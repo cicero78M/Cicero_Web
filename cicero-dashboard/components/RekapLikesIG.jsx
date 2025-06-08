@@ -14,10 +14,16 @@ export default function RekapLikesIG({ users = [] }) {
   const totalBelumLike = totalUser - totalSudahLike;
 
   // Hitung nilai jumlah_like tertinggi (max) di seluruh user
-  const maxJumlahLike = useMemo(
-    () => Math.max(0, ...users.map(u => parseInt(u.jumlah_like || 0, 10))),
-    [users]
-  );
+const maxJumlahLike = useMemo(
+  () =>
+    Math.max(
+      0,
+      ...users
+        .filter(u => !isException(u.exception))
+        .map(u => parseInt(u.jumlah_like || 0, 10))
+    ),
+  [users]
+);
 
   // Search/filter
   const [search, setSearch] = useState("");
