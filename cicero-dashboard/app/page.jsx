@@ -1,90 +1,58 @@
-// app/page.jsx
-'use client';
+// app/dashboard/page.jsx
+"use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
+import CardStat from "@/components/CardStat";
+import ChartAbsensi from "@/components/ChartAbsensi";
+import Loader from "@/components/Loader";
 
-export default function HomePage() {
-  const [profile, setProfile] = useState(null);
+export default function DashboardPage() {
+  const [stats, setStats] = useState(null);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const router = useRouter();
+
+  // Ambil token dari localStorage/session/cookie, sesuaikan dengan sistem auth Anda
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   useEffect(() => {
-    const token = localStorage.getItem("cicero_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    
-    const client_id = localStorage.getItem("client_id");
-    if (!client_id) {
-      router.push("/login");
-      return;
-    }
-    fetch(`http://103.182.52.127:3000/api/clients/?client_id=${client_id}/summary`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) setProfile(data.profile || data.data);
-        else setError(data.message || "Gagal fetch data profile");
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Gagal koneksi ke server");
-        setLoading(false);
-      });
-  }, [router]);
+    if (!token) return;
 
-  if (loading) return <div style={{ padding: 32 }}>Loading...</div>;
-  if (error) return <div style={{ color: "red", padding: 32 }}>{error}</div>;
-  if (!profile) return <div style={{ padding: 32 }}>Profile tidak ditemukan.</div>;
+    async function fetchData() {
+      try {
+        // Ambil stats global
+        const statsRes = await getDashboardStats(token);
+        setStats(statsRes.data);
+
+        // Ambil data rekap likes IG (ganti client_id sesuai kebutuhan user)
+        const client_id = statsRes.data?.client_id || "BOJONEGORO";
+        const rekapRes = await getRekapLikesIG(token, client_id);
+
+        // Data untuk chart: [{ nama_user, jumlah_like }]
+        setChartData(rekapRes.data?.users || []);
+      } catch (err) {
+        alert("Gagal mengambil data: " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [token]);
+
+  if (loading) return <Loader />;
 
   return (
-    <div style={{
-      maxWidth: 500,
-      margin: "48px auto",
-      padding: 24,
-      background: "white",
-      borderRadius: 16,
-      boxShadow: "0 6px 32px #0001"
-    }}>
-      <h1 style={{ color: "#2563eb", marginBottom: 24 }}>Profil Client</h1>
-      <table style={{ width: "100%", fontSize: 18 }}>
-        <tbody>
-          <tr>
-            <td style={{ fontWeight: "bold", padding: 8 }}>Client ID</td>
-            <td style={{ padding: 8 }}>{profile.client_id}</td>
-          </tr>
-          <tr>
-            <td style={{ fontWeight: "bold", padding: 8 }}>Nama</td>
-            <td style={{ padding: 8 }}>{profile.nama || profile.name}</td>
-          </tr>
-          <tr>
-            <td style={{ fontWeight: "bold", padding: 8 }}>Operator</td>
-            <td style={{ padding: 8 }}>{profile.operator || profile.client_operator}</td>
-          </tr>
-        </tbody>
-      </table>
-      <button
-        onClick={() => {
-          localStorage.removeItem("cicero_token");
-          localStorage.removeItem("client_id");
-          router.push("/login");
-        }}
-        style={{
-          marginTop: 32,
-          padding: "10px 32px",
-          background: "#ef4444",
-          color: "white",
-          border: "none",
-          borderRadius: 8,
-          cursor: "pointer",
-          fontWeight: "bold"
-        }}
-      >
-        Logout
-      </button>
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <CardStat title="Klien" value={stats?.clients || 0} />
+        <CardStat title="User" value={stats?.users || 0} />
+        <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
+        <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
+      </div>
+      <div className="mt-8">
+        <h3 className="font-semibold text-lg mb-4">Rekap Absensi Likes IG Hari Ini</h3>
+        <ChartAbsensi data={chartData} />
+      </div>
     </div>
   );
 }
