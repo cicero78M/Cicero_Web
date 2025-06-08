@@ -4,6 +4,7 @@ import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
+import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
