@@ -1,45 +1,56 @@
-// app/dashboard/page.jsx
 "use client";
 import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
-import ChartAbsensi from "@/components/ChartAbsensi";
 import CardStat from "@/components/CardStat";
+import ChartAbsensi from "@/components/ChartAbsensi";
 import Loader from "@/components/Loader";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Ambil token dari localStorage/session/cookie, sesuaikan dengan sistem auth Anda
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+    if (!token) {
+      setError("Token tidak ditemukan. Silakan login ulang.");
+      setLoading(false);
+      return;
+    }
 
     async function fetchData() {
       try {
-        // Ambil stats global
         const statsRes = await getDashboardStats(token);
-        setStats(statsRes.data);
+        setStats(statsRes.data || statsRes); // pastikan akses sesuai struktur response backend
 
-        // Ambil data rekap likes IG (ganti client_id sesuai kebutuhan user)
-        const client_id = statsRes.data?.client_id || "BOJONEGORO";
+        const client_id = statsRes.data?.client_id || statsRes.client_id || localStorage.getItem("client_id");
+        if (!client_id) {
+          setError("Client ID tidak ditemukan.");
+          setLoading(false);
+          return;
+        }
+
         const rekapRes = await getRekapLikesIG(token, client_id);
-
-        // Data untuk chart: [{ nama_user, jumlah_like }]
-        setChartData(rekapRes.data?.users || []);
+        setChartData(rekapRes.data?.users || rekapRes.users || []);
       } catch (err) {
-        alert("Gagal mengambil data: " + err.message);
+        setError("Gagal mengambil data: " + (err.message || err));
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [token]);
+  }, []);
 
   if (loading) return <Loader />;
+  if (error) return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="bg-white rounded-lg shadow-md p-6 text-center text-red-500 font-bold">
+        {error}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6">
