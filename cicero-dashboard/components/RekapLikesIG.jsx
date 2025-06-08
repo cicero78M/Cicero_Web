@@ -1,10 +1,12 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 // Utility: handle boolean/string/number for exception
 function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
+
+const PAGE_SIZE = 25;
 
 export default function RekapLikesIG({ users = [] }) {
   const totalUser = users.length;
@@ -14,16 +16,16 @@ export default function RekapLikesIG({ users = [] }) {
   const totalBelumLike = totalUser - totalSudahLike;
 
   // Hitung nilai jumlah_like tertinggi (max) di seluruh user
-const maxJumlahLike = useMemo(
-  () =>
-    Math.max(
-      0,
-      ...users
-        .filter(u => !isException(u.exception))
-        .map(u => parseInt(u.jumlah_like || 0, 10))
-    ),
-  [users]
-);
+  const maxJumlahLike = useMemo(
+    () =>
+      Math.max(
+        0,
+        ...users
+          .filter(u => !isException(u.exception))
+          .map(u => parseInt(u.jumlah_like || 0, 10))
+      ),
+    [users]
+  );
 
   // Search/filter
   const [search, setSearch] = useState("");
@@ -38,44 +40,49 @@ const maxJumlahLike = useMemo(
     [users, search]
   );
 
-  // Sort: Sudah Like (termasuk exception) di atas
+  // Sorting (pakai logic terbaru Anda)
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const aException = isException(a.exception);
+      const bException = isException(b.exception);
 
-const sorted = useMemo(() => {
-  return [...filtered].sort((a, b) => {
-    const aException = isException(a.exception);
-    const bException = isException(b.exception);
+      const aLike = Number(a.jumlah_like);
+      const bLike = Number(b.jumlah_like);
 
-    const aLike = Number(a.jumlah_like);
-    const bLike = Number(b.jumlah_like);
+      // 1. User sudah like (bukan exception) DAN jumlah_like == max → paling atas
+      if (!aException && aLike === maxJumlahLike && (bException || bLike < maxJumlahLike)) return -1;
+      if (!bException && bLike === maxJumlahLike && (aException || aLike < maxJumlahLike)) return 1;
 
-    // 1. User sudah like (bukan exception) DAN jumlah_like == max → paling atas
-    if (!aException && aLike === maxJumlahLike && (bException || bLike < maxJumlahLike)) return -1;
-    if (!bException && bLike === maxJumlahLike && (aException || aLike < maxJumlahLike)) return 1;
+      // 2. User exception, jumlah_like == max → tepat di bawah user sudah like max
+      if (aException && bException) return 0;
+      if (aException && !bException && bLike === maxJumlahLike) return 1;
+      if (!aException && bException && aLike === maxJumlahLike) return -1;
 
-    // 2. User exception, jumlah_like == max → tepat di bawah user sudah like max
-    if (aException && bException) return 0;
-    if (aException && !bException && bLike === maxJumlahLike) return 1;
-    if (!aException && bException && aLike === maxJumlahLike) return -1;
+      // 3. User sudah like (non-exception) dengan jumlah_like < max → berikutnya
+      if (!aException && !bException) {
+        if (aLike > 0 && bLike === 0) return -1;
+        if (aLike === 0 && bLike > 0) return 1;
+        // Di dalam kelompok, urut jumlah_like desc, lalu nama
+        if (aLike !== bLike) return bLike - aLike;
+        return (a.nama || "").localeCompare(b.nama || "");
+      }
 
-    // 3. User sudah like (non-exception) dengan jumlah_like < max → berikutnya
-    if (!aException && !bException) {
-      if (aLike > 0 && bLike === 0) return -1;
-      if (aLike === 0 && bLike > 0) return 1;
-      // Di dalam kelompok, urut jumlah_like desc, lalu nama
-      if (aLike !== bLike) return bLike - aLike;
+      // 4. User exception vs user belum like
+      if (aException && !bException) return -1;
+      if (!aException && bException) return 1;
+
+      // 5. Sisa: belum like, urut nama
       return (a.nama || "").localeCompare(b.nama || "");
-    }
+    });
+  }, [filtered, maxJumlahLike]);
 
-    // 4. User exception vs user belum like
-    if (aException && !bException) return -1;
-    if (!aException && bException) return 1;
+  // Pagination
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-    // 5. Sisa: belum like, urut nama
-    return (a.nama || "").localeCompare(b.nama || "");
-  });
-}, [filtered, maxJumlahLike]);
-
-
+  // Reset ke halaman 1 jika search berubah
+  useEffect(() => setPage(1), [search]);
 
   return (
     <div className="flex flex-col gap-6 mt-8">
@@ -132,11 +139,11 @@ const sorted = useMemo(() => {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((u, i) => {
+            {currentRows.map((u, i) => {
               const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
-                  <td className="py-1 px-2">{i + 1}</td>
+                  <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">
                     {u.title ? `${u.title} ${u.nama}` : u.nama}
                   </td>
@@ -168,6 +175,29 @@ const sorted = useMemo(() => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+            disabled={page === 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-600">
+            Halaman <b>{page}</b> dari <b>{totalPages}</b>
+          </span>
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+            disabled={page === totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
