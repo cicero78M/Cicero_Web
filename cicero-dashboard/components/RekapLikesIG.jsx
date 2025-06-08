@@ -1,11 +1,14 @@
 "use client";
 import { useMemo, useState } from "react";
 
+function isException(val) {
+  return val === true || val === "true" || val === 1 || val === "1";
+}
+
 export default function RekapLikesIG({ users = [] }) {
-  // Status: Sudah Like = jumlah_like > 0 ATAU exception === true
   const totalUser = users.length;
   const totalSudahLike = users.filter(u =>
-    Number(u.jumlah_like) > 0 || u.exception === true
+    Number(u.jumlah_like) > 0 || isException(u.exception)
   ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
@@ -16,7 +19,8 @@ export default function RekapLikesIG({ users = [] }) {
       users.filter(
         u =>
           (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
-          (u.username || "").toLowerCase().includes(search.toLowerCase())
+          (u.username || "").toLowerCase().includes(search.toLowerCase()) ||
+          (u.divisi || "").toLowerCase().includes(search.toLowerCase())
       ),
     [users, search]
   );
@@ -25,8 +29,8 @@ export default function RekapLikesIG({ users = [] }) {
   const sorted = useMemo(
     () =>
       [...filtered].sort((a, b) => {
-        const aSudah = Number(a.jumlah_like) > 0 || a.exception === true;
-        const bSudah = Number(b.jumlah_like) > 0 || b.exception === true;
+        const aSudah = Number(a.jumlah_like) > 0 || isException(a.exception);
+        const bSudah = Number(b.jumlah_like) > 0 || isException(b.exception);
         if (aSudah === bSudah) {
           return Number(b.jumlah_like) - Number(a.jumlah_like);
         }
@@ -43,18 +47,16 @@ export default function RekapLikesIG({ users = [] }) {
         <SummaryCard title="Sudah Like" value={totalSudahLike} color="bg-green-100" />
         <SummaryCard title="Belum Like" value={totalBelumLike} color="bg-red-100" />
       </div>
-
       {/* Search bar */}
       <div className="flex justify-end mb-2">
         <input
           type="text"
-          placeholder="Cari nama atau username"
+          placeholder="Cari nama, username, atau divisi"
           className="px-3 py-1 border rounded-lg text-sm w-64"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
       </div>
-
       {/* Tabel */}
       <div className="bg-white rounded-xl shadow-md p-4 overflow-x-auto">
         <h3 className="font-semibold text-lg mb-3">Rekap Likes Instagram Hari Ini</h3>
@@ -64,18 +66,20 @@ export default function RekapLikesIG({ users = [] }) {
               <th className="py-2 text-left">No</th>
               <th className="py-2 text-left">Nama</th>
               <th className="py-2 text-left">Username IG</th>
+              <th className="py-2 text-left">Divisi/Satfung</th>
               <th className="py-2 text-center">Status</th>
               <th className="py-2 text-center">Jumlah Like</th>
             </tr>
           </thead>
           <tbody>
             {sorted.map((u, i) => {
-              const sudahLike = Number(u.jumlah_like) > 0 || u.exception === true;
+              const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{i + 1}</td>
                   <td className="py-1 px-2">{u.nama}</td>
                   <td className="py-1 px-2">@{u.username}</td>
+                  <td className="py-1 px-2">{u.divisi || "-"}</td>
                   <td className="py-1 px-2 text-center">
                     {sudahLike ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">

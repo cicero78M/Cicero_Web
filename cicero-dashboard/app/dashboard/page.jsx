@@ -12,7 +12,10 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("cicero_token")
+        : null;
     if (!token) {
       setError("Token tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -24,7 +27,10 @@ export default function DashboardPage() {
         const statsRes = await getDashboardStats(token);
         setStats(statsRes.data || statsRes); // backend bisa kirim { success, data: ... } atau langsung objek
 
-        const client_id = statsRes.data?.client_id || statsRes.client_id || localStorage.getItem("client_id");
+        const client_id =
+          statsRes.data?.client_id ||
+          statsRes.client_id ||
+          localStorage.getItem("client_id");
         if (!client_id) {
           setError("Client ID tidak ditemukan.");
           setLoading(false);
@@ -45,13 +51,14 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) return <Loader />;
-  if (error) return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="bg-white rounded-lg shadow-md p-6 text-center text-red-500 font-bold">
-        {error}
+  if (error)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="bg-white rounded-lg shadow-md p-6 text-center text-red-500 font-bold">
+          {error}
+        </div>
       </div>
-    </div>
-  );
+    );
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,8 +68,10 @@ export default function DashboardPage() {
         <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
         <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
       </div>
+
       <div className="mt-8">
         <RekapLikesIG users={chartData} />
+        <ChartDivisiAbsensi users={chartData} />
       </div>
     </div>
   );
