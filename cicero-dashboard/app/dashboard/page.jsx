@@ -26,7 +26,7 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const statsRes = await getDashboardStats(token);
-        setStats(statsRes.data || statsRes); // backend bisa kirim { success, data: ... } atau langsung objek
+        setStats(statsRes.data || statsRes);
 
         const client_id =
           statsRes.data?.client_id ||
@@ -39,7 +39,6 @@ export default function DashboardPage() {
         }
 
         const rekapRes = await getRekapLikesIG(token, client_id);
-        // FINAL: .data langsung array, tanpa .users
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
@@ -62,19 +61,16 @@ export default function DashboardPage() {
     );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <CardStat title="Klien" value={stats?.clients || 0} />
         <CardStat title="User" value={stats?.users || 0} />
         <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
         <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
       </div>
+      <ChartDivisiAbsensi users={chartData} />
 
-      <div className="mt-8">
-        <ChartDivisiAbsensi users={chartData} />
-
-        <RekapLikesIG users={chartData} />
-      </div>
+      <RekapLikesIG users={chartData} />
     </div>
   );
 }
