@@ -20,7 +20,7 @@ export default function HomePage() {
       router.push("/login");
       return;
     }
-    fetch(`http://103.182.52.127:3000/api/client/profile?client_id=${client_id}`, {
+    fetch(`http://103.182.52.127:3000/api/clients/profile?client_id=${client_id}`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
