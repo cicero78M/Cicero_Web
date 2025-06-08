@@ -16,12 +16,15 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
+function bersihkanSatfung(divisi = "") {
+  return divisi.replace(/polsek\s*/i, "").trim();
+}
+
 export default function ChartDivisiAbsensi({ users }) {
-  // Grouping by divisi
   const divisiMap = {};
   users.forEach(u => {
     const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
-    const key = u.divisi || "LAINNYA";
+    const key = bersihkanSatfung(u.divisi || "LAINNYA");
     if (!divisiMap[key]) divisiMap[key] = { divisi: key, sudah: 0, belum: 0 };
     if (sudahLike) divisiMap[key].sudah += 1;
     else divisiMap[key].belum += 1;
@@ -54,3 +57,4 @@ export default function ChartDivisiAbsensi({ users }) {
     </div>
   );
 }
+
