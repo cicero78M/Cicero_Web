@@ -71,8 +71,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-8">
-        <RekapLikesIG users={chartData} />
         <ChartDivisiAbsensi users={chartData} />
+
+        <RekapLikesIG users={chartData} />
       </div>
     </div>
   );
