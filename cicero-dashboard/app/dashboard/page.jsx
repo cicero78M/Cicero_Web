@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [periode, setPeriode] = useState("harian"); // "harian" | "bulanan"
 
   useEffect(() => {
     const token =
@@ -38,7 +39,7 @@ export default function DashboardPage() {
           return;
         }
 
-        const rekapRes = await getRekapLikesIG(token, client_id);
+        const rekapRes = await getRekapLikesIG(token, client_id, periode);
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
@@ -48,7 +49,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, []);
+  }, [periode]);
 
   if (loading) return <Loader />;
   if (error)
@@ -68,8 +69,26 @@ export default function DashboardPage() {
         <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
         <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
       </div>
+      {/* Switch Periode */}
+      <div className="flex items-center justify-end gap-3 mb-2">
+        <span className={periode === "harian" ? "font-semibold text-blue-700" : "text-gray-400"}>Hari Ini</span>
+        <button
+          className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
+            periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
+          }`}
+          onClick={() => setPeriode(periode === "harian" ? "bulanan" : "harian")}
+          aria-label="Switch periode"
+          type="button"
+        >
+          <span
+            className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
+              periode === "bulanan" ? "left-6" : "left-0"
+            }`}
+          />
+        </button>
+        <span className={periode === "bulanan" ? "font-semibold text-blue-700" : "text-gray-400"}>Bulan Ini</span>
+      </div>
       <ChartDivisiAbsensi users={chartData} />
-
       <RekapLikesIG users={chartData} />
     </div>
   );
