@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import CardStat from "@/components/CardStat";
-import ChartAbsensi from "@/components/ChartAbsensi";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 
@@ -23,7 +22,7 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const statsRes = await getDashboardStats(token);
-        setStats(statsRes.data || statsRes); // pastikan akses sesuai struktur response backend
+        setStats(statsRes.data || statsRes); // backend bisa kirim { success, data: ... } atau langsung objek
 
         const client_id = statsRes.data?.client_id || statsRes.client_id || localStorage.getItem("client_id");
         if (!client_id) {
@@ -33,7 +32,8 @@ export default function DashboardPage() {
         }
 
         const rekapRes = await getRekapLikesIG(token, client_id);
-        setChartData(rekapRes.data?.users || rekapRes.users || []);
+        // FINAL: .data langsung array, tanpa .users
+        setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -61,7 +61,6 @@ export default function DashboardPage() {
         <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
         <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
       </div>
-
       <div className="mt-8">
         <RekapLikesIG users={chartData} />
       </div>

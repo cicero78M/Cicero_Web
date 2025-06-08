@@ -12,8 +12,8 @@ export default function RekapLikesIG({ users = [] }) {
   const filtered = useMemo(() =>
     users.filter(
       u =>
-        u.nama.toLowerCase().includes(search.toLowerCase()) ||
-        u.username.toLowerCase().includes(search.toLowerCase())
+        (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
+        (u.username || "").toLowerCase().includes(search.toLowerCase())
     ),
     [users, search]
   );
@@ -48,6 +48,7 @@ export default function RekapLikesIG({ users = [] }) {
 
       {/* Tabel */}
       <div className="bg-white rounded-xl shadow-md p-4 overflow-x-auto">
+        <h3 className="font-semibold text-lg mb-3">Rekap Likes Instagram Hari Ini</h3>
         <table className="w-full text-sm">
           <thead>
             <tr>
