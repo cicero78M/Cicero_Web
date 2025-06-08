@@ -2,9 +2,11 @@
 import { useMemo, useState } from "react";
 
 export default function RekapLikesIG({ users = [] }) {
-  // Ringkasan
+  // Hitung status dengan exception
   const totalUser = users.length;
-  const totalSudahLike = users.filter(u => Number(u.jumlah_like) > 0).length;
+  const totalSudahLike = users.filter(u =>
+    Number(u.jumlah_like) > 0 || u.exception === true
+  ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
   // Search
@@ -18,11 +20,19 @@ export default function RekapLikesIG({ users = [] }) {
     [users, search]
   );
 
-  // Sort: Sudah Like duluan
-  const sorted = useMemo(() =>
-    [...filtered].sort((a, b) =>
-      Number(b.jumlah_like) - Number(a.jumlah_like)
-    ),
+  // Sort: Sudah Like duluan (termasuk exception)
+  const sorted = useMemo(
+    () =>
+      [...filtered].sort((a, b) => {
+        // Sudah Like/exception di atas
+        const aSudah = Number(a.jumlah_like) > 0 || a.exception === true;
+        const bSudah = Number(b.jumlah_like) > 0 || b.exception === true;
+        if (aSudah === bSudah) {
+          // Jika sama, urutkan by jumlah_like
+          return Number(b.jumlah_like) - Number(a.jumlah_like);
+        }
+        return bSudah - aSudah; // yang sudah di atas
+      }),
     [filtered]
   );
 
@@ -57,36 +67,41 @@ export default function RekapLikesIG({ users = [] }) {
               <th className="py-2 text-left">Username IG</th>
               <th className="py-2 text-center">Status</th>
               <th className="py-2 text-center">Jumlah Like</th>
+              <th className="py-2 text-center">Exception</th>
             </tr>
           </thead>
           <tbody>
-            {sorted.map((u, i) => (
-              <tr key={u.user_id}
-                className={
-                  Number(u.jumlah_like) > 0
-                    ? "bg-green-50"
-                    : "bg-red-50"
-                }
-              >
-                <td className="py-1 px-2">{i + 1}</td>
-                <td className="py-1 px-2">{u.nama}</td>
-                <td className="py-1 px-2">@{u.username}</td>
-                <td className="py-1 px-2 text-center">
-                  {Number(u.jumlah_like) > 0 ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      Sudah
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                      Belum
-                    </span>
-                  )}
-                </td>
-                <td className="py-1 px-2 text-center font-bold">{u.jumlah_like}</td>
-              </tr>
-            ))}
+            {sorted.map((u, i) => {
+              const sudahLike = Number(u.jumlah_like) > 0 || u.exception === true;
+              return (
+                <tr key={u.user_id}
+                  className={
+                    sudahLike
+                      ? "bg-green-50"
+                      : "bg-red-50"
+                  }
+                >
+                  <td className="py-1 px-2">{i + 1}</td>
+                  <td className="py-1 px-2">{u.nama}</td>
+                  <td className="py-1 px-2">@{u.username}</td>
+                  <td className="py-1 px-2 text-center">
+                    {sudahLike ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        Sudah
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        Belum
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-1 px-2 text-center font-bold">{u.jumlah_like}</td>
+                  <td className="py-1 px-2 text-center">{u.exception === true ? "✅" : ""}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
