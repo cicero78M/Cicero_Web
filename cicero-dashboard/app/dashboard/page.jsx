@@ -54,7 +54,7 @@ export default function DashboardPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <div className="bg-white rounded-lg shadow-md p-6 text-center text-red-500 font-bold">
           {error}
         </div>
@@ -62,34 +62,38 @@ export default function DashboardPage() {
     );
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <CardStat title="Klien" value={stats?.clients || 0} />
-        <CardStat title="User" value={stats?.users || 0} />
-        <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
-        <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
+    <div className="min-h-screen bg-gray-100">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <CardStat title="Klien" value={stats?.clients || 0} />
+            <CardStat title="User" value={stats?.users || 0} />
+            <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
+            <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
+          </div>
+          {/* Switch Periode */}
+          <div className="flex items-center justify-end gap-3 mb-2">
+            <span className={periode === "harian" ? "font-semibold text-blue-700" : "text-gray-400"}>Hari Ini</span>
+            <button
+              className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
+                periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
+              }`}
+              onClick={() => setPeriode(periode === "harian" ? "bulanan" : "harian")}
+              aria-label="Switch periode"
+              type="button"
+            >
+              <span
+                className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
+                  periode === "bulanan" ? "left-6" : "left-0"
+                }`}
+              />
+            </button>
+            <span className={periode === "bulanan" ? "font-semibold text-blue-700" : "text-gray-400"}>Bulan Ini</span>
+          </div>
+          <ChartDivisiAbsensi users={chartData} />
+          <RekapLikesIG users={chartData} />
+        </div>
       </div>
-      {/* Switch Periode */}
-      <div className="flex items-center justify-end gap-3 mb-2">
-        <span className={periode === "harian" ? "font-semibold text-blue-700" : "text-gray-400"}>Hari Ini</span>
-        <button
-          className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
-            periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
-          }`}
-          onClick={() => setPeriode(periode === "harian" ? "bulanan" : "harian")}
-          aria-label="Switch periode"
-          type="button"
-        >
-          <span
-            className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
-              periode === "bulanan" ? "left-6" : "left-0"
-            }`}
-          />
-        </button>
-        <span className={periode === "bulanan" ? "font-semibold text-blue-700" : "text-gray-400"}>Bulan Ini</span>
-      </div>
-      <ChartDivisiAbsensi users={chartData} />
-      <RekapLikesIG users={chartData} />
     </div>
   );
 }
