@@ -4,6 +4,7 @@ import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import CardStat from "@/components/CardStat";
 import ChartAbsensi from "@/components/ChartAbsensi";
 import Loader from "@/components/Loader";
+import RekapLikesIG from "@/components/RekapLikesIG";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
@@ -60,9 +61,9 @@ export default function DashboardPage() {
         <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
         <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
       </div>
+
       <div className="mt-8">
-        <h3 className="font-semibold text-lg mb-4">Rekap Absensi Likes IG Hari Ini</h3>
-        <ChartAbsensi data={chartData} />
+        <RekapLikesIG users={chartData} />
       </div>
     </div>
   );
