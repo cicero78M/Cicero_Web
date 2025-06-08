@@ -1,33 +1,53 @@
-// components/RekapLikesIG.jsx
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function RekapLikesIG({ users = [] }) {
-  // users: [{ user_id, nama, username, jumlah_like }]
-
-  // Summary statistik
+  // Ringkasan
   const totalUser = users.length;
   const totalSudahLike = users.filter(u => Number(u.jumlah_like) > 0).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
-  // Untuk sorting urut absen
+  // Search
+  const [search, setSearch] = useState("");
+  const filtered = useMemo(() =>
+    users.filter(
+      u =>
+        u.nama.toLowerCase().includes(search.toLowerCase()) ||
+        u.username.toLowerCase().includes(search.toLowerCase())
+    ),
+    [users, search]
+  );
+
+  // Sort: Sudah Like duluan
   const sorted = useMemo(() =>
-    [...users].sort((a, b) =>
+    [...filtered].sort((a, b) =>
       Number(b.jumlah_like) - Number(a.jumlah_like)
-    ), [users]);
+    ),
+    [filtered]
+  );
 
   return (
     <div className="flex flex-col gap-6 mt-8">
-      {/* Summary card */}
+      {/* Ringkasan */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard title="Total User" value={totalUser} color="bg-blue-100" />
         <SummaryCard title="Sudah Like" value={totalSudahLike} color="bg-green-100" />
         <SummaryCard title="Belum Like" value={totalBelumLike} color="bg-red-100" />
       </div>
 
-      {/* Tabel absen */}
+      {/* Search bar */}
+      <div className="flex justify-end mb-2">
+        <input
+          type="text"
+          placeholder="Cari nama atau username"
+          className="px-3 py-1 border rounded-lg text-sm w-64"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* Tabel */}
       <div className="bg-white rounded-xl shadow-md p-4 overflow-x-auto">
-        <h3 className="font-semibold text-lg mb-3">Rekap Likes Instagram Hari Ini</h3>
         <table className="w-full text-sm">
           <thead>
             <tr>
@@ -35,7 +55,7 @@ export default function RekapLikesIG({ users = [] }) {
               <th className="py-2 text-left">Nama</th>
               <th className="py-2 text-left">Username IG</th>
               <th className="py-2 text-center">Status</th>
-              <th className="py-2 text-center">Total Like</th>
+              <th className="py-2 text-center">Jumlah Like</th>
             </tr>
           </thead>
           <tbody>
@@ -49,15 +69,21 @@ export default function RekapLikesIG({ users = [] }) {
               >
                 <td className="py-1 px-2">{i + 1}</td>
                 <td className="py-1 px-2">{u.nama}</td>
-                <td className="py-1 px-2">{u.username}</td>
+                <td className="py-1 px-2">@{u.username}</td>
                 <td className="py-1 px-2 text-center">
                   {Number(u.jumlah_like) > 0 ? (
-                    <span className="inline-block px-2 py-0.5 rounded text-xs bg-green-500 text-white">Sudah</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      Sudah
+                    </span>
                   ) : (
-                    <span className="inline-block px-2 py-0.5 rounded text-xs bg-red-500 text-white">Belum</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      Belum
+                    </span>
                   )}
                 </td>
-                <td className="py-1 px-2 text-center">{u.jumlah_like}</td>
+                <td className="py-1 px-2 text-center font-bold">{u.jumlah_like}</td>
               </tr>
             ))}
           </tbody>
@@ -67,7 +93,6 @@ export default function RekapLikesIG({ users = [] }) {
   );
 }
 
-// Komponen kecil untuk kartu summary
 function SummaryCard({ title, value, color }) {
   return (
     <div className={`rounded-xl shadow p-4 flex flex-col items-center ${color}`}>
