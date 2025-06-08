@@ -11,13 +11,38 @@ import {
   LabelList,
 } from "recharts";
 
-// Utility: handle boolean/string/number for exception
 function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
 function bersihkanSatfung(divisi = "") {
   return divisi.replace(/polsek\s*/i, "").trim();
+}
+
+function YAxisTickFrame({ x, y, payload }) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <rect
+        x={-5}
+        y={-12}
+        width={110}
+        height={24}
+        rx={8}
+        fill="#f1f5f9"
+      />
+      <text
+        x={50}
+        y={5}
+        textAnchor="middle"
+        fontSize={13}
+        fontWeight={600}
+        fill="#222"
+        style={{ pointerEvents: "none" }}
+      >
+        {payload.value}
+      </text>
+    </g>
+  );
 }
 
 export default function ChartDivisiAbsensi({ users }) {
@@ -34,7 +59,7 @@ export default function ChartDivisiAbsensi({ users }) {
   return (
     <div className="bg-white rounded-xl shadow p-6 mt-8">
       <h3 className="font-bold text-lg mb-4">Absensi Likes per Divisi/Satfung</h3>
-      <ResponsiveContainer width="100%" height={Math.max(300, dataChart.length * 36)}>
+      <ResponsiveContainer width="100%" height={Math.max(300, dataChart.length * 38)}>
         <BarChart
           data={dataChart}
           layout="vertical"
@@ -43,7 +68,12 @@ export default function ChartDivisiAbsensi({ users }) {
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis type="number" allowDecimals={false} />
-          <YAxis dataKey="divisi" type="category" width={110} />
+          <YAxis
+            dataKey="divisi"
+            type="category"
+            width={130}
+            tick={<YAxisTickFrame />}
+          />
           <Tooltip />
           <Legend />
           <Bar dataKey="sudah" fill="#22c55e" name="Sudah Like" isAnimationActive>
@@ -57,4 +87,3 @@ export default function ChartDivisiAbsensi({ users }) {
     </div>
   );
 }
-
