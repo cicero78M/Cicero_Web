@@ -16,7 +16,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://103.182.52.127:3000/api/auth/login", {
+      // Gunakan base URL dari environment (biar bisa ganti dev/prod)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://103.182.52.127:3000";
+      const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ client_id, client_operator }),
@@ -24,10 +26,11 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (data.success) {
-        if (data.token) localStorage.setItem("cicero_token", data.token);
-        localStorage.setItem("client_id", client_id); // <-- simpan client_id
-        router.push("/");
+      if (data.success && data.token) {
+        localStorage.setItem("cicero_token", data.token);
+        localStorage.setItem("client_id", client_id);
+        // Setelah login langsung redirect ke dashboard
+        router.push("/dashboard");
       } else {
         setError(data.message || "Login gagal, cek Client ID / Operator");
       }
@@ -38,71 +41,41 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f1f5f9",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-slate-100">
       <form
         onSubmit={handleLogin}
-        style={{
-          background: "white",
-          padding: "2rem",
-          borderRadius: "1rem",
-          boxShadow: "0 6px 24px #0001",
-          minWidth: 340,
-        }}
+        className="bg-white p-8 rounded-2xl shadow-xl min-w-[340px] w-full max-w-sm"
       >
-        <h2 style={{ marginBottom: 24, color: "#2563eb" }}>Login Cicero</h2>
-        <div style={{ marginBottom: 16 }}>
+        <h2 className="mb-6 text-2xl font-bold text-blue-600 text-center">Login Cicero</h2>
+        <div className="mb-4">
           <input
             type="text"
             placeholder="Client ID"
             value={client_id}
             onChange={(e) => setClientId(e.target.value)}
             required
-            style={{
-              width: "100%",
-              padding: 10,
-              borderRadius: 5,
-              border: "1px solid #ccc",
-            }}
+            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <input
             type="text"
             placeholder="Operator (misal: 08123xxxxxxx)"
             value={client_operator}
             onChange={(e) => setClientOperator(e.target.value)}
             required
-            style={{
-              width: "100%",
-              padding: 10,
-              borderRadius: 5,
-              border: "1px solid #ccc",
-            }}
+            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
-        {error && <div style={{ color: "red", marginBottom: 16 }}>{error}</div>}
+        {error && (
+          <div className="text-red-600 text-sm mb-4 text-center">{error}</div>
+        )}
         <button
           type="submit"
           disabled={loading}
-          style={{
-            width: "100%",
-            padding: "10px 0",
-            borderRadius: 6,
-            border: "none",
-            background: loading ? "#aaa" : "#2563eb",
-            color: "white",
-            fontWeight: "bold",
-            fontSize: 16,
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
+          className={`w-full py-2 rounded-lg text-white font-semibold text-lg transition
+            ${loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}
+          `}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
