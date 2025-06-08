@@ -2,8 +2,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
-import CardStat from "@/components/CardStat";
 import ChartAbsensi from "@/components/ChartAbsensi";
+import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 
 export default function DashboardPage() {
