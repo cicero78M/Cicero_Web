@@ -13,6 +13,12 @@ export default function RekapLikesIG({ users = [] }) {
   ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
+  // Hitung nilai jumlah_like tertinggi (max) di seluruh user
+  const maxJumlahLike = useMemo(
+    () => Math.max(0, ...users.map(u => parseInt(u.jumlah_like || 0, 10))),
+    [users]
+  );
+
   // Search/filter
   const [search, setSearch] = useState("");
   const filtered = useMemo(
@@ -94,39 +100,41 @@ export default function RekapLikesIG({ users = [] }) {
               <th className="py-2 px-2 text-center">Jumlah Like</th>
             </tr>
           </thead>
-<tbody>
-  {sorted.map((u, i) => {
-    const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
-    return (
-      <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
-        <td className="py-1 px-2">{i + 1}</td>
-        <td className="py-1 px-2">
-          {u.title ? `${u.title} ${u.nama}` : u.nama}
-        </td>
-        <td className="py-1 px-2 font-mono text-blue-700">@{u.username}</td>
-        <td className="py-1 px-2">
-          <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
-            {u.divisi || "-"}
-          </span>
-        </td>
-        <td className="py-1 px-2 text-center">
-          {sudahLike ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              Sudah
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              Belum
-            </span>
-          )}
-        </td>
-        <td className="py-1 px-2 text-center font-bold">{u.jumlah_like}</td>
-      </tr>
-    );
-  })}
-</tbody>
+          <tbody>
+            {sorted.map((u, i) => {
+              const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
+              return (
+                <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
+                  <td className="py-1 px-2">{i + 1}</td>
+                  <td className="py-1 px-2">
+                    {u.title ? `${u.title} ${u.nama}` : u.nama}
+                  </td>
+                  <td className="py-1 px-2 font-mono text-blue-700">@{u.username}</td>
+                  <td className="py-1 px-2">
+                    <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
+                      {u.divisi || "-"}
+                    </span>
+                  </td>
+                  <td className="py-1 px-2 text-center">
+                    {sudahLike ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        Sudah
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        Belum
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-1 px-2 text-center font-bold">
+                    {isException(u.exception) ? maxJumlahLike : u.jumlah_like}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
       </div>
     </div>
