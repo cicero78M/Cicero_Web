@@ -1,9 +1,7 @@
+// app/page.jsx
 'use client';
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const URL_API = "http://103.182.52.127:3000/api/client/profile";
 
 export default function HomePage() {
   const [profile, setProfile] = useState(null);
@@ -13,63 +11,32 @@ export default function HomePage() {
 
   useEffect(() => {
     const token = localStorage.getItem("cicero_token");
-    const client_id = localStorage.getItem("client_id");
-
-    // DEBUG: Pastikan token dan client_id ada nilainya
-    console.log("Token:", token);
-    console.log("Client ID:", client_id);
-
-    if (!token || !client_id) {
+    if (!token) {
       router.push("/login");
       return;
     }
-
-    // Fetch profil client dari API dengan header Authorization
-    fetch(`${URL_API}?client_id=${client_id}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        // (opsional) "Content-Type": "application/json",
-      }
+    const client_id = localStorage.getItem("client_id");
+    if (!client_id) {
+      router.push("/login");
+      return;
+    }
+    fetch(`http://103.182.52.127:3000/api/client/profile?client_id=${client_id}`, {
+      headers: { "Authorization": `Bearer ${token}` }
     })
-      .then(res => {
-        // DEBUG: Cek status
-        console.log("Fetch Status:", res.status);
-        return res.json();
-      })
+      .then(res => res.json())
       .then(data => {
-        console.log("Profile API Response:", data); // DEBUG: Lihat response
-
-        // Cek kalau token tidak valid/expired
-        if (
-          !data.success &&
-          data.message &&
-          data.message.toLowerCase().includes("token")
-        ) {
-          // Auto logout jika token invalid/expired
-          localStorage.removeItem("cicero_token");
-          localStorage.removeItem("client_id");
-          router.push("/login");
-          return;
-        }
-
-        if (data.success) {
-          setProfile(data.profile || data.data);
-        } else {
-          setError(data.message || "Gagal fetch data profile");
-        }
+        if (data.success) setProfile(data.profile || data.data);
+        else setError(data.message || "Gagal fetch data profile");
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Gagal koneksi ke server");
         setLoading(false);
-        console.error("Fetch error:", err);
       });
   }, [router]);
 
   if (loading) return <div style={{ padding: 32 }}>Loading...</div>;
   if (error) return <div style={{ color: "red", padding: 32 }}>{error}</div>;
-
   if (!profile) return <div style={{ padding: 32 }}>Profile tidak ditemukan.</div>;
 
   return (
@@ -96,7 +63,6 @@ export default function HomePage() {
             <td style={{ fontWeight: "bold", padding: 8 }}>Operator</td>
             <td style={{ padding: 8 }}>{profile.operator || profile.client_operator}</td>
           </tr>
-          {/* Tambah field lain sesuai response API */}
         </tbody>
       </table>
       <button
