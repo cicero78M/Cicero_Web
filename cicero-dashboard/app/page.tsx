@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Ganti URL_API sesuai endpoint profil client-mu
 const URL_API = "http://103.182.52.127:3000/api/client/profile";
 
 export default function HomePage() {
@@ -14,37 +13,57 @@ export default function HomePage() {
 
   useEffect(() => {
     const token = localStorage.getItem("cicero_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    // Misal, client_id dan operator disimpan saat login, atau bisa dari token/jwt jika decode.
-    // Di sini asumsikan client_id sudah diketahui, misal simpan juga di localStorage.
     const client_id = localStorage.getItem("client_id");
-    if (!client_id) {
+
+    // DEBUG: Pastikan token dan client_id ada nilainya
+    console.log("Token:", token);
+    console.log("Client ID:", client_id);
+
+    if (!token || !client_id) {
       router.push("/login");
       return;
     }
 
-    // Fetch profil client dari API
+    // Fetch profil client dari API dengan header Authorization
     fetch(`${URL_API}?client_id=${client_id}`, {
+      method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
+        // (opsional) "Content-Type": "application/json",
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        // DEBUG: Cek status
+        console.log("Fetch Status:", res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log("Profile API Response:", data); // DEBUG: Lihat response
+
+        // Cek kalau token tidak valid/expired
+        if (
+          !data.success &&
+          data.message &&
+          data.message.toLowerCase().includes("token")
+        ) {
+          // Auto logout jika token invalid/expired
+          localStorage.removeItem("cicero_token");
+          localStorage.removeItem("client_id");
+          router.push("/login");
+          return;
+        }
+
         if (data.success) {
-          setProfile(data.profile || data.data); // Sesuaikan key jika perlu
+          setProfile(data.profile || data.data);
         } else {
           setError(data.message || "Gagal fetch data profile");
         }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
         setError("Gagal koneksi ke server");
         setLoading(false);
+        console.error("Fetch error:", err);
       });
   }, [router]);
 
