@@ -39,44 +39,42 @@ const maxJumlahLike = useMemo(
   );
 
   // Sort: Sudah Like (termasuk exception) di atas
+
 const sorted = useMemo(() => {
   return [...filtered].sort((a, b) => {
-    // PATCH: Hitung max di filter
-    const maxJumlahLike = Math.max(
-      0,
-      ...filtered
-        .filter(u => !isException(u.exception))
-        .map(u => parseInt(u.jumlah_like || 0, 10))
-    );
-
     const aException = isException(a.exception);
     const bException = isException(b.exception);
 
-    const aMax = Number(a.jumlah_like) === maxJumlahLike;
-    const bMax = Number(b.jumlah_like) === maxJumlahLike;
+    const aLike = Number(a.jumlah_like);
+    const bLike = Number(b.jumlah_like);
 
-    // 1. User sudah like (non-exception) DAN jumlah_like === max (paling atas)
-    if (!aException && aMax && (bException || !bMax)) return -1;
-    if (!bException && bMax && (aException || !aMax)) return 1;
+    // 1. User sudah like (bukan exception) DAN jumlah_like == max → paling atas
+    if (!aException && aLike === maxJumlahLike && (bException || bLike < maxJumlahLike)) return -1;
+    if (!bException && bLike === maxJumlahLike && (aException || aLike < maxJumlahLike)) return 1;
 
-    // 2. User exception dengan jumlah_like === max (tepat di bawah user sudah like max)
-    if (aException && aMax && (!bException || !bMax)) return 1;
-    if (bException && bMax && (!aException || !aMax)) return -1;
+    // 2. User exception, jumlah_like == max → tepat di bawah user sudah like max
+    if (aException && bException) return 0;
+    if (aException && !bException && bLike === maxJumlahLike) return 1;
+    if (!aException && bException && aLike === maxJumlahLike) return -1;
 
-    // 3. User sudah like (non-exception) < max (berikutnya)
-    if (!aException && Number(a.jumlah_like) > 0 && (bException || Number(b.jumlah_like) === 0)) return -1;
-    if (!bException && Number(b.jumlah_like) > 0 && (aException || Number(a.jumlah_like) === 0)) return 1;
+    // 3. User sudah like (non-exception) dengan jumlah_like < max → berikutnya
+    if (!aException && !bException) {
+      if (aLike > 0 && bLike === 0) return -1;
+      if (aLike === 0 && bLike > 0) return 1;
+      // Di dalam kelompok, urut jumlah_like desc, lalu nama
+      if (aLike !== bLike) return bLike - aLike;
+      return (a.nama || "").localeCompare(b.nama || "");
+    }
 
-    // 4. User exception selain max (harusnya tidak terjadi, tapi tetap di bawah user sudah like)
-    if (aException && !bException) return 1;
-    if (!aException && bException) return -1;
+    // 4. User exception vs user belum like
+    if (aException && !bException) return -1;
+    if (!aException && bException) return 1;
 
-    // 5. Sisanya urut jumlah_like desc, lalu nama
-    if (Number(a.jumlah_like) !== Number(b.jumlah_like))
-      return Number(b.jumlah_like) - Number(a.jumlah_like);
+    // 5. Sisa: belum like, urut nama
     return (a.nama || "").localeCompare(b.nama || "");
   });
-}, [filtered]);
+}, [filtered, maxJumlahLike]);
+
 
 
   return (
