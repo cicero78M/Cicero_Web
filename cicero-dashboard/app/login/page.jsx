@@ -1,6 +1,7 @@
-// pages/login.js
+'use client';
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [client_id, setClientId] = useState("");
@@ -24,9 +25,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        // Simpan token (jika ada) di localStorage
         if (data.token) localStorage.setItem("cicero_token", data.token);
-        // Redirect ke halaman utama/dashboard
         router.push("/");
       } else {
         setError(data.message || "Login gagal, cek Client ID / Operator");
