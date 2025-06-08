@@ -60,7 +60,7 @@ export default function LoginPage() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Operator (misal: 08123xxxxxxx)"
+            placeholder="Operator"
             value={client_operator}
             onChange={(e) => setClientOperator(e.target.value)}
             required
