@@ -22,7 +22,7 @@ function bersihkanSatfung(divisi = "") {
 }
 
 export default function ChartDivisiAbsensi({ users }) {
-  // Grouping by divisi
+  // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
   users.forEach(u => {
     const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
@@ -53,7 +53,7 @@ export default function ChartDivisiAbsensi({ users }) {
           <YAxis
             dataKey="divisi"
             type="category"
-            width={180} // Lebar agar nama divisi panjang muat
+            width={200} // Lebar agar nama divisi panjang muat
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 15, fontWeight: 700, fill: "#222" }}
