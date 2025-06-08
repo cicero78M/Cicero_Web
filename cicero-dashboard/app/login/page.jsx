@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,7 @@ export default function LoginPage() {
 
       if (data.success) {
         if (data.token) localStorage.setItem("cicero_token", data.token);
+        localStorage.setItem("client_id", client_id); // <-- simpan client_id
         router.push("/");
       } else {
         setError(data.message || "Login gagal, cek Client ID / Operator");
@@ -37,13 +38,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#f1f5f9"
-    }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f1f5f9",
+      }}
+    >
       <form
         onSubmit={handleLogin}
         style={{
@@ -60,9 +63,14 @@ export default function LoginPage() {
             type="text"
             placeholder="Client ID"
             value={client_id}
-            onChange={e => setClientId(e.target.value)}
+            onChange={(e) => setClientId(e.target.value)}
             required
-            style={{ width: "100%", padding: 10, borderRadius: 5, border: "1px solid #ccc" }}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 5,
+              border: "1px solid #ccc",
+            }}
           />
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -70,14 +78,17 @@ export default function LoginPage() {
             type="text"
             placeholder="Operator (misal: 08123xxxxxxx)"
             value={client_operator}
-            onChange={e => setClientOperator(e.target.value)}
+            onChange={(e) => setClientOperator(e.target.value)}
             required
-            style={{ width: "100%", padding: 10, borderRadius: 5, border: "1px solid #ccc" }}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 5,
+              border: "1px solid #ccc",
+            }}
           />
         </div>
-        {error && (
-          <div style={{ color: "red", marginBottom: 16 }}>{error}</div>
-        )}
+        {error && <div style={{ color: "red", marginBottom: 16 }}>{error}</div>}
         <button
           type="submit"
           disabled={loading}
@@ -90,7 +101,7 @@ export default function LoginPage() {
             color: "white",
             fontWeight: "bold",
             fontSize: 16,
-            cursor: loading ? "not-allowed" : "pointer"
+            cursor: loading ? "not-allowed" : "pointer",
           }}
         >
           {loading ? "Logging in..." : "Login"}
