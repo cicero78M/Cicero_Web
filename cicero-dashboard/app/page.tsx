@@ -1,103 +1,104 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+// Ganti URL_API sesuai endpoint profil client-mu
+const URL_API = "http://103.182.52.127:3000/api/client/profile";
+
+export default function HomePage() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("cicero_token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    // Misal, client_id dan operator disimpan saat login, atau bisa dari token/jwt jika decode.
+    // Di sini asumsikan client_id sudah diketahui, misal simpan juga di localStorage.
+    const client_id = localStorage.getItem("client_id");
+    if (!client_id) {
+      router.push("/login");
+      return;
+    }
+
+    // Fetch profil client dari API
+    fetch(`${URL_API}?client_id=${client_id}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setProfile(data.profile || data.data); // Sesuaikan key jika perlu
+        } else {
+          setError(data.message || "Gagal fetch data profile");
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Gagal koneksi ke server");
+        setLoading(false);
+      });
+  }, [router]);
+
+  if (loading) return <div style={{ padding: 32 }}>Loading...</div>;
+  if (error) return <div style={{ color: "red", padding: 32 }}>{error}</div>;
+
+  if (!profile) return <div style={{ padding: 32 }}>Profile tidak ditemukan.</div>;
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div style={{
+      maxWidth: 500,
+      margin: "48px auto",
+      padding: 24,
+      background: "white",
+      borderRadius: 16,
+      boxShadow: "0 6px 32px #0001"
+    }}>
+      <h1 style={{ color: "#2563eb", marginBottom: 24 }}>Profil Client</h1>
+      <table style={{ width: "100%", fontSize: 18 }}>
+        <tbody>
+          <tr>
+            <td style={{ fontWeight: "bold", padding: 8 }}>Client ID</td>
+            <td style={{ padding: 8 }}>{profile.client_id}</td>
+          </tr>
+          <tr>
+            <td style={{ fontWeight: "bold", padding: 8 }}>Nama</td>
+            <td style={{ padding: 8 }}>{profile.nama || profile.name}</td>
+          </tr>
+          <tr>
+            <td style={{ fontWeight: "bold", padding: 8 }}>Operator</td>
+            <td style={{ padding: 8 }}>{profile.operator || profile.client_operator}</td>
+          </tr>
+          {/* Tambah field lain sesuai response API */}
+        </tbody>
+      </table>
+      <button
+        onClick={() => {
+          localStorage.removeItem("cicero_token");
+          localStorage.removeItem("client_id");
+          router.push("/login");
+        }}
+        style={{
+          marginTop: 32,
+          padding: "10px 32px",
+          background: "#ef4444",
+          color: "white",
+          border: "none",
+          borderRadius: 8,
+          cursor: "pointer",
+          fontWeight: "bold"
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }
