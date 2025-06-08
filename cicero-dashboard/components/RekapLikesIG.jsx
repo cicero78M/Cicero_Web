@@ -2,36 +2,35 @@
 import { useMemo, useState } from "react";
 
 export default function RekapLikesIG({ users = [] }) {
-  // Hitung status dengan exception
+  // Status: Sudah Like = jumlah_like > 0 ATAU exception === true
   const totalUser = users.length;
   const totalSudahLike = users.filter(u =>
     Number(u.jumlah_like) > 0 || u.exception === true
   ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
-  // Search
+  // Search/filter
   const [search, setSearch] = useState("");
-  const filtered = useMemo(() =>
-    users.filter(
-      u =>
-        (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
-        (u.username || "").toLowerCase().includes(search.toLowerCase())
-    ),
+  const filtered = useMemo(
+    () =>
+      users.filter(
+        u =>
+          (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
+          (u.username || "").toLowerCase().includes(search.toLowerCase())
+      ),
     [users, search]
   );
 
-  // Sort: Sudah Like duluan (termasuk exception)
+  // Sort: Sudah Like (termasuk exception) di atas
   const sorted = useMemo(
     () =>
       [...filtered].sort((a, b) => {
-        // Sudah Like/exception di atas
         const aSudah = Number(a.jumlah_like) > 0 || a.exception === true;
         const bSudah = Number(b.jumlah_like) > 0 || b.exception === true;
         if (aSudah === bSudah) {
-          // Jika sama, urutkan by jumlah_like
           return Number(b.jumlah_like) - Number(a.jumlah_like);
         }
-        return bSudah - aSudah; // yang sudah di atas
+        return bSudah - aSudah;
       }),
     [filtered]
   );
@@ -67,20 +66,13 @@ export default function RekapLikesIG({ users = [] }) {
               <th className="py-2 text-left">Username IG</th>
               <th className="py-2 text-center">Status</th>
               <th className="py-2 text-center">Jumlah Like</th>
-              <th className="py-2 text-center">Exception</th>
             </tr>
           </thead>
           <tbody>
             {sorted.map((u, i) => {
               const sudahLike = Number(u.jumlah_like) > 0 || u.exception === true;
               return (
-                <tr key={u.user_id}
-                  className={
-                    sudahLike
-                      ? "bg-green-50"
-                      : "bg-red-50"
-                  }
-                >
+                <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{i + 1}</td>
                   <td className="py-1 px-2">{u.nama}</td>
                   <td className="py-1 px-2">@{u.username}</td>
@@ -98,7 +90,6 @@ export default function RekapLikesIG({ users = [] }) {
                     )}
                   </td>
                   <td className="py-1 px-2 text-center font-bold">{u.jumlah_like}</td>
-                  <td className="py-1 px-2 text-center">{u.exception === true ? "✅" : ""}</td>
                 </tr>
               );
             })}
