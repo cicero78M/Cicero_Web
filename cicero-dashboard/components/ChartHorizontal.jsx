@@ -23,24 +23,28 @@ export default function ChartHorizontal({
   title = "POLSEK - Absensi Likes",
 }) {
   // Matrix 3 metrik per polsek
-  const divisiMap = {};
-  users.forEach(u => {
-    const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
-    const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    if (!divisiMap[key])
-      divisiMap[key] = {
-        divisi: key,
-        user_sudah: 0,
-        user_belum: 0,
-        total_like: 0,
-      };
-    if (sudahLike) {
-      divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_like += Number(u.jumlah_like || 0);
-    } else {
-      divisiMap[key].user_belum += 1;
-    }
-  });
+// Sebelumnya dapatkan totalIGPost dari stats/API
+const isZeroPost = (totalIGPost || 0) === 0;
+
+const divisiMap = {};
+users.forEach(u => {
+  const key = bersihkanSatfung(u.divisi || "LAINNYA");
+  // Jika IG POST 0, tidak ada yang sudahLike!
+  const sudahLike = !isZeroPost && (Number(u.jumlah_like) > 0 || isException(u.exception));
+  if (!divisiMap[key]) divisiMap[key] = {
+    divisi: key,
+    user_sudah: 0,
+    user_belum: 0,
+    total_like: 0,
+  };
+  if (sudahLike) {
+    divisiMap[key].user_sudah += 1;
+    divisiMap[key].total_like += Number(u.jumlah_like || 0);
+  } else {
+    divisiMap[key].user_belum += 1;
+  }
+});
+
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart proporsional
