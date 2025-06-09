@@ -20,7 +20,7 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartHorizontal({
   users,
-  title = "POLSEK - Absensi Likes",
+  title = "POLSEK - Absensi Likes",totalIGPost = 0
 }) {
   // Matrix 3 metrik per polsek
 // Sebelumnya dapatkan totalIGPost dari stats/API

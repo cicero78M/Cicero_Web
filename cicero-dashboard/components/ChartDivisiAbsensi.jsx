@@ -23,7 +23,7 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartDivisiAbsensi({
   users,
-  title = "Absensi Likes per Divisi/Satfung",   orientation = "vertical", // default vertical
+  title = "Absensi Likes per Divisi/Satfung",  totalIGPost = 0, orientation = "vertical", // default vertical
 
 }) {
   // Grouping by divisi (satfung), tanpa POLSEK
