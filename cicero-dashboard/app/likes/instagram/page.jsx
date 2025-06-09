@@ -56,8 +56,7 @@ export default function InstagramLikesTrackingPage() {
           (u) => Number(u.jumlah_like) > 0 || u.exception
         ).length;
         const totalBelumLike = totalUser - totalSudahLike;
-        const totalIGPost =
-          statsRes.data?.igPosts || statsRes.igPosts || 0;
+        const totalIGPost = statsRes.data?.igPosts || statsRes.igPosts || 0;
 
         setRekapSummary({
           totalUser,
@@ -99,39 +98,42 @@ export default function InstagramLikesTrackingPage() {
           </h1>
 
           {/* Card Ringkasan */}
-          <div className="bg-white rounded-xl shadow flex flex-col md:flex-row items-center justify-between p-4 md:p-6 gap-3">
-            <div className="flex-1">
-              <div className="text-gray-500 font-medium text-sm mb-1">
-                IG Post Hari Ini
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-blue-700">
-                {rekapSummary.totalIGPost}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="text-gray-500 font-medium text-sm mb-1">
-                Total User
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-blue-700">
-                {rekapSummary.totalUser}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="text-gray-500 font-medium text-sm mb-1">
-                Sudah Likes
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-green-600">
-                {rekapSummary.totalSudahLike}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="text-gray-500 font-medium text-sm mb-1">
-                Belum Likes
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-red-500">
-                {rekapSummary.totalBelumLike}
-              </div>
-            </div>
+          <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+            <SummaryItem
+              label="IG Post Hari Ini"
+              value={rekapSummary.totalIGPost}
+              color="blue"
+              icon={
+                <span className="inline-block text-blue-400 text-2xl">📸</span>
+              }
+            />
+            <Divider />
+            <SummaryItem
+              label="Total User"
+              value={rekapSummary.totalUser}
+              color="gray"
+              icon={
+                <span className="inline-block text-gray-400 text-2xl">👤</span>
+              }
+            />
+            <Divider />
+            <SummaryItem
+              label="Sudah Likes"
+              value={rekapSummary.totalSudahLike}
+              color="green"
+              icon={
+                <span className="inline-block text-green-500 text-2xl">👍</span>
+              }
+            />
+            <Divider />
+            <SummaryItem
+              label="Belum Likes"
+              value={rekapSummary.totalBelumLike}
+              color="red"
+              icon={
+                <span className="inline-block text-red-500 text-2xl">👎</span>
+              }
+            />
           </div>
 
           {/* Switch Periode */}
@@ -199,5 +201,30 @@ function ChartBox({ title, users }) {
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}
     </div>
+  );
+}
+
+function SummaryItem({ label, value, color = "gray", icon }) {
+  const colorMap = {
+    blue: "text-blue-700",
+    green: "text-green-600",
+    red: "text-red-500",
+    gray: "text-gray-700",
+  };
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center py-2">
+      <div className="mb-1">{icon}</div>
+      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>{value}</div>
+      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  // Vertical divider in desktop, horizontal in mobile
+  return (
+    <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>
   );
 }
