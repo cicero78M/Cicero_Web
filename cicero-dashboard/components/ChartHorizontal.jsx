@@ -21,12 +21,17 @@ function bersihkanSatfung(divisi = "") {
 export default function ChartHorizontal({
   users,
   title = "POLSEK - Absensi Likes",
+  totalIGPost = 1, // ← tambahkan prop ini, default 1 agar chart tetap jalan jika tidak dikirim
 }) {
+  // Jika IG POST 0, semua user masuk belum (termasuk exception)
+  const isZeroPost = (totalIGPost || 0) === 0;
+
   // Matrix 3 metrik per polsek
   const divisiMap = {};
   users.forEach(u => {
-    const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
+    // Logic: sudahLike hanya berlaku kalau IG Post > 0
+    const sudahLike = !isZeroPost && (Number(u.jumlah_like) > 0 || isException(u.exception));
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
@@ -47,51 +52,47 @@ export default function ChartHorizontal({
   const barHeight = 24;
   const chartHeight = Math.max(50, barHeight * dataChart.length);
 
-  // Fungsi potong label
-  function trimLabel(label, len = 18) {
-    return label.length > len ? label.slice(0, len) + "…" : label;
-  }
-
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
       <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
       <div className="w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
-  <BarChart
-    data={dataChart}
-    layout="vertical"
-    margin={{ top: 8, right: 30, left: 120, bottom: 12 }} // left besar!
-    barCategoryGap="18%"
-  >
-    <CartesianGrid strokeDasharray="3 3" />
-    <XAxis type="number" fontSize={12} />
-    <YAxis
-      dataKey="divisi"
-      type="category"
-      width={80}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
-      interval={0}
-      tick={({ x, y, payload }) => (
-        <>
-          <title>{payload.value}</title>
-          <text
-            x={x - 120}
-            y={y + 10}
-            fontSize={12}
-            fill="#444"
-            style={{ fontWeight: 500 }}
+          <BarChart
+            data={dataChart}
+            layout="vertical"
+            margin={{ top: 8, right: 30, left: 180, bottom: 12 }} // left besar!
+            barCategoryGap="18%"
           >
-            {payload.value}
-          </text>
-        </>
-      )}
-    />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" fontSize={12} />
+            <YAxis
+              dataKey="divisi"
+              type="category"
+              width={180}    // cukup besar untuk label panjang
+              interval={0}
+              tick={({ x, y, payload }) => (
+                <>
+                  <title>{payload.value}</title>
+                  <text
+                    x={x - 8} // mundur sedikit agar makin lepas dari bar
+                    y={y + 10}
+                    fontSize={13}
+                    fill="#444"
+                    style={{ fontWeight: 500 }}
+                    textAnchor="start"
+                  >
+                    {payload.value}
+                  </text>
+                </>
+              )}
+            />
             <Tooltip
               formatter={(value, name) =>
                 [
                   value,
                   name === "user_sudah" ? "User Sudah Like"
-                    : name === "user_belum" ? "User Belum Like"
-                    : name === "total_like" ? "Total Likes" : name,
+                  : name === "user_belum" ? "User Belum Like"
+                  : name === "total_like" ? "Total Likes" : name,
                 ]
               }
               labelFormatter={label => `Divisi: ${label}`}

@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
-import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path sudah benar
-import Link from "next/link"; // pastikan di import atas
 import ChartHorizontal from "@/components/ChartHorizontal";
+import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
+import Link from "next/link";
 
 export default function InstagramLikesTrackingPage() {
   const [stats, setStats] = useState(null);
@@ -53,11 +53,14 @@ export default function InstagramLikesTrackingPage() {
 
         // Rekap summary
         const totalUser = users.length;
-        const totalSudahLike = users.filter(
-          (u) => Number(u.jumlah_like) > 0 || u.exception
-        ).length;
-        const totalBelumLike = totalUser - totalSudahLike;
         const totalIGPost = statsRes.data?.igPosts || statsRes.igPosts || 0;
+        const isZeroPost = (totalIGPost || 0) === 0;
+        const totalSudahLike = isZeroPost
+          ? 0
+          : users.filter(
+              (u) => Number(u.jumlah_like) > 0 || u.exception
+            ).length;
+        const totalBelumLike = totalUser - totalSudahLike;
 
         setRekapSummary({
           totalUser,
@@ -177,11 +180,26 @@ export default function InstagramLikesTrackingPage() {
 
           {/* Chart per kelompok */}
           <div className="flex flex-col gap-6">
-            <ChartBox title="BAG" users={kelompok.BAG} />
-            <ChartBox title="SAT" users={kelompok.SAT} />
-            <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
-<ChartHorizontal title="POLSEK" users={kelompok.POLSEK} />
-
+            <ChartBox
+              title="BAG"
+              users={kelompok.BAG}
+              totalIGPost={rekapSummary.totalIGPost}
+            />
+            <ChartBox
+              title="SAT"
+              users={kelompok.SAT}
+              totalIGPost={rekapSummary.totalIGPost}
+            />
+            <ChartBox
+              title="SI & SPKT"
+              users={kelompok["SI & SPKT"]}
+              totalIGPost={rekapSummary.totalIGPost}
+            />
+            <ChartHorizontal
+              title="POLSEK"
+              users={kelompok.POLSEK}
+              totalIGPost={rekapSummary.totalIGPost}
+            />
           </div>
 
           <div className="flex justify-end my-2">
@@ -213,7 +231,7 @@ export default function InstagramLikesTrackingPage() {
 }
 
 // Komponen ChartBox di file yang sama
-function ChartBox({ title, users, orientation = "vertical" }) {
+function ChartBox({ title, users, orientation = "vertical", totalIGPost }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
@@ -222,6 +240,7 @@ function ChartBox({ title, users, orientation = "vertical" }) {
           users={users}
           title={title}
           orientation={orientation}
+          totalIGPost={totalIGPost}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
