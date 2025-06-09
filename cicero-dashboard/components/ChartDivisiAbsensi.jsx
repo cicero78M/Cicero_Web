@@ -33,7 +33,15 @@ export default function ChartDivisiAbsensi({ users, title = "Absensi Likes per D
   });
   const dataChart = Object.values(divisiMap);
 
-  const chartHeight = Math.max(340, 38 * dataChart.length);
+// Di ChartDivisiAbsensi
+const minHeight = 260; // lebih kecil jika chart sedikit
+const maxHeight = 420; // batasi maksimum, agar tetap muat di 1 layar
+const barHeight = 34;  // tinggi per bar/divisi, makin kecil = makin padat
+
+const chartHeight = Math.min(
+  maxHeight,
+  Math.max(minHeight, barHeight * dataChart.length)
+);
 
  return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
