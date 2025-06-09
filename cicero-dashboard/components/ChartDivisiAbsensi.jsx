@@ -21,7 +21,7 @@ function bersihkanSatfung(divisi = "") {
   return divisi.replace(/polsek\s*/i, "").trim();
 }
 
-export function ChartDivisiAbsensi({ users }) {
+export default function ChartDivisiAbsensi({ users }) {
   // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
   users.forEach(u => {
