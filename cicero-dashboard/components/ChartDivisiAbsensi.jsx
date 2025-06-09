@@ -45,8 +45,7 @@ const chartHeight = Math.min(
 
  return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
-      <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
-      <div className="w-full px-2 pb-4">
+\      <div className="w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
