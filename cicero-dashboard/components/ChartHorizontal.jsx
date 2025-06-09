@@ -43,11 +43,11 @@ export default function ChartHorizontal({
   });
   const dataChart = Object.values(divisiMap);
 
-  // Tinggi chart selalu proporsional
-  const barHeight = 22; // cukup padat, bisa dinaikkan/dikurangi
+  // Tinggi chart proporsional
+  const barHeight = 22;
   const chartHeight = Math.max(60, barHeight * dataChart.length);
 
-  // Fungsi potong label jika panjang
+  // Fungsi potong label
   function trimLabel(label, len = 18) {
     return label.length > len ? label.slice(0, len) + "…" : label;
   }
@@ -60,7 +60,7 @@ export default function ChartHorizontal({
           <BarChart
             data={dataChart}
             layout="vertical"
-            margin={{ top: 8, right: 30, left: 16, bottom: 12 }}
+            margin={{ top: 8, right: 30, left: 150, bottom: 12 }} // left besar!
             barCategoryGap="12%"
           >
             <CartesianGrid strokeDasharray="3 3" />
@@ -68,8 +68,8 @@ export default function ChartHorizontal({
             <YAxis
               dataKey="divisi"
               type="category"
-              width={140}
-              interval={0} // <-- SEMUA LABEL DITAMPILKAN
+              width={140} // cukup besar, agar label panjang tidak kepotong
+              interval={0}
               tick={({ x, y, payload }) => (
                 <>
                   <title>{payload.value}</title>
@@ -90,8 +90,8 @@ export default function ChartHorizontal({
                 [
                   value,
                   name === "user_sudah" ? "User Sudah Like"
-                  : name === "user_belum" ? "User Belum Like"
-                  : name === "total_like" ? "Total Likes" : name,
+                    : name === "user_belum" ? "User Belum Like"
+                    : name === "total_like" ? "Total Likes" : name,
                 ]
               }
               labelFormatter={label => `Divisi: ${label}`}
