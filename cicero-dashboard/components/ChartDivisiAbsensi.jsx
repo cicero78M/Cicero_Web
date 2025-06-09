@@ -76,16 +76,3 @@ export function ChartDivisiAbsensi({ users }) {
     </div>
   );
 }
-
-export function ChartBox({ title, users }) {
-  return (
-    <div className="bg-white rounded-xl shadow p-4">
-      <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
-      {users && users.length > 0 ? (
-        <ChartDivisiAbsensi users={users} />
-      ) : (
-        <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
-      )}
-    </div>
-  );
-}

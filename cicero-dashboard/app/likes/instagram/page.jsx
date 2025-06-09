@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
-import ChartBox from "@/components/ChartDivisiAbsensi";
+import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path sudah benar
 
 export default function InstagramLikesTrackingPage() {
@@ -184,6 +184,20 @@ export default function InstagramLikesTrackingPage() {
           <RekapLikesIG users={chartData} />
         </div>
       </div>
+    </div>
+  );
+}
+
+// Komponen ChartBox di file yang sama
+function ChartBox({ title, users }) {
+  return (
+    <div className="bg-white rounded-xl shadow p-4">
+      <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
+      {users && users.length > 0 ? (
+        <ChartDivisiAbsensi users={users} />
+      ) : (
+        <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
+      )}
     </div>
   );
 }
