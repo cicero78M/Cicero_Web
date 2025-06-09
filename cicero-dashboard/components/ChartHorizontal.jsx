@@ -68,13 +68,13 @@ export default function ChartHorizontal({
     <YAxis
       dataKey="divisi"
       type="category"
-      width={180}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
+      width={100}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
       interval={0}
       tick={({ x, y, payload }) => (
         <>
           <title>{payload.value}</title>
           <text
-            x={x - 12}
+            x={x - 200}
             y={y + 10}
             fontSize={12}
             fill="#444"
