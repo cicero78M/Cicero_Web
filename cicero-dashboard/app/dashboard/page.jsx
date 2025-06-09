@@ -37,8 +37,8 @@ export default function DashboardPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center text-red-500 font-bold">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-2">
+        <div className="bg-white rounded-lg shadow-md p-4 text-center text-red-500 font-bold">
           {error}
         </div>
       </div>
@@ -46,24 +46,24 @@ export default function DashboardPage() {
 
   if (!clientProfile)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-600 font-bold">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-2">
+        <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-600 font-bold">
           Data profil client tidak tersedia.
         </div>
       </div>
     );
 
-  // Helper: bikin link Instagram dan TikTok
   const igUsername = clientProfile.client_insta?.replace(/^@/, "");
   const tiktokUsername = clientProfile.client_tiktok?.replace(/^@/, "");
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="p-4 md:p-8 max-w-2xl mx-auto w-full">
-        <div className="bg-white rounded-2xl shadow-lg p-10">
-          <div className="text-3xl font-bold text-blue-700 mb-6 text-center">Profil Client</div>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="w-full max-w-xl px-2 md:px-8">
+        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+          <div className="text-2xl md:text-3xl font-bold text-blue-700 mb-4 md:mb-6 text-center">
+            Profil Client
+          </div>
           <div className="divide-y">
-            {/* Isi profil */}
             <Row label="Client ID" value={<span className="font-mono">{clientProfile.client_id}</span>} />
             <Row label="Nama" value={clientProfile.nama} />
             <Row label="Tipe" value={clientProfile.client_type} />
@@ -127,7 +127,6 @@ export default function DashboardPage() {
                 )
               }
             />
-            <Row label="Administrator" value={clientProfile.client_super || "-"} />
             <Row label="Operator" value={clientProfile.client_operator || "-"} />
             <Row label="Group" value={clientProfile.client_group || "-"} />
           </div>
@@ -140,8 +139,8 @@ export default function DashboardPage() {
 // Komponen Row untuk align ":" dan style rata
 function Row({ label, value, status }) {
   return (
-    <div className="flex items-center py-3 gap-3">
-      <div className="w-36 text-gray-500 font-medium flex-shrink-0 text-right">{label}</div>
+    <div className="flex items-center py-2 md:py-3 gap-2 md:gap-3">
+      <div className="w-28 md:w-36 text-gray-500 font-medium flex-shrink-0 text-right">{label}</div>
       <div className="text-gray-400 select-none">:</div>
       <div className="flex-1 text-gray-900 flex items-center gap-2">{value}{status && status}</div>
     </div>
