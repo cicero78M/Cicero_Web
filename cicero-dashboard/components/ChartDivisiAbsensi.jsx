@@ -33,6 +33,8 @@ export default function ChartDivisiAbsensi({ users, title = "Absensi Likes per D
   });
   const dataChart = Object.values(divisiMap);
 
+  const chartHeight = Math.max(340, 38 * dataChart.length);
+
  return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
       <h3 className="font-bold text-lg mb-4 px-6 pt-6">Absensi Likes per Divisi/Satfung</h3>
