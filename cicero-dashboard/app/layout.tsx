@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import { usePathname } from "next/navigation";
+import SidebarWrapper from "@/components/SidebarWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,34 +23,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Trick: Next.js App Router tidak support hooks langsung di layout,
-  // jadi gunakan window.location.pathname manual, atau gunakan wrapper Client Component jika mau lebih advanced.
-  // Untuk solusi simple tanpa hooks:
-  const isLogin =
-    typeof window !== "undefined"
-      ? window.location.pathname === "/login"
-      : false;
-
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Sidebar hanya muncul selain di /login */}
         <div className="flex min-h-screen bg-gray-100">
-          {/* Workaround: Render sidebar manual jika bukan login */}
-          {/* Untuk SSR, sidebar akan selalu tampil, jadi jika ingin lebih dinamis pakai Client Component */}
-          <SidebarWrapper>
-            <Sidebar />
-          </SidebarWrapper>
+          <SidebarWrapper />
           <main className="flex-1 min-h-screen p-4 md:p-8">{children}</main>
         </div>
       </body>
     </html>
   );
-}
-
-function SidebarWrapper({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  // Sembunyikan sidebar di halaman /login
-  if (pathname === "/login") return null;
-  return <>{children}</>;
 }
