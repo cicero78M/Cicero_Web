@@ -127,6 +127,7 @@ export default function DashboardPage() {
                 )
               }
             />
+            <Row label="Administrator" value={clientProfile.client_super || "-"} />
             <Row label="Operator" value={clientProfile.client_operator || "-"} />
             <Row label="Group" value={clientProfile.client_group || "-"} />
           </div>
