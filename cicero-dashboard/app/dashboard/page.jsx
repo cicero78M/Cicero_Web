@@ -53,55 +53,97 @@ export default function DashboardPage() {
       </div>
     );
 
+  // Helper: bikin link Instagram dan TikTok
+  const igUsername = clientProfile.client_insta?.replace(/^@/, "");
+  const tiktokUsername = clientProfile.client_tiktok?.replace(/^@/, "");
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="p-4 md:p-8 max-w-2xl mx-auto w-full">
-        <div className="bg-white rounded-xl shadow p-8">
-          <div className="text-2xl font-bold text-blue-700 mb-4">Profil Client</div>
-          <div className="flex flex-col gap-2">
-            <div>
-              <span className="text-gray-500 font-medium">Client ID:</span>
-              <span className="ml-2 text-gray-900 font-mono">{clientProfile.client_id}</span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">Nama:</span>
-              <span className="ml-2">{clientProfile.nama}</span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">Tipe:</span>
-              <span className="ml-2">{clientProfile.client_type}</span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">Status:</span>
-              <span className={`ml-2 font-semibold ${clientProfile.client_status ? "text-green-600" : "text-red-600"}`}>
-                {clientProfile.client_status ? "Aktif" : "Tidak Aktif"}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">Instagram:</span>
-              <span className="ml-2">{clientProfile.client_insta || "-"}</span>
-              <span className={`ml-2 text-xs ${clientProfile.client_insta_status ? "text-green-600" : "text-red-600"}`}>
-                ({clientProfile.client_insta_status ? "Aktif" : "Tidak Aktif"})
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">TikTok:</span>
-              <span className="ml-2">{clientProfile.client_tiktok || "-"}</span>
-              <span className={`ml-2 text-xs ${clientProfile.client_tiktok_status ? "text-green-600" : "text-red-600"}`}>
-                ({clientProfile.client_tiktok_status ? "Aktif" : "Tidak Aktif"})
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">Operator:</span>
-              <span className="ml-2">{clientProfile.client_operator || "-"}</span>
-            </div>
-            <div>
-              <span className="text-gray-500 font-medium">Group:</span>
-              <span className="ml-2">{clientProfile.client_group || "-"}</span>
-            </div>
+        <div className="bg-white rounded-2xl shadow-lg p-10">
+          <div className="text-3xl font-bold text-blue-700 mb-6 text-center">Profil Client</div>
+          <div className="divide-y">
+            {/* Isi profil */}
+            <Row label="Client ID" value={<span className="font-mono">{clientProfile.client_id}</span>} />
+            <Row label="Nama" value={clientProfile.nama} />
+            <Row label="Tipe" value={clientProfile.client_type} />
+            <Row
+              label="Status"
+              value={
+                <span className={`font-semibold ${clientProfile.client_status ? "text-green-600" : "text-red-600"}`}>
+                  {clientProfile.client_status ? "Aktif" : "Tidak Aktif"}
+                </span>
+              }
+            />
+            <Row
+              label="Instagram"
+              value={
+                igUsername ? (
+                  <a
+                    href={`https://instagram.com/${igUsername}`}
+                    className="text-blue-700 underline font-semibold hover:text-blue-900 transition"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {clientProfile.client_insta}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              status={
+                clientProfile.client_insta_status !== undefined && (
+                  <span
+                    className={`ml-2 text-xs ${clientProfile.client_insta_status ? "text-green-600" : "text-red-600"}`}
+                  >
+                    ({clientProfile.client_insta_status ? "Aktif" : "Tidak Aktif"})
+                  </span>
+                )
+              }
+            />
+            <Row
+              label="TikTok"
+              value={
+                tiktokUsername ? (
+                  <a
+                    href={`https://www.tiktok.com/@${tiktokUsername}`}
+                    className="text-blue-700 underline font-semibold hover:text-blue-900 transition"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {clientProfile.client_tiktok}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              status={
+                clientProfile.client_tiktok_status !== undefined && (
+                  <span
+                    className={`ml-2 text-xs ${clientProfile.client_tiktok_status ? "text-green-600" : "text-red-600"}`}
+                  >
+                    ({clientProfile.client_tiktok_status ? "Aktif" : "Tidak Aktif"})
+                  </span>
+                )
+              }
+            />
+            <Row label="Administrator" value={clientProfile.client_super || "-"} />
+            <Row label="Operator" value={clientProfile.client_operator || "-"} />
+            <Row label="Group" value={clientProfile.client_group || "-"} />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Komponen Row untuk align ":" dan style rata
+function Row({ label, value, status }) {
+  return (
+    <div className="flex items-center py-3 gap-3">
+      <div className="w-36 text-gray-500 font-medium flex-shrink-0 text-right">{label}</div>
+      <div className="text-gray-400 select-none">:</div>
+      <div className="flex-1 text-gray-900 flex items-center gap-2">{value}{status && status}</div>
     </div>
   );
 }
