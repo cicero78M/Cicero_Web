@@ -21,31 +21,43 @@ function bersihkanSatfung(divisi = "") {
   return divisi.replace(/polsek\s*/i, "").trim();
 }
 
-export default function ChartDivisiAbsensi({ users, title = "Absensi Likes per Divisi/Satfung" }) {
+export default function ChartDivisiAbsensi({
+  users,
+  title = "Absensi Likes per Divisi/Satfung",
+}) {
   // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
-  users.forEach(u => {
+  users.forEach((u) => {
     const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    if (!divisiMap[key]) divisiMap[key] = { divisi: key, sudah: 0, belum: 0 };
-    if (sudahLike) divisiMap[key].sudah += 1;
-    else divisiMap[key].belum += 1;
+    if (!divisiMap[key])
+      divisiMap[key] = {
+        divisi: key,
+        user_sudah: 0,
+        user_belum: 0,
+        total_like: 0,
+      };
+    if (sudahLike) {
+      divisiMap[key].user_sudah += 1;
+      divisiMap[key].total_like += Number(u.jumlah_like || 0);
+    } else divisiMap[key].user_belum += 1;
   });
+
   const dataChart = Object.values(divisiMap);
 
-// Di ChartDivisiAbsensi
-const minHeight = 260; // lebih kecil jika chart sedikit
-const maxHeight = 420; // batasi maksimum, agar tetap muat di 1 layar
-const barHeight = 34;  // tinggi per bar/divisi, makin kecil = makin padat
+  // Di ChartDivisiAbsensi
+  const minHeight = 260; // lebih kecil jika chart sedikit
+  const maxHeight = 420; // batasi maksimum, agar tetap muat di 1 layar
+  const barHeight = 34; // tinggi per bar/divisi, makin kecil = makin padat
 
-const chartHeight = Math.min(
-  maxHeight,
-  Math.max(minHeight, barHeight * dataChart.length)
-);
+  const chartHeight = Math.min(
+    maxHeight,
+    Math.max(minHeight, barHeight * dataChart.length)
+  );
 
- return (
+  return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
-\      <div className="w-full px-2 pb-4">
+      <div className="w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
@@ -53,20 +65,38 @@ const chartHeight = Math.min(
             barCategoryGap="20%"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
+            <XAxis
+              dataKey="divisi"
+              type="category"
+              angle={-30}
+              textAnchor="end"
+              interval={0}
+              height={70}
+            />
             <YAxis type="number" />
             <Tooltip
-              formatter={(value, name) =>
-                [value, name === "sudah" ? "Sudah Like" : "Belum Like"]
-              }
-              labelFormatter={label => `Divisi: ${label}`}
+              formatter={(value, name) => [
+                value,
+                name === "user_sudah"
+                  ? "User Sudah Like"
+                  : name === "user_belum"
+                  ? "User Belum Like"
+                  : name === "total_like"
+                  ? "Total Likes"
+                  : name,
+              ]}
+              labelFormatter={(label) => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="sudah" fill="#22c55e" name="Sudah Like" isAnimationActive>
-              <LabelList dataKey="sudah" position="top" />
+
+            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like">
+              <LabelList dataKey="user_sudah" position="top" />
             </Bar>
-            <Bar dataKey="belum" fill="#ef4444" name="Belum Like" isAnimationActive>
-              <LabelList dataKey="belum" position="top" />
+            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes">
+              <LabelList dataKey="total_like" position="top" />
+            </Bar>
+            <Bar dataKey="user_belum" fill="#ef4444" name="Belum Like">
+              <LabelList dataKey="user_belum" position="top" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
