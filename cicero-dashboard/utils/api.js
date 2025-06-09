@@ -30,9 +30,10 @@ export async function getRekapLikesIG(token, client_id, periode = "harian") {
 
 // Ambil profile client berdasarkan token dan client_id
 export async function getClientProfile(token, client_id) {
-  console.log(client_id);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const res = await fetch(`${apiUrl}/api/clients/profile?client_id=${client_id}`, {
+  const params = new URLSearchParams({ client_id });
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/api/clients/profile?${params.toString()}`;
+
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
