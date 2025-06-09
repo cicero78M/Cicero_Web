@@ -35,14 +35,9 @@ export default function CharHorizontal({ users, title = "Absensi Likes POLSEK" }
   const dataChart = Object.values(divisiMap);
 
   // Atur tinggi chart supaya selalu padat & proporsional
-  const barHeight = 18;
-  const minHeight = 220;
-  const maxHeight = 420;
-  const chartHeight = Math.min(
-    maxHeight,
-    Math.max(minHeight, barHeight * dataChart.length)
-  );
-  const needsScroll = dataChart.length > 18;
+
+  const barHeight = 18; // bisa disesuaikan
+  const chartHeight = Math.max(40, barHeight * dataChart.length);
 
   function trimLabel(label, len = 14) {
     return label.length > len ? label.slice(0, len) + "…" : label;
