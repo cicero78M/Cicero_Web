@@ -36,28 +36,16 @@ export default function ChartDivisiAbsensi({ users }) {
   return (
     <div className="bg-white rounded-xl shadow p-6 mt-8">
       <h3 className="font-bold text-lg mb-4">Absensi Likes per Divisi/Satfung</h3>
-      <ResponsiveContainer width="100%" height={Math.max(300, dataChart.length * 38)}>
+      <ResponsiveContainer width="100%" height={340}>
         <BarChart
           data={dataChart}
-          layout="vertical"
-          margin={{ top: 16, right: 40, left: 0, bottom: 16 }}
+          // layout="horizontal" // default, VERTICAL!
+          margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
           barCategoryGap="20%"
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            type="number"
-            allowDecimals={false}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            dataKey="divisi"
-            type="category"
-            width={200} // Lebar agar nama divisi panjang muat
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 15, fontWeight: 700, fill: "#222" }}
-          />
+          <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
+          <YAxis type="number" />
           <Tooltip
             formatter={(value, name) =>
               [value, name === "sudah" ? "Sudah Like" : "Belum Like"]
@@ -66,10 +54,10 @@ export default function ChartDivisiAbsensi({ users }) {
           />
           <Legend />
           <Bar dataKey="sudah" fill="#22c55e" name="Sudah Like" isAnimationActive>
-            <LabelList dataKey="sudah" position="right" />
+            <LabelList dataKey="sudah" position="top" />
           </Bar>
           <Bar dataKey="belum" fill="#ef4444" name="Belum Like" isAnimationActive>
-            <LabelList dataKey="belum" position="right" />
+            <LabelList dataKey="belum" position="top" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
