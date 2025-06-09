@@ -76,3 +76,4 @@ export default function ChartDivisiAbsensi({ users }) {
     </div>
   );
 }
+

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
-import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
@@ -12,6 +11,14 @@ export default function InstagramLikesTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian"); // "harian" | "bulanan"
+
+  // Untuk rekap likes summary (total user, sudah likes, belum likes)
+  const [rekapSummary, setRekapSummary] = useState({
+    totalUser: 0,
+    totalSudahLike: 0,
+    totalBelumLike: 0,
+    totalIGPost: 0,
+  });
 
   useEffect(() => {
     const token =
@@ -40,7 +47,24 @@ export default function InstagramLikesTrackingPage() {
         }
 
         const rekapRes = await getRekapLikesIG(token, client_id, periode);
-        setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
+        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+
+        // Rekap summary
+        const totalUser = users.length;
+        const totalSudahLike = users.filter(
+          (u) => Number(u.jumlah_like) > 0 || u.exception
+        ).length;
+        const totalBelumLike = totalUser - totalSudahLike;
+        const totalIGPost =
+          statsRes.data?.igPosts || statsRes.igPosts || 0;
+
+        setRekapSummary({
+          totalUser,
+          totalSudahLike,
+          totalBelumLike,
+          totalIGPost,
+        });
+        setChartData(users);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -65,25 +89,65 @@ export default function InstagramLikesTrackingPage() {
     <div className="min-h-screen bg-gray-100">
       <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
         <div className="flex flex-col gap-8">
-          {/* Judul baru */}
+          {/* Header */}
           <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
             Instagram Likes Tracking
           </h1>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <CardStat title="Klien" value={stats?.clients || 0} />
-            <CardStat title="User" value={stats?.users || 0} />
-            <CardStat title="IG Post Hari Ini" value={stats?.igPosts || 0} />
-            <CardStat title="TikTok Post Hari Ini" value={stats?.ttPosts || 0} />
+          {/* Card Ringkasan */}
+          <div className="bg-white rounded-xl shadow flex flex-col md:flex-row items-center justify-between p-4 md:p-6 gap-3">
+            <div className="flex-1">
+              <div className="text-gray-500 font-medium text-sm mb-1">
+                IG Post Hari Ini
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-blue-700">
+                {rekapSummary.totalIGPost}
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="text-gray-500 font-medium text-sm mb-1">
+                Total User
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-blue-700">
+                {rekapSummary.totalUser}
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="text-gray-500 font-medium text-sm mb-1">
+                Sudah Likes
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-green-600">
+                {rekapSummary.totalSudahLike}
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="text-gray-500 font-medium text-sm mb-1">
+                Belum Likes
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-red-500">
+                {rekapSummary.totalBelumLike}
+              </div>
+            </div>
           </div>
+
           {/* Switch Periode */}
           <div className="flex items-center justify-end gap-3 mb-2">
-            <span className={periode === "harian" ? "font-semibold text-blue-700" : "text-gray-400"}>Hari Ini</span>
+            <span
+              className={
+                periode === "harian"
+                  ? "font-semibold text-blue-700"
+                  : "text-gray-400"
+              }
+            >
+              Hari Ini
+            </span>
             <button
               className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
                 periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
               }`}
-              onClick={() => setPeriode(periode === "harian" ? "bulanan" : "harian")}
+              onClick={() =>
+                setPeriode(periode === "harian" ? "bulanan" : "harian")
+              }
               aria-label="Switch periode"
               type="button"
             >
@@ -93,9 +157,21 @@ export default function InstagramLikesTrackingPage() {
                 }`}
               />
             </button>
-            <span className={periode === "bulanan" ? "font-semibold text-blue-700" : "text-gray-400"}>Bulan Ini</span>
+            <span
+              className={
+                periode === "bulanan"
+                  ? "font-semibold text-blue-700"
+                  : "text-gray-400"
+              }
+            >
+              Bulan Ini
+            </span>
           </div>
+
+          {/* Chart */}
           <ChartDivisiAbsensi users={chartData} />
+
+          {/* Tabel Rekap */}
           <RekapLikesIG users={chartData} />
         </div>
       </div>
