@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   LabelList,
+  Legend,
 } from "recharts";
 
 function isException(val) {
@@ -19,29 +20,35 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartHorizontal({
   users,
-  title = "POLSEK - Total Likes User",
+  title = "POLSEK - Absensi Likes",
 }) {
-  // Hanya metrik total_like untuk tiap polsek
+  // Matrix 3 metrik per polsek
   const divisiMap = {};
   users.forEach(u => {
     const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    if (!divisiMap[key]) divisiMap[key] = {
-      divisi: key,
-      total_like: 0
-    };
+    if (!divisiMap[key])
+      divisiMap[key] = {
+        divisi: key,
+        user_sudah: 0,
+        user_belum: 0,
+        total_like: 0,
+      };
     if (sudahLike) {
+      divisiMap[key].user_sudah += 1;
       divisiMap[key].total_like += Number(u.jumlah_like || 0);
+    } else {
+      divisiMap[key].user_belum += 1;
     }
   });
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart selalu proporsional
-  const barHeight = 18; // bisa disesuaikan
-  const chartHeight = Math.max(40, barHeight * dataChart.length);
+  const barHeight = 22; // cukup padat, bisa dinaikkan/dikurangi
+  const chartHeight = Math.max(60, barHeight * dataChart.length);
 
-  // Fungsi potong label
-  function trimLabel(label, len = 14) {
+  // Fungsi potong label jika panjang
+  function trimLabel(label, len = 18) {
     return label.length > len ? label.slice(0, len) + "…" : label;
   }
 
@@ -53,22 +60,23 @@ export default function ChartHorizontal({
           <BarChart
             data={dataChart}
             layout="vertical"
-            margin={{ top: 8, right: 20, left: 12, bottom: 12 }}
-            barCategoryGap="10%"
+            margin={{ top: 8, right: 30, left: 16, bottom: 12 }}
+            barCategoryGap="12%"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" fontSize={11} />
+            <XAxis type="number" fontSize={12} />
             <YAxis
               dataKey="divisi"
               type="category"
-              width={110}
+              width={140}
+              interval={0} // <-- SEMUA LABEL DITAMPILKAN
               tick={({ x, y, payload }) => (
                 <>
                   <title>{payload.value}</title>
                   <text
                     x={x}
-                    y={y + 7}
-                    fontSize={11}
+                    y={y + 10}
+                    fontSize={12}
                     fill="#444"
                     style={{ fontWeight: 500 }}
                   >
@@ -78,17 +86,25 @@ export default function ChartHorizontal({
               )}
             />
             <Tooltip
-              formatter={(value) => [value, "Total Likes"]}
+              formatter={(value, name) =>
+                [
+                  value,
+                  name === "user_sudah" ? "User Sudah Like"
+                  : name === "user_belum" ? "User Belum Like"
+                  : name === "total_like" ? "Total Likes" : name,
+                ]
+              }
               labelFormatter={label => `Divisi: ${label}`}
             />
-            <Bar
-              dataKey="total_like"
-              fill="#2563eb"
-              name="Total Likes"
-              isAnimationActive
-              barSize={12}
-            >
-              <LabelList dataKey="total_like" position="right" fontSize={11} fill="#2563eb" fontWeight={700} />
+            <Legend />
+            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like" barSize={14}>
+              <LabelList dataKey="user_sudah" position="right" fontSize={12} />
+            </Bar>
+            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes" barSize={14}>
+              <LabelList dataKey="total_like" position="right" fontSize={12} />
+            </Bar>
+            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like" barSize={14}>
+              <LabelList dataKey="user_belum" position="right" fontSize={12} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
