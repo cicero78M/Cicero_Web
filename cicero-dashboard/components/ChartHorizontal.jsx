@@ -74,7 +74,7 @@ export default function ChartHorizontal({
                 <>
                   <title>{payload.value}</title>
                   <text
-                    x={x - 8} // mundur sedikit agar makin lepas dari bar
+                    x={x - 100} // mundur sedikit agar makin lepas dari bar
                     y={y + 10}
                     fontSize={13}
                     fill="#444"
