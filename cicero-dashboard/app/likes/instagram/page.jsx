@@ -53,11 +53,10 @@ export default function InstagramLikesTrackingPage() {
 
         // Rekap summary
         const totalUser = users.length;
-const totalSudahLike = isZeroPost
-  ? 0
-  : users.filter(u => Number(u.jumlah_like) > 0 || isException(u.exception)).length;
-const totalBelumLike = totalUser - totalSudahLike;
-
+        const totalSudahLike = users.filter(
+          (u) => Number(u.jumlah_like) > 0 || u.exception
+        ).length;
+        const totalBelumLike = totalUser - totalSudahLike;
         const totalIGPost = statsRes.data?.igPosts || statsRes.igPosts || 0;
 
         setRekapSummary({
