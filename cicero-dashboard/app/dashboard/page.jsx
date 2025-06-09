@@ -61,7 +61,7 @@ export default function DashboardPage() {
       <div className="w-full max-w-xl px-2 md:px-8">
         <div className="bg-white rounded-2xl shadow-lg p-4 md:p-8">
           <div className="text-2xl md:text-3xl font-bold text-blue-700 mb-4 md:mb-6 text-center">
-            Profil Client
+            Client Profile
           </div>
           <div className="divide-y">
             <Row label="Client ID" value={<span className="font-mono">{clientProfile.client_id}</span>} />
