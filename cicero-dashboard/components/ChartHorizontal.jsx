@@ -57,34 +57,34 @@ export default function ChartHorizontal({
       <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
       <div className="w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart
-            data={dataChart}
-            layout="vertical"
-            margin={{ top: 8, right: 30, left: 150, bottom: 12 }} // left besar!
-            barCategoryGap="12%"
+  <BarChart
+    data={dataChart}
+    layout="vertical"
+    margin={{ top: 8, right: 30, left: 180, bottom: 12 }} // left besar!
+    barCategoryGap="12%"
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis type="number" fontSize={12} />
+    <YAxis
+      dataKey="divisi"
+      type="category"
+      width={220}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
+      interval={0}
+      tick={({ x, y, payload }) => (
+        <>
+          <title>{payload.value}</title>
+          <text
+            x={x}
+            y={y + 10}
+            fontSize={12}
+            fill="#444"
+            style={{ fontWeight: 500 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" fontSize={12} />
-            <YAxis
-              dataKey="divisi"
-              type="category"
-              width={140} // cukup besar, agar label panjang tidak kepotong
-              interval={0}
-              tick={({ x, y, payload }) => (
-                <>
-                  <title>{payload.value}</title>
-                  <text
-                    x={x}
-                    y={y + 10}
-                    fontSize={12}
-                    fill="#444"
-                    style={{ fontWeight: 500 }}
-                  >
-                    {trimLabel(payload.value)}
-                  </text>
-                </>
-              )}
-            />
+            {payload.value}
+          </text>
+        </>
+      )}
+    />
             <Tooltip
               formatter={(value, name) =>
                 [
