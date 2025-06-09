@@ -68,7 +68,7 @@ export default function ChartHorizontal({
     <YAxis
       dataKey="divisi"
       type="category"
-      width={220}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
+      width={180}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
       interval={0}
       tick={({ x, y, payload }) => (
         <>
