@@ -5,6 +5,7 @@ import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path sudah benar
 import Link from "next/link"; // pastikan di import atas
+import ChartHorizontal from "@/components/ChartHorizontal";
 
 export default function InstagramLikesTrackingPage() {
   const [stats, setStats] = useState(null);
@@ -179,11 +180,8 @@ export default function InstagramLikesTrackingPage() {
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />
             <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
-            <ChartBox
-              title="POLSEK"
-              users={kelompok.POLSEK}
-              orientation="vertical"
-            />
+<ChartHorizontal title="POLSEK" users={kelompok.POLSEK} />
+
           </div>
 
           <div className="flex justify-end my-2">
