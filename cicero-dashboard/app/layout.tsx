@@ -49,11 +49,6 @@ export default function RootLayout({
   );
 }
 
-// Client wrapper agar bisa akses path (untuk hide sidebar di /login)
-"use client";
-import React from "react";
-import { usePathname } from "next/navigation";
-
 function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   // Sembunyikan sidebar di halaman /login
