@@ -42,19 +42,17 @@ export default function ChartDivisiAbsensi({
   const dataChart = Object.values(divisiMap);
 
   const isHorizontal = orientation === "horizontal";
-  // Untuk horizontal POLSEK:
-  const minHeight = 380;
-  const maxHeight = 580;
-  const barHeight = 26;
+  // LEBIH PADAT:
+  const minHeight = isHorizontal ? 220 : 260;
+  const maxHeight = isHorizontal ? 420 : 420;
+  const barHeight = isHorizontal ? 18 : 34;
   const chartHeight = Math.min(
     maxHeight,
     Math.max(minHeight, barHeight * dataChart.length)
   );
+  const needsScroll = isHorizontal && dataChart.length > 18;
 
-  const needsScroll = isHorizontal && dataChart.length > 12;
-
-  // Potong label jika panjang
-  function trimLabel(label, len = 16) {
+  function trimLabel(label, len = 14) {
     return label.length > len ? label.slice(0, len) + "…" : label;
   }
 
@@ -63,32 +61,29 @@ export default function ChartDivisiAbsensi({
       <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
       <div
         className={`w-full px-2 pb-4${needsScroll ? " overflow-y-auto" : ""}`}
-        style={needsScroll ? { maxHeight: maxHeight + 80 } : {}}
+        style={needsScroll ? { maxHeight: maxHeight + 60 } : {}}
       >
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
             layout={isHorizontal ? "vertical" : "horizontal"}
-            margin={{ top: 16, right: 32, left: 16, bottom: 16 }}
-            barCategoryGap="20%"
+            margin={{ top: 8, right: 20, left: 12, bottom: 12 }}
+            barCategoryGap="8%"
           >
             <CartesianGrid strokeDasharray="3 3" />
             {isHorizontal ? (
               <>
-                <XAxis type="number" />
+                <XAxis type="number" fontSize={11} />
                 <YAxis
                   dataKey="divisi"
                   type="category"
-                  width={180}
+                  width={110}
                   tick={({ x, y, payload }) => (
-                    <title>
-                      {payload.value}
-                    </title>,
+                    <title>{payload.value}</title>,
                     <text
                       x={x}
-                      y={y + 8}
-                      width={120}
-                      fontSize={13}
+                      y={y + 7}
+                      fontSize={11}
                       fill="#444"
                       style={{ fontWeight: 500 }}
                     >
@@ -99,8 +94,8 @@ export default function ChartDivisiAbsensi({
               </>
             ) : (
               <>
-                <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
-                <YAxis type="number" />
+                <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} fontSize={12}/>
+                <YAxis type="number" fontSize={12}/>
               </>
             )}
             <Tooltip
@@ -113,9 +108,9 @@ export default function ChartDivisiAbsensi({
               fill="#2563eb"
               name="Total Likes"
               isAnimationActive
-              barSize={18}
+              barSize={12}
             >
-              <LabelList dataKey="total_like" position={isHorizontal ? "right" : "top"} fontSize={13} fill="#2563eb" fontWeight={700} />
+              <LabelList dataKey="total_like" position={isHorizontal ? "right" : "top"} fontSize={11} fill="#2563eb" fontWeight={700} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
