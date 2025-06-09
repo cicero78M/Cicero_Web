@@ -53,12 +53,10 @@ export default function InstagramLikesTrackingPage() {
 
         // Rekap summary
         const totalUser = users.length;
-        const totalSudahLike = isZeroPost
-          ? 0
-          : users.filter(
-              (u) => Number(u.jumlah_like) > 0 || isException(u.exception)
-            ).length;
-        const totalBelumLike = totalUser - totalSudahLike;
+const totalSudahLike = isZeroPost
+  ? 0
+  : users.filter(u => Number(u.jumlah_like) > 0 || isException(u.exception)).length;
+const totalBelumLike = totalUser - totalSudahLike;
 
         const totalIGPost = statsRes.data?.igPosts || statsRes.igPosts || 0;
 
@@ -183,7 +181,8 @@ export default function InstagramLikesTrackingPage() {
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />
             <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
-            <ChartHorizontal title="POLSEK" users={kelompok.POLSEK} />
+<ChartHorizontal title="POLSEK" users={kelompok.POLSEK} />
+
           </div>
 
           <div className="flex justify-end my-2">
