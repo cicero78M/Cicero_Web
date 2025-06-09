@@ -44,8 +44,8 @@ export default function ChartHorizontal({
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart proporsional
-  const barHeight = 22;
-  const chartHeight = Math.max(60, barHeight * dataChart.length);
+  const barHeight = 18;
+  const chartHeight = Math.max(80, barHeight * dataChart.length);
 
   // Fungsi potong label
   function trimLabel(label, len = 18) {
@@ -60,7 +60,7 @@ export default function ChartHorizontal({
   <BarChart
     data={dataChart}
     layout="vertical"
-    margin={{ top: 8, right: 30, left: 180, bottom: 12 }} // left besar!
+    margin={{ top: 8, right: 30, left: 120, bottom: 12 }} // left besar!
     barCategoryGap="12%"
   >
     <CartesianGrid strokeDasharray="3 3" />
