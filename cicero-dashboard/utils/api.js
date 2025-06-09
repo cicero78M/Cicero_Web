@@ -28,10 +28,10 @@ export async function getRekapLikesIG(token, client_id, periode = "harian") {
   return res.json();
 }
 
-// utils/api.js
+// Ambil profile client berdasarkan token dan client_id
 export async function getClientProfile(token, client_id) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const res = await fetch(`${apiUrl}/api/profile?client_id=${client_id}`, {
+  const res = await fetch(`${apiUrl}/api/clients/profile?client_id=${client_id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -40,4 +40,3 @@ export async function getClientProfile(token, client_id) {
   if (!res.ok) throw new Error("Gagal fetch profile client");
   return res.json();
 }
-
