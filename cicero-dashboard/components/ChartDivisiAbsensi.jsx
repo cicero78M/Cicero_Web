@@ -23,94 +23,83 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartDivisiAbsensi({
   users,
-  title = "Absensi Likes per Divisi/Satfung",
-  orientation = "vertical",
+  title = "Absensi Likes per Divisi/Satfung",   orientation = "horizontal", // default vertical
+
 }) {
-  // Grouping logic
+  // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
-  users.forEach(u => {
+  users.forEach((u) => {
     const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    if (!divisiMap[key]) divisiMap[key] = {
-      divisi: key,
-      total_like: 0
-    };
+    if (!divisiMap[key])
+      divisiMap[key] = {
+        divisi: key,
+        user_sudah: 0,
+        user_belum: 0,
+        total_like: 0,
+      };
     if (sudahLike) {
+      divisiMap[key].user_sudah += 1;
       divisiMap[key].total_like += Number(u.jumlah_like || 0);
-    }
+    } else divisiMap[key].user_belum += 1;
   });
+
   const dataChart = Object.values(divisiMap);
 
-  const isHorizontal = orientation === "horizontal";
-  // LEBIH PADAT:
-  const minHeight = isHorizontal ? 220 : 260;
-  const maxHeight = isHorizontal ? 420 : 420;
-  const barHeight = isHorizontal ? 18 : 34;
+  // Di ChartDivisiAbsensi
+  const minHeight = 260; // lebih kecil jika chart sedikit
+  const maxHeight = 420; // batasi maksimum, agar tetap muat di 1 layar
+  const barHeight = 34; // tinggi per bar/divisi, makin kecil = makin padat
+
   const chartHeight = Math.min(
     maxHeight,
     Math.max(minHeight, barHeight * dataChart.length)
   );
-  const needsScroll = isHorizontal && dataChart.length > 18;
 
-  function trimLabel(label, len = 14) {
-    return label.length > len ? label.slice(0, len) + "…" : label;
-  }
+ const isHorizontal = orientation === "horizontal";
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
       <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
-      <div
-        className={`w-full px-2 pb-4${needsScroll ? " overflow-y-auto" : ""}`}
-        style={needsScroll ? { maxHeight: maxHeight + 60 } : {}}
-      >
+      <div className="w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
             layout={isHorizontal ? "vertical" : "horizontal"}
-            margin={{ top: 8, right: 20, left: 12, bottom: 12 }}
-            barCategoryGap="8%"
+            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            barCategoryGap="20%"
           >
             <CartesianGrid strokeDasharray="3 3" />
             {isHorizontal ? (
               <>
-                <XAxis type="number" fontSize={11} />
-                <YAxis
-                  dataKey="divisi"
-                  type="category"
-                  width={110}
-                  tick={({ x, y, payload }) => (
-                    <title>{payload.value}</title>,
-                    <text
-                      x={x}
-                      y={y + 7}
-                      fontSize={11}
-                      fill="#444"
-                      style={{ fontWeight: 500 }}
-                    >
-                      {trimLabel(payload.value)}
-                    </text>
-                  )}
-                />
+                <XAxis type="number" />
+                <YAxis dataKey="divisi" type="category" width={140} />
               </>
             ) : (
               <>
-                <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} fontSize={12}/>
-                <YAxis type="number" fontSize={12}/>
+                <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
+                <YAxis type="number" />
               </>
             )}
             <Tooltip
-              formatter={(value) => [value, "Total Likes"]}
+              formatter={(value, name) =>
+                [value,
+                  name === "user_sudah" ? "User Sudah Like"
+                  : name === "user_belum" ? "User Belum Like"
+                  : name === "total_like" ? "Total Likes" : name
+                ]
+              }
               labelFormatter={label => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar
-              dataKey="total_like"
-              fill="#2563eb"
-              name="Total Likes"
-              isAnimationActive
-              barSize={12}
-            >
-              <LabelList dataKey="total_like" position={isHorizontal ? "right" : "top"} fontSize={11} fill="#2563eb" fontWeight={700} />
+            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like">
+              <LabelList dataKey="user_sudah" position={isHorizontal ? "right" : "top"} />
+            </Bar>
+            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes">
+              <LabelList dataKey="total_like" position={isHorizontal ? "right" : "top"} />
+            </Bar>
+            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like">
+              <LabelList dataKey="user_belum" position={isHorizontal ? "right" : "top"} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -118,4 +107,3 @@ export default function ChartDivisiAbsensi({
     </div>
   );
 }
-
