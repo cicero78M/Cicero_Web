@@ -39,7 +39,7 @@ export default function ChartDivisiAbsensi({ users }) {
       <ResponsiveContainer width="100%" height={340}>
         <BarChart
           data={dataChart}
-          // layout="horizontal" // default, VERTICAL!
+           layout="horizontal" // default, VERTICAL!
           margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
           barCategoryGap="20%"
         >
