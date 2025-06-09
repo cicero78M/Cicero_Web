@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import Loader from "@/components/Loader";
-import RekapLikesIG from "@/components/RekapLikesIG";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path sudah benar
 import Link from "next/link"; // pastikan di import atas
@@ -217,7 +216,7 @@ function ChartBox({ title, users }) {
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
       {users && users.length > 0 ? (
-        <ChartDivisiAbsensi users={users} />
+        <ChartDivisiAbsensi users={users} title={title} />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}

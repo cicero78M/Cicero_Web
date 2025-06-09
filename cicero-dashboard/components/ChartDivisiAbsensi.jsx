@@ -21,7 +21,7 @@ function bersihkanSatfung(divisi = "") {
   return divisi.replace(/polsek\s*/i, "").trim();
 }
 
-export default function ChartDivisiAbsensi({ users }) {
+export default function ChartDivisiAbsensi({ users, title = "Absensi Likes per Divisi/Satfung" }) {
   // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
   users.forEach(u => {
@@ -33,34 +33,35 @@ export default function ChartDivisiAbsensi({ users }) {
   });
   const dataChart = Object.values(divisiMap);
 
-  return (
-    <div className="bg-white rounded-xl shadow p-6 mt-8">
-      <h3 className="font-bold text-lg mb-4">Absensi Likes per Divisi/Satfung</h3>
-      <ResponsiveContainer width="100%" height={340}>
-        <BarChart
-          data={dataChart}
-           layout="horizontal" // default, VERTICAL!
-          margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-          barCategoryGap="20%"
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
-          <YAxis type="number" />
-          <Tooltip
-            formatter={(value, name) =>
-              [value, name === "sudah" ? "Sudah Like" : "Belum Like"]
-            }
-            labelFormatter={label => `Divisi: ${label}`}
-          />
-          <Legend />
-          <Bar dataKey="sudah" fill="#22c55e" name="Sudah Like" isAnimationActive>
-            <LabelList dataKey="sudah" position="top" />
-          </Bar>
-          <Bar dataKey="belum" fill="#ef4444" name="Belum Like" isAnimationActive>
-            <LabelList dataKey="belum" position="top" />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+ return (
+    <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
+      <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
+      <div className="w-full px-2 pb-4">
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart
+            data={dataChart}
+            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            barCategoryGap="20%"
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
+            <YAxis type="number" />
+            <Tooltip
+              formatter={(value, name) =>
+                [value, name === "sudah" ? "Sudah Like" : "Belum Like"]
+              }
+              labelFormatter={label => `Divisi: ${label}`}
+            />
+            <Legend />
+            <Bar dataKey="sudah" fill="#22c55e" name="Sudah Like" isAnimationActive>
+              <LabelList dataKey="sudah" position="top" />
+            </Bar>
+            <Bar dataKey="belum" fill="#ef4444" name="Belum Like" isAnimationActive>
+              <LabelList dataKey="belum" position="top" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
