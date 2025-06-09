@@ -175,7 +175,7 @@ export default function InstagramLikesTrackingPage() {
           </div>
 
           {/* Chart per kelompok */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />
             <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
