@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
+import { getDashboardStats, getRekapLikesIG, getClientProfile } from "@/utils/api";
 import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
@@ -12,14 +12,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian"); // "harian" | "bulanan"
+  const [clientProfile, setClientProfile] = useState(null);
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("cicero_token")
-        : null;
-    if (!token) {
-      setError("Token tidak ditemukan. Silakan login ulang.");
+    const token = typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+    const client_id = typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
+
+    if (!token || !client_id) {
+      setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return;
     }
@@ -29,15 +29,9 @@ export default function DashboardPage() {
         const statsRes = await getDashboardStats(token);
         setStats(statsRes.data || statsRes);
 
-        const client_id =
-          statsRes.data?.client_id ||
-          statsRes.client_id ||
-          localStorage.getItem("client_id");
-        if (!client_id) {
-          setError("Client ID tidak ditemukan.");
-          setLoading(false);
-          return;
-        }
+        // Fetch profile client
+        const profileRes = await getClientProfile(token, client_id);
+        setClientProfile(profileRes.profile || profileRes);
 
         const rekapRes = await getRekapLikesIG(token, client_id, periode);
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
@@ -64,6 +58,22 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
+        {/* === Profil Client Login === */}
+        {clientProfile && (
+          <div className="bg-white rounded-xl shadow p-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div>
+                <div className="text-lg font-semibold text-blue-700">Profil Client</div>
+                <div className="text-md font-bold mt-1">{clientProfile.client_id}</div>
+                <div className="text-gray-600">{clientProfile.nama || clientProfile.name}</div>
+              </div>
+              <div className="text-sm text-gray-400">
+                Operator: <span className="font-medium">{clientProfile.operator || clientProfile.client_operator}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <CardStat title="Klien" value={stats?.clients || 0} />

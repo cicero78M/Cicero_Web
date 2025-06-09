@@ -27,3 +27,17 @@ export async function getRekapLikesIG(token, client_id, periode = "harian") {
   if (!res.ok) throw new Error("Failed to fetch rekap");
   return res.json();
 }
+
+// utils/api.js
+export async function getClientProfile(token, client_id) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const res = await fetch(`${apiUrl}/api/profile?client_id=${client_id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Gagal fetch profile client");
+  return res.json();
+}
+
