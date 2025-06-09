@@ -23,7 +23,7 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartDivisiAbsensi({
   users,
-  title = "Absensi Likes per Divisi/Satfung",   orientation = "horizontal", // default vertical
+  title = "Absensi Likes per Divisi/Satfung",   orientation = "vertical", // default vertical
 
 }) {
   // Grouping by divisi (satfung), tanpa POLSEK
@@ -56,7 +56,7 @@ export default function ChartDivisiAbsensi({
     Math.max(minHeight, barHeight * dataChart.length)
   );
 
- const isHorizontal = orientation === "vertical";
+ const isHorizontal = orientation === "horizontal";
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">

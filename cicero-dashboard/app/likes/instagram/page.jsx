@@ -182,7 +182,7 @@ export default function InstagramLikesTrackingPage() {
             <ChartBox
               title="POLSEK"
               users={kelompok.POLSEK}
-              orientation="horizontal"
+              orientation="vertical"
             />
           </div>
 
