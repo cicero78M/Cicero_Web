@@ -56,7 +56,7 @@ export default function ChartDivisiAbsensi({
     Math.max(minHeight, barHeight * dataChart.length)
   );
 
- const isHorizontal = orientation === "horizontal";
+ const isHorizontal = orientation === "vertical";
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
