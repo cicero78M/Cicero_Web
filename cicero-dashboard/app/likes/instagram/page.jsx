@@ -179,7 +179,11 @@ export default function InstagramLikesTrackingPage() {
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />
             <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
-            <ChartBox title="POLSEK" users={kelompok.POLSEK} />
+            <ChartBox
+              title="POLSEK"
+              users={kelompok.POLSEK}
+              orientation="horizontal"
+            />
           </div>
 
           <div className="flex justify-end my-2">
@@ -211,12 +215,16 @@ export default function InstagramLikesTrackingPage() {
 }
 
 // Komponen ChartBox di file yang sama
-function ChartBox({ title, users }) {
+function ChartBox({ title, users, orientation = "vertical" }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
       {users && users.length > 0 ? (
-        <ChartDivisiAbsensi users={users} title={title} />
+        <ChartDivisiAbsensi
+          users={users}
+          title={title}
+          orientation={orientation}
+        />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}
