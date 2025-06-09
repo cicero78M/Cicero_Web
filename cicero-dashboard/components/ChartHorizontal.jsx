@@ -44,8 +44,8 @@ export default function ChartHorizontal({
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart proporsional
-  const barHeight = 18;
-  const chartHeight = Math.max(80, barHeight * dataChart.length);
+  const barHeight = 24;
+  const chartHeight = Math.max(50, barHeight * dataChart.length);
 
   // Fungsi potong label
   function trimLabel(label, len = 18) {
@@ -61,20 +61,20 @@ export default function ChartHorizontal({
     data={dataChart}
     layout="vertical"
     margin={{ top: 8, right: 30, left: 120, bottom: 12 }} // left besar!
-    barCategoryGap="12%"
+    barCategoryGap="18%"
   >
     <CartesianGrid strokeDasharray="3 3" />
     <XAxis type="number" fontSize={12} />
     <YAxis
       dataKey="divisi"
       type="category"
-      width={100}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
+      width={80}    // cukup besar, ganti ke 200 atau 220 jika label sangat panjang
       interval={0}
       tick={({ x, y, payload }) => (
         <>
           <title>{payload.value}</title>
           <text
-            x={x - 200}
+            x={x - 180}
             y={y + 10}
             fontSize={12}
             fill="#444"
