@@ -5,6 +5,7 @@ import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path sudah benar
+import Link from "next/link"; // pastikan di import atas
 
 export default function InstagramLikesTrackingPage() {
   const [stats, setStats] = useState(null);
@@ -182,8 +183,28 @@ export default function InstagramLikesTrackingPage() {
             <ChartBox title="POLSEK" users={kelompok.POLSEK} />
           </div>
 
-          {/* Tabel Rekap */}
-          <RekapLikesIG users={chartData} />
+          <div className="flex justify-end my-2">
+            <Link
+              href="/likes/instagram/rekap"
+              className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
+            >
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                className="inline align-middle"
+              >
+                <path
+                  d="M7 15l5-5-5-5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Lihat Rekap Detail
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -214,7 +235,9 @@ function SummaryItem({ label, value, color = "gray", icon }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-2">
       <div className="mb-1">{icon}</div>
-      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>{value}</div>
+      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>
+        {value}
+      </div>
       <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
         {label}
       </div>
@@ -224,7 +247,5 @@ function SummaryItem({ label, value, color = "gray", icon }) {
 
 function Divider() {
   // Vertical divider in desktop, horizontal in mobile
-  return (
-    <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>
-  );
+  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>;
 }
