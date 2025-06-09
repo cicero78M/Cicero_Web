@@ -24,40 +24,39 @@ function bersihkanSatfung(divisi = "") {
 export default function ChartDivisiAbsensi({
   users,
   title = "Absensi Likes per Divisi/Satfung",
-  orientation = "vertical", // default vertical
+  orientation = "vertical",
 }) {
+  // Grouping logic
   const divisiMap = {};
-  users.forEach((u) => {
+  users.forEach(u => {
     const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    if (!divisiMap[key])
-      divisiMap[key] = {
-        divisi: key,
-        user_sudah: 0,
-        user_belum: 0,
-        total_like: 0,
-      };
+    if (!divisiMap[key]) divisiMap[key] = {
+      divisi: key,
+      total_like: 0
+    };
     if (sudahLike) {
-      divisiMap[key].user_sudah += 1;
       divisiMap[key].total_like += Number(u.jumlah_like || 0);
-    } else {
-      divisiMap[key].user_belum += 1;
     }
   });
   const dataChart = Object.values(divisiMap);
 
-  // Dinamis chart height & scroll
   const isHorizontal = orientation === "horizontal";
-  const banyakData = dataChart.length;
-  const minHeight = isHorizontal ? 400 : 260;
-  const maxHeight = isHorizontal ? 900 : 420;
-  const barHeight = isHorizontal ? 48 : 34;
+  // Untuk horizontal POLSEK:
+  const minHeight = 380;
+  const maxHeight = 580;
+  const barHeight = 26;
   const chartHeight = Math.min(
     maxHeight,
-    Math.max(minHeight, barHeight * banyakData)
+    Math.max(minHeight, barHeight * dataChart.length)
   );
 
-  const needsScroll = isHorizontal && banyakData > 15;
+  const needsScroll = isHorizontal && dataChart.length > 12;
+
+  // Potong label jika panjang
+  function trimLabel(label, len = 16) {
+    return label.length > len ? label.slice(0, len) + "…" : label;
+  }
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
@@ -70,62 +69,53 @@ export default function ChartDivisiAbsensi({
           <BarChart
             data={dataChart}
             layout={isHorizontal ? "vertical" : "horizontal"}
-            margin={{ top: 20, right: 40, left: 40, bottom: 60 }}
-            barCategoryGap="18%"
+            margin={{ top: 16, right: 32, left: 16, bottom: 16 }}
+            barCategoryGap="20%"
           >
             <CartesianGrid strokeDasharray="3 3" />
             {isHorizontal ? (
               <>
                 <XAxis type="number" />
-                <YAxis dataKey="divisi" type="category" width={200} />
+                <YAxis
+                  dataKey="divisi"
+                  type="category"
+                  width={180}
+                  tick={({ x, y, payload }) => (
+                    <title>
+                      {payload.value}
+                    </title>,
+                    <text
+                      x={x}
+                      y={y + 8}
+                      width={120}
+                      fontSize={13}
+                      fill="#444"
+                      style={{ fontWeight: 500 }}
+                    >
+                      {trimLabel(payload.value)}
+                    </text>
+                  )}
+                />
               </>
             ) : (
               <>
-                <XAxis
-                  dataKey="divisi"
-                  type="category"
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  height={70}
-                />
+                <XAxis dataKey="divisi" type="category" angle={-30} textAnchor="end" interval={0} height={70} />
                 <YAxis type="number" />
               </>
             )}
             <Tooltip
-              formatter={(value, name) => [
-                value,
-                name === "user_sudah"
-                  ? "User Sudah Like"
-                  : name === "user_belum"
-                  ? "User Belum Like"
-                  : name === "total_like"
-                  ? "Total Likes"
-                  : name,
-              ]}
-              labelFormatter={(label) => `Divisi: ${label}`}
+              formatter={(value) => [value, "Total Likes"]}
+              labelFormatter={label => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like">
-              <LabelList
-                dataKey="user_sudah"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={14}
-              />
-            </Bar>
-            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes">
-              <LabelList
-                dataKey="total_like"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={14}
-              />
-            </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like">
-              <LabelList
-                dataKey="user_belum"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={14}
-              />
+            <Bar
+              dataKey="total_like"
+              fill="#2563eb"
+              name="Total Likes"
+              isAnimationActive
+              barSize={18}
+            >
+              <LabelList dataKey="total_like" position={isHorizontal ? "right" : "top"} fontSize={13} fill="#2563eb" fontWeight={700} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -133,3 +123,4 @@ export default function ChartDivisiAbsensi({
     </div>
   );
 }
+
