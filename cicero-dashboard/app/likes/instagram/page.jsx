@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
-import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
+import ChartBox from "@/components/ChartDivisiAbsensi";
+import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path sudah benar
 
 export default function InstagramLikesTrackingPage() {
   const [stats, setStats] = useState(null);
@@ -84,6 +85,9 @@ export default function InstagramLikesTrackingPage() {
         </div>
       </div>
     );
+
+  // Group chartData by kelompok
+  const kelompok = groupUsersByKelompok(chartData);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -168,8 +172,13 @@ export default function InstagramLikesTrackingPage() {
             </span>
           </div>
 
-          {/* Chart */}
-          <ChartDivisiAbsensi users={chartData} />
+          {/* Chart per kelompok */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ChartBox title="BAG" users={kelompok.BAG} />
+            <ChartBox title="SAT" users={kelompok.SAT} />
+            <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
+            <ChartBox title="POLSEK" users={kelompok.POLSEK} />
+          </div>
 
           {/* Tabel Rekap */}
           <RekapLikesIG users={chartData} />
