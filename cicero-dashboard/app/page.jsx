@@ -17,8 +17,7 @@ export default function LandingPage() {
         className={`
           max-w-2xl w-full mx-auto flex flex-col items-center
           gap-1 md:gap-1 p-6 md:p-8
-          bg-gray-800 bg-opacity-90 rounded-3xl shadow-lg
-          backdrop-blur-sm
+
         `}
         // gap-14 di desktop, gap-10 di mobile
       >
@@ -49,7 +48,7 @@ export default function LandingPage() {
         <Link
           href="/login"
           className="
-            mt-3 md:mt-2
+            mt-2 md:mt-2
             inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400
           "
         >
