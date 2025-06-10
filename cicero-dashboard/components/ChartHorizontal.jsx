@@ -55,16 +55,16 @@ export default function ChartHorizontal({
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
       <h3 className="font-bold text-lg mb-2 px-6 pt-6">{title}</h3>
-      <div className="w-full px-2 pb-2">
+      <div className="w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
             layout="vertical"
             margin={{ top: 4, right: 20, left: 4, bottom: 4 }} // left besar!
-            barCategoryGap="18%"
+            barCategoryGap="24%"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" fontSize={12} />
+            <XAxis type="number" fontSize={10} />
             <YAxis
               dataKey="divisi"
               type="category"
@@ -76,7 +76,7 @@ export default function ChartHorizontal({
                   <text
                     x={x - 160} // mundur sedikit agar makin lepas dari bar
                     y={y + 10}
-                    fontSize={12}
+                    fontSize={14}
                     fill="#444"
                     style={{ fontWeight: 500 }}
                     textAnchor="start"
