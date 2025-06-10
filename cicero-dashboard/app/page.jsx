@@ -10,41 +10,36 @@ export default function LandingPage() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        minHeight: "100dvh",
+        minHeight: "100dvh", // mobile compatibility
       }}
     >
-      <div className="w-full max-w-md sm:max-w-xl flex flex-col items-center justify-center gap-8 p-4 sm:p-8 rounded-2xl bg-black/10 shadow-xl">
-        {/* Logo */}
+      <div className="max-w-2xl w-full mx-auto flex flex-col items-center gap-10 p-6">
+        {/* Logo utama */}
         <div className="w-full flex justify-center">
           <Image
             src="/CICERO.png"
             alt="CICERO Logo"
-            width={300}
-            height={128}
+            width={420}
+            height={180}
             priority
             className="drop-shadow-2xl select-none"
-            style={{
-              width: "clamp(160px, 60%, 320px)",
-              height: "auto",
-              marginBottom: "1.5rem",
-              objectFit: "contain",
-            }}
+            style={{ maxWidth: "90%", height: "auto" }}
           />
         </div>
-        <div className="text-center w-full flex flex-col gap-2">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight mb-2">
             CICERO
           </h1>
-          <div className="text-base sm:text-lg md:text-xl text-blue-300 font-mono tracking-wide">
+          <div className="text-lg md:text-xl text-blue-300 font-mono mb-2 tracking-wide">
             "Solus Sed Invictus"
           </div>
-          <p className="text-gray-300 mt-2 text-sm sm:text-base md:text-lg">
-            Next-Gen Dashboard for Social Media Monitoring &amp; Team Management
+          <p className="text-gray-300 mt-3 text-md md:text-lg">
+            Next-Gen Dashboard for Social Media Monitoring & Team Management
           </p>
         </div>
         <Link
           href="/login"
-          className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-base sm:text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400"
+          className="mt-8 inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400"
         >
           Masuk ke Dashboard
         </Link>
