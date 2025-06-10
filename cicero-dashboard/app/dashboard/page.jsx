@@ -54,7 +54,7 @@ export default function DashboardPage() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center overflow-hidden">
       <div className="w-full max-w-md px-2">
-        <div className="bg-white rounded-2xl shadow-2xl px-4 py-6 md:px-8 md:py-8">
+        <div className="bg-white rounded-2xl shadow-2xl px-4 md:px-8 py-6 md:py-8">
           <div className="flex flex-col items-center mb-6">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow mb-2">
               <span className="text-4xl text-white">📋</span>
@@ -145,10 +145,10 @@ export default function DashboardPage() {
   );
 }
 
-// Komponen Row mobile-friendly dengan padding bawah dan atas pada tiap baris
+// Row dengan padding atas bawah seperti sebelumnya
 function Row({ label, value, status }) {
   return (
-    <div className="flex items-center py-3 px-2 gap-2 w-full">
+    <div className="flex items-center py-2 px-2 gap-2 w-full">
       <div className="w-28 text-gray-500 font-medium flex-shrink-0">{label}</div>
       <div className="text-gray-300 select-none">:</div>
       <div className="flex-1 text-gray-800 flex flex-wrap items-center gap-1 break-all">{value}{status && status}</div>
