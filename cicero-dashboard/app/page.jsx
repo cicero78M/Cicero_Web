@@ -27,7 +27,7 @@ export default function LandingPage() {
             src="/CICERO.png"
             alt="CICERO Logo"
             width={360}
-            height= {160}
+            height={160}
             priority
             className="drop-shadow-2xl select-none"
             style={{ maxWidth: "90%", height: "auto" }}
@@ -52,7 +52,7 @@ export default function LandingPage() {
             inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400
           "
         >
-          Masuk ke Dashboard
+          Login{" "}
         </Link>
       </div>
     </div>
