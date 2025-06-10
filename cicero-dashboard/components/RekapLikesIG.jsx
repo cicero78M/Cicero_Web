@@ -10,9 +10,13 @@ const PAGE_SIZE = 25;
 
 export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
-  const totalSudahLike = users.filter(u =>
-    Number(u.jumlah_like) > 0 || isException(u.exception)
-  ).length;
+
+  // === LOGIC: Semua user exception (true/false) dianggap belum jika IG post = 0 ===
+  const totalSudahLike = totalIGPost === 0
+    ? 0
+    : users.filter(u =>
+        Number(u.jumlah_like) > 0 || isException(u.exception)
+      ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
   // Hitung nilai jumlah_like tertinggi (max) di seluruh user
@@ -93,31 +97,31 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           value={totalIGPost}
           color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
           icon={
-            <span className="text-pink-300 text-2xl">📸</span>
+            <span className="text-3xl">📸</span>
           }
         />
         <SummaryCard
           title="Total User"
           value={totalUser}
-          color="bg-blue-100"
+          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
           icon={
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87" /></svg>
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87" /></svg>
           }
         />
         <SummaryCard
           title="Sudah Like"
           value={totalSudahLike}
-          color="bg-green-100"
+          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
           icon={
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           }
         />
         <SummaryCard
           title="Belum Like"
           value={totalBelumLike}
-          color="bg-red-100"
+          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
           icon={
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           }
         />
       </div>
@@ -148,7 +152,11 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              const sudahLike = Number(u.jumlah_like) > 0 || isException(u.exception);
+              // LOGIC: semua user dianggap belum jika IG Post = 0
+              const sudahLike = totalIGPost === 0
+                ? false
+                : Number(u.jumlah_like) > 0 || isException(u.exception);
+
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
@@ -210,6 +218,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   );
 }
 
+// Semua card mengikuti style IG Post Hari Ini
 function SummaryCard({ title, value, color, icon }) {
   return (
     <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
@@ -217,7 +226,7 @@ function SummaryCard({ title, value, color, icon }) {
         {icon}
         <span>{value}</span>
       </div>
-      <div className="text-xs mt-1 text-gray-700 font-semibold uppercase tracking-wider">{title}</div>
+      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
     </div>
   );
 }
