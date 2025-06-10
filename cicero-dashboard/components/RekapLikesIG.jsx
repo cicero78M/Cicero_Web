@@ -8,21 +8,23 @@ function isException(val) {
 
 const PAGE_SIZE = 25;
 
+/**
+ * Komponen RekapLikesIG
+ * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
+ * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
+ */
 export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
 
-  // LOGIC ABSENSI:
-  // 1. Semua user dianggap "belum" jika IG Post hari ini = 0
-  // 2. Jika IG post ada, "sudah like" jika jumlah_like > 0 ATAU exception
-  const totalSudahLike = useMemo(() =>
-    totalIGPost === 0
-      ? 0
-      : users.filter(u => Number(u.jumlah_like) > 0 || isException(u.exception)).length
-    , [users, totalIGPost]
-  );
+  // === LOGIC: Semua user exception (true/false) dianggap belum jika IG post = 0 ===
+  const totalSudahLike = totalIGPost === 0
+    ? 0
+    : users.filter(u =>
+        Number(u.jumlah_like) > 0 || isException(u.exception)
+      ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
-  // Nilai tertinggi jumlah_like (bukan exception)
+  // Hitung nilai jumlah_like tertinggi (max) di seluruh user
   const maxJumlahLike = useMemo(
     () =>
       Math.max(
@@ -47,20 +49,41 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
     [users, search]
   );
 
-  // Sorting (urut absensi paling atas, urut nama jika sama)
+  // Sorting
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const aSudah = totalIGPost > 0 && (Number(a.jumlah_like) > 0 || isException(a.exception));
-      const bSudah = totalIGPost > 0 && (Number(b.jumlah_like) > 0 || isException(b.exception));
-      if (aSudah && !bSudah) return -1;
-      if (!aSudah && bSudah) return 1;
-      // urut jumlah_like desc jika sama-sama sudah like
-      if (aSudah && bSudah) {
-        if (a.jumlah_like !== b.jumlah_like) return b.jumlah_like - a.jumlah_like;
+      const aException = isException(a.exception);
+      const bException = isException(b.exception);
+
+      const aLike = Number(a.jumlah_like);
+      const bLike = Number(b.jumlah_like);
+
+      // 1. User sudah like (bukan exception) DAN jumlah_like == max → paling atas
+      if (!aException && aLike === maxJumlahLike && (bException || bLike < maxJumlahLike)) return -1;
+      if (!bException && bLike === maxJumlahLike && (aException || aLike < maxJumlahLike)) return 1;
+
+      // 2. User exception, jumlah_like == max → tepat di bawah user sudah like max
+      if (aException && bException) return 0;
+      if (aException && !bException && bLike === maxJumlahLike) return 1;
+      if (!aException && bException && aLike === maxJumlahLike) return -1;
+
+      // 3. User sudah like (non-exception) dengan jumlah_like < max → berikutnya
+      if (!aException && !bException) {
+        if (aLike > 0 && bLike === 0) return -1;
+        if (aLike === 0 && bLike > 0) return 1;
+        // Di dalam kelompok, urut jumlah_like desc, lalu nama
+        if (aLike !== bLike) return bLike - aLike;
+        return (a.nama || "").localeCompare(b.nama || "");
       }
+
+      // 4. User exception vs user belum like
+      if (aException && !bException) return -1;
+      if (!aException && bException) return 1;
+
+      // 5. Sisa: belum like, urut nama
       return (a.nama || "").localeCompare(b.nama || "");
     });
-  }, [filtered, totalIGPost]);
+  }, [filtered, maxJumlahLike]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -72,45 +95,39 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
 
   return (
     <div className="flex flex-col gap-6 mt-8">
-
-          {/* Card Ringkasan */}
-          <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
-            <SummaryItem
-              label="IG Post Hari Ini"
-              value={rekapSummary.totalIGPost}
-              color="blue"
-              icon={
-                <span className="inline-block text-blue-400 text-2xl">📸</span>
-              }
-            />
-            <Divider />
-            <SummaryItem
-              label="Total User"
-              value={rekapSummary.totalUser}
-              color="gray"
-              icon={
-                <span className="inline-block text-gray-400 text-2xl">👤</span>
-              }
-            />
-            <Divider />
-            <SummaryItem
-              label="Sudah Likes"
-              value={rekapSummary.totalSudahLike}
-              color="green"
-              icon={
-                <span className="inline-block text-green-500 text-2xl">👍</span>
-              }
-            />
-            <Divider />
-            <SummaryItem
-              label="Belum Likes"
-              value={rekapSummary.totalBelumLike}
-              color="red"
-              icon={
-                <span className="inline-block text-red-500 text-2xl">👎</span>
-              }
-            />
-          </div>
+      {/* Ringkasan */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <SummaryCard
+          title="IG Post Hari Ini"
+          value={totalIGPost}
+          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
+          icon={<span className="text-3xl">📸</span>}
+        />
+        <SummaryCard
+          title="Total User"
+          value={totalUser}
+          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
+          icon={
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87" /></svg>
+          }
+        />
+        <SummaryCard
+          title="Sudah Like"
+          value={totalSudahLike}
+          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
+          icon={
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+          }
+        />
+        <SummaryCard
+          title="Belum Like"
+          value={totalBelumLike}
+          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
+          icon={
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          }
+        />
+      </div>
 
       {/* Search bar */}
       <div className="flex justify-end mb-2">
@@ -138,8 +155,11 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              // Status absensi
-              const sudahLike = totalIGPost > 0 && (Number(u.jumlah_like) > 0 || isException(u.exception));
+              // LOGIC: semua user dianggap belum jika IG Post = 0
+              const sudahLike = totalIGPost === 0
+                ? false
+                : Number(u.jumlah_like) > 0 || isException(u.exception);
+
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
@@ -201,27 +221,15 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   );
 }
 
-function SummaryItem({ label, value, color = "gray", icon }) {
-  const colorMap = {
-    blue: "text-blue-700",
-    green: "text-green-600",
-    red: "text-red-500",
-    gray: "text-gray-700",
-  };
+// Semua card mengikuti style IG Post Hari Ini
+function SummaryCard({ title, value, color, icon }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-2">
-      <div className="mb-1">{icon}</div>
-      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>
-        {value}
+    <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
+      <div className="flex items-center gap-2 text-3xl font-bold">
+        {icon}
+        <span>{value}</span>
       </div>
-      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
-        {label}
-      </div>
+      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
     </div>
   );
-}
-
-function Divider() {
-  // Vertical divider in desktop, horizontal in mobile
-  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>;
 }
