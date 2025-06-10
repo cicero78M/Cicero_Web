@@ -73,39 +73,44 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   return (
     <div className="flex flex-col gap-6 mt-8">
 
-      {/* Ringkasan */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SummaryCard
-          title="IG Post Hari Ini"
-          value={totalIGPost}
-          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
-          icon={<span className="text-3xl">📸</span>}
-        />
-        <SummaryCard
-          title="Total User"
-          value={totalUser}
-          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
-          icon={
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87" /></svg>
-          }
-        />
-        <SummaryCard
-          title="Sudah Like"
-          value={totalSudahLike}
-          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
-          icon={
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-          }
-        />
-        <SummaryCard
-          title="Belum Like"
-          value={totalBelumLike}
-          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
-          icon={
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          }
-        />
-      </div>
+          {/* Card Ringkasan */}
+          <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+            <SummaryItem
+              label="IG Post Hari Ini"
+              value={rekapSummary.totalIGPost}
+              color="blue"
+              icon={
+                <span className="inline-block text-blue-400 text-2xl">📸</span>
+              }
+            />
+            <Divider />
+            <SummaryItem
+              label="Total User"
+              value={rekapSummary.totalUser}
+              color="gray"
+              icon={
+                <span className="inline-block text-gray-400 text-2xl">👤</span>
+              }
+            />
+            <Divider />
+            <SummaryItem
+              label="Sudah Likes"
+              value={rekapSummary.totalSudahLike}
+              color="green"
+              icon={
+                <span className="inline-block text-green-500 text-2xl">👍</span>
+              }
+            />
+            <Divider />
+            <SummaryItem
+              label="Belum Likes"
+              value={rekapSummary.totalBelumLike}
+              color="red"
+              icon={
+                <span className="inline-block text-red-500 text-2xl">👎</span>
+              }
+            />
+          </div>
 
       {/* Search bar */}
       <div className="flex justify-end mb-2">
@@ -196,15 +201,27 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   );
 }
 
-// Ringkasan summary card (bisa custom style di sini)
-function SummaryCard({ title, value, color, icon }) {
+function SummaryItem({ label, value, color = "gray", icon }) {
+  const colorMap = {
+    blue: "text-blue-700",
+    green: "text-green-600",
+    red: "text-red-500",
+    gray: "text-gray-700",
+  };
   return (
-    <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
-      <div className="flex items-center gap-2 text-3xl font-bold">
-        {icon}
-        <span>{value}</span>
+    <div className="flex-1 flex flex-col items-center justify-center py-2">
+      <div className="mb-1">{icon}</div>
+      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>
+        {value}
       </div>
-      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
+      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
+        {label}
+      </div>
     </div>
   );
+}
+
+function Divider() {
+  // Vertical divider in desktop, horizontal in mobile
+  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>;
 }
