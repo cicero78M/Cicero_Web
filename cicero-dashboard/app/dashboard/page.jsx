@@ -53,38 +53,26 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-[80vh] bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center py-8 px-2">
-      <div className="w-full max-w-2xl">
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl px-4 md:px-10 py-7 md:py-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow">
-                <span className="text-3xl text-white">📋</span>
-              </div>
-              <div>
-                <div className="text-xl md:text-2xl font-extrabold text-blue-700">Client Profile</div>
-                <div className="text-xs md:text-sm text-gray-400 font-semibold uppercase tracking-wide">
-                  {clientProfile.client_id}
-                </div>
-              </div>
+      <div className="w-full max-w-md">
+        <div className="bg-white/95 rounded-2xl shadow-2xl p-6">
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow mb-2">
+              <span className="text-4xl text-white">📋</span>
             </div>
-            {clientProfile.client_status !== undefined && (
-              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold
-                  ${clientProfile.client_status ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                {clientProfile.client_status ? (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    Aktif
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    Tidak Aktif
-                  </>
-                )}
-              </span>
-            )}
+            <div className="text-xl font-extrabold text-blue-700">{clientProfile.client_id}</div>
+            <div className="flex items-center mt-2">
+              {clientProfile.client_status ? (
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+          <div className="flex flex-col gap-2">
             <Row label="Nama" value={clientProfile.nama || "-"} />
             <Row label="Tipe" value={clientProfile.client_type || "-"} />
             <Row
@@ -105,11 +93,15 @@ export default function DashboardPage() {
               }
               status={
                 clientProfile.client_insta_status !== undefined && (
-                  <span
-                    className={`ml-2 text-xs ${clientProfile.client_insta_status ? "text-green-600" : "text-red-600"}`}
-                  >
-                    ({clientProfile.client_insta_status ? "Aktif" : "Tidak Aktif"})
-                  </span>
+                  clientProfile.client_insta_status ? (
+                    <svg className="w-5 h-5 ml-1 text-green-600 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 ml-1 text-red-500 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )
                 )
               }
             />
@@ -131,11 +123,15 @@ export default function DashboardPage() {
               }
               status={
                 clientProfile.client_tiktok_status !== undefined && (
-                  <span
-                    className={`ml-2 text-xs ${clientProfile.client_tiktok_status ? "text-green-600" : "text-red-600"}`}
-                  >
-                    ({clientProfile.client_tiktok_status ? "Aktif" : "Tidak Aktif"})
-                  </span>
+                  clientProfile.client_tiktok_status ? (
+                    <svg className="w-5 h-5 ml-1 text-green-600 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 ml-1 text-red-500 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )
                 )
               }
             />
@@ -149,13 +145,13 @@ export default function DashboardPage() {
   );
 }
 
-// Komponen Row dengan rata dan no overflow
+// Komponen Row mobile-friendly, selalu satu baris rata tengah
 function Row({ label, value, status }) {
   return (
-    <div className="flex items-center py-2 gap-2">
+    <div className="flex items-center py-2 gap-2 w-full">
       <div className="w-28 text-gray-500 font-medium flex-shrink-0">{label}</div>
       <div className="text-gray-300 select-none">:</div>
-      <div className="flex-1 text-gray-800 flex flex-wrap items-center gap-2 break-words">{value}{status && status}</div>
+      <div className="flex-1 text-gray-800 flex flex-wrap items-center gap-1 break-all">{value}{status && status}</div>
     </div>
   );
 }
