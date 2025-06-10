@@ -36,6 +36,9 @@ Run the development server with:
 npm run dev
 ```
 
+> **Note**: Avoid using the experimental Turbopack flag (`next dev --turbopack`),
+> as it can cause module resolution errors for `lightningcss`.
+
 The app will be available at [http://localhost:3000](http://localhost:3000).
 For a production build, run:
 
