@@ -52,8 +52,8 @@ export default function DashboardPage() {
   const tiktokUsername = clientProfile.client_tiktok?.replace(/^@/, "");
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white transition-all duration-200 pl-0 md:pl-0 flex items-center justify-center">
-    <div className="w-full max-w-md px-0">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center overflow-hidden">
+      <div className="w-full max-w-md px-2">
         <div className="bg-white rounded-2xl shadow-2xl px-4 md:px-8 py-6 md:py-8">
           <div className="flex flex-col items-center mb-6">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow mb-2">
