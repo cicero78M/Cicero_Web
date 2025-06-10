@@ -10,10 +10,17 @@ export default function LandingPage() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        minHeight: "100dvh", // mobile compatibility
+        minHeight: "100dvh",
       }}
     >
-      <div className="max-w-2xl w-full mx-auto flex flex-col items-center gap-10 p-6">
+      <div
+        className={`
+          max-w-2xl w-full mx-auto flex flex-col items-center
+          gap-10 p-6
+          md:gap-16 md:pt-24 md:pb-8
+        `}
+        // pt-24: dorong ke bawah di desktop, pb-8: biar tombol tidak terlalu ke bawah
+      >
         {/* Logo utama */}
         <div className="w-full flex justify-center">
           <Image
@@ -37,11 +44,16 @@ export default function LandingPage() {
             Next-Gen Dashboard for Social Media Monitoring & Team Management
           </p>
         </div>
+        {/* Tombol pada desktop dimajukan ke atas */}
         <Link
           href="/login"
-          className="mt-8 inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400"
+          className="
+            mt-8
+            md:mt-2 md:mb-4
+            inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400
+          "
         >
-          Masuk ke Dashboard
+          Halaman Login{" "}
         </Link>
       </div>
     </div>
