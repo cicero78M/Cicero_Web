@@ -16,7 +16,7 @@ export default function LandingPage() {
       <div
         className={`
           max-w-2xl w-full mx-auto flex flex-col items-center
-          gap-4 md:gap-4 p-6
+          gap-2 md:gap-2 p-4
         `}
         // gap-14 di desktop, gap-10 di mobile
       >
