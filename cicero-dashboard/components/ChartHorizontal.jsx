@@ -49,7 +49,7 @@ export default function ChartHorizontal({
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart proporsional
-  const barHeight = 24;
+  const barHeight = 18;
   const chartHeight = Math.max(50, barHeight * dataChart.length);
 
   return (
@@ -60,7 +60,7 @@ export default function ChartHorizontal({
           <BarChart
             data={dataChart}
             layout="vertical"
-            margin={{ top: 8, right: 30, left: 180, bottom: 12 }} // left besar!
+            margin={{ top: 4, right: 4, left: 4, bottom: 4 }} // left besar!
             barCategoryGap="18%"
           >
             <CartesianGrid strokeDasharray="3 3" />
