@@ -8,15 +8,21 @@ function isException(val) {
 
 const PAGE_SIZE = 25;
 
-/**
- * Komponen RekapLikesIG
- * @param {Array} users - array user rekap likes IG (sudah hasil filter/fetch periode yg benar dari parent)
- * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
- */
 export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
 
-  // Nilai tertinggi jumlah_like dari semua user bukan exception
+  // LOGIC ABSENSI:
+  // 1. Semua user dianggap "belum" jika IG Post hari ini = 0
+  // 2. Jika IG post ada, "sudah like" jika jumlah_like > 0 ATAU exception
+  const totalSudahLike = useMemo(() =>
+    totalIGPost === 0
+      ? 0
+      : users.filter(u => Number(u.jumlah_like) > 0 || isException(u.exception)).length
+    , [users, totalIGPost]
+  );
+  const totalBelumLike = totalUser - totalSudahLike;
+
+  // Nilai tertinggi jumlah_like (bukan exception)
   const maxJumlahLike = useMemo(
     () =>
       Math.max(
@@ -27,17 +33,6 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
       ),
     [users]
   );
-
-  // === LOGIC ABSENSI: ===
-  // 1. Semua user "belum" jika tidak ada IG post hari ini
-  // 2. Jika IG post ada, status "sudah" jika: jumlah_like > 0 ATAU exception
-  const totalSudahLike = useMemo(() =>
-    totalIGPost === 0
-      ? 0
-      : users.filter(u => Number(u.jumlah_like) > 0 || isException(u.exception)).length
-    , [users, totalIGPost]
-  );
-  const totalBelumLike = totalUser - totalSudahLike;
 
   // Search/filter
   const [search, setSearch] = useState("");
@@ -52,29 +47,17 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
     [users, search]
   );
 
-  // Sorting: 1. Sudah Like, 2. Exception, 3. Belum Like, urut jumlah_like desc, lalu nama
+  // Sorting (urut absensi paling atas, urut nama jika sama)
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      // Status "sudah like" mengikuti workflow baru
-      const aSudahLike = totalIGPost > 0 && (Number(a.jumlah_like) > 0 || isException(a.exception));
-      const bSudahLike = totalIGPost > 0 && (Number(b.jumlah_like) > 0 || isException(b.exception));
-
-      if (aSudahLike && !bSudahLike) return -1;
-      if (!aSudahLike && bSudahLike) return 1;
-
-      // Sama-sama "sudah like", urut exception ke bawah
-      if (aSudahLike && bSudahLike) {
-        const aIsExc = isException(a.exception);
-        const bIsExc = isException(b.exception);
-        if (aIsExc && !bIsExc) return 1;
-        if (!aIsExc && bIsExc) return -1;
-        // Urut jumlah_like desc, lalu nama
+      const aSudah = totalIGPost > 0 && (Number(a.jumlah_like) > 0 || isException(a.exception));
+      const bSudah = totalIGPost > 0 && (Number(b.jumlah_like) > 0 || isException(b.exception));
+      if (aSudah && !bSudah) return -1;
+      if (!aSudah && bSudah) return 1;
+      // urut jumlah_like desc jika sama-sama sudah like
+      if (aSudah && bSudah) {
         if (a.jumlah_like !== b.jumlah_like) return b.jumlah_like - a.jumlah_like;
-        return (a.nama || "").localeCompare(b.nama || "");
       }
-
-      // Sisa: urut jumlah_like desc, lalu nama
-      if (a.jumlah_like !== b.jumlah_like) return b.jumlah_like - a.jumlah_like;
       return (a.nama || "").localeCompare(b.nama || "");
     });
   }, [filtered, totalIGPost]);
@@ -90,7 +73,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   return (
     <div className="flex flex-col gap-6 mt-8">
 
-      {/* Summary Ringkasan */}
+      {/* Ringkasan */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <SummaryCard
           title="IG Post Hari Ini"
@@ -150,7 +133,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              // Status absensi mengikuti workflow baru
+              // Status absensi
               const sudahLike = totalIGPost > 0 && (Number(u.jumlah_like) > 0 || isException(u.exception));
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
