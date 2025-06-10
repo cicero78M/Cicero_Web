@@ -61,7 +61,7 @@ export default function ChartHorizontal({
             data={dataChart}
             layout="vertical"
             margin={{ top: 4, right: 20, left: 4, bottom: 4 }} // left besar!
-            barCategoryGap="24%"
+            barCategoryGap="16%"
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" fontSize={12} />

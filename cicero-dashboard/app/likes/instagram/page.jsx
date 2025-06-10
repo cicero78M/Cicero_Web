@@ -57,9 +57,8 @@ export default function InstagramLikesTrackingPage() {
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalSudahLike = isZeroPost
           ? 0
-          : users.filter(
-              (u) => Number(u.jumlah_like) > 0 || u.exception
-            ).length;
+          : users.filter((u) => Number(u.jumlah_like) > 0 || u.exception)
+              .length;
         const totalBelumLike = totalUser - totalSudahLike;
 
         setRekapSummary({
@@ -93,136 +92,144 @@ export default function InstagramLikesTrackingPage() {
   const kelompok = groupUsersByKelompok(chartData);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
-        <div className="flex flex-col gap-8">
-          {/* Header */}
-          <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
-            Instagram Likes Tracking
-          </h1>
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="flex-1 flex items-start justify-center">
+        <div className="w-full max-w-5xl px-2 md:px-8 py-8">
+          <div className="flex flex-col gap-8">
+            {/* Header */}
+            <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
+              Instagram Likes Tracking
+            </h1>
 
-          {/* Card Ringkasan */}
-          <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
-            <SummaryItem
-              label="IG Post Hari Ini"
-              value={rekapSummary.totalIGPost}
-              color="blue"
-              icon={
-                <span className="inline-block text-blue-400 text-2xl">📸</span>
-              }
-            />
-            <Divider />
-            <SummaryItem
-              label="Total User"
-              value={rekapSummary.totalUser}
-              color="gray"
-              icon={
-                <span className="inline-block text-gray-400 text-2xl">👤</span>
-              }
-            />
-            <Divider />
-            <SummaryItem
-              label="Sudah Likes"
-              value={rekapSummary.totalSudahLike}
-              color="green"
-              icon={
-                <span className="inline-block text-green-500 text-2xl">👍</span>
-              }
-            />
-            <Divider />
-            <SummaryItem
-              label="Belum Likes"
-              value={rekapSummary.totalBelumLike}
-              color="red"
-              icon={
-                <span className="inline-block text-red-500 text-2xl">👎</span>
-              }
-            />
-          </div>
-
-          {/* Switch Periode */}
-          <div className="flex items-center justify-end gap-3 mb-2">
-            <span
-              className={
-                periode === "harian"
-                  ? "font-semibold text-blue-700"
-                  : "text-gray-400"
-              }
-            >
-              Hari Ini
-            </span>
-            <button
-              className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
-                periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
-              }`}
-              onClick={() =>
-                setPeriode(periode === "harian" ? "bulanan" : "harian")
-              }
-              aria-label="Switch periode"
-              type="button"
-            >
-              <span
-                className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
-                  periode === "bulanan" ? "left-6" : "left-0"
-                }`}
+            {/* Card Ringkasan */}
+            <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+              <SummaryItem
+                label="IG Post Hari Ini"
+                value={rekapSummary.totalIGPost}
+                color="blue"
+                icon={
+                  <span className="inline-block text-blue-400 text-2xl">
+                    📸
+                  </span>
+                }
               />
-            </button>
-            <span
-              className={
-                periode === "bulanan"
-                  ? "font-semibold text-blue-700"
-                  : "text-gray-400"
-              }
-            >
-              Bulan Ini
-            </span>
-          </div>
+              <Divider />
+              <SummaryItem
+                label="Total User"
+                value={rekapSummary.totalUser}
+                color="gray"
+                icon={
+                  <span className="inline-block text-gray-400 text-2xl">
+                    👤
+                  </span>
+                }
+              />
+              <Divider />
+              <SummaryItem
+                label="Sudah Likes"
+                value={rekapSummary.totalSudahLike}
+                color="green"
+                icon={
+                  <span className="inline-block text-green-500 text-2xl">
+                    👍
+                  </span>
+                }
+              />
+              <Divider />
+              <SummaryItem
+                label="Belum Likes"
+                value={rekapSummary.totalBelumLike}
+                color="red"
+                icon={
+                  <span className="inline-block text-red-500 text-2xl">👎</span>
+                }
+              />
+            </div>
 
-          {/* Chart per kelompok */}
-          <div className="flex flex-col gap-6">
-            <ChartBox
-              title="BAG"
-              users={kelompok.BAG}
-              totalIGPost={rekapSummary.totalIGPost}
-            />
-            <ChartBox
-              title="SAT"
-              users={kelompok.SAT}
-              totalIGPost={rekapSummary.totalIGPost}
-            />
-            <ChartBox
-              title="SI & SPKT"
-              users={kelompok["SI & SPKT"]}
-              totalIGPost={rekapSummary.totalIGPost}
-            />
-            <ChartHorizontal
-              title="POLSEK"
-              users={kelompok.POLSEK}
-              totalIGPost={rekapSummary.totalIGPost}
-            />
-          </div>
-
-          <div className="flex justify-end my-2">
-            <Link
-              href="/likes/instagram/rekap"
-              className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
-            >
-              <svg
-                width="20"
-                height="20"
-                fill="none"
-                className="inline align-middle"
+            {/* Switch Periode */}
+            <div className="flex items-center justify-end gap-3 mb-2">
+              <span
+                className={
+                  periode === "harian"
+                    ? "font-semibold text-blue-700"
+                    : "text-gray-400"
+                }
               >
-                <path
-                  d="M7 15l5-5-5-5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                Hari Ini
+              </span>
+              <button
+                className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
+                  periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
+                }`}
+                onClick={() =>
+                  setPeriode(periode === "harian" ? "bulanan" : "harian")
+                }
+                aria-label="Switch periode"
+                type="button"
+              >
+                <span
+                  className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
+                    periode === "bulanan" ? "left-6" : "left-0"
+                  }`}
                 />
-              </svg>
-              Lihat Rekap Detail
-            </Link>
+              </button>
+              <span
+                className={
+                  periode === "bulanan"
+                    ? "font-semibold text-blue-700"
+                    : "text-gray-400"
+                }
+              >
+                Bulan Ini
+              </span>
+            </div>
+
+            {/* Chart per kelompok */}
+            <div className="flex flex-col gap-6">
+              <ChartBox
+                title="BAG"
+                users={kelompok.BAG}
+                totalIGPost={rekapSummary.totalIGPost}
+              />
+              <ChartBox
+                title="SAT"
+                users={kelompok.SAT}
+                totalIGPost={rekapSummary.totalIGPost}
+              />
+              <ChartBox
+                title="SI & SPKT"
+                users={kelompok["SI & SPKT"]}
+                totalIGPost={rekapSummary.totalIGPost}
+              />
+              <ChartHorizontal
+                title="POLSEK"
+                users={kelompok.POLSEK}
+                totalIGPost={rekapSummary.totalIGPost}
+              />
+            </div>
+
+            <div className="flex justify-end my-2">
+              <Link
+                href="/likes/instagram/rekap"
+                className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  fill="none"
+                  className="inline align-middle"
+                >
+                  <path
+                    d="M7 15l5-5-5-5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Lihat Rekap Detail
+              </Link>
+            </div>
           </div>
         </div>
       </div>
