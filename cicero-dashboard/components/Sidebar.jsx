@@ -25,13 +25,17 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Tombol Sembunyikan/Tampilkan Sidebar (mobile only) */}
+      {/* Toggle button (SELALU TAMPIL) */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="
-          fixed z-40 top-4 left-4 bg-blue-800 text-white rounded-full p-2 shadow-lg md:hidden
+          fixed z-50 top-4 left-4 bg-blue-800 text-white rounded-full p-2 shadow-lg
+          transition-all
         "
         aria-label={open ? "Sembunyikan Sidebar" : "Tampilkan Sidebar"}
+        style={{
+          left: open ? "272px" : "16px", // geser otomatis jika sidebar terbuka
+        }}
       >
         {open ? (
           // Icon X (close)
@@ -46,11 +50,12 @@ export default function Sidebar() {
       <aside
         className={`
           ${open ? "translate-x-0" : "-translate-x-full"}
-          fixed md:static z-30 left-0 top-0 h-full w-64 bg-white shadow-md p-6 flex flex-col transition-transform duration-300
+          fixed z-40 left-0 top-0 h-full w-64 bg-white shadow-md p-6 flex flex-col transition-transform duration-300
         `}
         style={{
           minHeight: "100dvh",
           maxHeight: "100dvh",
+          overflow: "unset",
         }}
       >
         <div className="text-2xl font-bold text-blue-700 mb-10 tracking-wide">
@@ -81,13 +86,7 @@ export default function Sidebar() {
         </button>
       </aside>
 
-      {/* Overlay ketika sidebar terbuka di mobile */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/20 z-20 md:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      {/* Overlay: hilang, tidak perlu jika sidebar tetap bisa toggle di desktop & mobile */}
     </>
   );
 }
