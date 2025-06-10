@@ -10,21 +10,13 @@ const PAGE_SIZE = 25;
 
 /**
  * Komponen RekapLikesIG
- * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
+ * @param {Array} users - array user rekap likes IG (sudah hasil filter/fetch periode yg benar dari parent)
  * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
  */
 export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
 
-  // === LOGIC: Semua user exception (true/false) dianggap belum jika IG post = 0 ===
-  const totalSudahLike = totalIGPost === 0
-    ? 0
-    : users.filter(u =>
-        Number(u.jumlah_like) > 0 || isException(u.exception)
-      ).length;
-  const totalBelumLike = totalUser - totalSudahLike;
-
-  // Hitung nilai jumlah_like tertinggi (max) di seluruh user
+  // Nilai tertinggi jumlah_like dari semua user bukan exception
   const maxJumlahLike = useMemo(
     () =>
       Math.max(
@@ -35,6 +27,17 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
       ),
     [users]
   );
+
+  // === LOGIC ABSENSI: ===
+  // 1. Semua user "belum" jika tidak ada IG post hari ini
+  // 2. Jika IG post ada, status "sudah" jika: jumlah_like > 0 ATAU exception
+  const totalSudahLike = useMemo(() =>
+    totalIGPost === 0
+      ? 0
+      : users.filter(u => Number(u.jumlah_like) > 0 || isException(u.exception)).length
+    , [users, totalIGPost]
+  );
+  const totalBelumLike = totalUser - totalSudahLike;
 
   // Search/filter
   const [search, setSearch] = useState("");
@@ -49,41 +52,32 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
     [users, search]
   );
 
-  // Sorting
+  // Sorting: 1. Sudah Like, 2. Exception, 3. Belum Like, urut jumlah_like desc, lalu nama
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const aException = isException(a.exception);
-      const bException = isException(b.exception);
+      // Status "sudah like" mengikuti workflow baru
+      const aSudahLike = totalIGPost > 0 && (Number(a.jumlah_like) > 0 || isException(a.exception));
+      const bSudahLike = totalIGPost > 0 && (Number(b.jumlah_like) > 0 || isException(b.exception));
 
-      const aLike = Number(a.jumlah_like);
-      const bLike = Number(b.jumlah_like);
+      if (aSudahLike && !bSudahLike) return -1;
+      if (!aSudahLike && bSudahLike) return 1;
 
-      // 1. User sudah like (bukan exception) DAN jumlah_like == max → paling atas
-      if (!aException && aLike === maxJumlahLike && (bException || bLike < maxJumlahLike)) return -1;
-      if (!bException && bLike === maxJumlahLike && (aException || aLike < maxJumlahLike)) return 1;
-
-      // 2. User exception, jumlah_like == max → tepat di bawah user sudah like max
-      if (aException && bException) return 0;
-      if (aException && !bException && bLike === maxJumlahLike) return 1;
-      if (!aException && bException && aLike === maxJumlahLike) return -1;
-
-      // 3. User sudah like (non-exception) dengan jumlah_like < max → berikutnya
-      if (!aException && !bException) {
-        if (aLike > 0 && bLike === 0) return -1;
-        if (aLike === 0 && bLike > 0) return 1;
-        // Di dalam kelompok, urut jumlah_like desc, lalu nama
-        if (aLike !== bLike) return bLike - aLike;
+      // Sama-sama "sudah like", urut exception ke bawah
+      if (aSudahLike && bSudahLike) {
+        const aIsExc = isException(a.exception);
+        const bIsExc = isException(b.exception);
+        if (aIsExc && !bIsExc) return 1;
+        if (!aIsExc && bIsExc) return -1;
+        // Urut jumlah_like desc, lalu nama
+        if (a.jumlah_like !== b.jumlah_like) return b.jumlah_like - a.jumlah_like;
         return (a.nama || "").localeCompare(b.nama || "");
       }
 
-      // 4. User exception vs user belum like
-      if (aException && !bException) return -1;
-      if (!aException && bException) return 1;
-
-      // 5. Sisa: belum like, urut nama
+      // Sisa: urut jumlah_like desc, lalu nama
+      if (a.jumlah_like !== b.jumlah_like) return b.jumlah_like - a.jumlah_like;
       return (a.nama || "").localeCompare(b.nama || "");
     });
-  }, [filtered, maxJumlahLike]);
+  }, [filtered, totalIGPost]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -95,6 +89,40 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
 
   return (
     <div className="flex flex-col gap-6 mt-8">
+
+      {/* Summary Ringkasan */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <SummaryCard
+          title="IG Post Hari Ini"
+          value={totalIGPost}
+          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
+          icon={<span className="text-3xl">📸</span>}
+        />
+        <SummaryCard
+          title="Total User"
+          value={totalUser}
+          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
+          icon={
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87" /></svg>
+          }
+        />
+        <SummaryCard
+          title="Sudah Like"
+          value={totalSudahLike}
+          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
+          icon={
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+          }
+        />
+        <SummaryCard
+          title="Belum Like"
+          value={totalBelumLike}
+          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
+          icon={
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          }
+        />
+      </div>
 
       {/* Search bar */}
       <div className="flex justify-end mb-2">
@@ -122,11 +150,8 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              // LOGIC: semua user dianggap belum jika IG Post = 0
-              const sudahLike = totalIGPost === 0
-                ? false
-                : Number(u.jumlah_like) > 0 || isException(u.exception);
-
+              // Status absensi mengikuti workflow baru
+              const sudahLike = totalIGPost > 0 && (Number(u.jumlah_like) > 0 || isException(u.exception));
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
@@ -188,3 +213,15 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   );
 }
 
+// Ringkasan summary card (bisa custom style di sini)
+function SummaryCard({ title, value, color, icon }) {
+  return (
+    <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
+      <div className="flex items-center gap-2 text-3xl font-bold">
+        {icon}
+        <span>{value}</span>
+      </div>
+      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
+    </div>
+  );
+}
