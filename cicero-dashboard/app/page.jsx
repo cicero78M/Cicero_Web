@@ -19,7 +19,7 @@ export default function LandingPage() {
       <div
         className={`
           max-w-2xl w-full mx-auto flex flex-col items-center
-          gap-8 md:gap-10 p-6 md:p-10
+          gap-2 md:gap-2 p-6 md:p-10
         `}
       >
         {/* Logo */}
@@ -34,7 +34,7 @@ export default function LandingPage() {
             style={{
               maxWidth: "80%",
               height: "auto",
-              marginBottom: "1.5rem"
+              marginBottom: "1rem"
             }}
           />
         </div>
@@ -52,7 +52,7 @@ export default function LandingPage() {
         <Link
           href="/login"
           className="
-            mt-6 md:mt-4
+            mt-4 md:mt-2
             inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400
           "
         >
