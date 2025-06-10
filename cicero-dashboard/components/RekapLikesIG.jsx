@@ -8,6 +8,11 @@ function isException(val) {
 
 const PAGE_SIZE = 25;
 
+/**
+ * Komponen RekapLikesIG
+ * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
+ * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
+ */
 export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
 
@@ -44,7 +49,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
     [users, search]
   );
 
-  // Sorting (pakai logic terbaru Anda)
+  // Sorting
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
       const aException = isException(a.exception);
@@ -96,9 +101,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           title="IG Post Hari Ini"
           value={totalIGPost}
           color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
-          icon={
-            <span className="text-3xl">📸</span>
-          }
+          icon={<span className="text-3xl">📸</span>}
         />
         <SummaryCard
           title="Total User"
