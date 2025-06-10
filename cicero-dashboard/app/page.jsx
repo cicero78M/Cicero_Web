@@ -1,8 +1,11 @@
 "use client";
+import useAuthRedirect from "@/hooks/useAuthRedirect";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function LandingPage() {
+  useAuthRedirect();
+
   return (
     <div
       className="fixed inset-0 bg-gradient-to-br from-gray-900 via-blue-950 to-black flex items-center justify-center"
@@ -16,21 +19,23 @@ export default function LandingPage() {
       <div
         className={`
           max-w-2xl w-full mx-auto flex flex-col items-center
-          gap-1 md:gap-1 p-6 md:p-8
-
+          gap-8 md:gap-10 p-6 md:p-10
         `}
-        // gap-14 di desktop, gap-10 di mobile
       >
         {/* Logo */}
         <div className="w-full flex justify-center">
           <Image
             src="/CICERO.png"
             alt="CICERO Logo"
-            width={360}
-            height={160}
+            width={320}
+            height={120}
             priority
             className="drop-shadow-2xl select-none"
-            style={{ maxWidth: "90%", height: "auto" }}
+            style={{
+              maxWidth: "80%",
+              height: "auto",
+              marginBottom: "1.5rem"
+            }}
           />
         </div>
         <div className="text-center">
@@ -41,18 +46,17 @@ export default function LandingPage() {
             "Solus Sed Invictus"
           </div>
           <p className="text-gray-300 mt-3 text-md md:text-lg">
-            Next-Gen Dashboard for Social Media Monitoring & Team Management
+            Next-Gen Dashboard for Social Media Monitoring &amp; Team Management
           </p>
         </div>
-        {/* Tombol selalu kelihatan */}
         <Link
           href="/login"
           className="
-            mt-2 md:mt-2
+            mt-6 md:mt-4
             inline-block bg-blue-600 hover:bg-blue-700 transition-all text-white text-lg md:text-xl font-semibold px-8 py-3 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-400
           "
         >
-          Login{" "}
+          Login
         </Link>
       </div>
     </div>

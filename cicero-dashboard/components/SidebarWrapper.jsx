@@ -4,7 +4,9 @@ import Sidebar from "./Sidebar";
 
 export default function SidebarWrapper() {
   const pathname = usePathname();
-  // Sembunyikan sidebar jika sedang di halaman /login
-  if (pathname === "/login") return null;
+  // Daftar path yang tidak menampilkan sidebar
+  const excludedPaths = ["/", "/login"];
+
+  if (excludedPaths.includes(pathname)) return null;
   return <Sidebar />;
 }

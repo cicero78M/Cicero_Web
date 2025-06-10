@@ -1,9 +1,12 @@
 "use client";
 
+import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
+
   const [client_id, setClientId] = useState("");
   const [client_operator, setClientOperator] = useState("");
   const [error, setError] = useState("");
@@ -16,7 +19,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Gunakan base URL dari environment (biar bisa ganti dev/prod)
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://103.182.52.127:3000";
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
@@ -29,7 +31,6 @@ export default function LoginPage() {
       if (data.success && data.token) {
         localStorage.setItem("cicero_token", data.token);
         localStorage.setItem("client_id", client_id);
-        // Setelah login langsung redirect ke dashboard
         router.push("/dashboard");
       } else {
         setError(data.message || "Login gagal, cek Client ID / Operator");
