@@ -1,7 +1,14 @@
 // utils/api.js
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  console.warn(
+    "NEXT_PUBLIC_API_URL is not defined; defaulting to relative '/api' paths"
+  );
+}
 export async function getDashboardStats(token) {
   const res = await fetch(
-    process.env.NEXT_PUBLIC_API_URL + '/api/dashboard/stats',
+    API_BASE_URL + '/api/dashboard/stats',
     {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -16,7 +23,7 @@ export async function getDashboardStats(token) {
 // Ambil rekap absensi instagram harian
 export async function getRekapLikesIG(token, client_id, periode = "harian") {
   const params = new URLSearchParams({ client_id, periode });
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/api/insta/rekap-likes?${params.toString()}`;
+  const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
   const res = await fetch(url, {
     headers: {
@@ -31,7 +38,7 @@ export async function getRekapLikesIG(token, client_id, periode = "harian") {
 // Ambil profile client berdasarkan token dan client_id
 export async function getClientProfile(token, client_id) {
   const params = new URLSearchParams({ client_id });
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/api/clients/profile?${params.toString()}`;
+  const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
 
   const res = await fetch(url, {
     headers: {

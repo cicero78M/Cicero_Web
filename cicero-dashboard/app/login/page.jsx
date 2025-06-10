@@ -19,7 +19,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://103.182.52.127:3000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || ""; // fall back to relative '/api'
+      if (!process.env.NEXT_PUBLIC_API_URL) {
+        console.warn(
+          "NEXT_PUBLIC_API_URL is not defined; defaulting to relative '/api'"
+        );
+      }
       const res = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
