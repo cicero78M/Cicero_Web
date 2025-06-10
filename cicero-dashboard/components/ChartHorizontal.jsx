@@ -64,7 +64,7 @@ export default function ChartHorizontal({
             barCategoryGap="24%"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" fontSize={10} />
+            <XAxis type="number" fontSize={12} />
             <YAxis
               dataKey="divisi"
               type="category"
@@ -76,7 +76,7 @@ export default function ChartHorizontal({
                   <text
                     x={x - 160} // mundur sedikit agar makin lepas dari bar
                     y={y + 10}
-                    fontSize={14}
+                    fontSize={12}
                     fill="#444"
                     style={{ fontWeight: 500 }}
                     textAnchor="start"
@@ -98,14 +98,14 @@ export default function ChartHorizontal({
               labelFormatter={label => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like" barSize={12}>
-              <LabelList dataKey="user_sudah" position="right" fontSize={12} />
+            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like" barSize={10}>
+              <LabelList dataKey="user_sudah" position="right" fontSize={10} />
             </Bar>
-            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes" barSize={12}>
-              <LabelList dataKey="total_like" position="right" fontSize={12} />
+            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes" barSize={10}>
+              <LabelList dataKey="total_like" position="right" fontSize={10} />
             </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like" barSize={12}>
-              <LabelList dataKey="user_belum" position="right" fontSize={12} />
+            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like" barSize={10}>
+              <LabelList dataKey="user_belum" position="right" fontSize={10} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

@@ -70,10 +70,10 @@ export default function ChartDivisiAbsensi({
             data={dataChart}
             layout={isHorizontal ? "vertical" : "horizontal"}
             margin={{
-              top: 20,
-              right: 30,
-              left: isHorizontal ? 180 : 20, // left besar untuk horizontal
-              bottom: 60,
+              top: 4,
+              right: 4,
+              left: 4, // left besar untuk horizontal
+              bottom: 4,
             }}
             barCategoryGap="16%"
           >
