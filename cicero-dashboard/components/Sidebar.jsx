@@ -3,6 +3,7 @@ import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { Menu as IconMenu, X as IconX } from "lucide-react"; // Import lucide icons
 
 const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
@@ -30,8 +31,11 @@ export default function ProSidebarWrapper() {
       <button
         onClick={() => setCollapsed((v) => !v)}
         className={`
-          fixed z-50 top-4 left-4 bg-blue-800 text-white rounded-full p-2 shadow-lg
-          transition-all
+          fixed z-50 top-4 left-4 flex items-center justify-center
+          bg-white shadow-lg border border-blue-200 text-blue-700
+          rounded-full w-12 h-12 transition-all
+          hover:bg-blue-700 hover:text-white group
+          focus:outline-none
         `}
         aria-label={collapsed ? "Tampilkan Sidebar" : "Sembunyikan Sidebar"}
         style={{
@@ -39,11 +43,9 @@ export default function ProSidebarWrapper() {
         }}
       >
         {collapsed ? (
-          // Icon Hamburger (menu)
-          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h18M4 13h18M4 19h18"/></svg>
+          <IconMenu size={28} strokeWidth={2.5} className="transition-all group-hover:scale-110" />
         ) : (
-          // Icon X (close)
-          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          <IconX size={28} strokeWidth={2.5} className="transition-all group-hover:scale-110" />
         )}
       </button>
 
