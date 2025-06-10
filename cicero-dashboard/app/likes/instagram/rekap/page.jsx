@@ -133,6 +133,37 @@ export default function RekapLikesIGPage() {
             </span>
           </div>
 
+          {/* Card Ringkasan */}
+          <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+            <SummaryItem
+              label="IG Post Hari Ini"
+              value={rekapSummary.totalIGPost}
+              color="blue"
+              icon={<span className="inline-block text-blue-400 text-2xl">📸</span>}
+            />
+            <Divider />
+            <SummaryItem
+              label="Total User"
+              value={rekapSummary.totalUser}
+              color="gray"
+              icon={<span className="inline-block text-gray-400 text-2xl">👤</span>}
+            />
+            <Divider />
+            <SummaryItem
+              label="Sudah Likes"
+              value={rekapSummary.totalSudahLike}
+              color="green"
+              icon={<span className="inline-block text-green-500 text-2xl">👍</span>}
+            />
+            <Divider />
+            <SummaryItem
+              label="Belum Likes"
+              value={rekapSummary.totalBelumLike}
+              color="red"
+              icon={<span className="inline-block text-red-500 text-2xl">👎</span>}
+            />
+          </div>
+
           {/* Tabel Rekap */}
           <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
             <RekapLikesIG users={chartData} />
@@ -141,4 +172,30 @@ export default function RekapLikesIGPage() {
       </div>
     </div>
   );
+}
+
+// --- Komponen helper untuk card summary dan divider ---
+function SummaryItem({ label, value, color = "gray", icon }) {
+  const colorMap = {
+    blue: "text-blue-700",
+    green: "text-green-600",
+    red: "text-red-500",
+    gray: "text-gray-700",
+  };
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center py-2">
+      <div className="mb-1">{icon}</div>
+      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>
+        {value}
+      </div>
+      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  // Vertical divider in desktop, horizontal in mobile
+  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>;
 }
