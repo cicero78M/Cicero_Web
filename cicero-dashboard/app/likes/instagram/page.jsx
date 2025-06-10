@@ -92,8 +92,9 @@ export default function InstagramLikesTrackingPage() {
   const kelompok = groupUsersByKelompok(chartData);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <div className="flex-1 flex items-start justify-center">
+  <div className="bg-gray-100 min-h-screen transition-all duration-300">
+  <div className="pl-0 md:pl-64 pt-8 pb-12 px-2 md:px-8 max-w-6xl mx-auto w-full">
+ 
         <div className="w-full max-w-5xl px-2 md:px-8 py-8">
           <div className="flex flex-col gap-8">
             {/* Header */}
