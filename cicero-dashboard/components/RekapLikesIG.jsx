@@ -95,39 +95,6 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
 
   return (
     <div className="flex flex-col gap-6 mt-8">
-      {/* Ringkasan */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SummaryCard
-          title="IG Post Hari Ini"
-          value={totalIGPost}
-          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
-          icon={<span className="text-3xl">📸</span>}
-        />
-        <SummaryCard
-          title="Total User"
-          value={totalUser}
-          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
-          icon={
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87" /></svg>
-          }
-        />
-        <SummaryCard
-          title="Sudah Like"
-          value={totalSudahLike}
-          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
-          icon={
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-          }
-        />
-        <SummaryCard
-          title="Belum Like"
-          value={totalBelumLike}
-          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
-          icon={
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          }
-        />
-      </div>
 
       {/* Search bar */}
       <div className="flex justify-end mb-2">
@@ -221,15 +188,3 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   );
 }
 
-// Semua card mengikuti style IG Post Hari Ini
-function SummaryCard({ title, value, color, icon }) {
-  return (
-    <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
-      <div className="flex items-center gap-2 text-3xl font-bold">
-        {icon}
-        <span>{value}</span>
-      </div>
-      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
-    </div>
-  );
-}
