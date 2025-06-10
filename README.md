@@ -20,7 +20,7 @@ Inside `cicero-dashboard` you will find the typical Next.js project layout:
 
 ## Installation
 
-1. Ensure [Node.js](https://nodejs.org/) and `npm` are installed.
+1. Ensure [Node.js](https://nodejs.org/) (version 20 LTS) and `npm` are installed.
 2. Install dependencies from within the dashboard directory:
 
 ```bash
