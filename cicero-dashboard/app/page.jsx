@@ -27,7 +27,7 @@ export default function LandingPage() {
             src="/CICERO.png"
             alt="CICERO Logo"
             width={360}
-            height= "auto"
+            height= {160}
             priority
             className="drop-shadow-2xl select-none"
             style={{ maxWidth: "90%", height: "auto" }}
