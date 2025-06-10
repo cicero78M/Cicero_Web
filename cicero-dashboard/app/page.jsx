@@ -29,7 +29,7 @@ export default function LandingPage() {
             height={180}
             priority
             className="drop-shadow-2xl select-none"
-            style={{ maxWidth: "90%", height: "auto" }}
+            style={{ maxWidth: "80%", height: "auto" }}
           />
         </div>
         <div className="text-center">
