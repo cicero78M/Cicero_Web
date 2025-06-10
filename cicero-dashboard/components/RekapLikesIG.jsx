@@ -8,7 +8,7 @@ function isException(val) {
 
 const PAGE_SIZE = 25;
 
-export default function RekapLikesIG({ users = [] }) {
+export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
   const totalSudahLike = users.filter(u =>
     Number(u.jumlah_like) > 0 || isException(u.exception)
@@ -87,7 +87,15 @@ export default function RekapLikesIG({ users = [] }) {
   return (
     <div className="flex flex-col gap-6 mt-8">
       {/* Ringkasan */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <SummaryCard
+          title="IG Post Hari Ini"
+          value={totalIGPost}
+          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
+          icon={
+            <span className="text-pink-300 text-2xl">📸</span>
+          }
+        />
         <SummaryCard
           title="Total User"
           value={totalUser}
