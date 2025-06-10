@@ -54,7 +54,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-[80vh] bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center py-8 px-2">
       <div className="w-full max-w-md">
-        <div className="bg-white/95 rounded-2xl shadow-2xl p-6">
           <div className="flex flex-col items-center mb-6">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow mb-2">
               <span className="text-4xl text-white">📋</span>
@@ -141,7 +140,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
