@@ -7,8 +7,8 @@ export default function useAuthRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    // Ganti dengan cek autentikasi sesuai implementasimu (misal cek token di localStorage/cookie)
-    const isLoggedIn = !!localStorage.getItem("token"); // atau cek cookie
+    // Check the token stored by the login page
+    const isLoggedIn = !!localStorage.getItem("cicero_token");
     if (isLoggedIn) {
       router.replace("/dashboard");
     }
