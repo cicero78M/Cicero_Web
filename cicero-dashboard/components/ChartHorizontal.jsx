@@ -54,8 +54,8 @@ export default function ChartHorizontal({
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
-      <h3 className="font-bold text-lg mb-4 px-6 pt-6">{title}</h3>
-      <div className="w-full px-2 pb-4">
+      <h3 className="font-bold text-lg mb-2 px-6 pt-6">{title}</h3>
+      <div className="w-full px-2 pb-2">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
@@ -74,9 +74,9 @@ export default function ChartHorizontal({
                 <>
                   <title>{payload.value}</title>
                   <text
-                    x={x - 100} // mundur sedikit agar makin lepas dari bar
+                    x={x - 160} // mundur sedikit agar makin lepas dari bar
                     y={y + 10}
-                    fontSize={13}
+                    fontSize={12}
                     fill="#444"
                     style={{ fontWeight: 500 }}
                     textAnchor="start"
@@ -98,13 +98,13 @@ export default function ChartHorizontal({
               labelFormatter={label => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like" barSize={14}>
+            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like" barSize={12}>
               <LabelList dataKey="user_sudah" position="right" fontSize={12} />
             </Bar>
-            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes" barSize={14}>
+            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes" barSize={12}>
               <LabelList dataKey="total_like" position="right" fontSize={12} />
             </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like" barSize={14}>
+            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like" barSize={12}>
               <LabelList dataKey="user_belum" position="right" fontSize={12} />
             </Bar>
           </BarChart>
