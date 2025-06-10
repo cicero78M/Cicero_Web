@@ -4,7 +4,15 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-black flex items-center justify-center">
+    <div
+      className="fixed inset-0 bg-gradient-to-br from-gray-900 via-blue-950 to-black flex items-center justify-center"
+      style={{
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        minHeight: "100dvh", // mobile compatibility
+      }}
+    >
       <div className="max-w-2xl w-full mx-auto flex flex-col items-center gap-10 p-6">
         {/* Logo utama */}
         <div className="w-full flex justify-center">
