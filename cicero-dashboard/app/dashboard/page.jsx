@@ -34,14 +34,14 @@ export default function DashboardPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex items-center justify-center min-h-[80vh] bg-gray-100 p-2">
+      <div className="flex items-center justify-center h-screen bg-gray-100 overflow-hidden">
         <div className="bg-white rounded-2xl shadow-lg p-6 text-center text-red-500 font-bold max-w-sm w-full">{error}</div>
       </div>
     );
 
   if (!clientProfile)
     return (
-      <div className="flex items-center justify-center min-h-[80vh] bg-gray-100 p-2">
+      <div className="flex items-center justify-center h-screen bg-gray-100 overflow-hidden">
         <div className="bg-white rounded-2xl shadow-lg p-6 text-center text-gray-600 font-bold max-w-sm w-full">
           Data profil client tidak tersedia.
         </div>
@@ -52,13 +52,14 @@ export default function DashboardPage() {
   const tiktokUsername = clientProfile.client_tiktok?.replace(/^@/, "");
 
   return (
-    <div className="min-h-[80vh] bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center py-8 px-2">
+    <div className="w-screen h-screen max-h-screen bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center overflow-hidden">
       <div className="w-full max-w-md">
+        <div className="bg-white/95 rounded-2xl shadow-2xl p-6">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow mb-2">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 via-blue-500 to-fuchsia-500 flex items-center justify-center shadow mb-2 flex-shrink-0">
               <span className="text-4xl text-white">📋</span>
             </div>
-            <div className="text-xl font-extrabold text-blue-700">{clientProfile.client_id}</div>
+            <div className="text-xl font-extrabold text-blue-700 break-words">{clientProfile.client_id}</div>
             <div className="flex items-center mt-2">
               {clientProfile.client_status ? (
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
@@ -71,7 +72,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 overflow-hidden">
             <Row label="Nama" value={clientProfile.nama || "-"} />
             <Row label="Tipe" value={clientProfile.client_type || "-"} />
             <Row
@@ -80,7 +81,7 @@ export default function DashboardPage() {
                 igUsername ? (
                   <a
                     href={`https://instagram.com/${igUsername}`}
-                    className="text-pink-600 underline font-semibold hover:text-pink-800 transition"
+                    className="text-pink-600 underline font-semibold hover:text-pink-800 transition break-all"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -110,7 +111,7 @@ export default function DashboardPage() {
                 tiktokUsername ? (
                   <a
                     href={`https://www.tiktok.com/@${tiktokUsername}`}
-                    className="text-blue-600 underline font-semibold hover:text-blue-800 transition"
+                    className="text-blue-600 underline font-semibold hover:text-blue-800 transition break-all"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -140,10 +141,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+    </div>
   );
 }
 
-// Komponen Row mobile-friendly, selalu satu baris rata tengah
+// Komponen Row mobile-friendly, selalu satu baris rata tengah, anti overflow
 function Row({ label, value, status }) {
   return (
     <div className="flex items-center py-2 gap-2 w-full">
