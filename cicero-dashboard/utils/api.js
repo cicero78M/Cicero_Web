@@ -138,7 +138,17 @@ export async function getInstagramProfileViaBackend(token, username) {
     const text = await res.text();
     throw new Error(`Failed to fetch instagram profile: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  const profile = json.data || json.profile || json;
+
+  // Normalise fields so the frontend can use a consistent structure
+  return {
+    username: profile.username || profile.user_name || "",
+    followers: profile.followers || profile.follower_count || 0,
+    following: profile.following || profile.following_count || 0,
+    bio: profile.bio || profile.biography || "",
+    ...profile,
+  };
 }
 
 export async function getTiktokPosts(token, client_id) {
