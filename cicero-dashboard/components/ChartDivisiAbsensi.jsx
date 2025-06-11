@@ -16,36 +16,48 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
-// Bersihkan "POLSEK" pada nama divisi/satfung
+// Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
-  return divisi.replace(/polsek\s*/i, "").trim();
+  return divisi
+    .replace(/polsek\s*/i, "") // hapus kata "POLSEK"
+    .replace(/^[0-9.\-\s]+/, "") // hapus awalan angka/strip/titik
+    .trim();
 }
 
 export default function ChartDivisiAbsensi({
   users,
   title = "Absensi Likes per Divisi/Satfung",
   orientation = "vertical", // default vertical
-  totalIGPost = 1, // ← tambahkan prop ini dari parent, default 1 agar chart tetap jalan
+  totalPost = 1, // generic total post count so component can be reused
+  totalIGPost, // backward compatibility
+  fieldJumlah = "jumlah_like",
+  labelSudah = "User Sudah Like",
+  labelBelum = "User Belum Like",
+  labelTotal = "Total Likes",
 }) {
-  // IG POST 0: semua user (termasuk exception) harus "belum"
-  const isZeroPost = (totalIGPost || 0) === 0;
+  const effectiveTotal =
+    typeof totalPost !== "undefined" ? totalPost : totalIGPost;
+
+  // Jika tidak ada post, semua user (termasuk exception) dianggap belum
+  const isZeroPost = (effectiveTotal || 0) === 0;
 
   // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
   users.forEach((u) => {
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    // sudahLike hanya true jika IG Post > 0
-    const sudahLike = !isZeroPost && (Number(u.jumlah_like) > 0 || isException(u.exception));
+    // user dianggap sudah komentar/like hanya jika ada post
+    const sudah =
+      !isZeroPost && (Number(u[fieldJumlah]) > 0 || isException(u.exception));
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
         user_sudah: 0,
         user_belum: 0,
-        total_like: 0,
+        total_value: 0,
       };
-    if (sudahLike) {
+    if (sudah) {
       divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_like += Number(u.jumlah_like || 0);
+      divisiMap[key].total_value += Number(u[fieldJumlah] || 0);
     } else divisiMap[key].user_belum += 1;
   });
 
@@ -118,32 +130,32 @@ export default function ChartDivisiAbsensi({
                 [
                   value,
                   name === "user_sudah"
-                    ? "User Sudah Like"
+                    ? labelSudah
                     : name === "user_belum"
-                    ? "User Belum Like"
-                    : name === "total_like"
-                    ? "Total Likes"
+                    ? labelBelum
+                    : name === "total_value"
+                    ? labelTotal
                     : name,
                 ]
               }
               labelFormatter={(label) => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like">
+            <Bar dataKey="user_sudah" fill="#22c55e" name={labelSudah}>
               <LabelList
                 dataKey="user_sudah"
                 position={isHorizontal ? "right" : "top"}
                 fontSize={12}
               />
             </Bar>
-            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes">
+            <Bar dataKey="total_value" fill="#2563eb" name={labelTotal}>
               <LabelList
-                dataKey="total_like"
+                dataKey="total_value"
                 position={isHorizontal ? "right" : "top"}
                 fontSize={12}
               />
             </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like">
+            <Bar dataKey="user_belum" fill="#ef4444" name={labelBelum}>
               <LabelList
                 dataKey="user_belum"
                 position={isHorizontal ? "right" : "top"}

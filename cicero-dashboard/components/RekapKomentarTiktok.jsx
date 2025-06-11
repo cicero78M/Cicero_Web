@@ -5,6 +5,13 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
+function bersihkanSatfung(divisi = "") {
+  return divisi
+    .replace(/polsek\s*/i, "")
+    .replace(/^[0-9.\-\s]+/, "")
+    .trim();
+}
+
 const PAGE_SIZE = 25;
 
 export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
@@ -31,7 +38,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
       users.filter(u =>
         (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
         (u.username || "").toLowerCase().includes(search.toLowerCase()) ||
-        (u.divisi || "").toLowerCase().includes(search.toLowerCase())
+        bersihkanSatfung(u.divisi || "").toLowerCase().includes(search.toLowerCase())
       ),
     [users, search]
   );
@@ -129,7 +136,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">{u.title ? `${u.title} ${u.nama}` : u.nama}</td>
                   <td className="py-1 px-2 font-mono text-pink-700">{u.username}</td>
-                  <td className="py-1 px-2"><span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">{u.divisi || "-"}</span></td>
+                  <td className="py-1 px-2"><span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">{bersihkanSatfung(u.divisi || "-")}</span></td>
                   <td className="py-1 px-2 text-center">
                     {sudahKomentar ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
