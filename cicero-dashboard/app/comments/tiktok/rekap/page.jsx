@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
 
-// Utility: handle boolean/string/number for exception
+// Helper: Cek exception value
 function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
@@ -10,13 +10,13 @@ const PAGE_SIZE = 25;
 
 /**
  * Komponen RekapKomentarTiktok
- * @param {Array} users - array user rekap komentar TikTok (hasil filter/fetch periode yg benar dari parent)
- * @param {number} totalTiktokPost - jumlah TikTok Post hari ini/periode, dari parent
+ * @param {Array} users - array user hasil fetch/final filtering
+ * @param {number} totalTiktokPost - jumlah TikTok Post hari ini/periode
  */
 export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
   const totalUser = users.length;
 
-  // === LOGIC: Semua user exception (true/false) dianggap belum jika TikTok post = 0 ===
+  // === Logic: Semua user exception (true/false) dianggap belum jika TikTok post = 0 ===
   const totalSudahKomentar =
     totalTiktokPost === 0
       ? 0
@@ -25,7 +25,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
         ).length;
   const totalBelumKomentar = totalUser - totalSudahKomentar;
 
-  // Hitung nilai jumlah_komentar tertinggi (max) di seluruh user (kecuali exception)
+  // Nilai jumlah_komentar tertinggi di seluruh user (kecuali exception)
   const maxJumlahKomentar = useMemo(
     () =>
       Math.max(
@@ -50,25 +50,24 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
     [users, search]
   );
 
-  // Sorting
+  // Sorting (identik dengan IG, urutkan: sudah komentar/max > exception > sudah > belum > nama)
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
       const aException = isException(a.exception);
       const bException = isException(b.exception);
-
       const aKomen = Number(a.jumlah_komentar);
       const bKomen = Number(b.jumlah_komentar);
 
-      // 1. User sudah komentar (bukan exception) DAN jumlah_komentar == max → paling atas
+      // 1. Sudah komentar max, bukan exception
       if (!aException && aKomen === maxJumlahKomentar && (bException || bKomen < maxJumlahKomentar)) return -1;
       if (!bException && bKomen === maxJumlahKomentar && (aException || aKomen < maxJumlahKomentar)) return 1;
 
-      // 2. User exception, jumlah_komentar == max → tepat di bawah user sudah komen max
+      // 2. Exception, jumlah_komentar == max → di bawah user yang komen max
       if (aException && bException) return 0;
       if (aException && !bException && bKomen === maxJumlahKomentar) return 1;
       if (!aException && bException && aKomen === maxJumlahKomentar) return -1;
 
-      // 3. User sudah komen (non-exception) dengan jumlah_komentar < max → berikutnya
+      // 3. Sudah komentar non-exception jumlah_komentar < max
       if (!aException && !bException) {
         if (aKomen > 0 && bKomen === 0) return -1;
         if (aKomen === 0 && bKomen > 0) return 1;
@@ -76,11 +75,11 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
         return (a.nama || "").localeCompare(b.nama || "");
       }
 
-      // 4. User exception vs user belum komen
+      // 4. Exception vs belum komen
       if (aException && !bException) return -1;
       if (!aException && bException) return 1;
 
-      // 5. Sisa: belum komen, urut nama
+      // 5. Sisanya urut nama
       return (a.nama || "").localeCompare(b.nama || "");
     });
   }, [filtered, maxJumlahKomentar]);
@@ -155,13 +154,12 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              // LOGIC: semua user dianggap belum jika TikTok Post = 0
               const sudahKomentar = totalTiktokPost === 0
                 ? false
                 : Number(u.jumlah_komentar) > 0 || isException(u.exception);
 
               return (
-                <tr key={u.user_id} className={sudahKomentar ? "bg-green-50" : "bg-red-50"}>
+                <tr key={u.user_id || u.username_tiktok || i} className={sudahKomentar ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">
                     {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
@@ -223,7 +221,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   );
 }
 
-// Semua card mengikuti style TikTok Post Hari Ini
+// Semua card mengikuti style TikTok Post Hari Ini (identik IG, tapi dengan warna dan icon TikTok)
 function SummaryCard({ title, value, color, icon }) {
   return (
     <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
