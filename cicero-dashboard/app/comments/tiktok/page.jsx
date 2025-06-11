@@ -8,13 +8,10 @@ import { groupUsersByKelompok } from "@/utils/grouping";
 import Link from "next/link";
 
 export default function TiktokKomentarTrackingPage() {
-  const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian");
-
-  // Rekap summary (total user, sudah komentar, belum komentar)
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -36,10 +33,8 @@ export default function TiktokKomentarTrackingPage() {
     async function fetchData() {
       try {
         const statsRes = await getDashboardStats(token);
+        // --- Ambil statsData dan handle semua kemungkinan key (ttPosts/tiktokPosts) ---
         const statsData = statsRes.data || statsRes;
-
-        setStats(statsData);
-
         const client_id =
           statsData?.client_id ||
           statsData.client_id ||
@@ -53,7 +48,7 @@ export default function TiktokKomentarTrackingPage() {
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        // Sumber utama TikTok Post Hari Ini dari statsRes
+        // --- Kunci: Ambil jumlah post dari ttPosts atau tiktokPosts (utamakan ttPosts) ---
         const totalTiktokPost =
           statsData?.ttPosts ||
           statsData?.tiktokPosts ||
@@ -65,9 +60,8 @@ export default function TiktokKomentarTrackingPage() {
         const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalSudahKomentar = isZeroPost
           ? 0
-          : users.filter(
-              (u) => Number(u.jumlah_komentar) > 0 || u.exception
-            ).length;
+          : users.filter((u) => Number(u.jumlah_komentar) > 0 || u.exception)
+              .length;
         const totalBelumKomentar = totalUser - totalSudahKomentar;
 
         setRekapSummary({
