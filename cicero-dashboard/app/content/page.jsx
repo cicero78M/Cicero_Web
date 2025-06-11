@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import Loader from "@/components/Loader";
-import { getInstagramPostsRapidAPI, getClientProfile } from "@/utils/api";
+import { getInstagramPostsViaBackend, getClientProfile } from "@/utils/api";
+
 
 export default function SocialMediaContentManagerPage() {
   const [igPosts, setIgPosts] = useState([]);
@@ -30,7 +31,8 @@ export default function SocialMediaContentManagerPage() {
           process.env.NEXT_PUBLIC_INSTAGRAM_USER ||
           "instagram";
 
-        const igRes = await getInstagramPostsRapidAPI(username, 12);
+        const igRes = await getInstagramPostsViaBackend(token, username, 12);
+
         const igData = igRes.data || igRes.posts || igRes;
         setIgPosts(Array.isArray(igData) ? igData : []);
       } catch (err) {
