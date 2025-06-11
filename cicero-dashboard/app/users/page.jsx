@@ -9,6 +9,13 @@ export default function UserDirectoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Ganti ini dengan cara ambil client_id sesuai kebutuhan
+  // Misal: dari localStorage, props, context, atau static
+  const client_id =
+    typeof window !== "undefined"
+      ? localStorage.getItem("client_id") || "BOJONEGORO"
+      : "BOJONEGORO";
+
   useEffect(() => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
@@ -17,10 +24,15 @@ export default function UserDirectoryPage() {
       setLoading(false);
       return;
     }
+    if (!client_id) {
+      setError("Client ID tidak ditemukan.");
+      setLoading(false);
+      return;
+    }
 
     async function fetchUsers() {
       try {
-        const res = await getUserDirectory(token);
+        const res = await getUserDirectory(token, client_id);
         const data = res.data || res.users || res;
         setUsers(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -30,16 +42,20 @@ export default function UserDirectoryPage() {
       }
     }
     fetchUsers();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client_id]);
 
+  // Filter: tidak tampilkan user yang exception = true
   const filtered = useMemo(
     () =>
-      users.filter(
-        (u) =>
-          (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
-          (u.username || "").toLowerCase().includes(search.toLowerCase()) ||
-          (u.divisi || "").toLowerCase().includes(search.toLowerCase())
-      ),
+      users
+        .filter((u) => !u.exception)
+        .filter(
+          (u) =>
+            (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
+            (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
+            (u.divisi || "").toLowerCase().includes(search.toLowerCase())
+        ),
     [users, search]
   );
 
@@ -71,7 +87,7 @@ export default function UserDirectoryPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="py-2 px-2 text-left">Nama</th>
-                <th className="py-2 px-2 text-left">Username</th>
+                <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Divisi</th>
               </tr>
             </thead>
@@ -79,7 +95,9 @@ export default function UserDirectoryPage() {
               {filtered.map((u, idx) => (
                 <tr key={idx} className="border-t">
                   <td className="py-1 px-2">{u.nama || "-"}</td>
-                  <td className="py-1 px-2 font-mono text-blue-700">@{u.username}</td>
+                  <td className="py-1 px-2 font-mono text-blue-700">
+                    @{u.insta || "-"}
+                  </td>
                   <td className="py-1 px-2">{u.divisi || "-"}</td>
                 </tr>
               ))}

@@ -51,8 +51,8 @@ export async function getClientProfile(token, client_id) {
 }
 
 // Ambil daftar user untuk User Directory
-export async function getUserDirectory(token) {
-  const url = `${API_BASE_URL}/api/users/list`;
+export async function getUserDirectory(token, client_id) {
+  const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
 
   const res = await fetch(url, {
     headers: {
