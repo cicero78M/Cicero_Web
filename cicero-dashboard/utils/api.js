@@ -93,3 +93,29 @@ export async function getRekapKomentarTiktok(token, client_id, periode = "harian
   }
   return res.json();
 }
+
+export async function getInstagramPosts(token, client_id) {
+  const params = new URLSearchParams({ client_id });
+  const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch instagram posts");
+  return res.json();
+}
+
+export async function getTiktokPosts(token, client_id) {
+  const params = new URLSearchParams({ client_id });
+  const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch tiktok posts");
+  return res.json();
+}
