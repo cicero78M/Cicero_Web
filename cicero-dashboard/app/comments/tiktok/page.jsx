@@ -33,7 +33,7 @@ export default function TiktokKomentarTrackingPage() {
     async function fetchData() {
       try {
         const statsRes = await getDashboardStats(token);
-        // --- Ambil statsData dan handle semua kemungkinan key (ttPosts/tiktokPosts) ---
+        // Gunakan semua kemungkinan key post TikTok (ttPosts/tiktokPosts)
         const statsData = statsRes.data || statsRes;
         const client_id =
           statsData?.client_id ||
@@ -48,7 +48,7 @@ export default function TiktokKomentarTrackingPage() {
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        // --- Kunci: Ambil jumlah post dari ttPosts atau tiktokPosts (utamakan ttPosts) ---
+        // Ambil field TikTok Post dengan fallback urutan prioritas
         const totalTiktokPost =
           statsData?.ttPosts ||
           statsData?.tiktokPosts ||
