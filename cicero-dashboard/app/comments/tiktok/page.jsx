@@ -212,8 +212,11 @@ export default function TiktokKomentarTrackingPage() {
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelSudah="User Sudah Komentar"
+                labelBelum="User Belum Komentar"
+                labelTotal="Total Komentar"
               />
             </div>
 
@@ -262,8 +265,11 @@ function ChartBox({
           users={users}
           title={title}
           orientation={orientation}
-          totalTiktokPost={totalTiktokPost}
+          totalPost={totalTiktokPost}
           fieldJumlah={fieldJumlah}
+          labelSudah="User Sudah Komentar"
+          labelBelum="User Belum Komentar"
+          labelTotal="Total Komentar"
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
