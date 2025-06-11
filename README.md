@@ -50,9 +50,11 @@ Create a `.env.local` file inside `cicero-dashboard` and define the following va
 
 ```bash
 NEXT_PUBLIC_API_URL=<backend base url>
+NEXT_PUBLIC_RAPIDAPI_KEY=<your RapidAPI key>
 ```
 
 `NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use.
+`NEXT_PUBLIC_RAPIDAPI_KEY` is required to fetch Instagram and TikTok posts from RapidAPI.
 
 ## Usage Notes
 
