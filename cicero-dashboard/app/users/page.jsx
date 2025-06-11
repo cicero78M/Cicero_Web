@@ -55,7 +55,6 @@ export default function UserDirectoryPage() {
             (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.divisi || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.jabatan || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
             (String(u.status)).toLowerCase().includes(search.toLowerCase())
@@ -94,7 +93,6 @@ export default function UserDirectoryPage() {
                 <th className="py-2 px-2 text-left">Nama<br />(Pangkat Nama)</th>
                 <th className="py-2 px-2 text-left">NRP/NIP<br />(User ID)</th>
                 <th className="py-2 px-2 text-left">Satfung</th>
-                <th className="py-2 px-2 text-left">Jabatan</th>
                 <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Username TikTok</th>
                 <th className="py-2 px-2 text-left">Status</th>
@@ -109,7 +107,6 @@ export default function UserDirectoryPage() {
                   </td>
                   <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
                   <td className="py-1 px-2">{u.divisi || "-"}</td>
-                  <td className="py-1 px-2">{u.jabatan || "-"}</td>
                   <td className="py-1 px-2 font-mono text-blue-700">@{u.insta || "-"}</td>
                   <td className="py-1 px-2 font-mono text-pink-700">@{u.tiktok || "-"}</td>
                   <td className="py-1 px-2">
