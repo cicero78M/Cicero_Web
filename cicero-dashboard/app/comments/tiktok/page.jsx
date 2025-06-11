@@ -53,7 +53,12 @@ export default function TiktokKomentarTrackingPage() {
 
         // Rekap summary
         const totalUser = users.length;
-        const totalTiktokPost = statsRes.data?.tiktokPosts || statsRes.tiktokPosts || 0;
+        const totalTiktokPost =
+          statsRes.data?.tiktok_posts ||
+          statsRes.tiktok_posts ||
+          statsRes.data?.tiktokPosts ||
+          statsRes.tiktokPosts ||
+          0;
         const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalSudahKomentar = isZeroPost
           ? 0
