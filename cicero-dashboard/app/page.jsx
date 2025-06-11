@@ -43,7 +43,7 @@ export default function LandingPage() {
             CICERO
           </h1>
           <div className="text-lg md:text-xl text-blue-300 font-mono mb-2 tracking-wide">
-            "Solus Sed Invictus"
+            &quot;Solus Sed Invictus&quot;
           </div>
           <p className="text-gray-300 mt-3 text-md md:text-lg">
             Next-Gen Dashboard for Social Media Monitoring &amp; Team Management
