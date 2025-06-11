@@ -12,7 +12,7 @@ export default function TiktokKomentarTrackingPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [periode, setPeriode] = useState("harian"); // "harian" | "bulanan"
+  const [periode, setPeriode] = useState("harian");
 
   // Rekap summary (total user, sudah komentar, belum komentar)
   const [rekapSummary, setRekapSummary] = useState({
@@ -36,11 +36,13 @@ export default function TiktokKomentarTrackingPage() {
     async function fetchData() {
       try {
         const statsRes = await getDashboardStats(token);
-        setStats(statsRes.data || statsRes);
+        const statsData = statsRes.data || statsRes;
+
+        setStats(statsData);
 
         const client_id =
-          statsRes.data?.client_id ||
-          statsRes.client_id ||
+          statsData?.client_id ||
+          statsData.client_id ||
           localStorage.getItem("client_id");
         if (!client_id) {
           setError("Client ID tidak ditemukan.");
@@ -51,13 +53,21 @@ export default function TiktokKomentarTrackingPage() {
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        // Rekap summary
+        // Sumber utama TikTok Post Hari Ini dari statsRes
+        const totalTiktokPost =
+          statsData?.ttPosts ||
+          statsData?.tiktokPosts ||
+          statsData.ttPosts ||
+          statsData.tiktokPosts ||
+          0;
+
+        const isZeroPost = totalTiktokPost === 0;
         const totalUser = users.length;
-        const totalTiktokPost = statsRes.data?.tiktokPosts || statsRes.tiktokPosts || 0;
-        const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalSudahKomentar = isZeroPost
           ? 0
-          : users.filter((u) => Number(u.jumlah_komentar) > 0 || u.exception).length;
+          : users.filter(
+              (u) => Number(u.jumlah_komentar) > 0 || u.exception
+            ).length;
         const totalBelumKomentar = totalUser - totalSudahKomentar;
 
         setRekapSummary({
@@ -253,7 +263,7 @@ function ChartBox({ title, users, orientation = "vertical", totalTiktokPost, fie
           title={title}
           orientation={orientation}
           totalTiktokPost={totalTiktokPost}
-          fieldJumlah={fieldJumlah} // tambahkan agar chart bisa dinamis untuk jumlah_komentar
+          fieldJumlah={fieldJumlah}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
