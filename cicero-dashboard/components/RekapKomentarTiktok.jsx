@@ -7,9 +7,15 @@ function isException(val) {
 
 const PAGE_SIZE = 25;
 
-export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
+export default function RekapKomentarTiktok({
+  users = [],
+  totalPost = 0,
+  labelJumlah = "Komentar",
+  totalTiktokPost,
+}) {
+  const actualTotal = totalPost !== undefined ? totalPost : totalTiktokPost || 0;
   const totalUser = users.length;
-  const totalSudahKomentar = totalTiktokPost === 0
+  const totalSudahKomentar = actualTotal === 0
     ? 0
     : users.filter(u => Number(u.jumlah_komentar) > 0 || isException(u.exception)).length;
   const totalBelumKomentar = totalUser - totalSudahKomentar;
@@ -73,7 +79,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <SummaryCard
           title="TikTok Post Hari Ini"
-          value={totalTiktokPost}
+          value={actualTotal}
           color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
           icon={<span className="text-3xl">🎵</span>}
         />
@@ -84,13 +90,13 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           icon={<svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87"/></svg>}
         />
         <SummaryCard
-          title="Sudah Komentar"
+          title={`Sudah ${labelJumlah}`}
           value={totalSudahKomentar}
           color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
           icon={<svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
         />
         <SummaryCard
-          title="Belum Komentar"
+          title={`Belum ${labelJumlah}`}
           value={totalBelumKomentar}
           color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
           icon={<svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>}
@@ -116,12 +122,12 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
               <th className="py-2 px-2">Username TikTok</th>
               <th className="py-2 px-2">Divisi/Satfung</th>
               <th className="py-2 px-2 text-center">Status</th>
-              <th className="py-2 px-2 text-center">Jumlah Komentar</th>
+              <th className="py-2 px-2 text-center">Jumlah {labelJumlah}</th>
             </tr>
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              const sudahKomentar = totalTiktokPost === 0
+              const sudahKomentar = actualTotal === 0
                 ? false
                 : Number(u.jumlah_komentar) > 0 || isException(u.exception);
               return (
