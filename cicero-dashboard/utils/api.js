@@ -107,6 +107,23 @@ export async function getInstagramPosts(token, client_id) {
   return res.json();
 }
 
+// Fetch Instagram posts via backend using username (backend handles RapidAPI call)
+export async function getInstagramPostsViaBackend(token, username, limit = 10) {
+  const params = new URLSearchParams({ username, limit });
+  const url = `${API_BASE_URL}/api/insta/rapid-posts?${params.toString()}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch instagram posts: ${text}`);
+  }
+  return res.json();
+}
+
 export async function getTiktokPosts(token, client_id) {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
@@ -119,3 +136,4 @@ export async function getTiktokPosts(token, client_id) {
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
+
