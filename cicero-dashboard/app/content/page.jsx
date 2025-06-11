@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import InstagramPostAnalysisTable from "@/components/InstagramPostAnalysisTable";
+import SocialMediaContentTable from "@/components/SocialMediaContentTable";
 import Loader from "@/components/Loader";
-import { getClientProfile } from "@/utils/api";
-import { dummyInstagramPosts } from "@/utils/dummyClientInsta";
+import { getInstagramPosts, getTiktokPosts } from "@/utils/api";
 
 export default function SocialMediaContentManagerPage() {
   const [igPosts, setIgPosts] = useState([]);
+  const [tiktokPosts, setTiktokPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -24,8 +24,13 @@ export default function SocialMediaContentManagerPage() {
 
     async function fetchPosts() {
       try {
-        await getClientProfile(token, client_id);
-        setIgPosts(dummyInstagramPosts);
+        const igRes = await getInstagramPosts(token, client_id);
+        const igData = igRes.data || igRes.posts || igRes;
+        setIgPosts(Array.isArray(igData) ? igData : []);
+
+        const ttRes = await getTiktokPosts(token, client_id);
+        const ttData = ttRes.data || ttRes.posts || ttRes;
+        setTiktokPosts(Array.isArray(ttData) ? ttData : []);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -49,11 +54,14 @@ export default function SocialMediaContentManagerPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
       <div className="w-full max-w-5xl flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-blue-700">Instagram Content Manager</h1>
+        <h1 className="text-2xl font-bold text-blue-700">Social Media Content Manager</h1>
         <p className="text-gray-600">
-          Analisa performa dan jadwalkan konten Instagram Anda.
+          Manage and schedule posts for Instagram and TikTok in one place.
         </p>
-        <InstagramPostAnalysisTable posts={igPosts} />
+        <div className="flex flex-col md:flex-row gap-6">
+          <SocialMediaContentTable platform="Instagram" initialPosts={igPosts} />
+          <SocialMediaContentTable platform="TikTok" initialPosts={tiktokPosts} />
+        </div>
       </div>
     </div>
   );
