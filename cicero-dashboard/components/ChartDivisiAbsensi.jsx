@@ -23,26 +23,30 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartDivisiAbsensi({
   users,
-  title = "Absensi Likes per Divisi/Satfung",
-  orientation = "vertical", // default vertical
-  totalPost = 1, // generic total post count so component can be reused
-  totalIGPost, // backward compatibility
-  fieldJumlah = "jumlah_like",
-  labelSudah = "User Sudah Like",
-  labelBelum = "User Belum Like",
-  labelTotal = "Total Likes",
+  title = "Absensi Komentar TikTok per Divisi/Satfung",
+  totalPost = 1, // jumlah post untuk perbandingan, generic
+  totalIGPost,   // fallback untuk instagram (kompatibilitas lama)
+  totalTiktokPost, // fallback untuk tiktok (kompatibilitas lama)
+  fieldJumlah = "jumlah_like", // bisa "jumlah_komentar" untuk tiktok
+  labelSudah = "User Sudah Komentar",
+  labelBelum = "User Belum Komentar",
+  labelTotal = "Total Komentar",
 }) {
+  // Fallback backward compatibility
   const effectiveTotal =
-    typeof totalPost !== "undefined" ? totalPost : totalIGPost;
+    typeof totalPost !== "undefined"
+      ? totalPost
+      : typeof totalTiktokPost !== "undefined"
+      ? totalTiktokPost
+      : totalIGPost;
 
-  // Jika tidak ada post, semua user (termasuk exception) dianggap belum
+  // Jika tidak ada post, semua user dianggap belum
   const isZeroPost = (effectiveTotal || 0) === 0;
 
-  // Grouping by divisi (satfung), tanpa POLSEK
+  // Group by divisi
   const divisiMap = {};
   users.forEach((u) => {
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    // user dianggap sudah komentar/like hanya jika ada post
     const sudah =
       !isZeroPost && (Number(u[fieldJumlah]) > 0 || isException(u.exception));
     if (!divisiMap[key])
@@ -63,13 +67,11 @@ export default function ChartDivisiAbsensi({
   // Dynamic height
   const minHeight = 220;
   const maxHeight = 420;
-  const barHeight = orientation === "horizontal" ? 22 : 34;
+  const barHeight = 34;
   const chartHeight = Math.min(
     maxHeight,
     Math.max(minHeight, barHeight * dataChart.length)
   );
-
-  const isHorizontal = orientation === "horizontal";
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
@@ -77,51 +79,26 @@ export default function ChartDivisiAbsensi({
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
-            layout={isHorizontal ? "vertical" : "horizontal"}
+            layout="horizontal" // Hanya vertical
             margin={{
               top: 4,
               right: 4,
-              left: 4, // left besar untuk horizontal
+              left: 4,
               bottom: 4,
             }}
             barCategoryGap="16%"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            {isHorizontal ? (
-              <>
-                <XAxis type="number" fontSize={12} />
-                <YAxis
-                  dataKey="divisi"
-                  type="category"
-                  width={180}
-                  interval={0}
-                  tick={({ x, y, payload }) => (
-                    <text
-                      x={x - 8}
-                      y={y + 10}
-                      fontSize={13}
-                      fill="#444"
-                      style={{ fontWeight: 500 }}
-                      textAnchor="start"
-                    >
-                      {payload.value}
-                    </text>
-                  )}
-                />
-              </>
-            ) : (
-              <>
-                <XAxis
-                  dataKey="divisi"
-                  type="category"
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  height={70}
-                />
-                <YAxis type="number" fontSize={12} />
-              </>
-            )}
+            <XAxis
+              dataKey="divisi"
+              type="category"
+              angle={-30}
+              textAnchor="end"
+              interval={0}
+              height={70}
+              tick={{ fontSize: 15, fontWeight: 700, fill: "#1e293b" }}
+            />
+            <YAxis type="number" fontSize={12} />
             <Tooltip
               formatter={(value, name) =>
                 [
@@ -139,25 +116,13 @@ export default function ChartDivisiAbsensi({
             />
             <Legend />
             <Bar dataKey="user_sudah" fill="#22c55e" name={labelSudah}>
-              <LabelList
-                dataKey="user_sudah"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={12}
-              />
+              <LabelList dataKey="user_sudah" position="top" fontSize={12} />
             </Bar>
             <Bar dataKey="total_value" fill="#2563eb" name={labelTotal}>
-              <LabelList
-                dataKey="total_value"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={12}
-              />
+              <LabelList dataKey="total_value" position="top" fontSize={12} />
             </Bar>
             <Bar dataKey="user_belum" fill="#ef4444" name={labelBelum}>
-              <LabelList
-                dataKey="user_belum"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={12}
-              />
+              <LabelList dataKey="user_belum" position="top" fontSize={12} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
