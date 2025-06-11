@@ -49,3 +49,17 @@ export async function getClientProfile(token, client_id) {
   if (!res.ok) throw new Error("Gagal fetch profile client");
   return res.json();
 }
+
+// Ambil daftar user untuk User Directory
+export async function getUserDirectory(token) {
+  const url = `${API_BASE_URL}/api/users/list`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Gagal fetch daftar user");
+  return res.json();
+}
