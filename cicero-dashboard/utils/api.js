@@ -124,6 +124,23 @@ export async function getInstagramPostsViaBackend(token, username, limit = 10) {
   return res.json();
 }
 
+// Fetch Instagram profile via backend using username
+export async function getInstagramProfileViaBackend(token, username) {
+  const params = new URLSearchParams({ username });
+  const url = `${API_BASE_URL}/api/insta/rapid-profile?${params.toString()}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch instagram profile: ${text}`);
+  }
+  return res.json();
+}
+
 export async function getTiktokPosts(token, client_id) {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
