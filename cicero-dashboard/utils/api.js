@@ -119,3 +119,25 @@ export async function getTiktokPosts(token, client_id) {
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
+
+// Fetch Instagram posts from RapidAPI
+export async function getInstagramPostsRapidAPI(username, limit = 10) {
+  const host = process.env.NEXT_PUBLIC_RAPIDAPI_HOST;
+  const key = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
+  if (!host || !key) {
+    throw new Error('RapidAPI credentials are not set');
+  }
+  const params = new URLSearchParams({ username, limit });
+  const url = `https://${host}/instagram/posts?${params.toString()}`;
+  const res = await fetch(url, {
+    headers: {
+      'X-RapidAPI-Key': key,
+      'X-RapidAPI-Host': host,
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch instagram posts: ${text}`);
+  }
+  return res.json();
+}
