@@ -136,4 +136,3 @@ export async function getTiktokPosts(token, client_id) {
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
-

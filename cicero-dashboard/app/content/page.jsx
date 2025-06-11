@@ -4,6 +4,7 @@ import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import Loader from "@/components/Loader";
 import { getInstagramPostsViaBackend, getClientProfile } from "@/utils/api";
 
+
 export default function SocialMediaContentManagerPage() {
   const [igPosts, setIgPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,7 @@ export default function SocialMediaContentManagerPage() {
           "instagram";
 
         const igRes = await getInstagramPostsViaBackend(token, username, 12);
+
         const igData = igRes.data || igRes.posts || igRes;
         setIgPosts(Array.isArray(igData) ? igData : []);
       } catch (err) {
