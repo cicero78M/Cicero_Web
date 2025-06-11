@@ -111,7 +111,7 @@ export default function UserDirectoryPage() {
                   <td className="py-1 px-2">{u.divisi || "-"}</td>
                   <td className="py-1 px-2">{u.jabatan || "-"}</td>
                   <td className="py-1 px-2 font-mono text-blue-700">@{u.insta || "-"}</td>
-                  <td className="py-1 px-2 font-mono text-pink-700">@{u.tiktok || "-"}</td>
+                  <td className="py-1 px-2 font-mono text-pink-700">{u.tiktok || "-"}</td>
                   <td className="py-1 px-2">
                     {u.status === true || u.status === "true"
                       ? (
