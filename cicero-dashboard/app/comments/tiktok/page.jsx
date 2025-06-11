@@ -61,9 +61,7 @@ export default function TiktokKomentarTrackingPage() {
           statsData.tiktokPosts ||
           0;
 
-        const isZeroPost = totalTiktokPost === 0;
         const totalUser = users.length;
-        const totalTiktokPost = statsRes.data?.tiktokPosts || statsRes.tiktokPosts || 0;
         const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalSudahKomentar = isZeroPost
           ? 0
