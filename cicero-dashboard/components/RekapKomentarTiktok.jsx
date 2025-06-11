@@ -128,7 +128,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                 <tr key={u.user_id} className={sudahKomentar ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">{u.title ? `${u.title} ${u.nama}` : u.nama}</td>
-                  <td className="py-1 px-2 font-mono text-pink-700">@{u.username}</td>
+                  <td className="py-1 px-2 font-mono text-pink-700">@{(u.username || "").replace(/^@+/, "")}</td>
                   <td className="py-1 px-2"><span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">{u.divisi || "-"}</span></td>
                   <td className="py-1 px-2 text-center">
                     {sudahKomentar ? (
