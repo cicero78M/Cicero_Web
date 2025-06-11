@@ -46,15 +46,13 @@ npm start
 
 ## Environment Variables
 
-Create a `.env.local` file inside `cicero-dashboard` and define the following variables:
+Create a `.env.local` file inside `cicero-dashboard` and define the following variable:
 
 ```bash
 NEXT_PUBLIC_API_URL=<backend base url>
-NEXT_PUBLIC_RAPIDAPI_KEY=<your RapidAPI key>
-NEXT_PUBLIC_RAPIDAPI_HOST=<RapidAPI host>
 ```
 
-`NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use. The RapidAPI variables are required for the TikTok content manager page which pulls data from Social API 4.
+`NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use.
 
 ## Usage Notes
 

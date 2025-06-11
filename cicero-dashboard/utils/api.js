@@ -119,26 +119,3 @@ export async function getTiktokPosts(token, client_id) {
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
-
-// Ambil postingan TikTok langsung dari RapidAPI (Social API 4)
-export async function fetchTikTokPosts(username, limit = 20) {
-  const host = process.env.NEXT_PUBLIC_RAPIDAPI_HOST;
-  const key = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
-  if (!host || !key) {
-    console.warn("RapidAPI credentials are missing");
-    return [];
-  }
-
-  const params = new URLSearchParams({ username, limit });
-  const url = `https://${host}/tiktok/posts?${params.toString()}`;
-
-  const res = await fetch(url, {
-    headers: {
-      "X-RapidAPI-Key": key,
-      "X-RapidAPI-Host": host,
-    },
-  });
-
-  if (!res.ok) throw new Error("Failed to fetch TikTok posts");
-  return res.json();
-}
