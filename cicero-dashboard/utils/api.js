@@ -63,3 +63,16 @@ export async function getUserDirectory(token) {
   if (!res.ok) throw new Error("Gagal fetch daftar user");
   return res.json();
 }
+
+// Ambil komentar TikTok
+export async function getTikTokComments(token) {
+  const url = `${API_BASE_URL}/api/tiktok/comments`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch comments");
+  return res.json();
+}
