@@ -31,9 +31,11 @@ export default function RekapKomentarTiktokPage() {
     async function fetchData() {
       try {
         const statsRes = await getDashboardStats(token);
+        const statsData = statsRes.data || statsRes;
+
         const client_id =
-          statsRes.data?.client_id ||
-          statsRes.client_id ||
+          statsData?.client_id ||
+          statsData.client_id ||
           localStorage.getItem("client_id");
         if (!client_id) {
           setError("Client ID tidak ditemukan.");
@@ -46,10 +48,10 @@ export default function RekapKomentarTiktokPage() {
 
         // Sumber utama TikTok Post Hari Ini dari statsRes
         const totalTiktokPost =
-          statsRes.data?.tiktok_posts ||
-          statsRes.tiktok_posts ||
-          statsRes.data?.tiktokPosts ||
-          statsRes.tiktokPosts ||
+          statsData?.ttPosts ||
+          statsData?.tiktokPosts ||
+          statsData.ttPosts ||
+          statsData.tiktokPosts ||
           0;
         const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalUser = users.length;
