@@ -76,3 +76,20 @@ export async function getTikTokComments(token) {
   if (!res.ok) throw new Error("Failed to fetch comments");
   return res.json();
 }
+
+export async function getRekapKomentarTiktok(token, client_id, periode = "harian") {
+  const params = new URLSearchParams({ client_id, periode });
+  const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to fetch rekap komentar tiktok: ${errText}`);
+  }
+  return res.json();
+}
