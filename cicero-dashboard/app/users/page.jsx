@@ -3,11 +3,14 @@ import { useEffect, useState, useMemo } from "react";
 import { getUserDirectory } from "@/utils/api";
 import Loader from "@/components/Loader";
 
+const PAGE_SIZE = 50;
+
 export default function UserDirectoryPage() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
 
   // Ambil client_id dari localStorage (atau sesuaikan kebutuhanmu)
   const client_id =
@@ -62,6 +65,13 @@ export default function UserDirectoryPage() {
     [users, search]
   );
 
+  // Paging logic
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const currentRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset ke halaman 1 saat search berubah
+  useEffect(() => setPage(1), [search]);
+
   if (loading) return <Loader />;
   if (error)
     return (
@@ -99,15 +109,17 @@ export default function UserDirectoryPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((u, idx) => (
+              {currentRows.map((u, idx) => (
                 <tr key={u.user_id || idx} className="border-t">
-                  <td className="py-1 px-2">{idx + 1}</td>
+                  <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="py-1 px-2">
                     {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
                   </td>
                   <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
                   <td className="py-1 px-2">{u.divisi || "-"}</td>
-                  <td className="py-1 px-2 font-mono text-blue-700">@{u.insta || "-"}</td>
+                  <td className="py-1 px-2 font-mono text-blue-700">
+                    {u.insta ? `@${u.insta}` : "-"}
+                  </td>
                   <td className="py-1 px-2 font-mono text-pink-700">{u.tiktok || "-"}</td>
                   <td className="py-1 px-2">
                     {u.status === true || u.status === "true"
@@ -121,7 +133,7 @@ export default function UserDirectoryPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {currentRows.length === 0 && (
                 <tr>
                   <td colSpan="8" className="py-4 text-center text-gray-500">
                     Tidak ada pengguna
@@ -131,6 +143,28 @@ export default function UserDirectoryPage() {
             </tbody>
           </table>
         </div>
+        {/* Paging Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Prev
+            </button>
+            <span className="text-sm text-gray-600">
+              Halaman <b>{page}</b> dari <b>{totalPages}</b>
+            </span>
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
