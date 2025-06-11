@@ -8,13 +8,12 @@ import { groupUsersByKelompok } from "@/utils/grouping";
 import Link from "next/link";
 
 export default function TiktokKomentarTrackingPage() {
-  const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian");
 
-  // Rekap summary (total user, sudah komentar, belum komentar)
+  // Ringkasan absensi TikTok
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -38,7 +37,13 @@ export default function TiktokKomentarTrackingPage() {
         const statsRes = await getDashboardStats(token);
         const statsData = statsRes.data || statsRes;
 
-        setStats(statsData);
+        // **Ambil jumlah TikTok post dari semua kemungkinan field**
+        const totalTiktokPost =
+          statsData?.ttPosts ??
+          statsData?.tiktokPosts ??
+          statsData.ttPosts ??
+          statsData.tiktokPosts ??
+          0;
 
         const client_id =
           statsData?.client_id ||
@@ -53,21 +58,12 @@ export default function TiktokKomentarTrackingPage() {
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        // Sumber utama TikTok Post Hari Ini dari statsRes
-        const totalTiktokPost =
-          statsData?.ttPosts ||
-          statsData?.tiktokPosts ||
-          statsData.ttPosts ||
-          statsData.tiktokPosts ||
-          0;
-
         const totalUser = users.length;
-        const isZeroPost = (totalTiktokPost || 0) === 0;
+        const isZeroPost = totalTiktokPost === 0;
         const totalSudahKomentar = isZeroPost
           ? 0
-          : users.filter(
-              (u) => Number(u.jumlah_komentar) > 0 || u.exception
-            ).length;
+          : users.filter((u) => Number(u.jumlah_komentar) > 0 || u.exception)
+              .length;
         const totalBelumKomentar = totalUser - totalSudahKomentar;
 
         setRekapSummary({
@@ -97,7 +93,7 @@ export default function TiktokKomentarTrackingPage() {
       </div>
     );
 
-  // Group chartData by kelompok (BAG, SAT, dst)
+  // Kelompokkan data users
   const kelompok = groupUsersByKelompok(chartData);
 
   return (
@@ -253,7 +249,13 @@ export default function TiktokKomentarTrackingPage() {
 }
 
 // Komponen ChartBox di file yang sama
-function ChartBox({ title, users, orientation = "vertical", totalTiktokPost, fieldJumlah }) {
+function ChartBox({
+  title,
+  users,
+  orientation = "vertical",
+  totalTiktokPost,
+  fieldJumlah,
+}) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-pink-700 mb-2 text-center">{title}</div>
@@ -266,7 +268,9 @@ function ChartBox({ title, users, orientation = "vertical", totalTiktokPost, fie
           fieldJumlah={fieldJumlah}
         />
       ) : (
-        <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
+        <div className="text-center text-gray-400 text-sm">
+          Tidak ada data
+        </div>
       )}
     </div>
   );
