@@ -90,8 +90,8 @@ export default function UserDirectoryPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="py-2 px-2 text-left">No</th>
-                <th className="py-2 px-2 text-left">Nama<br />(Pangkat Nama)</th>
-                <th className="py-2 px-2 text-left">NRP/NIP<br />(User ID)</th>
+                <th className="py-2 px-2 text-left">Nama</th>
+                <th className="py-2 px-2 text-left">NRP/NIP</th>
                 <th className="py-2 px-2 text-left">Satfung</th>
                 <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Username TikTok</th>
