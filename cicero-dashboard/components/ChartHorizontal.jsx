@@ -15,7 +15,10 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 function bersihkanSatfung(divisi = "") {
-  return divisi.replace(/polsek\s*/i, "").trim();
+  return divisi
+    .replace(/polsek\s*/i, "")
+    .replace(/^[0-9.\-\s]+/, "")
+    .trim();
 }
 
 export default function ChartHorizontal({

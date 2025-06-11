@@ -16,9 +16,12 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
-// Bersihkan "POLSEK" pada nama divisi/satfung
+// Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
-  return divisi.replace(/polsek\s*/i, "").trim();
+  return divisi
+    .replace(/polsek\s*/i, "") // hapus kata "POLSEK"
+    .replace(/^[0-9.\-\s]+/, "") // hapus awalan angka/strip/titik
+    .trim();
 }
 
 export default function ChartDivisiAbsensi({
