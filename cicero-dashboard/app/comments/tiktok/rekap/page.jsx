@@ -144,7 +144,8 @@ export default function RekapKomentarTiktokPage() {
           {/* Kirim data ke komponen detail rekap TikTok */}
           <RekapKomentarTiktok
             users={chartData}
-            totalTiktokPost={rekapSummary.totalTiktokPost}
+            totalPost={rekapSummary.totalTiktokPost}
+            labelJumlah="Komentar"
           />
         </div>
       </div>

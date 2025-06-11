@@ -200,26 +200,30 @@ export default function TiktokKomentarTrackingPage() {
               <ChartBox
                 title="BAG"
                 users={kelompok.BAG}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
               <ChartBox
                 title="SAT"
                 users={kelompok.SAT}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
               <ChartBox
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
             </div>
 
@@ -253,7 +257,13 @@ export default function TiktokKomentarTrackingPage() {
 }
 
 // Komponen ChartBox di file yang sama
-function ChartBox({ title, users, orientation = "vertical", totalTiktokPost, fieldJumlah }) {
+function ChartBox({
+  title,
+  users,
+  orientation = "vertical",
+  totalTiktokPost,
+  fieldJumlah,
+}) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-pink-700 mb-2 text-center">{title}</div>
@@ -262,8 +272,9 @@ function ChartBox({ title, users, orientation = "vertical", totalTiktokPost, fie
           users={users}
           title={title}
           orientation={orientation}
-          totalTiktokPost={totalTiktokPost}
+          totalPost={totalPost}
           fieldJumlah={fieldJumlah}
+          labelJumlah={labelJumlah}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
