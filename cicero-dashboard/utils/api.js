@@ -119,3 +119,35 @@ export async function getTiktokPosts(token, client_id) {
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
+
+// === RapidAPI integration ===
+const RAPID_HOST = "social-api4.p.rapidapi.com";
+const RAPID_BASE_URL = `https://${RAPID_HOST}`;
+
+export async function getInstagramPostsByUsername(username) {
+  const url = `${RAPID_BASE_URL}/instagram/user-posts?username=${encodeURIComponent(
+    username
+  )}`;
+  const res = await fetch(url, {
+    headers: {
+      "X-RapidAPI-Key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY || "",
+      "X-RapidAPI-Host": RAPID_HOST,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch instagram posts via RapidAPI");
+  return res.json();
+}
+
+export async function getTiktokPostsByUsername(username) {
+  const url = `${RAPID_BASE_URL}/tiktok/user-posts?username=${encodeURIComponent(
+    username
+  )}`;
+  const res = await fetch(url, {
+    headers: {
+      "X-RapidAPI-Key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY || "",
+      "X-RapidAPI-Host": RAPID_HOST,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch tiktok posts via RapidAPI");
+  return res.json();
+}
