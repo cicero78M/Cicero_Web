@@ -196,26 +196,30 @@ export default function TiktokKomentarTrackingPage() {
               <ChartBox
                 title="BAG"
                 users={kelompok.BAG}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
               <ChartBox
                 title="SAT"
                 users={kelompok.SAT}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
               <ChartBox
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
+                totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                labelJumlah="Komentar"
               />
             </div>
 
@@ -253,8 +257,9 @@ function ChartBox({
   title,
   users,
   orientation = "vertical",
-  totalTiktokPost,
+  totalPost,
   fieldJumlah,
+  labelJumlah,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -264,8 +269,9 @@ function ChartBox({
           users={users}
           title={title}
           orientation={orientation}
-          totalTiktokPost={totalTiktokPost}
+          totalPost={totalPost}
           fieldJumlah={fieldJumlah}
+          labelJumlah={labelJumlah}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">

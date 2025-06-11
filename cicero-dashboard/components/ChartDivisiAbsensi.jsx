@@ -23,29 +23,41 @@ function bersihkanSatfung(divisi = "") {
 
 export default function ChartDivisiAbsensi({
   users,
-  title = "Absensi Likes per Divisi/Satfung",
-  orientation = "vertical", // default vertical
-  totalIGPost = 1, // ← tambahkan prop ini dari parent, default 1 agar chart tetap jalan
+  title = "Absensi per Divisi/Satfung",
+  orientation = "vertical",
+  totalPost = 1,
+  fieldJumlah = "jumlah_like",
+  labelJumlah = "Like",
+  // backwards compatibility
+  totalIGPost,
+  totalTiktokPost,
 }) {
-  // IG POST 0: semua user (termasuk exception) harus "belum"
-  const isZeroPost = (totalIGPost || 0) === 0;
+  const actualTotal =
+    totalPost !== undefined
+      ? totalPost
+      : totalIGPost !== undefined
+      ? totalIGPost
+      : totalTiktokPost !== undefined
+      ? totalTiktokPost
+      : 1;
+  const isZeroPost = (actualTotal || 0) === 0;
 
   // Grouping by divisi (satfung), tanpa POLSEK
   const divisiMap = {};
   users.forEach((u) => {
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    // sudahLike hanya true jika IG Post > 0
-    const sudahLike = !isZeroPost && (Number(u.jumlah_like) > 0 || isException(u.exception));
+    const jumlah = Number(u[fieldJumlah] || 0);
+    const sudah = !isZeroPost && (jumlah > 0 || isException(u.exception));
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
         user_sudah: 0,
         user_belum: 0,
-        total_like: 0,
+        total_count: 0,
       };
-    if (sudahLike) {
+    if (sudah) {
       divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_like += Number(u.jumlah_like || 0);
+      divisiMap[key].total_count += jumlah;
     } else divisiMap[key].user_belum += 1;
   });
 
@@ -114,36 +126,34 @@ export default function ChartDivisiAbsensi({
               </>
             )}
             <Tooltip
-              formatter={(value, name) =>
-                [
-                  value,
-                  name === "user_sudah"
-                    ? "User Sudah Like"
-                    : name === "user_belum"
-                    ? "User Belum Like"
-                    : name === "total_like"
-                    ? "Total Likes"
-                    : name,
-                ]
-              }
+              formatter={(value, name) => [
+                value,
+                name === "user_sudah"
+                  ? `User Sudah ${labelJumlah}`
+                  : name === "user_belum"
+                  ? `User Belum ${labelJumlah}`
+                  : name === "total_count"
+                  ? `Total ${labelJumlah}`
+                  : name,
+              ]}
               labelFormatter={(label) => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="user_sudah" fill="#22c55e" name="User Sudah Like">
+            <Bar dataKey="user_sudah" fill="#22c55e" name={`User Sudah ${labelJumlah}`}>
               <LabelList
                 dataKey="user_sudah"
                 position={isHorizontal ? "right" : "top"}
                 fontSize={12}
               />
             </Bar>
-            <Bar dataKey="total_like" fill="#2563eb" name="Total Likes">
+            <Bar dataKey="total_count" fill="#2563eb" name={`Total ${labelJumlah}`}>
               <LabelList
-                dataKey="total_like"
+                dataKey="total_count"
                 position={isHorizontal ? "right" : "top"}
                 fontSize={12}
               />
             </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name="User Belum Like">
+            <Bar dataKey="user_belum" fill="#ef4444" name={`User Belum ${labelJumlah}`}>
               <LabelList
                 dataKey="user_belum"
                 position={isHorizontal ? "right" : "top"}
