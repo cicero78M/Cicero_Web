@@ -1,8 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import SocialMediaContentTable from "@/components/SocialMediaContentTable";
+import SocialMediaPosts from "@/components/SocialMediaPosts";
 import Loader from "@/components/Loader";
-import { getInstagramPosts, getTiktokPosts } from "@/utils/api";
+import {
+  getClientProfile,
+  getInstagramPostsByUsername,
+  getTiktokPostsByUsername,
+} from "@/utils/api";
 
 export default function SocialMediaContentManagerPage() {
   const [igPosts, setIgPosts] = useState([]);
@@ -24,13 +29,22 @@ export default function SocialMediaContentManagerPage() {
 
     async function fetchPosts() {
       try {
-        const igRes = await getInstagramPosts(token, client_id);
-        const igData = igRes.data || igRes.posts || igRes;
-        setIgPosts(Array.isArray(igData) ? igData : []);
+        const profileRes = await getClientProfile(token, client_id);
+        const profile = profileRes.client || profileRes.profile || profileRes;
+        const igUsername = profile.client_insta?.replace(/^@/, "");
+        const ttUsername = profile.client_tiktok?.replace(/^@/, "");
 
-        const ttRes = await getTiktokPosts(token, client_id);
-        const ttData = ttRes.data || ttRes.posts || ttRes;
-        setTiktokPosts(Array.isArray(ttData) ? ttData : []);
+        if (igUsername) {
+          const igRes = await getInstagramPostsByUsername(igUsername);
+          const igData = igRes.data || igRes.posts || igRes;
+          setIgPosts(Array.isArray(igData) ? igData : []);
+        }
+
+        if (ttUsername) {
+          const ttRes = await getTiktokPostsByUsername(ttUsername);
+          const ttData = ttRes.data || ttRes.posts || ttRes;
+          setTiktokPosts(Array.isArray(ttData) ? ttData : []);
+        }
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -58,9 +72,13 @@ export default function SocialMediaContentManagerPage() {
         <p className="text-gray-600">
           Manage and schedule posts for Instagram and TikTok in one place.
         </p>
+        <div className="flex flex-col gap-6">
+          <SocialMediaPosts platform="Instagram" posts={igPosts} />
+          <SocialMediaPosts platform="TikTok" posts={tiktokPosts} />
+        </div>
         <div className="flex flex-col md:flex-row gap-6">
-          <SocialMediaContentTable platform="Instagram" initialPosts={igPosts} />
-          <SocialMediaContentTable platform="TikTok" initialPosts={tiktokPosts} />
+          <SocialMediaContentTable platform="Instagram" initialPosts={[]} />
+          <SocialMediaContentTable platform="TikTok" initialPosts={[]} />
         </div>
       </div>
     </div>
