@@ -45,7 +45,12 @@ export default function RekapKomentarTiktokPage() {
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
         // Sumber utama TikTok Post Hari Ini dari statsRes
-        const totalTiktokPost = statsRes.data?.tiktokPosts || statsRes.tiktokPosts || 0;
+        const totalTiktokPost =
+          statsRes.data?.tiktok_posts ||
+          statsRes.tiktok_posts ||
+          statsRes.data?.tiktokPosts ||
+          statsRes.tiktokPosts ||
+          0;
         const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalUser = users.length;
         const totalSudahKomentar = isZeroPost
