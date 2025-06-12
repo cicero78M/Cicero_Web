@@ -96,6 +96,7 @@ export default function InstagramInfoPage() {
     try {
       const profileRes = await getInstagramProfileViaBackend(token, username);
       const infoRes = await getInstagramInfoViaBackend(token, username);
+      const infoData = infoRes.data || infoRes.info || infoRes;
       const postsRes = await getInstagramPostsViaBackend(token, username, 20);
       const postsData = postsRes.data || postsRes.posts || postsRes;
       const avgLikes =
@@ -103,6 +104,9 @@ export default function InstagramInfoPage() {
         (postsData.length || 1);
       const avgComments =
         postsData.reduce((s, p) => s + (p.comment_count || 0), 0) /
+        (postsData.length || 1);
+      const avgViews =
+        postsData.reduce((s, p) => s + (p.view_count || 0), 0) /
         (postsData.length || 1);
       const engagement = profileRes.followers
         ? (((avgLikes + avgComments) / profileRes.followers) * 100).toFixed(2)
@@ -112,6 +116,11 @@ export default function InstagramInfoPage() {
         followers: profileRes.followers,
         following: profileRes.following,
         engagementRate: engagement,
+        avgLikes,
+        avgComments,
+        avgViews,
+        totalPosts: infoData?.media_count ?? infoData?.post_count,
+        totalIgtv: infoData?.total_igtv_videos,
       });
     } catch (err) {
       setCompareStats(null);
@@ -334,6 +343,17 @@ export default function InstagramInfoPage() {
               {`Akun ${profile.username} memiliki ${profile.followers} followers dengan engagement rate ${engagementRate}%. `}
               {`Akun ${compareStats.username} memiliki ${compareStats.followers} followers dengan engagement rate ${compareStats.engagementRate}%.`}
             </Narrative>
+            <div className="text-sm">
+              <h3 className="font-semibold mt-2">Summary Engagement</h3>
+              <ul className="list-disc ml-5">
+                <li>Avg Likes: {compareStats.avgLikes.toFixed(1)}</li>
+                <li>Avg Comments: {compareStats.avgComments.toFixed(1)}</li>
+                <li>Avg Views: {compareStats.avgViews.toFixed(1)}</li>
+                <li>Engagement Rate: {compareStats.engagementRate}%</li>
+                <li>Total Posts: {compareStats.totalPosts ?? "-"}</li>
+                <li>Total IG-TV: {compareStats.totalIgtv ?? "-"}</li>
+              </ul>
+            </div>
           </div>
         )}
       </div>
