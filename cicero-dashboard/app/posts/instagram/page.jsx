@@ -7,6 +7,8 @@ import HeatmapTable from "@/components/HeatmapTable";
 import PostMetricsChart from "@/components/PostMetricsChart";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import Loader from "@/components/Loader";
+import Narrative from "@/components/Narrative";
+import PostCompareChart from "@/components/PostCompareChart";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
@@ -18,6 +20,10 @@ export default function InstagramPostAnalysisPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [compareLink, setCompareLink] = useState("");
+  const [compareStats, setCompareStats] = useState(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareError, setCompareError] = useState("");
 
   useEffect(() => {
     const token =
@@ -56,6 +62,79 @@ export default function InstagramPostAnalysisPage() {
     fetchData();
   }, []);
 
+  function extractUsername(url) {
+    if (!url) return "";
+    return url
+      .replace(/https?:\/\/(www\.)?instagram.com\//i, "")
+      .split(/[/?]/)[0]
+      .replace(/^@/, "")
+      .trim();
+  }
+
+  async function handleCompare(e) {
+    e.preventDefault();
+    const username = extractUsername(compareLink);
+    if (!username) {
+      setCompareError("Link tidak valid");
+      return;
+    }
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+    if (!token) {
+      setCompareError("Token tidak ditemukan. Silakan login ulang.");
+      return;
+    }
+    setCompareLoading(true);
+    setCompareError("");
+    try {
+      const profileRes = await getInstagramProfileViaBackend(token, username);
+      const postsRes = await getInstagramPostsViaBackend(token, username, 12);
+      const postData = postsRes.data || postsRes.posts || postsRes;
+      const sorted = Array.isArray(postData)
+        ? [...postData].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        : [];
+      const subset = sorted.slice(-12);
+      const first = subset.length ? new Date(subset[0].created_at) : new Date();
+      const last = subset.length
+        ? new Date(subset[subset.length - 1].created_at)
+        : new Date();
+      const diff = (last - first) / (1000 * 60 * 60 * 24) || 1;
+      const postRate = (subset.length / diff).toFixed(2);
+
+      const avgLikes =
+        subset.reduce((s, p) => s + (p.like_count || 0), 0) /
+        (subset.length || 1);
+      const avgComments =
+        subset.reduce((s, p) => s + (p.comment_count || 0), 0) /
+        (subset.length || 1);
+      const avgShares =
+        subset.reduce((s, p) => s + (p.share_count || 0), 0) /
+        (subset.length || 1);
+      const avgViews =
+        subset.reduce((s, p) => s + (p.view_count || 0), 0) /
+        (subset.length || 1);
+      const followerRatio = profileRes.followers
+        ? (profileRes.followers / profileRes.following).toFixed(2)
+        : "0";
+      setCompareStats({
+        username: profileRes.username,
+        followers: profileRes.followers,
+        following: profileRes.following,
+        followerRatio: parseFloat(followerRatio),
+        postRate: parseFloat(postRate),
+        avgLikes,
+        avgComments,
+        avgShares,
+        avgViews,
+      });
+    } catch (err) {
+      setCompareStats(null);
+      setCompareError("Gagal mengambil akun pembanding: " + (err.message || err));
+    } finally {
+      setCompareLoading(false);
+    }
+  }
+
   if (loading) return <Loader />;
   if (error)
     return (
@@ -81,6 +160,39 @@ export default function InstagramPostAnalysisPage() {
   const followerRatio = profile.followers
     ? (profile.followers / profile.following).toFixed(2)
     : "0";
+
+  const latestPosts = sortedPosts.slice(-12);
+  const firstLatest = latestPosts.length
+    ? new Date(latestPosts[0].created_at)
+    : new Date();
+  const lastLatest = latestPosts.length
+    ? new Date(latestPosts[latestPosts.length - 1].created_at)
+    : new Date();
+  const diffLatest = (lastLatest - firstLatest) / (1000 * 60 * 60 * 24) || 1;
+  const latestPostRate = (latestPosts.length / diffLatest).toFixed(2);
+  const avgLikesClient =
+    latestPosts.reduce((s, p) => s + (p.like_count || 0), 0) /
+    (latestPosts.length || 1);
+  const avgCommentsClient =
+    latestPosts.reduce((s, p) => s + (p.comment_count || 0), 0) /
+    (latestPosts.length || 1);
+  const avgSharesClient =
+    latestPosts.reduce((s, p) => s + (p.share_count || 0), 0) /
+    (latestPosts.length || 1);
+  const avgViewsClient =
+    latestPosts.reduce((s, p) => s + (p.view_count || 0), 0) /
+    (latestPosts.length || 1);
+
+  const profilePic =
+    profile.hd_profile_pic_url_info?.url ||
+    profile.hd_profile_pic_versions?.[0]?.url ||
+    profile.profile_pic_url ||
+    "";
+
+  const getProfilePicSrc = (url) => {
+    if (!url) return "/file.svg";
+    return url.replace(/\.heic(\?|$)/, ".jpg$1");
+  };
 
   const hashtagMap = {};
   const mentionMap = {};
@@ -141,6 +253,47 @@ export default function InstagramPostAnalysisPage() {
         <h1 className="text-2xl font-bold text-blue-700">Instagram Post Analysis</h1>
         <p className="text-gray-600">Analisis performa postingan Instagram.</p>
 
+        <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
+          {profilePic && (
+            <img
+              src={getProfilePicSrc(profilePic)}
+              alt="profile"
+              className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+              onError={(e) => {
+                e.currentTarget.src = "/file.svg";
+              }}
+            />
+          )}
+          <div className="flex-1">
+            <div className="text-lg font-semibold">
+              {profile.full_name || profile.username}
+            </div>
+            <div className="text-gray-500">@{profile.username}</div>
+            {profile.category && (
+              <div className="text-gray-500 text-sm">{profile.category}</div>
+            )}
+          </div>
+        </div>
+
+        <form onSubmit={handleCompare} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Link akun pembanding"
+            value={compareLink}
+            onChange={(e) => setCompareLink(e.target.value)}
+            className="flex-1 px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            Bandingkan
+          </button>
+        </form>
+        {compareError && (
+          <div className="text-red-500 text-sm">{compareError}</div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardStat title="Followers" value={profile.followers} />
           <CardStat title="Following" value={profile.following} />
@@ -191,6 +344,31 @@ export default function InstagramPostAnalysisPage() {
           <h3 className="font-semibold mb-2">Posts Overview</h3>
           <InstagramPostsGrid posts={sortedPosts} />
         </div>
+
+        {compareLoading && <Loader />}
+        {compareStats && (
+          <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
+            <h3 className="font-semibold">Perbandingan dengan {compareStats.username}</h3>
+            <PostCompareChart
+              client={{
+                username: profile.username,
+                followers: profile.followers,
+                following: profile.following,
+                followerRatio: parseFloat(followerRatio),
+                postRate: parseFloat(latestPostRate),
+                avgLikes: avgLikesClient,
+                avgComments: avgCommentsClient,
+                avgShares: avgSharesClient,
+                avgViews: avgViewsClient,
+              }}
+              competitor={compareStats}
+            />
+            <Narrative>
+              {`Dalam 12 posting terakhir, ${profile.username} rata-rata memperoleh ${avgLikesClient.toFixed(1)} likes, ${avgCommentsClient.toFixed(1)} komentar, ${avgSharesClient.toFixed(1)} share, dan ${avgViewsClient.toFixed(1)} views dengan frekuensi ${latestPostRate} posting per hari serta rasio follower/following ${followerRatio}. `}
+              {`Sementara ${compareStats.username} rata-rata ${compareStats.avgLikes.toFixed(1)} likes, ${compareStats.avgComments.toFixed(1)} komentar, ${compareStats.avgShares.toFixed(1)} share, dan ${compareStats.avgViews.toFixed(1)} views dengan frekuensi ${compareStats.postRate} posting per hari serta rasio ${compareStats.followerRatio}.`}
+            </Narrative>
+          </div>
+        )}
 
 
       </div>
