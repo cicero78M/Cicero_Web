@@ -1,12 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import CardStat from "@/components/CardStat";
-import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import Loader from "@/components/Loader";
-import PostMetricsChart from "@/components/PostMetricsChart";
 import {
   getInstagramProfileViaBackend,
-  getInstagramPostsViaBackend,
   getInstagramInfoViaBackend,
   getClientProfile,
 } from "@/utils/api";
@@ -14,7 +11,7 @@ import {
 export default function InstagramInfoPage() {
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
-  const [posts, setPosts] = useState([]);
+  const [clientProfile, setClientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -34,10 +31,14 @@ export default function InstagramInfoPage() {
 
     async function fetchData() {
       try {
-        const clientProfile = await getClientProfile(token, clientId);
+        const clientProfileRes = await getClientProfile(token, clientId);
+        const clientData =
+          clientProfileRes.client || clientProfileRes.profile || clientProfileRes;
+        setClientProfile(clientData);
+
         const username =
-          clientProfile.client?.client_insta?.replace(/^@/, "") ||
-          clientProfile.client_insta?.replace(/^@/, "") ||
+          clientData.client?.client_insta?.replace(/^@/, "") ||
+          clientData.client_insta?.replace(/^@/, "") ||
           process.env.NEXT_PUBLIC_INSTAGRAM_USER ||
           "instagram";
 
@@ -48,9 +49,6 @@ export default function InstagramInfoPage() {
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
 
-        const postRes = await getInstagramPostsViaBackend(token, username, 5);
-        const postData = postRes.data || postRes.posts || postRes;
-        setPosts(Array.isArray(postData) ? postData : []);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -71,7 +69,7 @@ export default function InstagramInfoPage() {
       </div>
     );
 
-  if (!profile) return null;
+  if (!profile || !clientProfile) return null;
 
   const stats = [
     { title: "Followers", value: profile.followers },
@@ -80,11 +78,19 @@ export default function InstagramInfoPage() {
     { title: "Account Type", value: info?.account_type || "-" },
   ];
 
-  const sortedPosts = [...posts].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at),
-  );
-  const latestPost = sortedPosts[0];
-  const otherPosts = sortedPosts.slice(1);
+  const profilePic =
+    profile.profile_pic_url ||
+    info?.profile_pic_url_hd ||
+    info?.profile_pic_url ||
+    "";
+
+  const biography = profile.bio || info?.biography || "";
+
+  const bioLink =
+    (info?.bio_links && (info.bio_links[0]?.link || info.bio_links[0]?.url)) ||
+    info?.external_url ||
+    "";
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
@@ -95,32 +101,84 @@ export default function InstagramInfoPage() {
             <CardStat key={s.title} title={s.title} value={s.value ?? "-"} />
           ))}
         </div>
-        {latestPost && (
-          <div className="bg-white p-4 rounded-xl shadow">
-            <h2 className="font-semibold mb-2">Latest Post</h2>
-            {latestPost.thumbnail && (
-              <img
-                src={latestPost.thumbnail}
-                alt={latestPost.caption || "thumbnail"}
-                className="w-full max-h-64 object-cover rounded"
-              />
+        <div className="bg-white p-4 rounded-xl shadow flex items-start gap-4">
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="profile"
+              className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+            />
+          )}
+          <div className="flex-1">
+            <div className="font-semibold">{profile.username}</div>
+            {biography && (
+              <p className="mt-1 text-sm whitespace-pre-line">{biography}</p>
             )}
-            <p className="mt-2 text-sm">{latestPost.caption || "-"}</p>
+            {bioLink && (
+              <a
+                href={bioLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline text-sm break-all"
+              >
+                {bioLink}
+              </a>
+            )}
           </div>
-        )}
-        <div className="bg-white p-4 rounded-xl shadow">
-          <h2 className="font-semibold mb-2">Other Recent Posts</h2>
-          <InstagramPostsGrid posts={otherPosts} />
         </div>
         <div className="bg-white p-4 rounded-xl shadow">
-          <h2 className="font-semibold mb-2">Post Metrics Comparison</h2>
-          <PostMetricsChart posts={sortedPosts} />
+          <h2 className="font-semibold mb-2">Client Profile</h2>
+          <div className="flex flex-col gap-1 text-sm">
+            <Row label="Nama" value={clientProfile.nama || "-"} />
+            <Row label="Tipe" value={clientProfile.client_type || "-"} />
+            <Row label="Group" value={clientProfile.client_group || "-"} />
+            {clientProfile.client_insta && (
+              <Row
+                label="Instagram"
+                value={
+                  <a
+                    href={`https://instagram.com/${clientProfile.client_insta.replace(/^@/, "")}`}
+                    className="text-pink-600 underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {clientProfile.client_insta}
+                  </a>
+                }
+              />
+            )}
+            {clientProfile.client_tiktok && (
+              <Row
+                label="TikTok"
+                value={
+                  <a
+                    href={`https://www.tiktok.com/@${clientProfile.client_tiktok.replace(/^@/, "")}`}
+                    className="text-blue-600 underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {clientProfile.client_tiktok}
+                  </a>
+                }
+              />
+            )}
+          </div>
         </div>
         <div className="bg-white p-4 rounded-xl shadow overflow-x-auto text-sm">
           <h2 className="font-semibold mb-2">Raw Info</h2>
           <pre>{JSON.stringify(info, null, 2)}</pre>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex items-start py-1 gap-2">
+      <div className="w-24 text-gray-500 flex-shrink-0">{label}</div>
+      <div className="text-gray-300 select-none">:</div>
+      <div className="flex-1 break-all">{value}</div>
     </div>
   );
 }
