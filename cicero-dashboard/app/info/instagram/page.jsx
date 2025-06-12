@@ -330,30 +330,34 @@ export default function InstagramInfoPage() {
         {compareStats && (
           <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
             <h2 className="font-semibold">Perbandingan dengan {compareStats.username}</h2>
-            <InstagramCompareChart
-              client={{
-                username: profile.username,
-                followers: profile.followers,
-                following: profile.following,
-                engagementRate,
-              }}
-              competitor={compareStats}
-            />
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <InstagramCompareChart
+                  client={{
+                    username: profile.username,
+                    followers: profile.followers,
+                    following: profile.following,
+                    engagementRate,
+                  }}
+                  competitor={compareStats}
+                />
+              </div>
+              <div className="text-sm flex-1">
+                <h3 className="font-semibold md:mt-0 mt-2">Summary Engagement</h3>
+                <ul className="list-disc ml-5">
+                  <li>Avg Likes: {compareStats.avgLikes.toFixed(1)}</li>
+                  <li>Avg Comments: {compareStats.avgComments.toFixed(1)}</li>
+                  <li>Avg Views: {compareStats.avgViews.toFixed(1)}</li>
+                  <li>Engagement Rate: {compareStats.engagementRate}%</li>
+                  <li>Total Posts: {compareStats.totalPosts ?? "-"}</li>
+                  <li>Total IG-TV: {compareStats.totalIgtv ?? "-"}</li>
+                </ul>
+              </div>
+            </div>
             <Narrative>
               {`Akun ${profile.username} memiliki ${profile.followers} followers dengan engagement rate ${engagementRate}%. `}
               {`Akun ${compareStats.username} memiliki ${compareStats.followers} followers dengan engagement rate ${compareStats.engagementRate}%.`}
             </Narrative>
-            <div className="text-sm">
-              <h3 className="font-semibold mt-2">Summary Engagement</h3>
-              <ul className="list-disc ml-5">
-                <li>Avg Likes: {compareStats.avgLikes.toFixed(1)}</li>
-                <li>Avg Comments: {compareStats.avgComments.toFixed(1)}</li>
-                <li>Avg Views: {compareStats.avgViews.toFixed(1)}</li>
-                <li>Engagement Rate: {compareStats.engagementRate}%</li>
-                <li>Total Posts: {compareStats.totalPosts ?? "-"}</li>
-                <li>Total IG-TV: {compareStats.totalIgtv ?? "-"}</li>
-              </ul>
-            </div>
           </div>
         )}
       </div>
