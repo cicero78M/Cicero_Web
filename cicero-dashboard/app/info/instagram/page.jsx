@@ -79,6 +79,8 @@ export default function InstagramInfoPage() {
     { title: "Followers", value: profile.followers },
     { title: "Following", value: profile.following },
     { title: "Total Posts", value: info?.media_count ?? info?.post_count },
+    { title: "Total IG-TV", value: info?.total_igtv_videos },
+
   ];
 
   const profilePic =
