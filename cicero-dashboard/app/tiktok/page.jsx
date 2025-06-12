@@ -1,12 +1,12 @@
 "use client";
-import TiktokInfoPage from "../info/tiktok/page";
-import TiktokPostAnalysisPage from "../posts/tiktok/page";
+import TiktokInfo from "@/components/tiktok/Info";
+import TiktokPostAnalysis from "@/components/tiktok/PostAnalysis";
 
 export default function TiktokCombinedPage() {
   return (
     <>
-      <TiktokInfoPage />
-      <TiktokPostAnalysisPage />
+      <TiktokInfo />
+      <TiktokPostAnalysis />
     </>
   );
 }
