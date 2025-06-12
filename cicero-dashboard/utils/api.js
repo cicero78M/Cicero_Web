@@ -251,7 +251,30 @@ export async function getTiktokPostsViaBackend(token, client_id, limit = 10) {
     const text = await res.text();
     throw new Error(`Failed to fetch tiktok posts: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  let posts = json.data || json.posts || json;
+  if (Array.isArray(posts)) {
+    posts = posts.map((p) => ({
+      id: p.id || p.post_id || p.aweme_id || p.video_id,
+      caption: p.caption || p.desc || "",
+      thumbnail:
+        p.thumbnail ||
+        p.cover ||
+        p.video?.cover ||
+        p.video?.originCover ||
+        "",
+      like_count: p.like_count ?? p.stats?.diggCount ?? p.diggCount ?? 0,
+      comment_count:
+        p.comment_count ?? p.stats?.commentCount ?? p.commentCount ?? 0,
+      share_count: p.share_count ?? p.stats?.shareCount ?? p.shareCount ?? 0,
+      view_count: p.view_count ?? p.stats?.playCount ?? p.playCount ?? 0,
+      created_at:
+        p.created_at ||
+        (p.createTime ? new Date(p.createTime * 1000).toISOString() : ""),
+      ...p,
+    }));
+  }
+  return posts;
 }
 
 // Fetch TikTok posts via backend using username (for compare feature)
@@ -267,7 +290,30 @@ export async function getTiktokPostsByUsernameViaBackend(
     const text = await res.text();
     throw new Error(`Failed to fetch tiktok posts: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  let posts = json.data || json.posts || json;
+  if (Array.isArray(posts)) {
+    posts = posts.map((p) => ({
+      id: p.id || p.post_id || p.aweme_id || p.video_id,
+      caption: p.caption || p.desc || "",
+      thumbnail:
+        p.thumbnail ||
+        p.cover ||
+        p.video?.cover ||
+        p.video?.originCover ||
+        "",
+      like_count: p.like_count ?? p.stats?.diggCount ?? p.diggCount ?? 0,
+      comment_count:
+        p.comment_count ?? p.stats?.commentCount ?? p.commentCount ?? 0,
+      share_count: p.share_count ?? p.stats?.shareCount ?? p.shareCount ?? 0,
+      view_count: p.view_count ?? p.stats?.playCount ?? p.playCount ?? 0,
+      created_at:
+        p.created_at ||
+        (p.createTime ? new Date(p.createTime * 1000).toISOString() : ""),
+      ...p,
+    }));
+  }
+  return posts;
 }
 
 export async function getTiktokPosts(token, client_id) {
