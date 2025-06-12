@@ -122,6 +122,7 @@ export default function SocialMediaContentManagerPage() {
       like_count: p.like_count || 0,
       comment_count: p.comment_count || 0,
       share_count: p.share_count || 0,
+      view_count: p.view_count || 0,
     });
 
     if (!typeMap[p.type]) typeMap[p.type] = { total: 0, count: 0 };

@@ -35,6 +35,11 @@ export default function PostMetricsChart({ posts = [] }) {
         data: posts.map((p) => p.share_count || 0),
         backgroundColor: "rgba(234,88,12,0.6)",
       },
+      {
+        label: "Views",
+        data: posts.map((p) => p.view_count || 0),
+        backgroundColor: "rgba(139,92,246,0.6)",
+      },
     ],
   };
 

@@ -81,6 +81,7 @@ The Social Media Content Manager page retrieves Instagram analytics from the bac
 - `like_count`
 - `comment_count`
 - `share_count`
+- `view_count` (optional)
 - `thumbnail` (optional)
 
 These fields are provided by the backend endpoints `/api/insta/rapid-profile` and `/api/insta/rapid-posts`.
