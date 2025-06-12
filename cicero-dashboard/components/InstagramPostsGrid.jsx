@@ -7,13 +7,11 @@ export default function InstagramPostsGrid({ posts = [] }) {
           key={post.id || post.post_id}
           className="bg-white rounded-lg shadow border overflow-hidden"
         >
-          {post.thumbnail && (
-            <img
-              src={post.thumbnail}
-              alt={post.caption || "thumbnail"}
-              className="w-full h-48 object-cover"
-            />
-          )}
+          <img
+            src={post.thumbnail || "/file.svg"}
+            alt={post.caption || "thumbnail"}
+            className="w-full h-48 object-cover"
+          />
           <div className="p-4 flex flex-col gap-2">
             <p className="font-semibold text-sm break-words">
               {post.caption || "-"}
