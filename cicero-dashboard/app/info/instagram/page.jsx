@@ -11,7 +11,6 @@ import {
 export default function InstagramInfoPage() {
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
-  const [clientProfile, setClientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -34,7 +33,6 @@ export default function InstagramInfoPage() {
         const clientProfileRes = await getClientProfile(token, clientId);
         const clientData =
           clientProfileRes.client || clientProfileRes.profile || clientProfileRes;
-        setClientProfile(clientData);
 
         const username =
           clientData.client?.client_insta?.replace(/^@/, "") ||
@@ -69,17 +67,18 @@ export default function InstagramInfoPage() {
       </div>
     );
 
-  if (!profile || !clientProfile) return null;
+  if (!profile) return null;
 
   const stats = [
     { title: "Followers", value: profile.followers },
     { title: "Following", value: profile.following },
-    { title: "Total Posts", value: info?.post_count },
-    { title: "Account Type", value: info?.account_type || "-" },
+    { title: "Total Posts", value: info?.media_count ?? info?.post_count },
+    { title: "Category", value: info?.category || "-" },
   ];
 
   const profilePic =
     profile.profile_pic_url ||
+    info?.hd_profile_pic_url_info?.url ||
     info?.profile_pic_url_hd ||
     info?.profile_pic_url ||
     "";
@@ -90,6 +89,14 @@ export default function InstagramInfoPage() {
     (info?.bio_links && (info.bio_links[0]?.link || info.bio_links[0]?.url)) ||
     info?.external_url ||
     "";
+
+  const profileDetails = [
+    { label: "Full Name", value: info?.full_name || "-" },
+    { label: "User ID", value: info?.id || "-" },
+    { label: "Verified", value: info?.is_verified ? "Yes" : "No" },
+    { label: "Business Email", value: info?.public_email || "-" },
+    { label: "Phone", value: info?.public_phone_number || "-" },
+  ];
 
 
   return (
@@ -127,41 +134,11 @@ export default function InstagramInfoPage() {
           </div>
         </div>
         <div className="bg-white p-4 rounded-xl shadow">
-          <h2 className="font-semibold mb-2">Client Profile</h2>
+          <h2 className="font-semibold mb-2">Profile Details</h2>
           <div className="flex flex-col gap-1 text-sm">
-            <Row label="Nama" value={clientProfile.nama || "-"} />
-            <Row label="Tipe" value={clientProfile.client_type || "-"} />
-            <Row label="Group" value={clientProfile.client_group || "-"} />
-            {clientProfile.client_insta && (
-              <Row
-                label="Instagram"
-                value={
-                  <a
-                    href={`https://instagram.com/${clientProfile.client_insta.replace(/^@/, "")}`}
-                    className="text-pink-600 underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {clientProfile.client_insta}
-                  </a>
-                }
-              />
-            )}
-            {clientProfile.client_tiktok && (
-              <Row
-                label="TikTok"
-                value={
-                  <a
-                    href={`https://www.tiktok.com/@${clientProfile.client_tiktok.replace(/^@/, "")}`}
-                    className="text-blue-600 underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {clientProfile.client_tiktok}
-                  </a>
-                }
-              />
-            )}
+            {profileDetails.map((row) => (
+              <Row key={row.label} label={row.label} value={row.value} />
+            ))}
           </div>
         </div>
         <div className="bg-white p-4 rounded-xl shadow overflow-x-auto text-sm">
