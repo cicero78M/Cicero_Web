@@ -6,6 +6,7 @@ import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import Link from "next/link";
+import Narrative from "@/components/Narrative";
 
 export default function TiktokKomentarTrackingPage() {
   const [chartData, setChartData] = useState([]);
@@ -196,18 +197,21 @@ export default function TiktokKomentarTrackingPage() {
                 users={kelompok.BAG}
                 totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
               />
               <ChartBox
                 title="SAT"
                 users={kelompok.SAT}
                 totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
               />
               <ChartBox
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
                 totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
               />
               <ChartHorizontal
                 title="POLSEK"
@@ -218,6 +222,10 @@ export default function TiktokKomentarTrackingPage() {
                 labelBelum="User Belum Komentar"
                 labelTotal="Total Komentar"
               />
+              <Narrative>
+                Grafik POLSEK menggambarkan distribusi komentar antar user dari
+                setiap polsek serta total komentar yang berhasil dikumpulkan.
+              </Narrative>
             </div>
 
             <div className="flex justify-end my-2">
@@ -250,12 +258,14 @@ export default function TiktokKomentarTrackingPage() {
 }
 
 // Komponen ChartBox di file yang sama
+
 function ChartBox({
   title,
   users,
   orientation = "vertical",
   totalTiktokPost,
   fieldJumlah,
+  narrative,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -274,6 +284,7 @@ function ChartBox({
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}
+      {narrative && <Narrative>{narrative}</Narrative>}
     </div>
   );
 }

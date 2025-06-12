@@ -157,6 +157,10 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-sm text-gray-500 italic">
+        Tabel ini merangkum status komentar TikTok setiap user dan total jumlah
+        komentar yang diberikan.
+      </p>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
