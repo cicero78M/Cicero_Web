@@ -83,10 +83,15 @@ export default function InstagramInfoPage() {
 
   ];
 
-  const profilePic = 
+  const profilePic =
     info?.hd_profile_pic_url_info?.url ||
-    info?.hd_profile_pic_versions.url ||
+    info?.hd_profile_pic_versions?.[0]?.url ||
     "";
+
+  const getProfilePicSrc = (url) => {
+    if (!url) return "/file.svg";
+    return url.replace(/\.heic(\?|$)/, ".jpg$1");
+  };
 
   const biography = profile.bio || info?.biography || "";
 
@@ -127,9 +132,12 @@ export default function InstagramInfoPage() {
         <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
           {profilePic && (
             <img
-              src={profilePic}
+              src={getProfilePicSrc(profilePic)}
               alt="profile"
               className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+              onError={(e) => {
+                e.currentTarget.src = "/file.svg";
+              }}
             />
           )}
           <div className="flex-1">
