@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
+import Narrative from "@/components/Narrative";
+import InstagramCompareChart from "@/components/InstagramCompareChart";
 import {
   getInstagramProfileViaBackend,
   getInstagramInfoViaBackend,
@@ -15,6 +17,10 @@ export default function InstagramInfoPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [compareLink, setCompareLink] = useState("");
+  const [compareStats, setCompareStats] = useState(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareError, setCompareError] = useState("");
 
   useEffect(() => {
     const token =
@@ -62,6 +68,58 @@ export default function InstagramInfoPage() {
 
     fetchData();
   }, []);
+
+  function extractUsername(url) {
+    if (!url) return "";
+    return url
+      .replace(/https?:\/\/(www\.)?instagram.com\//i, "")
+      .split(/[/?]/)[0]
+      .replace(/^@/, "")
+      .trim();
+  }
+
+  async function handleCompare(e) {
+    e.preventDefault();
+    const username = extractUsername(compareLink);
+    if (!username) {
+      setCompareError("Link tidak valid");
+      return;
+    }
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+    if (!token) {
+      setCompareError("Token tidak ditemukan. Silakan login ulang.");
+      return;
+    }
+    setCompareLoading(true);
+    setCompareError("");
+    try {
+      const profileRes = await getInstagramProfileViaBackend(token, username);
+      const infoRes = await getInstagramInfoViaBackend(token, username);
+      const postsRes = await getInstagramPostsViaBackend(token, username, 20);
+      const postsData = postsRes.data || postsRes.posts || postsRes;
+      const avgLikes =
+        postsData.reduce((s, p) => s + (p.like_count || 0), 0) /
+        (postsData.length || 1);
+      const avgComments =
+        postsData.reduce((s, p) => s + (p.comment_count || 0), 0) /
+        (postsData.length || 1);
+      const engagement = profileRes.followers
+        ? (((avgLikes + avgComments) / profileRes.followers) * 100).toFixed(2)
+        : "0";
+      setCompareStats({
+        username: profileRes.username,
+        followers: profileRes.followers,
+        following: profileRes.following,
+        engagementRate: engagement,
+      });
+    } catch (err) {
+      setCompareStats(null);
+      setCompareError("Gagal mengambil akun pembanding: " + (err.message || err));
+    } finally {
+      setCompareLoading(false);
+    }
+  }
 
   if (loading) return <Loader />;
   if (error)
@@ -124,6 +182,24 @@ export default function InstagramInfoPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-4xl flex flex-col gap-8">
         <h1 className="text-2xl font-bold text-blue-700">Instagram Info</h1>
+        <form onSubmit={handleCompare} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Link akun pembanding"
+            value={compareLink}
+            onChange={(e) => setCompareLink(e.target.value)}
+            className="flex-1 px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            Bandingkan
+          </button>
+        </form>
+        {compareError && (
+          <div className="text-red-500 text-sm">{compareError}</div>
+        )}
         <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
           {profilePic && (
             <img
@@ -232,6 +308,26 @@ export default function InstagramInfoPage() {
             ))}
           </div>
         </div>
+
+        {compareLoading && <Loader />}
+        {compareStats && (
+          <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
+            <h2 className="font-semibold">Perbandingan dengan {compareStats.username}</h2>
+            <InstagramCompareChart
+              client={{
+                username: profile.username,
+                followers: profile.followers,
+                following: profile.following,
+                engagementRate,
+              }}
+              competitor={compareStats}
+            />
+            <Narrative>
+              {`Akun ${profile.username} memiliki ${profile.followers} followers dengan engagement rate ${engagementRate}%. `}
+              {`Akun ${compareStats.username} memiliki ${compareStats.followers} followers dengan engagement rate ${compareStats.engagementRate}%.`}
+            </Narrative>
+          </div>
+        )}
       </div>
     </div>
   );
