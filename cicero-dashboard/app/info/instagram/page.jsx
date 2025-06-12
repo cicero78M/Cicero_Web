@@ -356,17 +356,6 @@ export default function InstagramInfoPage() {
                   }}
                   competitor={compareStats}
                 />
-                <div className="text-sm">
-                  <h3 className="font-semibold md:mt-0 mt-2">Summary Engagement</h3>
-                  <ul className="list-disc ml-5">
-                    <li>Avg Likes: {compareStats.avgLikes.toFixed(1)}</li>
-                    <li>Avg Comments: {compareStats.avgComments.toFixed(1)}</li>
-                    <li>Avg Views: {compareStats.avgViews.toFixed(1)}</li>
-                    <li>Engagement Rate: {compareStats.engagementRate}%</li>
-                    <li>Total Posts: {compareStats.totalPosts ?? "-"}</li>
-                    <li>Total IG-TV: {compareStats.totalIgtv ?? "-"}</li>
-                  </ul>
-                </div>
               </div>
             </div>
             <Narrative>
