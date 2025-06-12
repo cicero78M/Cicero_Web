@@ -219,11 +219,12 @@ export default function TiktokPostAnalysisPage() {
     typeMap[p.type].total += eng;
     typeMap[p.type].count += 1;
 
-    const tags = p.caption.match(/#\w+/g) || [];
+    const captionText = typeof p.caption === "string" ? p.caption : "";
+    const tags = captionText.match(/#\w+/g) || [];
     tags.forEach((t) => {
       hashtagMap[t] = (hashtagMap[t] || 0) + 1;
     });
-    const mentions = p.caption.match(/@\w+/g) || [];
+    const mentions = captionText.match(/@\w+/g) || [];
     mentions.forEach((m) => {
       mentionMap[m] = (mentionMap[m] || 0) + 1;
     });
