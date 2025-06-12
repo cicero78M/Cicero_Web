@@ -347,8 +347,12 @@ export default function InstagramInfoPage() {
               />
             </div>
             <Narrative>
-              {`Akun ${profile.username} memiliki ${profile.followers} followers dengan engagement rate ${engagementRate}%. `}
-              {`Akun ${compareStats.username} memiliki ${compareStats.followers} followers dengan engagement rate ${compareStats.engagementRate}%.`}
+              {`Akun ${profile.username} memiliki ${profile.followers} followers dan mengikuti ${profile.following} akun. `}
+              {`Rata-rata mendapat ${avgLikes.toFixed(1)} likes, ${avgComments.toFixed(1)} komentar, dan ${avgViews.toFixed(1)} views per posting dengan engagement rate ${engagementRate}%. `}
+              {`Total posting sebanyak ${info?.media_count ?? info?.post_count} dan ${info?.total_igtv_videos || 0} IG-TV. `}
+              {`Sebagai pembanding, akun ${compareStats.username} memiliki ${compareStats.followers} followers dan mengikuti ${compareStats.following} akun. `}
+              {`Rata-rata ${compareStats.avgLikes.toFixed(1)} likes, ${compareStats.avgComments.toFixed(1)} komentar, serta ${compareStats.avgViews.toFixed(1)} views tiap posting dengan engagement rate ${compareStats.engagementRate}%. `}
+              {`Total posting ${compareStats.totalPosts || 0} dan ${compareStats.totalIgtv || 0} IG-TV.`}
             </Narrative>
           </div>
         )}
