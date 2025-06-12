@@ -153,7 +153,7 @@ export default function InstagramPostAnalysisPage() {
           <EngagementLineChart data={lineData} />
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow">
+                <div className="bg-white p-4 rounded-xl shadow">
           <h3 className="font-semibold mb-2">Post Metrics Comparison</h3>
           <PostMetricsChart posts={sortedPosts} />
         </div>
@@ -162,7 +162,6 @@ export default function InstagramPostAnalysisPage() {
           <h2 className="font-semibold mb-2">Engagement by Content Type</h2>
           <EngagementByTypeChart data={typeData} />
         </div>
-
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-xl shadow">
@@ -192,6 +191,7 @@ export default function InstagramPostAnalysisPage() {
           <h3 className="font-semibold mb-2">Posts Overview</h3>
           <InstagramPostsGrid posts={sortedPosts} />
         </div>
+
 
       </div>
     </div>
