@@ -5,12 +5,14 @@ import Loader from "@/components/Loader";
 import {
   getInstagramProfileViaBackend,
   getInstagramInfoViaBackend,
+  getInstagramPostsViaBackend,
   getClientProfile,
 } from "@/utils/api";
 
 export default function InstagramInfoPage() {
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -46,6 +48,10 @@ export default function InstagramInfoPage() {
         const infoRes = await getInstagramInfoViaBackend(token, username);
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
+
+        const postsRes = await getInstagramPostsViaBackend(token, username, 20);
+        const postsData = postsRes.data || postsRes.posts || postsRes;
+        setPosts(Array.isArray(postsData) ? postsData : []);
 
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
@@ -98,17 +104,28 @@ export default function InstagramInfoPage() {
     { label: "Phone", value: info?.public_phone_number || "-" },
   ];
 
+  const avgLikes =
+    posts.reduce((sum, p) => sum + (p.like_count || 0), 0) / (posts.length || 1);
+  const avgComments =
+    posts.reduce((sum, p) => sum + (p.comment_count || 0), 0) /
+    (posts.length || 1);
+  const avgViews =
+    posts.reduce((sum, p) => sum + (p.view_count || 0), 0) /
+    (posts.length || 1);
+  const engagementRate = profile.followers
+    ? (((avgLikes + avgComments) / profile.followers) * 100).toFixed(2)
+    : "0";
+
+  const accountType =
+    info?.is_business || info?.is_professional ? "Bisnis" : "Pribadi";
+  const privacyStatus = info?.is_private ? "Privat" : "Terbuka";
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-4xl flex flex-col gap-8">
         <h1 className="text-2xl font-bold text-blue-700">Instagram Info</h1>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((s) => (
-            <CardStat key={s.title} title={s.title} value={s.value ?? "-"} />
-          ))}
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow flex items-start gap-4">
+        <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
           {profilePic && (
             <img
               src={profilePic}
@@ -117,22 +134,97 @@ export default function InstagramInfoPage() {
             />
           )}
           <div className="flex-1">
-            <div className="font-semibold">{profile.username}</div>
-            {biography && (
-              <p className="mt-1 text-sm whitespace-pre-line">{biography}</p>
+            <div className="flex items-center gap-2">
+              <div className="text-lg font-semibold">
+                {info?.full_name || profile.username}
+              </div>
+              {info?.is_verified && (
+                <span className="text-blue-500" title="Verified">
+                  ✔
+                </span>
+              )}
+            </div>
+            <div className="text-gray-500">@{profile.username}</div>
+            <div className="text-gray-500 text-sm">{info?.category || "-"}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((s) => (
+            <CardStat key={s.title} title={s.title} value={s.value ?? "-"} />
+          ))}
+        </div>
+
+        {biography && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm whitespace-pre-line">
+            {biography}
+            {bioLink && (
+              <div className="mt-2">
+                <a
+                  href={bioLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline break-all"
+                >
+                  {bioLink}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(info?.address || info?.public_phone_number || info?.public_email) && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm">
+            {info?.address && <div>{info.address}</div>}
+            {info?.public_phone_number && <div>WA: {info.public_phone_number}</div>}
+            {info?.public_email && <div>Email: {info.public_email}</div>}
+          </div>
+        )}
+
+        {posts.length > 0 && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <h2 className="font-semibold mb-2">Summary Engagement</h2>
+            <ul className="list-disc ml-5">
+              <li>Avg Likes: {avgLikes.toFixed(1)}</li>
+              <li>Avg Comments: {avgComments.toFixed(1)}</li>
+              <li>Avg Views: {avgViews.toFixed(1)}</li>
+              <li>Engagement Rate: {engagementRate}%</li>
+            </ul>
+          </div>
+        )}
+
+        <div className="bg-white p-4 rounded-xl shadow text-sm">
+          <h2 className="font-semibold mb-2">Fitur dan Status Akun</h2>
+          <ul className="list-disc ml-5">
+            <li>{accountType}</li>
+            <li>{privacyStatus}</li>
+          </ul>
+        </div>
+
+        {(info?.public_phone_number || bioLink) && (
+          <div className="bg-white p-4 rounded-xl shadow text-center">
+            {info?.public_phone_number && (
+              <a
+                href={`https://wa.me/${info.public_phone_number}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline mr-4"
+              >
+                Hubungi WhatsApp
+              </a>
             )}
             {bioLink && (
               <a
                 href={bioLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline text-sm break-all"
+                className="text-blue-600 underline"
               >
-                {bioLink}
+                Kunjungi Link
               </a>
             )}
           </div>
-        </div>
+        )}
         <div className="bg-white p-4 rounded-xl shadow">
           <h2 className="font-semibold mb-2">Profile Details</h2>
           <div className="flex flex-col gap-1 text-sm">
