@@ -8,7 +8,6 @@ import { Menu as IconMenu, X as IconX } from "lucide-react"; // Import lucide ic
 const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
   { label: "User Directory", path: "/users", icon: "👤" },
-  { label: "Social Media Content Manager", path: "/content", icon: "🗂️" },
   { label: "Instagram Info", path: "/info/instagram", icon: "ℹ️" },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: "❤️" },
   { label: "Instagram Post Analysis", path: "/posts/instagram", icon: "📸" },
