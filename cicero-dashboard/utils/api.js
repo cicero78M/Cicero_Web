@@ -145,6 +145,50 @@ export async function getInstagramInfoViaBackend(token, username) {
   return res.json();
 }
 
+// Fetch TikTok profile via backend using username
+export async function getTiktokProfileViaBackend(token, username) {
+  const params = new URLSearchParams({ username });
+  const url = `${API_BASE_URL}/api/tiktok/rapid-profile?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch tiktok profile: ${text}`);
+  }
+  const json = await res.json();
+  const profile = json.data || json.profile || json;
+  return {
+    username: profile.username || profile.user_name || "",
+    followers: profile.followers || profile.follower_count || 0,
+    following: profile.following || profile.following_count || 0,
+    bio: profile.bio || profile.signature || "",
+    ...profile,
+  };
+}
+
+// Fetch additional TikTok info via backend using username
+export async function getTiktokInfoViaBackend(token, username) {
+  const params = new URLSearchParams({ username });
+  const url = `${API_BASE_URL}/api/tiktok/rapid-info?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch tiktok info: ${text}`);
+  }
+  return res.json();
+}
+
+// Fetch TikTok posts via backend using username
+export async function getTiktokPostsViaBackend(token, username, limit = 10) {
+  const params = new URLSearchParams({ username, limit });
+  const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch tiktok posts: ${text}`);
+  }
+  return res.json();
+}
+
 export async function getTiktokPosts(token, client_id) {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;

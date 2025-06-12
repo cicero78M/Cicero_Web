@@ -11,6 +11,7 @@ const menu = [
   { label: "Instagram Info", path: "/info/instagram", icon: "ℹ️" },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: "❤️" },
   { label: "Instagram Post Analysis", path: "/posts/instagram", icon: "📸" },
+  { label: "TikTok Info", path: "/info/tiktok", icon: "🎵" },
   { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: "💬" },
 ];
 
