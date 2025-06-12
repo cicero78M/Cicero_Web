@@ -63,9 +63,9 @@ NEXT_PUBLIC_API_URL=<backend base url>
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
 
-## Content Manager API
+## Instagram Post Analysis API
 
-The Social Media Content Manager page retrieves Instagram analytics from the backend. Data is fetched via `getInstagramProfileViaBackend` and `getInstagramPostsViaBackend` in `cicero-dashboard/utils/api.js`.
+The Instagram Post Analysis page retrieves Instagram analytics from the backend. Data is fetched via `getInstagramProfileViaBackend` and `getInstagramPostsViaBackend` in `cicero-dashboard/utils/api.js`.
 
 ### Profile Fields
 - `username`
