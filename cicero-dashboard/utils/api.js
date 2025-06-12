@@ -155,13 +155,38 @@ export async function getTiktokProfileViaBackend(token, username) {
     throw new Error(`Failed to fetch tiktok profile: ${text}`);
   }
   const json = await res.json();
-  const profile = json.data || json.profile || json;
+  const raw = json.data || json.profile || json;
+  const userInfo = raw.userInfo || raw;
+  const user = userInfo.user || raw.user || {};
+  const stats = userInfo.stats || raw.stats || {};
+
   return {
-    username: profile.username || profile.user_name || "",
-    followers: profile.followers || profile.follower_count || 0,
-    following: profile.following || profile.following_count || 0,
-    bio: profile.bio || profile.signature || "",
-    ...profile,
+    username:
+      user.uniqueId ||
+      user.username ||
+      user.user_name ||
+      raw.username ||
+      "",
+    followers:
+      stats.followerCount ||
+      stats.followers ||
+      stats.follower_count ||
+      raw.followers ||
+      raw.follower_count ||
+      0,
+    following:
+      stats.followingCount ||
+      stats.following ||
+      stats.following_count ||
+      raw.following ||
+      raw.following_count ||
+      0,
+    bio: user.signature || raw.bio || raw.signature || "",
+    avatar: user.avatarLarger || user.avatarMedium || raw.avatar || "",
+    ...raw,
+    ...userInfo,
+    ...user,
+    ...stats,
   };
 }
 
@@ -174,7 +199,27 @@ export async function getTiktokInfoViaBackend(token, username) {
     const text = await res.text();
     throw new Error(`Failed to fetch tiktok info: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  const raw = json.data || json.info || json;
+  if (raw.userInfo) {
+    const user = raw.userInfo.user || {};
+    const stats = raw.userInfo.stats || {};
+    return {
+      full_name: user.nickname || raw.full_name,
+      id: user.id || raw.id,
+      biography: user.signature || raw.biography,
+      is_verified: user.verified ?? raw.is_verified,
+      video_count: stats.videoCount ?? raw.video_count,
+      heart_count: stats.heart || stats.heartCount || raw.heart_count,
+      follower_count: stats.followerCount ?? raw.follower_count,
+      following_count: stats.followingCount ?? raw.following_count,
+      hd_profile_pic_url_info: { url: user.avatarLarger },
+      user,
+      stats,
+      ...raw,
+    };
+  }
+  return raw;
 }
 
 // Fetch TikTok posts via backend using username
