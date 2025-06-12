@@ -85,3 +85,7 @@ The Instagram Post Analysis page retrieves Instagram analytics from the backend.
 - `thumbnail` (optional)
 
 These fields are provided by the backend endpoints `/api/insta/rapid-profile` and `/api/insta/rapid-posts`.
+
+Thumbnails from Instagram occasionally use the `.heic` extension which many browsers
+cannot display. The frontend automatically replaces `.heic` with `.jpg` and falls
+back to `/file.svg` if loading fails.
