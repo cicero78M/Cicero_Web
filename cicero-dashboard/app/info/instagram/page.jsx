@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import CardStat from "@/components/CardStat";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import Loader from "@/components/Loader";
+import PostMetricsChart from "@/components/PostMetricsChart";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
@@ -18,8 +19,12 @@ export default function InstagramInfoPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    const clientId = typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("cicero_token")
+        : null;
+    const clientId =
+      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
 
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -76,7 +81,7 @@ export default function InstagramInfoPage() {
   ];
 
   const sortedPosts = [...posts].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    (a, b) => new Date(b.created_at) - new Date(a.created_at),
   );
   const latestPost = sortedPosts[0];
   const otherPosts = sortedPosts.slice(1);
@@ -106,6 +111,10 @@ export default function InstagramInfoPage() {
         <div className="bg-white p-4 rounded-xl shadow">
           <h2 className="font-semibold mb-2">Other Recent Posts</h2>
           <InstagramPostsGrid posts={otherPosts} />
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h2 className="font-semibold mb-2">Post Metrics Comparison</h2>
+          <PostMetricsChart posts={sortedPosts} />
         </div>
         <div className="bg-white p-4 rounded-xl shadow overflow-x-auto text-sm">
           <h2 className="font-semibold mb-2">Raw Info</h2>
