@@ -6,15 +6,37 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
     "NEXT_PUBLIC_API_URL is not defined; defaulting to relative '/api' paths"
   );
 }
+
+// Handle expired or invalid token by clearing storage and redirecting to login
+function handleTokenExpired() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("cicero_token");
+    localStorage.removeItem("client_id");
+    window.location.href = "/login";
+  }
+}
+
+// Wrapper around fetch that attaches the Authorization header and
+// automatically logs the user out when the token is rejected by the backend
+async function fetchWithAuth(url, token, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+  if (res.status === 401) {
+    handleTokenExpired();
+    throw new Error("Unauthorized");
+  }
+  return res;
+}
 export async function getDashboardStats(token) {
-  const res = await fetch(
-    API_BASE_URL + '/api/dashboard/stats',
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    }
+  const res = await fetchWithAuth(
+    API_BASE_URL + "/api/dashboard/stats",
+    token
   );
   if (!res.ok) throw new Error("Failed to fetch stats");
   return res.json();
@@ -25,12 +47,7 @@ export async function getRekapLikesIG(token, client_id, periode = "harian") {
   const params = new URLSearchParams({ client_id, periode });
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch rekap");
   return res.json();
 }
@@ -40,12 +57,7 @@ export async function getClientProfile(token, client_id) {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
 
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Gagal fetch profile client");
   return res.json();
 }
@@ -54,12 +66,7 @@ export async function getClientProfile(token, client_id) {
 export async function getUserDirectory(token, client_id) {
   const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
 
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Gagal fetch daftar user");
   return res.json();
 }
@@ -67,12 +74,7 @@ export async function getUserDirectory(token, client_id) {
 // Ambil komentar TikTok
 export async function getTikTokComments(token) {
   const url = `${API_BASE_URL}/api/tiktok/comments`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch comments");
   return res.json();
 }
@@ -81,12 +83,7 @@ export async function getRekapKomentarTiktok(token, client_id, periode = "harian
   const params = new URLSearchParams({ client_id, periode });
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
 
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`Failed to fetch rekap komentar tiktok: ${errText}`);
@@ -97,12 +94,7 @@ export async function getRekapKomentarTiktok(token, client_id, periode = "harian
 export async function getInstagramPosts(token, client_id) {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch instagram posts");
   return res.json();
 }
@@ -111,12 +103,7 @@ export async function getInstagramPosts(token, client_id) {
 export async function getInstagramPostsViaBackend(token, username, limit = 10) {
   const params = new URLSearchParams({ username, limit });
   const url = `${API_BASE_URL}/api/insta/rapid-posts?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to fetch instagram posts: ${text}`);
@@ -128,12 +115,7 @@ export async function getInstagramPostsViaBackend(token, username, limit = 10) {
 export async function getInstagramProfileViaBackend(token, username) {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/insta/rapid-profile?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to fetch instagram profile: ${text}`);
@@ -155,12 +137,7 @@ export async function getInstagramProfileViaBackend(token, username) {
 export async function getInstagramInfoViaBackend(token, username) {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/insta/rapid-info?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to fetch instagram info: ${text}`);
@@ -171,12 +148,7 @@ export async function getInstagramInfoViaBackend(token, username) {
 export async function getTiktokPosts(token, client_id) {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
