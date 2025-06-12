@@ -9,6 +9,7 @@ const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
   { label: "User Directory", path: "/users", icon: "👤" },
   { label: "Social Media Content Manager", path: "/content", icon: "🗂️" },
+  { label: "Instagram Info", path: "/info/instagram", icon: "ℹ️" },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: "❤️" },
   { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: "💬" },
 ];
