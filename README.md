@@ -89,3 +89,26 @@ These fields are provided by the backend endpoints `/api/insta/rapid-profile` an
 Thumbnails from Instagram occasionally use the `.heic` extension which many browsers
 cannot display. The frontend automatically replaces `.heic` with `.jpg` and falls
 back to `/file.svg` if loading fails.
+
+## TikTok Post Analysis API
+
+The TikTok Post Analysis page works similarly to the Instagram one but uses the TikTok endpoints `getTiktokProfileViaBackend` and `getTiktokPostsViaBackend` found in `cicero-dashboard/utils/api.js`.
+
+### Profile Fields
+- `username`
+- `followers`
+- `following`
+- `bio`
+
+### Post Fields
+- `id`
+- `created_at`
+- `type`
+- `caption`
+- `like_count`
+- `comment_count`
+- `share_count`
+- `view_count` (optional)
+- `thumbnail` (optional)
+
+These values are provided by `/api/tiktok/rapid-profile` and `/api/tiktok/rapid-posts`.
