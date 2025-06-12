@@ -4,7 +4,6 @@ import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import InstagramCompareChart from "@/components/InstagramCompareChart";
-import SummaryEngagementChart from "@/components/SummaryEngagementChart";
 import {
   getInstagramProfileViaBackend,
   getInstagramInfoViaBackend,
@@ -277,24 +276,12 @@ export default function InstagramInfoPage() {
         {posts.length > 0 && (
           <div className="bg-white p-4 rounded-xl shadow text-sm">
             <h2 className="font-semibold mb-2">Summary Engagement</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-              <div>
-                <ul className="list-disc ml-5 mb-4">
-                  <li>Avg Likes: {avgLikes.toFixed(1)}</li>
-                  <li>Avg Comments: {avgComments.toFixed(1)}</li>
-                  <li>Avg Views: {avgViews.toFixed(1)}</li>
-                  <li>Engagement Rate: {engagementRate}%</li>
-                </ul>
-                <Narrative>
-                  {`Rata-rata posting memperoleh ${avgLikes.toFixed(1)} likes dan ${avgComments.toFixed(1)} komentar dengan ${avgViews.toFixed(1)} views, menghasilkan engagement rate ${engagementRate}%.`}
-                </Narrative>
-              </div>
-              <SummaryEngagementChart
-                likes={avgLikes}
-                comments={avgComments}
-                views={avgViews}
-              />
-            </div>
+            <ul className="list-disc ml-5">
+              <li>Avg Likes: {avgLikes.toFixed(1)}</li>
+              <li>Avg Comments: {avgComments.toFixed(1)}</li>
+              <li>Avg Views: {avgViews.toFixed(1)}</li>
+              <li>Engagement Rate: {engagementRate}%</li>
+            </ul>
           </div>
         )}
 
