@@ -178,7 +178,23 @@ export async function getTiktokInfoViaBackend(token, username) {
 }
 
 // Fetch TikTok posts via backend using username
-export async function getTiktokPostsViaBackend(token, username, limit = 10) {
+export async function getTiktokPostsViaBackend(token, client_id, limit = 10) {
+  const params = new URLSearchParams({ client_id, limit });
+  const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch tiktok posts: ${text}`);
+  }
+  return res.json();
+}
+
+// Fetch TikTok posts via backend using username (for compare feature)
+export async function getTiktokPostsByUsernameViaBackend(
+  token,
+  username,
+  limit = 10
+) {
   const params = new URLSearchParams({ username, limit });
   const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);

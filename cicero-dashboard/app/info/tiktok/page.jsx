@@ -8,6 +8,7 @@ import {
   getTiktokProfileViaBackend,
   getTiktokInfoViaBackend,
   getTiktokPostsViaBackend,
+  getTiktokPostsByUsernameViaBackend,
   getClientProfile,
 } from "@/utils/api";
 
@@ -55,7 +56,7 @@ export default function TiktokInfoPage() {
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
 
-        const postsRes = await getTiktokPostsViaBackend(token, username, 20);
+        const postsRes = await getTiktokPostsViaBackend(token, clientId, 20);
         const postsData = postsRes.data || postsRes.posts || postsRes;
         setPosts(Array.isArray(postsData) ? postsData : []);
 
@@ -97,7 +98,11 @@ export default function TiktokInfoPage() {
       const profileRes = await getTiktokProfileViaBackend(token, username);
       const infoRes = await getTiktokInfoViaBackend(token, username);
       const infoData = infoRes.data || infoRes.info || infoRes;
-      const postsRes = await getTiktokPostsViaBackend(token, username, 20);
+      const postsRes = await getTiktokPostsByUsernameViaBackend(
+        token,
+        username,
+        20
+      );
       const postsData = postsRes.data || postsRes.posts || postsRes;
       const avgLikes =
         postsData.reduce((s, p) => s + (p.like_count || 0), 0) /
