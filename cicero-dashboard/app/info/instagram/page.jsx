@@ -4,7 +4,6 @@ import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import InstagramCompareChart from "@/components/InstagramCompareChart";
-import InstagramEngagementSummaryChart from "@/components/InstagramEngagementSummaryChart";
 import {
   getInstagramProfileViaBackend,
   getInstagramInfoViaBackend,
@@ -331,32 +330,21 @@ export default function InstagramInfoPage() {
         {compareStats && (
           <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
             <h2 className="font-semibold">Perbandingan dengan {compareStats.username}</h2>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <InstagramCompareChart
-                  client={{
-                    username: profile.username,
-                    followers: profile.followers,
-                    following: profile.following,
-                    engagementRate,
-                  }}
-                  competitor={compareStats}
-                />
-              </div>
-              <div className="flex-1 flex flex-col gap-4">
-                <InstagramEngagementSummaryChart
-                  client={{
-                    username: profile.username,
-                    avgLikes,
-                    avgComments,
-                    avgViews,
-                    engagementRate,
-                    totalPosts: info?.media_count ?? info?.post_count,
-                    totalIgtv: info?.total_igtv_videos,
-                  }}
-                  competitor={compareStats}
-                />
-              </div>
+            <div className="flex-1">
+              <InstagramCompareChart
+                client={{
+                  username: profile.username,
+                  followers: profile.followers,
+                  following: profile.following,
+                  avgLikes,
+                  avgComments,
+                  avgViews,
+                  engagementRate,
+                  totalPosts: info?.media_count ?? info?.post_count,
+                  totalIgtv: info?.total_igtv_videos,
+                }}
+                competitor={compareStats}
+              />
             </div>
             <Narrative>
               {`Akun ${profile.username} memiliki ${profile.followers} followers dengan engagement rate ${engagementRate}%. `}
