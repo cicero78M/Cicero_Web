@@ -233,10 +233,6 @@ export default function InstagramInfoPage() {
             ))}
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow overflow-x-auto text-sm">
-          <h2 className="font-semibold mb-2">Raw Info</h2>
-          <pre>{JSON.stringify(info, null, 2)}</pre>
-        </div>
       </div>
     </div>
   );
