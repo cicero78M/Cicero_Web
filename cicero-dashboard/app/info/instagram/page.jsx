@@ -75,6 +75,12 @@ export default function InstagramInfoPage() {
     { title: "Account Type", value: info?.account_type || "-" },
   ];
 
+  const sortedPosts = [...posts].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  );
+  const latestPost = sortedPosts[0];
+  const otherPosts = sortedPosts.slice(1);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-4xl flex flex-col gap-8">
@@ -84,9 +90,22 @@ export default function InstagramInfoPage() {
             <CardStat key={s.title} title={s.title} value={s.value ?? "-"} />
           ))}
         </div>
+        {latestPost && (
+          <div className="bg-white p-4 rounded-xl shadow">
+            <h2 className="font-semibold mb-2">Latest Post</h2>
+            {latestPost.thumbnail && (
+              <img
+                src={latestPost.thumbnail}
+                alt={latestPost.caption || "thumbnail"}
+                className="w-full max-h-64 object-cover rounded"
+              />
+            )}
+            <p className="mt-2 text-sm">{latestPost.caption || "-"}</p>
+          </div>
+        )}
         <div className="bg-white p-4 rounded-xl shadow">
-          <h2 className="font-semibold mb-2">Latest Posts</h2>
-          <InstagramPostsGrid posts={posts} />
+          <h2 className="font-semibold mb-2">Other Recent Posts</h2>
+          <InstagramPostsGrid posts={otherPosts} />
         </div>
         <div className="bg-white p-4 rounded-xl shadow overflow-x-auto text-sm">
           <h2 className="font-semibold mb-2">Raw Info</h2>
