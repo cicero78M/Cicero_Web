@@ -1,1 +1,1 @@
-export { default } from "../../posts/instagram/page";
+export { default } from "../page";
