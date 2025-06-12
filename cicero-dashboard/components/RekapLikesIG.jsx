@@ -194,6 +194,10 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-sm text-gray-500 italic">
+        Tabel ini menampilkan status like Instagram setiap user serta jumlah
+        like yang berhasil dihimpun.
+      </p>
 
       {/* Pagination Controls */}
       {totalPages > 1 && (

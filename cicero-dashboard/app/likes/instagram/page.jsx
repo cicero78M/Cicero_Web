@@ -6,6 +6,7 @@ import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
 import Link from "next/link";
+import Narrative from "@/components/Narrative";
 
 export default function InstagramLikesTrackingPage() {
   const [stats, setStats] = useState(null);
@@ -190,22 +191,29 @@ export default function InstagramLikesTrackingPage() {
                 title="BAG"
                 users={kelompok.BAG}
                 totalIGPost={rekapSummary.totalIGPost}
+                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
               />
               <ChartBox
                 title="SAT"
                 users={kelompok.SAT}
                 totalIGPost={rekapSummary.totalIGPost}
+                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
               />
               <ChartBox
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
                 totalIGPost={rekapSummary.totalIGPost}
+                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
               />
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
                 totalIGPost={rekapSummary.totalIGPost}
               />
+              <Narrative>
+                Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
+                polsek dan membandingkan partisipasi pengguna.
+              </Narrative>
             </div>
 
             <div className="flex justify-end my-2">
@@ -238,7 +246,13 @@ export default function InstagramLikesTrackingPage() {
 }
 
 // Komponen ChartBox di file yang sama
-function ChartBox({ title, users, orientation = "vertical", totalIGPost }) {
+function ChartBox({
+  title,
+  users,
+  orientation = "vertical",
+  totalIGPost,
+  narrative,
+}) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
@@ -252,6 +266,7 @@ function ChartBox({ title, users, orientation = "vertical", totalIGPost }) {
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}
+      {narrative && <Narrative>{narrative}</Narrative>}
     </div>
   );
 }
