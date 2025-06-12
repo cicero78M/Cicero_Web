@@ -19,6 +19,7 @@ export default function InstagramPostsGrid({ posts = [] }) {
             <div className="text-xs text-gray-600 flex gap-4">
               {post.like_count != null && <span>❤️ {post.like_count}</span>}
               {post.comment_count != null && <span>💬 {post.comment_count}</span>}
+              {post.view_count != null && <span>👁️ {post.view_count}</span>}
             </div>
           </div>
         </div>
