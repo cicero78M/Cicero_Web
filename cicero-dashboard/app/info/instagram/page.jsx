@@ -84,10 +84,10 @@ export default function InstagramInfoPage() {
   ];
 
   const profilePic =
-    profile.profile_pic_url ||
     info?.hd_profile_pic_url_info?.url ||
     info?.profile_pic_url_hd ||
     info?.profile_pic_url ||
+    profile.profile_pic_url ||
     "";
 
   const biography = profile.bio || info?.biography || "";
