@@ -4,6 +4,7 @@ import CardStat from "@/components/CardStat";
 import EngagementLineChart from "@/components/EngagementLineChart";
 import EngagementByTypeChart from "@/components/EngagementByTypeChart";
 import HeatmapTable from "@/components/HeatmapTable";
+import PostMetricsChart from "@/components/PostMetricsChart";
 import Loader from "@/components/Loader";
 import {
   getInstagramProfileViaBackend,
@@ -100,6 +101,7 @@ export default function SocialMediaContentManagerPage() {
   const typeMap = {};
   const heatmap = {};
   const sentimentCount = { Positive: 0, Neutral: 0, Negative: 0 };
+  const postCompareData = [];
   const buckets = ["0-5", "6-11", "12-17", "18-23"];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -113,6 +115,13 @@ export default function SocialMediaContentManagerPage() {
         day: "numeric",
       }),
       rate: parseFloat(eng.toFixed(2)),
+    });
+
+    postCompareData.push({
+      created_at: p.created_at,
+      like_count: p.like_count || 0,
+      comment_count: p.comment_count || 0,
+      share_count: p.share_count || 0,
     });
 
     if (!typeMap[p.type]) typeMap[p.type] = { total: 0, count: 0 };
@@ -156,6 +165,10 @@ export default function SocialMediaContentManagerPage() {
     { user: "@friend", interactions: 3 },
     { user: "@chef", interactions: 2 },
   ];
+
+  const postChartData = postCompareData.sort(
+    (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
@@ -220,6 +233,10 @@ export default function SocialMediaContentManagerPage() {
               <li key={n.user}>{n.user} - {n.interactions} interactions</li>
             ))}
           </ul>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h3 className="font-semibold mb-2">Post Metrics Comparison</h3>
+          <PostMetricsChart posts={postChartData} />
         </div>
       </div>
     </div>
