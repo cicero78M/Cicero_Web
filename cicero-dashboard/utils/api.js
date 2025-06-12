@@ -108,27 +108,7 @@ export async function getInstagramPostsViaBackend(token, username, limit = 10) {
     const text = await res.text();
     throw new Error(`Failed to fetch instagram posts: ${text}`);
   }
-  const json = await res.json();
-  let posts = json.data || json.posts || json;
-  if (Array.isArray(posts)) {
-    posts = posts.map((p) => ({
-      id: p.id || p.post_id || p.aweme_id || p.video_id,
-      caption: p.caption || p.desc || "",
-      thumbnail:
-        p.thumbnail ||
-        (p.image_versions2?.candidates?.[0]?.url ?? p.video?.cover) ||
-        "",
-      like_count: p.like_count ?? p.stats?.diggCount ?? 0,
-      comment_count: p.comment_count ?? p.stats?.commentCount ?? 0,
-      share_count: p.share_count ?? p.stats?.shareCount ?? 0,
-      view_count: p.view_count ?? p.stats?.playCount ?? 0,
-      created_at:
-        p.created_at ||
-        (p.createTime ? new Date(p.createTime * 1000).toISOString() : ""),
-      ...p,
-    }));
-  }
-  return posts;
+  return res.json();
 }
 
 // Fetch Instagram profile via backend using username
