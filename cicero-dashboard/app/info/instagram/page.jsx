@@ -4,6 +4,7 @@ import CardStat from "@/components/CardStat";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import InstagramCompareChart from "@/components/InstagramCompareChart";
+import InstagramEngagementSummaryChart from "@/components/InstagramEngagementSummaryChart";
 import {
   getInstagramProfileViaBackend,
   getInstagramInfoViaBackend,
@@ -342,16 +343,30 @@ export default function InstagramInfoPage() {
                   competitor={compareStats}
                 />
               </div>
-              <div className="text-sm flex-1">
-                <h3 className="font-semibold md:mt-0 mt-2">Summary Engagement</h3>
-                <ul className="list-disc ml-5">
-                  <li>Avg Likes: {compareStats.avgLikes.toFixed(1)}</li>
-                  <li>Avg Comments: {compareStats.avgComments.toFixed(1)}</li>
-                  <li>Avg Views: {compareStats.avgViews.toFixed(1)}</li>
-                  <li>Engagement Rate: {compareStats.engagementRate}%</li>
-                  <li>Total Posts: {compareStats.totalPosts ?? "-"}</li>
-                  <li>Total IG-TV: {compareStats.totalIgtv ?? "-"}</li>
-                </ul>
+              <div className="flex-1 flex flex-col gap-4">
+                <InstagramEngagementSummaryChart
+                  client={{
+                    username: profile.username,
+                    avgLikes,
+                    avgComments,
+                    avgViews,
+                    engagementRate,
+                    totalPosts: info?.media_count ?? info?.post_count,
+                    totalIgtv: info?.total_igtv_videos,
+                  }}
+                  competitor={compareStats}
+                />
+                <div className="text-sm">
+                  <h3 className="font-semibold md:mt-0 mt-2">Summary Engagement</h3>
+                  <ul className="list-disc ml-5">
+                    <li>Avg Likes: {compareStats.avgLikes.toFixed(1)}</li>
+                    <li>Avg Comments: {compareStats.avgComments.toFixed(1)}</li>
+                    <li>Avg Views: {compareStats.avgViews.toFixed(1)}</li>
+                    <li>Engagement Rate: {compareStats.engagementRate}%</li>
+                    <li>Total Posts: {compareStats.totalPosts ?? "-"}</li>
+                    <li>Total IG-TV: {compareStats.totalIgtv ?? "-"}</li>
+                  </ul>
+                </div>
               </div>
             </div>
             <Narrative>
