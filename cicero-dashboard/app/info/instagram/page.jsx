@@ -10,8 +10,10 @@ import {
   getInstagramPostsViaBackend,
   getClientProfile,
 } from "@/utils/api";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function InstagramInfoPage() {
+  useRequireAuth();
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
   const [posts, setPosts] = useState([]);

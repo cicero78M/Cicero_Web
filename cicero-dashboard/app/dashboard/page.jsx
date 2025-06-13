@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import { getClientProfile } from "@/utils/api";
 import Loader from "@/components/Loader";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function DashboardPage() {
+  useRequireAuth();
   const [clientProfile, setClientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

@@ -4,8 +4,10 @@ import { getDashboardStats, getRekapKomentarTiktok } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
 import Link from "next/link";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function RekapKomentarTiktokPage() {
+  useRequireAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
