@@ -2,10 +2,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { getUserDirectory } from "@/utils/api";
 import Loader from "@/components/Loader";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 const PAGE_SIZE = 50;
 
 export default function UserDirectoryPage() {
+  useRequireAuth();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);

@@ -4,8 +4,10 @@ import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function RekapLikesIGPage() {
+  useRequireAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

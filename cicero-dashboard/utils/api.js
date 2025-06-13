@@ -12,7 +12,7 @@ function handleTokenExpired() {
   if (typeof window !== "undefined") {
     localStorage.removeItem("cicero_token");
     localStorage.removeItem("client_id");
-    window.location.href = "/login";
+    window.location.href = "/";
   }
 }
 

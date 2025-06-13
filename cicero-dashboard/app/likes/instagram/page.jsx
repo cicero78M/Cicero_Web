@@ -7,8 +7,10 @@ import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function InstagramLikesTrackingPage() {
+  useRequireAuth();
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);

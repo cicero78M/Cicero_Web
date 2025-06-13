@@ -9,6 +9,7 @@ import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
+import useRequireAuth from "@/hooks/useRequireAuth";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
@@ -16,6 +17,7 @@ import {
 } from "@/utils/api";
 
 export default function InstagramPostAnalysisPage() {
+  useRequireAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);

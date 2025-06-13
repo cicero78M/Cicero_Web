@@ -7,8 +7,10 @@ import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
+import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function TiktokKomentarTrackingPage() {
+  useRequireAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
