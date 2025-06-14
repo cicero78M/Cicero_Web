@@ -52,6 +52,40 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Pricing Section */}
+        <section className="mt-16 w-full max-w-5xl">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-center">Paket Cicero</h2>
+          <p className="text-blue-100 mb-8 text-center">
+            Optimalkan pengelolaan media sosial Anda bersama Cicero dengan paket yang sesuai skala tim. Dapatkan potongan 10% untuk komitmen jangka menengah maupun jangka panjang.
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold mb-2">Kelas A</h3>
+              <p className="text-blue-100 text-sm mb-4">1500-3000 pengguna</p>
+              <p className="text-sm text-blue-100">Biaya Setup</p>
+              <p className="text-2xl font-bold text-white">Rp5.000.000</p>
+              <p className="mt-4 text-sm text-blue-100">Biaya Bulanan</p>
+              <p className="text-xl font-semibold text-white">Rp4.200.000</p>
+            </div>
+            <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold mb-2">Kelas B</h3>
+              <p className="text-blue-100 text-sm mb-4">800-1500 pengguna</p>
+              <p className="text-sm text-blue-100">Biaya Setup</p>
+              <p className="text-2xl font-bold text-white">Rp4.000.000</p>
+              <p className="mt-4 text-sm text-blue-100">Biaya Bulanan</p>
+              <p className="text-xl font-semibold text-white">Rp3.600.000</p>
+            </div>
+            <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold mb-2">Kelas C</h3>
+              <p className="text-blue-100 text-sm mb-4">maks. 800 pengguna</p>
+              <p className="text-sm text-blue-100">Biaya Setup</p>
+              <p className="text-2xl font-bold text-white">Rp3.000.000</p>
+              <p className="mt-4 text-sm text-blue-100">Biaya Bulanan</p>
+              <p className="text-xl font-semibold text-white">Rp2.400.000</p>
+            </div>
+          </div>
+        </section>
+
         {/* Social Proof */}
         <section className="mt-16 max-w-2xl">
           <blockquote className="italic text-blue-100">"Cicero drastically improved our social engagement in just weeks."</blockquote>
