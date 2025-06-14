@@ -222,7 +222,7 @@ function SocialCard({ platform, profile, posts }) {
   return (
     <div className="bg-white rounded-xl shadow p-4 flex flex-col">
       <h2 className="font-semibold capitalize mb-2">{platform} Profile</h2>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         {avatar && (
           <img
             src={getThumb(avatar)}
@@ -233,28 +233,26 @@ function SocialCard({ platform, profile, posts }) {
             }}
           />
         )}
-        <div className="flex-1">
-          <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-blue-600 hover:underline"
-          >
-            @{profile.username}
-          </a>
-          <div className="text-sm text-gray-500">
-            {profile.followers} followers
-          </div>
-          <div className="text-sm text-gray-500">
-            {profile.following} following
-          </div>
-          {profile.bio && (
-            <div className="text-sm text-gray-500 whitespace-pre-line">
-              {profile.bio}
-            </div>
-          )}
-        </div>
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-blue-600 hover:underline"
+        >
+          @{profile.username}
+        </a>
+        <span className="text-sm text-gray-500">
+          {profile.followers} followers
+        </span>
+        <span className="text-sm text-gray-500">
+          {profile.following} following
+        </span>
       </div>
+      {profile.bio && (
+        <div className="text-sm text-gray-500 whitespace-pre-line mt-1">
+          {profile.bio}
+        </div>
+      )}
       {posts && posts.length > 0 && (
         <div className="flex gap-2 mt-4">
           {posts.slice(0, 3).map((p) => (
