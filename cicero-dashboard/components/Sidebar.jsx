@@ -1,9 +1,14 @@
 "use client";
-import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { Menu as IconMenu, X as IconX } from "lucide-react"; // Import lucide icons
+import { Menu as IconMenu, X as IconX } from "lucide-react";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
@@ -14,12 +19,11 @@ const menu = [
   { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: "💬" },
 ];
 
-export default function ProSidebarWrapper() {
+export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Logout logic
   const handleLogout = () => {
     localStorage.removeItem("cicero_token");
     localStorage.removeItem("client_id");
@@ -27,71 +31,41 @@ export default function ProSidebarWrapper() {
   };
 
   return (
-    <div>
-      {/* Sidebar Toggle Button */}
-      <button
-        onClick={() => setCollapsed((v) => !v)}
-        className={`
-          fixed z-50 top-4 left-4 flex items-center justify-center
-          bg-white shadow-lg border border-blue-200 text-blue-700
-          rounded-full w-12 h-12 transition-all
-          hover:bg-blue-700 hover:text-white group
-          focus:outline-none
-        `}
-        aria-label={collapsed ? "Tampilkan Sidebar" : "Sembunyikan Sidebar"}
-        style={{
-          left: collapsed ? "16px" : "272px",
-        }}
-      >
-        {collapsed ? (
-          <IconMenu size={28} strokeWidth={2.5} className="transition-all group-hover:scale-110" />
-        ) : (
-          <IconX size={28} strokeWidth={2.5} className="transition-all group-hover:scale-110" />
-        )}
-      </button>
-
-      {/* Sidebar dari react-pro-sidebar */}
-      <Sidebar
-        collapsed={collapsed}
-        breakPoint="md"
-        backgroundColor="#fff"
-        className="!fixed !left-0 !top-0 !h-screen !z-40"
-        width="256px"
-        rootStyles={{
-          minHeight: "100dvh",
-          boxShadow: "0 0 24px #0001",
-        }}
-      >
-        <div className="text-2xl font-bold text-blue-700 mb-6 mt-8 px-6 tracking-wide">
-          {collapsed ? "🟦" : "CICERO Dashboard"}
-        </div>
-        <Menu>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button
+          aria-label={open ? "Tutup Sidebar" : "Buka Sidebar"}
+          className="fixed z-50 top-4 left-4 flex items-center justify-center bg-white shadow-lg border border-blue-200 text-blue-700 rounded-full w-12 h-12 transition-all hover:bg-blue-700 hover:text-white focus:outline-none"
+        >
+          {open ? (
+            <IconX size={28} strokeWidth={2.5} />
+          ) : (
+            <IconMenu size={28} strokeWidth={2.5} />
+          )}
+        </button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-64 p-6 flex flex-col">
+        <div className="text-2xl font-bold text-blue-700 mb-6">CICERO Dashboard</div>
+        <nav className="flex-1 space-y-2">
           {menu.map((item) => (
-            <MenuItem
-              key={item.path}
-              component={<Link href={item.path} />}
-              active={pathname.startsWith(item.path)}
-              icon={<span className="text-xl">{item.icon}</span>}
-              className={
-                pathname.startsWith(item.path)
-                  ? "!bg-blue-100 !text-blue-700 font-semibold"
-                  : "hover:!bg-blue-50 hover:!text-blue-700"
-              }
-            >
-              {collapsed ? "" : item.label}
-            </MenuItem>
+            <SheetClose asChild key={item.path}>
+              <Link
+                href={item.path}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-blue-50 hover:text-blue-700 ${pathname.startsWith(item.path) ? "bg-blue-100 text-blue-700" : "text-gray-700"}`}
+              >
+                <span className="text-xl">{item.icon}</span>
+                {item.label}
+              </Link>
+            </SheetClose>
           ))}
-        </Menu>
-        <div className="flex-1" />
-        <div className="px-4 mt-8 mb-6">
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold p-4 rounded-xl transition-all"
-          >
-            {collapsed ? <span className="text-xl">🚪</span> : "Logout"}
-          </button>
-        </div>
-      </Sidebar>
-    </div>
+        </nav>
+        <button
+          onClick={handleLogout}
+          className="mt-4 w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 rounded-lg"
+        >
+          Logout
+        </button>
+      </SheetContent>
+    </Sheet>
   );
 }
