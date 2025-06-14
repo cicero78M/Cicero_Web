@@ -123,12 +123,15 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <button
+                <a
+                  href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={`Daftar paket ${pkg.name}`}
                   className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
                   Daftar Sekarang
-                </button>
+                </a>
               </div>
             ))}
           </div>
