@@ -6,6 +6,8 @@ import EngagementByTypeChart from "@/components/EngagementByTypeChart";
 import HeatmapTable from "@/components/HeatmapTable";
 import PostMetricsChart from "@/components/PostMetricsChart";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
+import FilterBar from "@/components/FilterBar";
+import WordCloudChart from "@/components/WordCloudChart";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
@@ -13,6 +15,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
+  getInstagramInfoViaBackend,
   getClientProfile,
 } from "@/utils/api";
 
@@ -20,12 +23,16 @@ export default function InstagramPostAnalysisPage() {
   useRequireAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [compareLink, setCompareLink] = useState("");
   const [compareStats, setCompareStats] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const token =
@@ -50,6 +57,10 @@ export default function InstagramPostAnalysisPage() {
 
         const profileRes = await getInstagramProfileViaBackend(token, username);
         setProfile(profileRes.data || profileRes.profile || profileRes);
+
+        const infoRes = await getInstagramInfoViaBackend(token, username);
+        const infoData = infoRes.data || infoRes.info || infoRes;
+        setInfo(infoData);
 
         const postRes = await getInstagramPostsViaBackend(token, username, 50);
         const postData = postRes.data || postRes.posts || postRes;
@@ -148,7 +159,16 @@ export default function InstagramPostAnalysisPage() {
     );
   if (!profile) return null;
 
-  const sortedPosts = [...posts].sort(
+  const filteredPosts = posts.filter((p) => {
+    const d = new Date(p.created_at);
+    if (startDate && d < new Date(startDate)) return false;
+    if (endDate && d > new Date(endDate + "T23:59:59")) return false;
+    if (search && !(p.caption || "").toLowerCase().includes(search.toLowerCase()))
+      return false;
+    return true;
+  });
+
+  const sortedPosts = [...filteredPosts].sort(
     (a, b) => new Date(a.created_at) - new Date(b.created_at)
   );
   const firstDate = sortedPosts.length
@@ -185,10 +205,38 @@ export default function InstagramPostAnalysisPage() {
     latestPosts.reduce((s, p) => s + (p.view_count || 0), 0) /
     (latestPosts.length || 1);
 
+  const avgLikesAll =
+    sortedPosts.reduce((s, p) => s + (p.like_count || 0), 0) /
+    (sortedPosts.length || 1);
+  const avgCommentsAll =
+    sortedPosts.reduce((s, p) => s + (p.comment_count || 0), 0) /
+    (sortedPosts.length || 1);
+  const avgViewsAll =
+    sortedPosts.reduce((s, p) => s + (p.view_count || 0), 0) /
+    (sortedPosts.length || 1);
+  const engagementRate = profile.followers
+    ? (((avgLikesAll + avgCommentsAll) / profile.followers) * 100).toFixed(2)
+    : "0";
+
+  const totalPosts = info?.media_count ?? info?.post_count;
+  const totalIgtv = info?.total_igtv_videos;
+
+  const biography = profile.bio || info?.biography || "";
+  const bioLink =
+    (info?.bio_links && (info.bio_links[0]?.link || info.bio_links[0]?.url)) ||
+    info?.external_url ||
+    "";
+
+  const accountType =
+    info?.is_business || info?.is_professional ? "Bisnis" : "Pribadi";
+  const privacyStatus = info?.is_private ? "Privat" : "Terbuka";
+
   const profilePic =
     profile.hd_profile_pic_url_info?.url ||
     profile.hd_profile_pic_versions?.[0]?.url ||
     profile.profile_pic_url ||
+    info?.hd_profile_pic_url_info?.url ||
+    info?.hd_profile_pic_versions?.[0]?.url ||
     "";
 
   const getProfilePicSrc = (url) => {
@@ -250,6 +298,23 @@ export default function InstagramPostAnalysisPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  const wordMap = {};
+  filteredPosts.forEach((p) => {
+    const words =
+      (typeof p.caption === "string" ? p.caption : "")
+        .toLowerCase()
+        .match(/\b\w+\b/g) || [];
+    words.forEach((w) => {
+      if (w.length > 3) {
+        wordMap[w] = (wordMap[w] || 0) + 1;
+      }
+    });
+  });
+  const cloudWords = Object.entries(wordMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 50)
+    .map(([text, value]) => ({ text, value }));
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-5xl flex flex-col gap-8">
@@ -297,11 +362,72 @@ export default function InstagramPostAnalysisPage() {
           <div className="text-red-500 text-sm">{compareError}</div>
         )}
 
+        <FilterBar
+          startDate={startDate}
+          endDate={endDate}
+          search={search}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+          setSearch={setSearch}
+        />
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardStat title="Followers" value={profile.followers} />
           <CardStat title="Following" value={profile.following} />
           <CardStat title="Follower/Following" value={followerRatio} />
           <CardStat title="Posts / Day" value={postingFreq} />
+          {totalPosts !== undefined && (
+            <CardStat title="Total Posts" value={totalPosts} />
+          )}
+          {totalIgtv !== undefined && (
+            <CardStat title="Total IG-TV" value={totalIgtv} />
+          )}
+        </div>
+
+        {biography && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm whitespace-pre-line">
+            {biography}
+            {bioLink && (
+              <div className="mt-2">
+                <a
+                  href={bioLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline break-all"
+                >
+                  {bioLink}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(info?.address || info?.public_phone_number || info?.public_email) && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm">
+            {info?.address && <div>{info.address}</div>}
+            {info?.public_phone_number && <div>WA: {info.public_phone_number}</div>}
+            {info?.public_email && <div>Email: {info.public_email}</div>}
+          </div>
+        )}
+
+        {posts.length > 0 && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <h2 className="font-semibold mb-2">Summary Engagement</h2>
+            <ul className="list-disc ml-5">
+              <li>Avg Likes: {avgLikesAll.toFixed(1)}</li>
+              <li>Avg Comments: {avgCommentsAll.toFixed(1)}</li>
+              <li>Avg Views: {avgViewsAll.toFixed(1)}</li>
+              <li>Engagement Rate: {engagementRate}%</li>
+            </ul>
+          </div>
+        )}
+
+        <div className="bg-white p-4 rounded-xl shadow text-sm">
+          <h2 className="font-semibold mb-2">Fitur dan Status Akun</h2>
+          <ul className="list-disc ml-5">
+            <li>{accountType}</li>
+            <li>{privacyStatus}</li>
+          </ul>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow">
@@ -318,6 +444,13 @@ export default function InstagramPostAnalysisPage() {
           <h2 className="font-semibold mb-2">Engagement by Content Type</h2>
           <EngagementByTypeChart data={typeData} />
         </div>
+
+        {cloudWords.length > 0 && (
+          <div className="bg-white p-4 rounded-xl shadow">
+            <h3 className="font-semibold mb-2">Word Cloud</h3>
+            <WordCloudChart words={cloudWords} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-xl shadow">

@@ -8,12 +8,13 @@ import {
   SheetTrigger,
   SheetContent,
   SheetClose,
+  SheetTitle,
 } from "@/components/ui/sheet";
 
 const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
   { label: "User Directory", path: "/users", icon: "👤" },
-  { label: "Instagram Analysis", path: "/instagram", icon: "📸" },
+  { label: "Instagram Post Analysis", path: "/instagram", icon: "📸" },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: "❤️" },
   { label: "TikTok Analysis", path: "/tiktok", icon: "🎵" },
   { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: "💬" },
@@ -45,6 +46,7 @@ export default function Sidebar() {
         </button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-6 flex flex-col">
+        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <div className="text-2xl font-bold text-blue-700 mb-6">CICERO Dashboard</div>
         <nav className="flex-1 space-y-2">
           {menu.map((item) => (

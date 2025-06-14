@@ -185,6 +185,7 @@ export default function TiktokPostAnalysisPage() {
     (latestPosts.length || 1);
 
   const profilePic =
+    profile.avatar_url ||
     profile.hd_profile_pic_url_info?.url ||
     profile.hd_profile_pic_versions?.[0]?.url ||
     profile.profile_pic_url ||

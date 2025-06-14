@@ -59,6 +59,8 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - The login page expects a valid API endpoint provided by `NEXT_PUBLIC_API_URL`.
 - Pages under the `app/` directory automatically refresh during development when files are edited.
 - Static assets such as icons reside in `cicero-dashboard/public`.
+- The backend no longer restricts how many users can log in at once.
+- Clients may allow an unlimited number of concurrent sessions.
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
@@ -89,6 +91,10 @@ These fields are provided by the backend endpoints `/api/insta/rapid-profile` an
 Thumbnails from Instagram occasionally use the `.heic` extension which many browsers
 cannot display. The frontend automatically replaces `.heic` with `.jpg` and falls
 back to `/file.svg` if loading fails.
+
+The dashboard provides a single Instagram Post Analysis page at `/instagram`
+that combines the info and post analytics previously found under
+`/info/instagram` and `/posts/instagram`.
 
 ## TikTok Post Analysis API
 
