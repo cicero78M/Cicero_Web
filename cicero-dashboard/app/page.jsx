@@ -124,13 +124,13 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <a
-                  href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP}`}
+                  href="https://wa.me/081235114745"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`Daftar paket ${pkg.name}`}
+                  aria-label={`Kirim pesan paket ${pkg.name}`}
                   className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
-                  Daftar Sekarang
+                  Kirim Pesan
                 </a>
               </div>
             ))}
