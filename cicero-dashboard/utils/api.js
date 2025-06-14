@@ -111,6 +111,18 @@ export async function getInstagramPostsViaBackend(token, username, limit = 10) {
   return res.json();
 }
 
+// Fetch Instagram posts for the current month via backend using username
+export async function getInstagramPostsThisMonthViaBackend(token, username) {
+  const params = new URLSearchParams({ username });
+  const url = `${API_BASE_URL}/api/insta/rapid-posts-month?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch instagram posts this month: ${text}`);
+  }
+  return res.json();
+}
+
 // Fetch Instagram profile via backend using username
 export async function getInstagramProfileViaBackend(token, username) {
   const params = new URLSearchParams({ username });
