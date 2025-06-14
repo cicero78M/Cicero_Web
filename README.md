@@ -95,6 +95,7 @@ back to `/file.svg` if loading fails.
 The dashboard provides a single Instagram Post Analysis page at `/instagram`
 that combines the info and post analytics previously found under
 `/info/instagram` and `/posts/instagram`.
+By default, the page filters posts to the current month.
 
 ## TikTok Post Analysis API
 
