@@ -15,6 +15,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
+  getInstagramPostsThisMonthViaBackend,
   getInstagramInfoViaBackend,
   getClientProfile,
 } from "@/utils/api";
@@ -30,8 +31,15 @@ export default function InstagramPostAnalysisPage() {
   const [compareStats, setCompareStats] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .split("T")[0];
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .split("T")[0];
+  const [startDate, setStartDate] = useState(firstDay);
+  const [endDate, setEndDate] = useState(lastDay);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -62,7 +70,7 @@ export default function InstagramPostAnalysisPage() {
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
 
-        const postRes = await getInstagramPostsViaBackend(token, username, 50);
+        const postRes = await getInstagramPostsThisMonthViaBackend(token, username);
         const postData = postRes.data || postRes.posts || postRes;
         setPosts(Array.isArray(postData) ? postData : []);
       } catch (err) {
