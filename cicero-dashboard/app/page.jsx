@@ -55,7 +55,7 @@ export default function LandingPage() {
         {/* Social Proof */}
         <section className="mt-16 max-w-2xl">
           <blockquote className="italic text-blue-100">"Cicero drastically improved our social engagement in just weeks."</blockquote>
-          <p className="mt-2 text-sm text-blue-200">- Marketing Manager, Example Corp</p>
+          <p className="mt-2 text-sm text-blue-200">- Marketing Manager, Cicero Devs</p>
         </section>
 
         {/* Signup Form */}
