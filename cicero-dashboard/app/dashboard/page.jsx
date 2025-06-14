@@ -247,6 +247,11 @@ function SocialCard({ platform, profile, posts }) {
           <div className="text-sm text-gray-500">
             {profile.following} following
           </div>
+          {profile.bio && (
+            <div className="text-sm text-gray-500 whitespace-pre-line">
+              {profile.bio}
+            </div>
+          )}
         </div>
       </div>
       {posts && posts.length > 0 && (
