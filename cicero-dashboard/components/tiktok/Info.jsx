@@ -12,7 +12,7 @@ import {
   getClientProfile,
 } from "@/utils/api";
 
-export default function TiktokInfoPage({ embedded = false }) {
+export default function TiktokInfoPage({ embedded = false, hideHeader = false }) {
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -203,7 +203,9 @@ export default function TiktokInfoPage({ embedded = false }) {
 
   const content = (
     <>
-      <h1 className="text-2xl font-bold text-blue-700">TikTok Info</h1>
+      {!hideHeader && (
+        <h1 className="text-2xl font-bold text-blue-700">TikTok Info</h1>
+      )}
         <form onSubmit={handleCompare} className="flex gap-2">
           <input
             type="text"
