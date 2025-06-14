@@ -153,6 +153,9 @@ export default function InstagramInfoPage() {
   ];
 
   const profilePic =
+    profile?.profile_pic_url_hd ||
+    profile?.profile_pic_url ||
+    profile?.hd_profile_pic_url_info?.url ||
     info?.hd_profile_pic_url_info?.url ||
     info?.hd_profile_pic_versions?.[0]?.url ||
     "";
