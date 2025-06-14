@@ -3,19 +3,17 @@ import useAuthRedirect from "@/hooks/useAuthRedirect";
 import Image from "next/image";
 import Link from "next/link";
 
+export const metadata = {
+  title: "CICERO Dashboard",
+  description:
+    "Next-Gen Dashboard for Social Media Monitoring & Team Management",
+};
+
 export default function LandingPage() {
   useAuthRedirect();
 
   return (
-    <div
-      className="fixed inset-0 bg-gradient-to-br from-gray-900 via-blue-950 to-black flex items-center justify-center"
-      style={{
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-        minHeight: "100dvh",
-      }}
-    >
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-black flex items-center justify-center p-4">
       <div
         className={`
           max-w-2xl w-full mx-auto flex flex-col items-center
@@ -59,6 +57,6 @@ export default function LandingPage() {
           Login
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
