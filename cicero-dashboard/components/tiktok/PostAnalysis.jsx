@@ -16,7 +16,7 @@ import {
   getClientProfile,
 } from "@/utils/api";
 
-export default function TiktokPostAnalysisPage({ embedded = false }) {
+export default function TiktokPostAnalysisPage({ embedded = false, hideHeader = false }) {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -252,8 +252,12 @@ export default function TiktokPostAnalysisPage({ embedded = false }) {
 
   const content = (
     <>
-        <h1 className="text-2xl font-bold text-blue-700">TikTok Post Analysis</h1>
-        <p className="text-gray-600">Analisis performa postingan TikTok.</p>
+        {!hideHeader && (
+          <>
+            <h1 className="text-2xl font-bold text-blue-700">TikTok Post Analysis</h1>
+            <p className="text-gray-600">Analisis performa postingan TikTok.</p>
+          </>
+        )}
 
         <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
           {profilePic && (
