@@ -4,6 +4,11 @@ import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+export const metadata = {
+  title: "Login - CICERO Dashboard",
+  description: "Masuk ke dashboard CICERO",
+};
+
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
 
@@ -47,14 +52,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
+    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
       <form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-xl min-w-[340px] w-full max-w-sm"
+        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm"
       >
         <h2 className="mb-6 text-2xl font-bold text-blue-600 text-center">Login Cicero</h2>
         <div className="mb-4">
+          <label htmlFor="client_id" className="sr-only">
+            Client ID
+          </label>
           <input
+            id="client_id"
             type="text"
             placeholder="Client ID"
             value={client_id}
@@ -64,7 +73,11 @@ export default function LoginPage() {
           />
         </div>
         <div className="mb-4">
+          <label htmlFor="client_operator" className="sr-only">
+            Operator
+          </label>
           <input
+            id="client_operator"
             type="text"
             placeholder="Operator"
             value={client_operator}
@@ -86,6 +99,6 @@ export default function LoginPage() {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
-    </div>
+    </main>
   );
 }
