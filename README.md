@@ -100,8 +100,8 @@ that combines the info and post analytics previously found under
 
 The TikTok Post Analysis page works similarly to the Instagram one but uses the TikTok endpoints `getTiktokProfileViaBackend` and `getTiktokPostsViaBackend` found in `cicero-dashboard/utils/api.js`.
 
-Additionally, the dashboard provides a combined TikTok Analysis view at `/tiktok`
-which merges the info and post analytics into a single page.
+The dashboard provides a single TikTok Post Analysis page at `/tiktok`
+that merges the info and post analytics into one view.
 
 ### Profile Fields
 - `username`
