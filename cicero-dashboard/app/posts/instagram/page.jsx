@@ -6,7 +6,6 @@ import EngagementByTypeChart from "@/components/EngagementByTypeChart";
 import HeatmapTable from "@/components/HeatmapTable";
 import PostMetricsChart from "@/components/PostMetricsChart";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
-import FilterBar from "@/components/FilterBar";
 import WordCloudChart from "@/components/WordCloudChart";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
@@ -31,16 +30,6 @@ export default function InstagramPostAnalysisPage() {
   const [compareStats, setCompareStats] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    .toISOString()
-    .split("T")[0];
-  const [startDate, setStartDate] = useState(firstDay);
-  const [endDate, setEndDate] = useState(lastDay);
-  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const token =
@@ -167,14 +156,7 @@ export default function InstagramPostAnalysisPage() {
     );
   if (!profile) return null;
 
-  const filteredPosts = posts.filter((p) => {
-    const d = new Date(p.created_at);
-    if (startDate && d < new Date(startDate)) return false;
-    if (endDate && d > new Date(endDate + "T23:59:59")) return false;
-    if (search && !(p.caption || "").toLowerCase().includes(search.toLowerCase()))
-      return false;
-    return true;
-  });
+  const filteredPosts = posts;
 
   const sortedPosts = [...filteredPosts].sort(
     (a, b) => new Date(a.created_at) - new Date(b.created_at)
@@ -396,14 +378,6 @@ export default function InstagramPostAnalysisPage() {
           </div>
         )}
 
-        <FilterBar
-          startDate={startDate}
-          endDate={endDate}
-          search={search}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          setSearch={setSearch}
-        />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardStat title="Followers" value={profile.followers} />
