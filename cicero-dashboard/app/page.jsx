@@ -3,11 +3,51 @@ import { useState } from "react";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, ShieldCheck, Users } from "lucide-react";
+import { BarChart3, ShieldCheck, Users, CheckCircle } from "lucide-react";
 
 export default function LandingPage() {
   useAuthRedirect();
   const [email, setEmail] = useState("");
+
+  const packages = [
+    {
+      name: "Kelas A",
+      users: "1500-3000 pengguna",
+      setup: "Rp5.000.000",
+      monthly: "Rp4.200.000",
+      features: [
+        "Analisis real-time",
+        "Kolaborasi tim penuh",
+        "Prioritas dukungan",
+        "Integrasi kustom",
+      ],
+    },
+    {
+      name: "Kelas B",
+      users: "800-1500 pengguna",
+      setup: "Rp4.000.000",
+      monthly: "Rp3.600.000",
+      popular: true,
+      features: [
+        "Analisis real-time",
+        "Kolaborasi tim",
+        "Dukungan standar",
+        "Integrasi dasar",
+      ],
+    },
+    {
+      name: "Kelas C",
+      users: "maks. 800 pengguna",
+      setup: "Rp3.000.000",
+      monthly: "Rp2.400.000",
+      features: [
+        "Analisis dasar",
+        "Kolaborasi tim",
+        "Dukungan email",
+        "1 akun sosial",
+      ],
+    },
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,31 +98,39 @@ export default function LandingPage() {
           <p className="text-blue-100 mb-8 text-center">
             Optimalkan pengelolaan media sosial Anda bersama Cicero dengan paket yang sesuai skala tim. Dapatkan potongan 10% untuk komitmen jangka menengah maupun jangka panjang.
           </p>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold mb-2">Kelas A</h3>
-              <p className="text-blue-100 text-sm mb-4">1500-3000 pengguna</p>
-              <p className="text-sm text-blue-100">Biaya Setup</p>
-              <p className="text-2xl font-bold text-white">Rp5.000.000</p>
-              <p className="mt-4 text-sm text-blue-100">Biaya Bulanan</p>
-              <p className="text-xl font-semibold text-white">Rp4.200.000</p>
-            </div>
-            <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold mb-2">Kelas B</h3>
-              <p className="text-blue-100 text-sm mb-4">800-1500 pengguna</p>
-              <p className="text-sm text-blue-100">Biaya Setup</p>
-              <p className="text-2xl font-bold text-white">Rp4.000.000</p>
-              <p className="mt-4 text-sm text-blue-100">Biaya Bulanan</p>
-              <p className="text-xl font-semibold text-white">Rp3.600.000</p>
-            </div>
-            <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold mb-2">Kelas C</h3>
-              <p className="text-blue-100 text-sm mb-4">maks. 800 pengguna</p>
-              <p className="text-sm text-blue-100">Biaya Setup</p>
-              <p className="text-2xl font-bold text-white">Rp3.000.000</p>
-              <p className="mt-4 text-sm text-blue-100">Biaya Bulanan</p>
-              <p className="text-xl font-semibold text-white">Rp2.400.000</p>
-            </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {packages.map((pkg) => (
+              <div
+                key={pkg.name}
+                className={`relative flex flex-col bg-white text-gray-900 rounded-xl shadow-lg p-6 ${pkg.popular ? "ring-2 ring-blue-600" : ""}`}
+              >
+                {pkg.popular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    Most Popular
+                  </span>
+                )}
+                <h3 className="text-lg font-semibold mb-1">{pkg.name}</h3>
+                <p className="text-sm text-gray-500 mb-4">{pkg.users}</p>
+                <p className="text-sm text-gray-500">Biaya Setup</p>
+                <p className="text-3xl font-extrabold">{pkg.setup}</p>
+                <p className="mt-4 text-sm text-gray-500">Biaya Bulanan</p>
+                <p className="text-2xl font-semibold">{pkg.monthly} </p>
+                <ul className="mt-4 flex-1 space-y-2 text-sm">
+                  {pkg.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <CheckCircle aria-hidden="true" className="h-4 w-4 text-blue-600 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  aria-label={`Daftar paket ${pkg.name}`}
+                  className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  Daftar Sekarang
+                </button>
+              </div>
+            ))}
           </div>
         </section>
 
