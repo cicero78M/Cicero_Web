@@ -15,6 +15,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
+  getInstagramInfoViaBackend,
   getClientProfile,
 } from "@/utils/api";
 
@@ -22,6 +23,7 @@ export default function InstagramPostAnalysisPage() {
   useRequireAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [compareLink, setCompareLink] = useState("");
@@ -55,6 +57,10 @@ export default function InstagramPostAnalysisPage() {
 
         const profileRes = await getInstagramProfileViaBackend(token, username);
         setProfile(profileRes.data || profileRes.profile || profileRes);
+
+        const infoRes = await getInstagramInfoViaBackend(token, username);
+        const infoData = infoRes.data || infoRes.info || infoRes;
+        setInfo(infoData);
 
         const postRes = await getInstagramPostsViaBackend(token, username, 50);
         const postData = postRes.data || postRes.posts || postRes;
@@ -199,10 +205,38 @@ export default function InstagramPostAnalysisPage() {
     latestPosts.reduce((s, p) => s + (p.view_count || 0), 0) /
     (latestPosts.length || 1);
 
+  const avgLikesAll =
+    sortedPosts.reduce((s, p) => s + (p.like_count || 0), 0) /
+    (sortedPosts.length || 1);
+  const avgCommentsAll =
+    sortedPosts.reduce((s, p) => s + (p.comment_count || 0), 0) /
+    (sortedPosts.length || 1);
+  const avgViewsAll =
+    sortedPosts.reduce((s, p) => s + (p.view_count || 0), 0) /
+    (sortedPosts.length || 1);
+  const engagementRate = profile.followers
+    ? (((avgLikesAll + avgCommentsAll) / profile.followers) * 100).toFixed(2)
+    : "0";
+
+  const totalPosts = info?.media_count ?? info?.post_count;
+  const totalIgtv = info?.total_igtv_videos;
+
+  const biography = profile.bio || info?.biography || "";
+  const bioLink =
+    (info?.bio_links && (info.bio_links[0]?.link || info.bio_links[0]?.url)) ||
+    info?.external_url ||
+    "";
+
+  const accountType =
+    info?.is_business || info?.is_professional ? "Bisnis" : "Pribadi";
+  const privacyStatus = info?.is_private ? "Privat" : "Terbuka";
+
   const profilePic =
     profile.hd_profile_pic_url_info?.url ||
     profile.hd_profile_pic_versions?.[0]?.url ||
     profile.profile_pic_url ||
+    info?.hd_profile_pic_url_info?.url ||
+    info?.hd_profile_pic_versions?.[0]?.url ||
     "";
 
   const getProfilePicSrc = (url) => {
@@ -342,6 +376,58 @@ export default function InstagramPostAnalysisPage() {
           <CardStat title="Following" value={profile.following} />
           <CardStat title="Follower/Following" value={followerRatio} />
           <CardStat title="Posts / Day" value={postingFreq} />
+          {totalPosts !== undefined && (
+            <CardStat title="Total Posts" value={totalPosts} />
+          )}
+          {totalIgtv !== undefined && (
+            <CardStat title="Total IG-TV" value={totalIgtv} />
+          )}
+        </div>
+
+        {biography && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm whitespace-pre-line">
+            {biography}
+            {bioLink && (
+              <div className="mt-2">
+                <a
+                  href={bioLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline break-all"
+                >
+                  {bioLink}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(info?.address || info?.public_phone_number || info?.public_email) && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm">
+            {info?.address && <div>{info.address}</div>}
+            {info?.public_phone_number && <div>WA: {info.public_phone_number}</div>}
+            {info?.public_email && <div>Email: {info.public_email}</div>}
+          </div>
+        )}
+
+        {posts.length > 0 && (
+          <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <h2 className="font-semibold mb-2">Summary Engagement</h2>
+            <ul className="list-disc ml-5">
+              <li>Avg Likes: {avgLikesAll.toFixed(1)}</li>
+              <li>Avg Comments: {avgCommentsAll.toFixed(1)}</li>
+              <li>Avg Views: {avgViewsAll.toFixed(1)}</li>
+              <li>Engagement Rate: {engagementRate}%</li>
+            </ul>
+          </div>
+        )}
+
+        <div className="bg-white p-4 rounded-xl shadow text-sm">
+          <h2 className="font-semibold mb-2">Fitur dan Status Akun</h2>
+          <ul className="list-disc ml-5">
+            <li>{accountType}</li>
+            <li>{privacyStatus}</li>
+          </ul>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow">
