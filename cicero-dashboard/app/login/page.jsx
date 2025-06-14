@@ -4,11 +4,6 @@ import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export const metadata = {
-  title: "Login - CICERO Dashboard",
-  description: "Masuk ke dashboard CICERO",
-};
-
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
 
