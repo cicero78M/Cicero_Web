@@ -156,6 +156,7 @@ export default function TiktokInfoPage() {
   ];
 
   const profilePic =
+    profile?.avatar_url ||
     profile?.avatar ||
     profile?.hd_profile_pic_url_info?.url ||
     profile?.hd_profile_pic_versions?.[0]?.url ||
