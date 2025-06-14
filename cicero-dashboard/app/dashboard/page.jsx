@@ -206,6 +206,7 @@ function SocialCard({ platform, profile, posts }) {
     );
 
   const avatar =
+    profile.avatar_url ||
     profile.avatar ||
     profile.hd_profile_pic_url_info?.url ||
     profile.hd_profile_pic_versions?.[0]?.url ||
