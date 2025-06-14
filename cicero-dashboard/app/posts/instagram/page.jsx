@@ -362,6 +362,32 @@ export default function InstagramPostAnalysisPage() {
           <div className="text-red-500 text-sm">{compareError}</div>
         )}
 
+        
+        {compareLoading && <Loader />}
+        {compareStats && (
+          <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
+            <h3 className="font-semibold">Perbandingan dengan {compareStats.username}</h3>
+            <PostCompareChart
+              client={{
+                username: profile.username,
+                followers: profile.followers,
+                following: profile.following,
+                followerRatio: parseFloat(followerRatio),
+                postRate: parseFloat(latestPostRate),
+                avgLikes: avgLikesClient,
+                avgComments: avgCommentsClient,
+                avgShares: avgSharesClient,
+                avgViews: avgViewsClient,
+              }}
+              competitor={compareStats}
+            />
+            <Narrative>
+              {`Dalam 12 posting terakhir, ${profile.username} rata-rata memperoleh ${avgLikesClient.toFixed(1)} likes, ${avgCommentsClient.toFixed(1)} komentar, ${avgSharesClient.toFixed(1)} share, dan ${avgViewsClient.toFixed(1)} views dengan frekuensi ${latestPostRate} posting per hari serta rasio follower/following ${followerRatio}. `}
+              {`Sementara ${compareStats.username} rata-rata ${compareStats.avgLikes.toFixed(1)} likes, ${compareStats.avgComments.toFixed(1)} komentar, ${compareStats.avgShares.toFixed(1)} share, dan ${compareStats.avgViews.toFixed(1)} views dengan frekuensi ${compareStats.postRate} posting per hari serta rasio ${compareStats.followerRatio}.`}
+            </Narrative>
+          </div>
+        )}
+
         <FilterBar
           startDate={startDate}
           endDate={endDate}
@@ -481,30 +507,6 @@ export default function InstagramPostAnalysisPage() {
           <InstagramPostsGrid posts={sortedPosts} />
         </div>
 
-        {compareLoading && <Loader />}
-        {compareStats && (
-          <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
-            <h3 className="font-semibold">Perbandingan dengan {compareStats.username}</h3>
-            <PostCompareChart
-              client={{
-                username: profile.username,
-                followers: profile.followers,
-                following: profile.following,
-                followerRatio: parseFloat(followerRatio),
-                postRate: parseFloat(latestPostRate),
-                avgLikes: avgLikesClient,
-                avgComments: avgCommentsClient,
-                avgShares: avgSharesClient,
-                avgViews: avgViewsClient,
-              }}
-              competitor={compareStats}
-            />
-            <Narrative>
-              {`Dalam 12 posting terakhir, ${profile.username} rata-rata memperoleh ${avgLikesClient.toFixed(1)} likes, ${avgCommentsClient.toFixed(1)} komentar, ${avgSharesClient.toFixed(1)} share, dan ${avgViewsClient.toFixed(1)} views dengan frekuensi ${latestPostRate} posting per hari serta rasio follower/following ${followerRatio}. `}
-              {`Sementara ${compareStats.username} rata-rata ${compareStats.avgLikes.toFixed(1)} likes, ${compareStats.avgComments.toFixed(1)} komentar, ${compareStats.avgShares.toFixed(1)} share, dan ${compareStats.avgViews.toFixed(1)} views dengan frekuensi ${compareStats.postRate} posting per hari serta rasio ${compareStats.followerRatio}.`}
-            </Narrative>
-          </div>
-        )}
 
 
       </div>
