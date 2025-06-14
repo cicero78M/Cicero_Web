@@ -6,6 +6,8 @@ import EngagementByTypeChart from "@/components/EngagementByTypeChart";
 import HeatmapTable from "@/components/HeatmapTable";
 import PostMetricsChart from "@/components/PostMetricsChart";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
+import FilterBar from "@/components/FilterBar";
+import WordCloudChart from "@/components/WordCloudChart";
 import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
@@ -26,6 +28,9 @@ export default function InstagramPostAnalysisPage() {
   const [compareStats, setCompareStats] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const token =
@@ -148,7 +153,16 @@ export default function InstagramPostAnalysisPage() {
     );
   if (!profile) return null;
 
-  const sortedPosts = [...posts].sort(
+  const filteredPosts = posts.filter((p) => {
+    const d = new Date(p.created_at);
+    if (startDate && d < new Date(startDate)) return false;
+    if (endDate && d > new Date(endDate + "T23:59:59")) return false;
+    if (search && !(p.caption || "").toLowerCase().includes(search.toLowerCase()))
+      return false;
+    return true;
+  });
+
+  const sortedPosts = [...filteredPosts].sort(
     (a, b) => new Date(a.created_at) - new Date(b.created_at)
   );
   const firstDate = sortedPosts.length
@@ -250,6 +264,23 @@ export default function InstagramPostAnalysisPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  const wordMap = {};
+  filteredPosts.forEach((p) => {
+    const words =
+      (typeof p.caption === "string" ? p.caption : "")
+        .toLowerCase()
+        .match(/\b\w+\b/g) || [];
+    words.forEach((w) => {
+      if (w.length > 3) {
+        wordMap[w] = (wordMap[w] || 0) + 1;
+      }
+    });
+  });
+  const cloudWords = Object.entries(wordMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 50)
+    .map(([text, value]) => ({ text, value }));
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-5xl flex flex-col gap-8">
@@ -297,6 +328,15 @@ export default function InstagramPostAnalysisPage() {
           <div className="text-red-500 text-sm">{compareError}</div>
         )}
 
+        <FilterBar
+          startDate={startDate}
+          endDate={endDate}
+          search={search}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+          setSearch={setSearch}
+        />
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CardStat title="Followers" value={profile.followers} />
           <CardStat title="Following" value={profile.following} />
@@ -318,6 +358,13 @@ export default function InstagramPostAnalysisPage() {
           <h2 className="font-semibold mb-2">Engagement by Content Type</h2>
           <EngagementByTypeChart data={typeData} />
         </div>
+
+        {cloudWords.length > 0 && (
+          <div className="bg-white p-4 rounded-xl shadow">
+            <h3 className="font-semibold mb-2">Word Cloud</h3>
+            <WordCloudChart words={cloudWords} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-xl shadow">
