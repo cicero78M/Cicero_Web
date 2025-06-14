@@ -1,13 +1,11 @@
 "use client";
-import dynamic from "next/dynamic";
-
-const ReactWordcloud = dynamic(() => import("react-wordcloud"), { ssr: false });
+import WordCloud from "react-d3-cloud";
 
 export default function WordCloudChart({ words = [] }) {
-  const options = { rotations: 2, rotationAngles: [0, 0], fontSizes: [12, 40] };
+  if (typeof window === "undefined") return null;
   return (
     <div style={{ height: 300 }} className="w-full">
-      <ReactWordcloud words={words} options={options} size={[300, 300]} />
+      <WordCloud data={words} width={300} height={300} />
     </div>
   );
 }
