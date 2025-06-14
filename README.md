@@ -59,6 +59,9 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - The login page expects a valid API endpoint provided by `NEXT_PUBLIC_API_URL`.
 - Pages under the `app/` directory automatically refresh during development when files are edited.
 - Static assets such as icons reside in `cicero-dashboard/public`.
+- The maximum number of concurrent logins for a client is controlled by the backend.
+  If you need more than three users logged in at the same time, update the server
+  configuration to allow at least five simultaneous sessions.
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
