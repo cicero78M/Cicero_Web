@@ -12,7 +12,7 @@ import {
   getClientProfile,
 } from "@/utils/api";
 
-export default function TiktokInfoPage() {
+export default function TiktokInfoPage({ embedded = false }) {
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -201,10 +201,9 @@ export default function TiktokInfoPage() {
   const privacyStatus = info?.is_private ? "Privat" : "Terbuka";
 
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
-      <div className="w-full max-w-4xl flex flex-col gap-8">
-        <h1 className="text-2xl font-bold text-blue-700">TikTok Info</h1>
+  const content = (
+    <>
+      <h1 className="text-2xl font-bold text-blue-700">TikTok Info</h1>
         <form onSubmit={handleCompare} className="flex gap-2">
           <input
             type="text"
@@ -365,6 +364,17 @@ export default function TiktokInfoPage() {
             </Narrative>
           </div>
         )}
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
+      <div className="w-full max-w-5xl flex flex-col gap-8">
+        {content}
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ import {
   getClientProfile,
 } from "@/utils/api";
 
-export default function TiktokPostAnalysisPage() {
+export default function TiktokPostAnalysisPage({ embedded = false }) {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -250,9 +250,8 @@ export default function TiktokPostAnalysisPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
-      <div className="w-full max-w-5xl flex flex-col gap-8">
+  const content = (
+    <>
         <h1 className="text-2xl font-bold text-blue-700">TikTok Post Analysis</h1>
         <p className="text-gray-600">Analisis performa postingan TikTok.</p>
 
@@ -373,7 +372,17 @@ export default function TiktokPostAnalysisPage() {
           </div>
         )}
 
+    </>
+  );
 
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
+      <div className="w-full max-w-5xl flex flex-col gap-8">
+        {content}
       </div>
     </div>
   );
