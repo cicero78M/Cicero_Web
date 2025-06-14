@@ -3,12 +3,6 @@ import useAuthRedirect from "@/hooks/useAuthRedirect";
 import Image from "next/image";
 import Link from "next/link";
 
-export const metadata = {
-  title: "CICERO Dashboard",
-  description:
-    "Next-Gen Dashboard for Social Media Monitoring & Team Management",
-};
-
 export default function LandingPage() {
   useAuthRedirect();
 
