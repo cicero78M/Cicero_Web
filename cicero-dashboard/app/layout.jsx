@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
