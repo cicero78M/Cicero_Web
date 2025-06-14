@@ -92,6 +92,10 @@ Thumbnails from Instagram occasionally use the `.heic` extension which many brow
 cannot display. The frontend automatically replaces `.heic` with `.jpg` and falls
 back to `/file.svg` if loading fails.
 
+The dashboard also provides a combined Instagram Analysis view at `/instagram`
+which merges the info and post analytics previously found under
+`/info/instagram` and `/posts/instagram` into a single page.
+
 ## TikTok Post Analysis API
 
 The TikTok Post Analysis page works similarly to the Instagram one but uses the TikTok endpoints `getTiktokProfileViaBackend` and `getTiktokPostsViaBackend` found in `cicero-dashboard/utils/api.js`.
