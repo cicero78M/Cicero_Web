@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import CardStat from "@/components/CardStat";
 import EngagementLineChart from "@/components/EngagementLineChart";
 import EngagementByTypeChart from "@/components/EngagementByTypeChart";
@@ -30,8 +30,11 @@ export default function InstagramPostAnalysisPage() {
   const [compareStats, setCompareStats] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =
