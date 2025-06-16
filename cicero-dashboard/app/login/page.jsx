@@ -3,9 +3,11 @@
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
+  const { setAuth } = useAuth();
 
   const [client_id, setClientId] = useState("");
   const [client_operator, setClientOperator] = useState("");
@@ -34,8 +36,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success && data.token) {
-        localStorage.setItem("cicero_token", data.token);
-        localStorage.setItem("client_id", client_id);
+        setAuth(data.token, client_id);
         router.push("/dashboard");
       } else {
         setError(data.message || "Login gagal, cek Client ID / Operator");

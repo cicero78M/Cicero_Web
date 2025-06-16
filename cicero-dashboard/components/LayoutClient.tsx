@@ -1,8 +1,9 @@
 "use client";
 import { usePathname } from "next/navigation";
 import SidebarWrapper from "./SidebarWrapper";
+import DarkModeToggle from "./DarkModeToggle";
 
-export default function LayoutClient({ children }) {
+export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Landing and login pages render without sidebar
@@ -15,7 +16,10 @@ export default function LayoutClient({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100 relative">
+      <div className="absolute top-4 right-4 z-50">
+        <DarkModeToggle />
+      </div>
       <aside aria-label="Sidebar navigation">
         <SidebarWrapper />
       </aside>
