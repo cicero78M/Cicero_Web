@@ -195,7 +195,7 @@ function ClientCard({ profile }) {
 
 function SocialCard({ platform, profile, posts }) {
   const getThumb = (url) => {
-    if (!url) return "/file.svg";
+    if (!url) return "/lib/public/file.svg";
     return url.replace(/\.heic(\?|$)/, ".jpg$1");
   };
   if (!profile)
@@ -229,7 +229,7 @@ function SocialCard({ platform, profile, posts }) {
             alt="avatar"
             className="w-12 h-12 rounded-full object-cover"
             onError={(e) => {
-              e.currentTarget.src = "/public/file.svg";
+              e.currentTarget.src = "/lib/public/file.svg";
             }}
           />
         )}
@@ -262,7 +262,7 @@ function SocialCard({ platform, profile, posts }) {
               alt="thumb"
               className="w-16 h-16 object-cover rounded"
               onError={(e) => {
-                e.currentTarget.src = "/public/file.svg";
+                e.currentTarget.src = "/lib/public/file.svg";
               }}
             />
           ))}
