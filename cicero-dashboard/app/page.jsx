@@ -3,7 +3,15 @@ import { useState } from "react";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, ShieldCheck, Users, CheckCircle } from "lucide-react";
+import {
+  BarChart3,
+  ShieldCheck,
+  Users,
+  CheckCircle,
+  Activity,
+  MessageCircle,
+  Database,
+} from "lucide-react";
 
 export default function LandingPage() {
   useAuthRedirect();
@@ -90,6 +98,69 @@ export default function LandingPage() {
             <h3 className="mt-4 font-semibold text-lg">Secure Data</h3>
             <p className="mt-2 text-sm text-blue-100 text-center">Your analytics are protected with enterprise-grade security.</p>
           </div>
+        </section>
+
+        {/* Why Cicero Section */}
+        <section className="mt-16 w-full max-w-6xl text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-10">
+            Kenapa Cicero Dibuat?
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 text-left">
+            {[
+              {
+                icon: Activity,
+                title: "Monitoring & Evaluasi Terpusat",
+                desc:
+                  "Cicero otomatis menarik aktivitas Instagram/TikTok anggota dan mencocokkannya dengan database organisasi.",
+                useCase:
+                  "Contoh: tim marketing kampus memantau seberapa aktif mahasiswa mempromosikan acara.",
+              },
+              {
+                icon: CheckCircle,
+                title: "Absensi Digital & Penilaian Kinerja",
+                desc:
+                  "Sistem menandai siapa yang sudah like, komen atau repost sehingga keaktifan mudah dipantau.",
+                useCase:
+                  "Contoh: instansi pemerintah menilai kepatuhan pegawai dalam amplifikasi konten resmi.",
+              },
+              {
+                icon: MessageCircle,
+                title: "Laporan Otomatis via WhatsApp",
+                desc:
+                  "Rekap harian langsung dikirim ke WhatsApp admin atau pimpinan untuk monitoring real-time.",
+                useCase:
+                  "Contoh: komandan mendapatkan laporan tiap pagi tanpa menunggu rekap manual.",
+              },
+              {
+                icon: Database,
+                title: "Minim Administrasi Manual",
+                desc:
+                  "Data dapat diimpor massal dari Google Sheet dan diproses otomatis tanpa kerepotan.",
+                useCase:
+                  "Contoh: admin cukup unggah daftar akun lalu fokus pada strategi konten.",
+              },
+              {
+                icon: BarChart3,
+                title: "Visualisasi & Analisis Lengkap",
+                desc:
+                  "Dashboard menampilkan grafik tren serta insight performa tim untuk evaluasi menyeluruh.",
+                useCase:
+                  "Contoh: manajemen melihat grafik harian guna menentukan strategi kampanye berikutnya.",
+              },
+            ].map(({ icon: Icon, title, desc, useCase }) => (
+              <div key={title} className="bg-white/5 p-6 rounded-xl flex flex-col">
+                <Icon className="h-8 w-8 text-blue-400" />
+                <h3 className="mt-4 font-semibold text-lg">{title}</h3>
+                <p className="mt-2 text-sm text-blue-100">{desc}</p>
+                <p className="mt-2 text-xs text-blue-300 italic">{useCase}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-10 text-blue-100 max-w-4xl mx-auto leading-relaxed">
+            Dengan <strong>automasi</strong>, <strong>transparansi</strong>, dan
+            <strong> efisiensi</strong>, Cicero membantu organisasi menghemat
+            waktu sekaligus menilai kinerja sosial media secara objektif.
+          </p>
         </section>
 
         {/* Pricing Section */}
