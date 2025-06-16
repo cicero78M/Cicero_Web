@@ -195,7 +195,7 @@ function ClientCard({ profile }) {
 
 function SocialCard({ platform, profile, posts }) {
   const getThumb = (url) => {
-    if (!url) return "/file.svg";
+    if (!url) return null;
     return url.replace(/\.heic(\?|$)/, ".jpg$1");
   };
   if (!profile)
@@ -218,18 +218,19 @@ function SocialCard({ platform, profile, posts }) {
     platform === "instagram"
       ? `https://instagram.com/${profile.username}`
       : `https://www.tiktok.com/@${profile.username}`;
+  const avatarSrc = getThumb(avatar);
 
   return (
     <div className="bg-white rounded-xl shadow p-4 flex flex-col">
       <h2 className="font-semibold capitalize mb-2">{platform} Profile</h2>
       <div className="flex items-center gap-3 flex-wrap">
-        {avatar && (
+        {avatarSrc && (
           <img
-            src={getThumb(avatar)}
+            src={avatarSrc}
             alt="avatar"
             className="w-12 h-12 rounded-full object-cover"
             onError={(e) => {
-              e.currentTarget.src = "/file.svg";
+              e.currentTarget.style.display = "none";
             }}
           />
         )}
@@ -255,17 +256,22 @@ function SocialCard({ platform, profile, posts }) {
       )}
       {posts && posts.length > 0 && (
         <div className="flex gap-2 mt-4">
-          {posts.slice(0, 3).map((p) => (
-            <img
-              key={p.id || p.post_id}
-              src={getThumb(p.thumbnail)}
-              alt="thumb"
-              className="w-16 h-16 object-cover rounded"
-              onError={(e) => {
-                e.currentTarget.src = "/file.svg";
-              }}
-            />
-          ))}
+          {posts.slice(0, 3).map((p) => {
+            const thumb = getThumb(p.thumbnail);
+            return (
+              thumb && (
+                <img
+                  key={p.id || p.post_id}
+                  src={thumb}
+                  alt="thumb"
+                  className="w-16 h-16 object-cover rounded"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              )
+            );
+          })}
         </div>
       )}
     </div>
