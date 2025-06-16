@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { Menu as IconMenu, X as IconX } from "lucide-react";
 import {
   Sheet,
@@ -24,10 +25,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const { setAuth } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("cicero_token");
-    localStorage.removeItem("client_id");
+    setAuth(null, null);
     router.replace("/login");
   };
 

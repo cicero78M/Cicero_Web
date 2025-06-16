@@ -1,4 +1,4 @@
-// utils/api.js
+// utils/api.ts
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
@@ -8,7 +8,7 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 }
 
 // Handle expired or invalid token by clearing storage and redirecting to login
-function handleTokenExpired() {
+function handleTokenExpired(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem("cicero_token");
     localStorage.removeItem("client_id");
@@ -18,7 +18,11 @@ function handleTokenExpired() {
 
 // Wrapper around fetch that attaches the Authorization header and
 // automatically logs the user out when the token is rejected by the backend
-async function fetchWithAuth(url, token, options = {}) {
+async function fetchWithAuth(
+  url: string,
+  token: string,
+  options: RequestInit = {}
+): Promise<Response> {
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -33,7 +37,7 @@ async function fetchWithAuth(url, token, options = {}) {
   }
   return res;
 }
-export async function getDashboardStats(token) {
+export async function getDashboardStats(token: string): Promise<any> {
   const res = await fetchWithAuth(
     API_BASE_URL + "/api/dashboard/stats",
     token
@@ -43,7 +47,11 @@ export async function getDashboardStats(token) {
 }
 
 // Ambil rekap absensi instagram harian
-export async function getRekapLikesIG(token, client_id, periode = "harian") {
+export async function getRekapLikesIG(
+  token: string,
+  client_id: string,
+  periode: string = "harian"
+): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
@@ -53,7 +61,7 @@ export async function getRekapLikesIG(token, client_id, periode = "harian") {
 }
 
 // Ambil profile client berdasarkan token dan client_id
-export async function getClientProfile(token, client_id) {
+export async function getClientProfile(token: string, client_id: string): Promise<any> {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
 
@@ -63,7 +71,7 @@ export async function getClientProfile(token, client_id) {
 }
 
 // Ambil daftar user untuk User Directory
-export async function getUserDirectory(token, client_id) {
+export async function getUserDirectory(token: string, client_id: string): Promise<any> {
   const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
 
   const res = await fetchWithAuth(url, token);
@@ -72,14 +80,18 @@ export async function getUserDirectory(token, client_id) {
 }
 
 // Ambil komentar TikTok
-export async function getTikTokComments(token) {
+export async function getTikTokComments(token: string): Promise<any> {
   const url = `${API_BASE_URL}/api/tiktok/comments`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch comments");
   return res.json();
 }
 
-export async function getRekapKomentarTiktok(token, client_id, periode = "harian") {
+export async function getRekapKomentarTiktok(
+  token: string,
+  client_id: string,
+  periode: string = "harian"
+): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
 
@@ -91,7 +103,7 @@ export async function getRekapKomentarTiktok(token, client_id, periode = "harian
   return res.json();
 }
 
-export async function getInstagramPosts(token, client_id) {
+export async function getInstagramPosts(token: string, client_id: string): Promise<any> {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
@@ -100,8 +112,12 @@ export async function getInstagramPosts(token, client_id) {
 }
 
 // Fetch Instagram posts via backend using username (backend handles RapidAPI call)
-export async function getInstagramPostsViaBackend(token, username, limit = 10) {
-  const params = new URLSearchParams({ username, limit });
+export async function getInstagramPostsViaBackend(
+  token: string,
+  username: string,
+  limit: number = 10
+): Promise<any> {
+  const params = new URLSearchParams({ username, limit: String(limit) });
   const url = `${API_BASE_URL}/api/insta/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
@@ -112,7 +128,10 @@ export async function getInstagramPostsViaBackend(token, username, limit = 10) {
 }
 
 // Fetch Instagram posts for the current month via backend using username
-export async function getInstagramPostsThisMonthViaBackend(token, username) {
+export async function getInstagramPostsThisMonthViaBackend(
+  token: string,
+  username: string
+): Promise<any> {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/insta/rapid-posts-month?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
@@ -124,7 +143,7 @@ export async function getInstagramPostsThisMonthViaBackend(token, username) {
 }
 
 // Fetch Instagram profile via backend using username
-export async function getInstagramProfileViaBackend(token, username) {
+export async function getInstagramProfileViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/insta/rapid-profile?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
@@ -146,7 +165,7 @@ export async function getInstagramProfileViaBackend(token, username) {
 }
 
 // Fetch additional Instagram info via backend using username
-export async function getInstagramInfoViaBackend(token, username) {
+export async function getInstagramInfoViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/insta/rapid-info?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
@@ -158,7 +177,7 @@ export async function getInstagramInfoViaBackend(token, username) {
 }
 
 // Fetch TikTok profile via backend using username
-export async function getTiktokProfileViaBackend(token, username) {
+export async function getTiktokProfileViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/tiktok/rapid-profile?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
@@ -204,7 +223,7 @@ export async function getTiktokProfileViaBackend(token, username) {
 }
 
 // Fetch additional TikTok info via backend using username
-export async function getTiktokInfoViaBackend(token, username) {
+export async function getTiktokInfoViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
   const url = `${API_BASE_URL}/api/tiktok/rapid-info?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
@@ -236,8 +255,12 @@ export async function getTiktokInfoViaBackend(token, username) {
 }
 
 // Fetch TikTok posts via backend using username
-export async function getTiktokPostsViaBackend(token, client_id, limit = 10) {
-  const params = new URLSearchParams({ client_id, limit });
+export async function getTiktokPostsViaBackend(
+  token: string,
+  client_id: string,
+  limit: number = 10
+): Promise<any> {
+  const params = new URLSearchParams({ client_id, limit: String(limit) });
   const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
@@ -272,11 +295,11 @@ export async function getTiktokPostsViaBackend(token, client_id, limit = 10) {
 
 // Fetch TikTok posts via backend using username (for compare feature)
 export async function getTiktokPostsByUsernameViaBackend(
-  token,
-  username,
-  limit = 10
-) {
-  const params = new URLSearchParams({ username, limit });
+  token: string,
+  username: string,
+  limit: number = 10
+): Promise<any> {
+  const params = new URLSearchParams({ username, limit: String(limit) });
   const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
@@ -309,7 +332,7 @@ export async function getTiktokPostsByUsernameViaBackend(
   return posts;
 }
 
-export async function getTiktokPosts(token, client_id) {
+export async function getTiktokPosts(token: string, client_id: string): Promise<any> {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);

@@ -9,9 +9,11 @@ import {
 } from "@/utils/api";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardPage() {
   useRequireAuth();
+  const { token, clientId } = useAuth();
   const [clientProfile, setClientProfile] = useState(null);
   const [igProfile, setIgProfile] = useState(null);
   const [igPosts, setIgPosts] = useState([]);
@@ -21,11 +23,6 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    const clientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
-
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
