@@ -161,6 +161,7 @@ export default function LandingPage() {
             <strong> efisiensi</strong>, Cicero membantu organisasi menghemat
             waktu sekaligus menilai kinerja sosial media secara objektif.
           </p>
+
         </section>
 
         {/* Pricing Section */}
