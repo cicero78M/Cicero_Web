@@ -72,13 +72,6 @@ export async function getUserDirectory(token, client_id) {
 }
 
 // Ambil komentar TikTok
-export async function getTikTokComments(token) {
-  const url = `${API_BASE_URL}/api/tiktok/comments`;
-  const res = await fetchWithAuth(url, token);
-  if (!res.ok) throw new Error("Failed to fetch comments");
-  return res.json();
-}
-
 export async function getRekapKomentarTiktok(token, client_id, periode = "harian") {
   const params = new URLSearchParams({ client_id, periode });
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
@@ -88,14 +81,6 @@ export async function getRekapKomentarTiktok(token, client_id, periode = "harian
     const errText = await res.text();
     throw new Error(`Failed to fetch rekap komentar tiktok: ${errText}`);
   }
-  return res.json();
-}
-
-export async function getInstagramPosts(token, client_id) {
-  const params = new URLSearchParams({ client_id });
-  const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
-  const res = await fetchWithAuth(url, token);
-  if (!res.ok) throw new Error("Failed to fetch instagram posts");
   return res.json();
 }
 
@@ -308,10 +293,3 @@ export async function getTiktokPostsByUsernameViaBackend(
   return posts;
 }
 
-export async function getTiktokPosts(token, client_id) {
-  const params = new URLSearchParams({ client_id });
-  const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
-  const res = await fetchWithAuth(url, token);
-  if (!res.ok) throw new Error("Failed to fetch tiktok posts");
-  return res.json();
-}
