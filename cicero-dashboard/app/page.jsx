@@ -92,6 +92,45 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Why Cicero Section */}
+        <section className="mt-16 w-full max-w-5xl text-left">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+            Kenapa Cicero Dibuat?
+          </h2>
+          <div className="space-y-4 text-blue-100 leading-relaxed">
+            <p>
+              <strong>Monitoring &amp; Evaluasi Terpusat</strong> &mdash; Cicero
+              otomatis menarik aktivitas Instagram dan TikTok anggota lalu
+              mencocokkannya dengan data organisasi. Semua rekap tersimpan di
+              satu dashboard.
+            </p>
+            <p>
+              <strong>Absensi Digital &amp; Penilaian Kinerja</strong> &mdash; Tak
+              perlu cek manual. Sistem mencatat siapa yang sudah like, komen, atau
+              repost sehingga keaktifan setiap anggota mudah dipantau.
+            </p>
+            <p>
+              <strong>Laporan Otomatis via WhatsApp</strong> &mdash; Rekap harian
+              langsung dikirim ke WhatsApp pimpinan atau admin, memudahkan
+              monitoring real-time.
+            </p>
+            <p>
+              <strong>Minim Administrasi Manual</strong> &mdash; Import data massal
+              dan biarkan Cicero memprosesnya. Semua paperless dan tanpa repot.
+            </p>
+            <p>
+              <strong>Visualisasi &amp; Analisis Lengkap</strong> &mdash; Dashboard
+              menampilkan grafik tren dan insight untuk mendukung evaluasi dan
+              pengambilan keputusan.
+            </p>
+            <p className="mt-6">
+              Dengan <strong>automasi</strong>, <strong>transparansi</strong>, dan
+              <strong>efisiensi</strong>, Cicero membantu organisasi menghemat
+              waktu sekaligus menilai kinerja sosial media secara objektif.
+            </p>
+          </div>
+        </section>
+
         {/* Pricing Section */}
         <section className="mt-16 w-full max-w-5xl">
           <h2 className="text-2xl md:text-3xl font-bold mb-4 text-center">Paket Cicero</h2>
