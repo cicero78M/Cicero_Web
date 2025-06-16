@@ -229,7 +229,7 @@ function SocialCard({ platform, profile, posts }) {
             alt="avatar"
             className="w-12 h-12 rounded-full object-cover"
             onError={(e) => {
-              e.currentTarget.src = "/file.svg";
+              e.currentTarget.src = "/public/file.svg";
             }}
           />
         )}
@@ -262,7 +262,7 @@ function SocialCard({ platform, profile, posts }) {
               alt="thumb"
               className="w-16 h-16 object-cover rounded"
               onError={(e) => {
-                e.currentTarget.src = "/file.svg";
+                e.currentTarget.src = "/public/file.svg";
               }}
             />
           ))}
