@@ -185,7 +185,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <a
-                  href="https://wa.me/081235114745"
+                  href="https://wa.me/+6281235114745"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Kirim pesan paket ${pkg.name}`}
