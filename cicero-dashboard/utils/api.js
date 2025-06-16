@@ -156,6 +156,7 @@ export async function getTiktokProfileViaBackend(token, username) {
   const userInfo = raw.userInfo || raw;
   const user = userInfo.user || raw.user || {};
   const stats = userInfo.stats || raw.stats || {};
+  
 
   return {
     username:
