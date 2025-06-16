@@ -2,6 +2,7 @@ import {
   getDashboardStats,
   getInstagramBasicProfile,
   getInstagramBasicPosts,
+  getInstagramBasicAccessToken,
 } from '../utils/api';
 
 beforeEach(() => {
@@ -41,5 +42,12 @@ test('getInstagramBasicPosts adds access token and limit', async () => {
     expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer token123' })
     })
+  );
+});
+
+test('getInstagramBasicAccessToken exchanges code', async () => {
+  await getInstagramBasicAccessToken('CODE123');
+  expect(global.fetch).toHaveBeenCalledWith(
+    expect.stringContaining('/api/insta/basic-token?code=CODE123')
   );
 });

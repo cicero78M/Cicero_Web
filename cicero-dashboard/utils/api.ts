@@ -207,6 +207,21 @@ export async function getInstagramBasicPosts(
   return res.json();
 }
 
+// Exchange OAuth "code" for an Instagram Basic access token via backend
+export async function getInstagramBasicAccessToken(
+  code: string,
+): Promise<string> {
+  const params = new URLSearchParams({ code });
+  const url = `${API_BASE_URL}/api/insta/basic-token?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch basic token: ${text}`);
+  }
+  const json = await res.json();
+  return json.access_token || json.token || json;
+}
+
 // Fetch TikTok profile via backend using username
 export async function getTiktokProfileViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });

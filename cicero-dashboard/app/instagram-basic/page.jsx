@@ -4,6 +4,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import { getInstagramBasicProfile, getInstagramBasicPosts } from "@/utils/api";
 import Loader from "@/components/Loader";
 import InstagramPostsGrid from "@/components/InstagramPostsGrid";
+import Link from "next/link";
 
 export default function InstagramBasicPage() {
   useRequireAuth();
@@ -68,6 +69,14 @@ export default function InstagramBasicPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-4xl flex flex-col gap-6">
         <h1 className="text-2xl font-bold text-blue-700">Instagram Basic</h1>
+        {!accessToken && (
+          <Link
+            href="/instagram-basic/login"
+            className="self-start bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg"
+          >
+            Login with Instagram
+          </Link>
+        )}
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
