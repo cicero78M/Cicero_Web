@@ -96,6 +96,13 @@ The dashboard provides a single Instagram Post Analysis page at `/instagram`
 that combines the info and post analytics previously found under
 `/info/instagram` and `/posts/instagram`.
 
+## Instagram Basic API
+
+The `/instagram-basic` page demonstrates using the official Instagram Basic
+Display API. Paste an access token in the form to load your profile and recent
+posts. Data is retrieved via `getInstagramBasicProfile` and
+`getInstagramBasicPosts` in `cicero-dashboard/utils/api.ts`.
+
 ## TikTok Post Analysis API
 
 The TikTok Post Analysis page works similarly to the Instagram one but uses the TikTok endpoints `getTiktokProfileViaBackend` and `getTiktokPostsViaBackend` found in `cicero-dashboard/utils/api.js`.

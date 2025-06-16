@@ -176,6 +176,37 @@ export async function getInstagramInfoViaBackend(token: string, username: string
   return res.json();
 }
 
+// Fetch profile using Instagram Basic Display API via backend
+export async function getInstagramBasicProfile(
+  token: string,
+  accessToken: string,
+): Promise<any> {
+  const params = new URLSearchParams({ access_token: accessToken });
+  const url = `${API_BASE_URL}/api/insta/basic-profile?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch basic instagram profile: ${text}`);
+  }
+  return res.json();
+}
+
+// Fetch posts using Instagram Basic Display API via backend
+export async function getInstagramBasicPosts(
+  token: string,
+  accessToken: string,
+  limit: number = 10,
+): Promise<any> {
+  const params = new URLSearchParams({ access_token: accessToken, limit: String(limit) });
+  const url = `${API_BASE_URL}/api/insta/basic-posts?${params.toString()}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch basic instagram posts: ${text}`);
+  }
+  return res.json();
+}
+
 // Fetch TikTok profile via backend using username
 export async function getTiktokProfileViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
