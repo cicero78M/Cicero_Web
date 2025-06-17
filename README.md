@@ -123,3 +123,15 @@ the visualized posts are limited to the current month.
 - `thumbnail` (optional)
 
 These values are provided by `/api/tiktok/rapid-profile` and `/api/tiktok/rapid-posts`.
+
+## Running Tests
+
+Jest unit tests live in `cicero-dashboard/__tests__`. Execute them from inside
+the dashboard directory:
+
+```bash
+cd cicero-dashboard
+npm test
+```
+
+The test suite uses the `jest` command specified in `package.json`.
