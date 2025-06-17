@@ -54,13 +54,6 @@ NEXT_PUBLIC_API_URL=<backend base url>
 
 `NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use.
 
-To enable Instagram OAuth login, also include:
-
-```bash
-NEXT_PUBLIC_IG_APP_ID=<instagram app id>
-NEXT_PUBLIC_IG_REDIRECT_URI=<your redirect url>
-```
-
 ## Usage Notes
 
 - The login page expects a valid API endpoint provided by `NEXT_PUBLIC_API_URL`.
@@ -103,13 +96,6 @@ The dashboard provides a single Instagram Post Analysis page at `/instagram`
 that combines the info and post analytics previously found under
 `/info/instagram` and `/posts/instagram`.
 
-## Instagram Basic API
-
-The `/instagram-basic` page demonstrates using the official Instagram Basic
-Display API. You can paste an access token manually or use the login helper at
-`/instagram-basic/login` to request a token via OAuth. Data is fetched via
-`getInstagramBasicProfile`, `getInstagramBasicPosts`, and
-`getInstagramBasicAccessToken` in `cicero-dashboard/utils/api.ts`.
 
 ## TikTok Post Analysis API
 
