@@ -16,7 +16,6 @@ const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
   { label: "User Directory", path: "/users", icon: "👤" },
   { label: "Instagram Post Analysis", path: "/instagram", icon: "📸" },
-  { label: "Instagram Basic", path: "/instagram-basic", icon: "📷" },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: "❤️" },
   { label: "TikTok Post Analysis", path: "/tiktok", icon: "🎵" },
   { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: "💬" },
