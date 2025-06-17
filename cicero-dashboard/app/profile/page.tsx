@@ -1,5 +1,5 @@
 "use client";
-import ProfileDashboard from "@/components/ProfileDashboard";
+import ProfileDashboard from "@/components/profile/organisms/ProfileDashboard";
 
 export default function ProfilePage() {
   return (
