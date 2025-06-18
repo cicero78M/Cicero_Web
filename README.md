@@ -94,7 +94,8 @@ back to `/file.svg` if loading fails.
 
 The dashboard provides a single Instagram Post Analysis page at `/instagram`
 that combines the info and post analytics previously found under
-`/info/instagram` and `/posts/instagram`.
+`/info/instagram` and `/posts/instagram`. By default only the latest 12
+Instagram posts are fetched from the backend.
 
 
 ## TikTok Post Analysis API
