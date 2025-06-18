@@ -14,7 +14,6 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import {
   getInstagramProfileViaBackend,
   getInstagramPostsViaBackend,
-  getInstagramPostsThisMonthViaBackend,
   getInstagramInfoViaBackend,
   getClientProfile,
 } from "@/utils/api";
@@ -62,7 +61,7 @@ export default function InstagramPostAnalysisPage() {
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
 
-        const postRes = await getInstagramPostsThisMonthViaBackend(token, username);
+        const postRes = await getInstagramPostsViaBackend(token, username, 12);
         const postData = postRes.data || postRes.posts || postRes;
         setPosts(Array.isArray(postData) ? postData : []);
       } catch (err) {

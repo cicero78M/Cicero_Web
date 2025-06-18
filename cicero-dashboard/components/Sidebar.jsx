@@ -14,7 +14,6 @@ import {
 
 const menu = [
   { label: "Dashboard", path: "/dashboard", icon: "🏠" },
-  { label: "Profile", path: "/profile", icon: "🙍" },
   { label: "User Directory", path: "/users", icon: "👤" },
   { label: "Instagram Post Analysis", path: "/instagram", icon: "📸" },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: "❤️" },
