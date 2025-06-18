@@ -23,7 +23,8 @@
     "react-dom": "18.3.1",
     "react-pro-sidebar": "^1.1.0",
     "recharts": "^2.15.3",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "twilio": "^5.7.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

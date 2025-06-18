@@ -1,10 +1,26 @@
 "use client";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import SidebarWrapper from "./SidebarWrapper";
 import DarkModeToggle from "./DarkModeToggle";
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  useEffect(() => {
+    const logVisit = async () => {
+      try {
+        await fetch('/api/visitor-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: pathname }),
+        });
+      } catch (err) {
+        console.error('Failed to log visit', err);
+      }
+    };
+    logVisit();
+  }, [pathname]);
 
   // Landing and login pages render without sidebar
   if (pathname === "/" || pathname === "/login") {
