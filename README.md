@@ -2,6 +2,8 @@
 
 This repository contains a Next.js dashboard used for visualizing data from the Cicero backend. The application resides in the `cicero-dashboard` directory.
 
+For detailed instructions on setting up a production server and deploying the dashboard, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Directory Overview
 
 ```
