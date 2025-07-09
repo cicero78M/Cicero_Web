@@ -79,6 +79,29 @@ export async function getUserDirectory(token: string, client_id: string): Promis
   return res.json();
 }
 
+// Tambah user baru ke directory
+export async function createUser(
+  token: string,
+  data: {
+    client_id: string;
+    nama: string;
+    pangkat: string;
+    nrp_nip: string;
+    satfung: string;
+  },
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/users/create`;
+  const res = await fetchWithAuth(url, token, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gagal menambah user: ${text}`);
+  }
+  return res.json();
+}
+
 // Ambil komentar TikTok
 export async function getTikTokComments(token: string): Promise<any> {
   const url = `${API_BASE_URL}/api/tiktok/comments`;
