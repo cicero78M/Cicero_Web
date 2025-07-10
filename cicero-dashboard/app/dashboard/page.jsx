@@ -225,6 +225,7 @@ function SocialCard({ platform, profile, posts }) {
           <img
             src={avatarSrc}
             alt="avatar"
+            loading="lazy"
             className="w-12 h-12 rounded-full object-cover"
             onError={(e) => {
               e.currentTarget.style.display = "none";
@@ -261,6 +262,7 @@ function SocialCard({ platform, profile, posts }) {
                   key={p.id || p.post_id}
                   src={thumb}
                   alt="thumb"
+                  loading="lazy"
                   className="w-16 h-16 object-cover rounded"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";

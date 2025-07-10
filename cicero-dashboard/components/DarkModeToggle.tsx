@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 export default function DarkModeToggle() {
   const [enabled, setEnabled] = useState(false);
@@ -24,9 +25,9 @@ export default function DarkModeToggle() {
     <button
       aria-label="Toggle dark mode"
       onClick={() => setEnabled(!enabled)}
-      className="text-sm px-2 py-1 border rounded"
+      className="p-2 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
     >
-      {enabled ? "Light" : "Dark"}
+      {enabled ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
     </button>
   );
 }

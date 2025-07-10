@@ -74,7 +74,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-grow flex flex-col items-center text-center px-6 pt-16 pb-10">
+      <main className="flex-grow flex flex-col items-center text-center px-6 pt-16 pb-10 container">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Manage Social Media Effortlessly</h1>
         <p className="text-blue-200 mb-8 max-w-2xl">Next-Gen Dashboard for Social Media Monitoring &amp; Team Management</p>
         <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold px-6 py-3 rounded-xl shadow-lg">
@@ -82,7 +82,7 @@ export default function LandingPage() {
         </Link>
 
         {/* Features */}
-        <section className="mt-16 grid md:grid-cols-3 gap-8 max-w-5xl w-full">
+        <section className="mt-16 grid md:grid-cols-3 gap-8 max-w-5xl w-full mx-auto">
           <div className="flex flex-col items-center bg-white/5 p-6 rounded-xl">
             <BarChart3 className="h-8 w-8 text-blue-400" />
             <h3 className="mt-4 font-semibold text-lg">Analytics in Real Time</h3>
@@ -154,7 +154,7 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="mt-16 w-full max-w-5xl">
+        <section className="mt-16 w-full max-w-5xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold mb-4 text-center">Paket Cicero</h2>
           <p className="text-blue-100 mb-8 text-center">
             Optimalkan pengelolaan media sosial Anda bersama Cicero dengan paket yang sesuai skala tim. Dapatkan potongan 10% untuk komitmen jangka menengah maupun jangka panjang.
@@ -199,13 +199,13 @@ export default function LandingPage() {
         </section>
 
         {/* Social Proof */}
-        <section className="mt-16 max-w-2xl">
+        <section className="mt-16 max-w-2xl mx-auto">
           <blockquote className="italic text-blue-100">"Cicero drastically improved our social engagement in just weeks."</blockquote>
           <p className="mt-2 text-sm text-blue-200">- Marketing Manager, Cicero Devs</p>
         </section>
 
         {/* Signup Form */}
-        <section className="mt-16 w-full max-w-md">
+        <section className="mt-16 w-full max-w-md mx-auto">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 bg-white/5 p-6 rounded-xl">
             <input
               type="email"
