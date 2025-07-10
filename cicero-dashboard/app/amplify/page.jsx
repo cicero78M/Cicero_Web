@@ -1,21 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  getRekapAmplify,
-  getDashboardStats,
-  getInstagramPostsViaBackend,
-} from "@/utils/api";
+import { getRekapAmplify } from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import InstagramPostsGrid from "@/components/InstagramPostsGrid";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
 
 export default function AmplifyPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
-  const [igPosts, setIgPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian");
@@ -36,14 +30,6 @@ export default function AmplifyPage() {
         const rekapRes = await getRekapAmplify(token, clientId, periode);
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
 
-        const statsRes = await getDashboardStats(token);
-        const username =
-          statsRes.data?.instagram_username || statsRes.instagram_username;
-        if (username) {
-          const postsRes = await getInstagramPostsViaBackend(token, username, 6);
-          const posts = postsRes.data || postsRes.posts || postsRes;
-          setIgPosts(Array.isArray(posts) ? posts : []);
-        }
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -104,10 +90,6 @@ export default function AmplifyPage() {
               labelBelum="Belum Post"
               labelTotal="Total Link"
             />
-            <div className="flex flex-col gap-4">
-              <h2 className="text-xl font-semibold text-blue-700">Instagram Posts</h2>
-              <InstagramPostsGrid posts={igPosts} />
-            </div>
           </div>
         </div>
       </div>
