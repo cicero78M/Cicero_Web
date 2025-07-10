@@ -61,7 +61,7 @@ export default function UserDirectoryPage() {
         client_id,
         nama,
         pangkat,
-        nrp_nip: nrpNip,
+        user_id: nrpNip,
         satfung,
       });
       setNama("");
