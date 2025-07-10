@@ -1,4 +1,4 @@
-import { getDashboardStats } from '../utils/api';
+import { getDashboardStats, getRekapAmplify } from '../utils/api';
 
 beforeEach(() => {
   global.fetch = jest.fn(() =>
@@ -16,6 +16,16 @@ test('getDashboardStats calls endpoint with auth header', async () => {
     expect.stringContaining('/api/dashboard/stats'),
     expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer token123' })
+    })
+  );
+});
+
+test('getRekapAmplify calls endpoint with auth header', async () => {
+  await getRekapAmplify('tok', 'c1', 'harian');
+  expect(global.fetch).toHaveBeenCalledWith(
+    expect.stringContaining('/api/amplify/rekap'),
+    expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer tok' })
     })
   );
 });
