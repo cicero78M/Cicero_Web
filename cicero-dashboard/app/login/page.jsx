@@ -4,6 +4,7 @@ import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import DarkModeToggle from "@/components/DarkModeToggle";
 
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
@@ -48,7 +49,10 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4 relative">
+      <div className="absolute top-4 right-4">
+        <DarkModeToggle />
+      </div>
       <form
         onSubmit={handleLogin}
         className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm"
