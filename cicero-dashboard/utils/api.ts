@@ -86,7 +86,7 @@ export async function createUser(
     client_id: string;
     nama: string;
     pangkat: string;
-    nrp_nip: string;
+    user_id: string;
     satfung: string;
   },
 ): Promise<any> {
