@@ -126,6 +126,20 @@ export async function getRekapKomentarTiktok(
   return res.json();
 }
 
+// Ambil rekap amplifikasi link konten
+export async function getRekapAmplify(
+  token: string,
+  client_id: string,
+  periode: string = "harian"
+): Promise<any> {
+  const params = new URLSearchParams({ client_id, periode });
+  const url = `${API_BASE_URL}/api/amplify/rekap?${params.toString()}`;
+
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) throw new Error("Failed to fetch rekap amplifikasi");
+  return res.json();
+}
+
 export async function getInstagramPosts(token: string, client_id: string): Promise<any> {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
