@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Link as LinkIcon,
 } from "lucide-react";
 import {
   Sheet,
@@ -28,7 +29,7 @@ const menu = [
   { label: "User Directory", path: "/users", icon: Users },
   { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
   { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: Heart },
-  { label: "Link Amplification", path: "/amplify", icon: Instagram },
+  { label: "Link Amplification", path: "/amplify", icon: LinkIcon },
   { label: "TikTok Post Analysis", path: "/tiktok", icon: Music },
   { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: MessageCircle },
 ];
