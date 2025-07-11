@@ -1,4 +1,5 @@
 "use client";
+import { Heart, MessageCircle, Eye } from "lucide-react";
 export default function InstagramPostsGrid({ posts = [] }) {
   const getThumbnailSrc = (url) => {
     if (!url) return "/file.svg";
@@ -25,9 +26,21 @@ export default function InstagramPostsGrid({ posts = [] }) {
               {post.caption || "-"}
             </p>
             <div className="text-xs text-gray-600 flex gap-4">
-              {post.like_count != null && <span>❤️ {post.like_count}</span>}
-              {post.comment_count != null && <span>💬 {post.comment_count}</span>}
-              {post.view_count != null && <span>👁️ {post.view_count}</span>}
+              {post.like_count != null && (
+                <span className="flex items-center gap-1">
+                  <Heart className="w-3 h-3" /> {post.like_count}
+                </span>
+              )}
+              {post.comment_count != null && (
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" /> {post.comment_count}
+                </span>
+              )}
+              {post.view_count != null && (
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3 h-3" /> {post.view_count}
+                </span>
+              )}
             </div>
           </div>
         </div>

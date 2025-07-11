@@ -6,6 +6,7 @@ import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import DateSelector from "@/components/DateSelector";
+import { ArrowLeft } from "lucide-react";
 
 export default function RekapLikesIGPage() {
   useRequireAuth();
@@ -97,9 +98,10 @@ export default function RekapLikesIGPage() {
             </h1>
             <Link
               href="/likes/instagram"
-              className="inline-block bg-gray-100 hover:bg-blue-50 text-blue-700 border border-blue-300 font-semibold px-4 py-2 rounded-lg transition-all duration-150 shadow"
+              className="inline-block bg-gray-100 hover:bg-blue-50 text-blue-700 border border-blue-300 font-semibold px-4 py-2 rounded-lg transition-all duration-150 shadow flex items-center gap-2"
             >
-              ← Kembali
+              <ArrowLeft className="w-4 h-4" />
+              Kembali
             </Link>
           </div>
           <div className="flex items-center justify-end gap-3 mb-2">

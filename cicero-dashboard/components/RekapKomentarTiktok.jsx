@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
+import { Music, Users, Check, X } from "lucide-react";
 
 function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
@@ -82,25 +83,25 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           title="TikTok Post Hari Ini"
           value={totalTiktokPost}
           color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
-          icon={<span className="text-3xl">🎵</span>}
+          icon={<Music />}
         />
         <SummaryCard
           title="Total User"
           value={totalUser}
           color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
-          icon={<svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5m0 0v-2a4 4 0 00-3-3.87m3 3.87a9 9 0 0010 0m-10 0a9 9 0 0110 0M6 20v-2a4 4 0 013-3.87M18 20v-2a4 4 0 00-3-3.87"/></svg>}
+          icon={<Users />}
         />
         <SummaryCard
           title="Sudah Komentar"
           value={totalSudahKomentar}
           color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
-          icon={<svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+          icon={<Check />}
         />
         <SummaryCard
           title="Belum Komentar"
           value={totalBelumKomentar}
           color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
-          icon={<svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>}
+          icon={<X />}
         />
       </div>
 
@@ -140,12 +141,12 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                   <td className="py-1 px-2 text-center">
                     {sudahKomentar ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <Check className="w-3 h-3" />
                         Sudah
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <X className="w-3 h-3" />
                         Belum
                       </span>
                     )}
