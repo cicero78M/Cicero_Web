@@ -131,12 +131,12 @@ function SocialCard({ platform, profile, posts }) {
     );
 
   const avatar =
+    profile.profile_pic_url_hd ||
+    profile.profile_pic_url ||
     profile.avatar_url ||
     profile.avatar ||
     profile.hd_profile_pic_url_info?.url ||
     profile.hd_profile_pic_versions?.[0]?.url ||
-    profile.profile_pic_url ||
-    profile.profile_pic_url_hd ||
     "";
 
   const link =
