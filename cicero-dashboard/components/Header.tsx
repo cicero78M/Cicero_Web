@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import DarkModeToggle from "./DarkModeToggle";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,7 +27,18 @@ export default function Header() {
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link href="/dashboard" className="font-bold text-blue-700 dark:text-blue-300">
+        <Link
+          href="/dashboard"
+          className="flex items-center font-bold text-blue-700 dark:text-blue-300"
+        >
+          <Image
+            src="/CICERO.png"
+            alt="CICERO Logo"
+            width={24}
+            height={24}
+            className="mr-2"
+            priority
+          />
           CICERO
         </Link>
         <nav className="hidden md:flex gap-6">
