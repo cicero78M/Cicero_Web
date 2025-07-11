@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { getUserDirectory, createUser, updateUser } from "@/utils/api";
+import { Pencil, Check, X } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 
@@ -14,14 +15,22 @@ export default function UserDirectoryPage() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  // state for new user form
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
   const [nrpNip, setNrpNip] = useState("");
   const [satfung, setSatfung] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
+
+  // inline edit state
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [editNama, setEditNama] = useState("");
+  const [editPangkat, setEditPangkat] = useState("");
+  const [editSatfung, setEditSatfung] = useState("");
+  const [updateError, setUpdateError] = useState("");
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   // Ambil client_id dari localStorage (atau sesuaikan kebutuhanmu)
   const client_id =
@@ -58,43 +67,48 @@ export default function UserDirectoryPage() {
     setSubmitError("");
     setSubmitLoading(true);
     try {
-      if (editingUser) {
-        await updateUser(token || "", editingUser.user_id, {
-          nama,
-          title: pangkat,
-          divisi: satfung,
-        });
-      } else {
-        await createUser(token || "", {
-          client_id,
-          nama,
-          title: pangkat,
-          user_id: nrpNip,
-          divisi: satfung,
-        });
-      }
+      await createUser(token || "", {
+        client_id,
+        nama,
+        title: pangkat,
+        user_id: nrpNip,
+        divisi: satfung,
+      });
       setNama("");
       setPangkat("");
       setNrpNip("");
       setSatfung("");
-      setEditingUser(null);
-      setShowAddForm(false);
+      setShowForm(false);
       fetchUsers();
     } catch (err) {
-      setSubmitError(
-        err.message || (editingUser ? "Gagal mengubah user" : "Gagal menambah user")
-      );
+      setSubmitError(err.message || "Gagal menambah user");
     }
     setSubmitLoading(false);
   }
 
   function handleEditClick(user) {
-    setEditingUser(user);
-    setNama(user.nama || "");
-    setPangkat(user.title || "");
-    setNrpNip(user.user_id || "");
-    setSatfung(user.divisi || "");
-    setShowAddForm(false);
+    setEditingRowId(user.user_id);
+    setEditNama(user.nama || "");
+    setEditPangkat(user.title || "");
+    setEditSatfung(user.divisi || "");
+    setUpdateError("");
+  }
+
+  async function handleUpdateRow(userId) {
+    setUpdateLoading(true);
+    setUpdateError("");
+    try {
+      await updateUser(token || "", userId, {
+        nama: editNama,
+        title: editPangkat,
+        divisi: editSatfung,
+      });
+      await fetchUsers();
+      setEditingRowId(null);
+    } catch (err) {
+      setUpdateError(err.message || "Gagal mengubah user");
+    }
+    setUpdateLoading(false);
   }
 
   useEffect(() => {
@@ -144,12 +158,11 @@ export default function UserDirectoryPage() {
         <div className="flex justify-between items-center mb-4 gap-2">
           <button
             onClick={() => {
-              setEditingUser(null);
-              setShowAddForm((s) => !s);
+              setShowForm((s) => !s);
             }}
             className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
           >
-            {showAddForm ? "Tutup" : "Tambah User"}
+            {showForm ? "Tutup" : "Tambah User"}
           </button>
           <input
             type="text"
@@ -160,7 +173,7 @@ export default function UserDirectoryPage() {
           />
         </div>
 
-        {showAddForm && (
+        {showForm && (
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <input
               type="text"
@@ -184,7 +197,6 @@ export default function UserDirectoryPage() {
               value={nrpNip}
               onChange={(e) => setNrpNip(e.target.value)}
               required
-              disabled={Boolean(editingUser)}
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
             <input
@@ -204,17 +216,12 @@ export default function UserDirectoryPage() {
                 disabled={submitLoading}
                 className={`px-4 py-2 rounded-lg text-white text-sm flex-1 ${submitLoading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
               >
-                {submitLoading
-                  ? "Menyimpan..."
-                  : editingUser
-                  ? "Update"
-                  : "Simpan"}
+                {submitLoading ? "Menyimpan..." : "Simpan"}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setShowAddForm(false);
-                  setEditingUser(null);
+                  setShowForm(false);
                 }}
                 className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
               >
@@ -239,99 +246,79 @@ export default function UserDirectoryPage() {
             </thead>
             <tbody>
               {currentRows.map((u, idx) => (
-                <React.Fragment key={u.user_id || idx}>
-                  <tr className="border-t">
+                <tr key={u.user_id || idx} className="border-t">
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="py-1 px-2">
-                    {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
+                    {editingRowId === u.user_id ? (
+                      <div className="flex gap-1">
+                        <input
+                          value={editPangkat}
+                          onChange={(e) => setEditPangkat(e.target.value)}
+                          placeholder="Pangkat"
+                          className="w-20 border rounded px-1 text-xs"
+                        />
+                        <input
+                          value={editNama}
+                          onChange={(e) => setEditNama(e.target.value)}
+                          placeholder="Nama"
+                          className="flex-1 border rounded px-1 text-xs"
+                        />
+                      </div>
+                    ) : (
+                      (u.title ? `${u.title} ` : "") + (u.nama || "-")
+                    )}
                   </td>
                   <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
-                  <td className="py-1 px-2">{u.divisi || "-"}</td>
+                  <td className="py-1 px-2">
+                    {editingRowId === u.user_id ? (
+                      <input
+                        value={editSatfung}
+                        onChange={(e) => setEditSatfung(e.target.value)}
+                        placeholder="Satfung"
+                        className="border rounded px-1 text-xs"
+                      />
+                    ) : (
+                      u.divisi || "-"
+                    )}
+                  </td>
                   <td className="py-1 px-2 font-mono text-blue-700">
                     {u.insta ? `@${u.insta}` : "-"}
                   </td>
                   <td className="py-1 px-2 font-mono text-pink-700">{u.tiktok || "-"}</td>
                   <td className="py-1 px-2">
-                    {u.status === true || u.status === "true"
-                      ? (
-                        <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-700 text-xs">Aktif</span>
-                      )
-                      : (
-                        <span className="inline-block px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">Nonaktif</span>
-                      )
-                    }
+                    {u.status === true || u.status === "true" ? (
+                      <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-700 text-xs">Aktif</span>
+                    ) : (
+                      <span className="inline-block px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">Nonaktif</span>
+                    )}
                   </td>
                   <td className="py-1 px-2">
-                    <button
-                      onClick={() => handleEditClick(u)}
-                      className="text-blue-600 hover:underline text-xs"
-                    >
-                      Edit
-                    </button>
+                    {editingRowId === u.user_id ? (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleUpdateRow(u.user_id)}
+                          disabled={updateLoading}
+                          className="text-green-600"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setEditingRowId(null)} className="text-red-600">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => handleEditClick(u)} className="text-blue-600">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
-                {editingUser && editingUser.user_id === u.user_id && (
-                  <tr className="border-t bg-gray-50">
-                    <td colSpan="8" className="p-4">
-                      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          placeholder="Nama"
-                          value={nama}
-                          onChange={(e) => setNama(e.target.value)}
-                          required
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Pangkat"
-                          value={pangkat}
-                          onChange={(e) => setPangkat(e.target.value)}
-                          required
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="NRP/NIP"
-                          value={nrpNip}
-                          onChange={(e) => setNrpNip(e.target.value)}
-                          required
-                          disabled={Boolean(editingUser)}
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Satfung"
-                          value={satfung}
-                          onChange={(e) => setSatfung(e.target.value)}
-                          required
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        {submitError && (
-                          <div className="text-red-500 text-sm md:col-span-2">{submitError}</div>
-                        )}
-                        <div className="flex gap-2 md:col-span-2">
-                          <button
-                            type="submit"
-                            disabled={submitLoading}
-                            className={`px-4 py-2 rounded-lg text-white text-sm flex-1 ${submitLoading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
-                          >
-                            {submitLoading ? "Menyimpan..." : "Update"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingUser(null)}
-                            className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
-                          >
-                            Batal
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  </tr>
-                )}
-                </React.Fragment>
               ))}
+              {editingRowId && updateError && (
+                <tr>
+                  <td colSpan="8" className="py-1 px-2 text-red-500 text-xs">{updateError}</td>
+                </tr>
+              )}
               {currentRows.length === 0 && (
                 <tr>
                   <td colSpan="8" className="py-4 text-center text-gray-500">

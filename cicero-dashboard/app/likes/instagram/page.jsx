@@ -9,6 +9,13 @@ import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import DateSelector from "@/components/DateSelector";
+import {
+  Camera,
+  User,
+  ThumbsUp,
+  ThumbsDown,
+  ArrowRight
+} from "lucide-react";
 
 export default function InstagramLikesTrackingPage() {
   useRequireAuth();
@@ -113,42 +120,28 @@ export default function InstagramLikesTrackingPage() {
                 label="IG Post Hari Ini"
                 value={rekapSummary.totalIGPost}
                 color="blue"
-                icon={
-                  <span className="inline-block text-blue-400 text-2xl">
-                    📸
-                  </span>
-                }
+                icon={<Camera className="text-blue-400" />}
               />
               <Divider />
               <SummaryItem
                 label="Total User"
                 value={rekapSummary.totalUser}
                 color="gray"
-                icon={
-                  <span className="inline-block text-gray-400 text-2xl">
-                    👤
-                  </span>
-                }
+                icon={<User className="text-gray-400" />}
               />
               <Divider />
               <SummaryItem
                 label="Sudah Likes"
                 value={rekapSummary.totalSudahLike}
                 color="green"
-                icon={
-                  <span className="inline-block text-green-500 text-2xl">
-                    👍
-                  </span>
-                }
+                icon={<ThumbsUp className="text-green-500" />}
               />
               <Divider />
               <SummaryItem
                 label="Belum Likes"
                 value={rekapSummary.totalBelumLike}
                 color="red"
-                icon={
-                  <span className="inline-block text-red-500 text-2xl">👎</span>
-                }
+                icon={<ThumbsDown className="text-red-500" />}
               />
             </div>
 
@@ -227,20 +220,7 @@ export default function InstagramLikesTrackingPage() {
                 href="/likes/instagram/rekap"
                 className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  className="inline align-middle"
-                >
-                  <path
-                    d="M7 15l5-5-5-5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ArrowRight className="w-5 h-5 inline" />
                 Lihat Rekap Detail
               </Link>
             </div>

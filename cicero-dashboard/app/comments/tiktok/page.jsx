@@ -9,6 +9,13 @@ import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import DateSelector from "@/components/DateSelector";
+import {
+  Music,
+  User,
+  MessageCircle,
+  X,
+  ArrowRight
+} from "lucide-react";
 
 export default function TiktokKomentarTrackingPage() {
   useRequireAuth();
@@ -116,44 +123,28 @@ export default function TiktokKomentarTrackingPage() {
                 label="TikTok Post Hari Ini"
                 value={rekapSummary.totalTiktokPost}
                 color="fuchsia"
-                icon={
-                  <span className="inline-block text-fuchsia-400 text-2xl">
-                    🎵
-                  </span>
-                }
+                icon={<Music className="text-fuchsia-400" />}
               />
               <Divider />
               <SummaryItem
                 label="Total User"
                 value={rekapSummary.totalUser}
                 color="gray"
-                icon={
-                  <span className="inline-block text-gray-400 text-2xl">
-                    👤
-                  </span>
-                }
+                icon={<User className="text-gray-400" />}
               />
               <Divider />
               <SummaryItem
                 label="Sudah Komentar"
                 value={rekapSummary.totalSudahKomentar}
                 color="green"
-                icon={
-                  <span className="inline-block text-green-500 text-2xl">
-                    💬
-                  </span>
-                }
+                icon={<MessageCircle className="text-green-500" />}
               />
               <Divider />
               <SummaryItem
                 label="Belum Komentar"
                 value={rekapSummary.totalBelumKomentar}
                 color="red"
-                icon={
-                  <span className="inline-block text-red-500 text-2xl">
-                    ❌
-                  </span>
-                }
+                icon={<X className="text-red-500" />}
               />
             </div>
 
@@ -239,20 +230,7 @@ export default function TiktokKomentarTrackingPage() {
                 href="/comments/tiktok/rekap"
                 className="bg-pink-700 hover:bg-pink-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  className="inline align-middle"
-                >
-                  <path
-                    d="M7 15l5-5-5-5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ArrowRight className="w-5 h-5 inline" />
                 Lihat Rekap Detail
               </Link>
             </div>
