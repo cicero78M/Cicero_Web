@@ -67,7 +67,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-black text-gray-100">
       {/* Header */}
       <header className="w-full flex justify-between items-center px-6 py-4 bg-black/70 backdrop-blur-md sticky top-0 z-10">
-        <Image src="/CICERO.png" alt="CICERO Logo" width={120} height={40} priority className="h-10 w-auto" />
+        <Image src="/next.svg" alt="CICERO Logo" width={120} height={40} priority className="h-10 w-auto" />
         <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow">
           Login
         </Link>
