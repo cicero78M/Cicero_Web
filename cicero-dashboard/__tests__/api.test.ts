@@ -21,7 +21,7 @@ test('getDashboardStats calls endpoint with auth header', async () => {
 });
 
 test('getRekapAmplify calls endpoint with auth header', async () => {
-  await getRekapAmplify('tok', 'c1', 'harian');
+  await getRekapAmplify('tok', 'c1', 'harian', '2024-01-01');
   expect(global.fetch).toHaveBeenCalledWith(
     expect.stringContaining('/api/amplify/rekap'),
     expect.objectContaining({

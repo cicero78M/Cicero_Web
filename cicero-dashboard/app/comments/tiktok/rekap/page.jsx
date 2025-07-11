@@ -5,6 +5,7 @@ import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
 import Link from "next/link";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import DateSelector from "@/components/DateSelector";
 
 export default function RekapKomentarTiktokPage() {
   useRequireAuth();
@@ -12,6 +13,8 @@ export default function RekapKomentarTiktokPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian");
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -45,7 +48,7 @@ export default function RekapKomentarTiktokPage() {
           return;
         }
 
-        const rekapRes = await getRekapKomentarTiktok(token, client_id, periode);
+        const rekapRes = await getRekapKomentarTiktok(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
         // Sumber utama TikTok Post Hari Ini dari statsRes
@@ -79,7 +82,7 @@ export default function RekapKomentarTiktokPage() {
     }
 
     fetchData();
-  }, [periode]);
+  }, [periode, date]);
 
   if (loading) return <Loader />;
   if (error)
@@ -141,6 +144,7 @@ export default function RekapKomentarTiktokPage() {
             >
               Bulan Ini
             </span>
+            <DateSelector date={date} setDate={setDate} />
           </div>
 
           {/* Kirim data ke komponen detail rekap TikTok */}

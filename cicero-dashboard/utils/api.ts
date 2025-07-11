@@ -50,9 +50,11 @@ export async function getDashboardStats(token: string): Promise<any> {
 export async function getRekapLikesIG(
   token: string,
   client_id: string,
-  periode: string = "harian"
+  periode: string = "harian",
+  tanggal?: string
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
+  if (tanggal) params.append("tanggal", tanggal);
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -113,9 +115,11 @@ export async function getTikTokComments(token: string): Promise<any> {
 export async function getRekapKomentarTiktok(
   token: string,
   client_id: string,
-  periode: string = "harian"
+  periode: string = "harian",
+  tanggal?: string
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
+  if (tanggal) params.append("tanggal", tanggal);
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -130,9 +134,11 @@ export async function getRekapKomentarTiktok(
 export async function getRekapAmplify(
   token: string,
   client_id: string,
-  periode: string = "harian"
+  periode: string = "harian",
+  tanggal?: string
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
+  if (tanggal) params.append("tanggal", tanggal);
   const url = `${API_BASE_URL}/api/amplify/rekap?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
