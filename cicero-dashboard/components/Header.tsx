@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import DarkModeToggle from "./DarkModeToggle";
 import { usePathname, useRouter } from "next/navigation";
+import ClientProfileMenu from "./ClientProfileMenu";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard" },
@@ -54,6 +55,7 @@ export default function Header() {
         </nav>
         <div className="flex items-center gap-4">
           <DarkModeToggle />
+          <ClientProfileMenu />
           <button
             onClick={handleLogout}
             className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
