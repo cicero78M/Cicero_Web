@@ -351,6 +351,11 @@ export default function InstagramPostAnalysisPage() {
             {profile.category && (
               <div className="text-gray-500 text-sm">{profile.category}</div>
             )}
+            {profilePic && (
+              <div className="text-gray-400 text-xs break-all mt-1">
+                {profilePic}
+              </div>
+            )}
           </div>
         </div>
 
