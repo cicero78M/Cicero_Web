@@ -103,8 +103,7 @@ export default function DashboardPage() {
           tiktokProfile={tiktokProfile}
           tiktokPosts={tiktokPosts}
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ClientCard profile={clientProfile} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SocialCard platform="instagram" profile={igProfile} posts={igPosts} />
           <SocialCard
             platform="tiktok"
@@ -117,84 +116,7 @@ export default function DashboardPage() {
   );
 }
 
-// Row dengan padding atas bawah seperti sebelumnya
-function Row({ label, value, status }) {
-  return (
-    <div className="flex items-center py-2 px-2 gap-2 w-full">
-      <div className="w-28 text-gray-500 font-medium flex-shrink-0">{label}</div>
-      <div className="text-gray-300 select-none">:</div>
-      <div className="flex-1 text-gray-800 flex flex-wrap items-center gap-1 break-all">{value}{status && status}</div>
-    </div>
-  );
-}
 
-function ClientCard({ profile }) {
-  const igUsername = profile.client_insta?.replace(/^@/, "");
-  const tiktokUsername = profile.client_tiktok?.replace(/^@/, "");
-  return (
-    <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
-      <h2 className="font-semibold text-blue-700 text-center mb-2">Client Profile</h2>
-      <Row label="ID" value={profile.client_id} />
-      <Row label="Nama" value={profile.nama || "-"} />
-      <Row label="Tipe" value={profile.client_type || "-"} />
-      <Row
-        label="Instagram"
-        value={
-          igUsername ? (
-            <a
-              href={`https://instagram.com/${igUsername}`}
-              className="text-pink-600 underline font-semibold hover:text-pink-800 transition"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {profile.client_insta}
-            </a>
-          ) : (
-            "-"
-          )
-        }
-        status={
-          profile.client_insta_status !== undefined && (
-            profile.client_insta_status ? (
-              <Check className="w-4 h-4 ml-1 text-green-600 inline" />
-            ) : (
-              <X className="w-4 h-4 ml-1 text-red-500 inline" />
-            )
-          )
-        }
-      />
-      <Row
-        label="TikTok"
-        value={
-          tiktokUsername ? (
-            <a
-              href={`https://www.tiktok.com/@${tiktokUsername}`}
-              className="text-blue-600 underline font-semibold hover:text-blue-800 transition"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {profile.client_tiktok}
-            </a>
-          ) : (
-            "-"
-          )
-        }
-        status={
-          profile.client_tiktok_status !== undefined && (
-            profile.client_tiktok_status ? (
-              <Check className="w-4 h-4 ml-1 text-green-600 inline" />
-            ) : (
-              <X className="w-4 h-4 ml-1 text-red-500 inline" />
-            )
-          )
-        }
-      />
-      <Row label="Administrator" value={profile.client_super || "-"} />
-      <Row label="Operator" value={profile.client_operator || "-"} />
-      <Row label="Group" value={profile.client_group || "-"} />
-    </div>
-  );
-}
 
 function SocialCard({ platform, profile, posts }) {
   const getThumb = (url) => {
