@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   Menu as IconMenu,
   X as IconX,
@@ -14,7 +14,6 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
-  LogOut,
   Link as LinkIcon,
 } from "lucide-react";
 import {
@@ -36,20 +35,19 @@ const menu = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { setAuth } = useAuth();
-
-  const handleLogout = () => {
-    setAuth(null, null);
-    router.replace("/login");
-  };
 
   const navLinks = (isSheet = false, isCollapsed = false) => (
     <>
-      <div className="text-2xl font-bold text-blue-700 mb-6 px-4">
-        {isCollapsed ? "C" : "CICERO Dashboard"}
+      <div className="mb-6 px-4 flex justify-center">
+        <Image
+          src="/CICERO.png"
+          alt="CICERO Logo"
+          width={isCollapsed ? 32 : 150}
+          height={40}
+          priority
+        />
       </div>
       <nav className="flex-1 space-y-1 px-2">
         {menu.map((item) => {
@@ -67,13 +65,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <button
-        onClick={handleLogout}
-        className="mt-4 mx-2 w-auto bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-md flex items-center justify-center gap-2"
-      >
-        <LogOut className="w-5 h-5" />
-        {!isCollapsed && <span>Logout</span>}
-      </button>
     </>
   );
 
