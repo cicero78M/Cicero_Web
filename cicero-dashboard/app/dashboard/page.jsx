@@ -11,6 +11,7 @@ import DashboardStats from "@/components/DashboardStats";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
+import { Check, X } from "lucide-react";
 
 export default function DashboardPage() {
   useRequireAuth();
@@ -155,13 +156,9 @@ function ClientCard({ profile }) {
         status={
           profile.client_insta_status !== undefined && (
             profile.client_insta_status ? (
-              <svg className="w-4 h-4 ml-1 text-green-600 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-4 h-4 ml-1 text-green-600 inline" />
             ) : (
-              <svg className="w-4 h-4 ml-1 text-red-500 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-4 h-4 ml-1 text-red-500 inline" />
             )
           )
         }
@@ -185,13 +182,9 @@ function ClientCard({ profile }) {
         status={
           profile.client_tiktok_status !== undefined && (
             profile.client_tiktok_status ? (
-              <svg className="w-4 h-4 ml-1 text-green-600 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-4 h-4 ml-1 text-green-600 inline" />
             ) : (
-              <svg className="w-4 h-4 ml-1 text-red-500 inline" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-4 h-4 ml-1 text-red-500 inline" />
             )
           )
         }
