@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getRekapAmplify } from "@/utils/api";
+import DateSelector from "@/components/DateSelector";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -13,6 +14,8 @@ export default function AmplifyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian");
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
 
   useEffect(() => {
     const token =
@@ -27,7 +30,7 @@ export default function AmplifyPage() {
 
     async function fetchData() {
       try {
-        const rekapRes = await getRekapAmplify(token, clientId, periode);
+        const rekapRes = await getRekapAmplify(token, clientId, periode, date);
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
 
       } catch (err) {
@@ -38,7 +41,7 @@ export default function AmplifyPage() {
     }
 
     fetchData();
-  }, [periode]);
+  }, [periode, date]);
 
   if (loading) return <Loader />;
   if (error)
@@ -78,6 +81,7 @@ export default function AmplifyPage() {
                   {label}
                 </button>
               ))}
+              <DateSelector date={date} setDate={setDate} />
             </div>
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />

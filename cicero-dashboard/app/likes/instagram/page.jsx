@@ -8,6 +8,7 @@ import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import DateSelector from "@/components/DateSelector";
 
 export default function InstagramLikesTrackingPage() {
   useRequireAuth();
@@ -16,6 +17,8 @@ export default function InstagramLikesTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian"); // "harian" | "bulanan"
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
 
   // Untuk rekap likes summary (total user, sudah likes, belum likes)
   const [rekapSummary, setRekapSummary] = useState({
@@ -51,7 +54,7 @@ export default function InstagramLikesTrackingPage() {
           return;
         }
 
-        const rekapRes = await getRekapLikesIG(token, client_id, periode);
+        const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
         // Rekap summary
@@ -79,7 +82,7 @@ export default function InstagramLikesTrackingPage() {
     }
 
     fetchData();
-  }, [periode]);
+  }, [periode, date]);
 
   if (loading) return <Loader />;
   if (error)
@@ -185,6 +188,7 @@ export default function InstagramLikesTrackingPage() {
               >
                 Bulan Ini
               </span>
+              <DateSelector date={date} setDate={setDate} />
             </div>
 
             {/* Chart per kelompok */}

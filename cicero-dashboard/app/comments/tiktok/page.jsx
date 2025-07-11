@@ -8,6 +8,7 @@ import { groupUsersByKelompok } from "@/utils/grouping";
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import DateSelector from "@/components/DateSelector";
 
 export default function TiktokKomentarTrackingPage() {
   useRequireAuth();
@@ -15,6 +16,8 @@ export default function TiktokKomentarTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periode, setPeriode] = useState("harian");
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -48,7 +51,7 @@ export default function TiktokKomentarTrackingPage() {
           return;
         }
 
-        const rekapRes = await getRekapKomentarTiktok(token, client_id, periode);
+        const rekapRes = await getRekapKomentarTiktok(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
         // Ambil field TikTok Post dengan fallback urutan prioritas
@@ -82,7 +85,7 @@ export default function TiktokKomentarTrackingPage() {
     }
 
     fetchData();
-  }, [periode]);
+  }, [periode, date]);
 
   if (loading) return <Loader />;
   if (error)
@@ -190,6 +193,7 @@ export default function TiktokKomentarTrackingPage() {
               >
                 Bulan Ini
               </span>
+              <DateSelector date={date} setDate={setDate} />
             </div>
 
             {/* Chart per kelompok */}
