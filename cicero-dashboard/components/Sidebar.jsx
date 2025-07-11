@@ -90,7 +90,7 @@ export default function Sidebar() {
       </Sheet>
 
       <div
-        className={`hidden md:flex ${collapsed ? "md:w-20" : "md:w-64"} md:flex-col md:border-r md:bg-white md:shadow-sm md:min-h-screen transition-all`}
+        className={`hidden md:flex ${collapsed ? "md:w-20" : "md:w-64"} md:flex-col md:border-r md:bg-white md:shadow-sm md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:overflow-y-auto transition-all`}
       >
         <div className="flex justify-end p-2">
           <button
