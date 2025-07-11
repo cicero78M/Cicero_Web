@@ -60,9 +60,9 @@ export default function UserDirectoryPage() {
       await createUser(token || "", {
         client_id,
         nama,
-        pangkat,
+        title: pangkat,
         user_id: nrpNip,
-        satfung,
+        divisi: satfung,
       });
       setNama("");
       setPangkat("");

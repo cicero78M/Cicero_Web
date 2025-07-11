@@ -87,9 +87,9 @@ export async function createUser(
   data: {
     client_id: string;
     nama: string;
-    pangkat: string;
+    title: string;
     user_id: string;
-    satfung: string;
+    divisi: string;
   },
 ): Promise<any> {
   const url = `${API_BASE_URL}/api/users/create`;
