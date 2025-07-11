@@ -81,8 +81,7 @@ export default function DashboardPage() {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center overflow-hidden">
         <div className="bg-white rounded-2xl shadow-lg text-center text-red-500 font-bold max-w-sm w-full p-6">{error}</div>
       </div>
-    </div>
-  );
+    );
 
   if (!clientProfile)
     return (
