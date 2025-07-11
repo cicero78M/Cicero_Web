@@ -14,7 +14,7 @@ export default function UserDirectoryPage() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
@@ -78,7 +78,7 @@ export default function UserDirectoryPage() {
       setNrpNip("");
       setSatfung("");
       setEditingUser(null);
-      setShowAddForm(false);
+      setShowForm(false);
       fetchUsers();
     } catch (err) {
       setSubmitError(
@@ -94,7 +94,7 @@ export default function UserDirectoryPage() {
     setPangkat(user.title || "");
     setNrpNip(user.user_id || "");
     setSatfung(user.divisi || "");
-    setShowAddForm(false);
+    setShowForm(true);
   }
 
   useEffect(() => {
@@ -144,12 +144,14 @@ export default function UserDirectoryPage() {
         <div className="flex justify-between items-center mb-4 gap-2">
           <button
             onClick={() => {
-              setEditingUser(null);
-              setShowAddForm((s) => !s);
+              if (showForm && editingUser) {
+                setEditingUser(null);
+              }
+              setShowForm((s) => !s);
             }}
             className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
           >
-            {showAddForm ? "Tutup" : "Tambah User"}
+            {showForm ? "Tutup" : "Tambah User"}
           </button>
           <input
             type="text"
@@ -160,7 +162,7 @@ export default function UserDirectoryPage() {
           />
         </div>
 
-        {showAddForm && (
+        {showForm && (
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <input
               type="text"
@@ -213,7 +215,7 @@ export default function UserDirectoryPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setShowAddForm(false);
+                  setShowForm(false);
                   setEditingUser(null);
                 }}
                 className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
@@ -239,8 +241,7 @@ export default function UserDirectoryPage() {
             </thead>
             <tbody>
               {currentRows.map((u, idx) => (
-                <React.Fragment key={u.user_id || idx}>
-                  <tr className="border-t">
+                <tr key={u.user_id || idx} className="border-t">
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="py-1 px-2">
                     {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
@@ -270,67 +271,6 @@ export default function UserDirectoryPage() {
                     </button>
                   </td>
                 </tr>
-                {editingUser && editingUser.user_id === u.user_id && (
-                  <tr className="border-t bg-gray-50">
-                    <td colSpan="8" className="p-4">
-                      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          placeholder="Nama"
-                          value={nama}
-                          onChange={(e) => setNama(e.target.value)}
-                          required
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Pangkat"
-                          value={pangkat}
-                          onChange={(e) => setPangkat(e.target.value)}
-                          required
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="NRP/NIP"
-                          value={nrpNip}
-                          onChange={(e) => setNrpNip(e.target.value)}
-                          required
-                          disabled={Boolean(editingUser)}
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Satfung"
-                          value={satfung}
-                          onChange={(e) => setSatfung(e.target.value)}
-                          required
-                          className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        />
-                        {submitError && (
-                          <div className="text-red-500 text-sm md:col-span-2">{submitError}</div>
-                        )}
-                        <div className="flex gap-2 md:col-span-2">
-                          <button
-                            type="submit"
-                            disabled={submitLoading}
-                            className={`px-4 py-2 rounded-lg text-white text-sm flex-1 ${submitLoading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
-                          >
-                            {submitLoading ? "Menyimpan..." : "Update"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingUser(null)}
-                            className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
-                          >
-                            Batal
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  </tr>
-                )}
-                </React.Fragment>
               ))}
               {currentRows.length === 0 && (
                 <tr>
