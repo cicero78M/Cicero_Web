@@ -12,6 +12,9 @@ import {
   Heart,
   Music,
   MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
 } from "lucide-react";
 import {
   Sheet,
@@ -34,6 +37,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const { setAuth } = useAuth();
 
   const handleLogout = () => {
@@ -41,9 +45,11 @@ export default function Sidebar() {
     router.replace("/login");
   };
 
-  const navLinks = (isSheet = false) => (
+  const navLinks = (isSheet = false, isCollapsed = false) => (
     <>
-      <div className="text-2xl font-bold text-blue-700 mb-6 px-4">CICERO Dashboard</div>
+      <div className="text-2xl font-bold text-blue-700 mb-6 px-4">
+        {isCollapsed ? "C" : "CICERO Dashboard"}
+      </div>
       <nav className="flex-1 space-y-1 px-2">
         {menu.map((item) => {
           const ItemIcon = item.icon;
@@ -51,20 +57,21 @@ export default function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith(item.path) ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"}`}
+              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith(item.path) ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"} ${isCollapsed ? "justify-center" : ""}`}
               {...(isSheet ? { onClick: () => setOpen(false) } : {})}
             >
               <ItemIcon className="w-5 h-5" />
-              <span>{item.label}</span>
+              {!isCollapsed && <span>{item.label}</span>}
             </Link>
           );
         })}
       </nav>
       <button
         onClick={handleLogout}
-        className="mt-4 mx-2 w-auto bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-md"
+        className="mt-4 mx-2 w-auto bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-md flex items-center justify-center gap-2"
       >
-        Logout
+        <LogOut className="w-5 h-5" />
+        {!isCollapsed && <span>Logout</span>}
       </button>
     </>
   );
@@ -86,12 +93,27 @@ export default function Sidebar() {
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-4 flex flex-col md:hidden">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          {navLinks(true)}
+          {navLinks(true, false)}
         </SheetContent>
       </Sheet>
 
-      <div className="hidden md:flex md:w-64 md:flex-col md:border-r md:bg-white md:shadow-sm">
-        {navLinks(false)}
+      <div
+        className={`hidden md:flex ${collapsed ? "md:w-20" : "md:w-64"} md:flex-col md:border-r md:bg-white md:shadow-sm transition-all`}
+      >
+        <div className="flex justify-end p-2">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-gray-500 hover:text-gray-700"
+            aria-label="Toggle Sidebar"
+          >
+            {collapsed ? (
+              <ChevronRight size={20} />
+            ) : (
+              <ChevronLeft size={20} />
+            )}
+          </button>
+        </div>
+        {navLinks(false, collapsed)}
       </div>
     </>
   );

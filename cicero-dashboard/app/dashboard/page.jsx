@@ -7,6 +7,7 @@ import {
   getTiktokProfileViaBackend,
   getTiktokPostsViaBackend,
 } from "@/utils/api";
+import DashboardStats from "@/components/DashboardStats";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
@@ -80,7 +81,8 @@ export default function DashboardPage() {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-fuchsia-50 to-white flex items-center justify-center overflow-hidden">
         <div className="bg-white rounded-2xl shadow-lg text-center text-red-500 font-bold max-w-sm w-full p-6">{error}</div>
       </div>
-    );
+    </div>
+  );
 
   if (!clientProfile)
     return (
@@ -94,10 +96,22 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ClientCard profile={clientProfile} />
-        <SocialCard platform="instagram" profile={igProfile} posts={igPosts} />
-        <SocialCard platform="tiktok" profile={tiktokProfile} posts={tiktokPosts} />
+      <div className="w-full max-w-6xl space-y-6">
+        <DashboardStats
+          igProfile={igProfile}
+          igPosts={igPosts}
+          tiktokProfile={tiktokProfile}
+          tiktokPosts={tiktokPosts}
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ClientCard profile={clientProfile} />
+          <SocialCard platform="instagram" profile={igProfile} posts={igPosts} />
+          <SocialCard
+            platform="tiktok"
+            profile={tiktokProfile}
+            posts={tiktokPosts}
+          />
+        </div>
       </div>
     </div>
   );
