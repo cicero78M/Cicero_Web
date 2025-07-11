@@ -19,7 +19,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     <>
       <Header />
       <div className="flex min-h-screen bg-gray-100 dark:bg-gray-950">
-        <aside aria-label="Sidebar navigation">
+        <aside aria-label="Sidebar navigation" className="md:min-h-screen">
           <SidebarWrapper />
         </aside>
         <main id="main-content" className="flex-1 p-4 md:p-8">
