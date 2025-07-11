@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { getUserDirectory, createUser } from "@/utils/api";
+import { getUserDirectory, createUser, updateUser } from "@/utils/api";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 
@@ -15,6 +15,7 @@ export default function UserDirectoryPage() {
   const [page, setPage] = useState(1);
 
   const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
   const [nrpNip, setNrpNip] = useState("");
@@ -52,28 +53,48 @@ export default function UserDirectoryPage() {
     }
   }
 
-  async function handleAddUser(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setSubmitError("");
     setSubmitLoading(true);
     try {
-      await createUser(token || "", {
-        client_id,
-        nama,
-        title: pangkat,
-        user_id: nrpNip,
-        divisi: satfung,
-      });
+      if (editingUser) {
+        await updateUser(token || "", editingUser.user_id, {
+          nama,
+          title: pangkat,
+          divisi: satfung,
+        });
+      } else {
+        await createUser(token || "", {
+          client_id,
+          nama,
+          title: pangkat,
+          user_id: nrpNip,
+          divisi: satfung,
+        });
+      }
       setNama("");
       setPangkat("");
       setNrpNip("");
       setSatfung("");
+      setEditingUser(null);
       setShowForm(false);
       fetchUsers();
     } catch (err) {
-      setSubmitError(err.message || "Gagal menambah user");
+      setSubmitError(
+        err.message || (editingUser ? "Gagal mengubah user" : "Gagal menambah user")
+      );
     }
     setSubmitLoading(false);
+  }
+
+  function handleEditClick(user) {
+    setEditingUser(user);
+    setNama(user.nama || "");
+    setPangkat(user.title || "");
+    setNrpNip(user.user_id || "");
+    setSatfung(user.divisi || "");
+    setShowForm(true);
   }
 
   useEffect(() => {
@@ -122,7 +143,12 @@ export default function UserDirectoryPage() {
         <h1 className="text-2xl font-bold text-blue-700 mb-6">User Directory</h1>
         <div className="flex justify-between items-center mb-4 gap-2">
           <button
-            onClick={() => setShowForm((s) => !s)}
+            onClick={() => {
+              if (showForm && editingUser) {
+                setEditingUser(null);
+              }
+              setShowForm((s) => !s);
+            }}
             className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
           >
             {showForm ? "Tutup" : "Tambah User"}
@@ -137,7 +163,7 @@ export default function UserDirectoryPage() {
         </div>
 
         {showForm && (
-          <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <input
               type="text"
               placeholder="Nama"
@@ -160,6 +186,7 @@ export default function UserDirectoryPage() {
               value={nrpNip}
               onChange={(e) => setNrpNip(e.target.value)}
               required
+              disabled={Boolean(editingUser)}
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
             <input
@@ -179,11 +206,18 @@ export default function UserDirectoryPage() {
                 disabled={submitLoading}
                 className={`px-4 py-2 rounded-lg text-white text-sm flex-1 ${submitLoading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
               >
-                {submitLoading ? "Menyimpan..." : "Simpan"}
+                {submitLoading
+                  ? "Menyimpan..."
+                  : editingUser
+                  ? "Update"
+                  : "Simpan"}
               </button>
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingUser(null);
+                }}
                 className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
               >
                 Batal
@@ -202,6 +236,7 @@ export default function UserDirectoryPage() {
                 <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Username TikTok</th>
                 <th className="py-2 px-2 text-left">Status</th>
+                <th className="py-2 px-2 text-left">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -226,6 +261,14 @@ export default function UserDirectoryPage() {
                         <span className="inline-block px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">Nonaktif</span>
                       )
                     }
+                  </td>
+                  <td className="py-1 px-2">
+                    <button
+                      onClick={() => handleEditClick(u)}
+                      className="text-blue-600 hover:underline text-xs"
+                    >
+                      Edit
+                    </button>
                   </td>
                 </tr>
               ))}

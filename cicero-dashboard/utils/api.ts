@@ -104,6 +104,24 @@ export async function createUser(
   return res.json();
 }
 
+// Perbarui data user yang ada
+export async function updateUser(
+  token: string,
+  userId: string,
+  data: Record<string, any>,
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}`;
+  const res = await fetchWithAuth(url, token, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gagal memperbarui user: ${text}`);
+  }
+  return res.json();
+}
+
 // Ambil komentar TikTok
 export async function getTikTokComments(token: string): Promise<any> {
   const url = `${API_BASE_URL}/api/tiktok/comments`;
