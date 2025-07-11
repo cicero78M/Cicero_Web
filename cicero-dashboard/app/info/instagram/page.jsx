@@ -243,6 +243,11 @@ export default function InstagramInfoPage() {
             </div>
             <div className="text-gray-500">@{profile.username}</div>
             <div className="text-gray-500 text-sm">{info?.category || "-"}</div>
+            {profilePic && (
+              <div className="text-gray-400 text-xs break-all mt-1">
+                {profilePic}
+              </div>
+            )}
           </div>
         </div>
 
