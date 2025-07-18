@@ -10,15 +10,19 @@ export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
   const { setAuth } = useAuth();
 
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [client_id, setClientId] = useState("");
-  const [client_operator, setClientOperator] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setMessage("");
     setLoading(true);
 
     try {
@@ -28,19 +32,48 @@ export default function LoginPage() {
           "NEXT_PUBLIC_API_URL is not defined; defaulting to relative '/api'"
         );
       }
-      const res = await fetch(`${apiUrl}/api/auth/login`, {
+      const res = await fetch(`${apiUrl}/api/auth/dashboard-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_id, client_operator }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
 
       if (data.success && data.token) {
-        setAuth(data.token, client_id);
+        const userId = data.user?.user_id || null;
+        setAuth(data.token, client_id, userId);
         router.push("/dashboard");
       } else {
-        setError(data.message || "Login gagal, cek Client ID / Operator");
+        setError(data.message || "Login gagal");
+      }
+    } catch (err) {
+      setError("Gagal koneksi ke server");
+    }
+    setLoading(false);
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, client_id: client_id || undefined }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage("Registrasi berhasil, silakan login");
+        setIsRegister(false);
+        setUsername("");
+        setPassword("");
+      } else {
+        setError(data.message || "Registrasi gagal");
       }
     } catch (err) {
       setError("Gagal koneksi ke server");
@@ -54,10 +87,40 @@ export default function LoginPage() {
         <DarkModeToggle />
       </div>
       <form
-        onSubmit={handleLogin}
+        onSubmit={isRegister ? handleRegister : handleLogin}
         className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm"
       >
-        <h2 className="mb-6 text-2xl font-bold text-blue-600 text-center">Login Cicero</h2>
+        <h2 className="mb-6 text-2xl font-bold text-blue-600 text-center">
+          {isRegister ? "Register" : "Login"} Cicero
+        </h2>
+        <div className="mb-4">
+          <label htmlFor="username" className="sr-only">
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="password" className="sr-only">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+          />
+        </div>
         <div className="mb-4">
           <label htmlFor="client_id" className="sr-only">
             Client ID
@@ -68,26 +131,14 @@ export default function LoginPage() {
             placeholder="Client ID"
             value={client_id}
             onChange={(e) => setClientId(e.target.value)}
-            required
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="client_operator" className="sr-only">
-            Operator
-          </label>
-          <input
-            id="client_operator"
-            type="text"
-            placeholder="Operator"
-            value={client_operator}
-            onChange={(e) => setClientOperator(e.target.value)}
-            required
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
         {error && (
-          <div className="text-red-600 text-sm mb-4 text-center">{error}</div>
+          <div className="text-red-600 text-sm mb-2 text-center">{error}</div>
+        )}
+        {message && (
+          <div className="text-green-600 text-sm mb-2 text-center">{message}</div>
         )}
         <button
           type="submit"
@@ -96,8 +147,19 @@ export default function LoginPage() {
             ${loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}
           `}
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? (isRegister ? "Registering..." : "Logging in...") : isRegister ? "Register" : "Login"}
         </button>
+        <div className="text-sm text-center mt-4">
+          {isRegister ? (
+            <button type="button" onClick={() => setIsRegister(false)} className="text-blue-600 hover:underline">
+              Sudah punya akun? Login
+            </button>
+          ) : (
+            <button type="button" onClick={() => setIsRegister(true)} className="text-blue-600 hover:underline">
+              Belum punya akun? Register
+            </button>
+          )}
+        </div>
       </form>
     </main>
   );

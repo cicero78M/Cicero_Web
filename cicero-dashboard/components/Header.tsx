@@ -19,7 +19,7 @@ export default function Header() {
   const router = useRouter();
 
   const handleLogout = () => {
-    setAuth(null, null);
+    setAuth(null, null, null);
     router.replace("/login");
   };
 
