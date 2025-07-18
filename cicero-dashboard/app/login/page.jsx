@@ -42,7 +42,8 @@ export default function LoginPage() {
 
       if (data.success && data.token) {
         const userId = data.user?.user_id || null;
-        setAuth(data.token, client_id, userId);
+        const userClient = data.user?.client_id || null;
+        setAuth(data.token, userClient, userId);
         router.push("/dashboard");
       } else {
         setError(data.message || "Login gagal");
@@ -68,7 +69,10 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage("Registrasi berhasil, silakan login");
+        const msg = data.status === false
+          ? "Registrasi berhasil, menunggu persetujuan admin"
+          : "Registrasi berhasil, silakan login";
+        setMessage(msg);
         setIsRegister(false);
         setUsername("");
         setPassword("");
@@ -121,19 +125,21 @@ export default function LoginPage() {
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
-        <div className="mb-4">
-          <label htmlFor="client_id" className="sr-only">
-            Client ID
-          </label>
-          <input
-            id="client_id"
-            type="text"
-            placeholder="Client ID"
-            value={client_id}
-            onChange={(e) => setClientId(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
+        {isRegister && (
+          <div className="mb-4">
+            <label htmlFor="client_id" className="sr-only">
+              Client ID
+            </label>
+            <input
+              id="client_id"
+              type="text"
+              placeholder="Client ID"
+              value={client_id}
+              onChange={(e) => setClientId(e.target.value)}
+              className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+            />
+          </div>
+        )}
         {error && (
           <div className="text-red-600 text-sm mb-2 text-center">{error}</div>
         )}
