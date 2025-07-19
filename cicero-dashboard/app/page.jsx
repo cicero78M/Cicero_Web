@@ -226,6 +226,14 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-black text-gray-400 text-center py-4 text-sm">
         <p>&copy; {new Date().getFullYear()} Cicero</p>
+        <p className="mt-2 space-x-4">
+          <Link href="/terms-of-service" className="hover:underline">
+            Ketentuan Layanan
+          </Link>
+          <Link href="/privacy-policy" className="hover:underline">
+            Kebijakan Privasi
+          </Link>
+        </p>
       </footer>
     </div>
   );
