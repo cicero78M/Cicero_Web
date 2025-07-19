@@ -63,6 +63,7 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - Static assets such as icons reside in `cicero-dashboard/public`.
 - The backend no longer restricts how many users can log in at once.
 - Clients may allow an unlimited number of concurrent sessions.
+- Terms of Service and Privacy Policy for Google sign-in are available at `/terms-of-service` and `/privacy-policy`. See `docs/google_auth_policies.md` for details.
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
