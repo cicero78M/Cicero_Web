@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [client_id, setClientId] = useState("");
+  const [role, setRole] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -65,7 +66,12 @@ export default function LoginPage() {
       const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, client_id: client_id || undefined }),
+        body: JSON.stringify({
+          username,
+          password,
+          role: role ? role.toLowerCase() : undefined,
+          client_id: client_id || undefined,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -76,6 +82,8 @@ export default function LoginPage() {
         setIsRegister(false);
         setUsername("");
         setPassword("");
+        setRole("");
+        setClientId("");
       } else {
         setError(data.message || "Registrasi gagal");
       }
@@ -126,19 +134,84 @@ export default function LoginPage() {
           />
         </div>
         {isRegister && (
-          <div className="mb-4">
-            <label htmlFor="client_id" className="sr-only">
-              Client ID
-            </label>
-            <input
-              id="client_id"
-              type="text"
-              placeholder="Client ID"
-              value={client_id}
-              onChange={(e) => setClientId(e.target.value)}
-              className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-            />
-          </div>
+          <>
+            <div className="mb-4">
+              <label htmlFor="role" className="sr-only">
+                Role
+              </label>
+              <input
+                id="role"
+                type="text"
+                list="role-options"
+                placeholder="Role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+              />
+              <datalist id="role-options">
+                <option value="OPERATOR" />
+                <option value="DITBINMAS" />
+                <option value="DITLANTAS" />
+              </datalist>
+            </div>
+            <div className="mb-4">
+              <label htmlFor="client_id" className="sr-only">
+                Client ID
+              </label>
+              <input
+                id="client_id"
+                type="text"
+                list="client-options"
+                placeholder="Client ID"
+                value={client_id}
+                onChange={(e) => setClientId(e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+              />
+              <datalist id="client-options">
+                <option value="KEDIRI" />
+                <option value="BANGKALAN" />
+                <option value="BANYUWANGI" />
+                <option value="BATU" />
+                <option value="BINMAS" />
+                <option value="BLITAR" />
+                <option value="BLITAR KOTA" />
+                <option value="BOJONEGORO" />
+                <option value="BONDOWOSO" />
+                <option value="GRESIK" />
+                <option value="JEMBER" />
+                <option value="JOMBANG" />
+                <option value="KEDIRI KOTA" />
+                <option value="KP3 TANJUNG PERAK" />
+                <option value="LAMONGAN" />
+                <option value="LANTAS" />
+                <option value="LUMAJANG" />
+                <option value="MADIUN" />
+                <option value="MADIUN KOTA" />
+                <option value="MAGETAN" />
+                <option value="MALANG" />
+                <option value="MALANG KOTA" />
+                <option value="MOJOKERTO" />
+                <option value="MOJOKERTO KOTA" />
+                <option value="NGANJUK" />
+                <option value="NGAWI" />
+                <option value="PACITAN" />
+                <option value="PAMEKASAN" />
+                <option value="PASURUAN" />
+                <option value="PASURUAN KOTA" />
+                <option value="PONOROGO" />
+                <option value="PROBOLINGGO" />
+                <option value="PROBOLINGGO KOTA" />
+                <option value="SAMPANG" />
+                <option value="SIDOARJO" />
+                <option value="SITUBONDO" />
+                <option value="SUMENEP" />
+                <option value="SURABAYA" />
+                <option value="TRENGGALEK" />
+                <option value="TUBAN" />
+                <option value="TULUNGAGUNG" />
+              </datalist>
+            </div>
+          </>
         )}
         {error && (
           <div className="text-red-600 text-sm mb-2 text-center">{error}</div>
