@@ -4,7 +4,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
 }
 
 @theme inline {
@@ -31,6 +31,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
   line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .text-gray-500 {
+    color: #374151 !important;
+  }
 }
 
 .container {

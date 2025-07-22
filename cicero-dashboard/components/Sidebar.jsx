@@ -83,9 +83,9 @@ export default function Sidebar() {
             )}
           </button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-4 flex flex-col md:hidden">
+        <SheetContent side="left" className="w-20 p-4 flex flex-col md:hidden">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          {navLinks(true, false)}
+          {navLinks(true, true)}
         </SheetContent>
       </Sheet>
 
