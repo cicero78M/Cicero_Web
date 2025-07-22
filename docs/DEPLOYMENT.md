@@ -30,6 +30,9 @@ Create a `.env.local` file inside `cicero-dashboard` and define the API URL used
 
 ```bash
 NEXT_PUBLIC_API_URL=<backend base url>
+# Service account credentials for Google Sheets export
+GOOGLE_SERVICE_ACCOUNT_EMAIL=<service-account-email>
+GOOGLE_PRIVATE_KEY=<private-key-with-\n>
 ```
 
 ## 4. Build the Application
