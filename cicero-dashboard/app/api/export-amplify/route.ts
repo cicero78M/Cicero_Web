@@ -10,15 +10,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing Google credentials' }, { status: 500 });
   }
 
-  const auth = new google.auth.JWT(
+  const auth = new google.auth.JWT({
     email,
-    undefined,
-    key.replace(/\\n/g, '\n'),
-    [
+    key: key.replace(/\\n/g, '\n'),
+    scopes: [
       'https://www.googleapis.com/auth/spreadsheets',
       'https://www.googleapis.com/auth/drive'
     ]
-  );
+  });
 
   const sheets = google.sheets({ version: 'v4', auth });
 
