@@ -15,7 +15,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.18.1",
-    "googleapis": "^153.0.0",
     "lucide-react": "^0.364.0",
     "next": "15.3.3",
     "react": "18.3.1",

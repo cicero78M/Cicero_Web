@@ -17,30 +17,6 @@ export default function AmplifyPage() {
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
 
-  async function handleExport() {
-    const rows = chartData.map((u) => ({
-      date,
-      pangkat_nama: `${u.title || u.pangkat || ''} ${u.nama || ''}`.trim(),
-      satfung: u.divisi || '',
-      instagram: u.link_instagram || u.instagram || '',
-      facebook: u.link_facebook || u.facebook || '',
-      twitter: u.link_twitter || u.twitter || '',
-      tiktok: u.link_tiktok || u.tiktok || '',
-      youtube: u.link_youtube || u.youtube || '',
-    }));
-
-    try {
-      const res = await fetch('/api/export-amplify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows, fileName: 'Data Rekap Bulan Tahun' }),
-      });
-      if (!res.ok) throw new Error('Export failed');
-      alert('Data berhasil dikirim ke Google Sheet');
-    } catch (err) {
-      alert('Gagal transfer: ' + (err.message || err));
-    }
-  }
 
   async function handleDownload() {
     const rows = chartData.map((u) => ({
@@ -138,12 +114,6 @@ export default function AmplifyPage() {
                 </button>
               ))}
               <DateSelector date={date} setDate={setDate} />
-              <button
-                onClick={handleExport}
-                className="px-3 py-1 rounded-lg text-sm font-semibold bg-green-600 text-white"
-              >
-                Transfer ke Google Sheet
-              </button>
               <button
                 onClick={handleDownload}
                 className="px-3 py-1 rounded-lg text-sm font-semibold bg-blue-600 text-white"
