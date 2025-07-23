@@ -17,6 +17,12 @@ export default function AmplifyPage() {
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
 
+  useEffect(() => {
+    setDate((d) =>
+      periode === "bulanan" ? d.slice(0, 7) : d.length === 7 ? `${d}-01` : d
+    );
+  }, [periode]);
+
 
   async function handleDownload() {
     const token =
@@ -118,7 +124,7 @@ export default function AmplifyPage() {
                   {label}
                 </button>
               ))}
-              <DateSelector date={date} setDate={setDate} />
+              <DateSelector date={date} setDate={setDate} periode={periode} />
               <button
                 onClick={handleDownload}
                 className="px-3 py-1 rounded-lg text-sm font-semibold bg-blue-600 text-white"

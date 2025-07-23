@@ -27,6 +27,12 @@ export default function InstagramLikesTrackingPage() {
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
 
+  useEffect(() => {
+    setDate((d) =>
+      periode === "bulanan" ? d.slice(0, 7) : d.length === 7 ? `${d}-01` : d
+    );
+  }, [periode]);
+
   // Untuk rekap likes summary (total user, sudah likes, belum likes)
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
@@ -181,7 +187,7 @@ export default function InstagramLikesTrackingPage() {
               >
                 Bulan Ini
               </span>
-              <DateSelector date={date} setDate={setDate} />
+              <DateSelector date={date} setDate={setDate} periode={periode} />
             </div>
 
             {/* Chart per kelompok */}
