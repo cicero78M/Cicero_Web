@@ -42,6 +42,37 @@ export default function AmplifyPage() {
     }
   }
 
+  async function handleDownload() {
+    const rows = chartData.map((u) => ({
+      date,
+      pangkat_nama: `${u.title || u.pangkat || ''} ${u.nama || ''}`.trim(),
+      satfung: u.divisi || '',
+      instagram: u.link_instagram || u.instagram || '',
+      facebook: u.link_facebook || u.facebook || '',
+      twitter: u.link_twitter || u.twitter || '',
+      tiktok: u.link_tiktok || u.tiktok || '',
+      youtube: u.link_youtube || u.youtube || '',
+    }));
+
+    try {
+      const res = await fetch('/api/download-amplify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows, fileName: 'Data Rekap Bulan Tahun' }),
+      });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rekap.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Gagal download: ' + (err.message || err));
+    }
+  }
+
   useEffect(() => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
@@ -112,6 +143,12 @@ export default function AmplifyPage() {
                 className="px-3 py-1 rounded-lg text-sm font-semibold bg-green-600 text-white"
               >
                 Transfer ke Google Sheet
+              </button>
+              <button
+                onClick={handleDownload}
+                className="px-3 py-1 rounded-lg text-sm font-semibold bg-blue-600 text-white"
+              >
+                Download Excel
               </button>
             </div>
             <ChartBox title="BAG" users={kelompok.BAG} />
