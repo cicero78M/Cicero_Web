@@ -401,3 +401,20 @@ export async function getTiktokPosts(token: string, client_id: string): Promise<
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
+
+export async function downloadAmplifyExcel(
+  token: string,
+  rows: any[],
+  fileName = 'rekap'
+): Promise<Blob> {
+  const url = `${API_BASE_URL}/api/download-amplify`;
+  const res = await fetchWithAuth(url, token, {
+    method: 'POST',
+    body: JSON.stringify({ rows, fileName }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to download excel: ${text}`);
+  }
+  return res.blob();
+}
