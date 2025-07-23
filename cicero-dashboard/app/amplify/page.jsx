@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapAmplify } from "@/utils/api";
+import { getRekapAmplify, downloadAmplifyExcel } from "@/utils/api";
 import DateSelector from "@/components/DateSelector";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
@@ -19,6 +19,13 @@ export default function AmplifyPage() {
 
 
   async function handleDownload() {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+    if (!token) {
+      alert("Token tidak ditemukan. Silakan login ulang.");
+      return;
+    }
+
     const rows = chartData.map((u) => ({
       date,
       pangkat_nama: `${u.title || u.pangkat || ''} ${u.nama || ''}`.trim(),
@@ -31,13 +38,11 @@ export default function AmplifyPage() {
     }));
 
     try {
-      const res = await fetch('/api/download-amplify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows, fileName: 'Data Rekap Bulan Tahun' }),
-      });
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
+      const blob = await downloadAmplifyExcel(
+        token,
+        rows,
+        'Data Rekap Bulan Tahun'
+      );
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
