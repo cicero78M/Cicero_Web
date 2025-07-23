@@ -30,7 +30,7 @@ test('getRekapAmplify calls endpoint with auth header', async () => {
   );
 });
 
-test('downloadAmplifyExcel posts to local route', async () => {
+test('downloadAmplifyExcel posts to backend route', async () => {
   // mock blob response
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,

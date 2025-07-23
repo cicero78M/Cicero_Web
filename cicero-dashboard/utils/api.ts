@@ -407,11 +407,10 @@ export async function downloadAmplifyExcel(
   rows: any[],
   fileName = 'rekap'
 ): Promise<Blob> {
-  // Always hit the Next.js route for excel generation.
-  // Using API_BASE_URL here breaks when the dashboard is
-  // configured to point at a separate backend, because the
-  // backend does not expose this endpoint.
-  const url = `/api/download-amplify`;
+  // Use the backend endpoint for excel generation. The backend
+  // now exposes `/api/download-amplify`, so we can rely on
+  // `API_BASE_URL` like other API calls.
+  const url = `${API_BASE_URL}/api/download-amplify`;
   const res = await fetchWithAuth(url, token, {
     method: 'POST',
     body: JSON.stringify({ rows, fileName }),
