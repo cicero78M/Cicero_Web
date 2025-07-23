@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapAmplify, downloadAmplifyExcel } from "@/utils/api";
+import { getRekapAmplify } from "@/utils/api";
 import DateSelector from "@/components/DateSelector";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
@@ -24,41 +24,6 @@ export default function AmplifyPage() {
   }, [periode]);
 
 
-  async function handleDownload() {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    if (!token) {
-      alert("Token tidak ditemukan. Silakan login ulang.");
-      return;
-    }
-
-    const rows = chartData.map((u) => ({
-      date,
-      pangkat_nama: `${u.title || u.pangkat || ''} ${u.nama || ''}`.trim(),
-      satfung: u.divisi || '',
-      instagram: u.link_instagram || u.instagram || '',
-      facebook: u.link_facebook || u.facebook || '',
-      twitter: u.link_twitter || u.twitter || '',
-      tiktok: u.link_tiktok || u.tiktok || '',
-      youtube: u.link_youtube || u.youtube || '',
-    }));
-
-    try {
-      const blob = await downloadAmplifyExcel(
-        token,
-        rows,
-        'Data Rekap Bulan Tahun'
-      );
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rekap.xlsx';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('Gagal download: ' + (err.message || err));
-    }
-  }
 
   useEffect(() => {
     const token =
@@ -125,12 +90,6 @@ export default function AmplifyPage() {
                 </button>
               ))}
               <DateSelector date={date} setDate={setDate} periode={periode} />
-              <button
-                onClick={handleDownload}
-                className="px-3 py-1 rounded-lg text-sm font-semibold bg-blue-600 text-white"
-              >
-                Download Excel
-              </button>
             </div>
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />

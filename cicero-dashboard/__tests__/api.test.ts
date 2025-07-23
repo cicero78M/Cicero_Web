@@ -1,4 +1,4 @@
-import { getDashboardStats, getRekapAmplify, downloadAmplifyExcel } from '../utils/api';
+import { getDashboardStats, getRekapAmplify } from '../utils/api';
 
 beforeEach(() => {
   global.fetch = jest.fn(() =>
@@ -30,19 +30,4 @@ test('getRekapAmplify calls endpoint with auth header', async () => {
   );
 });
 
-test('downloadAmplifyExcel posts to backend route', async () => {
-  // mock blob response
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
-    ok: true,
-    blob: () => Promise.resolve(new Blob(['data']))
-  });
-  await downloadAmplifyExcel('t1', [], 'file');
-  expect(global.fetch).toHaveBeenCalledWith(
-    expect.stringContaining('/api/download-amplify'),
-    expect.objectContaining({
-      method: 'POST',
-      headers: expect.objectContaining({ Authorization: 'Bearer t1' })
-    })
-  );
-});
 

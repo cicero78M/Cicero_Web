@@ -402,22 +402,3 @@ export async function getTiktokPosts(token: string, client_id: string): Promise<
   return res.json();
 }
 
-export async function downloadAmplifyExcel(
-  token: string,
-  rows: any[],
-  fileName = 'rekap'
-): Promise<Blob> {
-  // Use the backend endpoint for excel generation. The backend
-  // now exposes `/api/download-amplify`, so we can rely on
-  // `API_BASE_URL` like other API calls.
-  const url = `${API_BASE_URL}/api/download-amplify`;
-  const res = await fetchWithAuth(url, token, {
-    method: 'POST',
-    body: JSON.stringify({ rows, fileName }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to download excel: ${text}`);
-  }
-  return res.blob();
-}
