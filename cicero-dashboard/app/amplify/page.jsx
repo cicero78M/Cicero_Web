@@ -35,7 +35,10 @@ export default function AmplifyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows, fileName: 'Data Rekap Bulan Tahun' }),
       });
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Export failed');
+      }
       alert('Data berhasil dikirim ke Google Sheet');
     } catch (err) {
       alert('Gagal transfer: ' + (err.message || err));
@@ -60,7 +63,10 @@ export default function AmplifyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows, fileName: 'Data Rekap Bulan Tahun' }),
       });
-      if (!res.ok) throw new Error('Download failed');
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Download failed');
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
