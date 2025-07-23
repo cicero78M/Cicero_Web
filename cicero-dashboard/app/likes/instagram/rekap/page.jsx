@@ -24,6 +24,12 @@ export default function RekapLikesIGPage() {
   });
 
   useEffect(() => {
+    setDate((d) =>
+      periode === "bulanan" ? d.slice(0, 7) : d.length === 7 ? `${d}-01` : d
+    );
+  }, [periode]);
+
+  useEffect(() => {
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token")
@@ -139,7 +145,7 @@ export default function RekapLikesIGPage() {
             >
               Bulan Ini
             </span>
-            <DateSelector date={date} setDate={setDate} />
+            <DateSelector date={date} setDate={setDate} periode={periode} />
           </div>
 
           {/* Kirim data dari fetch ke komponen rekap likes */}
