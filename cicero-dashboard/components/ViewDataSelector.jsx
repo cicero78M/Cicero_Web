@@ -25,8 +25,8 @@ export function getPeriodeDateForView(view, selectedDate) {
   }
 
   if (opt.custom) {
-    const d = selectedDate ? new Date(selectedDate) : now;
-    return { periode: opt.periode, date: formatDate(d) };
+    const d = selectedDate ? selectedDate : formatDate(now);
+    return { periode: opt.periode, date: d };
   }
 
   if (Object.prototype.hasOwnProperty.call(opt, "offset")) {
