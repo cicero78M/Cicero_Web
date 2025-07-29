@@ -22,6 +22,8 @@ export default function AmplifyPage() {
 
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =

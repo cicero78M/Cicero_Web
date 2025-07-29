@@ -38,6 +38,8 @@ export default function InstagramLikesTrackingPage() {
   });
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token")
