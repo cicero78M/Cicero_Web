@@ -25,6 +25,8 @@ export default function TiktokKomentarTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewBy, setViewBy] = useState("today");
+  const today = new Date().toISOString().split("T")[0];
+  const [customDate, setCustomDate] = useState(today);
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -58,7 +60,7 @@ export default function TiktokKomentarTrackingPage() {
           return;
         }
 
-        const { periode, date } = getPeriodeDateForView(viewBy);
+        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
@@ -93,7 +95,7 @@ export default function TiktokKomentarTrackingPage() {
     }
 
     fetchData();
-  }, [viewBy]);
+  }, [viewBy, customDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -151,7 +153,12 @@ export default function TiktokKomentarTrackingPage() {
 
             {/* Switch Periode */}
             <div className="flex items-center justify-end gap-3 mb-2">
-              <ViewDataSelector value={viewBy} onChange={setViewBy} />
+              <ViewDataSelector
+                value={viewBy}
+                onChange={setViewBy}
+                date={customDate}
+                onDateChange={setCustomDate}
+              />
             </div>
 
             {/* Chart per kelompok */}
