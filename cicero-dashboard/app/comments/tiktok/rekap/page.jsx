@@ -5,7 +5,9 @@ import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
 import Link from "next/link";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import DateSelector from "@/components/DateSelector";
+import ViewDataSelector, {
+  getPeriodeDateForView,
+} from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
 
 export default function RekapKomentarTiktokPage() {
@@ -13,9 +15,9 @@ export default function RekapKomentarTiktokPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [periode, setPeriode] = useState("harian");
+  const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
+  const [customDate, setCustomDate] = useState(today);
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -23,13 +25,10 @@ export default function RekapKomentarTiktokPage() {
     totalTiktokPost: 0,
   });
 
-  useEffect(() => {
-    setDate((d) =>
-      periode === "bulanan" ? d.slice(0, 7) : d.length === 7 ? `${d}-01` : d
-    );
-  }, [periode]);
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token")
@@ -55,6 +54,7 @@ export default function RekapKomentarTiktokPage() {
           return;
         }
 
+        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
@@ -89,7 +89,7 @@ export default function RekapKomentarTiktokPage() {
     }
 
     fetchData();
-  }, [periode, date]);
+  }, [viewBy, customDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -118,41 +118,12 @@ export default function RekapKomentarTiktokPage() {
             </Link>
           </div>
           <div className="flex items-center justify-end gap-3 mb-2">
-            <span
-              className={
-                periode === "harian"
-                  ? "font-semibold text-pink-700"
-                  : "text-gray-400"
-              }
-            >
-              Hari Ini
-            </span>
-            <button
-              className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
-                periode === "bulanan" ? "bg-pink-500" : "bg-gray-300"
-              }`}
-              onClick={() =>
-                setPeriode(periode === "harian" ? "bulanan" : "harian")
-              }
-              aria-label="Switch periode"
-              type="button"
-            >
-              <span
-                className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
-                  periode === "bulanan" ? "left-6" : "left-0"
-                }`}
-              />
-            </button>
-            <span
-              className={
-                periode === "bulanan"
-                  ? "font-semibold text-pink-700"
-                  : "text-gray-400"
-              }
-            >
-              Bulan Ini
-            </span>
-            <DateSelector date={date} setDate={setDate} periode={periode} />
+            <ViewDataSelector
+              value={viewBy}
+              onChange={setViewBy}
+              date={customDate}
+              onDateChange={setCustomDate}
+            />
           </div>
 
           {/* Kirim data ke komponen detail rekap TikTok */}
