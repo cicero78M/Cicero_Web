@@ -8,10 +8,11 @@ export const VIEW_OPTIONS = [
   { value: "last_week", label: "Minggu Sebelumnya", periode: "mingguan", weekOffset: -1 },
   { value: "this_month", label: "Bulan ini", periode: "bulanan", monthOffset: 0 },
   { value: "last_month", label: "Bulan Sebelumnya", periode: "bulanan", monthOffset: -1 },
+  { value: "date", label: "Tanggal Pilihan", periode: "harian", custom: true },
   { value: "all", label: "Seluruh Data", periode: "semua" },
 ];
 
-export function getPeriodeDateForView(view) {
+export function getPeriodeDateForView(view, selectedDate) {
   const opt = VIEW_OPTIONS.find((o) => o.value === view) || VIEW_OPTIONS[0];
   const now = new Date();
   if (opt.periode === "semua") return { periode: opt.periode, date: "" };
@@ -21,6 +22,11 @@ export function getPeriodeDateForView(view) {
   }
   function formatMonth(d) {
     return d.toISOString().split("T")[0].slice(0, 7);
+  }
+
+  if (opt.custom) {
+    const d = selectedDate ? new Date(selectedDate) : now;
+    return { periode: opt.periode, date: formatDate(d) };
   }
 
   if (Object.prototype.hasOwnProperty.call(opt, "offset")) {
@@ -41,8 +47,9 @@ export function getPeriodeDateForView(view) {
   return { periode: opt.periode, date: formatDate(now) };
 }
 
-export default function ViewDataSelector({ value, onChange }) {
+export default function ViewDataSelector({ value, onChange, date, onDateChange }) {
   const id = useId();
+  const showDateInput = value === "date";
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm font-semibold">
@@ -60,6 +67,14 @@ export default function ViewDataSelector({ value, onChange }) {
           </option>
         ))}
       </select>
+      {showDateInput && (
+        <input
+          type="date"
+          className="border rounded px-2 py-1 text-sm"
+          value={date}
+          onChange={(e) => onDateChange?.(e.target.value)}
+        />
+      )}
     </div>
   );
 }
