@@ -8,7 +8,9 @@ import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import DateSelector from "@/components/DateSelector";
+import ViewDataSelector, {
+  getPeriodeDateForView,
+} from "@/components/ViewDataSelector";
 import {
   Camera,
   User,
@@ -23,15 +25,7 @@ export default function InstagramLikesTrackingPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [periode, setPeriode] = useState("harian"); // "harian" | "bulanan"
-  const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
-
-  useEffect(() => {
-    setDate((d) =>
-      periode === "bulanan" ? d.slice(0, 7) : d.length === 7 ? `${d}-01` : d
-    );
-  }, [periode]);
+  const [viewBy, setViewBy] = useState("today");
 
   // Untuk rekap likes summary (total user, sudah likes, belum likes)
   const [rekapSummary, setRekapSummary] = useState({
@@ -67,6 +61,7 @@ export default function InstagramLikesTrackingPage() {
           return;
         }
 
+        const { periode, date } = getPeriodeDateForView(viewBy);
         const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
@@ -95,7 +90,7 @@ export default function InstagramLikesTrackingPage() {
     }
 
     fetchData();
-  }, [periode, date]);
+  }, [viewBy]);
 
   if (loading) return <Loader />;
   if (error)
@@ -153,41 +148,7 @@ export default function InstagramLikesTrackingPage() {
 
             {/* Switch Periode */}
             <div className="flex items-center justify-end gap-3 mb-2">
-              <span
-                className={
-                  periode === "harian"
-                    ? "font-semibold text-blue-700"
-                    : "text-gray-400"
-                }
-              >
-                Hari Ini
-              </span>
-              <button
-                className={`w-12 h-6 rounded-full relative transition-colors duration-200 ${
-                  periode === "bulanan" ? "bg-blue-500" : "bg-gray-300"
-                }`}
-                onClick={() =>
-                  setPeriode(periode === "harian" ? "bulanan" : "harian")
-                }
-                aria-label="Switch periode"
-                type="button"
-              >
-                <span
-                  className={`block w-6 h-6 bg-white rounded-full shadow absolute top-0 transition-all duration-200 ${
-                    periode === "bulanan" ? "left-6" : "left-0"
-                  }`}
-                />
-              </button>
-              <span
-                className={
-                  periode === "bulanan"
-                    ? "font-semibold text-blue-700"
-                    : "text-gray-400"
-                }
-              >
-                Bulan Ini
-              </span>
-              <DateSelector date={date} setDate={setDate} periode={periode} />
+              <ViewDataSelector value={viewBy} onChange={setViewBy} />
             </div>
 
             {/* Chart per kelompok */}

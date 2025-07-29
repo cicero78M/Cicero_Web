@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getRekapAmplify } from "@/utils/api";
-import DateSelector from "@/components/DateSelector";
+import ViewDataSelector, {
+  getPeriodeDateForView,
+} from "@/components/ViewDataSelector";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -13,15 +15,7 @@ export default function AmplifyPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [periode, setPeriode] = useState("harian");
-  const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
-
-  useEffect(() => {
-    setDate((d) =>
-      periode === "bulanan" ? d.slice(0, 7) : d.length === 7 ? `${d}-01` : d
-    );
-  }, [periode]);
+  const [viewBy, setViewBy] = useState("today");
 
 
 
@@ -36,11 +30,12 @@ export default function AmplifyPage() {
       return;
     }
 
+    const { periode, date } = getPeriodeDateForView(viewBy);
+
     async function fetchData() {
       try {
         const rekapRes = await getRekapAmplify(token, clientId, periode, date);
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
-
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -49,7 +44,7 @@ export default function AmplifyPage() {
     }
 
     fetchData();
-  }, [periode, date]);
+  }, [viewBy]);
 
   if (loading) return <Loader />;
   if (error)
@@ -72,24 +67,7 @@ export default function AmplifyPage() {
               Link Amplification Report
             </h1>
             <div className="flex items-center justify-end gap-3 mb-2">
-              {[
-                ["harian", "Harian"],
-                ["mingguan", "Mingguan"],
-                ["bulanan", "Bulanan"],
-              ].map(([val, label]) => (
-                <button
-                  key={val}
-                  className={`px-3 py-1 rounded-lg text-sm font-semibold border ${
-                    periode === val
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-blue-700"
-                  }`}
-                  onClick={() => setPeriode(val)}
-                >
-                  {label}
-                </button>
-              ))}
-              <DateSelector date={date} setDate={setDate} periode={periode} />
+              <ViewDataSelector value={viewBy} onChange={setViewBy} />
             </div>
             <ChartBox title="BAG" users={kelompok.BAG} />
             <ChartBox title="SAT" users={kelompok.SAT} />
