@@ -41,7 +41,8 @@ export default function RekapLikesIGPage() {
 
     async function fetchData() {
       try {
-        const statsRes = await getDashboardStats(token);
+        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
+        const statsRes = await getDashboardStats(token, periode, date);
         const client_id =
           statsRes.data?.client_id ||
           statsRes.client_id ||
@@ -52,7 +53,6 @@ export default function RekapLikesIGPage() {
           return;
         }
 
-        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
         const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
