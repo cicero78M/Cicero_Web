@@ -56,8 +56,11 @@ export default function RekapLikesIGPage() {
         const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        // Sumber utama IG Post Hari Ini dari statsRes
-        const totalIGPost = statsRes.data?.igPosts || statsRes.igPosts || 0;
+        // Hitung jumlah IG post dari stats
+        const igPostsData = statsRes.data?.igPosts ?? statsRes.igPosts ?? 0;
+        const totalIGPost = Array.isArray(igPostsData)
+          ? igPostsData.length
+          : Number(igPostsData) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalUser = users.length;
         const totalSudahLike = isZeroPost
