@@ -52,7 +52,8 @@ export default function InstagramLikesTrackingPage() {
 
     async function fetchData() {
       try {
-        const statsRes = await getDashboardStats(token);
+        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
+        const statsRes = await getDashboardStats(token, periode, date);
         setStats(statsRes.data || statsRes);
 
         const client_id =
@@ -65,7 +66,6 @@ export default function InstagramLikesTrackingPage() {
           return;
         }
 
-        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
         const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
@@ -122,7 +122,7 @@ export default function InstagramLikesTrackingPage() {
             {/* Card Ringkasan */}
             <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
               <SummaryItem
-                label="IG Post Hari Ini"
+                label="Jumlah IG Post"
                 value={rekapSummary.totalIGPost}
                 color="blue"
                 icon={<Camera className="text-blue-400" />}
