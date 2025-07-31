@@ -37,11 +37,18 @@ async function fetchWithAuth(
   }
   return res;
 }
-export async function getDashboardStats(token: string): Promise<any> {
-  const res = await fetchWithAuth(
-    API_BASE_URL + "/api/dashboard/stats",
-    token
-  );
+export async function getDashboardStats(
+  token: string,
+  periode?: string,
+  tanggal?: string
+): Promise<any> {
+  const params = new URLSearchParams();
+  if (periode) params.append("periode", periode);
+  if (tanggal) params.append("tanggal", tanggal);
+  const url = `${API_BASE_URL}/api/dashboard/stats${
+    params.toString() ? `?${params.toString()}` : ""
+  }`;
+  const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch stats");
   return res.json();
 }
