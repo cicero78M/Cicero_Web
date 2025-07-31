@@ -41,7 +41,8 @@ export default function RekapKomentarTiktokPage() {
 
     async function fetchData() {
       try {
-        const statsRes = await getDashboardStats(token);
+        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
+        const statsRes = await getDashboardStats(token, periode, date);
         const statsData = statsRes.data || statsRes;
 
         const client_id =
@@ -54,7 +55,6 @@ export default function RekapKomentarTiktokPage() {
           return;
         }
 
-        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
         const rekapRes = await getRekapKomentarTiktok(token, client_id, periode, date);
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
