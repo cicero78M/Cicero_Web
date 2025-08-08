@@ -9,6 +9,12 @@ export const VIEW_OPTIONS = [
   { value: "this_month", label: "Bulan ini", periode: "bulanan", monthOffset: 0 },
   { value: "last_month", label: "Bulan Sebelumnya", periode: "bulanan", monthOffset: -1 },
   { value: "date", label: "Tanggal Pilihan", periode: "harian", custom: true },
+  {
+    value: "custom_range",
+    label: "Rentang Tanggal",
+    periode: "harian",
+    range: true,
+  },
   { value: "all", label: "Seluruh Data", periode: "semua" },
 ];
 
@@ -27,6 +33,14 @@ export function getPeriodeDateForView(view, selectedDate) {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
     return `${year}-${month}`;
+  }
+
+  if (opt.range) {
+    const start = selectedDate?.startDate
+      ? selectedDate.startDate
+      : formatDate(now);
+    const end = selectedDate?.endDate ? selectedDate.endDate : start;
+    return { periode: opt.periode, startDate: start, endDate: end };
   }
 
   if (opt.custom) {
@@ -55,6 +69,7 @@ export function getPeriodeDateForView(view, selectedDate) {
 export default function ViewDataSelector({ value, onChange, date, onDateChange }) {
   const id = useId();
   const showDateInput = value === "date";
+  const showRangeInput = value === "custom_range";
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm font-semibold">
@@ -79,6 +94,26 @@ export default function ViewDataSelector({ value, onChange, date, onDateChange }
           value={date}
           onChange={(e) => onDateChange?.(e.target.value)}
         />
+      )}
+      {showRangeInput && (
+        <>
+          <input
+            type="date"
+            className="border rounded px-2 py-1 text-sm"
+            value={date?.startDate || ""}
+            onChange={(e) =>
+              onDateChange?.({ ...date, startDate: e.target.value })
+            }
+          />
+          <input
+            type="date"
+            className="border rounded px-2 py-1 text-sm"
+            value={date?.endDate || ""}
+            onChange={(e) =>
+              onDateChange?.({ ...date, endDate: e.target.value })
+            }
+          />
+        </>
       )}
     </div>
   );
