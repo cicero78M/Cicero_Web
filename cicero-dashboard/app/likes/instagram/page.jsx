@@ -33,6 +33,8 @@ export default function InstagramLikesTrackingPage() {
   const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
   const [customDate, setCustomDate] = useState(today);
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
 
   // Untuk rekap likes summary (total user, sudah likes, belum likes)
   const [rekapSummary, setRekapSummary] = useState({
@@ -57,8 +59,19 @@ export default function InstagramLikesTrackingPage() {
 
     async function fetchData() {
       try {
-        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
-        const statsRes = await getDashboardStats(token, periode, date);
+        const selectedDate =
+          viewBy === "custom_range"
+            ? { startDate: fromDate, endDate: toDate }
+            : customDate;
+        const { periode, date, startDate, endDate } =
+          getPeriodeDateForView(viewBy, selectedDate);
+        const statsRes = await getDashboardStats(
+          token,
+          periode,
+          date,
+          startDate,
+          endDate,
+        );
         const statsData = statsRes.data || statsRes;
         setStats(statsData);
 
@@ -72,7 +85,14 @@ export default function InstagramLikesTrackingPage() {
           return;
         }
 
-        const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
+        const rekapRes = await getRekapLikesIG(
+          token,
+          client_id,
+          periode,
+          date,
+          startDate,
+          endDate,
+        );
         const users = Array.isArray(rekapRes?.data)
           ? rekapRes.data
           : Array.isArray(rekapRes)
@@ -114,7 +134,7 @@ export default function InstagramLikesTrackingPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate]);
+  }, [viewBy, customDate, fromDate, toDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -175,8 +195,18 @@ export default function InstagramLikesTrackingPage() {
               <ViewDataSelector
                 value={viewBy}
                 onChange={setViewBy}
-                date={customDate}
-                onDateChange={setCustomDate}
+                date=
+                  {viewBy === "custom_range"
+                    ? { startDate: fromDate, endDate: toDate }
+                    : customDate}
+                onDateChange={(val) => {
+                  if (viewBy === "custom_range") {
+                    setFromDate(val.startDate || "");
+                    setToDate(val.endDate || "");
+                  } else {
+                    setCustomDate(val);
+                  }
+                }}
               />
             </div>
 
