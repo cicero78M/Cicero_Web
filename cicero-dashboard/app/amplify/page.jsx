@@ -18,8 +18,8 @@ export default function AmplifyPage() {
   const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
   const [customDate, setCustomDate] = useState(today);
-
-
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
 
   useEffect(() => {
     setLoading(true);
@@ -34,11 +34,25 @@ export default function AmplifyPage() {
       return;
     }
 
-    const { periode, date } = getPeriodeDateForView(viewBy, customDate);
+    const selectedDate =
+      viewBy === "custom_range"
+        ? { startDate: fromDate, endDate: toDate }
+        : customDate;
+    const { periode, date, startDate, endDate } = getPeriodeDateForView(
+      viewBy,
+      selectedDate,
+    );
 
     async function fetchData() {
       try {
-        const rekapRes = await getRekapAmplify(token, clientId, periode, date);
+        const rekapRes = await getRekapAmplify(
+          token,
+          clientId,
+          periode,
+          date,
+          startDate,
+          endDate,
+        );
         setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
@@ -48,7 +62,7 @@ export default function AmplifyPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate]);
+  }, [viewBy, customDate, fromDate, toDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -74,8 +88,18 @@ export default function AmplifyPage() {
               <ViewDataSelector
                 value={viewBy}
                 onChange={setViewBy}
-                date={customDate}
-                onDateChange={setCustomDate}
+                date=
+                  {viewBy === "custom_range"
+                    ? { startDate: fromDate, endDate: toDate }
+                    : customDate}
+                onDateChange={(val) => {
+                  if (viewBy === "custom_range") {
+                    setFromDate(val.startDate || "");
+                    setToDate(val.endDate || "");
+                  } else {
+                    setCustomDate(val);
+                  }
+                }}
               />
             </div>
             <ChartBox title="BAG" users={kelompok.BAG} />
