@@ -27,6 +27,8 @@ export default function TiktokKomentarTrackingPage() {
   const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
   const [customDate, setCustomDate] = useState(today);
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -49,8 +51,19 @@ export default function TiktokKomentarTrackingPage() {
 
     async function fetchData() {
       try {
-        const { periode, date } = getPeriodeDateForView(viewBy, customDate);
-        const statsRes = await getDashboardStats(token, periode, date);
+        const selectedDate =
+          viewBy === "custom_range"
+            ? { startDate: fromDate, endDate: toDate }
+            : customDate;
+        const { periode, date, startDate, endDate } =
+          getPeriodeDateForView(viewBy, selectedDate);
+        const statsRes = await getDashboardStats(
+          token,
+          periode,
+          date,
+          startDate,
+          endDate,
+        );
         // Gunakan semua kemungkinan key post TikTok (ttPosts/tiktokPosts)
         const statsData = statsRes.data || statsRes;
         const client_id =
@@ -63,7 +76,14 @@ export default function TiktokKomentarTrackingPage() {
           return;
         }
 
-        const rekapRes = await getRekapKomentarTiktok(token, client_id, periode, date);
+        const rekapRes = await getRekapKomentarTiktok(
+          token,
+          client_id,
+          periode,
+          date,
+          startDate,
+          endDate,
+        );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
         // Ambil field TikTok Post dengan fallback urutan prioritas
@@ -97,7 +117,7 @@ export default function TiktokKomentarTrackingPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate]);
+  }, [viewBy, customDate, fromDate, toDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -158,8 +178,18 @@ export default function TiktokKomentarTrackingPage() {
               <ViewDataSelector
                 value={viewBy}
                 onChange={setViewBy}
-                date={customDate}
-                onDateChange={setCustomDate}
+                date=
+                  {viewBy === "custom_range"
+                    ? { startDate: fromDate, endDate: toDate }
+                    : customDate}
+                onDateChange={(val) => {
+                  if (viewBy === "custom_range") {
+                    setFromDate(val.startDate || "");
+                    setToDate(val.endDate || "");
+                  } else {
+                    setCustomDate(val);
+                  }
+                }}
               />
             </div>
 
