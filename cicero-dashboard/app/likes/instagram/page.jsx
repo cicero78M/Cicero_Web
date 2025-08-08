@@ -197,6 +197,10 @@ export default function InstagramLikesTrackingPage() {
                 title="POLSEK"
                 users={kelompok.POLSEK}
                 totalPost={rekapSummary.totalIGPost}
+                fieldJumlah="jumlah_like"
+                labelSudah="User Sudah Like"
+                labelBelum="User Belum Like"
+                labelTotal="Total Likes"
               />
               <Narrative>
                 Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
