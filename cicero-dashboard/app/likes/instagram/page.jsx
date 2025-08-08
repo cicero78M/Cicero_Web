@@ -54,11 +54,12 @@ export default function InstagramLikesTrackingPage() {
       try {
         const { periode, date } = getPeriodeDateForView(viewBy, customDate);
         const statsRes = await getDashboardStats(token, periode, date);
-        setStats(statsRes.data || statsRes);
+        const statsData = statsRes.data || statsRes;
+        setStats(statsData);
 
         const client_id =
-          statsRes.data?.client_id ||
-          statsRes.client_id ||
+          statsData?.client_id ||
+          statsData.client_id ||
           localStorage.getItem("client_id");
         if (!client_id) {
           setError("Client ID tidak ditemukan.");
@@ -67,11 +68,20 @@ export default function InstagramLikesTrackingPage() {
         }
 
         const rekapRes = await getRekapLikesIG(token, client_id, periode, date);
-        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+        const users = Array.isArray(rekapRes?.data)
+          ? rekapRes.data
+          : Array.isArray(rekapRes)
+          ? rekapRes
+          : [];
 
         // Rekap summary
         const totalUser = users.length;
-        const igPostsData = statsRes.data?.igPosts ?? statsRes.igPosts ?? 0;
+        const igPostsData =
+          statsData?.igPosts ??
+          statsData?.instagramPosts ??
+          statsData.igPosts ??
+          statsData.instagramPosts ??
+          0;
         const totalIGPost = Array.isArray(igPostsData)
           ? igPostsData.length
           : Number(igPostsData) || 0;
