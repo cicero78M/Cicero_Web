@@ -168,25 +168,25 @@ export default function InstagramLikesTrackingPage() {
               <ChartBox
                 title="BAG"
                 users={kelompok.BAG}
-                totalIGPost={rekapSummary.totalIGPost}
+                totalPost={rekapSummary.totalIGPost}
                 narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
               />
               <ChartBox
                 title="SAT"
                 users={kelompok.SAT}
-                totalIGPost={rekapSummary.totalIGPost}
+                totalPost={rekapSummary.totalIGPost}
                 narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
               />
               <ChartBox
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
-                totalIGPost={rekapSummary.totalIGPost}
+                totalPost={rekapSummary.totalIGPost}
                 narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
               />
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
-                totalIGPost={rekapSummary.totalIGPost}
+                totalPost={rekapSummary.totalIGPost}
               />
               <Narrative>
                 Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
@@ -215,7 +215,7 @@ function ChartBox({
   title,
   users,
   orientation = "vertical",
-  totalIGPost,
+  totalPost,
   narrative,
 }) {
   return (
@@ -226,7 +226,7 @@ function ChartBox({
           users={users}
           title={title}
           orientation={orientation}
-          totalIGPost={totalIGPost}
+          totalPost={totalPost}
           fieldJumlah="jumlah_like"
           labelSudah="User Sudah Like"
           labelBelum="User Belum Like"
