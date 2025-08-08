@@ -60,7 +60,7 @@ export default function ChartDivisiAbsensi({
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
-      !isZeroPost && (jumlah > 0 || isException(u.exception));
+      !isZeroPost && (jumlah >= effectiveTotal || isException(u.exception));
     const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {

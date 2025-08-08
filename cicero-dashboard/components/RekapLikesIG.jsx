@@ -21,7 +21,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalSudahLike = totalIGPost === 0
     ? 0
     : users.filter(u =>
-        Number(u.jumlah_like) > 0 || isException(u.exception)
+        Number(u.jumlah_like) >= totalIGPost || isException(u.exception)
       ).length;
   const totalBelumLike = totalUser - totalSudahLike;
 
@@ -153,7 +153,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
               // LOGIC: semua user dianggap belum jika IG Post = 0
               const sudahLike = totalIGPost === 0
                 ? false
-                : Number(u.jumlah_like) > 0 || isException(u.exception);
+                : Number(u.jumlah_like) >= totalIGPost || isException(u.exception);
 
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>

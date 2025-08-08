@@ -19,6 +19,11 @@ import {
   ArrowRight
 } from "lucide-react";
 
+// Helper: handle boolean/string/number for exception
+function isException(val) {
+  return val === true || val === "true" || val === 1 || val === "1";
+}
+
 export default function InstagramLikesTrackingPage() {
   useRequireAuth();
   const [stats, setStats] = useState(null);
@@ -88,8 +93,10 @@ export default function InstagramLikesTrackingPage() {
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalSudahLike = isZeroPost
           ? 0
-          : users.filter((u) => Number(u.jumlah_like) > 0 || u.exception)
-              .length;
+          : users.filter(
+              (u) =>
+                Number(u.jumlah_like) >= totalIGPost || isException(u.exception)
+            ).length;
         const totalBelumLike = totalUser - totalSudahLike;
 
         setRekapSummary({
