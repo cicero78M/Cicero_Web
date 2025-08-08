@@ -10,6 +10,11 @@ import ViewDataSelector, {
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
 
+// Helper: handle boolean/string/number for exception
+function isException(val) {
+  return val === true || val === "true" || val === 1 || val === "1";
+}
+
 export default function RekapLikesIGPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
@@ -76,7 +81,8 @@ export default function RekapLikesIGPage() {
         const totalSudahLike = isZeroPost
           ? 0
           : users.filter(
-              (u) => Number(u.jumlah_like) > 0 || u.exception
+              (u) =>
+                Number(u.jumlah_like) >= totalIGPost || isException(u.exception)
             ).length;
         const totalBelumLike = totalUser - totalSudahLike;
 
