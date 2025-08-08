@@ -69,10 +69,12 @@ export default function ChartDivisiAbsensi({
         user_belum: 0,
         total_value: 0,
       };
+    divisiMap[key].total_value += nilai;
     if (sudah) {
       divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_value += nilai;
-    } else divisiMap[key].user_belum += 1;
+    } else {
+      divisiMap[key].user_belum += 1;
+    }
   });
 
   const dataChart = Object.values(divisiMap);
