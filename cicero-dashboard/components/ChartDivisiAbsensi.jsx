@@ -27,7 +27,7 @@ function bersihkanSatfung(divisi = "") {
 export default function ChartDivisiAbsensi({
   users,
   title = "Absensi Komentar TikTok per Divisi/Satfung",
-  totalPost = 1, // jumlah post untuk perbandingan, generic
+  totalPost, // jumlah post untuk perbandingan, generic
   totalIGPost,   // fallback untuk instagram (kompatibilitas lama)
   totalTiktokPost, // fallback untuk tiktok (kompatibilitas lama)
   fieldJumlah = "jumlah_like", // bisa "jumlah_komentar" untuk tiktok

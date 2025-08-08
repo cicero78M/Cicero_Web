@@ -227,6 +227,10 @@ function ChartBox({
           title={title}
           orientation={orientation}
           totalIGPost={totalIGPost}
+          fieldJumlah="jumlah_like"
+          labelSudah="User Sudah Like"
+          labelBelum="User Belum Like"
+          labelTotal="Total Likes"
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
