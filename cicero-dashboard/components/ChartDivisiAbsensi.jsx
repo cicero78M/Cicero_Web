@@ -46,12 +46,22 @@ export default function ChartDivisiAbsensi({
   // Jika tidak ada post, semua user dianggap belum
   const isZeroPost = (effectiveTotal || 0) === 0;
 
+  // Cari nilai jumlah_like tertinggi dari user non-exception
+  const maxJumlahLike = Math.max(
+    0,
+    ...users
+      .filter((u) => !isException(u.exception))
+      .map((u) => Number(u[fieldJumlah] || 0))
+  );
+
   // Group by divisi
   const divisiMap = {};
   users.forEach((u) => {
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
+    const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
-      !isZeroPost && (Number(u[fieldJumlah]) > 0 || isException(u.exception));
+      !isZeroPost && (jumlah > 0 || isException(u.exception));
+    const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
@@ -61,7 +71,7 @@ export default function ChartDivisiAbsensi({
       };
     if (sudah) {
       divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_value += Number(u[fieldJumlah] || 0);
+      divisiMap[key].total_value += nilai;
     } else divisiMap[key].user_belum += 1;
   });
 

@@ -37,13 +37,23 @@ export default function ChartHorizontal({
   // Jika tidak ada post, semua user masuk belum (termasuk exception)
   const isZeroPost = (effectiveTotal || 0) === 0;
 
+  // Cari nilai jumlah_like tertinggi untuk user non-exception
+  const maxJumlahLike = Math.max(
+    0,
+    ...users
+      .filter((u) => !isException(u.exception))
+      .map((u) => Number(u[fieldJumlah] || 0))
+  );
+
   // Matrix 3 metrik per polsek
   const divisiMap = {};
   users.forEach((u) => {
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
     // Logic: sudahLike hanya berlaku kalau ada post
+    const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
-      !isZeroPost && (Number(u[fieldJumlah]) > 0 || isException(u.exception));
+      !isZeroPost && (jumlah > 0 || isException(u.exception));
+    const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
@@ -53,7 +63,7 @@ export default function ChartHorizontal({
       };
     if (sudah) {
       divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_value += Number(u[fieldJumlah] || 0);
+      divisiMap[key].total_value += nilai;
     } else {
       divisiMap[key].user_belum += 1;
     }
