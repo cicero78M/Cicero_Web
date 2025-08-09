@@ -56,6 +56,7 @@ export default function TiktokPostAnalysisPage() {
 
     async function fetchData() {
       try {
+        setLoading(true);
         const clientProfile = await getClientProfile(token, clientId);
         const username =
           clientProfile.client?.client_tiktok?.replace(/^@/, "") ||
@@ -70,7 +71,13 @@ export default function TiktokPostAnalysisPage() {
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
 
-        const postRes = await getTiktokPostsViaBackend(token, clientId, 50);
+        const postRes = await getTiktokPostsViaBackend(
+          token,
+          clientId,
+          50,
+          startDate,
+          endDate,
+        );
         const postData = postRes.data || postRes.posts || postRes;
         setPosts(Array.isArray(postData) ? postData : []);
       } catch (err) {
@@ -81,7 +88,7 @@ export default function TiktokPostAnalysisPage() {
     }
 
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   function extractUsername(url) {
     if (!url) return "";

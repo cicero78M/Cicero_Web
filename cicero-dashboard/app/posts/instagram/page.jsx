@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import CardStat from "@/components/CardStat";
 import EngagementLineChart from "@/components/EngagementLineChart";
 import EngagementByTypeChart from "@/components/EngagementByTypeChart";
@@ -40,11 +40,8 @@ export default function InstagramPostAnalysisPage() {
   const [startDate, setStartDate] = useState(firstDay);
   const [endDate, setEndDate] = useState(lastDay);
   const [search, setSearch] = useState("");
-  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =
@@ -58,6 +55,7 @@ export default function InstagramPostAnalysisPage() {
 
     async function fetchData() {
       try {
+        setLoading(true);
         const clientProfile = await getClientProfile(token, clientId);
         const username =
           clientProfile.client?.client_insta?.replace(/^@/, "") ||
@@ -72,7 +70,13 @@ export default function InstagramPostAnalysisPage() {
         const infoData = infoRes.data || infoRes.info || infoRes;
         setInfo(infoData);
 
-        const postRes = await getInstagramPostsViaBackend(token, username, 12);
+        const postRes = await getInstagramPostsViaBackend(
+          token,
+          username,
+          12,
+          startDate,
+          endDate,
+        );
         const postData = postRes.data || postRes.posts || postRes;
         setPosts(Array.isArray(postData) ? postData : []);
       } catch (err) {
@@ -83,7 +87,7 @@ export default function InstagramPostAnalysisPage() {
     }
 
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   function extractUsername(url) {
     if (!url) return "";
