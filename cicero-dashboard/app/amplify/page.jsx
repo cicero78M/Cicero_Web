@@ -1,10 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getRekapAmplify } from "@/utils/api";
-import ViewDataSelector, {
-  getPeriodeDateForView,
-  VIEW_OPTIONS,
-} from "@/components/ViewDataSelector";
+import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -16,15 +13,9 @@ export default function AmplifyPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
-  const [customDate, setCustomDate] = useState(today);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
-
-  const viewOptions = VIEW_OPTIONS.filter(
-    (opt) => !["this_week", "last_week", "all"].includes(opt.value),
-  );
 
   useEffect(() => {
     setLoading(true);
@@ -39,13 +30,9 @@ export default function AmplifyPage() {
       return;
     }
 
-    const selectedDate =
-      viewBy === "custom_range"
-        ? { startDate: fromDate, endDate: toDate }
-        : customDate;
-    const { periode, date, startDate, endDate } = getPeriodeDateForView(
-      viewBy,
-      selectedDate,
+    const { periode, startDate, endDate } = getPeriodeDateForView(
+      "custom_range",
+      { startDate: fromDate, endDate: toDate },
     );
 
     async function fetchData() {
@@ -54,7 +41,7 @@ export default function AmplifyPage() {
           token,
           clientId,
           periode,
-          date,
+          undefined,
           startDate,
           endDate,
         );
@@ -67,7 +54,7 @@ export default function AmplifyPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [fromDate, toDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -89,23 +76,19 @@ export default function AmplifyPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
               Link Amplification Report
             </h1>
-            <div className="flex items-center justify-end gap-3 mb-2">
-              <ViewDataSelector
-                value={viewBy}
-                onChange={setViewBy}
-                options={viewOptions}
-                date=
-                  {viewBy === "custom_range"
-                    ? { startDate: fromDate, endDate: toDate }
-                    : customDate}
-                onDateChange={(val) => {
-                  if (viewBy === "custom_range") {
-                    setFromDate(val.startDate || "");
-                    setToDate(val.endDate || "");
-                  } else {
-                    setCustomDate(val);
-                  }
-                }}
+            <div className="flex items-center justify-end gap-2 mb-2">
+              <input
+                type="date"
+                className="border rounded px-2 py-1 text-sm"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+              <span className="text-sm">s/d</span>
+              <input
+                type="date"
+                className="border rounded px-2 py-1 text-sm"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
               />
             </div>
             <ChartBox title="BAG" users={kelompok.BAG} />

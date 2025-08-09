@@ -8,10 +8,7 @@ import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import ViewDataSelector, {
-  getPeriodeDateForView,
-  VIEW_OPTIONS,
-} from "@/components/ViewDataSelector";
+import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import {
   Camera,
   User,
@@ -31,9 +28,7 @@ export default function InstagramLikesTrackingPage() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
-  const [customDate, setCustomDate] = useState(today);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
 
@@ -44,10 +39,6 @@ export default function InstagramLikesTrackingPage() {
     totalBelumLike: 0,
     totalIGPost: 0,
   });
-
-  const viewOptions = VIEW_OPTIONS.filter(
-    (opt) => !["this_week", "last_week", "all"].includes(opt.value),
-  );
 
   useEffect(() => {
     setLoading(true);
@@ -64,16 +55,14 @@ export default function InstagramLikesTrackingPage() {
 
     async function fetchData() {
       try {
-        const selectedDate =
-          viewBy === "custom_range"
-            ? { startDate: fromDate, endDate: toDate }
-            : customDate;
-        const { periode, date, startDate, endDate } =
-          getPeriodeDateForView(viewBy, selectedDate);
+        const { periode, startDate, endDate } = getPeriodeDateForView(
+          "custom_range",
+          { startDate: fromDate, endDate: toDate },
+        );
         const statsRes = await getDashboardStats(
           token,
           periode,
-          date,
+          undefined,
           startDate,
           endDate,
         );
@@ -94,7 +83,7 @@ export default function InstagramLikesTrackingPage() {
           token,
           client_id,
           periode,
-          date,
+          undefined,
           startDate,
           endDate,
         );
@@ -144,7 +133,7 @@ export default function InstagramLikesTrackingPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [fromDate, toDate]);
 
   if (loading) return <Loader />;
   if (error)
@@ -200,24 +189,20 @@ export default function InstagramLikesTrackingPage() {
               />
             </div>
 
-            {/* Switch Periode */}
-            <div className="flex items-center justify-end gap-3 mb-2">
-              <ViewDataSelector
-                value={viewBy}
-                onChange={setViewBy}
-                options={viewOptions}
-                date=
-                  {viewBy === "custom_range"
-                    ? { startDate: fromDate, endDate: toDate }
-                    : customDate}
-                onDateChange={(val) => {
-                  if (viewBy === "custom_range") {
-                    setFromDate(val.startDate || "");
-                    setToDate(val.endDate || "");
-                  } else {
-                    setCustomDate(val);
-                  }
-                }}
+            {/* Rentang Tanggal */}
+            <div className="flex items-center justify-end gap-2 mb-2">
+              <input
+                type="date"
+                className="border rounded px-2 py-1 text-sm"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+              <span className="text-sm">s/d</span>
+              <input
+                type="date"
+                className="border rounded px-2 py-1 text-sm"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
               />
             </div>
 
