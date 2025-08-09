@@ -6,8 +6,7 @@ export const VIEW_OPTIONS = [
   { value: "yesterday", label: "Hari Sebelumnya", periode: "harian", offset: -1 },
   { value: "this_week", label: "Minggu ini", periode: "mingguan", weekOffset: 0 },
   { value: "last_week", label: "Minggu Sebelumnya", periode: "mingguan", weekOffset: -1 },
-  { value: "this_month", label: "Bulan ini", periode: "bulanan", monthOffset: 0 },
-  { value: "last_month", label: "Bulan Sebelumnya", periode: "bulanan", monthOffset: -1 },
+  { value: "month", label: "Pilih Bulan", periode: "bulanan", month: true },
   { value: "date", label: "Tanggal Pilihan", periode: "harian", custom: true },
   {
     value: "custom_range",
@@ -59,8 +58,10 @@ export function getPeriodeDateForView(view, selectedDate) {
     d.setDate(d.getDate() - mondayOffset + (opt.weekOffset || 0) * 7);
     return { periode: opt.periode, date: formatDate(d) };
   }
-  if (Object.prototype.hasOwnProperty.call(opt, "monthOffset")) {
-    const d = new Date(now.getFullYear(), now.getMonth() + (opt.monthOffset || 0), 1);
+  if (opt.month) {
+    const d = selectedDate
+      ? new Date(`${selectedDate}-01`)
+      : new Date(now.getFullYear(), now.getMonth(), 1);
     return { periode: opt.periode, date: formatMonth(d) };
   }
   return { periode: opt.periode, date: formatDate(now) };
@@ -70,6 +71,7 @@ export default function ViewDataSelector({ value, onChange, date, onDateChange }
   const id = useId();
   const showDateInput = value === "date";
   const showRangeInput = value === "custom_range";
+  const showMonthInput = value === "month";
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm font-semibold">
@@ -90,6 +92,14 @@ export default function ViewDataSelector({ value, onChange, date, onDateChange }
       {showDateInput && (
         <input
           type="date"
+          className="border rounded px-2 py-1 text-sm"
+          value={date}
+          onChange={(e) => onDateChange?.(e.target.value)}
+        />
+      )}
+      {showMonthInput && (
+        <input
+          type="month"
           className="border rounded px-2 py-1 text-sm"
           value={date}
           onChange={(e) => onDateChange?.(e.target.value)}
