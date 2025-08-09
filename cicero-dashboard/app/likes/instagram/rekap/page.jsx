@@ -104,7 +104,12 @@ export default function RekapLikesIGPage() {
               (u) =>
                 Number(u.jumlah_like) >= totalIGPost || isException(u.exception)
             ).length;
-        const totalBelumLike = totalUser - totalSudahLike;
+        const totalBelumLike = isZeroPost
+          ? totalUser
+          : users.filter(
+              (u) =>
+                Number(u.jumlah_like) < totalIGPost && !isException(u.exception)
+            ).length;
 
         setRekapSummary({
           totalUser,
