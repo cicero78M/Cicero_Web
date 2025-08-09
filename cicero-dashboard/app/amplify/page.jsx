@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getRekapAmplify } from "@/utils/api";
 import ViewDataSelector, {
   getPeriodeDateForView,
+  VIEW_OPTIONS,
 } from "@/components/ViewDataSelector";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
@@ -20,6 +21,10 @@ export default function AmplifyPage() {
   const [customDate, setCustomDate] = useState(today);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
+
+  const viewOptions = VIEW_OPTIONS.filter(
+    (opt) => !["this_week", "last_week", "all"].includes(opt.value),
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -88,6 +93,7 @@ export default function AmplifyPage() {
               <ViewDataSelector
                 value={viewBy}
                 onChange={setViewBy}
+                options={viewOptions}
                 date=
                   {viewBy === "custom_range"
                     ? { startDate: fromDate, endDate: toDate }

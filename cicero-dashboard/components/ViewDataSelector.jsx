@@ -67,7 +67,13 @@ export function getPeriodeDateForView(view, selectedDate) {
   return { periode: opt.periode, date: formatDate(now) };
 }
 
-export default function ViewDataSelector({ value, onChange, date, onDateChange }) {
+export default function ViewDataSelector({
+  value,
+  onChange,
+  date,
+  onDateChange,
+  options = VIEW_OPTIONS,
+}) {
   const id = useId();
   const showDateInput = value === "date";
   const showRangeInput = value === "custom_range";
@@ -83,7 +89,7 @@ export default function ViewDataSelector({ value, onChange, date, onDateChange }
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
-        {VIEW_OPTIONS.map((opt) => (
+        {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>
