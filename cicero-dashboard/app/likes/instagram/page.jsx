@@ -10,6 +10,7 @@ import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import ViewDataSelector, {
   getPeriodeDateForView,
+  VIEW_OPTIONS,
 } from "@/components/ViewDataSelector";
 import {
   Camera,
@@ -43,6 +44,10 @@ export default function InstagramLikesTrackingPage() {
     totalBelumLike: 0,
     totalIGPost: 0,
   });
+
+  const viewOptions = VIEW_OPTIONS.filter(
+    (opt) => !["this_week", "last_week", "all"].includes(opt.value),
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -200,6 +205,7 @@ export default function InstagramLikesTrackingPage() {
               <ViewDataSelector
                 value={viewBy}
                 onChange={setViewBy}
+                options={viewOptions}
                 date=
                   {viewBy === "custom_range"
                     ? { startDate: fromDate, endDate: toDate }
