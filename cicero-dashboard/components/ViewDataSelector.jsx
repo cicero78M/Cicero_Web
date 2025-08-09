@@ -6,8 +6,7 @@ export const VIEW_OPTIONS = [
   { value: "yesterday", label: "Hari Sebelumnya", periode: "harian", offset: -1 },
   { value: "this_week", label: "Minggu ini", periode: "mingguan", weekOffset: 0 },
   { value: "last_week", label: "Minggu Sebelumnya", periode: "mingguan", weekOffset: -1 },
-  { value: "this_month", label: "Bulan ini", periode: "bulanan", monthOffset: 0 },
-  { value: "last_month", label: "Bulan Sebelumnya", periode: "bulanan", monthOffset: -1 },
+  { value: "month", label: "Pilih Bulan", periode: "bulanan", month: true },
   { value: "date", label: "Tanggal Pilihan", periode: "harian", custom: true },
   {
     value: "custom_range",
@@ -59,8 +58,10 @@ export function getPeriodeDateForView(view, selectedDate) {
     d.setDate(d.getDate() - mondayOffset + (opt.weekOffset || 0) * 7);
     return { periode: opt.periode, date: formatDate(d) };
   }
-  if (Object.prototype.hasOwnProperty.call(opt, "monthOffset")) {
-    const d = new Date(now.getFullYear(), now.getMonth() + (opt.monthOffset || 0), 1);
+  if (opt.month) {
+    const d = selectedDate
+      ? new Date(`${selectedDate}-01`)
+      : new Date(now.getFullYear(), now.getMonth(), 1);
     return { periode: opt.periode, date: formatMonth(d) };
   }
   return { periode: opt.periode, date: formatDate(now) };
@@ -70,6 +71,28 @@ export default function ViewDataSelector({ value, onChange, date, onDateChange }
   const id = useId();
   const showDateInput = value === "date";
   const showRangeInput = value === "custom_range";
+  const showMonthInput = value === "month";
+
+  const now = new Date();
+  const [yearPart, rawMonthPart] = (
+    date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+  ).split("-");
+  const monthPart = (rawMonthPart || "1").slice(0, 2).padStart(2, "0");
+  const MONTH_OPTIONS = [
+    { value: "01", label: "Januari" },
+    { value: "02", label: "Februari" },
+    { value: "03", label: "Maret" },
+    { value: "04", label: "April" },
+    { value: "05", label: "Mei" },
+    { value: "06", label: "Juni" },
+    { value: "07", label: "Juli" },
+    { value: "08", label: "Agustus" },
+    { value: "09", label: "September" },
+    { value: "10", label: "Oktober" },
+    { value: "11", label: "November" },
+    { value: "12", label: "Desember" },
+  ];
+
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm font-semibold">
@@ -94,6 +117,19 @@ export default function ViewDataSelector({ value, onChange, date, onDateChange }
           value={date}
           onChange={(e) => onDateChange?.(e.target.value)}
         />
+      )}
+      {showMonthInput && (
+        <select
+          className="border rounded px-2 py-1 text-sm"
+          value={monthPart}
+          onChange={(e) => onDateChange?.(`${yearPart}-${e.target.value}`)}
+        >
+          {MONTH_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
       )}
       {showRangeInput && (
         <>
