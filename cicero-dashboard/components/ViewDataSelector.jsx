@@ -60,7 +60,7 @@ export function getPeriodeDateForView(view, selectedDate) {
   }
   if (opt.month) {
     const d = selectedDate
-      ? new Date(`${selectedDate}-01`)
+      ? new Date(selectedDate)
       : new Date(now.getFullYear(), now.getMonth(), 1);
     return { periode: opt.periode, date: formatMonth(d) };
   }
