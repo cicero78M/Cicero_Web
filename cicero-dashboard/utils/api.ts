@@ -47,10 +47,8 @@ export async function getDashboardStats(
   const params = new URLSearchParams();
   if (periode) params.append("periode", periode);
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate && endDate) {
-    params.append("tanggal_mulai", startDate);
-    params.append("tanggal_selesai", endDate);
-  }
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/dashboard/stats${
     params.toString() ? `?${params.toString()}` : ""
   }`;
@@ -70,10 +68,8 @@ export async function getRekapLikesIG(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate && endDate) {
-    params.append("tanggal_mulai", startDate);
-    params.append("tanggal_selesai", endDate);
-  }
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -159,10 +155,8 @@ export async function getRekapKomentarTiktok(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate && endDate) {
-    params.append("tanggal_mulai", startDate);
-    params.append("tanggal_selesai", endDate);
-  }
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -184,10 +178,8 @@ export async function getRekapAmplify(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate && endDate) {
-    params.append("tanggal_mulai", startDate);
-    params.append("tanggal_selesai", endDate);
-  }
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/amplify/rekap?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);

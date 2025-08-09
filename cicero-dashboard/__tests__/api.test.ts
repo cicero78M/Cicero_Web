@@ -70,3 +70,17 @@ test("getRekapKomentarTiktok supports date range params", async () => {
   expect(url).toContain("tanggal_selesai=2024-03-31");
 });
 
+test("getDashboardStats handles partial date range params", async () => {
+  await getDashboardStats("tok", undefined, undefined, "2024-06-01");
+  let url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("tanggal_mulai=2024-06-01");
+  expect(url).not.toContain("tanggal_selesai");
+
+  (global.fetch as jest.Mock).mockClear();
+
+  await getDashboardStats("tok", undefined, undefined, undefined, "2024-06-30");
+  url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("tanggal_selesai=2024-06-30");
+  expect(url).not.toContain("tanggal_mulai");
+});
+
