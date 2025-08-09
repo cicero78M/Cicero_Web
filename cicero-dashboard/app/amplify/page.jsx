@@ -10,6 +10,7 @@ import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { Link as LinkIcon, User, Check, X } from "lucide-react";
 
 export default function AmplifyPage() {
   useRequireAuth();
@@ -21,6 +22,12 @@ export default function AmplifyPage() {
   const [customDate, setCustomDate] = useState(today);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
+  const [rekapSummary, setRekapSummary] = useState({
+    totalUser: 0,
+    totalSudahPost: 0,
+    totalBelumPost: 0,
+    totalLink: 0,
+  });
 
   const viewOptions = VIEW_OPTIONS.filter(
     (opt) => !["this_week", "last_week", "all"].includes(opt.value),
@@ -58,7 +65,23 @@ export default function AmplifyPage() {
           startDate,
           endDate,
         );
-        setChartData(Array.isArray(rekapRes.data) ? rekapRes.data : []);
+        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+        const totalUser = users.length;
+        const totalSudahPost = users.filter(
+          (u) => Number(u.jumlah_link) > 0,
+        ).length;
+        const totalBelumPost = totalUser - totalSudahPost;
+        const totalLink = users.reduce(
+          (sum, u) => sum + Number(u.jumlah_link || 0),
+          0,
+        );
+        setRekapSummary({
+          totalUser,
+          totalSudahPost,
+          totalBelumPost,
+          totalLink,
+        });
+        setChartData(users);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -89,6 +112,37 @@ export default function AmplifyPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
               Link Amplification Report
             </h1>
+
+            <div className="bg-gradient-to-tr from-indigo-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+              <SummaryItem
+                label="Total Link"
+                value={rekapSummary.totalLink}
+                color="indigo"
+                icon={<LinkIcon className="text-indigo-400" />}
+              />
+              <Divider />
+              <SummaryItem
+                label="Total User"
+                value={rekapSummary.totalUser}
+                color="gray"
+                icon={<User className="text-gray-400" />}
+              />
+              <Divider />
+              <SummaryItem
+                label="Sudah Post"
+                value={rekapSummary.totalSudahPost}
+                color="green"
+                icon={<Check className="text-green-500" />}
+              />
+              <Divider />
+              <SummaryItem
+                label="Belum Post"
+                value={rekapSummary.totalBelumPost}
+                color="red"
+                icon={<X className="text-red-500" />}
+              />
+            </div>
+
             <div className="flex items-center justify-end gap-3 mb-2">
               <ViewDataSelector
                 value={viewBy}
@@ -145,4 +199,26 @@ function ChartBox({ title, users }) {
       )}
     </div>
   );
+}
+
+function SummaryItem({ label, value, color = "gray", icon }) {
+  const colorMap = {
+    indigo: "text-indigo-700",
+    green: "text-green-600",
+    red: "text-red-500",
+    gray: "text-gray-700",
+  };
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center py-2">
+      <div className="mb-1">{icon}</div>
+      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color]}`}>{value}</div>
+      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2"></div>;
 }
