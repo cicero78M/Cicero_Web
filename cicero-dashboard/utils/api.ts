@@ -199,9 +199,13 @@ export async function getInstagramPosts(token: string, client_id: string): Promi
 export async function getInstagramPostsViaBackend(
   token: string,
   username: string,
-  limit: number = 10
+  limit: number = 10,
+  startDate?: string,
+  endDate?: string
 ): Promise<any> {
   const params = new URLSearchParams({ username, limit: String(limit) });
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/insta/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
@@ -343,9 +347,13 @@ export async function getTiktokInfoViaBackend(token: string, username: string): 
 export async function getTiktokPostsViaBackend(
   token: string,
   client_id: string,
-  limit: number = 10
+  limit: number = 10,
+  startDate?: string,
+  endDate?: string
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, limit: String(limit) });
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
