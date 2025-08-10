@@ -54,7 +54,19 @@ export async function getDashboardStats(
   }`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch stats");
-  return res.json();
+  const json = await res.json();
+  const raw: any = json.data || json;
+  const clientId = raw.client_id ?? raw.clientId ?? raw.clientID ?? null;
+  const igPostsRaw =
+    raw.instagramPosts ??
+    raw.instagram_posts ??
+    raw.igPosts ??
+    raw.ig_posts ??
+    0;
+  const instagramPosts = Array.isArray(igPostsRaw)
+    ? igPostsRaw.length
+    : Number(igPostsRaw) || 0;
+  return { ...raw, client_id: clientId, instagramPosts };
 }
 
 // Ambil rekap absensi instagram harian

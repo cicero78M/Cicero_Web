@@ -59,18 +59,15 @@ export default function RekapLikesIGPage() {
             : customDate;
         const { periode, date, startDate, endDate } =
           getPeriodeDateForView(viewBy, selectedDate);
-        const statsRes = await getDashboardStats(
+        const statsData = await getDashboardStats(
           token,
           periode,
           date,
           startDate,
           endDate,
         );
-        const statsData = statsRes.data || statsRes;
         const client_id =
-          statsData?.client_id ||
-          statsData.client_id ||
-          localStorage.getItem("client_id");
+          statsData.client_id || localStorage.getItem("client_id");
         if (!client_id) {
           setError("Client ID tidak ditemukan.");
           setLoading(false);
@@ -92,19 +89,7 @@ export default function RekapLikesIGPage() {
           : [];
 
         // Hitung jumlah IG post dari stats
-        const igPostsData =
-          statsData?.instagram_posts ??
-          statsData?.ig_posts ??
-          statsData?.igPosts ??
-          statsData?.instagramPosts ??
-          statsData.instagram_posts ??
-          statsData.ig_posts ??
-          statsData.igPosts ??
-          statsData.instagramPosts ??
-          0;
-        const totalIGPost = Array.isArray(igPostsData)
-          ? igPostsData.length
-          : Number(igPostsData) || 0;
+        const totalIGPost = Number(statsData.instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalUser = users.length;
         const totalSudahLike = isZeroPost
