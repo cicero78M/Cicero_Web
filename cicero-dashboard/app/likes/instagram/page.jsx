@@ -107,8 +107,12 @@ export default function InstagramLikesTrackingPage() {
         // Rekap summary
         const totalUser = users.length;
         const igPostsData =
+          statsData?.instagram_posts ??
+          statsData?.ig_posts ??
           statsData?.igPosts ??
           statsData?.instagramPosts ??
+          statsData.instagram_posts ??
+          statsData.ig_posts ??
           statsData.igPosts ??
           statsData.instagramPosts ??
           0;
