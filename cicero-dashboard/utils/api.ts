@@ -47,8 +47,8 @@ export async function getDashboardStats(
   const params = new URLSearchParams();
   if (periode) params.append("periode", periode);
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("tanggal_mulai", startDate);
-  if (endDate) params.append("tanggal_selesai", endDate);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/dashboard/stats${
     params.toString() ? `?${params.toString()}` : ""
   }`;
@@ -68,8 +68,8 @@ export async function getRekapLikesIG(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("tanggal_mulai", startDate);
-  if (endDate) params.append("tanggal_selesai", endDate);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -155,8 +155,8 @@ export async function getRekapKomentarTiktok(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("tanggal_mulai", startDate);
-  if (endDate) params.append("tanggal_selesai", endDate);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -178,8 +178,8 @@ export async function getRekapAmplify(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("tanggal_mulai", startDate);
-  if (endDate) params.append("tanggal_selesai", endDate);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/amplify/rekap?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -204,8 +204,8 @@ export async function getInstagramPostsViaBackend(
   endDate?: string
 ): Promise<any> {
   const params = new URLSearchParams({ username, limit: String(limit) });
-  if (startDate) params.append("tanggal_mulai", startDate);
-  if (endDate) params.append("tanggal_selesai", endDate);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/insta/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
@@ -352,8 +352,8 @@ export async function getTiktokPostsViaBackend(
   endDate?: string
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, limit: String(limit) });
-  if (startDate) params.append("tanggal_mulai", startDate);
-  if (endDate) params.append("tanggal_selesai", endDate);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
