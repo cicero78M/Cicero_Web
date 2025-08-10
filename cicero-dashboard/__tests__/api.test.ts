@@ -7,7 +7,7 @@ import {
 
 beforeEach(() => {
   global.fetch = jest.fn(() =>
-    Promise.resolve({ ok: true, json: () => Promise.resolve({ data: 1 }) })
+    Promise.resolve({ ok: true, json: () => Promise.resolve({ data: {} }) })
   ) as any;
 });
 
@@ -68,6 +68,19 @@ test("getRekapKomentarTiktok supports date range params", async () => {
   expect(url).toContain("/api/tiktok/rekap-komentar");
   expect(url).toContain("start_date=2024-03-01");
   expect(url).toContain("end_date=2024-03-31");
+});
+
+test("getDashboardStats normalizes fields", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () =>
+      Promise.resolve({
+        data: { clientId: "c1", instagram_posts: [1, 2, 3] },
+      }),
+  });
+  const result = await getDashboardStats("tok");
+  expect(result.client_id).toBe("c1");
+  expect(result.instagramPosts).toBe(3);
 });
 
 test("getDashboardStats handles partial date range params", async () => {
