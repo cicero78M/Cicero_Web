@@ -93,8 +93,12 @@ export default function RekapLikesIGPage() {
 
         // Hitung jumlah IG post dari stats
         const igPostsData =
+          statsData?.instagram_posts ??
+          statsData?.ig_posts ??
           statsData?.igPosts ??
           statsData?.instagramPosts ??
+          statsData.instagram_posts ??
+          statsData.ig_posts ??
           statsData.igPosts ??
           statsData.instagramPosts ??
           0;
