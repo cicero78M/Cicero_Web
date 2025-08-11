@@ -29,9 +29,7 @@ export default function AmplifyPage() {
     totalLink: 0,
   });
 
-  const viewOptions = VIEW_OPTIONS.filter(
-    (opt) => !["this_week", "last_week", "all"].includes(opt.value),
-  );
+  const viewOptions = VIEW_OPTIONS;
 
   useEffect(() => {
     setLoading(true);
