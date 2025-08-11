@@ -90,12 +90,14 @@ export default function RekapLikesIGPage() {
         const totalIGPost = Number(statsData.instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalUser = users.length;
+        
         const totalSudahLike = isZeroPost
           ? 0
           : users.filter(
               (u) =>
                 Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception)
             ).length;
+
         const totalBelumLike = isZeroPost
           ? totalUser
           : users.filter(
