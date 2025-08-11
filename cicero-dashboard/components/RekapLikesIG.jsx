@@ -21,12 +21,12 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalSudahLike = totalIGPost === 0
     ? 0
     : users.filter(u =>
-        Number(u.jumlah_like) >= totalIGPost || isException(u.exception)
+        Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception)
       ).length;
   const totalBelumLike = totalIGPost === 0
     ? totalUser
     : users.filter(u =>
-        Number(u.jumlah_like) < totalIGPost && !isException(u.exception)
+        Number(u.jumlah_like) < totalIGPost*0.5 && !isException(u.exception)
       ).length;
 
   // Hitung nilai jumlah_like tertinggi (max) di seluruh user
