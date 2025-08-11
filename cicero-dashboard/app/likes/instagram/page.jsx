@@ -107,13 +107,13 @@ export default function InstagramLikesTrackingPage() {
           ? 0
           : users.filter(
               (u) =>
-                Number(u.jumlah_like) >= totalIGPost || isException(u.exception)
+                Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception)
             ).length;
         const totalBelumLike = isZeroPost
           ? totalUser
           : users.filter(
               (u) =>
-                Number(u.jumlah_like) < totalIGPost && !isException(u.exception)
+                Number(u.jumlah_like*0.5) < totalIGPost && !isException(u.exception)
             ).length;
 
         setRekapSummary({

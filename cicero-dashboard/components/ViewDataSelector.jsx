@@ -3,7 +3,7 @@ import { useId } from "react";
 
 export const VIEW_OPTIONS = [
   { value: "today", label: "Hari ini", periode: "harian" },
-  { value: "date", label: "Tanggal Pilihan", periode: "harian", custom: true },
+  { value: "date", label: "Pilih Tanggal", periode: "harian", custom: true },
   { value: "month", label: "Pilih Bulan", periode: "bulanan", month: true },
   {
     value: "custom_range",
