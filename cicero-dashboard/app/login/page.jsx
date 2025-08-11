@@ -172,7 +172,8 @@ export default function LoginPage() {
                 <option value="BANGKALAN" />
                 <option value="BANYUWANGI" />
                 <option value="BATU" />
-                <option value="BINMAS" />
+                <option value="DITBINMAS" />
+                <option value="DITLANTAS" />
                 <option value="BLITAR" />
                 <option value="BLITAR KOTA" />
                 <option value="BOJONEGORO" />
@@ -183,7 +184,6 @@ export default function LoginPage() {
                 <option value="KEDIRI KOTA" />
                 <option value="KP3 TANJUNG PERAK" />
                 <option value="LAMONGAN" />
-                <option value="LANTAS" />
                 <option value="LUMAJANG" />
                 <option value="MADIUN" />
                 <option value="MADIUN KOTA" />
