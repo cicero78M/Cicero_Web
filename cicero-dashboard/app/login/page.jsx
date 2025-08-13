@@ -230,12 +230,13 @@ export default function LoginPage() {
                 className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
               />
               <datalist id="client-options">
+                <option value="DITBINMAS" />
+                <option value="DITLANTAS" />
+                <option value="BIDHUMAS" />
                 <option value="KEDIRI" />
                 <option value="BANGKALAN" />
                 <option value="BANYUWANGI" />
                 <option value="BATU" />
-                <option value="DITBINMAS" />
-                <option value="DITLANTAS" />
                 <option value="BLITAR" />
                 <option value="BLITAR KOTA" />
                 <option value="BOJONEGORO" />
