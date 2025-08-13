@@ -214,6 +214,8 @@ export default function LoginPage() {
                 <option value="OPERATOR" />
                 <option value="DITBINMAS" />
                 <option value="DITLANTAS" />
+                <option value="BIDHUMAS" />
+
               </datalist>
             </div>
             <div>
