@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,21 +22,48 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet";
-
-const menu = [
-  { label: "Dashboard", path: "/dashboard", icon: Home },
-  { label: "User Directory", path: "/users", icon: Users },
-  { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
-  { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: Heart },
-  { label: "Link Amplification", path: "/amplify", icon: LinkIcon },
-  { label: "TikTok Post Analysis", path: "/tiktok", icon: Music },
-  { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: MessageCircle },
-];
+import { useAuth } from "@/context/AuthContext";
+import { getClientProfile } from "@/utils/api";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { token, clientId } = useAuth();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!token || !clientId) return;
+      try {
+        const res = await getClientProfile(token, clientId);
+        setProfile(res.client || res.profile || res);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchProfile();
+  }, [token, clientId]);
+
+  const menu = [
+    { label: "Dashboard", path: "/dashboard", icon: Home },
+    { label: "User Directory", path: "/users", icon: Users },
+    ...(profile?.client_insta_status
+      ? [
+          { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
+          { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: Heart },
+        ]
+      : []),
+    ...(profile?.client_amplify_status
+      ? [{ label: "Link Amplification", path: "/amplify", icon: LinkIcon }]
+      : []),
+    ...(profile?.client_tiktok_status
+      ? [
+          { label: "TikTok Post Analysis", path: "/tiktok", icon: Music },
+          { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: MessageCircle },
+        ]
+      : []),
+  ];
 
   const navLinks = (isSheet = false, isCollapsed = false) => (
     <>
