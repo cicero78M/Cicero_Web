@@ -2,6 +2,7 @@
 
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DarkModeToggle from "@/components/DarkModeToggle";
@@ -12,12 +13,16 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [client_id, setClientId] = useState("");
   const [role, setRole] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [whatsapp, setWhatsapp] = useState("");
   const router = useRouter();
 
   const handleLogin = async (e) => {
@@ -61,6 +66,12 @@ export default function LoginPage() {
     setMessage("");
     setLoading(true);
 
+    if (password !== confirmPassword) {
+      setError("Konfirmasi password tidak sesuai");
+      setLoading(false);
+      return;
+    }
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
       const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
@@ -71,6 +82,7 @@ export default function LoginPage() {
           password,
           role: role ? role.toLowerCase() : undefined,
           client_id: client_id || undefined,
+          whatsapp,
         }),
       });
       const data = await res.json();
@@ -82,8 +94,10 @@ export default function LoginPage() {
         setIsRegister(false);
         setUsername("");
         setPassword("");
+        setConfirmPassword("");
         setRole("");
         setClientId("");
+        setWhatsapp("");
       } else {
         setError(data.message || "Registrasi gagal");
       }
@@ -119,22 +133,66 @@ export default function LoginPage() {
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label htmlFor="password" className="sr-only">
             Password
           </label>
           <input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
         </div>
         {isRegister && (
           <>
+            <div className="mb-4 relative">
+              <label htmlFor="confirm_password" className="sr-only">
+                Konfirmasi Password
+              </label>
+              <input
+                id="confirm_password"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Konfirmasi Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            <div className="mb-4">
+              <label htmlFor="whatsapp" className="sr-only">
+                Nomor WhatsApp
+              </label>
+              <input
+                id="whatsapp"
+                type="tel"
+                placeholder="Nomor WhatsApp"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                required
+                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+              />
+            </div>
             <div className="mb-4">
               <label htmlFor="role" className="sr-only">
                 Role
