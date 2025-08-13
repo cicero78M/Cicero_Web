@@ -144,6 +144,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete={isRegister ? "new-password" : "current-password"}
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
           />
           <button
@@ -156,8 +157,8 @@ export default function LoginPage() {
           </button>
         </div>
         {isRegister && (
-          <>
-            <div className="mb-4 relative">
+          <div className="space-y-4">
+            <div className="relative">
               <label htmlFor="confirm_password" className="sr-only">
                 Konfirmasi Password
               </label>
@@ -168,6 +169,7 @@ export default function LoginPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                autoComplete="new-password"
                 className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
               />
               <button
@@ -179,7 +181,7 @@ export default function LoginPage() {
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            <div className="mb-4">
+            <div>
               <label htmlFor="whatsapp" className="sr-only">
                 Nomor WhatsApp
               </label>
@@ -190,10 +192,12 @@ export default function LoginPage() {
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 required
+                inputMode="tel"
+                autoComplete="tel"
                 className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
               />
             </div>
-            <div className="mb-4">
+            <div>
               <label htmlFor="role" className="sr-only">
                 Role
               </label>
@@ -212,7 +216,7 @@ export default function LoginPage() {
                 <option value="DITLANTAS" />
               </datalist>
             </div>
-            <div className="mb-4">
+            <div>
               <label htmlFor="client_id" className="sr-only">
                 Client ID
               </label>
@@ -269,7 +273,7 @@ export default function LoginPage() {
                 <option value="TULUNGAGUNG" />
               </datalist>
             </div>
-          </>
+          </div>
         )}
         {error && (
           <div className="text-red-600 text-sm mb-2 text-center">{error}</div>
