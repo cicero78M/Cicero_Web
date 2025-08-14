@@ -28,13 +28,14 @@ export default function ChartDivisiAbsensi({
   users,
   title = "Absensi Komentar TikTok per Divisi/Satfung",
   totalPost, // jumlah post untuk perbandingan, generic
-  totalIGPost,   // fallback untuk instagram (kompatibilitas lama)
+  totalIGPost, // fallback untuk instagram (kompatibilitas lama)
   totalTiktokPost, // fallback untuk tiktok (kompatibilitas lama)
   fieldJumlah = "jumlah_like", // bisa "jumlah_komentar" untuk tiktok
   labelSudah = "User Sudah Komentar",
   labelBelum = "User Belum Komentar",
   labelTotal = "Total Komentar",
   groupBy = "divisi",
+  orientation = "vertical",
 }) {
   // Fallback backward compatibility
   const effectiveTotal =
@@ -97,13 +98,13 @@ export default function ChartDivisiAbsensi({
   const dataChart = Object.values(divisiMap);
 
   // Dynamic height
-  const minHeight = 220;
-  const maxHeight = 420;
-  const barHeight = 34;
-  const chartHeight = Math.min(
-    maxHeight,
-    Math.max(minHeight, barHeight * dataChart.length)
-  );
+  const isHorizontal = orientation === "horizontal";
+  const barHeight = isHorizontal ? 32 : 34;
+  const minHeight = isHorizontal ? 50 : 220;
+  const maxHeight = isHorizontal ? 900 : 420;
+  const chartHeight = isHorizontal
+    ? Math.max(minHeight, barHeight * dataChart.length)
+    : Math.min(maxHeight, Math.max(minHeight, barHeight * dataChart.length));
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
@@ -111,7 +112,7 @@ export default function ChartDivisiAbsensi({
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
-            layout="horizontal" // Hanya vertical
+            layout={isHorizontal ? "vertical" : "horizontal"}
             margin={{
               top: 4,
               right: 4,
@@ -121,16 +122,30 @@ export default function ChartDivisiAbsensi({
             barCategoryGap="16%"
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="divisi"
-              type="category"
-              angle={-30}
-              textAnchor="end"
-              interval={0}
-              height={70}
-              tick={{ fontSize: 15, fontWeight: 700, fill: "#1e293b" }}
-            />
-            <YAxis type="number" fontSize={12} />
+            {isHorizontal ? (
+              <XAxis type="number" fontSize={12} />
+            ) : (
+              <XAxis
+                dataKey="divisi"
+                type="category"
+                angle={-30}
+                textAnchor="end"
+                interval={0}
+                height={70}
+                tick={{ fontSize: 15, fontWeight: 700, fill: "#1e293b" }}
+              />
+            )}
+            {isHorizontal ? (
+              <YAxis
+                dataKey="divisi"
+                type="category"
+                width={180}
+                interval={0}
+                tick={{ fontSize: 12, fontWeight: 700, fill: "#1e293b" }}
+              />
+            ) : (
+              <YAxis type="number" fontSize={12} />
+            )}
             <Tooltip
               formatter={(value, name) =>
                 [
@@ -147,14 +162,41 @@ export default function ChartDivisiAbsensi({
               labelFormatter={(label) => `Divisi: ${label}`}
             />
             <Legend />
-            <Bar dataKey="user_sudah" fill="#22c55e" name={labelSudah}>
-              <LabelList dataKey="user_sudah" position="top" fontSize={12} />
+            <Bar
+              dataKey="user_sudah"
+              fill="#22c55e"
+              name={labelSudah}
+              barSize={isHorizontal ? 10 : undefined}
+            >
+              <LabelList
+                dataKey="user_sudah"
+                position={isHorizontal ? "right" : "top"}
+                fontSize={isHorizontal ? 10 : 12}
+              />
             </Bar>
-            <Bar dataKey="total_value" fill="#2563eb" name={labelTotal}>
-              <LabelList dataKey="total_value" position="top" fontSize={12} />
+            <Bar
+              dataKey="total_value"
+              fill="#2563eb"
+              name={labelTotal}
+              barSize={isHorizontal ? 10 : undefined}
+            >
+              <LabelList
+                dataKey="total_value"
+                position={isHorizontal ? "right" : "top"}
+                fontSize={isHorizontal ? 10 : 12}
+              />
             </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name={labelBelum}>
-              <LabelList dataKey="user_belum" position="top" fontSize={12} />
+            <Bar
+              dataKey="user_belum"
+              fill="#ef4444"
+              name={labelBelum}
+              barSize={isHorizontal ? 10 : undefined}
+            >
+              <LabelList
+                dataKey="user_belum"
+                position={isHorizontal ? "right" : "top"}
+                fontSize={isHorizontal ? 10 : 12}
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

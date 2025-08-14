@@ -174,6 +174,7 @@ export default function DiseminasiInsightPage() {
                 title="POLRES JAJARAN"
                 users={chartData}
                 groupBy="client_id"
+                orientation="horizontal"
               />
             ) : (
               <>
@@ -197,7 +198,7 @@ export default function DiseminasiInsightPage() {
   );
 }
 
-function ChartBox({ title, users, groupBy }) {
+function ChartBox({ title, users, groupBy, orientation = "vertical" }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
@@ -205,6 +206,7 @@ function ChartBox({ title, users, groupBy }) {
         <ChartDivisiAbsensi
           users={users}
           title={title}
+          orientation={orientation}
           totalPost={1}
           fieldJumlah="jumlah_link"
           labelSudah="Sudah Post"
