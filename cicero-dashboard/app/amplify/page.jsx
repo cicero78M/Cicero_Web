@@ -29,6 +29,7 @@ export default function DiseminasiInsightPage() {
     totalLink: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [clientName, setClientName] = useState("");
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -72,6 +73,12 @@ export default function DiseminasiInsightPage() {
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
+        setClientName(
+          profile.nama_client ||
+            profile.client_name ||
+            profile.client ||
+            ""
+        );
         const totalUser = users.length;
         const totalSudahPost = users.filter(
           (u) => Number(u.jumlah_link) > 0,
@@ -171,7 +178,7 @@ export default function DiseminasiInsightPage() {
             </div>
             {isDirectorate ? (
               <ChartBox
-                title="POLRES JAJARAN"
+                title={clientName || "POLRES JAJARAN"}
                 users={chartData}
                 groupBy="client_id"
                 orientation="horizontal"
