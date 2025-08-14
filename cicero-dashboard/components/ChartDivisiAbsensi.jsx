@@ -100,7 +100,9 @@ export default function ChartDivisiAbsensi({
   // Dynamic height
   const isHorizontal = orientation === "horizontal";
   const barHeight = isHorizontal ? 32 : 34;
-  const minHeight = isHorizontal ? 50 : 220;
+  // Give horizontal charts a larger minimum height so that a small number
+  // of bars (e.g. in directorate views) remain readable.
+  const minHeight = 220;
   const maxHeight = isHorizontal ? 900 : 420;
   const chartHeight = isHorizontal
     ? Math.max(minHeight, barHeight * dataChart.length)
