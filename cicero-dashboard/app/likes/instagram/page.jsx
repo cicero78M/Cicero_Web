@@ -224,7 +224,7 @@ export default function InstagramEngagementInsightPage() {
 
             {/* Chart per kelompok / polres */}
             {isDirectorate ? (
-              <ChartHorizontal
+              <ChartBox
                 title="POLRES"
                 users={chartData}
                 totalPost={rekapSummary.totalIGPost}

@@ -207,7 +207,7 @@ export default function UserInsightPage() {
                 <ChartBox
                   title="POLRES"
                   data={chartPolres}
-                  orientation="horizontal"
+                  orientation="vertical"
                 />
               </div>
             ) : (
