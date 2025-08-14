@@ -53,6 +53,33 @@ export default function UserInsightPage() {
         const raw = res.data || res.users || res;
         const users = Array.isArray(raw) ? raw : [];
 
+        // helper untuk membuat data chart per divisi
+        const generateChartData = (arr) => {
+          const map = {};
+          arr.forEach((u) => {
+            const div = (u.divisi || "LAINNYA").toUpperCase();
+            const key = div.replace(/POLSEK\s*/i, "").trim();
+            if (!map[key]) {
+              map[key] = {
+                divisi: key,
+                total: 0,
+                instagramFilled: 0,
+                instagramEmpty: 0,
+                tiktokFilled: 0,
+                tiktokEmpty: 0,
+              };
+            }
+            map[key].total += 1;
+            const hasIG = u.insta && String(u.insta).trim() !== "";
+            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+            if (hasIG) map[key].instagramFilled += 1;
+            else map[key].instagramEmpty += 1;
+            if (hasTT) map[key].tiktokFilled += 1;
+            else map[key].tiktokEmpty += 1;
+          });
+          return Object.values(map);
+        };
+
         // Cek tipe client
         const profileRes = await getClientProfile(token, clientId);
         const profile =
@@ -79,61 +106,24 @@ export default function UserInsightPage() {
         });
 
         if (dir) {
-          const map = {};
+          const clientMap = {};
           users.forEach((u) => {
             const id = String(
               u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
             );
             const name = (
-              u.nama_client || u.client_name || u.client || "LAINNYA"
+              u.nama_client || u.client_name || u.client || id
             ).toUpperCase();
-            if (!map[id]) {
-              map[id] = {
-                divisi: name,
-                total: 0,
-                instagramFilled: 0,
-                instagramEmpty: 0,
-                tiktokFilled: 0,
-                tiktokEmpty: 0,
-              };
-            }
-            map[id].total += 1;
-            const hasIG = u.insta && String(u.insta).trim() !== "";
-            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            if (hasIG) map[id].instagramFilled += 1;
-            else map[id].instagramEmpty += 1;
-            if (hasTT) map[id].tiktokFilled += 1;
-            else map[id].tiktokEmpty += 1;
+            if (!clientMap[id]) clientMap[id] = { title: name, users: [] };
+            clientMap[id].users.push(u);
           });
-          setChartPolres(Object.values(map));
+          const charts = Object.values(clientMap).map(({ title, users }) => ({
+            title,
+            data: generateChartData(users),
+          }));
+          setChartPolres(charts);
         } else {
           const grouped = groupUsersByKelompok(users);
-          const generateChartData = (arr) => {
-            const map = {};
-            arr.forEach((u) => {
-              const div = (u.divisi || "LAINNYA").toUpperCase();
-              const key = div.replace(/POLSEK\s*/i, "").trim();
-              if (!map[key]) {
-                map[key] = {
-                  divisi: key,
-                  total: 0,
-                  instagramFilled: 0,
-                  instagramEmpty: 0,
-                  tiktokFilled: 0,
-                  tiktokEmpty: 0,
-                };
-              }
-              map[key].total += 1;
-              const hasIG = u.insta && String(u.insta).trim() !== "";
-              const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-              if (hasIG) map[key].instagramFilled += 1;
-              else map[key].instagramEmpty += 1;
-              if (hasTT) map[key].tiktokFilled += 1;
-              else map[key].tiktokEmpty += 1;
-            });
-            return Object.values(map);
-          };
-
           setChartKelompok({
             BAG: generateChartData(grouped.BAG),
             SAT: generateChartData(grouped.SAT),
@@ -208,11 +198,14 @@ export default function UserInsightPage() {
 
             {isDirectorate ? (
               <div className="flex flex-col gap-6">
-                <ChartBox
-                  title="POLRES"
-                  data={chartPolres}
-                  orientation="vertical"
-                />
+                {chartPolres.map((c, idx) => (
+                  <ChartBox
+                    key={idx}
+                    title={c.title}
+                    data={c.data}
+                    orientation="vertical"
+                  />
+                ))}
               </div>
             ) : (
               <div className="flex flex-col gap-6">
