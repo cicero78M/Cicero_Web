@@ -58,6 +58,7 @@ export default function ChartDivisiAbsensi({
 
   // Group by divisi atau client_id jika diminta
   const divisiMap = {};
+  const labelKey = groupBy === "client_id" ? "client_name" : "divisi";
   users.forEach((u) => {
     const idKey = String(
       u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
@@ -82,7 +83,7 @@ export default function ChartDivisiAbsensi({
     const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
-        divisi: display,
+        [labelKey]: display,
         user_sudah: 0,
         user_belum: 0,
         total_value: 0,
@@ -101,7 +102,7 @@ export default function ChartDivisiAbsensi({
 
   // Dynamic height
   const isHorizontal = orientation === "horizontal";
-  const barHeight = isHorizontal ? 32 : 34;
+  const barHeight = isHorizontal ? 40 : 34;
   // Ensure horizontal charts (used in direktorat views) remain legible
   // by providing a larger minimum height and capping extreme values.
   const minHeight = isHorizontal ? 300 : 220;
@@ -124,14 +125,14 @@ export default function ChartDivisiAbsensi({
               left: 4,
               bottom: 4,
             }}
-            barCategoryGap="16%"
+            barCategoryGap={isHorizontal ? "30%" : "16%"}
           >
             <CartesianGrid strokeDasharray="3 3" />
             {isHorizontal ? (
               <XAxis type="number" fontSize={12} />
             ) : (
               <XAxis
-                dataKey="divisi"
+                dataKey={labelKey}
                 type="category"
                 angle={-30}
                 textAnchor="end"
@@ -142,7 +143,7 @@ export default function ChartDivisiAbsensi({
             )}
             {isHorizontal ? (
               <YAxis
-                dataKey="divisi"
+                dataKey={labelKey}
                 type="category"
                 width={200}
                 interval={0}
@@ -178,14 +179,16 @@ export default function ChartDivisiAbsensi({
                     : name,
                 ]
               }
-              labelFormatter={(label) => `Divisi: ${label}`}
+              labelFormatter={(label) =>
+                `${labelKey === "client_name" ? "Client" : "Divisi"}: ${label}`
+              }
             />
             <Legend />
             <Bar
               dataKey="user_sudah"
               fill="#22c55e"
               name={labelSudah}
-              barSize={isHorizontal ? 10 : undefined}
+              barSize={isHorizontal ? 20 : undefined}
             >
               <LabelList
                 dataKey="user_sudah"
@@ -197,7 +200,7 @@ export default function ChartDivisiAbsensi({
               dataKey="total_value"
               fill="#2563eb"
               name={labelTotal}
-              barSize={isHorizontal ? 10 : undefined}
+              barSize={isHorizontal ? 20 : undefined}
             >
               <LabelList
                 dataKey="total_value"
@@ -209,7 +212,7 @@ export default function ChartDivisiAbsensi({
               dataKey="user_belum"
               fill="#ef4444"
               name={labelBelum}
-              barSize={isHorizontal ? 10 : undefined}
+              barSize={isHorizontal ? 20 : undefined}
             >
               <LabelList
                 dataKey="user_belum"
