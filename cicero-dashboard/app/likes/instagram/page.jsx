@@ -223,6 +223,7 @@ export default function InstagramEngagementInsightPage() {
                 users={chartData}
                 totalPost={rekapSummary.totalIGPost}
                 groupBy="client_id"
+                orientation="horizontal"
               />
             ) : (
               <div className="flex flex-col gap-6">

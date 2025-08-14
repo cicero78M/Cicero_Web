@@ -213,6 +213,7 @@ export default function TiktokEngagementInsightPage() {
                 totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
                 groupBy="client_id"
+                orientation="horizontal"
               />
             ) : (
               <div className="flex flex-col gap-6">
