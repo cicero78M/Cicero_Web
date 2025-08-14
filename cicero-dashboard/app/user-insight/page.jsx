@@ -16,7 +16,7 @@ import { groupUsersByKelompok } from "@/utils/grouping";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
-import { User, Phone, Instagram, Music } from "lucide-react";
+import { User, Instagram, Music } from "lucide-react";
 
 export default function UserInsightPage() {
   useRequireAuth();
@@ -26,9 +26,10 @@ export default function UserInsightPage() {
 
   const [summary, setSummary] = useState({
     total: 0,
-    wa: 0,
-    instagram: 0,
-    tiktok: 0,
+    instagramFilled: 0,
+    instagramEmpty: 0,
+    tiktokFilled: 0,
+    tiktokEmpty: 0,
   });
 
   const [chartKelompok, setChartKelompok] = useState({
@@ -51,16 +52,21 @@ export default function UserInsightPage() {
         const users = Array.isArray(raw) ? raw : [];
 
         const total = users.length;
-        const wa = users.filter(
-          (u) => u.whatsapp && String(u.whatsapp).trim() !== "",
-        ).length;
-        const instagram = users.filter(
+        const instagramFilled = users.filter(
           (u) => u.insta && String(u.insta).trim() !== "",
         ).length;
-        const tiktok = users.filter(
+        const tiktokFilled = users.filter(
           (u) => u.tiktok && String(u.tiktok).trim() !== "",
         ).length;
-        setSummary({ total, wa, instagram, tiktok });
+        const instagramEmpty = total - instagramFilled;
+        const tiktokEmpty = total - tiktokFilled;
+        setSummary({
+          total,
+          instagramFilled,
+          instagramEmpty,
+          tiktokFilled,
+          tiktokEmpty,
+        });
 
         const grouped = groupUsersByKelompok(users);
 
@@ -73,17 +79,19 @@ export default function UserInsightPage() {
               map[key] = {
                 divisi: key,
                 total: 0,
-                wa: 0,
-                instagram: 0,
-                tiktok: 0,
+                instagramFilled: 0,
+                instagramEmpty: 0,
+                tiktokFilled: 0,
+                tiktokEmpty: 0,
               };
             }
             map[key].total += 1;
-            if (u.whatsapp && String(u.whatsapp).trim() !== "") map[key].wa += 1;
-            if (u.insta && String(u.insta).trim() !== "")
-              map[key].instagram += 1;
-            if (u.tiktok && String(u.tiktok).trim() !== "")
-              map[key].tiktok += 1;
+            const hasIG = u.insta && String(u.insta).trim() !== "";
+            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+            if (hasIG) map[key].instagramFilled += 1;
+            else map[key].instagramEmpty += 1;
+            if (hasTT) map[key].tiktokFilled += 1;
+            else map[key].tiktokEmpty += 1;
           });
           return Object.values(map);
         };
@@ -131,22 +139,29 @@ export default function UserInsightPage() {
               />
               <Divider />
               <SummaryItem
-                label="No WA Terisi"
-                value={summary.wa}
-                color="green"
-                icon={<Phone className="text-green-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Username IG Terisi"
-                value={summary.instagram}
+                label="Instagram Terisi"
+                value={summary.instagramFilled}
                 color="red"
                 icon={<Instagram className="text-red-500" />}
               />
               <Divider />
               <SummaryItem
-                label="Username TikTok Terisi"
-                value={summary.tiktok}
+                label="Instagram Belum Diisi"
+                value={summary.instagramEmpty}
+                color="gray"
+                icon={<Instagram className="text-gray-500" />}
+              />
+              <Divider />
+              <SummaryItem
+                label="TikTok Terisi"
+                value={summary.tiktokFilled}
+                color="green"
+                icon={<Music className="text-green-500" />}
+              />
+              <Divider />
+              <SummaryItem
+                label="TikTok Belum Diisi"
+                value={summary.tiktokEmpty}
                 color="gray"
                 icon={<Music className="text-gray-500" />}
               />
@@ -214,14 +229,49 @@ function ContactChart({ data, orientation }) {
           <Bar dataKey="total" name="Jumlah User" fill="#3b82f6">
             <LabelList dataKey="total" position={barPosition} fontSize={12} />
           </Bar>
-          <Bar dataKey="wa" name="No WA Terisi" fill="#10b981">
-            <LabelList dataKey="wa" position={barPosition} fontSize={12} />
+          <Bar
+            dataKey="instagramFilled"
+            name="Instagram Terisi"
+            fill="#e1306c"
+          >
+            <LabelList
+              dataKey="instagramFilled"
+              position={barPosition}
+              fontSize={12}
+            />
           </Bar>
-          <Bar dataKey="instagram" name="Username IG Terisi" fill="#e1306c">
-            <LabelList dataKey="instagram" position={barPosition} fontSize={12} />
+          <Bar
+            dataKey="instagramEmpty"
+            name="Instagram Belum Diisi"
+            fill="#fca5a5"
+          >
+            <LabelList
+              dataKey="instagramEmpty"
+              position={barPosition}
+              fontSize={12}
+            />
           </Bar>
-          <Bar dataKey="tiktok" name="Username TikTok Terisi" fill="#000000">
-            <LabelList dataKey="tiktok" position={barPosition} fontSize={12} />
+          <Bar
+            dataKey="tiktokFilled"
+            name="TikTok Terisi"
+            fill="#000000"
+          >
+            <LabelList
+              dataKey="tiktokFilled"
+              position={barPosition}
+              fontSize={12}
+            />
+          </Bar>
+          <Bar
+            dataKey="tiktokEmpty"
+            name="TikTok Belum Diisi"
+            fill="#6b7280"
+          >
+            <LabelList
+              dataKey="tiktokEmpty"
+              position={barPosition}
+              fontSize={12}
+            />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
