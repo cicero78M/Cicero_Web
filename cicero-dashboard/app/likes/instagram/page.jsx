@@ -228,6 +228,7 @@ export default function InstagramEngagementInsightPage() {
                 title="POLRES"
                 users={chartData}
                 totalPost={rekapSummary.totalIGPost}
+                groupBy="client_id"
               />
             ) : (
               <div className="flex flex-col gap-6">
@@ -284,6 +285,7 @@ function ChartBox({
   orientation = "vertical",
   totalPost,
   narrative,
+  groupBy,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -298,6 +300,7 @@ function ChartBox({
           labelSudah="User Sudah Like"
           labelBelum="User Belum Like"
           labelTotal="Total Likes"
+          groupBy={groupBy}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
