@@ -114,9 +114,10 @@ export default function UserInsightPage() {
             const name = (
               u.nama_client || u.client_name || u.client || id
             ).toUpperCase();
+            const label = `${name} (${id})`;
             if (!clientMap[id]) {
               clientMap[id] = {
-                divisi: name,
+                divisi: label,
                 total: 0,
                 instagramFilled: 0,
                 instagramEmpty: 0,
@@ -132,7 +133,9 @@ export default function UserInsightPage() {
             if (hasTT) clientMap[id].tiktokFilled += 1;
             else clientMap[id].tiktokEmpty += 1;
           });
-          setChartPolres(Object.values(clientMap));
+          setChartPolres(
+            Object.values(clientMap).sort((a, b) => b.total - a.total),
+          );
         } else {
           const grouped = groupUsersByKelompok(users);
           setChartKelompok({
@@ -268,7 +271,27 @@ function ContactChart({ data, orientation }) {
             <XAxis dataKey="divisi" interval={0} />
           )}
           {isHorizontal ? (
-            <YAxis dataKey="divisi" type="category" width={160} />
+            <YAxis
+              dataKey="divisi"
+              type="category"
+              width={220}
+              interval={0}
+              tick={({ x, y, payload }) => (
+                <>
+                  <title>{payload.value}</title>
+                  <text
+                    x={x - 200}
+                    y={y + 10}
+                    fontSize={12}
+                    fontWeight={700}
+                    fill="#1e293b"
+                    textAnchor="start"
+                  >
+                    {payload.value}
+                  </text>
+                </>
+              )}
+            />
           ) : (
             <YAxis allowDecimals={false} />
           )}
