@@ -119,13 +119,7 @@ export default function TiktokEngagementInsightPage() {
           totalBelumKomentar,
           totalTiktokPost,
         });
-        const processed = users.map((u) => ({
-          ...u,
-          divisi: dir
-            ? u.nama_client || u.client_name || u.client || u.divisi
-            : u.divisi,
-        }));
-        setChartData(processed);
+        setChartData(users);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -148,6 +142,21 @@ export default function TiktokEngagementInsightPage() {
 
   // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
+
+  const groupByClientId = (arr) => {
+    const map = {};
+    arr.forEach((u) => {
+      const id = String(
+        u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
+      );
+      const name = u.nama_client || u.client_name || u.client || id;
+      if (!map[id]) map[id] = { name, users: [] };
+      map[id].users.push(u);
+    });
+    return Object.values(map);
+  };
+
+  const clients = isDirectorate ? groupByClientId(chartData) : [];
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -213,13 +222,17 @@ export default function TiktokEngagementInsightPage() {
 
             {/* Chart per kelompok atau polres */}
             {isDirectorate ? (
-              <ChartBox
-                title="POLRES"
-                users={chartData}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
-                fieldJumlah="jumlah_komentar"
-                groupBy="client_id"
-              />
+              <>
+                {clients.map((c, idx) => (
+                  <ChartBox
+                    key={idx}
+                    title={c.name}
+                    users={c.users}
+                    totalTiktokPost={rekapSummary.totalTiktokPost}
+                    fieldJumlah="jumlah_komentar"
+                  />
+                ))}
+              </>
             ) : (
               <div className="flex flex-col gap-6">
                 <ChartBox
