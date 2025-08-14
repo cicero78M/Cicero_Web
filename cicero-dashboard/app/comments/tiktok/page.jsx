@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapKomentarTiktok } from "@/utils/api";
+import { getDashboardStats, getRekapKomentarTiktok, getClientProfile } from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -36,6 +36,7 @@ export default function TiktokEngagementInsightPage() {
     totalBelumKomentar: 0,
     totalTiktokPost: 0,
   });
+  const [isDirectorate, setIsDirectorate] = useState(false);
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -89,6 +90,13 @@ export default function TiktokEngagementInsightPage() {
         );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
+        const profileRes = await getClientProfile(token, client_id);
+        const profile =
+          profileRes.client || profileRes.profile || profileRes || {};
+        const dir =
+          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        setIsDirectorate(dir);
+
         // Ambil field TikTok Post dengan fallback urutan prioritas
         const totalTiktokPost =
           statsData?.ttPosts ||
@@ -111,7 +119,13 @@ export default function TiktokEngagementInsightPage() {
           totalBelumKomentar,
           totalTiktokPost,
         });
-        setChartData(users);
+        const processed = users.map((u) => ({
+          ...u,
+          divisi: dir
+            ? u.nama_client || u.client_name || u.client || u.divisi
+            : u.divisi,
+        }));
+        setChartData(processed);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -132,8 +146,8 @@ export default function TiktokEngagementInsightPage() {
       </div>
     );
 
-  // Group chartData by kelompok (BAG, SAT, dst)
-  const kelompok = groupUsersByKelompok(chartData);
+  // Group chartData by kelompok jika bukan direktorat
+  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -197,43 +211,55 @@ export default function TiktokEngagementInsightPage() {
               />
             </div>
 
-            {/* Chart per kelompok */}
-            <div className="flex flex-col gap-6">
-              <ChartBox
-                title="BAG"
-                users={kelompok.BAG}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
-                fieldJumlah="jumlah_komentar"
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
-              />
-              <ChartBox
-                title="SAT"
-                users={kelompok.SAT}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
-                fieldJumlah="jumlah_komentar"
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
-              />
-              <ChartBox
-                title="SI & SPKT"
-                users={kelompok["SI & SPKT"]}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
-                fieldJumlah="jumlah_komentar"
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
-              />
+            {/* Chart per kelompok atau polres */}
+            {isDirectorate ? (
               <ChartHorizontal
-                title="POLSEK"
-                users={kelompok.POLSEK}
+                title="POLRES"
+                users={chartData}
                 totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
                 labelSudah="User Sudah Komentar"
                 labelBelum="User Belum Komentar"
                 labelTotal="Total Komentar"
               />
-              <Narrative>
-                Grafik POLSEK menggambarkan distribusi komentar antar user dari
-                setiap polsek serta total komentar yang berhasil dikumpulkan.
-              </Narrative>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                <ChartBox
+                  title="BAG"
+                  users={kelompok.BAG}
+                  totalTiktokPost={rekapSummary.totalTiktokPost}
+                  fieldJumlah="jumlah_komentar"
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
+                />
+                <ChartBox
+                  title="SAT"
+                  users={kelompok.SAT}
+                  totalTiktokPost={rekapSummary.totalTiktokPost}
+                  fieldJumlah="jumlah_komentar"
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
+                />
+                <ChartBox
+                  title="SI & SPKT"
+                  users={kelompok["SI & SPKT"]}
+                  totalTiktokPost={rekapSummary.totalTiktokPost}
+                  fieldJumlah="jumlah_komentar"
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
+                />
+                <ChartHorizontal
+                  title="POLSEK"
+                  users={kelompok.POLSEK}
+                  totalPost={rekapSummary.totalTiktokPost}
+                  fieldJumlah="jumlah_komentar"
+                  labelSudah="User Sudah Komentar"
+                  labelBelum="User Belum Komentar"
+                  labelTotal="Total Komentar"
+                />
+                <Narrative>
+                  Grafik POLSEK menggambarkan distribusi komentar antar user dari
+                  setiap polsek serta total komentar yang berhasil dikumpulkan.
+                </Narrative>
+              </div>
+            )}
 
             <div className="flex justify-end my-2">
               <Link

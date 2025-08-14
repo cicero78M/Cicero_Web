@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
+import { getDashboardStats, getRekapLikesIG, getClientProfile } from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -44,6 +44,7 @@ export default function InstagramEngagementInsightPage() {
     totalBelumLike: 0,
     totalIGPost: 0,
   });
+  const [isDirectorate, setIsDirectorate] = useState(false);
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -99,6 +100,13 @@ export default function InstagramEngagementInsightPage() {
           ? rekapRes
           : [];
 
+        const profileRes = await getClientProfile(token, client_id);
+        const profile =
+          profileRes.client || profileRes.profile || profileRes || {};
+        const dir =
+          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        setIsDirectorate(dir);
+
         // Rekap summary
         const totalUser = users.length;
         const totalIGPost = Number(statsData.instagramPosts) || 0;
@@ -122,7 +130,13 @@ export default function InstagramEngagementInsightPage() {
           totalBelumLike,
           totalIGPost,
         });
-        setChartData(users);
+        const processed = users.map((u) => ({
+          ...u,
+          divisi: dir
+            ? u.nama_client || u.client_name || u.client || u.divisi
+            : u.divisi,
+        }));
+        setChartData(processed);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -143,8 +157,8 @@ export default function InstagramEngagementInsightPage() {
       </div>
     );
 
-  // Group chartData by kelompok
-  const kelompok = groupUsersByKelompok(chartData);
+  // Group chartData by kelompok jika bukan direktorat
+  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -208,36 +222,44 @@ export default function InstagramEngagementInsightPage() {
               />
             </div>
 
-            {/* Chart per kelompok */}
-            <div className="flex flex-col gap-6">
-              <ChartBox
-                title="BAG"
-                users={kelompok.BAG}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
-              />
-              <ChartBox
-                title="SAT"
-                users={kelompok.SAT}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
-              />
-              <ChartBox
-                title="SI & SPKT"
-                users={kelompok["SI & SPKT"]}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
-              />
+            {/* Chart per kelompok / polres */}
+            {isDirectorate ? (
               <ChartHorizontal
-                title="POLSEK"
-                users={kelompok.POLSEK}
+                title="POLRES"
+                users={chartData}
                 totalPost={rekapSummary.totalIGPost}
               />
-              <Narrative>
-                Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
-                polsek dan membandingkan partisipasi pengguna.
-              </Narrative>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                <ChartBox
+                  title="BAG"
+                  users={kelompok.BAG}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
+                />
+                <ChartBox
+                  title="SAT"
+                  users={kelompok.SAT}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
+                />
+                <ChartBox
+                  title="SI & SPKT"
+                  users={kelompok["SI & SPKT"]}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
+                />
+                <ChartHorizontal
+                  title="POLSEK"
+                  users={kelompok.POLSEK}
+                  totalPost={rekapSummary.totalIGPost}
+                />
+                <Narrative>
+                  Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
+                  polsek dan membandingkan partisipasi pengguna.
+                </Narrative>
+              </div>
+            )}
 
             <div className="flex justify-end my-2">
               <Link
