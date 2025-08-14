@@ -8,6 +8,7 @@ import {
   X as IconX,
   Home,
   Users,
+  BarChart3,
   Instagram,
   Heart,
   Music,
@@ -48,6 +49,7 @@ export default function Sidebar() {
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
     { label: "User Directory", path: "/users", icon: Users },
+    { label: "User Insight", path: "/user-insight", icon: BarChart3 },
     ...(profile?.client_insta_status
       ? [
           { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
