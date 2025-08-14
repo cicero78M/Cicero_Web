@@ -111,21 +111,6 @@ export default function DiseminasiInsightPage() {
 
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
-  const groupByClientId = (arr) => {
-    const map = {};
-    arr.forEach((u) => {
-      const id = String(
-        u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
-      );
-      const name = u.nama_client || u.client_name || u.client || id;
-      if (!map[id]) map[id] = { name, users: [] };
-      map[id].users.push(u);
-    });
-    return Object.values(map);
-  };
-
-  const clients = isDirectorate ? groupByClientId(chartData) : [];
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="flex-1 flex items-start justify-center">
@@ -185,11 +170,11 @@ export default function DiseminasiInsightPage() {
               />
             </div>
             {isDirectorate ? (
-              <>
-                {clients.map((c, idx) => (
-                  <ChartBox key={idx} title={c.name} users={c.users} />
-                ))}
-              </>
+              <ChartBox
+                title="POLRES JAJARAN"
+                users={chartData}
+                groupBy="client_id"
+              />
             ) : (
               <>
                 <ChartBox title="BAG" users={kelompok.BAG} />
