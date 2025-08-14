@@ -95,7 +95,9 @@ export default function ChartDivisiAbsensi({
     }
   });
 
-  const dataChart = Object.values(divisiMap);
+  const dataChart = Object.values(divisiMap).sort(
+    (a, b) => b.total_value - a.total_value
+  );
 
   // Dynamic height
   const isHorizontal = orientation === "horizontal";
