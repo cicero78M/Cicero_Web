@@ -37,6 +37,7 @@ export default function TiktokEngagementInsightPage() {
     totalTiktokPost: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [clientName, setClientName] = useState("");
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -96,6 +97,12 @@ export default function TiktokEngagementInsightPage() {
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
+        setClientName(
+          profile.nama_client ||
+            profile.client_name ||
+            profile.client ||
+            ""
+        );
 
         // Ambil field TikTok Post dengan fallback urutan prioritas
         const totalTiktokPost =
@@ -208,7 +215,7 @@ export default function TiktokEngagementInsightPage() {
             {/* Chart per kelompok atau polres */}
             {isDirectorate ? (
               <ChartBox
-                title="POLRES JAJARAN"
+                title={clientName || "POLRES JAJARAN"}
                 users={chartData}
                 totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
