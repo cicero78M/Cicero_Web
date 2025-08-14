@@ -53,16 +53,16 @@ export default function Sidebar() {
     ...(profile?.client_insta_status
       ? [
           { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
-          { label: "Instagram Likes Tracking", path: "/likes/instagram", icon: Heart },
+          { label: "Instagram Engagement Insight", path: "/likes/instagram", icon: Heart },
         ]
       : []),
     ...(profile?.client_amplify_status
-      ? [{ label: "Link Amplification", path: "/amplify", icon: LinkIcon }]
+      ? [{ label: "Diseminasi Insight", path: "/amplify", icon: LinkIcon }]
       : []),
     ...(profile?.client_tiktok_status
       ? [
           { label: "TikTok Post Analysis", path: "/tiktok", icon: Music },
-          { label: "TikTok Comments Tracking", path: "/comments/tiktok", icon: MessageCircle },
+          { label: "TikTok Engagement Insight", path: "/comments/tiktok", icon: MessageCircle },
         ]
       : []),
   ];

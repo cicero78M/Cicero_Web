@@ -20,7 +20,7 @@ import {
   ArrowRight
 } from "lucide-react";
 
-export default function TiktokKomentarTrackingPage() {
+export default function TiktokEngagementInsightPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -142,7 +142,7 @@ export default function TiktokKomentarTrackingPage() {
           <div className="flex flex-col gap-8">
             {/* Header */}
             <h1 className="text-2xl md:text-3xl font-bold text-pink-700 mb-2">
-              TikTok Comments Tracking
+              TikTok Engagement Insight
             </h1>
 
             {/* Card Ringkasan */}

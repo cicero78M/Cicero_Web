@@ -25,7 +25,7 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
-export default function InstagramLikesTrackingPage() {
+export default function InstagramEngagementInsightPage() {
   useRequireAuth();
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
@@ -153,7 +153,7 @@ export default function InstagramLikesTrackingPage() {
           <div className="flex flex-col gap-8">
             {/* Header */}
             <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
-              Instagram Likes Tracking
+              Instagram Engagement Insight
             </h1>
 
             {/* Card Ringkasan */}

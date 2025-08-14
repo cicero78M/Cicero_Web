@@ -12,7 +12,7 @@ import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { Link as LinkIcon, User, Check, X } from "lucide-react";
 
-export default function AmplifyPage() {
+export default function DiseminasiInsightPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +108,7 @@ export default function AmplifyPage() {
         <div className="w-full max-w-6xl px-2 md:px-8 py-8">
           <div className="flex flex-col gap-8">
             <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
-              Link Amplification Report
+              Diseminasi Insight Report
             </h1>
 
             <div className="bg-gradient-to-tr from-indigo-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
