@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { getUserDirectory } from "@/utils/api";
+import { getUserDirectory, getClientProfile } from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -38,6 +38,8 @@ export default function UserInsightPage() {
     "SI & SPKT": [],
     POLSEK: [],
   });
+  const [isDirectorate, setIsDirectorate] = useState(false);
+  const [chartPolres, setChartPolres] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -50,6 +52,14 @@ export default function UserInsightPage() {
         const res = await getUserDirectory(token, clientId);
         const raw = res.data || res.users || res;
         const users = Array.isArray(raw) ? raw : [];
+
+        // Cek tipe client
+        const profileRes = await getClientProfile(token, clientId);
+        const profile =
+          profileRes.client || profileRes.profile || profileRes || {};
+        const dir =
+          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        setIsDirectorate(dir);
 
         const total = users.length;
         const instagramFilled = users.filter(
@@ -68,16 +78,14 @@ export default function UserInsightPage() {
           tiktokEmpty,
         });
 
-        const grouped = groupUsersByKelompok(users);
-
-        const generateChartData = (arr) => {
+        if (dir) {
           const map = {};
-          arr.forEach((u) => {
-            const div = (u.divisi || "LAINNYA").toUpperCase();
-            const key = div.replace(/POLSEK\s*/i, "").trim();
-            if (!map[key]) {
-              map[key] = {
-                divisi: key,
+          users.forEach((u) => {
+            const name =
+              (u.nama_client || u.client_name || u.client || "LAINNYA").toUpperCase();
+            if (!map[name]) {
+              map[name] = {
+                divisi: name,
                 total: 0,
                 instagramFilled: 0,
                 instagramEmpty: 0,
@@ -85,23 +93,50 @@ export default function UserInsightPage() {
                 tiktokEmpty: 0,
               };
             }
-            map[key].total += 1;
+            map[name].total += 1;
             const hasIG = u.insta && String(u.insta).trim() !== "";
             const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            if (hasIG) map[key].instagramFilled += 1;
-            else map[key].instagramEmpty += 1;
-            if (hasTT) map[key].tiktokFilled += 1;
-            else map[key].tiktokEmpty += 1;
+            if (hasIG) map[name].instagramFilled += 1;
+            else map[name].instagramEmpty += 1;
+            if (hasTT) map[name].tiktokFilled += 1;
+            else map[name].tiktokEmpty += 1;
           });
-          return Object.values(map);
-        };
+          setChartPolres(Object.values(map));
+        } else {
+          const grouped = groupUsersByKelompok(users);
+          const generateChartData = (arr) => {
+            const map = {};
+            arr.forEach((u) => {
+              const div = (u.divisi || "LAINNYA").toUpperCase();
+              const key = div.replace(/POLSEK\s*/i, "").trim();
+              if (!map[key]) {
+                map[key] = {
+                  divisi: key,
+                  total: 0,
+                  instagramFilled: 0,
+                  instagramEmpty: 0,
+                  tiktokFilled: 0,
+                  tiktokEmpty: 0,
+                };
+              }
+              map[key].total += 1;
+              const hasIG = u.insta && String(u.insta).trim() !== "";
+              const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+              if (hasIG) map[key].instagramFilled += 1;
+              else map[key].instagramEmpty += 1;
+              if (hasTT) map[key].tiktokFilled += 1;
+              else map[key].tiktokEmpty += 1;
+            });
+            return Object.values(map);
+          };
 
-        setChartKelompok({
-          BAG: generateChartData(grouped.BAG),
-          SAT: generateChartData(grouped.SAT),
-          "SI & SPKT": generateChartData(grouped["SI & SPKT"]),
-          POLSEK: generateChartData(grouped.POLSEK),
-        });
+          setChartKelompok({
+            BAG: generateChartData(grouped.BAG),
+            SAT: generateChartData(grouped.SAT),
+            "SI & SPKT": generateChartData(grouped["SI & SPKT"]),
+            POLSEK: generateChartData(grouped.POLSEK),
+          });
+        }
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -167,16 +202,26 @@ export default function UserInsightPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-6">
-              <ChartBox title="BAG" data={chartKelompok.BAG} />
-              <ChartBox title="SAT" data={chartKelompok.SAT} />
-              <ChartBox title="SI & SPKT" data={chartKelompok["SI & SPKT"]} />
-              <ChartBox
-                title="POLSEK"
-                data={chartKelompok.POLSEK}
-                orientation="horizontal"
-              />
-            </div>
+            {isDirectorate ? (
+              <div className="flex flex-col gap-6">
+                <ChartBox
+                  title="POLRES"
+                  data={chartPolres}
+                  orientation="horizontal"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                <ChartBox title="BAG" data={chartKelompok.BAG} />
+                <ChartBox title="SAT" data={chartKelompok.SAT} />
+                <ChartBox title="SI & SPKT" data={chartKelompok["SI & SPKT"]} />
+                <ChartBox
+                  title="POLSEK"
+                  data={chartKelompok.POLSEK}
+                  orientation="horizontal"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapAmplify } from "@/utils/api";
+import { getRekapAmplify, getClientProfile } from "@/utils/api";
 import ViewDataSelector, {
   getPeriodeDateForView,
   VIEW_OPTIONS,
@@ -28,6 +28,7 @@ export default function DiseminasiInsightPage() {
     totalBelumPost: 0,
     totalLink: 0,
   });
+  const [isDirectorate, setIsDirectorate] = useState(false);
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -64,6 +65,13 @@ export default function DiseminasiInsightPage() {
           endDate,
         );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+
+        const profileRes = await getClientProfile(token, clientId);
+        const profile =
+          profileRes.client || profileRes.profile || profileRes || {};
+        const dir =
+          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        setIsDirectorate(dir);
         const totalUser = users.length;
         const totalSudahPost = users.filter(
           (u) => Number(u.jumlah_link) > 0,
@@ -79,7 +87,14 @@ export default function DiseminasiInsightPage() {
           totalBelumPost,
           totalLink,
         });
-        setChartData(users);
+
+        const processed = users.map((u) => ({
+          ...u,
+          divisi: dir
+            ? u.nama_client || u.client_name || u.client || u.divisi
+            : u.divisi,
+        }));
+        setChartData(processed);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
@@ -100,7 +115,7 @@ export default function DiseminasiInsightPage() {
       </div>
     );
 
-  const kelompok = groupUsersByKelompok(chartData);
+  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -160,17 +175,30 @@ export default function DiseminasiInsightPage() {
                 }}
               />
             </div>
-            <ChartBox title="BAG" users={kelompok.BAG} />
-            <ChartBox title="SAT" users={kelompok.SAT} />
-            <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
-            <ChartHorizontal
-              title="POLSEK"
-              users={kelompok.POLSEK}
-              fieldJumlah="jumlah_link"
-              labelSudah="Sudah Post"
-              labelBelum="Belum Post"
-              labelTotal="Total Link"
-            />
+            {isDirectorate ? (
+              <ChartHorizontal
+                title="POLRES"
+                users={chartData}
+                fieldJumlah="jumlah_link"
+                labelSudah="Sudah Post"
+                labelBelum="Belum Post"
+                labelTotal="Total Link"
+              />
+            ) : (
+              <>
+                <ChartBox title="BAG" users={kelompok.BAG} />
+                <ChartBox title="SAT" users={kelompok.SAT} />
+                <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
+                <ChartHorizontal
+                  title="POLSEK"
+                  users={kelompok.POLSEK}
+                  fieldJumlah="jumlah_link"
+                  labelSudah="Sudah Post"
+                  labelBelum="Belum Post"
+                  labelTotal="Total Link"
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
