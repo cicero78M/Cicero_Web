@@ -114,14 +114,25 @@ export default function UserInsightPage() {
             const name = (
               u.nama_client || u.client_name || u.client || id
             ).toUpperCase();
-            if (!clientMap[id]) clientMap[id] = { title: name, users: [] };
-            clientMap[id].users.push(u);
+            if (!clientMap[id]) {
+              clientMap[id] = {
+                divisi: name,
+                total: 0,
+                instagramFilled: 0,
+                instagramEmpty: 0,
+                tiktokFilled: 0,
+                tiktokEmpty: 0,
+              };
+            }
+            clientMap[id].total += 1;
+            const hasIG = u.insta && String(u.insta).trim() !== "";
+            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+            if (hasIG) clientMap[id].instagramFilled += 1;
+            else clientMap[id].instagramEmpty += 1;
+            if (hasTT) clientMap[id].tiktokFilled += 1;
+            else clientMap[id].tiktokEmpty += 1;
           });
-          const charts = Object.values(clientMap).map(({ title, users }) => ({
-            title,
-            data: generateChartData(users),
-          }));
-          setChartPolres(charts);
+          setChartPolres(Object.values(clientMap));
         } else {
           const grouped = groupUsersByKelompok(users);
           setChartKelompok({
@@ -197,16 +208,11 @@ export default function UserInsightPage() {
             </div>
 
             {isDirectorate ? (
-              <div className="flex flex-col gap-6">
-                {chartPolres.map((c, idx) => (
-                  <ChartBox
-                    key={idx}
-                    title={c.title}
-                    data={c.data}
-                    orientation="vertical"
-                  />
-                ))}
-              </div>
+              <ChartBox
+                title="POLRES JAJARAN"
+                data={chartPolres}
+                orientation="horizontal"
+              />
             ) : (
               <div className="flex flex-col gap-6">
                 <ChartBox title="BAG" data={chartKelompok.BAG} />
