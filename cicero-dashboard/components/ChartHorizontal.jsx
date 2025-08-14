@@ -71,7 +71,7 @@ export default function ChartHorizontal({
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart proporsional
-  const barHeight = 32;
+  const barHeight = 44;
   const chartHeight = Math.max(50, barHeight * dataChart.length);
 
   return (
