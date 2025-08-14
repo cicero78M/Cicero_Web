@@ -176,14 +176,7 @@ export default function DiseminasiInsightPage() {
               />
             </div>
             {isDirectorate ? (
-              <ChartHorizontal
-                title="POLRES"
-                users={chartData}
-                fieldJumlah="jumlah_link"
-                labelSudah="Sudah Post"
-                labelBelum="Belum Post"
-                labelTotal="Total Link"
-              />
+              <ChartBox title="POLRES" users={chartData} />
             ) : (
               <>
                 <ChartBox title="BAG" users={kelompok.BAG} />

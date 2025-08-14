@@ -213,14 +213,11 @@ export default function TiktokEngagementInsightPage() {
 
             {/* Chart per kelompok atau polres */}
             {isDirectorate ? (
-              <ChartHorizontal
+              <ChartBox
                 title="POLRES"
                 users={chartData}
-                totalPost={rekapSummary.totalTiktokPost}
+                totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
-                labelSudah="User Sudah Komentar"
-                labelBelum="User Belum Komentar"
-                labelTotal="Total Komentar"
               />
             ) : (
               <div className="flex flex-col gap-6">
