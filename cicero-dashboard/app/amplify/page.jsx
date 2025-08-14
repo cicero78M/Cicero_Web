@@ -176,7 +176,7 @@ export default function DiseminasiInsightPage() {
               />
             </div>
             {isDirectorate ? (
-              <ChartBox title="POLRES" users={chartData} />
+              <ChartBox title="POLRES" users={chartData} groupBy="client_id" />
             ) : (
               <>
                 <ChartBox title="BAG" users={kelompok.BAG} />
@@ -199,7 +199,7 @@ export default function DiseminasiInsightPage() {
   );
 }
 
-function ChartBox({ title, users }) {
+function ChartBox({ title, users, groupBy }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
@@ -212,6 +212,7 @@ function ChartBox({ title, users }) {
           labelSudah="Sudah Post"
           labelBelum="Belum Post"
           labelTotal="Total Link"
+          groupBy={groupBy}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>

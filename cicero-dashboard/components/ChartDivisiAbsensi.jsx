@@ -34,6 +34,7 @@ export default function ChartDivisiAbsensi({
   labelSudah = "User Sudah Komentar",
   labelBelum = "User Belum Komentar",
   labelTotal = "Total Komentar",
+  groupBy = "divisi",
 }) {
   // Fallback backward compatibility
   const effectiveTotal =
@@ -54,17 +55,33 @@ export default function ChartDivisiAbsensi({
       .map((u) => Number(u[fieldJumlah] || 0))
   );
 
-  // Group by divisi
+  // Group by divisi atau client_id jika diminta
   const divisiMap = {};
   users.forEach((u) => {
-    const key = bersihkanSatfung(u.divisi || "LAINNYA");
+    const idKey = String(
+      u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
+    );
+    const key =
+      groupBy === "client_id"
+        ? idKey
+        : bersihkanSatfung(u.divisi || "LAINNYA");
+    const display =
+      groupBy === "client_id"
+        ? bersihkanSatfung(
+            u.divisi ||
+              u.nama_client ||
+              u.client_name ||
+              u.client ||
+              "LAINNYA",
+          )
+        : key;
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
-      !isZeroPost && (jumlah >= effectiveTotal*0.5 || isException(u.exception));
+      !isZeroPost && (jumlah >= effectiveTotal * 0.5 || isException(u.exception));
     const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
-        divisi: key,
+        divisi: display,
         user_sudah: 0,
         user_belum: 0,
         total_value: 0,

@@ -81,10 +81,14 @@ export default function UserInsightPage() {
         if (dir) {
           const map = {};
           users.forEach((u) => {
-            const name =
-              (u.nama_client || u.client_name || u.client || "LAINNYA").toUpperCase();
-            if (!map[name]) {
-              map[name] = {
+            const id = String(
+              u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
+            );
+            const name = (
+              u.nama_client || u.client_name || u.client || "LAINNYA"
+            ).toUpperCase();
+            if (!map[id]) {
+              map[id] = {
                 divisi: name,
                 total: 0,
                 instagramFilled: 0,
@@ -93,13 +97,13 @@ export default function UserInsightPage() {
                 tiktokEmpty: 0,
               };
             }
-            map[name].total += 1;
+            map[id].total += 1;
             const hasIG = u.insta && String(u.insta).trim() !== "";
             const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            if (hasIG) map[name].instagramFilled += 1;
-            else map[name].instagramEmpty += 1;
-            if (hasTT) map[name].tiktokFilled += 1;
-            else map[name].tiktokEmpty += 1;
+            if (hasIG) map[id].instagramFilled += 1;
+            else map[id].instagramEmpty += 1;
+            if (hasTT) map[id].tiktokFilled += 1;
+            else map[id].tiktokEmpty += 1;
           });
           setChartPolres(Object.values(map));
         } else {

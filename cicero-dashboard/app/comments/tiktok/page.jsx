@@ -218,6 +218,7 @@ export default function TiktokEngagementInsightPage() {
                 users={chartData}
                 totalTiktokPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
+                groupBy="client_id"
               />
             ) : (
               <div className="flex flex-col gap-6">
@@ -283,6 +284,7 @@ function ChartBox({
   totalTiktokPost,
   fieldJumlah,
   narrative,
+  groupBy,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -297,6 +299,7 @@ function ChartBox({
           labelSudah="User Sudah Komentar"
           labelBelum="User Belum Komentar"
           labelTotal="Total Komentar"
+          groupBy={groupBy}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
