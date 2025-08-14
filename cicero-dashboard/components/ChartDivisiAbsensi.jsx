@@ -143,9 +143,23 @@ export default function ChartDivisiAbsensi({
               <YAxis
                 dataKey="divisi"
                 type="category"
-                width={180}
+                width={200}
                 interval={0}
-                tick={{ fontSize: 12, fontWeight: 700, fill: "#1e293b" }}
+                tick={({ x, y, payload }) => (
+                  <>
+                    <title>{payload.value}</title>
+                    <text
+                      x={x - 180}
+                      y={y + 10}
+                      fontSize={12}
+                      fontWeight={700}
+                      fill="#1e293b"
+                      textAnchor="start"
+                    >
+                      {payload.value}
+                    </text>
+                  </>
+                )}
               />
             ) : (
               <YAxis type="number" fontSize={12} />
