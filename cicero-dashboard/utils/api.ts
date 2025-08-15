@@ -90,13 +90,24 @@ export async function getRekapLikesIG(
 }
 
 // Ambil profile client berdasarkan token dan client_id
-export async function getClientProfile(token: string, client_id: string): Promise<any> {
+export async function getClientProfile(
+  token: string,
+  client_id: string,
+): Promise<any> {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Gagal fetch profile client");
-  return res.json();
+  const json = await res.json();
+  return (
+    json?.data?.client ||
+    json?.data ||
+    json?.client ||
+    json?.profile ||
+    json ||
+    {}
+  );
 }
 
 // Ambil nama-nama client berdasarkan daftar client_id
@@ -108,8 +119,7 @@ export async function getClientNames(
   const entries = await Promise.all(
     uniqueIds.map(async (id) => {
       try {
-        const res = await getClientProfile(token, id);
-        const profile = res.client || res.profile || res || {};
+        const profile = await getClientProfile(token, id);
         const name =
           profile.nama_client || profile.client_name || profile.client || id;
         return [id, name] as [string, string];
