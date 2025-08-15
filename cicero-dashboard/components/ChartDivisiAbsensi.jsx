@@ -69,13 +69,7 @@ export default function ChartDivisiAbsensi({
         : bersihkanSatfung(u.divisi || "LAINNYA");
     const display =
       groupBy === "client_id"
-        ? bersihkanSatfung(
-            u.divisi ||
-              u.nama_client ||
-              u.client_name ||
-              u.client ||
-              "LAINNYA",
-          )
+        ? u.nama_client || u.client_name || u.client || idKey
         : key;
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
@@ -102,10 +96,12 @@ export default function ChartDivisiAbsensi({
 
   // Dynamic height
   const isHorizontal = orientation === "horizontal";
-  const barHeight = isHorizontal ? 40 : 34;
+  const isDirectorate = groupBy === "client_id";
+  const thicknessMultiplier = isDirectorate ? 3 : 1;
+  const barHeight = isHorizontal ? 40 * thicknessMultiplier : 34;
   // Ensure horizontal charts (used in direktorat views) remain legible
   // by providing a larger minimum height and capping extreme values.
-  const minHeight = isHorizontal ? 300 : 220;
+  const minHeight = isHorizontal ? (isDirectorate ? 420 : 300) : 220;
   const maxHeight = isHorizontal ? 900 : 420;
   const chartHeight = Math.min(
     maxHeight,
@@ -188,7 +184,7 @@ export default function ChartDivisiAbsensi({
               dataKey="user_sudah"
               fill="#22c55e"
               name={labelSudah}
-              barSize={isHorizontal ? 20 : undefined}
+              barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >
               <LabelList
                 dataKey="user_sudah"
@@ -200,7 +196,7 @@ export default function ChartDivisiAbsensi({
               dataKey="total_value"
               fill="#2563eb"
               name={labelTotal}
-              barSize={isHorizontal ? 20 : undefined}
+              barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >
               <LabelList
                 dataKey="total_value"
@@ -212,7 +208,7 @@ export default function ChartDivisiAbsensi({
               dataKey="user_belum"
               fill="#ef4444"
               name={labelBelum}
-              barSize={isHorizontal ? 20 : undefined}
+              barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >
               <LabelList
                 dataKey="user_belum"

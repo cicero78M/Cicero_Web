@@ -114,10 +114,9 @@ export default function UserInsightPage() {
             const name = (
               u.nama_client || u.client_name || u.client || id
             ).toUpperCase();
-            const label = `${name} (${id})`;
             if (!clientMap[id]) {
               clientMap[id] = {
-                divisi: label,
+                divisi: name,
                 total: 0,
                 instagramFilled: 0,
                 instagramEmpty: 0,
@@ -215,6 +214,8 @@ export default function UserInsightPage() {
                 title="POLRES JAJARAN"
                 data={chartPolres}
                 orientation="horizontal"
+                minHeight={420}
+                thicknessMultiplier={3}
               />
             ) : (
               <div className="flex flex-col gap-6">
@@ -235,12 +236,23 @@ export default function UserInsightPage() {
   );
 }
 
-function ChartBox({ title, data, orientation = "vertical" }) {
+function ChartBox({
+  title,
+  data,
+  orientation = "vertical",
+  minHeight,
+  thicknessMultiplier = 1,
+}) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
       {data && data.length > 0 ? (
-        <ContactChart data={data} orientation={orientation} />
+        <ContactChart
+          data={data}
+          orientation={orientation}
+          minHeight={minHeight}
+          thicknessMultiplier={thicknessMultiplier}
+        />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}
@@ -248,12 +260,11 @@ function ChartBox({ title, data, orientation = "vertical" }) {
   );
 }
 
-function ContactChart({ data, orientation }) {
+function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier = 1 }) {
   const isHorizontal = orientation === "horizontal";
   const barPosition = isHorizontal ? "right" : "top";
-  const height = isHorizontal
-    ? Math.max(50, 35 * data.length)
-    : 300;
+  const perItem = 35 * thicknessMultiplier;
+  const height = isHorizontal ? Math.max(minHeight, perItem * data.length) : 300;
 
   return (
     <div className="w-full h-full">
