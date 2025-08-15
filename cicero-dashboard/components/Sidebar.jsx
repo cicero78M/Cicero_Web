@@ -45,21 +45,38 @@ export default function Sidebar() {
     }
     fetchProfile();
   }, [token, clientId]);
+  function isActive(val) {
+    return val === true || val === "true" || val === 1 || val === "1";
+  }
+
+  function getStatus(obj, key) {
+    return (
+      obj?.[key] ??
+      obj?.parent?.[key] ??
+      obj?.parent_client?.[key] ??
+      obj?.parentClient?.[key] ??
+      obj?.parent_profile?.[key]
+    );
+  }
+
+  const instagramEnabled = isActive(getStatus(profile, "client_insta_status"));
+  const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
+  const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
     { label: "User Directory", path: "/users", icon: Users },
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
-    ...(profile?.client_insta_status
+    ...(instagramEnabled
       ? [
           { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
           { label: "Instagram Engagement Insight", path: "/likes/instagram", icon: Heart },
         ]
       : []),
-    ...(profile?.client_amplify_status
+    ...(amplifyEnabled
       ? [{ label: "Diseminasi Insight", path: "/amplify", icon: LinkIcon }]
       : []),
-    ...(profile?.client_tiktok_status
+    ...(tiktokEnabled
       ? [
           { label: "TikTok Post Analysis", path: "/tiktok", icon: Music },
           { label: "TikTok Engagement Insight", path: "/comments/tiktok", icon: MessageCircle },
