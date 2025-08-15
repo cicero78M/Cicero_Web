@@ -10,6 +10,8 @@ import {
   CartesianGrid,
   LabelList,
 } from "recharts";
+import { useEffect, useState } from "react";
+import { getClientNames } from "@/utils/api";
 
 // Helper: handle boolean/string/number for exception
 function isException(val) {
@@ -37,6 +39,61 @@ export default function ChartDivisiAbsensi({
   groupBy = "divisi",
   orientation = "vertical",
 }) {
+  const [enrichedUsers, setEnrichedUsers] = useState(users);
+
+  // Enrich user data with client names when grouping by client_id.
+  useEffect(() => {
+    async function enrich() {
+      if (groupBy !== "client_id") {
+        setEnrichedUsers(users);
+        return;
+      }
+
+      const needsName = users.some(
+        (u) => !(u.nama_client || u.client_name || u.client)
+      );
+      if (!needsName) {
+        setEnrichedUsers(users);
+        return;
+      }
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("cicero_token")
+          : null;
+      if (!token) {
+        setEnrichedUsers(users);
+        return;
+      }
+
+      try {
+        const ids = users.map((u) =>
+          String(
+            u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
+          )
+        );
+        const nameMap = await getClientNames(token, ids);
+        const mapped = users.map((u) => ({
+          ...u,
+          nama_client:
+            u.nama_client ||
+            nameMap[
+              String(
+                u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
+              )
+            ] ||
+            u.client_name ||
+            u.client,
+        }));
+        setEnrichedUsers(mapped);
+      } catch {
+        setEnrichedUsers(users);
+      }
+    }
+
+    enrich();
+  }, [users, groupBy]);
+
   // Fallback backward compatibility
   const effectiveTotal =
     typeof totalPost !== "undefined"
@@ -51,7 +108,7 @@ export default function ChartDivisiAbsensi({
   // Cari nilai jumlah_like tertinggi dari user non-exception
   const maxJumlahLike = Math.max(
     0,
-    ...users
+    ...enrichedUsers
       .filter((u) => !isException(u.exception))
       .map((u) => Number(u[fieldJumlah] || 0))
   );
@@ -59,7 +116,7 @@ export default function ChartDivisiAbsensi({
   // Group by divisi atau client_id jika diminta
   const divisiMap = {};
   const labelKey = groupBy === "client_id" ? "client_name" : "divisi";
-  users.forEach((u) => {
+  enrichedUsers.forEach((u) => {
     const idKey = String(
       u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
     );
