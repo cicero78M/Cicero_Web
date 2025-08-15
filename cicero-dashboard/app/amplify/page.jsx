@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapAmplify, getClientProfile } from "@/utils/api";
+import { getRekapAmplify, getClientProfile, getClientNames } from "@/utils/api";
 import ViewDataSelector, {
   getPeriodeDateForView,
   VIEW_OPTIONS,
@@ -79,12 +79,32 @@ export default function DiseminasiInsightPage() {
             profile.client ||
             ""
         );
-        const totalUser = users.length;
-        const totalSudahPost = users.filter(
+        let enrichedUsers = users;
+        if (dir) {
+          const nameMap = await getClientNames(
+            token,
+            users.map((u) =>
+              String(
+                u.client_id || u.clientId || u.clientID || u.client || ""
+              )
+            )
+          );
+          enrichedUsers = users.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id || u.clientId || u.clientID || u.client || ""
+                )
+              ] || u.nama_client || u.client_name || u.client,
+          }));
+        }
+        const totalUser = enrichedUsers.length;
+        const totalSudahPost = enrichedUsers.filter(
           (u) => Number(u.jumlah_link) > 0,
         ).length;
         const totalBelumPost = totalUser - totalSudahPost;
-        const totalLink = users.reduce(
+        const totalLink = enrichedUsers.reduce(
           (sum, u) => sum + Number(u.jumlah_link || 0),
           0,
         );
@@ -95,7 +115,7 @@ export default function DiseminasiInsightPage() {
           totalLink,
         });
 
-        setChartData(users);
+        setChartData(enrichedUsers);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
