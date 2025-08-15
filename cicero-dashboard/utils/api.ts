@@ -99,6 +99,28 @@ export async function getClientProfile(token: string, client_id: string): Promis
   return res.json();
 }
 
+// Ambil nama-nama client berdasarkan daftar client_id
+export async function getClientNames(
+  token: string,
+  clientIds: string[],
+): Promise<Record<string, string>> {
+  const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
+  const entries = await Promise.all(
+    uniqueIds.map(async (id) => {
+      try {
+        const res = await getClientProfile(token, id);
+        const profile = res.client || res.profile || res || {};
+        const name =
+          profile.nama_client || profile.client_name || profile.client || id;
+        return [id, name] as [string, string];
+      } catch {
+        return [id, id] as [string, string];
+      }
+    }),
+  );
+  return Object.fromEntries(entries);
+}
+
 // Ambil daftar user untuk User Directory
 export async function getUserDirectory(token: string, client_id: string): Promise<any> {
   const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;

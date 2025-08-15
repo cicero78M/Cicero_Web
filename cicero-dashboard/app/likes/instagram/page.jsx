@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapLikesIG, getClientProfile } from "@/utils/api";
+import {
+  getDashboardStats,
+  getRekapLikesIG,
+  getClientProfile,
+  getClientNames,
+} from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -114,21 +119,44 @@ export default function InstagramEngagementInsightPage() {
             ""
         );
 
+        let enrichedUsers = users;
+        if (dir) {
+          const nameMap = await getClientNames(
+            token,
+            users.map((u) =>
+              String(
+                u.client_id || u.clientId || u.clientID || u.client || "",
+              ),
+            ),
+          );
+          enrichedUsers = users.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id || u.clientId || u.clientID || u.client || "",
+                )
+              ] || u.nama_client || u.client_name || u.client,
+          }));
+        }
+
         // Rekap summary
-        const totalUser = users.length;
+        const totalUser = enrichedUsers.length;
         const totalIGPost = Number(statsData.instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalSudahLike = isZeroPost
           ? 0
-          : users.filter(
+          : enrichedUsers.filter(
               (u) =>
-                Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception)
+                Number(u.jumlah_like) >= totalIGPost * 0.5 ||
+                isException(u.exception),
             ).length;
         const totalBelumLike = isZeroPost
           ? totalUser
-          : users.filter(
+          : enrichedUsers.filter(
               (u) =>
-                Number(u.jumlah_like) < totalIGPost*0.5 && !isException(u.exception)
+                Number(u.jumlah_like) < totalIGPost * 0.5 &&
+                !isException(u.exception),
             ).length;
 
         setRekapSummary({
@@ -137,7 +165,7 @@ export default function InstagramEngagementInsightPage() {
           totalBelumLike,
           totalIGPost,
         });
-        setChartData(users);
+        setChartData(enrichedUsers);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {

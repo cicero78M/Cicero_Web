@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapKomentarTiktok, getClientProfile } from "@/utils/api";
+import {
+  getDashboardStats,
+  getRekapKomentarTiktok,
+  getClientProfile,
+  getClientNames,
+} from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -104,6 +109,27 @@ export default function TiktokEngagementInsightPage() {
             ""
         );
 
+        let enrichedUsers = users;
+        if (dir) {
+          const nameMap = await getClientNames(
+            token,
+            users.map((u) =>
+              String(
+                u.client_id || u.clientId || u.clientID || u.client || ""
+              )
+            )
+          );
+          enrichedUsers = users.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id || u.clientId || u.clientID || u.client || ""
+                )
+              ] || u.nama_client || u.client_name || u.client,
+          }));
+        }
+
         // Ambil field TikTok Post dengan fallback urutan prioritas
         const totalTiktokPost =
           statsData?.ttPosts ||
@@ -112,12 +138,13 @@ export default function TiktokEngagementInsightPage() {
           statsData.tiktokPosts ||
           0;
 
-        const totalUser = users.length;
+        const totalUser = enrichedUsers.length;
         const isZeroPost = (totalTiktokPost || 0) === 0;
         const totalSudahKomentar = isZeroPost
           ? 0
-          : users.filter((u) => Number(u.jumlah_komentar) > 0 || u.exception)
-              .length;
+          : enrichedUsers.filter(
+              (u) => Number(u.jumlah_komentar) > 0 || u.exception
+            ).length;
         const totalBelumKomentar = totalUser - totalSudahKomentar;
 
         setRekapSummary({
@@ -126,7 +153,7 @@ export default function TiktokEngagementInsightPage() {
           totalBelumKomentar,
           totalTiktokPost,
         });
-        setChartData(users);
+        setChartData(enrichedUsers);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {

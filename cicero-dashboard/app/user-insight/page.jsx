@@ -11,7 +11,11 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { getUserDirectory, getClientProfile } from "@/utils/api";
+import {
+  getUserDirectory,
+  getClientProfile,
+  getClientNames,
+} from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -88,11 +92,32 @@ export default function UserInsightPage() {
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
 
-        const total = users.length;
-        const instagramFilled = users.filter(
+        let processedUsers = users;
+        if (dir) {
+          const nameMap = await getClientNames(
+            token,
+            users.map((u) =>
+              String(
+                u.client_id || u.clientId || u.clientID || u.id || "",
+              ),
+            ),
+          );
+          processedUsers = users.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id || u.clientId || u.clientID || u.id || "",
+                )
+              ] || u.nama_client || u.client_name || u.client,
+          }));
+        }
+
+        const total = processedUsers.length;
+        const instagramFilled = processedUsers.filter(
           (u) => u.insta && String(u.insta).trim() !== "",
         ).length;
-        const tiktokFilled = users.filter(
+        const tiktokFilled = processedUsers.filter(
           (u) => u.tiktok && String(u.tiktok).trim() !== "",
         ).length;
         const instagramEmpty = total - instagramFilled;
@@ -107,7 +132,7 @@ export default function UserInsightPage() {
 
         if (dir) {
           const clientMap = {};
-          users.forEach((u) => {
+          processedUsers.forEach((u) => {
             const id = String(
               u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
             );
@@ -136,7 +161,7 @@ export default function UserInsightPage() {
             Object.values(clientMap).sort((a, b) => b.total - a.total),
           );
         } else {
-          const grouped = groupUsersByKelompok(users);
+          const grouped = groupUsersByKelompok(processedUsers);
           setChartKelompok({
             BAG: generateChartData(grouped.BAG),
             SAT: generateChartData(grouped.SAT),
