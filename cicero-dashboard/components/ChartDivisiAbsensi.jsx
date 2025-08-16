@@ -115,7 +115,7 @@ export default function ChartDivisiAbsensi({
 
   // Group by divisi atau client_id jika diminta
   const divisiMap = {};
-  const labelKey = groupBy === "client_id" ? "client_name" : "divisi";
+  const labelKey = groupBy === "client_id" ? "nama_client" : "divisi";
   enrichedUsers.forEach((u) => {
     const idKey = String(
       u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
@@ -233,7 +233,7 @@ export default function ChartDivisiAbsensi({
                 ]
               }
               labelFormatter={(label) =>
-                `${labelKey === "client_name" ? "Client" : "Divisi"}: ${label}`
+                `${labelKey === "nama_client" ? "Client" : "Divisi"}: ${label}`
               }
             />
             <Legend />
