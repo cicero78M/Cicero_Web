@@ -10,10 +10,12 @@ import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { useAuth } from "@/context/AuthContext";
 import { Link as LinkIcon, User, Check, X } from "lucide-react";
 
 export default function DiseminasiInsightPage() {
   useRequireAuth();
+  const { token, clientId } = useAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,10 +37,6 @@ export default function DiseminasiInsightPage() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    const clientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
     if (!token || !clientId) {
       setError("Token atau Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -121,7 +119,7 @@ export default function DiseminasiInsightPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [token, clientId, viewBy, customDate, fromDate, toDate]);
 
   if (loading) return <Loader />;
   if (error)
