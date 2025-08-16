@@ -80,7 +80,11 @@ export default function UserDirectoryPage() {
           nama_client:
             nameMap[
               String(u.client_id || u.clientId || u.clientID || u.client || "")
-            ] || u.nama_client || u.client_name || u.client,
+            ] ||
+            u.nama ||
+            u.nama_client ||
+            u.client_name ||
+            u.client,
         }));
       }
 
@@ -156,7 +160,7 @@ export default function UserDirectoryPage() {
             (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.nama_client || u.divisi || "")
+            (u.nama_client || u.nama || u.divisi || "")
               .toLowerCase()
               .includes(search.toLowerCase()) ||
             (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -305,7 +309,7 @@ export default function UserDirectoryPage() {
                   <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
                   <td className="py-1 px-2">
                     {isDirectorate ? (
-                      u.nama_client || "-"
+                      u.nama_client || u.nama || "-"
                     ) : editingRowId === u.user_id ? (
                       <input
                         value={editSatfung}

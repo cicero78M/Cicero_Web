@@ -121,7 +121,11 @@ export async function getClientNames(
       try {
         const profile = await getClientProfile(token, id);
         const name =
-          profile.nama_client || profile.client_name || profile.client || id;
+          profile.nama ||
+          profile.nama_client ||
+          profile.client_name ||
+          profile.client ||
+          id;
         return [id, name] as [string, string];
       } catch {
         return [id, id] as [string, string];

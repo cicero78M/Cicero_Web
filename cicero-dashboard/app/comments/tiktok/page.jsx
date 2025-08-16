@@ -103,7 +103,8 @@ export default function TiktokEngagementInsightPage() {
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
         setClientName(
-          profile.nama_client ||
+          profile.nama ||
+            profile.nama_client ||
             profile.client_name ||
             profile.client ||
             ""
@@ -126,7 +127,11 @@ export default function TiktokEngagementInsightPage() {
                 String(
                   u.client_id || u.clientId || u.clientID || u.client || ""
                 )
-              ] || u.nama_client || u.client_name || u.client,
+              ] ||
+              u.nama ||
+              u.nama_client ||
+              u.client_name ||
+              u.client,
           }));
         }
 
