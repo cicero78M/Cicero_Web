@@ -49,9 +49,9 @@ export default function ChartDivisiAbsensi({
         return;
       }
 
-      const needsName = users.some(
-        (u) => !(u.nama_client || u.client_name || u.client)
-      );
+        const needsName = users.some(
+          (u) => !(u.nama_client || u.nama || u.client_name || u.client)
+        );
       if (!needsName) {
         setEnrichedUsers(users);
         return;
@@ -77,6 +77,7 @@ export default function ChartDivisiAbsensi({
           ...u,
           nama_client:
             u.nama_client ||
+            u.nama ||
             nameMap[
               String(
                 u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
@@ -124,10 +125,10 @@ export default function ChartDivisiAbsensi({
       groupBy === "client_id"
         ? idKey
         : bersihkanSatfung(u.divisi || "LAINNYA");
-    const display =
-      groupBy === "client_id"
-        ? u.nama_client || u.client_name || u.client || idKey
-        : key;
+      const display =
+        groupBy === "client_id"
+          ? u.nama_client || u.nama || u.client_name || u.client || idKey
+          : key;
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
       !isZeroPost && (jumlah >= effectiveTotal * 0.5 || isException(u.exception));
