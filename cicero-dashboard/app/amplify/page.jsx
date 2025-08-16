@@ -29,7 +29,6 @@ export default function DiseminasiInsightPage() {
     totalLink: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
-  const [clientName, setClientName] = useState("");
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -73,13 +72,6 @@ export default function DiseminasiInsightPage() {
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
-        setClientName(
-          profile.nama ||
-            profile.nama_client ||
-            profile.client_name ||
-            profile.client ||
-            ""
-        );
         let enrichedUsers = users;
         if (dir) {
           const nameMap = await getClientNames(
@@ -203,7 +195,7 @@ export default function DiseminasiInsightPage() {
             </div>
             {isDirectorate ? (
               <ChartBox
-                title={clientName || "POLRES JAJARAN"}
+                title="POLRES JAJARAN"
                 users={chartData}
                 groupBy="client_id"
                 orientation="horizontal"
