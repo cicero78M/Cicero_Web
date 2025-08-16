@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapAmplify, getClientProfile, getClientNames } from "@/utils/api";
+import {
+  getRekapAmplify,
+  getClientProfile,
+  getClientNames,
+  getUserProfile,
+} from "@/utils/api";
 import ViewDataSelector, {
   getPeriodeDateForView,
   VIEW_OPTIONS,
@@ -11,6 +16,7 @@ import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { Link as LinkIcon, User, Check, X } from "lucide-react";
+import isTrue from "@/utils/isTrue";
 
 export default function DiseminasiInsightPage() {
   useRequireAuth();
@@ -39,8 +45,12 @@ export default function DiseminasiInsightPage() {
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =
       typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
-    if (!token || !clientId) {
-      setError("Token atau Client ID tidak ditemukan. Silakan login ulang.");
+    const userId =
+      typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
+    if (!token || !clientId || !userId) {
+      setError(
+        "Token, Client ID, atau User ID tidak ditemukan. Silakan login ulang.",
+      );
       setLoading(false);
       return;
     }
@@ -56,38 +66,56 @@ export default function DiseminasiInsightPage() {
 
     async function fetchData() {
       try {
-        const rekapRes = await getRekapAmplify(
-          token,
-          clientId,
-          periode,
-          date,
-          startDate,
-          endDate,
-        );
-        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+        const [rekapRes, profileRes, userRes] = await Promise.all([
+          getRekapAmplify(token, clientId, periode, date, startDate, endDate),
+          getClientProfile(token, clientId),
+          getUserProfile(token, userId),
+        ]);
+        let users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        const profileRes = await getClientProfile(token, clientId);
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
+
+        const userDivision = isTrue(userRes.ditbinmas)
+          ? "ditbinmas"
+          : isTrue(userRes.ditlantas)
+            ? "ditlantas"
+            : isTrue(userRes.bidhumas)
+              ? "bidhumas"
+              : "";
+
+        if (dir) {
+          users = users.filter((u) => {
+            if (userDivision === "ditbinmas") return isTrue(u.ditbinmas);
+            if (userDivision === "ditlantas") return isTrue(u.ditlantas);
+            if (userDivision === "bidhumas") return isTrue(u.bidhumas);
+            return (
+              isTrue(u.ditbinmas) ||
+              isTrue(u.ditlantas) ||
+              isTrue(u.bidhumas)
+            );
+          });
+        }
+
         let enrichedUsers = users;
         if (dir) {
           const nameMap = await getClientNames(
             token,
             users.map((u) =>
               String(
-                u.client_id || u.clientId || u.clientID || u.client || ""
-              )
-            )
+                u.client_id || u.clientId || u.clientID || u.client || "",
+              ),
+            ),
           );
           enrichedUsers = users.map((u) => ({
             ...u,
             nama_client:
               nameMap[
                 String(
-                  u.client_id || u.clientId || u.clientID || u.client || ""
+                  u.client_id || u.clientId || u.clientID || u.client || "",
                 )
               ] ||
               u.nama ||
