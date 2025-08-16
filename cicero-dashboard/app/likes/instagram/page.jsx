@@ -50,7 +50,6 @@ export default function InstagramEngagementInsightPage() {
     totalIGPost: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
-  const [clientName, setClientName] = useState("");
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -112,13 +111,6 @@ export default function InstagramEngagementInsightPage() {
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
-        setClientName(
-          profile.nama ||
-            profile.nama_client ||
-            profile.client_name ||
-            profile.client ||
-            ""
-        );
 
         let enrichedUsers = users;
         if (dir) {
@@ -259,7 +251,7 @@ export default function InstagramEngagementInsightPage() {
             {/* Chart per kelompok / polres */}
             {isDirectorate ? (
               <ChartBox
-                title={clientName || "POLRES JAJARAN"}
+                title="POLRES JAJARAN"
                 users={chartData}
                 totalPost={rekapSummary.totalIGPost}
                 groupBy="client_id"
