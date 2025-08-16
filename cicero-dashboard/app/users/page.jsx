@@ -1,6 +1,12 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { getUserDirectory, createUser, updateUser } from "@/utils/api";
+import {
+  getUserDirectory,
+  createUser,
+  updateUser,
+  getClientProfile,
+  getClientNames,
+} from "@/utils/api";
 import { Pencil, Check, X } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -31,6 +37,7 @@ export default function UserDirectoryPage() {
   const [editSatfung, setEditSatfung] = useState("");
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [isDirectorate, setIsDirectorate] = useState(false);
 
   // Ambil client_id dari localStorage (atau sesuaikan kebutuhanmu)
   const client_id =
@@ -53,8 +60,31 @@ export default function UserDirectoryPage() {
     }
     try {
       const res = await getUserDirectory(token, client_id);
-      const data = res.data || res.users || res;
-      setUsers(Array.isArray(data) ? data : []);
+      let data = res.data || res.users || res;
+      let arr = Array.isArray(data) ? data : [];
+
+      const profileRes = await getClientProfile(token, client_id);
+      const profile = profileRes.client || profileRes.profile || profileRes || {};
+      const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+      setIsDirectorate(dir);
+
+      if (dir) {
+        const nameMap = await getClientNames(
+          token,
+          arr.map((u) =>
+            String(u.client_id || u.clientId || u.clientID || u.client || ""),
+          ),
+        );
+        arr = arr.map((u) => ({
+          ...u,
+          nama_client:
+            nameMap[
+              String(u.client_id || u.clientId || u.clientID || u.client || "")
+            ] || u.nama_client || u.client_name || u.client,
+        }));
+      }
+
+      setUsers(arr);
     } catch (err) {
       setError("Gagal mengambil data: " + (err.message || err));
     } finally {
@@ -126,7 +156,9 @@ export default function UserDirectoryPage() {
             (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.divisi || "").toLowerCase().includes(search.toLowerCase()) ||
+            (u.nama_client || u.divisi || "")
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
             (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
             (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
             (String(u.status)).toLowerCase().includes(search.toLowerCase())
@@ -201,7 +233,7 @@ export default function UserDirectoryPage() {
             />
             <input
               type="text"
-              placeholder="Satfung"
+              placeholder={isDirectorate ? "Kesatuan" : "Satfung"}
               value={satfung}
               onChange={(e) => setSatfung(e.target.value)}
               required
@@ -237,7 +269,9 @@ export default function UserDirectoryPage() {
                 <th className="py-2 px-2 text-left">No</th>
                 <th className="py-2 px-2 text-left">Nama</th>
                 <th className="py-2 px-2 text-left">NRP/NIP</th>
-                <th className="py-2 px-2 text-left">Satfung</th>
+                <th className="py-2 px-2 text-left">
+                  {isDirectorate ? "Kesatuan" : "Satfung"}
+                </th>
                 <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Username TikTok</th>
                 <th className="py-2 px-2 text-left">Status</th>
@@ -270,11 +304,13 @@ export default function UserDirectoryPage() {
                   </td>
                   <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
                   <td className="py-1 px-2">
-                    {editingRowId === u.user_id ? (
+                    {isDirectorate ? (
+                      u.nama_client || "-"
+                    ) : editingRowId === u.user_id ? (
                       <input
                         value={editSatfung}
                         onChange={(e) => setEditSatfung(e.target.value)}
-                        placeholder="Satfung"
+                        placeholder={isDirectorate ? "Kesatuan" : "Satfung"}
                         className="border rounded px-1 text-xs"
                       />
                     ) : (
