@@ -199,12 +199,13 @@ export default function DiseminasiInsightPage() {
                 users={chartData}
                 groupBy="client_id"
                 orientation="horizontal"
+                showTotalUser
               />
             ) : (
               <>
-                <ChartBox title="BAG" users={kelompok.BAG} />
-                <ChartBox title="SAT" users={kelompok.SAT} />
-                <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} />
+                <ChartBox title="BAG" users={kelompok.BAG} showTotalUser />
+                <ChartBox title="SAT" users={kelompok.SAT} showTotalUser />
+                <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} showTotalUser />
                 <ChartHorizontal
                   title="POLSEK"
                   users={kelompok.POLSEK}
@@ -222,7 +223,13 @@ export default function DiseminasiInsightPage() {
   );
 }
 
-function ChartBox({ title, users, groupBy, orientation = "vertical" }) {
+function ChartBox({
+  title,
+  users,
+  groupBy,
+  orientation = "vertical",
+  showTotalUser = false,
+}) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
@@ -237,6 +244,8 @@ function ChartBox({ title, users, groupBy, orientation = "vertical" }) {
           labelBelum="Belum Post"
           labelTotal="Total Link"
           groupBy={groupBy}
+          showTotalUser={showTotalUser}
+          labelTotalUser="Jumlah User"
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
