@@ -5,6 +5,7 @@ import {
   getRekapKomentarTiktok,
   getClientProfile,
   getClientNames,
+  getUserProfile,
 } from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
@@ -24,6 +25,7 @@ import {
   X,
   ArrowRight
 } from "lucide-react";
+import isTrue from "@/utils/isTrue";
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
@@ -52,8 +54,10 @@ export default function TiktokEngagementInsightPage() {
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token")
         : null;
-    if (!token) {
-      setError("Token tidak ditemukan. Silakan login ulang.");
+    const userId =
+      typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
+    if (!token || !userId) {
+      setError("Token atau User ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return;
     }
@@ -85,47 +89,71 @@ export default function TiktokEngagementInsightPage() {
           return;
         }
 
-        const rekapRes = await getRekapKomentarTiktok(
-          token,
-          client_id,
-          periode,
-          date,
-          startDate,
-          endDate,
-        );
-        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+        const [rekapRes, profileRes, userRes] = await Promise.all([
+          getRekapKomentarTiktok(
+            token,
+            client_id,
+            periode,
+            date,
+            startDate,
+            endDate,
+          ),
+          getClientProfile(token, client_id),
+          getUserProfile(token, userId),
+        ]);
+        let users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        const profileRes = await getClientProfile(token, client_id);
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
 
-        let enrichedUsers = users;
+        const userDivision = isTrue(userRes.ditbinmas)
+          ? "ditbinmas"
+          : isTrue(userRes.ditlantas)
+            ? "ditlantas"
+            : isTrue(userRes.bidhumas)
+              ? "bidhumas"
+              : "";
+
         if (dir) {
-          const nameMap = await getClientNames(
-            token,
-            users.map((u) =>
-              String(
-                u.client_id || u.clientId || u.clientID || u.client || ""
-              )
-            )
-          );
-          enrichedUsers = users.map((u) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(
-                  u.client_id || u.clientId || u.clientID || u.client || ""
-                )
-              ] ||
-              u.nama ||
-              u.nama_client ||
-              u.client_name ||
-              u.client,
-          }));
+          users = users.filter((u) => {
+            if (userDivision === "ditbinmas") return isTrue(u.ditbinmas);
+            if (userDivision === "ditlantas") return isTrue(u.ditlantas);
+            if (userDivision === "bidhumas") return isTrue(u.bidhumas);
+            return (
+              isTrue(u.ditbinmas) ||
+              isTrue(u.ditlantas) ||
+              isTrue(u.bidhumas)
+            );
+          });
         }
+
+          let enrichedUsers = users;
+          if (dir) {
+            const nameMap = await getClientNames(
+              token,
+              users.map((u) =>
+                String(
+                  u.client_id || u.clientId || u.clientID || u.client || "",
+                ),
+              ),
+            );
+            enrichedUsers = users.map((u) => ({
+              ...u,
+              nama_client:
+                nameMap[
+                  String(
+                    u.client_id || u.clientId || u.clientID || u.client || "",
+                  )
+                ] ||
+                u.nama ||
+                u.nama_client ||
+                u.client_name ||
+                u.client,
+            }));
+          }
 
         // Ambil field TikTok Post dengan fallback urutan prioritas
         const totalTiktokPost =

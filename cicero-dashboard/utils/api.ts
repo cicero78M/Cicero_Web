@@ -135,6 +135,18 @@ export async function getClientNames(
   return Object.fromEntries(entries);
 }
 
+// Ambil profile user berdasarkan user_id
+export async function getUserProfile(
+  token: string,
+  userId: string,
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}`;
+  const res = await fetchWithAuth(url, token);
+  if (!res.ok) throw new Error("Gagal fetch user profile");
+  const json = await res.json();
+  return json?.data?.user || json?.data || json?.user || json || {};
+}
+
 // Ambil daftar user untuk User Directory
 export async function getUserDirectory(token: string, client_id: string): Promise<any> {
   const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
