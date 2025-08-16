@@ -38,6 +38,8 @@ export default function ChartDivisiAbsensi({
   labelTotal = "Total Komentar",
   groupBy = "divisi",
   orientation = "vertical",
+  showTotalUser = false,
+  labelTotalUser = "Jumlah User",
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
 
@@ -50,7 +52,7 @@ export default function ChartDivisiAbsensi({
       }
 
         const needsName = users.some(
-          (u) => !(u.nama_client || u.nama || u.client_name || u.client)
+          (u) => !(u.nama_client || u.client_name || u.client)
         );
       if (!needsName) {
         setEnrichedUsers(users);
@@ -77,7 +79,6 @@ export default function ChartDivisiAbsensi({
           ...u,
           nama_client:
             u.nama_client ||
-            u.nama ||
             nameMap[
               String(
                 u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
@@ -127,7 +128,7 @@ export default function ChartDivisiAbsensi({
         : bersihkanSatfung(u.divisi || "LAINNYA");
       const display =
         groupBy === "client_id"
-          ? u.nama_client || u.nama || u.client_name || u.client || idKey
+          ? u.nama_client || u.client_name || u.client || idKey
           : key;
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
@@ -136,10 +137,12 @@ export default function ChartDivisiAbsensi({
     if (!divisiMap[key])
       divisiMap[key] = {
         [labelKey]: display,
+        total_user: 0,
         user_sudah: 0,
         user_belum: 0,
         total_value: 0,
       };
+    divisiMap[key].total_user += 1;
     divisiMap[key].total_value += nilai;
     if (sudah) {
       divisiMap[key].user_sudah += 1;
@@ -224,7 +227,9 @@ export default function ChartDivisiAbsensi({
               formatter={(value, name) =>
                 [
                   value,
-                  name === "user_sudah"
+                  name === "total_user"
+                    ? labelTotalUser
+                    : name === "user_sudah"
                     ? labelSudah
                     : name === "user_belum"
                     ? labelBelum
@@ -238,6 +243,20 @@ export default function ChartDivisiAbsensi({
               }
             />
             <Legend />
+            {showTotalUser && (
+              <Bar
+                dataKey="total_user"
+                fill="#0ea5e9"
+                name={labelTotalUser}
+                barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
+              >
+                <LabelList
+                  dataKey="total_user"
+                  position={isHorizontal ? "right" : "top"}
+                  fontSize={isHorizontal ? 10 : 12}
+                />
+              </Bar>
+            )}
             <Bar
               dataKey="user_sudah"
               fill="#22c55e"
@@ -251,18 +270,6 @@ export default function ChartDivisiAbsensi({
               />
             </Bar>
             <Bar
-              dataKey="total_value"
-              fill="#2563eb"
-              name={labelTotal}
-              barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
-            >
-              <LabelList
-                dataKey="total_value"
-                position={isHorizontal ? "right" : "top"}
-                fontSize={isHorizontal ? 10 : 12}
-              />
-            </Bar>
-            <Bar
               dataKey="user_belum"
               fill="#ef4444"
               name={labelBelum}
@@ -270,6 +277,18 @@ export default function ChartDivisiAbsensi({
             >
               <LabelList
                 dataKey="user_belum"
+                position={isHorizontal ? "right" : "top"}
+                fontSize={isHorizontal ? 10 : 12}
+              />
+            </Bar>
+            <Bar
+              dataKey="total_value"
+              fill="#2563eb"
+              name={labelTotal}
+              barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
+            >
+              <LabelList
+                dataKey="total_value"
                 position={isHorizontal ? "right" : "top"}
                 fontSize={isHorizontal ? 10 : 12}
               />
