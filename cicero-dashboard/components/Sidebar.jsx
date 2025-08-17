@@ -30,24 +30,21 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { token, clientId, role } = useAuth();
+  const { token, clientId } = useAuth();
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     async function fetchProfile() {
-      const specialRoles = ["ditbinmas", "ditlantas", "bidhumas"];
-      const targetId =
-        role && specialRoles.includes(role.toLowerCase()) ? role.toLowerCase() : clientId;
-      if (!token || !targetId) return;
+      if (!token || !clientId) return;
       try {
-        const res = await getClientProfile(token, targetId);
+        const res = await getClientProfile(token, clientId);
         setProfile(res.client || res.profile || res);
       } catch (err) {
         console.error(err);
       }
     }
     fetchProfile();
-  }, [token, clientId, role]);
+  }, [token, clientId]);
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
   }
