@@ -76,7 +76,12 @@ export default function DiseminasiInsightPage() {
             token,
             users.map((u) =>
               String(
-                u.client_id || u.clientId || u.clientID || u.client || ""
+                u.client_id ||
+                  u.clientId ||
+                  u.clientID ||
+                  u.id ||
+                  u.client ||
+                  ""
               )
             )
           );
@@ -85,7 +90,12 @@ export default function DiseminasiInsightPage() {
             nama_client:
               nameMap[
                 String(
-                  u.client_id || u.clientId || u.clientID || u.client || ""
+                  u.client_id ||
+                    u.clientId ||
+                    u.clientID ||
+                    u.id ||
+                    u.client ||
+                    ""
                 )
               ] ||
               u.nama_client ||
