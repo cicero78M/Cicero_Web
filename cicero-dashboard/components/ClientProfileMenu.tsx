@@ -4,26 +4,23 @@ import { getClientProfile } from "@/utils/api";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ClientProfileMenu() {
-  const { token, clientId, role } = useAuth();
+  const { token, clientId } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchProfile() {
-      const specialRoles = ["ditbinmas", "ditlantas", "bidhumas"];
-      const targetId =
-        role && specialRoles.includes(role.toLowerCase()) ? role.toLowerCase() : clientId;
-      if (!token || !targetId) return;
+      if (!token || !clientId) return;
       try {
-        const res = await getClientProfile(token, targetId);
+        const res = await getClientProfile(token, clientId);
         setProfile(res.client || res.profile || res);
       } catch (err) {
         console.error(err);
       }
     }
     fetchProfile();
-  }, [token, clientId, role]);
+  }, [token, clientId]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

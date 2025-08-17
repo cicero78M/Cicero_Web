@@ -5,14 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function useRequireAuth() {
   const router = useRouter();
-  const { token, clientId, role } = useAuth();
+  const { token, clientId } = useAuth();
 
   useEffect(() => {
-    const specialRoles = ["ditbinmas", "ditlantas", "bidhumas"];
-    const hasAccess =
-      token && (clientId || (role && specialRoles.includes(role.toLowerCase())));
-    if (!hasAccess) {
+    if (!token || !clientId) {
       router.replace("/");
     }
-  }, [router, token, clientId, role]);
+  }, [router, token, clientId]);
 }

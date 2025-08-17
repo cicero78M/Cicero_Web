@@ -15,12 +15,7 @@ import { Check, X } from "lucide-react";
 
 export default function DashboardPage() {
   useRequireAuth();
-  const { token, clientId, role } = useAuth();
-  const specialRoles = ["ditbinmas", "ditlantas", "bidhumas"];
-  const targetClientId =
-    role && specialRoles.includes(role.toLowerCase())
-      ? role.toLowerCase()
-      : clientId;
+  const { token, clientId } = useAuth();
   const [clientProfile, setClientProfile] = useState(null);
   const [igProfile, setIgProfile] = useState(null);
   const [igPosts, setIgPosts] = useState([]);
@@ -30,7 +25,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token || !targetClientId) {
+    if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return;
@@ -38,7 +33,7 @@ export default function DashboardPage() {
 
     async function fetchData() {
       try {
-        const profileRes = await getClientProfile(token, targetClientId);
+        const profileRes = await getClientProfile(token, clientId);
         const client = profileRes.client || profileRes.profile || profileRes;
         setClientProfile(client);
 
@@ -64,7 +59,7 @@ export default function DashboardPage() {
           try {
             const ttProf = await getTiktokProfileViaBackend(token, ttUser);
             setTiktokProfile(ttProf);
-            const ttRes = await getTiktokPostsViaBackend(token, targetClientId, 3);
+            const ttRes = await getTiktokPostsViaBackend(token, clientId, 3);
             const ttData = ttRes.data || ttRes.posts || ttRes;
             setTiktokPosts(Array.isArray(ttData) ? ttData : []);
           } catch (err) {
@@ -79,7 +74,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, [token, targetClientId]);
+  }, []);
 
   if (loading) return <Loader />;
   if (error)
