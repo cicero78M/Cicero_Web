@@ -81,7 +81,6 @@ export default function UserDirectoryPage() {
             nameMap[
               String(u.client_id || u.clientId || u.clientID || u.client || "")
             ] ||
-            u.nama ||
             u.nama_client ||
             u.client_name ||
             u.client,
@@ -153,22 +152,24 @@ export default function UserDirectoryPage() {
   // Filter: tidak tampilkan user dengan exception
   const filtered = useMemo(
     () =>
-      users
-        .filter((u) => !u.exception)
-        .filter(
-          (u) =>
-            (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.nama_client || u.nama || u.divisi || "")
-              .toLowerCase()
-              .includes(search.toLowerCase()) ||
-            (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
-            (String(u.status)).toLowerCase().includes(search.toLowerCase())
-        ),
-    [users, search]
-  );
+        users
+          .filter((u) => !u.exception)
+          .filter(
+            (u) =>
+              (u.nama_client || u.nama || "")
+                .toLowerCase()
+                .includes(search.toLowerCase()) ||
+              (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
+              (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
+              (u.divisi || "")
+                .toLowerCase()
+                .includes(search.toLowerCase()) ||
+              (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
+              (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
+              String(u.status).toLowerCase().includes(search.toLowerCase())
+          ),
+      [users, search]
+    );
 
   // Paging logic
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -308,10 +309,10 @@ export default function UserDirectoryPage() {
                   </td>
                   <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
                   <td className="py-1 px-2">
-                    {isDirectorate ? (
-                      u.nama_client || u.nama || "-"
-                    ) : editingRowId === u.user_id ? (
-                      <input
+                  {isDirectorate ? (
+                    u.nama_client || u.client_name || u.client || u.nama || "-"
+                  ) : editingRowId === u.user_id ? (
+                    <input
                         value={editSatfung}
                         onChange={(e) => setEditSatfung(e.target.value)}
                         placeholder={isDirectorate ? "Kesatuan" : "Satfung"}
