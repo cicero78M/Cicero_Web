@@ -110,7 +110,6 @@ export default function UserInsightPage() {
                   u.client_id || u.clientId || u.clientID || u.id || "",
                 )
               ] ||
-              u.nama ||
               u.nama_client ||
               u.client_name ||
               u.client,
@@ -142,7 +141,6 @@ export default function UserInsightPage() {
             );
             const name = (
               u.nama_client ||
-              u.nama ||
               u.client_name ||
               u.client ||
               id

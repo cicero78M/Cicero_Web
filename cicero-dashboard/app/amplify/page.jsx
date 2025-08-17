@@ -88,7 +88,6 @@ export default function DiseminasiInsightPage() {
                   u.client_id || u.clientId || u.clientID || u.client || ""
                 )
               ] ||
-              u.nama ||
               u.nama_client ||
               u.client_name ||
               u.client,

@@ -112,20 +112,19 @@ export default function TiktokEngagementInsightPage() {
               )
             )
           );
-          enrichedUsers = users.map((u) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(
-                  u.client_id || u.clientId || u.clientID || u.client || ""
-                )
-              ] ||
-              u.nama ||
-              u.nama_client ||
-              u.client_name ||
-              u.client,
-          }));
-        }
+            enrichedUsers = users.map((u) => ({
+              ...u,
+              nama_client:
+                nameMap[
+                  String(
+                    u.client_id || u.clientId || u.clientID || u.client || ""
+                  )
+                ] ||
+                u.nama_client ||
+                u.client_name ||
+                u.client,
+            }));
+          }
 
         // Ambil field TikTok Post dengan fallback urutan prioritas
         const totalTiktokPost =
