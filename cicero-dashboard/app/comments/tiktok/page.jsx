@@ -186,7 +186,7 @@ export default function TiktokEngagementInsightPage() {
             {/* Card Ringkasan */}
             <div className="bg-gradient-to-tr from-fuchsia-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
               <SummaryItem
-                label="Jumlah TikTok Post"
+                label="TikTok Post Hari Ini"
                 value={rekapSummary.totalTiktokPost}
                 color="fuchsia"
                 icon={<Music className="text-fuchsia-400" />}
