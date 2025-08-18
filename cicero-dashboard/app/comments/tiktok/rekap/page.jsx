@@ -1,14 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  getDashboardStats,
-  getRekapKomentarTiktok,
-  getClientProfile,
-  getClientNames,
-} from "@/utils/api";
+import { getDashboardStats, getRekapKomentarTiktok } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
-import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import Link from "next/link";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import ViewDataSelector, {
@@ -33,7 +27,6 @@ export default function RekapKomentarTiktokPage() {
     totalBelumKomentar: 0,
     totalTiktokPost: 0,
   });
-  const [isDirectorate, setIsDirectorate] = useState(false);
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -86,36 +79,7 @@ export default function RekapKomentarTiktokPage() {
           startDate,
           endDate,
         );
-        let users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
-
-        const profileRes = await getClientProfile(token, client_id);
-        const profile =
-          profileRes.client || profileRes.profile || profileRes || {};
-        const dir =
-          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
-        setIsDirectorate(dir);
-        if (dir) {
-          const nameMap = await getClientNames(
-            token,
-            users.map((u) =>
-              String(
-                u.client_id || u.clientId || u.clientID || u.client || "",
-              ),
-            ),
-          );
-          users = users.map((u) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(
-                  u.client_id || u.clientId || u.clientID || u.client || "",
-                )
-              ] ||
-              u.nama_client ||
-              u.client_name ||
-              u.client,
-          }));
-        }
+        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
         // Sumber utama TikTok Post Hari Ini dari statsRes
         const totalTiktokPost =
@@ -195,21 +159,6 @@ export default function RekapKomentarTiktokPage() {
               }}
             />
           </div>
-          {isDirectorate && (
-            <ChartDivisiAbsensi
-              users={chartData}
-              title="POLRES JAJARAN"
-              orientation="horizontal"
-              totalPost={rekapSummary.totalTiktokPost}
-              fieldJumlah="jumlah_komentar"
-              labelSudah="User Sudah Komentar"
-              labelBelum="User Belum Komentar"
-              labelTotal="Total Komentar"
-              groupBy="client_id"
-              showTotalUser
-              labelTotalUser="Jumlah User"
-            />
-          )}
 
           {/* Kirim data ke komponen detail rekap TikTok */}
           <RekapKomentarTiktok
