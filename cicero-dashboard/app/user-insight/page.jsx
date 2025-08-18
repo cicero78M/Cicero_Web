@@ -41,6 +41,7 @@ export default function UserInsightPage() {
     SAT: [],
     "SI & SPKT": [],
     POLSEK: [],
+    LAINNYA: [],
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [chartPolres, setChartPolres] = useState([]);
@@ -173,6 +174,7 @@ export default function UserInsightPage() {
             SAT: generateChartData(grouped.SAT),
             "SI & SPKT": generateChartData(grouped["SI & SPKT"]),
             POLSEK: generateChartData(grouped.POLSEK),
+            LAINNYA: generateChartData(grouped.LAINNYA),
           });
         }
       } catch (err) {
@@ -253,6 +255,7 @@ export default function UserInsightPage() {
                 <ChartBox title="BAG" data={chartKelompok.BAG} />
                 <ChartBox title="SAT" data={chartKelompok.SAT} />
                 <ChartBox title="SI & SPKT" data={chartKelompok["SI & SPKT"]} />
+                <ChartBox title="LAINNYA" data={chartKelompok.LAINNYA} />
                 <ChartBox
                   title="POLSEK"
                   data={chartKelompok.POLSEK}

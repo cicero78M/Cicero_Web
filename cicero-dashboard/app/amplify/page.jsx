@@ -209,20 +209,21 @@ export default function DiseminasiInsightPage() {
                 showTotalUser
               />
             ) : (
-              <>
-                <ChartBox title="BAG" users={kelompok.BAG} showTotalUser />
-                <ChartBox title="SAT" users={kelompok.SAT} showTotalUser />
-                <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} showTotalUser />
-                <ChartHorizontal
-                  title="POLSEK"
-                  users={kelompok.POLSEK}
-                  fieldJumlah="jumlah_link"
-                  labelSudah="Sudah Post"
-                  labelBelum="Belum Post"
-                  labelTotal="Total Link"
-                />
-              </>
-            )}
+            <> 
+              <ChartBox title="BAG" users={kelompok.BAG} showTotalUser />
+              <ChartBox title="SAT" users={kelompok.SAT} showTotalUser />
+              <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} showTotalUser />
+              <ChartBox title="LAINNYA" users={kelompok.LAINNYA} showTotalUser />
+              <ChartHorizontal
+                title="POLSEK"
+                users={kelompok.POLSEK}
+                fieldJumlah="jumlah_link"
+                labelSudah="Sudah Post"
+                labelBelum="Belum Post"
+                labelTotal="Total Link"
+              />
+            </>
+          )}
           </div>
         </div>
       </div>
