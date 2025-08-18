@@ -178,9 +178,8 @@ export default function InstagramEngagementInsightPage() {
               ),
             ),
           );
-          enrichedUsers = users.map((u) => ({
-            ...u,
-            nama_client:
+          enrichedUsers = users.map((u) => {
+            const clientName =
               nameMap[
                 String(
                   u.client_id || u.clientId || u.clientID || u.client || "",
@@ -188,8 +187,13 @@ export default function InstagramEngagementInsightPage() {
               ] ||
               u.nama_client ||
               u.client_name ||
-              u.client,
-          }));
+              u.client;
+            return {
+              ...u,
+              nama_client: clientName,
+              client_name: clientName,
+            };
+          });
         }
 
         // Rekap summary
