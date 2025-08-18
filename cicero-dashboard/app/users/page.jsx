@@ -238,7 +238,7 @@ export default function UserDirectoryPage() {
             />
             <input
               type="text"
-              placeholder={isDirectorate ? "Kesatuan" : "Satfung"}
+              placeholder="Satfung"
               value={satfung}
               onChange={(e) => setSatfung(e.target.value)}
               required
