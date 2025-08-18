@@ -22,6 +22,11 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
     : users.filter(u => Number(u.jumlah_komentar) > 0 || isException(u.exception)).length;
   const totalBelumKomentar = totalUser - totalSudahKomentar;
 
+  const hasClient = useMemo(
+    () => users.some(u => u.nama_client || u.client_name || u.client),
+    [users]
+  );
+
   const maxJumlahKomentar = useMemo(
     () =>
       Math.max(
@@ -34,15 +39,18 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   );
 
   const [search, setSearch] = useState("");
-  const filtered = useMemo(
-    () =>
-      users.filter(u =>
-        (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
-        (u.username || "").toLowerCase().includes(search.toLowerCase()) ||
-        bersihkanSatfung(u.divisi || "").toLowerCase().includes(search.toLowerCase())
-      ),
-    [users, search]
-  );
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase();
+    return users.filter(
+      (u) =>
+        (u.nama || "").toLowerCase().includes(term) ||
+        (u.username || "").toLowerCase().includes(term) ||
+        bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
+        (u.nama_client || u.client_name || u.client || "")
+          .toLowerCase()
+          .includes(term)
+    );
+  }, [users, search]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -108,10 +116,14 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
       <div className="flex justify-end mb-2">
         <input
           type="text"
-          placeholder="Cari nama, username, atau divisi"
+          placeholder={
+            hasClient
+              ? "Cari nama, username, divisi, atau client"
+              : "Cari nama, username, atau divisi"
+          }
           className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-pink-300"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
@@ -120,6 +132,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
               <th className="py-2 px-2">No</th>
+              {hasClient && <th className="py-2 px-2">Client</th>}
               <th className="py-2 px-2">Nama</th>
               <th className="py-2 px-2">Username TikTok</th>
               <th className="py-2 px-2">Divisi/Satfung</th>
@@ -129,15 +142,30 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              const sudahKomentar = totalTiktokPost === 0
-                ? false
-                : Number(u.jumlah_komentar) > 0 || isException(u.exception);
+              const sudahKomentar =
+                totalTiktokPost === 0
+                  ? false
+                  : Number(u.jumlah_komentar) > 0 || isException(u.exception);
               return (
-                <tr key={u.user_id} className={sudahKomentar ? "bg-green-50" : "bg-red-50"}>
+                <tr
+                  key={u.user_id}
+                  className={sudahKomentar ? "bg-green-50" : "bg-red-50"}
+                >
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                  <td className="py-1 px-2">{u.title ? `${u.title} ${u.nama}` : u.nama}</td>
+                  {hasClient && (
+                    <td className="py-1 px-2">
+                      {u.nama_client || u.client_name || u.client || "-"}
+                    </td>
+                  )}
+                  <td className="py-1 px-2">
+                    {u.title ? `${u.title} ${u.nama}` : u.nama}
+                  </td>
                   <td className="py-1 px-2 font-mono text-pink-700">{u.username}</td>
-                  <td className="py-1 px-2"><span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">{bersihkanSatfung(u.divisi || "-")}</span></td>
+                  <td className="py-1 px-2">
+                    <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
+                      {bersihkanSatfung(u.divisi || "-")}
+                    </span>
+                  </td>
                   <td className="py-1 px-2 text-center">
                     {sudahKomentar ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
@@ -151,7 +179,9 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                       </span>
                     )}
                   </td>
-                  <td className="py-1 px-2 text-center font-bold">{isException(u.exception) ? maxJumlahKomentar : u.jumlah_komentar}</td>
+                  <td className="py-1 px-2 text-center font-bold">
+                    {isException(u.exception) ? maxJumlahKomentar : u.jumlah_komentar}
+                  </td>
                 </tr>
               );
             })}

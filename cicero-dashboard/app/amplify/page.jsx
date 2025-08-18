@@ -13,7 +13,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { Link as LinkIcon, User, Check, X } from "lucide-react";
 
-export default function DiseminasiInsightPage() {
+export default function AmplifikasiLinkPage() {
   useRequireAuth();
   const { token, clientId } = useAuth();
   const [chartData, setChartData] = useState([]);
@@ -148,12 +148,12 @@ export default function DiseminasiInsightPage() {
         <div className="w-full max-w-6xl px-2 md:px-8 py-8">
           <div className="flex flex-col gap-8">
             <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
-              Diseminasi Insight Report
+              Amplifikasi Link Insight
             </h1>
 
             <div className="bg-gradient-to-tr from-indigo-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
               <SummaryItem
-                label="Total Link"
+                label="Link Amplifikasi"
                 value={rekapSummary.totalLink}
                 color="indigo"
                 icon={<LinkIcon className="text-indigo-400" />}
@@ -218,9 +218,9 @@ export default function DiseminasiInsightPage() {
                 title="POLSEK"
                 users={kelompok.POLSEK}
                 fieldJumlah="jumlah_link"
-                labelSudah="Sudah Post"
-                labelBelum="Belum Post"
-                labelTotal="Total Link"
+                labelSudah="User Sudah Post"
+                labelBelum="User Belum Post"
+                labelTotal="Total Link Amplifikasi"
               />
             </>
           )}
@@ -248,9 +248,9 @@ function ChartBox({
           orientation={orientation}
           totalPost={1}
           fieldJumlah="jumlah_link"
-          labelSudah="Sudah Post"
-          labelBelum="Belum Post"
-          labelTotal="Total Link"
+          labelSudah="User Sudah Post"
+          labelBelum="User Belum Post"
+          labelTotal="Total Link Amplifikasi"
           groupBy={groupBy}
           showTotalUser={showTotalUser}
           labelTotalUser="Jumlah User"
