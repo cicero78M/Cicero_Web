@@ -268,6 +268,13 @@ export default function TiktokEngagementInsightPage() {
                   fieldJumlah="jumlah_komentar"
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
                 />
+                <ChartBox
+                  title="LAINNYA"
+                  users={kelompok.LAINNYA}
+                  totalTiktokPost={rekapSummary.totalTiktokPost}
+                  fieldJumlah="jumlah_komentar"
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
+                />
                 <ChartHorizontal
                   title="POLSEK"
                   users={kelompok.POLSEK}

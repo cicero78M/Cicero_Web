@@ -276,6 +276,12 @@ export default function InstagramEngagementInsightPage() {
                   totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
                 />
+                <ChartBox
+                  title="LAINNYA"
+                  users={kelompok.LAINNYA}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi lainnya."
+                />
                 <ChartHorizontal
                   title="POLSEK"
                   users={kelompok.POLSEK}
