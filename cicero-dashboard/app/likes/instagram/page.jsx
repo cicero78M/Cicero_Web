@@ -31,11 +31,6 @@ function isException(val) {
   return val === true || val === "true" || val === 1 || val === "1";
 }
 
-// Generic helper to check boolean-ish flags
-function isFlagTrue(val) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
-
 export default function InstagramEngagementInsightPage() {
   useRequireAuth();
   const [stats, setStats] = useState(null);
@@ -109,17 +104,19 @@ export default function InstagramEngagementInsightPage() {
           const directoryRes = await getUserDirectory(token, client_id);
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
+          const expectedRole = String(client_id).toLowerCase();
           const clientIds = Array.from(
             new Set(
               dirData
-                .filter((u) =>
-                  isFlagTrue(
-                    u.same_role ||
-                      u.sameRole ||
-                      u.role_sama ||
-                      u.isSameRole ||
-                      u.roleSame,
-                  ),
+                .filter(
+                  (u) =>
+                    String(
+                      u.role ||
+                        u.user_role ||
+                        u.userRole ||
+                        u.roleName ||
+                        "",
+                    ).toLowerCase() === expectedRole,
                 )
                 .map((u) =>
                   String(

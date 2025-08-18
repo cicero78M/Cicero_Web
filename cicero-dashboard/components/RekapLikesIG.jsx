@@ -16,6 +16,10 @@ const PAGE_SIZE = 25;
  */
 export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const totalUser = users.length;
+  const hasClient = useMemo(
+    () => users.some((u) => u.nama_client || u.client_name || u.client),
+    [users],
+  );
 
   // === LOGIC: Semua user exception (true/false) dianggap belum jika IG post = 0 ===
   const totalSudahLike = totalIGPost === 0
@@ -45,13 +49,16 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
   const [search, setSearch] = useState("");
   const filtered = useMemo(
     () =>
-      users.filter(
-        u =>
-          (u.nama || "").toLowerCase().includes(search.toLowerCase()) ||
-          (u.username || "").toLowerCase().includes(search.toLowerCase()) ||
-          (u.divisi || "").toLowerCase().includes(search.toLowerCase())
-      ),
-    [users, search]
+      users.filter((u) => {
+        const term = search.toLowerCase();
+        return (
+          (u.nama || "").toLowerCase().includes(term) ||
+          (u.username || "").toLowerCase().includes(term) ||
+          (u.divisi || "").toLowerCase().includes(term) ||
+          (u.nama_client || u.client_name || u.client || "").toLowerCase().includes(term)
+        );
+      }),
+    [users, search],
   );
 
   // Sorting
@@ -132,10 +139,10 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
       <div className="flex justify-end mb-2">
         <input
           type="text"
-          placeholder="Cari nama, username, atau divisi"
+          placeholder="Cari nama, username, divisi, atau client"
           className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
@@ -145,6 +152,7 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
           <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
               <th className="py-2 px-2">No</th>
+              {hasClient && <th className="py-2 px-2">Client</th>}
               <th className="py-2 px-2">Nama</th>
               <th className="py-2 px-2">Username IG</th>
               <th className="py-2 px-2">Divisi/Satfung</th>
@@ -162,6 +170,11 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
               return (
                 <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                  {hasClient && (
+                    <td className="py-1 px-2">
+                      {u.nama_client || u.client_name || u.client || "-"}
+                    </td>
+                  )}
                   <td className="py-1 px-2">
                     {u.title ? `${u.title} ${u.nama}` : u.nama}
                   </td>
