@@ -49,7 +49,12 @@ export default function LoginPage() {
       if (data.success && data.token) {
         const userId = data.user?.user_id || null;
         const userClient = data.user?.client_id || null;
-        setAuth(data.token, userClient, userId);
+        const userRole =
+          data.user?.role ||
+          data.user?.user_role ||
+          data.user?.roleName ||
+          null;
+        setAuth(data.token, userClient, userId, userRole);
         router.push("/dashboard");
       } else {
         setError(data.message || "Login gagal");

@@ -30,7 +30,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { token, clientId } = useAuth();
+  const { token, clientId, role } = useAuth();
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -62,6 +62,7 @@ export default function Sidebar() {
   const instagramEnabled = isActive(getStatus(profile, "client_insta_status"));
   const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
   const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
+  const isOperator = role?.toLowerCase() === "operator";
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -69,7 +70,13 @@ export default function Sidebar() {
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
     ...(instagramEnabled
       ? [
-          { label: "Instagram Post Analysis", path: "/instagram", icon: Instagram },
+          ...(isOperator
+            ? [{
+                label: "Instagram Post Analysis",
+                path: "/instagram",
+                icon: Instagram,
+              }]
+            : []),
           { label: "Instagram Engagement Insight", path: "/likes/instagram", icon: Heart },
         ]
       : []),
@@ -78,8 +85,18 @@ export default function Sidebar() {
       : []),
     ...(tiktokEnabled
       ? [
-          { label: "TikTok Post Analysis", path: "/tiktok", icon: Music },
-          { label: "TikTok Engagement Insight", path: "/comments/tiktok", icon: MessageCircle },
+          ...(isOperator
+            ? [{
+                label: "TikTok Post Analysis",
+                path: "/tiktok",
+                icon: Music,
+              }]
+            : []),
+          {
+            label: "TikTok Engagement Insight",
+            path: "/comments/tiktok",
+            icon: MessageCircle,
+          },
         ]
       : []),
   ];
