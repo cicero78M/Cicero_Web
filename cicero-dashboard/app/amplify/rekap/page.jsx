@@ -71,9 +71,9 @@ export default function RekapAmplifikasiPage() {
                   u.clientID ||
                   u.id ||
                   u.client ||
-                  "",
-              ),
-            ),
+                  ""
+              )
+            )
           );
           users = users.map((u) => ({
             ...u,
@@ -85,8 +85,8 @@ export default function RekapAmplifikasiPage() {
                     u.clientID ||
                     u.id ||
                     u.client ||
-                    "",
-                ),
+                    ""
+                )
               ] ||
               u.nama_client ||
               u.client_name ||
