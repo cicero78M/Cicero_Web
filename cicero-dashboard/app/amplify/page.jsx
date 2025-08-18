@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getRekapAmplify, getClientProfile, getClientNames } from "@/utils/api";
 import ViewDataSelector, {
   getPeriodeDateForView,
@@ -11,7 +12,7 @@ import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
-import { Link as LinkIcon, User, Check, X } from "lucide-react";
+import { Link as LinkIcon, User, Check, X, ArrowRight } from "lucide-react";
 
 export default function AmplifikasiLinkPage() {
   useRequireAuth();
@@ -209,7 +210,7 @@ export default function AmplifikasiLinkPage() {
                 showTotalUser
               />
             ) : (
-            <> 
+            <>
               <ChartBox title="BAG" users={kelompok.BAG} showTotalUser />
               <ChartBox title="SAT" users={kelompok.SAT} showTotalUser />
               <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} showTotalUser />
@@ -224,6 +225,16 @@ export default function AmplifikasiLinkPage() {
               />
             </>
           )}
+
+            <div className="flex justify-end my-2">
+              <Link
+                href="/amplify/rekap"
+                className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
+              >
+                <ArrowRight className="w-5 h-5 inline" />
+                Lihat Rekap Detail
+              </Link>
+            </div>
           </div>
         </div>
       </div>
