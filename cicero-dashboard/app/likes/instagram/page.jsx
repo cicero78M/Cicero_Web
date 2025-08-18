@@ -5,6 +5,7 @@ import {
   getRekapLikesIG,
   getClientProfile,
   getClientNames,
+  getUserDirectory,
 } from "@/utils/api";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
@@ -91,26 +92,70 @@ export default function InstagramEngagementInsightPage() {
           return;
         }
 
-        const rekapRes = await getRekapLikesIG(
-          token,
-          client_id,
-          periode,
-          date,
-          startDate,
-          endDate,
-        );
-        const users = Array.isArray(rekapRes?.data)
-          ? rekapRes.data
-          : Array.isArray(rekapRes)
-          ? rekapRes
-          : [];
-
         const profileRes = await getClientProfile(token, client_id);
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
+
+        let users = [];
+        if (dir) {
+          const directoryRes = await getUserDirectory(token, client_id);
+          const dirData =
+            directoryRes.data || directoryRes.users || directoryRes || [];
+          const clientIds = Array.from(
+            new Set(
+              dirData
+                .map((u) =>
+                  String(
+                    u.client_id ||
+                      u.clientId ||
+                      u.clientID ||
+                      u.client ||
+                      "",
+                  ),
+                )
+                .filter(Boolean),
+            ),
+          );
+          if (!clientIds.includes(String(client_id))) {
+            clientIds.push(String(client_id));
+          }
+          const rekapAll = await Promise.all(
+            clientIds.map((cid) =>
+              getRekapLikesIG(
+                token,
+                cid,
+                periode,
+                date,
+                startDate,
+                endDate,
+              ).catch(() => ({ data: [] })),
+            ),
+          );
+          users = rekapAll.flatMap((res) =>
+            Array.isArray(res?.data)
+              ? res.data
+              : Array.isArray(res)
+              ? res
+              : [],
+          );
+        } else {
+          const rekapRes = await getRekapLikesIG(
+            token,
+            client_id,
+            periode,
+            date,
+            startDate,
+            endDate,
+          );
+          users = Array.isArray(rekapRes?.data)
+            ? rekapRes.data
+            : Array.isArray(rekapRes)
+            ? rekapRes
+            : [];
+        }
 
         let enrichedUsers = users;
         if (dir) {
@@ -122,19 +167,19 @@ export default function InstagramEngagementInsightPage() {
               ),
             ),
           );
-            enrichedUsers = users.map((u) => ({
-              ...u,
-              nama_client:
-                nameMap[
-                  String(
-                    u.client_id || u.clientId || u.clientID || u.client || "",
-                  )
-                ] ||
-                u.nama_client ||
-                u.client_name ||
-                u.client,
-            }));
-          }
+          enrichedUsers = users.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id || u.clientId || u.clientID || u.client || "",
+                )
+              ] ||
+              u.nama_client ||
+              u.client_name ||
+              u.client,
+          }));
+        }
 
         // Rekap summary
         const totalUser = enrichedUsers.length;
