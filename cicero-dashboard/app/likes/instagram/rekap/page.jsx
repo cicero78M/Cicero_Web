@@ -1,6 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapLikesIG } from "@/utils/api";
+import {
+  getDashboardStats,
+  getRekapLikesIG,
+  getClientProfile,
+  getClientNames,
+  getUserDirectory,
+} from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
@@ -72,19 +78,100 @@ export default function RekapLikesIGPage() {
           return;
         }
 
-        const rekapRes = await getRekapLikesIG(
-          token,
-          client_id,
-          periode,
-          date,
-          startDate,
-          endDate,
-        );
-        const users = Array.isArray(rekapRes?.data)
-          ? rekapRes.data
-          : Array.isArray(rekapRes)
-          ? rekapRes
-          : [];
+        const profileRes = await getClientProfile(token, client_id);
+        const profile =
+          profileRes.client || profileRes.profile || profileRes || {};
+        const dir =
+          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+
+        let users = [];
+        if (dir) {
+          const directoryRes = await getUserDirectory(token, client_id);
+          const dirData =
+            directoryRes.data || directoryRes.users || directoryRes || [];
+          const expectedRole = String(client_id).toLowerCase();
+          const clientIds = Array.from(
+            new Set(
+              dirData
+                .filter(
+                  (u) =>
+                    String(
+                      u.role ||
+                        u.user_role ||
+                        u.userRole ||
+                        u.roleName ||
+                        "",
+                    ).toLowerCase() === expectedRole,
+                )
+                .map((u) =>
+                  String(
+                    u.client_id ||
+                      u.clientId ||
+                      u.clientID ||
+                      u.client ||
+                      "",
+                  ),
+                )
+                .filter(Boolean),
+            ),
+          );
+          if (!clientIds.includes(String(client_id))) {
+            clientIds.push(String(client_id));
+          }
+          const rekapAll = await Promise.all(
+            clientIds.map((cid) =>
+              getRekapLikesIG(
+                token,
+                cid,
+                periode,
+                date,
+                startDate,
+                endDate,
+              ).catch(() => ({ data: [] })),
+            ),
+          );
+          users = rekapAll.flatMap((res) =>
+            Array.isArray(res?.data)
+              ? res.data
+              : Array.isArray(res)
+              ? res
+              : [],
+          );
+          const nameMap = await getClientNames(
+            token,
+            users.map((u) =>
+              String(
+                u.client_id || u.clientId || u.clientID || u.client || "",
+              ),
+            ),
+          );
+          users = users.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id || u.clientId || u.clientID || u.client || "",
+                )
+              ] ||
+              u.nama_client ||
+              u.client_name ||
+              u.client,
+          }));
+        } else {
+          const rekapRes = await getRekapLikesIG(
+            token,
+            client_id,
+            periode,
+            date,
+            startDate,
+            endDate,
+          );
+          users = Array.isArray(rekapRes?.data)
+            ? rekapRes.data
+            : Array.isArray(rekapRes)
+            ? rekapRes
+            : [];
+        }
 
         // Hitung jumlah IG post dari stats
         const totalIGPost = Number(statsData.instagramPosts) || 0;
