@@ -207,23 +207,24 @@ export default function AmplifikasiLinkPage() {
                 groupBy="client_id"
                 orientation="horizontal"
                 showTotalUser
+                totalPost={1}
               />
             ) : (
-            <> 
-              <ChartBox title="BAG" users={kelompok.BAG} showTotalUser />
-              <ChartBox title="SAT" users={kelompok.SAT} showTotalUser />
-              <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} showTotalUser />
-              <ChartBox title="LAINNYA" users={kelompok.LAINNYA} showTotalUser />
-              <ChartHorizontal
-                title="POLSEK"
-                users={kelompok.POLSEK}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-              />
-            </>
-          )}
+              <>
+                <ChartBox title="BAG" users={kelompok.BAG} showTotalUser />
+                <ChartBox title="SAT" users={kelompok.SAT} showTotalUser />
+                <ChartBox title="SI & SPKT" users={kelompok["SI & SPKT"]} showTotalUser />
+                <ChartBox title="LAINNYA" users={kelompok.LAINNYA} showTotalUser />
+                <ChartHorizontal
+                  title="POLSEK"
+                  users={kelompok.POLSEK}
+                  fieldJumlah="jumlah_link"
+                  labelSudah="User Sudah Post"
+                  labelBelum="User Belum Post"
+                  labelTotal="Total Link Amplifikasi"
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -237,6 +238,7 @@ function ChartBox({
   groupBy,
   orientation = "vertical",
   showTotalUser = false,
+  totalPost = 1,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -246,7 +248,7 @@ function ChartBox({
           users={users}
           title={title}
           orientation={orientation}
-          totalPost={1}
+          totalPost={totalPost}
           fieldJumlah="jumlah_link"
           labelSudah="User Sudah Post"
           labelBelum="User Belum Post"
