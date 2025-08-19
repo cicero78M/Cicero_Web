@@ -30,6 +30,8 @@ export default function ChartHorizontal({
   labelSudah = "User Sudah Like",
   labelBelum = "User Belum Like",
   labelTotal = "Total Likes",
+  showTotalUser = false,
+  labelTotalUser = "Jumlah User",
 }) {
   const effectiveTotal =
     typeof totalPost !== "undefined" ? totalPost : totalIGPost;
@@ -57,10 +59,12 @@ export default function ChartHorizontal({
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
+        total_user: 0,
         user_sudah: 0,
         user_belum: 0,
         total_value: 0,
       };
+    divisiMap[key].total_user += 1;
     if (sudah) {
       divisiMap[key].user_sudah += 1;
       divisiMap[key].total_value += nilai;
@@ -112,7 +116,9 @@ export default function ChartHorizontal({
               formatter={(value, name) =>
                 [
                   value,
-                  name === "user_sudah"
+                  name === "total_user"
+                    ? labelTotalUser
+                    : name === "user_sudah"
                     ? labelSudah
                     : name === "user_belum"
                     ? labelBelum
@@ -124,6 +130,20 @@ export default function ChartHorizontal({
               labelFormatter={label => `Divisi: ${label}`}
             />
             <Legend />
+            {showTotalUser && (
+              <Bar
+                dataKey="total_user"
+                fill="#0ea5e9"
+                name={labelTotalUser}
+                barSize={10}
+              >
+                <LabelList
+                  dataKey="total_user"
+                  position="right"
+                  fontSize={10}
+                />
+              </Bar>
+            )}
             <Bar dataKey="user_sudah" fill="#22c55e" name={labelSudah} barSize={10}>
               <LabelList dataKey="user_sudah" position="right" fontSize={10} />
             </Bar>
