@@ -318,6 +318,7 @@ function ChartBox({
   narrative,
   groupBy,
 }) {
+  const showTotalUser = groupBy === "client_id";
   return (
     <div className="bg-white rounded-xl shadow p-4">
       <div className="font-bold text-pink-700 mb-2 text-center">{title}</div>
@@ -332,6 +333,8 @@ function ChartBox({
           labelBelum="User Belum Komentar"
           labelTotal="Total Komentar"
           groupBy={groupBy}
+          showTotalUser={showTotalUser}
+          labelTotalUser="Jumlah User"
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
