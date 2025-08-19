@@ -244,6 +244,7 @@ export default function TiktokEngagementInsightPage() {
                 fieldJumlah="jumlah_komentar"
                 groupBy="client_id"
                 orientation="horizontal"
+                showTotalUser
               />
             ) : (
               <div className="flex flex-col gap-6">
@@ -253,6 +254,7 @@ export default function TiktokEngagementInsightPage() {
                   totalTiktokPost={rekapSummary.totalTiktokPost}
                   fieldJumlah="jumlah_komentar"
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
+                  showTotalUser
                 />
                 <ChartBox
                   title="SAT"
@@ -260,6 +262,7 @@ export default function TiktokEngagementInsightPage() {
                   totalTiktokPost={rekapSummary.totalTiktokPost}
                   fieldJumlah="jumlah_komentar"
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
+                  showTotalUser
                 />
                 <ChartBox
                   title="SI & SPKT"
@@ -267,6 +270,7 @@ export default function TiktokEngagementInsightPage() {
                   totalTiktokPost={rekapSummary.totalTiktokPost}
                   fieldJumlah="jumlah_komentar"
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
+                  showTotalUser
                 />
                 <ChartBox
                   title="LAINNYA"
@@ -274,6 +278,7 @@ export default function TiktokEngagementInsightPage() {
                   totalTiktokPost={rekapSummary.totalTiktokPost}
                   fieldJumlah="jumlah_komentar"
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
+                  showTotalUser
                 />
                 <ChartHorizontal
                   title="POLSEK"
@@ -283,6 +288,7 @@ export default function TiktokEngagementInsightPage() {
                   labelSudah="User Sudah Komentar"
                   labelBelum="User Belum Komentar"
                   labelTotal="Total Komentar"
+                  showTotalUser
                 />
                 <Narrative>
                   Grafik POLSEK menggambarkan distribusi komentar antar user dari
@@ -317,6 +323,7 @@ function ChartBox({
   fieldJumlah,
   narrative,
   groupBy,
+  showTotalUser = false,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -332,6 +339,8 @@ function ChartBox({
           labelBelum="User Belum Komentar"
           labelTotal="Total Komentar"
           groupBy={groupBy}
+          showTotalUser={showTotalUser}
+          labelTotalUser="Jumlah User"
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
