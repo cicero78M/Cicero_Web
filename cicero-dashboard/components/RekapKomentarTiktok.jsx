@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import usePersistentState from "@/hooks/usePersistentState";
 import { Music, Users, Check, X } from "lucide-react";
 
 function isException(val) {
@@ -79,10 +80,15 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
     });
   }, [filtered, maxJumlahKomentar]);
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePersistentState("rekapKomentarTiktok_page", 1);
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
   const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  useEffect(() => setPage(1), [search]);
+  useEffect(() => setPage(1), [search, setPage]);
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages || 1);
+    }
+  }, [page, totalPages, setPage]);
 
   return (
     <div className="flex flex-col gap-6 mt-8">
