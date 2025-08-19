@@ -25,7 +25,11 @@ Dokumen ini merangkum arsitektur tinggi dan alur kerja antar komponen.
 - Komunikasi dengan backend dilakukan lewat helper di `utils/api.ts` dan URL dasar
   diatur lewat variabel `NEXT_PUBLIC_API_URL`.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L39】
 - Menyajikan halaman analitik Instagram dan TikTok, direktori pengguna,
-  serta informasi client melalui folder `app/` di dalam proyek.`【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L38】
+  serta informasi client melalui folder `app/` di dalam proyek. 【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L38】
+- Otentikasi global dikelola oleh `AuthContext` di folder `context/` dengan hook
+  `useRequireAuth` dan `useAuthRedirect` untuk menjaga akses halaman.
+- Modul utilitas seperti `groupUsersByKelompok` di `utils/` membantu
+  normalisasi data sebelum ditampilkan.
 
 ## Aplikasi Android pegiat_medsos_apps
 

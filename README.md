@@ -9,6 +9,7 @@ For detailed instructions on setting up a production server and deploying the da
 ```
 Cicero_Web/
 ├── cicero-dashboard/   # Next.js application
+├── docs/               # Supplementary documentation
 ├── LICENSE             # Project license
 └── README.md           # This file
 ```
@@ -17,8 +18,11 @@ Inside `cicero-dashboard` you will find the typical Next.js project layout:
 
 - `app/` – application pages and layouts
 - `components/` – shared React components
+- `context/` – React context providers for shared state (e.g. authentication)
 - `hooks/` – custom React hooks
+- `lib/` – small utility modules and shared assets
 - `utils/` – helper functions and API utilities
+- `__tests__/` – Jest unit tests
 
 ## Installation
 
@@ -65,6 +69,14 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - Clients may allow an unlimited number of concurrent sessions.
 - Terms of Service and Privacy Policy for Google sign-in are available at `/terms-of-service` and `/privacy-policy`.
 - For Google OAuth verification, `docs/google_auth_policies.md` also includes a short description of the application.
+
+## Documentation
+
+Additional documents live under the [`docs/`](docs) directory:
+
+- [`DEPLOYMENT.md`](docs/DEPLOYMENT.md) – server setup and deployment workflow
+- [`executive_summary.md`](docs/executive_summary.md) – high-level architecture across repositories
+- [`google_auth_policies.md`](docs/google_auth_policies.md) – Google OAuth terms and privacy policy links
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
