@@ -346,6 +346,7 @@ export default function InstagramEngagementInsightPage() {
                   title="POLSEK"
                   users={kelompok.POLSEK}
                   totalPost={rekapSummary.totalIGPost}
+                  showTotalUser
                 />
                 <Narrative>
                   Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
@@ -393,6 +394,8 @@ function ChartBox({
           labelBelum="User Belum Like"
           labelTotal="Total Likes"
           groupBy={groupBy}
+          showTotalUser
+          labelTotalUser="Jumlah User"
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
