@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import usePersistentState from "@/hooks/usePersistentState";
 import {
   getUserDirectory,
   createUser,
@@ -19,7 +20,7 @@ export default function UserDirectoryPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePersistentState("users_page", 1);
 
   const [showForm, setShowForm] = useState(false);
   // state for new user form
@@ -176,7 +177,14 @@ export default function UserDirectoryPage() {
   const currentRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Reset ke halaman 1 saat search berubah
-  useEffect(() => setPage(1), [search]);
+  useEffect(() => setPage(1), [search, setPage]);
+
+  // Pastikan halaman tetap valid saat totalPages berubah
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages || 1);
+    }
+  }, [page, totalPages, setPage]);
 
   if (loading) return <Loader />;
   if (error)
