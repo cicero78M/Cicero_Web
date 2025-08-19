@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Link as LinkIcon,
+  Book,
 } from "lucide-react";
 import {
   Sheet,
@@ -99,6 +100,7 @@ export default function Sidebar() {
           },
         ]
       : []),
+    { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },
   ];
 
   const navLinks = (isSheet = false, isCollapsed = false) => (
