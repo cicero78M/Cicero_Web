@@ -14,8 +14,17 @@ const PAGE_SIZE = 25;
  * Komponen RekapLikesIG
  * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
  * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
+ * @param {Array} posts - daftar posting IG untuk rekap ORG
+ * @param {boolean} showRekapButton - tampilkan tombol salin rekap jika true
+ * @param {string} clientName - nama client ORG
  */
-export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
+export default function RekapLikesIG({
+  users = [],
+  totalIGPost = 0,
+  posts = [],
+  showRekapButton = false,
+  clientName = "",
+}) {
   const totalUser = users.length;
   const hasClient = useMemo(
     () => users.some((u) => u.nama_client || u.client_name || u.client),
@@ -45,6 +54,29 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
       ),
     [users]
   );
+
+  const sudahUsers = useMemo(() => {
+    if (totalIGPost === 0) return [];
+    return users.filter(
+      u => Number(u.jumlah_like) >= totalIGPost * 0.5 || isException(u.exception),
+    );
+  }, [users, totalIGPost]);
+
+  const belumUsers = useMemo(() => {
+    if (totalIGPost === 0) return users;
+    return users.filter(
+      u => Number(u.jumlah_like) < totalIGPost * 0.5 && !isException(u.exception),
+    );
+  }, [users, totalIGPost]);
+
+  function groupByDivisi(arr) {
+    return arr.reduce((acc, u) => {
+      const d = u.divisi || "Lainnya";
+      if (!acc[d]) acc[d] = [];
+      acc[d].push(u);
+      return acc;
+    }, {});
+  }
 
   // Search/filter
   const [search, setSearch] = useState("");
@@ -112,6 +144,52 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
       setPage(totalPages || 1);
     }
   }, [page, totalPages, setPage]);
+
+  function handleCopyRekap() {
+    const now = new Date();
+    const hour = now.getHours();
+    let greeting = "Selamat Pagi";
+    if (hour >= 18) greeting = "Selamat Malam";
+    else if (hour >= 12) greeting = "Selamat Siang";
+
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const jam = now.toLocaleTimeString("id-ID", { hour12: false });
+
+    const jumlahKonten = Array.isArray(posts) && posts.length > 0 ? posts.length : totalIGPost;
+    const linkKonten = Array.isArray(posts) && posts.length > 0
+      ? posts
+          .map(p => p.permalink || p.permalink_url || p.media_url || p.link || p.url || "")
+          .filter(Boolean)
+          .join("\n")
+      : "-";
+
+    const belumGroup = groupByDivisi(belumUsers);
+    const sudahGroup = groupByDivisi(sudahUsers);
+
+    const formatGroup = grp =>
+      Object.entries(grp)
+        .map(([div, arr]) => {
+          const list = arr
+            .map(u => {
+              const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+              return `- ${name} : @${u.username} (${u.jumlah_like}/${jumlahKonten} konten)`;
+            })
+            .join("\n");
+          return `${div} (${arr.length} user):\n${list}`;
+        })
+        .join("\n");
+
+    const message = `${greeting},\n\nMohon ijin melaporkan Rekap Akumulasi Likes dan komentar Instagram Pada Konten Social Media Akun Official Ditbinmas Polda Jatim oleh Personil Bhabinkamtibmas ${clientName} : \n\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah Konten: ${jumlahKonten}\nDaftar Link Konten:\n${linkKonten}\n\nJumlah user: ${totalUser}\n✅ Sudah melaksanakan : ${totalSudahLike} user\n❌ Belum melaksanakan : ${totalBelumLike} user\n\n❌ Belum melaksanakan (${totalBelumLike} user):\n${formatGroup(belumGroup)}\n\n✅ Sudah melaksanakan (${totalSudahLike} user):\n${formatGroup(sudahGroup)}`;
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(message).then(() => {
+        alert("Rekap disalin ke clipboard");
+      });
+    } else {
+      alert(message);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 mt-8">
@@ -238,6 +316,17 @@ export default function RekapLikesIG({ users = [], totalIGPost = 0 }) {
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
           >
             Next
+          </button>
+        </div>
+      )}
+
+      {showRekapButton && (
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={handleCopyRekap}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
+          >
+            Salin Rekap
           </button>
         </div>
       )}

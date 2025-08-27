@@ -39,6 +39,10 @@ export default function RekapLikesIGPage() {
     totalIGPost: 0,
   });
 
+  const [igPosts, setIgPosts] = useState([]);
+  const [isOrg, setIsOrg] = useState(false);
+  const [clientName, setClientName] = useState("");
+
   const viewOptions = VIEW_OPTIONS;
 
 
@@ -82,6 +86,14 @@ export default function RekapLikesIGPage() {
           endDate,
           taskClientId,
         );
+        const posts = Array.isArray(statsData.ig_posts)
+          ? statsData.ig_posts
+          : Array.isArray(statsData.igPosts)
+          ? statsData.igPosts
+          : Array.isArray(statsData.instagram_posts)
+          ? statsData.instagram_posts
+          : [];
+        setIgPosts(posts);
         const client_id = userClientId;
 
         const profileRes = await getClientProfile(token, client_id);
@@ -89,6 +101,17 @@ export default function RekapLikesIGPage() {
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        setIsOrg(
+          (profile.client_type || profile.clientType || "")
+            .toUpperCase() === "ORG",
+        );
+        setClientName(
+          profile.nama ||
+            profile.nama_client ||
+            profile.client_name ||
+            profile.client ||
+            "",
+        );
 
         let users = [];
         if (dir) {
@@ -265,6 +288,9 @@ export default function RekapLikesIGPage() {
           <RekapLikesIG
             users={chartData}
             totalIGPost={rekapSummary.totalIGPost}
+            posts={igPosts}
+            showRekapButton={isOrg}
+            clientName={clientName}
           />
         </div>
       </div>
