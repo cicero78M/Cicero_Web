@@ -49,11 +49,22 @@ export default function RekapLikesIGPage() {
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token")
         : null;
-    if (!token) {
-      setError("Token tidak ditemukan. Silakan login ulang.");
+    const userClientId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("client_id")
+        : null;
+    const role =
+      typeof window !== "undefined"
+        ? localStorage.getItem("user_role")
+        : null;
+    if (!token || !userClientId) {
+      setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return;
     }
+
+    const isDitbinmas = String(role).toLowerCase() === "ditbinmas";
+    const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
 
     async function fetchData() {
       try {
@@ -69,14 +80,9 @@ export default function RekapLikesIGPage() {
           date,
           startDate,
           endDate,
+          taskClientId,
         );
-        const client_id =
-          statsData.client_id || localStorage.getItem("client_id");
-        if (!client_id) {
-          setError("Client ID tidak ditemukan.");
-          setLoading(false);
-          return;
-        }
+        const client_id = userClientId;
 
         const profileRes = await getClientProfile(token, client_id);
         const profile =

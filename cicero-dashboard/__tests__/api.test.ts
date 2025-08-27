@@ -97,3 +97,10 @@ test("getDashboardStats handles partial date range params", async () => {
   expect(url).not.toContain("start_date");
 });
 
+test("getDashboardStats includes client_id when provided", async () => {
+  await getDashboardStats("tok", undefined, undefined, undefined, undefined, "DITBINMAS");
+  const url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("/api/dashboard/stats");
+  expect(url).toContain("client_id=DITBINMAS");
+});
+
