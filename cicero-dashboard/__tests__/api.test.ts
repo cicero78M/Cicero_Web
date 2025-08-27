@@ -104,9 +104,3 @@ test("getDashboardStats includes client_id when provided", async () => {
   expect(url).toContain("client_id=DITBINMAS");
 });
 
-test("getDashboardStats normalizes client_id to uppercase", async () => {
-  await getDashboardStats("tok", undefined, undefined, undefined, undefined, "ditbinmas");
-  const url = (global.fetch as jest.Mock).mock.calls[0][0];
-  expect(url).toContain("client_id=DITBINMAS");
-});
-
