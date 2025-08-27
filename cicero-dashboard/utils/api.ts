@@ -16,10 +16,6 @@ function handleTokenExpired(): void {
   }
 }
 
-function normalizeClientId(client_id?: string): string | undefined {
-  return client_id ? String(client_id).toUpperCase() : undefined;
-}
-
 // Wrapper around fetch that attaches the Authorization header and
 // automatically logs the user out when the token is rejected by the backend
 async function fetchWithAuth(
@@ -54,8 +50,7 @@ export async function getDashboardStats(
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
-  const cid = normalizeClientId(client_id);
-  if (cid) params.append("client_id", cid);
+  if (client_id) params.append("client_id", client_id);
   const url = `${API_BASE_URL}/api/dashboard/stats${
     params.toString() ? `?${params.toString()}` : ""
   }`;
@@ -85,10 +80,7 @@ export async function getRekapLikesIG(
   startDate?: string,
   endDate?: string
 ): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-    periode,
-  });
+  const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
@@ -104,9 +96,7 @@ export async function getClientProfile(
   token: string,
   client_id: string,
 ): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-  });
+  const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
@@ -149,8 +139,7 @@ export async function getClientNames(
 
 // Ambil daftar user untuk User Directory
 export async function getUserDirectory(token: string, client_id: string): Promise<any> {
-  const cid = normalizeClientId(client_id) || "";
-  const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(cid)}`;
+  const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
 
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Gagal fetch daftar user");
@@ -169,13 +158,9 @@ export async function createUser(
   },
 ): Promise<any> {
   const url = `${API_BASE_URL}/api/users/create`;
-  const payload = {
-    ...data,
-    client_id: normalizeClientId(data.client_id) || data.client_id,
-  };
   const res = await fetchWithAuth(url, token, {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(data),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -191,13 +176,9 @@ export async function updateUser(
   data: Record<string, any>,
 ): Promise<any> {
   const url = `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}`;
-  const payload = {
-    ...data,
-    ...(data.client_id && { client_id: normalizeClientId(data.client_id) }),
-  };
   const res = await fetchWithAuth(url, token, {
     method: "PUT",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(data),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -222,10 +203,7 @@ export async function getRekapKomentarTiktok(
   startDate?: string,
   endDate?: string
 ): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-    periode,
-  });
+  const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
@@ -248,10 +226,7 @@ export async function getRekapAmplify(
   startDate?: string,
   endDate?: string
 ): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-    periode,
-  });
+  const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
@@ -263,9 +238,7 @@ export async function getRekapAmplify(
 }
 
 export async function getInstagramPosts(token: string, client_id: string): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-  });
+  const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch instagram posts");
@@ -428,10 +401,7 @@ export async function getTiktokPostsViaBackend(
   startDate?: string,
   endDate?: string
 ): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-    limit: String(limit),
-  });
+  const params = new URLSearchParams({ client_id, limit: String(limit) });
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
@@ -506,9 +476,7 @@ export async function getTiktokPostsByUsernameViaBackend(
 }
 
 export async function getTiktokPosts(token: string, client_id: string): Promise<any> {
-  const params = new URLSearchParams({
-    client_id: normalizeClientId(client_id) || "",
-  });
+  const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
