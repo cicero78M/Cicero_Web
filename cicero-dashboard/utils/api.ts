@@ -42,13 +42,15 @@ export async function getDashboardStats(
   periode?: string,
   tanggal?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  client_id?: string
 ): Promise<any> {
   const params = new URLSearchParams();
   if (periode) params.append("periode", periode);
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
+  if (client_id) params.append("client_id", client_id);
   const url = `${API_BASE_URL}/api/dashboard/stats${
     params.toString() ? `?${params.toString()}` : ""
   }`;
