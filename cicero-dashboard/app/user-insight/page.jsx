@@ -186,6 +186,48 @@ export default function UserInsightPage() {
     fetchData();
   }, [token, clientId]);
 
+  function handleCopyRekap() {
+    const now = new Date();
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const lines = [
+      `Rekap User Insight (${tanggal})`,
+      `Total User: ${summary.total}`,
+      `Instagram Terisi: ${summary.instagramFilled}`,
+      `Instagram Belum Diisi: ${summary.instagramEmpty}`,
+      `TikTok Terisi: ${summary.tiktokFilled}`,
+      `TikTok Belum Diisi: ${summary.tiktokEmpty}`,
+      "",
+    ];
+    if (isDirectorate) {
+      lines.push("POLRES JAJARAN:");
+      chartPolres.forEach((c) => {
+        lines.push(
+          `${c.divisi} (${c.total}): IG ${c.instagramFilled}/${c.instagramEmpty}, TikTok ${c.tiktokFilled}/${c.tiktokEmpty}`,
+        );
+      });
+    } else {
+      Object.entries(chartKelompok).forEach(([key, arr]) => {
+        if (arr && arr.length > 0) {
+          lines.push(`${key}:`);
+          arr.forEach((c) => {
+            lines.push(
+              `- ${c.divisi} (${c.total}): IG ${c.instagramFilled}/${c.instagramEmpty}, TikTok ${c.tiktokFilled}/${c.tiktokEmpty}`,
+            );
+          });
+          lines.push("");
+        }
+      });
+    }
+    const message = lines.join("\n");
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(message).then(() => {
+        alert("Rekap disalin ke clipboard");
+      });
+    } else {
+      alert(message);
+    }
+  }
+
   if (loading) return <Loader />;
   if (error)
     return (
@@ -201,9 +243,17 @@ export default function UserInsightPage() {
       <div className="flex-1 flex items-start justify-center">
         <div className="w-full max-w-5xl px-2 md:px-8 py-8">
           <div className="flex flex-col gap-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
-              User Insight
-            </h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-blue-700">
+                User Insight
+              </h1>
+              <button
+                onClick={handleCopyRekap}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
+              >
+                Salin Rekap
+              </button>
+            </div>
 
             <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
               <SummaryItem
