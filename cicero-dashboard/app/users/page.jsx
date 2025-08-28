@@ -47,6 +47,8 @@ export default function UserDirectoryPage() {
       : "BOJONEGORO";
   const token =
     typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+  const isDitbinmasClient = client_id === "DITBINMAS";
+  const [showAllDitbinmas, setShowAllDitbinmas] = useState(true);
 
   async function fetchUsers() {
     if (!token) {
@@ -153,24 +155,34 @@ export default function UserDirectoryPage() {
   // Filter: tidak tampilkan user dengan exception
   const filtered = useMemo(
     () =>
-        users
-          .filter((u) => !u.exception)
-          .filter(
-            (u) =>
-              (u.nama_client || u.nama || "")
-                .toLowerCase()
-                .includes(search.toLowerCase()) ||
-              (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
-              (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
-              (u.divisi || "")
-                .toLowerCase()
-                .includes(search.toLowerCase()) ||
-              (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
-              (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
-              String(u.status).toLowerCase().includes(search.toLowerCase())
-          ),
-      [users, search]
-    );
+      users
+        .filter((u) => !u.exception)
+        .filter((u) => {
+          if (isDitbinmasClient && !showAllDitbinmas) {
+            return (
+              String(
+                u.client_id || u.clientId || u.clientID || u.client || "",
+              ).toUpperCase() === "DITBINMAS"
+            );
+          }
+          return true;
+        })
+        .filter(
+          (u) =>
+            (u.nama_client || u.nama || "")
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
+            (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
+            (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
+            (u.divisi || "")
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
+            (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
+            (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
+            String(u.status).toLowerCase().includes(search.toLowerCase()),
+        ),
+    [users, search, isDitbinmasClient, showAllDitbinmas],
+  );
 
   // Paging logic
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -200,7 +212,7 @@ export default function UserDirectoryPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
       <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8">
         <h1 className="text-2xl font-bold text-blue-700 mb-6">User Directory</h1>
-        <div className="flex justify-between items-center mb-4 gap-2">
+        <div className="flex flex-wrap items-center mb-4 gap-2">
           <button
             onClick={() => {
               setShowForm((s) => !s);
@@ -209,12 +221,22 @@ export default function UserDirectoryPage() {
           >
             {showForm ? "Tutup" : "Tambah User"}
           </button>
+          {isDitbinmasClient && (
+            <button
+              onClick={() => setShowAllDitbinmas((s) => !s)}
+              className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
+            >
+              {showAllDitbinmas
+                ? "Hanya DITBINMAS"
+                : "Semua Ditbinmas"}
+            </button>
+          )}
           <input
             type="text"
             placeholder="Cari pengguna..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 flex-1"
+            className="ml-auto px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 flex-1"
           />
         </div>
 
