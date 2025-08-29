@@ -59,6 +59,15 @@ export default function UserDirectoryPage() {
     isDitbinmasClient && String(role).toLowerCase() === "ditbinmas";
   const [showAllDitbinmas, setShowAllDitbinmas] = useState(() => !isDitbinmas);
 
+  const columnLabel = isDitbinmasClient
+    ? showAllDitbinmas
+      ? "Kesatuan"
+      : "Divisi"
+    : isDirectorate
+    ? "Kesatuan"
+    : "Satfung";
+  const showKesatuanColumn = columnLabel === "Kesatuan";
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentDate(new Date()), 60000);
     return () => clearInterval(interval);
@@ -325,7 +334,7 @@ export default function UserDirectoryPage() {
           >
             Rekap User
           </button>
-          {isDitbinmasClient && !isDitbinmas && (
+          {isDitbinmasClient && (
             <button
               onClick={() => setShowAllDitbinmas((s) => !s)}
               className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
@@ -372,9 +381,9 @@ export default function UserDirectoryPage() {
             />
             <input
               type="text"
-              placeholder={isDitbinmas ? "Divisi" : isDirectorate ? "Kesatuan" : "Satfung"}
+              placeholder={columnLabel}
               value={satfung}
-            onChange={(e) => setSatfung(e.target.value.trim())}
+              onChange={(e) => setSatfung(e.target.value.trim())}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -408,9 +417,7 @@ export default function UserDirectoryPage() {
                 <th className="py-2 px-2 text-left">No</th>
                 <th className="py-2 px-2 text-left">Nama</th>
                 <th className="py-2 px-2 text-left">NRP/NIP</th>
-                <th className="py-2 px-2 text-left">
-                  {isDitbinmas ? "Divisi" : isDirectorate ? "Kesatuan" : "Satfung"}
-                </th>
+                <th className="py-2 px-2 text-left">{columnLabel}</th>
                 <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Username TikTok</th>
                 <th className="py-2 px-2 text-left">Status</th>
@@ -454,13 +461,13 @@ export default function UserDirectoryPage() {
                     )}
                   </td>
                   <td className="py-1 px-2">
-                  {isDirectorate ? (
-                    u.nama_client || u.client_name || u.client || u.nama || "-"
-                  ) : editingRowId === u.user_id ? (
-                    <input
+                    {showKesatuanColumn ? (
+                      u.nama_client || u.client_name || u.client || u.nama || "-"
+                    ) : editingRowId === u.user_id ? (
+                      <input
                         value={editSatfung}
                         onChange={(e) => setEditSatfung(e.target.value.trim())}
-                        placeholder={isDitbinmas ? "Divisi" : isDirectorate ? "Kesatuan" : "Satfung"}
+                        placeholder={columnLabel}
                         className="border rounded px-1 text-xs"
                       />
                     ) : (
