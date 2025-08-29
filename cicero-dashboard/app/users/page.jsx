@@ -129,12 +129,16 @@ export default function UserDirectoryPage() {
     setSubmitError("");
     setSubmitLoading(true);
     try {
+      const trimmedNama = nama.trim();
+      const trimmedPangkat = pangkat.trim();
+      const trimmedNrpNip = nrpNip.trim();
+      const trimmedSatfung = satfung.trim();
       await createUser(token || "", {
         client_id,
-        nama,
-        title: pangkat,
-        user_id: nrpNip,
-        divisi: satfung,
+        nama: trimmedNama,
+        title: trimmedPangkat,
+        user_id: trimmedNrpNip,
+        divisi: trimmedSatfung,
       });
       setNama("");
       setPangkat("");
@@ -150,10 +154,10 @@ export default function UserDirectoryPage() {
 
   function handleEditClick(user) {
     setEditingRowId(user.user_id);
-    setEditNama(user.nama || "");
-    setEditPangkat(user.title || "");
-    setEditNrpNip(user.user_id || "");
-    setEditSatfung(user.divisi || "");
+    setEditNama((user.nama || "").trim());
+    setEditPangkat((user.title || "").trim());
+    setEditNrpNip((user.user_id || "").trim());
+    setEditSatfung((user.divisi || "").trim());
     setUpdateError("");
   }
 
@@ -161,14 +165,18 @@ export default function UserDirectoryPage() {
     setUpdateLoading(true);
     setUpdateError("");
     try {
+      const trimmedNama = editNama.trim();
+      const trimmedPangkat = editPangkat.trim();
+      const trimmedNrpNip = editNrpNip.trim();
+      const trimmedSatfung = editSatfung.trim();
       await updateUser(token || "", userId, {
-        nama: editNama,
-        title: editPangkat,
-        divisi: editSatfung,
-        user_id: editNrpNip,
+        nama: trimmedNama,
+        title: trimmedPangkat,
+        divisi: trimmedSatfung,
+        user_id: trimmedNrpNip,
       });
-      if (userId !== editNrpNip) {
-        await updateUserRoles(token || "", userId, editNrpNip);
+      if (userId !== trimmedNrpNip) {
+        await updateUserRoles(token || "", userId, trimmedNrpNip);
       }
       await fetchUsers();
       setEditingRowId(null);
@@ -340,7 +348,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="Nama"
               value={nama}
-              onChange={(e) => setNama(e.target.value)}
+            onChange={(e) => setNama(e.target.value.trim())}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -348,7 +356,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="Pangkat"
               value={pangkat}
-              onChange={(e) => setPangkat(e.target.value)}
+            onChange={(e) => setPangkat(e.target.value.trim())}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -356,7 +364,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="NRP/NIP"
               value={nrpNip}
-              onChange={(e) => setNrpNip(e.target.value)}
+            onChange={(e) => setNrpNip(e.target.value.trim())}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -364,7 +372,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="Satfung"
               value={satfung}
-              onChange={(e) => setSatfung(e.target.value)}
+            onChange={(e) => setSatfung(e.target.value.trim())}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -416,13 +424,13 @@ export default function UserDirectoryPage() {
                       <div className="flex gap-1">
                         <input
                           value={editPangkat}
-                          onChange={(e) => setEditPangkat(e.target.value)}
+                          onChange={(e) => setEditPangkat(e.target.value.trim())}
                           placeholder="Pangkat"
                           className="w-20 border rounded px-1 text-xs"
                         />
                         <input
                           value={editNama}
-                          onChange={(e) => setEditNama(e.target.value)}
+                          onChange={(e) => setEditNama(e.target.value.trim())}
                           placeholder="Nama"
                           className="flex-1 border rounded px-1 text-xs"
                         />
@@ -435,7 +443,7 @@ export default function UserDirectoryPage() {
                     {editingRowId === u.user_id ? (
                       <input
                         value={editNrpNip}
-                        onChange={(e) => setEditNrpNip(e.target.value)}
+                        onChange={(e) => setEditNrpNip(e.target.value.trim())}
                         placeholder="NRP/NIP"
                         className="w-28 border rounded px-1 text-xs font-mono"
                       />
@@ -449,7 +457,7 @@ export default function UserDirectoryPage() {
                   ) : editingRowId === u.user_id ? (
                     <input
                         value={editSatfung}
-                        onChange={(e) => setEditSatfung(e.target.value)}
+                        onChange={(e) => setEditSatfung(e.target.value.trim())}
                         placeholder={isDirectorate ? "Kesatuan" : "Satfung"}
                         className="border rounded px-1 text-xs"
                       />
