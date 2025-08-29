@@ -35,6 +35,7 @@ export default function UserDirectoryPage() {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editNama, setEditNama] = useState("");
   const [editPangkat, setEditPangkat] = useState("");
+  const [editNrpNip, setEditNrpNip] = useState("");
   const [editSatfung, setEditSatfung] = useState("");
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -150,6 +151,7 @@ export default function UserDirectoryPage() {
     setEditingRowId(user.user_id);
     setEditNama(user.nama || "");
     setEditPangkat(user.title || "");
+    setEditNrpNip(user.user_id || "");
     setEditSatfung(user.divisi || "");
     setUpdateError("");
   }
@@ -162,6 +164,7 @@ export default function UserDirectoryPage() {
         nama: editNama,
         title: editPangkat,
         divisi: editSatfung,
+        user_id: editNrpNip,
       });
       await fetchUsers();
       setEditingRowId(null);
@@ -424,7 +427,18 @@ export default function UserDirectoryPage() {
                       (u.title ? `${u.title} ` : "") + (u.nama || "-")
                     )}
                   </td>
-                  <td className="py-1 px-2 font-mono">{u.user_id || "-"}</td>
+                  <td className="py-1 px-2 font-mono">
+                    {editingRowId === u.user_id ? (
+                      <input
+                        value={editNrpNip}
+                        onChange={(e) => setEditNrpNip(e.target.value)}
+                        placeholder="NRP/NIP"
+                        className="w-28 border rounded px-1 text-xs font-mono"
+                      />
+                    ) : (
+                      u.user_id || "-"
+                    )}
+                  </td>
                   <td className="py-1 px-2">
                   {isDirectorate ? (
                     u.nama_client || u.client_name || u.client || u.nama || "-"
