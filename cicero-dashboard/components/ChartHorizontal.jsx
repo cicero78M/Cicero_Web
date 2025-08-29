@@ -72,6 +72,15 @@ export default function ChartHorizontal({
       divisiMap[key].user_belum += 1;
     }
   });
+
+  // Jika sebuah client sudah berada pada kolom "sudah",
+  // maka data "belum" untuk client tersebut diabaikan.
+  Object.values(divisiMap).forEach((entry) => {
+    if (entry.user_sudah > 0) {
+      entry.user_belum = 0;
+    }
+  });
+
   const dataChart = Object.values(divisiMap);
 
   // Tinggi chart proporsional

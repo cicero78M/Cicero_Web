@@ -151,6 +151,14 @@ export default function ChartDivisiAbsensi({
     }
   });
 
+  // Jika sebuah client sudah memiliki user pada kolom "sudah",
+  // jangan hitung lagi user lain pada kolom "belum" untuk client tersebut.
+  Object.values(divisiMap).forEach((entry) => {
+    if (entry.user_sudah > 0) {
+      entry.user_belum = 0;
+    }
+  });
+
   const dataChart = Object.values(divisiMap).sort(
     (a, b) => b.total_value - a.total_value
   );
