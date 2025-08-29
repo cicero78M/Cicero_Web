@@ -191,7 +191,7 @@ export default function UserDirectoryPage() {
     setUpdateLoading(false);
   }
 
-  function handleDownloadRekap() {
+  async function handleCopyRekap() {
     const now = new Date();
     const day = now.toLocaleDateString("id-ID", { weekday: "long" });
     const date = now.toLocaleDateString("id-ID", {
@@ -219,15 +219,12 @@ export default function UserDirectoryPage() {
       });
       lines.push("");
     });
-    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "rekap-user.txt";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      alert("Rekap user berhasil disalin ke clipboard");
+    } catch (err) {
+      alert("Gagal menyalin rekap user: " + (err.message || err));
+    }
   }
 
   useEffect(() => {
@@ -323,7 +320,7 @@ export default function UserDirectoryPage() {
             {showForm ? "Tutup" : "Tambah User"}
           </button>
           <button
-            onClick={handleDownloadRekap}
+            onClick={handleCopyRekap}
             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
           >
             Rekap User
