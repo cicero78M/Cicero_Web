@@ -44,15 +44,20 @@ export default function UserDirectoryPage() {
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Ambil client_id dari localStorage (atau sesuaikan kebutuhanmu)
+  // Ambil client_id dan role dari localStorage
   const client_id =
     typeof window !== "undefined"
       ? localStorage.getItem("client_id") || "BOJONEGORO"
       : "BOJONEGORO";
+  const role =
+    typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
   const token =
     typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+
   const isDitbinmasClient = client_id === "DITBINMAS";
-  const [showAllDitbinmas, setShowAllDitbinmas] = useState(true);
+  const isDitbinmas =
+    isDitbinmasClient && String(role).toLowerCase() === "ditbinmas";
+  const [showAllDitbinmas, setShowAllDitbinmas] = useState(() => !isDitbinmas);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentDate(new Date()), 60000);
@@ -88,7 +93,7 @@ export default function UserDirectoryPage() {
       const profileRes = await getClientProfile(token, client_id);
       const profile = profileRes.client || profileRes.profile || profileRes || {};
       const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
-      setIsDirectorate(dir);
+      setIsDirectorate(dir && !isDitbinmas);
       setClientName(
         profile.nama_client ||
           profile.client_name ||
@@ -323,7 +328,7 @@ export default function UserDirectoryPage() {
           >
             Rekap User
           </button>
-          {isDitbinmasClient && (
+          {isDitbinmasClient && !isDitbinmas && (
             <button
               onClick={() => setShowAllDitbinmas((s) => !s)}
               className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
@@ -370,7 +375,7 @@ export default function UserDirectoryPage() {
             />
             <input
               type="text"
-              placeholder="Satfung"
+              placeholder={isDitbinmas ? "Divisi" : isDirectorate ? "Kesatuan" : "Satfung"}
               value={satfung}
             onChange={(e) => setSatfung(e.target.value.trim())}
               required
@@ -407,7 +412,7 @@ export default function UserDirectoryPage() {
                 <th className="py-2 px-2 text-left">Nama</th>
                 <th className="py-2 px-2 text-left">NRP/NIP</th>
                 <th className="py-2 px-2 text-left">
-                  {isDirectorate ? "Kesatuan" : "Satfung"}
+                  {isDitbinmas ? "Divisi" : isDirectorate ? "Kesatuan" : "Satfung"}
                 </th>
                 <th className="py-2 px-2 text-left">Username IG</th>
                 <th className="py-2 px-2 text-left">Username TikTok</th>
@@ -458,7 +463,7 @@ export default function UserDirectoryPage() {
                     <input
                         value={editSatfung}
                         onChange={(e) => setEditSatfung(e.target.value.trim())}
-                        placeholder={isDirectorate ? "Kesatuan" : "Satfung"}
+                        placeholder={isDitbinmas ? "Divisi" : isDirectorate ? "Kesatuan" : "Satfung"}
                         className="border rounded px-1 text-xs"
                       />
                     ) : (
