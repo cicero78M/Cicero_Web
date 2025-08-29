@@ -39,6 +39,7 @@ export default function UserDirectoryPage() {
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [showRekap, setShowRekap] = useState(false);
 
   // Ambil client_id dari localStorage (atau sesuaikan kebutuhanmu)
   const client_id =
@@ -49,6 +50,16 @@ export default function UserDirectoryPage() {
     typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
   const isDitbinmasClient = client_id === "DITBINMAS";
   const [showAllDitbinmas, setShowAllDitbinmas] = useState(true);
+
+  const rekapUsers = useMemo(() => {
+    const grouped = {};
+    users.forEach((u) => {
+      const key = u.divisi || "-";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(u);
+    });
+    return grouped;
+  }, [users]);
 
   async function fetchUsers() {
     if (!token) {
@@ -225,6 +236,12 @@ export default function UserDirectoryPage() {
           >
             {showForm ? "Tutup" : "Tambah User"}
           </button>
+          <button
+            onClick={() => setShowRekap((s) => !s)}
+            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
+          >
+            {showRekap ? "Tutup Rekap" : "Rekap User"}
+          </button>
           {isDitbinmasClient && (
             <button
               onClick={() => setShowAllDitbinmas((s) => !s)}
@@ -300,6 +317,22 @@ export default function UserDirectoryPage() {
               </button>
             </div>
           </form>
+        )}
+        {showRekap && (
+          <div className="mb-6">
+            {Object.entries(rekapUsers).map(([sf, list]) => (
+              <div key={sf} className="mb-4">
+                <h2 className="font-semibold">{sf}</h2>
+                <ul className="list-disc pl-5 text-sm">
+                  {list.map((u, idx) => (
+                    <li key={idx}>
+                      {(u.nama || "-")}, {u.insta ? `@${u.insta}` : "IG Kosong"}, {u.tiktok || "Tiktok Kosong"}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         )}
         <div className="overflow-x-auto rounded-xl border">
           <table className="min-w-full text-sm">
