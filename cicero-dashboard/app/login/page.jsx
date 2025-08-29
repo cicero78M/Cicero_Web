@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [whatsapp, setWhatsapp] = useState("");
   const router = useRouter();
+  const handleTrim = (setter) => (e) => setter(e.target.value.trim());
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -41,7 +42,7 @@ export default function LoginPage() {
       const res = await fetch(`${apiUrl}/api/auth/dashboard-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: username.trim(), password: password.trim() }),
       });
 
       const data = await res.json();
@@ -71,7 +72,9 @@ export default function LoginPage() {
     setMessage("");
     setLoading(true);
 
-    if (password !== confirmPassword) {
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
+    if (trimmedPassword !== trimmedConfirmPassword) {
       setError("Konfirmasi password tidak sesuai");
       setLoading(false);
       return;
@@ -79,15 +82,19 @@ export default function LoginPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const trimmedUsername = username.trim();
+      const trimmedRole = role.trim();
+      const trimmedClientId = client_id.trim();
+      const trimmedWhatsapp = whatsapp.trim();
       const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
-          password,
-          role: role ? role.toLowerCase() : undefined,
-          client_id: client_id || undefined,
-          whatsapp,
+          username: trimmedUsername,
+          password: trimmedPassword,
+          role: trimmedRole ? trimmedRole.toLowerCase() : undefined,
+          client_id: trimmedClientId || undefined,
+          whatsapp: trimmedWhatsapp,
         }),
       });
       const data = await res.json();
@@ -134,6 +141,7 @@ export default function LoginPage() {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onBlur={handleTrim(setUsername)}
             required
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
@@ -148,6 +156,7 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onBlur={handleTrim(setPassword)}
             required
             autoComplete={isRegister ? "new-password" : "current-password"}
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
@@ -173,6 +182,7 @@ export default function LoginPage() {
                 placeholder="Konfirmasi Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                onBlur={handleTrim(setConfirmPassword)}
                 required
                 autoComplete="new-password"
                 className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
@@ -196,6 +206,7 @@ export default function LoginPage() {
                 placeholder="Nomor WhatsApp"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
+                onBlur={handleTrim(setWhatsapp)}
                 required
                 inputMode="tel"
                 autoComplete="tel"
@@ -213,6 +224,7 @@ export default function LoginPage() {
                 placeholder="Role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
+                onBlur={handleTrim(setRole)}
                 className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
               />
               <datalist id="role-options">
@@ -234,6 +246,7 @@ export default function LoginPage() {
                 placeholder="Client ID"
                 value={client_id}
                 onChange={(e) => setClientId(e.target.value)}
+                onBlur={handleTrim(setClientId)}
                 className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
               />
               <datalist id="client-options">
