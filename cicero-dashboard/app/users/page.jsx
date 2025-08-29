@@ -39,7 +39,8 @@ export default function UserDirectoryPage() {
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
   const [isDirectorate, setIsDirectorate] = useState(false);
-  const [showRekap, setShowRekap] = useState(false);
+  const [clientName, setClientName] = useState("");
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Ambil client_id dari localStorage (atau sesuaikan kebutuhanmu)
   const client_id =
@@ -50,6 +51,11 @@ export default function UserDirectoryPage() {
     typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
   const isDitbinmasClient = client_id === "DITBINMAS";
   const [showAllDitbinmas, setShowAllDitbinmas] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentDate(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const rekapUsers = useMemo(() => {
     const grouped = {};
@@ -81,6 +87,13 @@ export default function UserDirectoryPage() {
       const profile = profileRes.client || profileRes.profile || profileRes || {};
       const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
       setIsDirectorate(dir);
+      setClientName(
+        profile.nama_client ||
+          profile.client_name ||
+          profile.client ||
+          profile.nama ||
+          client_id,
+      );
 
       if (dir) {
         const nameMap = await getClientNames(
@@ -158,6 +171,45 @@ export default function UserDirectoryPage() {
     setUpdateLoading(false);
   }
 
+  function handleDownloadRekap() {
+    const now = new Date();
+    const day = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const date = now.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    const time = now.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const lines = [
+      `Client Name: ${clientName || "-"}`,
+      `${day}, ${date} ${time}`,
+      "",
+    ];
+    Object.entries(rekapUsers).forEach(([sf, list]) => {
+      lines.push(sf);
+      list.forEach((u) => {
+        lines.push(
+          `${u.nama || "-"}, IG ${u.insta || "Kosong"}, Tiktok ${
+            u.tiktok || "Kosong"
+          }`,
+        );
+      });
+      lines.push("");
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "rekap-user.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   useEffect(() => {
     fetchUsers();
     const interval = setInterval(() => {
@@ -213,6 +265,17 @@ export default function UserDirectoryPage() {
     }
   }, [page, totalPages, setPage]);
 
+  const day = currentDate.toLocaleDateString("id-ID", { weekday: "long" });
+  const dateStr = currentDate.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const timeStr = currentDate.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   if (loading) return <Loader />;
   if (error)
     return (
@@ -226,7 +289,10 @@ export default function UserDirectoryPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
       <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8">
-        <h1 className="text-2xl font-bold text-blue-700 mb-6">User Directory</h1>
+        <h1 className="text-2xl font-bold text-blue-700">User Directory</h1>
+        <div className="mb-4 text-sm text-gray-600">
+          Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
+        </div>
         <div className="flex flex-wrap items-center mb-4 gap-2">
           <button
             onClick={() => {
@@ -237,10 +303,10 @@ export default function UserDirectoryPage() {
             {showForm ? "Tutup" : "Tambah User"}
           </button>
           <button
-            onClick={() => setShowRekap((s) => !s)}
+            onClick={handleDownloadRekap}
             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
           >
-            {showRekap ? "Tutup Rekap" : "Rekap User"}
+            Rekap User
           </button>
           {isDitbinmasClient && (
             <button
@@ -317,22 +383,6 @@ export default function UserDirectoryPage() {
               </button>
             </div>
           </form>
-        )}
-        {showRekap && (
-          <div className="mb-6">
-            {Object.entries(rekapUsers).map(([sf, list]) => (
-              <div key={sf} className="mb-4">
-                <h2 className="font-semibold">{sf}</h2>
-                <ul className="list-disc pl-5 text-sm">
-                  {list.map((u, idx) => (
-                    <li key={idx}>
-                      {(u.nama || "-")}, {u.insta ? `@${u.insta}` : "IG Kosong"}, {u.tiktok || "Tiktok Kosong"}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
         )}
         <div className="overflow-x-auto rounded-xl border">
           <table className="min-w-full text-sm">
