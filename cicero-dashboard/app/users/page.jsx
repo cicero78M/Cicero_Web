@@ -50,7 +50,9 @@ export default function UserDirectoryPage() {
       ? localStorage.getItem("client_id") || "BOJONEGORO"
       : "BOJONEGORO";
   const role =
-    typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
+    typeof window !== "undefined"
+      ? localStorage.getItem("user_role") || ""
+      : "";
   const token =
     typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
 
@@ -75,13 +77,32 @@ export default function UserDirectoryPage() {
 
   const rekapUsers = useMemo(() => {
     const grouped = {};
-    users.forEach((u) => {
-      const key = u.divisi || "-";
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(u);
-    });
+    users
+      .filter((u) => !u.exception)
+      .filter((u) => {
+        if (isDitbinmasClient && !showAllDitbinmas) {
+          return (
+            String(
+              u.client_id || u.clientId || u.clientID || u.client || "",
+            ).toUpperCase() === "DITBINMAS" &&
+            String(
+              u.role ||
+                u.user_role ||
+                u.userRole ||
+                u.roleName ||
+                "",
+            ).toLowerCase() === "ditbinmas"
+          );
+        }
+        return true;
+      })
+      .forEach((u) => {
+        const key = u.divisi || "-";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(u);
+      });
     return grouped;
-  }, [users]);
+  }, [users, isDitbinmasClient, showAllDitbinmas]);
 
   async function fetchUsers() {
     if (!token) {
@@ -255,7 +276,14 @@ export default function UserDirectoryPage() {
             return (
               String(
                 u.client_id || u.clientId || u.clientID || u.client || "",
-              ).toUpperCase() === "DITBINMAS"
+              ).toUpperCase() === "DITBINMAS" &&
+              String(
+                u.role ||
+                  u.user_role ||
+                  u.userRole ||
+                  u.roleName ||
+                  "",
+              ).toLowerCase() === "ditbinmas"
             );
           }
           return true;
