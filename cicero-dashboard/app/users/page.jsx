@@ -7,6 +7,7 @@ import {
   updateUser,
   getClientProfile,
   getClientNames,
+  updateUserRoles,
 } from "@/utils/api";
 import { Pencil, Check, X } from "lucide-react";
 import Loader from "@/components/Loader";
@@ -166,6 +167,9 @@ export default function UserDirectoryPage() {
         divisi: editSatfung,
         user_id: editNrpNip,
       });
+      if (userId !== editNrpNip) {
+        await updateUserRoles(token || "", userId, editNrpNip);
+      }
       await fetchUsers();
       setEditingRowId(null);
     } catch (err) {

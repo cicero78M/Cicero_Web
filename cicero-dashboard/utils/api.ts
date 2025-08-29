@@ -187,6 +187,24 @@ export async function updateUser(
   return res.json();
 }
 
+// Perbarui relasi user_roles ketika NRP/NIP berubah
+export async function updateUserRoles(
+  token: string,
+  oldUserId: string,
+  newUserId: string,
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/user_roles/update`;
+  const res = await fetchWithAuth(url, token, {
+    method: "PUT",
+    body: JSON.stringify({ old_user_id: oldUserId, new_user_id: newUserId }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gagal memperbarui user_roles: ${text}`);
+  }
+  return res.json();
+}
+
 // Ambil komentar TikTok
 export async function getTikTokComments(token: string): Promise<any> {
   const url = `${API_BASE_URL}/api/tiktok/comments`;
