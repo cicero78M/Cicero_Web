@@ -48,8 +48,8 @@ export async function getDashboardStats(
   const params = new URLSearchParams();
   if (periode) params.append("periode", periode);
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("start_date", startDate);
-  if (endDate) params.append("end_date", endDate);
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   if (client_id) params.append("client_id", client_id);
   const url = `${API_BASE_URL}/api/dashboard/stats${
     params.toString() ? `?${params.toString()}` : ""
@@ -82,8 +82,8 @@ export async function getRekapLikesIG(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("start_date", startDate);
-  if (endDate) params.append("end_date", endDate);
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
