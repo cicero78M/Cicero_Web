@@ -39,8 +39,8 @@ export async function fetchDitbinmasAbsensiLikes(
   const directoryRes = await getUserDirectory(token, clientId);
   const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
   const expectedRole = clientId.toLowerCase();
-  const clientIds = Array.from(
-    new Set(
+  const clientIds: string[] = Array.from(
+    new Set<string>(
       dirData
         .filter(
           (u: any) =>
