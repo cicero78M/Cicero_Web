@@ -7,6 +7,7 @@ import {
   getClientNames,
   getUserDirectory,
 } from "@/utils/api";
+import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -89,6 +90,19 @@ export default function InstagramEngagementInsightPage() {
             : customDate;
         const { periode, date, startDate, endDate } =
           getPeriodeDateForView(viewBy, selectedDate);
+        if (isDitbinmas) {
+          const { users, summary } = await fetchDitbinmasAbsensiLikes(token, {
+            periode,
+            date,
+            startDate,
+            endDate,
+          });
+          setRekapSummary(summary);
+          setChartData(users);
+          setIsDirectorate(true);
+          return;
+        }
+
         const statsData = await getDashboardStats(
           token,
           periode,
