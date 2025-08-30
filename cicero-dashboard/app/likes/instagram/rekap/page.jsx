@@ -35,7 +35,9 @@ export default function RekapLikesIGPage() {
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahLike: 0,
+    totalKurangLike: 0,
     totalBelumLike: 0,
+    totalTanpaUsername: 0,
     totalIGPost: 0,
   });
 
@@ -202,29 +204,40 @@ export default function RekapLikesIGPage() {
             : [];
         }
 
-        // Hitung jumlah IG post dari stats
+        // Hitung jumlah IG post dari stats dan klasifikasi user
         const totalIGPost = Number(statsData.instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         const totalUser = users.length;
-        
-        const totalSudahLike = isZeroPost
-          ? 0
-          : users.filter(
-              (u) =>
-                Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception)
-            ).length;
-
-        const totalBelumLike = isZeroPost
-          ? totalUser
-          : users.filter(
-              (u) =>
-                Number(u.jumlah_like) < totalIGPost*0.5 && !isException(u.exception)
-            ).length;
+        let totalSudahLike = 0;
+        let totalKurangLike = 0;
+        let totalBelumLike = 0;
+        let totalTanpaUsername = 0;
+        users.forEach((u) => {
+          const username = String(u.username || "").trim();
+          if (!username) {
+            totalTanpaUsername += 1;
+            return;
+          }
+          const jumlah = Number(u.jumlah_like) || 0;
+          if (isZeroPost) {
+            totalBelumLike += 1;
+            return;
+          }
+          if (isException(u.exception) || jumlah >= totalIGPost * 0.5) {
+            totalSudahLike += 1;
+          } else if (jumlah > 0) {
+            totalKurangLike += 1;
+          } else {
+            totalBelumLike += 1;
+          }
+        });
 
         setRekapSummary({
           totalUser,
           totalSudahLike,
+          totalKurangLike,
           totalBelumLike,
+          totalTanpaUsername,
           totalIGPost,
         });
         setChartData(users);

@@ -23,7 +23,8 @@ import {
   User,
   ThumbsUp,
   ThumbsDown,
-  ArrowRight
+  ArrowRight,
+  UserX,
 } from "lucide-react";
 
 // Helper: handle boolean/string/number for exception
@@ -47,7 +48,9 @@ export default function InstagramEngagementInsightPage() {
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahLike: 0,
+    totalKurangLike: 0,
     totalBelumLike: 0,
+    totalTanpaUsername: 0,
     totalIGPost: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
@@ -203,29 +206,40 @@ export default function InstagramEngagementInsightPage() {
           });
         }
 
-        // Rekap summary
+        // Rekap summary dengan klasifikasi lengkap
         const totalUser = enrichedUsers.length;
         const totalIGPost = Number(statsData.instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
-        const totalSudahLike = isZeroPost
-          ? 0
-          : enrichedUsers.filter(
-              (u) =>
-                Number(u.jumlah_like) >= totalIGPost * 0.5 ||
-                isException(u.exception),
-            ).length;
-        const totalBelumLike = isZeroPost
-          ? totalUser
-          : enrichedUsers.filter(
-              (u) =>
-                Number(u.jumlah_like) < totalIGPost * 0.5 &&
-                !isException(u.exception),
-            ).length;
+        let totalSudahLike = 0;
+        let totalKurangLike = 0;
+        let totalBelumLike = 0;
+        let totalTanpaUsername = 0;
+        enrichedUsers.forEach((u) => {
+          const username = String(u.username || "").trim();
+          if (!username) {
+            totalTanpaUsername += 1;
+            return;
+          }
+          const jumlah = Number(u.jumlah_like) || 0;
+          if (isZeroPost) {
+            totalBelumLike += 1;
+            return;
+          }
+          if (isException(u.exception) || jumlah >= totalIGPost * 0.5) {
+            totalSudahLike += 1;
+          } else if (jumlah > 0) {
+            totalKurangLike += 1;
+          } else {
+            totalBelumLike += 1;
+          }
+        });
 
         setRekapSummary({
           totalUser,
           totalSudahLike,
+          totalKurangLike,
           totalBelumLike,
+          totalTanpaUsername,
           totalIGPost,
         });
         setChartData(enrichedUsers);
@@ -286,10 +300,24 @@ export default function InstagramEngagementInsightPage() {
               />
               <Divider />
               <SummaryItem
+                label="Kurang Likes"
+                value={rekapSummary.totalKurangLike}
+                color="orange"
+                icon={<ThumbsDown className="text-orange-500" />}
+              />
+              <Divider />
+              <SummaryItem
                 label="Belum Likes"
                 value={rekapSummary.totalBelumLike}
                 color="red"
                 icon={<ThumbsDown className="text-red-500" />}
+              />
+              <Divider />
+              <SummaryItem
+                label="Tanpa Username"
+                value={rekapSummary.totalTanpaUsername}
+                color="gray"
+                icon={<UserX className="text-gray-400" />}
               />
             </div>
 
@@ -418,6 +446,7 @@ function SummaryItem({ label, value, color = "gray", icon }) {
     green: "text-green-600",
     red: "text-red-500",
     gray: "text-gray-700",
+    orange: "text-orange-500",
   };
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-2">
