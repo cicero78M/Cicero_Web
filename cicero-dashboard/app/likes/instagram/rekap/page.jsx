@@ -7,6 +7,7 @@ import {
   getClientNames,
   getUserDirectory,
 } from "@/utils/api";
+import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
@@ -80,6 +81,22 @@ export default function RekapLikesIGPage() {
             : customDate;
         const { periode, date, startDate, endDate } =
           getPeriodeDateForView(viewBy, selectedDate);
+        if (isDitbinmas) {
+          const { users, summary, posts, clientName } =
+            await fetchDitbinmasAbsensiLikes(token, {
+              periode,
+              date,
+              startDate,
+              endDate,
+            });
+          setRekapSummary(summary);
+          setChartData(users);
+          setIgPosts(posts);
+          setClientName(clientName);
+          setIsOrg(false);
+          return;
+        }
+
         const statsData = await getDashboardStats(
           token,
           periode,
