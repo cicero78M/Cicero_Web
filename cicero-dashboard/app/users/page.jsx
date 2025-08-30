@@ -223,18 +223,33 @@ export default function UserDirectoryPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+    const allUsers = Object.values(rekapUsers).flat();
+    const totalUser = allUsers.length;
+    const totalUpdateIG = allUsers.filter((u) => u.insta).length;
+    const totalUpdateTiktok = allUsers.filter((u) => u.tiktok).length;
+    const totalBelumUpdate = allUsers.filter(
+      (u) => !u.insta && !u.tiktok,
+    ).length;
+
     const lines = [
       `Client Name: ${clientName || "-"}`,
       `${day}, ${date} ${time}`,
       "",
+      `Total User : ${totalUser}`,
+      `Update Instagram : ${totalUpdateIG}`,
+      `Update Tiktok : ${totalUpdateTiktok}`,
+      `Belum Update : ${totalBelumUpdate}`,
+      "",
+      "Rincian",
+      "",
     ];
     Object.entries(rekapUsers).forEach(([sf, list]) => {
-      lines.push(sf);
+      lines.push(`*${sf}*`);
       list.forEach((u) => {
         lines.push(
-          `${u.nama || "-"}, IG ${u.insta || "Kosong"}, Tiktok ${
-            u.tiktok || "Kosong"
-          }`,
+          `${u.title ? `${u.title} ` : ""}${u.nama || "-"}, IG ${
+            u.insta || "Kosong"
+          }, Tiktok ${u.tiktok || "Kosong"}`,
         );
       });
       lines.push("");
