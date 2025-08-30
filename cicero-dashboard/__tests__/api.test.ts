@@ -19,8 +19,8 @@ test("getDashboardStats supports date range params", async () => {
   await getDashboardStats("token123", undefined, undefined, "2024-01-01", "2024-01-31");
   const call = (global.fetch as jest.Mock).mock.calls[0];
   expect(call[0]).toContain("/api/dashboard/stats");
-  expect(call[0]).toContain("start_date=2024-01-01");
-  expect(call[0]).toContain("end_date=2024-01-31");
+  expect(call[0]).toContain("tanggal_mulai=2024-01-01");
+  expect(call[0]).toContain("tanggal_selesai=2024-01-31");
   expect(call[1].headers.Authorization).toBe("Bearer token123");
 });
 
@@ -51,8 +51,8 @@ test("getRekapLikesIG supports date range params", async () => {
   );
   const url = (global.fetch as jest.Mock).mock.calls[0][0];
   expect(url).toContain("/api/insta/rekap-likes");
-  expect(url).toContain("start_date=2023-12-01");
-  expect(url).toContain("end_date=2023-12-31");
+  expect(url).toContain("tanggal_mulai=2023-12-01");
+  expect(url).toContain("tanggal_selesai=2023-12-31");
 });
 
 test("getRekapKomentarTiktok supports date range params", async () => {
@@ -86,15 +86,15 @@ test("getDashboardStats normalizes fields", async () => {
 test("getDashboardStats handles partial date range params", async () => {
   await getDashboardStats("tok", undefined, undefined, "2024-06-01");
   let url = (global.fetch as jest.Mock).mock.calls[0][0];
-  expect(url).toContain("start_date=2024-06-01");
-  expect(url).not.toContain("end_date");
+  expect(url).toContain("tanggal_mulai=2024-06-01");
+  expect(url).not.toContain("tanggal_selesai");
 
   (global.fetch as jest.Mock).mockClear();
 
   await getDashboardStats("tok", undefined, undefined, undefined, "2024-06-30");
   url = (global.fetch as jest.Mock).mock.calls[0][0];
-  expect(url).toContain("end_date=2024-06-30");
-  expect(url).not.toContain("start_date");
+  expect(url).toContain("tanggal_selesai=2024-06-30");
+  expect(url).not.toContain("tanggal_mulai");
 });
 
 test("getDashboardStats includes client_id when provided", async () => {
