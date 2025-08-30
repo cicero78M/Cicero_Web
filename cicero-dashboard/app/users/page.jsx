@@ -75,13 +75,24 @@ export default function UserDirectoryPage() {
 
   const rekapUsers = useMemo(() => {
     const grouped = {};
-    users.forEach((u) => {
-      const key = u.divisi || "-";
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(u);
-    });
+    users
+      .filter((u) => !u.exception)
+      .filter((u) => {
+        if (isDitbinmasClient && !showAllDitbinmas) {
+          const cid = String(
+            u.client_id || u.clientId || u.clientID || u.client || "",
+          ).toUpperCase();
+          return cid === "DITBINMAS";
+        }
+        return true;
+      })
+      .forEach((u) => {
+        const key = u.divisi || "-";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(u);
+      });
     return grouped;
-  }, [users]);
+  }, [users, isDitbinmasClient, showAllDitbinmas]);
 
   async function fetchUsers() {
     if (!token) {
