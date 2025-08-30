@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
-import { Camera, Users, Check, X } from "lucide-react";
+import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 
 // Utility: handle boolean/string/number for exception
 function isException(val) {
@@ -31,43 +31,72 @@ export default function RekapLikesIG({
     [users],
   );
 
-  // === LOGIC: Semua user exception (true/false) dianggap belum jika IG post = 0 ===
-  const totalSudahLike = totalIGPost === 0
-    ? 0
-    : users.filter(u =>
-        Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception)
-      ).length;
-  const totalBelumLike = totalIGPost === 0
-    ? totalUser
-    : users.filter(u =>
-        Number(u.jumlah_like) < totalIGPost*0.5 && !isException(u.exception)
-      ).length;
+  const validUsers = useMemo(
+    () => users.filter((u) => String(u.username || "").trim() !== ""),
+    [users],
+  );
+  const tanpaUsernameUsers = useMemo(
+    () => users.filter((u) => String(u.username || "").trim() === ""),
+    [users],
+  );
+
+  // Klasifikasi pengguna
+  const totalSudahLike =
+    totalIGPost === 0
+      ? 0
+      : validUsers.filter(
+          (u) =>
+            Number(u.jumlah_like) >= totalIGPost * 0.5 || isException(u.exception),
+        ).length;
+  const totalKurangLike =
+    totalIGPost === 0
+      ? 0
+      : validUsers.filter((u) => {
+          const likes = Number(u.jumlah_like) || 0;
+          return likes > 0 && likes < totalIGPost * 0.5 && !isException(u.exception);
+        }).length;
+  const totalBelumLike =
+    totalIGPost === 0
+      ? validUsers.length
+      : validUsers.filter(
+          (u) => Number(u.jumlah_like) === 0 && !isException(u.exception),
+        ).length;
+  const totalTanpaUsername = tanpaUsernameUsers.length;
 
   // Hitung nilai jumlah_like tertinggi (max) di seluruh user
   const maxJumlahLike = useMemo(
     () =>
       Math.max(
         0,
-        ...users
-          .filter(u => !isException(u.exception))
-          .map(u => parseInt(u.jumlah_like || 0, 10))
+        ...validUsers
+          .filter((u) => !isException(u.exception))
+          .map((u) => parseInt(u.jumlah_like || 0, 10)),
       ),
-    [users]
+    [validUsers],
   );
 
   const sudahUsers = useMemo(() => {
     if (totalIGPost === 0) return [];
-    return users.filter(
-      u => Number(u.jumlah_like) >= totalIGPost * 0.5 || isException(u.exception),
+    return validUsers.filter(
+      (u) =>
+        Number(u.jumlah_like) >= totalIGPost * 0.5 || isException(u.exception),
     );
-  }, [users, totalIGPost]);
+  }, [validUsers, totalIGPost]);
+
+  const kurangUsers = useMemo(() => {
+    if (totalIGPost === 0) return [];
+    return validUsers.filter((u) => {
+      const likes = Number(u.jumlah_like) || 0;
+      return likes > 0 && likes < totalIGPost * 0.5 && !isException(u.exception);
+    });
+  }, [validUsers, totalIGPost]);
 
   const belumUsers = useMemo(() => {
-    if (totalIGPost === 0) return users;
-    return users.filter(
-      u => Number(u.jumlah_like) < totalIGPost * 0.5 && !isException(u.exception),
+    if (totalIGPost === 0) return validUsers;
+    return validUsers.filter(
+      (u) => Number(u.jumlah_like) === 0 && !isException(u.exception),
     );
-  }, [users, totalIGPost]);
+  }, [validUsers, totalIGPost]);
 
   function groupByDivisi(arr) {
     return arr.reduce((acc, u) => {
@@ -165,7 +194,9 @@ export default function RekapLikesIG({
       : "-";
 
     const belumGroup = groupByDivisi(belumUsers);
+    const kurangGroup = groupByDivisi(kurangUsers);
     const sudahGroup = groupByDivisi(sudahUsers);
+    const tanpaUsernameGroup = groupByDivisi(tanpaUsernameUsers);
 
     const formatGroup = grp =>
       Object.entries(grp)
@@ -180,7 +211,7 @@ export default function RekapLikesIG({
         })
         .join("\n");
 
-    const message = `${greeting},\n\nMohon ijin melaporkan Rekap Akumulasi Likes dan komentar Instagram Pada Konten Social Media Akun Official Ditbinmas Polda Jatim oleh Personil Bhabinkamtibmas ${clientName} : \n\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah Konten: ${jumlahKonten}\nDaftar Link Konten:\n${linkKonten}\n\nJumlah user: ${totalUser}\n✅ Sudah melaksanakan : ${totalSudahLike} user\n❌ Belum melaksanakan : ${totalBelumLike} user\n\n❌ Belum melaksanakan (${totalBelumLike} user):\n${formatGroup(belumGroup)}\n\n✅ Sudah melaksanakan (${totalSudahLike} user):\n${formatGroup(sudahGroup)}`;
+    const message = `${greeting},\n\nMohon ijin melaporkan Rekap Akumulasi Likes dan komentar Instagram Pada Konten Social Media Akun Official Ditbinmas Polda Jatim oleh Personil Bhabinkamtibmas ${clientName} : \n\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah Konten: ${jumlahKonten}\nDaftar Link Konten:\n${linkKonten}\n\nJumlah user: ${totalUser}\n✅ Sudah melaksanakan : ${totalSudahLike} user\n⚠️ Kurang like : ${totalKurangLike} user\n❌ Belum melaksanakan : ${totalBelumLike} user\n⁉️ Tanpa username IG : ${totalTanpaUsername} user\n\n⁉️ Tanpa Username IG (${totalTanpaUsername} user):\n${formatGroup(tanpaUsernameGroup)}\n\n❌ Belum melaksanakan (${totalBelumLike} user):\n${formatGroup(belumGroup)}\n\n⚠️ Kurang like (${totalKurangLike} user):\n${formatGroup(kurangGroup)}\n\n✅ Sudah melaksanakan (${totalSudahLike} user):\n${formatGroup(sudahGroup)}`;
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
@@ -194,7 +225,7 @@ export default function RekapLikesIG({
   return (
     <div className="flex flex-col gap-6 mt-8">
       {/* Ringkasan */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <SummaryCard
           title="IG Post Hari Ini"
           value={totalIGPost}
@@ -214,10 +245,22 @@ export default function RekapLikesIG({
           icon={<Check />}
         />
         <SummaryCard
+          title="Kurang Like"
+          value={totalKurangLike}
+          color="bg-gradient-to-r from-yellow-400 via-orange-500 to-orange-600 text-white"
+          icon={<AlertTriangle />}
+        />
+        <SummaryCard
           title="Belum Like"
           value={totalBelumLike}
           color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
           icon={<X />}
+        />
+        <SummaryCard
+          title="Tanpa Username"
+          value={totalTanpaUsername}
+          color="bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 text-gray-800"
+          icon={<UserX />}
         />
       </div>
 
@@ -248,13 +291,45 @@ export default function RekapLikesIG({
           </thead>
           <tbody>
             {currentRows.map((u, i) => {
-              // LOGIC: semua user dianggap belum jika IG Post = 0
-              const sudahLike = totalIGPost === 0
-                ? false
-                : Number(u.jumlah_like) >= totalIGPost*0.5 || isException(u.exception);
+              const username = String(u.username || "").trim();
+              let rowClass = "bg-red-50";
+              let statusEl = (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
+                  <X className="w-3 h-3" /> Belum
+                </span>
+              );
+              let jumlahDisplay = isException(u.exception)
+                ? maxJumlahLike
+                : u.jumlah_like;
+              if (!username) {
+                rowClass = "bg-gray-50";
+                statusEl = (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-500 text-white font-semibold">
+                    <UserX className="w-3 h-3" /> Tanpa Username
+                  </span>
+                );
+                jumlahDisplay = 0;
+              } else if (totalIGPost !== 0) {
+                const likes = Number(u.jumlah_like) || 0;
+                if (isException(u.exception) || likes >= totalIGPost * 0.5) {
+                  rowClass = "bg-green-50";
+                  statusEl = (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
+                      <Check className="w-3 h-3" /> Sudah
+                    </span>
+                  );
+                } else if (likes > 0) {
+                  rowClass = "bg-yellow-50";
+                  statusEl = (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-500 text-white font-semibold">
+                      <AlertTriangle className="w-3 h-3" /> Kurang
+                    </span>
+                  );
+                }
+              }
 
               return (
-                <tr key={u.user_id} className={sudahLike ? "bg-green-50" : "bg-red-50"}>
+                <tr key={u.user_id} className={rowClass}>
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   {hasClient && (
                     <td className="py-1 px-2">
@@ -270,22 +345,8 @@ export default function RekapLikesIG({
                       {u.divisi || "-"}
                     </span>
                   </td>
-                  <td className="py-1 px-2 text-center">
-                    {sudahLike ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                        <Check className="w-3 h-3" />
-                        Sudah
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                        <X className="w-3 h-3" />
-                        Belum
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-1 px-2 text-center font-bold">
-                    {isException(u.exception) ? maxJumlahLike : u.jumlah_like}
-                  </td>
+                  <td className="py-1 px-2 text-center">{statusEl}</td>
+                  <td className="py-1 px-2 text-center font-bold">{jumlahDisplay}</td>
                 </tr>
               );
             })}
