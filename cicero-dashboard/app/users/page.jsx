@@ -303,9 +303,20 @@ export default function UserDirectoryPage() {
     [users, search, isDitbinmasClient, showAllDitbinmas],
   );
 
-  // Paging logic
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const currentRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Urutkan sehingga pangkat KOMBES POL dan AKBP berada di atas
+  const sorted = useMemo(() => {
+    const rank = (u) => {
+      const t = String(u.title || "").toUpperCase();
+      if (t.includes("KOMBES POL")) return 0;
+      if (t.includes("AKBP")) return 1;
+      return 2;
+    };
+    return [...filtered].sort((a, b) => rank(a) - rank(b));
+  }, [filtered]);
+
+  // Paging logic menggunakan data yang sudah diurutkan
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Reset ke halaman 1 saat search berubah
   useEffect(() => setPage(1), [search, setPage]);
