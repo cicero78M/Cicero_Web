@@ -279,7 +279,7 @@ export default function RekapLikesIG({
   }
 
   return (
-    <div className="flex flex-col gap-6 mt-8">
+    <div className="flex flex-col gap-6 mt-8 min-h-screen">
       {/* Ringkasan */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <SummaryCard
@@ -438,7 +438,7 @@ export default function RekapLikesIG({
       )}
 
       {showRekapButton && (
-        <div className="flex justify-end mt-4 gap-2">
+        <div className="mt-auto flex justify-end gap-2 pt-4">
           <button
             onClick={handleDownloadRekap}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
