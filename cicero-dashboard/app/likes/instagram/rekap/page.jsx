@@ -309,15 +309,15 @@ export default function RekapLikesIGPage() {
           </div>
 
           {/* Kirim data dari fetch ke komponen rekap likes */}
-          <RekapLikesIG
-            users={chartData}
-            totalIGPost={rekapSummary.totalIGPost}
-            posts={igPosts}
-            showRekapButton
-            clientName={clientName}
-          />
+            <RekapLikesIG
+              users={chartData}
+              totalIGPost={rekapSummary.totalIGPost}
+              posts={igPosts}
+              showRekapButton={true}
+              clientName={clientName}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
