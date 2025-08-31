@@ -22,7 +22,8 @@ export default function RekapLikesIG({
   users = [],
   totalIGPost = 0,
   posts = [],
-  showRekapButton = false,
+  // tampilkan tombol rekap secara default
+  showRekapButton = true,
   clientName = "",
 }) {
   const totalUser = users.length;

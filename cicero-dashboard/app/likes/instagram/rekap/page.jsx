@@ -313,7 +313,7 @@ export default function RekapLikesIGPage() {
               users={chartData}
               totalIGPost={rekapSummary.totalIGPost}
               posts={igPosts}
-              showRekapButton={true}
+              showRekapButton
               clientName={clientName}
             />
           </div>
