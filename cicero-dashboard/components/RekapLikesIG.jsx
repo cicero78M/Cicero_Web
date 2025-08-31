@@ -1,5 +1,11 @@
 "use client";
-import { useMemo, useEffect, useState } from "react";
+import {
+  useMemo,
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 
@@ -18,14 +24,17 @@ const PAGE_SIZE = 25;
  * @param {boolean} showRekapButton - tampilkan tombol salin rekap jika true
  * @param {string} clientName - nama client ORG
  */
-export default function RekapLikesIG({
-  users = [],
-  totalIGPost = 0,
-  posts = [],
-  // tampilkan tombol rekap secara default
-  showRekapButton = true,
-  clientName = "",
-}) {
+const RekapLikesIG = forwardRef(function RekapLikesIG(
+  {
+    users = [],
+    totalIGPost = 0,
+    posts = [],
+    // tampilkan tombol rekap secara default
+    showRekapButton = true,
+    clientName = "",
+  },
+  ref,
+) {
   const totalUser = users.length;
   const hasClient = useMemo(
     () => users.some((u) => u.nama_client || u.client_name || u.client),
@@ -279,6 +288,11 @@ export default function RekapLikesIG({
     URL.revokeObjectURL(url);
   }
 
+  useImperativeHandle(ref, () => ({
+    copyRekap: handleCopyRekap,
+    downloadRekap: handleDownloadRekap,
+  }));
+
   return (
     <div className="flex flex-col gap-6 mt-8 min-h-screen">
       {/* Ringkasan */}
@@ -456,7 +470,9 @@ export default function RekapLikesIG({
       )}
     </div>
   );
-}
+});
+
+export default RekapLikesIG;
 
 // Semua card mengikuti style IG Post Hari Ini
 function SummaryCard({ title, value, color, icon }) {
