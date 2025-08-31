@@ -74,19 +74,16 @@ export async function getDashboardStats(
 // Ambil rekap absensi instagram harian
 export async function getRekapLikesIG(
   token: string,
-  client_id?: string,
+  client_id: string,
   periode: string = "harian",
   tanggal?: string,
   startDate?: string,
-  endDate?: string,
-  role?: string,
+  endDate?: string
 ): Promise<any> {
-  const params = new URLSearchParams({ periode });
-  if (client_id) params.append("client_id", client_id);
+  const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);
-  if (role) params.append("user_role", role);
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);

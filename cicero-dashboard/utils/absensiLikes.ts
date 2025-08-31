@@ -1,4 +1,4 @@
-import { getDashboardStats, getRekapLikesIG, getClientProfile, getClientNames } from "@/utils/api";
+import { getDashboardStats, getRekapLikesIG, getClientProfile, getClientNames, getUserDirectory } from "@/utils/api";
 
 function isException(val: any) {
   return val === true || val === "true" || val === 1 || val === "1";
@@ -32,30 +32,51 @@ export async function fetchDitbinmasAbsensiLikes(
     [];
   const totalIGPost = Number(statsData.instagramPosts) || 0;
 
+  // gather user directory
   const profileRes = await getClientProfile(token, clientId);
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
-  const rekapRes = await getRekapLikesIG(
-    token,
-    undefined,
-    periode,
-    date,
-    startDate,
-    endDate,
-    "ditbinmas",
-  ).catch(() => ({ data: [] }));
+  const directoryRes = await getUserDirectory(token, clientId);
+  const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
+  const expectedRole = clientId.toLowerCase();
+  const clientIds: string[] = Array.from(
+    new Set<string>(
+      dirData
+        .filter(
+          (u: any) =>
+            String(
+              u.role || u.user_role || u.userRole || u.roleName || "",
+            ).toLowerCase() === expectedRole,
+        )
+        .map((u: any) =>
+          String(
+            u.client_id || u.clientId || u.clientID || u.client || "",
+          ),
+        )
+        .filter(Boolean),
+    ),
+  );
+  if (!clientIds.includes(clientId)) clientIds.push(clientId);
 
-  let users = Array.isArray(rekapRes?.data)
-    ? rekapRes.data
-    : Array.isArray(rekapRes)
-    ? rekapRes
-    : [];
+  const rekapAll = await Promise.all(
+    clientIds.map((cid) =>
+      getRekapLikesIG(
+        token,
+        cid,
+        periode,
+        date,
+        startDate,
+        endDate,
+      ).catch(() => ({ data: [] })),
+    ),
+  );
 
-  users = users.filter(
-    (u: any) =>
-      String(
-        u.role || u.user_role || u.userRole || u.roleName || "",
-      ).toLowerCase() === "ditbinmas",
+  let users = rekapAll.flatMap((res) =>
+    Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res)
+      ? res
+      : [],
   );
 
   const nameMap = await getClientNames(
