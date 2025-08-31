@@ -43,7 +43,6 @@ export default function RekapLikesIGPage() {
   });
 
   const [igPosts, setIgPosts] = useState([]);
-  const [isOrg, setIsOrg] = useState(false);
   const [clientName, setClientName] = useState("");
 
   const viewOptions = VIEW_OPTIONS;
@@ -93,7 +92,6 @@ export default function RekapLikesIGPage() {
           setChartData(users);
           setIgPosts(posts);
           setClientName(clientName);
-          setIsOrg(false);
           return;
         }
 
@@ -120,10 +118,6 @@ export default function RekapLikesIGPage() {
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
-        setIsOrg(
-          (profile.client_type || profile.clientType || "")
-            .toUpperCase() === "ORG",
-        );
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -319,7 +313,7 @@ export default function RekapLikesIGPage() {
             users={chartData}
             totalIGPost={rekapSummary.totalIGPost}
             posts={igPosts}
-            showRekapButton={isOrg}
+            showRekapButton
             clientName={clientName}
           />
         </div>
