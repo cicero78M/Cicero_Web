@@ -281,6 +281,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     const now = new Date();
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const tanggalFile = `${String(now.getDate()).padStart(2, "0")}_${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}_${now.getFullYear()}`;
     const jam = now.toLocaleTimeString("id-ID", { hour12: false });
     const jumlahKonten =
       Array.isArray(posts) && posts.length > 0 ? posts.length : totalIGPost;
@@ -352,7 +355,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "rekap_likes.txt";
+    a.download = `Rekap_Likes dan Komentar_Ditbinmas_${hari}_${tanggalFile}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
