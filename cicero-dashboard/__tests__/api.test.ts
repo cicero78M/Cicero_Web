@@ -55,6 +55,20 @@ test("getRekapLikesIG supports date range params", async () => {
   expect(url).toContain("tanggal_selesai=2023-12-31");
 });
 
+test("getRekapLikesIG supports user_role param", async () => {
+  await getRekapLikesIG(
+    "tok",
+    undefined,
+    "harian",
+    undefined,
+    undefined,
+    undefined,
+    "ditbinmas",
+  );
+  const url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("user_role=ditbinmas");
+});
+
 test("getRekapKomentarTiktok supports date range params", async () => {
   await getRekapKomentarTiktok(
     "tok",
