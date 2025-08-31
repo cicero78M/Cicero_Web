@@ -135,7 +135,15 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   // Sorting
   const sorted = useMemo(() => {
+    const rank = (u) => {
+      const t = String(u.title || "").toUpperCase();
+      if (t.includes("KOMBES POL")) return 0;
+      if (t.includes("AKBP")) return 1;
+      return 2;
+    };
     return [...filtered].sort((a, b) => {
+      const rankDiff = rank(a) - rank(b);
+      if (rankDiff !== 0) return rankDiff;
       const aException = isException(a.exception);
       const bException = isException(b.exception);
 
@@ -234,16 +242,19 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   function handleDownloadRekap() {
     const clients = {};
-    validUsers.forEach((u) => {
-      const client =
-        u.nama_client || u.client_name || u.client || "Lainnya";
+    users.forEach((u) => {
+      const client = u.nama_client || u.client_name || u.client || "Lainnya";
       if (!clients[client])
-        clients[client] = { Sudah: [], Kurang: [], Belum: [] };
+        clients[client] = { Sudah: [], Kurang: [], Belum: [], UsernameKosong: [] };
+      const username = String(u.username || "").trim();
+      if (!username) {
+        clients[client].UsernameKosong.push(u);
+        return;
+      }
       const likes = Number(u.jumlah_like) || 0;
       let status = "Belum";
       if (totalIGPost !== 0) {
-        if (isException(u.exception) || likes >= totalIGPost * 0.5)
-          status = "Sudah";
+        if (isException(u.exception) || likes >= totalIGPost * 0.5) status = "Sudah";
         else if (likes > 0) status = "Kurang";
       }
       clients[client][status].push(u);
@@ -257,22 +268,29 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
     const lines = [];
     sortedClients.forEach((client) => {
-      const { Sudah, Kurang, Belum } = clients[client];
-      lines.push(client);
-      lines.push("Sudah");
+      const { Sudah, Kurang, Belum, UsernameKosong } = clients[client];
+      lines.push(
+        `${client} : ${Sudah.length}/${Kurang.length}/${Belum.length}/${UsernameKosong.length}`,
+      );
+      lines.push(`Sudah : ${Sudah.length}`);
       Sudah.forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.jumlah_like}`);
       });
-      lines.push("Kurang");
+      lines.push(`Kurang : ${Kurang.length}`);
       Kurang.forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.jumlah_like}`);
       });
-      lines.push("Belum");
+      lines.push(`Belum : ${Belum.length}`);
       Belum.forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        lines.push(`- ${name}, @${u.username}`);
+        lines.push(`- ${name}, ${u.username}`);
+      });
+      lines.push(`Username Kosong : ${UsernameKosong.length}`);
+      UsernameKosong.forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        lines.push(`- ${name}`);
       });
       lines.push("");
     });
