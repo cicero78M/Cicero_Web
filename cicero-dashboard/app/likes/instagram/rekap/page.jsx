@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   getDashboardStats,
   getRekapLikesIG,
@@ -44,6 +44,7 @@ export default function RekapLikesIGPage() {
 
   const [igPosts, setIgPosts] = useState([]);
   const [clientName, setClientName] = useState("");
+  const rekapRef = useRef(null);
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -288,7 +289,13 @@ export default function RekapLikesIGPage() {
               Kembali
             </Link>
           </div>
-          <div className="flex items-center justify-end gap-3 mb-2">
+          <div className="flex flex-wrap items-center justify-end gap-3 mb-2">
+            <button
+              onClick={() => rekapRef.current?.copyRekap()}
+              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
+            >
+              Rekap Likes
+            </button>
             <ViewDataSelector
               value={viewBy}
               onChange={setViewBy}
@@ -310,6 +317,7 @@ export default function RekapLikesIGPage() {
 
           {/* Kirim data dari fetch ke komponen rekap likes */}
             <RekapLikesIG
+              ref={rekapRef}
               users={chartData}
               totalIGPost={rekapSummary.totalIGPost}
               posts={igPosts}
