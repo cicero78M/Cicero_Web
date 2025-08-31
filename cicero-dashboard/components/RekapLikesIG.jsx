@@ -222,6 +222,62 @@ export default function RekapLikesIG({
     }
   }
 
+  function handleDownloadRekap() {
+    const clients = {};
+    validUsers.forEach((u) => {
+      const client =
+        u.nama_client || u.client_name || u.client || "Lainnya";
+      if (!clients[client])
+        clients[client] = { Sudah: [], Kurang: [], Belum: [] };
+      const likes = Number(u.jumlah_like) || 0;
+      let status = "Belum";
+      if (totalIGPost !== 0) {
+        if (isException(u.exception) || likes >= totalIGPost * 0.5)
+          status = "Sudah";
+        else if (likes > 0) status = "Kurang";
+      }
+      clients[client][status].push(u);
+    });
+
+    const sortedClients = Object.keys(clients).sort((a, b) => {
+      if (a === "Direktorat Binmas") return -1;
+      if (b === "Direktorat Binmas") return 1;
+      return a.localeCompare(b);
+    });
+
+    const lines = [];
+    sortedClients.forEach((client) => {
+      const { Sudah, Kurang, Belum } = clients[client];
+      lines.push(client);
+      lines.push("Sudah");
+      Sudah.forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        lines.push(`- ${name}, ${u.jumlah_like}`);
+      });
+      lines.push("Kurang");
+      Kurang.forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        lines.push(`- ${name}, ${u.jumlah_like}`);
+      });
+      lines.push("Belum");
+      Belum.forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        lines.push(`- ${name}, @${u.username}`);
+      });
+      lines.push("");
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rekap_likes.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="flex flex-col gap-6 mt-8">
       {/* Ringkasan */}
@@ -382,7 +438,13 @@ export default function RekapLikesIG({
       )}
 
       {showRekapButton && (
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-4 gap-2">
+          <button
+            onClick={handleDownloadRekap}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
+          >
+            Download Rekap
+          </button>
           <button
             onClick={handleCopyRekap}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
