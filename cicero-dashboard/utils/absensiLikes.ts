@@ -60,12 +60,12 @@ export async function fetchDitbinmasAbsensiLikes(
 
   const nameMap = await getClientNames(
     token,
-    users.map((u: any) =>
+    users.map((u) =>
       String(u.client_id || u.clientId || u.clientID || u.client || ""),
     ),
   );
 
-  users = users.map((u: any) => {
+  users = users.map((u) => {
     const clientName =
       nameMap[
         String(u.client_id || u.clientId || u.clientID || u.client || "")
