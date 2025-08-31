@@ -260,35 +260,88 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       clients[client][status].push(u);
     });
 
+    const rank = (u) => {
+      const t = String(u.title || "").toUpperCase();
+      if (t.includes("KOMISARIS BESAR POLISI")) return 0;
+      if (t.includes("AKBP")) return 1;
+      return 2;
+    };
+
+    const sortByRank = (arr) =>
+      [...arr].sort(
+        (a, b) => rank(a) - rank(b) || (a.nama || "").localeCompare(b.nama || ""),
+      );
+
     const sortedClients = Object.keys(clients).sort((a, b) => {
       if (a === "Direktorat Binmas") return -1;
       if (b === "Direktorat Binmas") return 1;
       return a.localeCompare(b);
     });
 
-    const lines = [];
+    const now = new Date();
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const jam = now.toLocaleTimeString("id-ID", { hour12: false });
+    const jumlahKonten =
+      Array.isArray(posts) && posts.length > 0 ? posts.length : totalIGPost;
+    const linkKonten =
+      Array.isArray(posts) && posts.length > 0
+        ? posts
+            .map(
+              (p) =>
+                p.permalink ||
+                p.permalink_url ||
+                p.media_url ||
+                p.link ||
+                p.url ||
+                "",
+            )
+            .filter(Boolean)
+            .join("\n")
+        : "-";
+
+    const lines = [
+      "Mohon ijin Komandan,",
+      "",
+      "📋 Rekap Akumulasi Likes Instagram",
+      `Polres: ${clientName || "-"}`,
+      `${hari}, ${tanggal}`,
+      `Jam: ${jam}`,
+      "",
+      `Jumlah Konten: ${jumlahKonten}`,
+      "Daftar Link Konten:",
+      linkKonten,
+      "",
+      `Jumlah Total Personil : ${totalUser} pers`,
+      `Sudah melaksanakan : ${totalSudahLike} pers`,
+      `Melaksanakan kurang lengkap : ${totalKurangLike} pers`,
+      `Belum melaksanakan : ${totalBelumLike} pers`,
+      `Belum Update Username Instagram : ${totalTanpaUsername} pers`,
+      "",
+    ];
+
     sortedClients.forEach((client) => {
       const { Sudah, Kurang, Belum, UsernameKosong } = clients[client];
       lines.push(
-        `${client} : ${Sudah.length}/${Kurang.length}/${Belum.length}/${UsernameKosong.length}`,
+        `${client.toUpperCase()} : ${Sudah.length}/${Kurang.length}/${Belum.length}/${UsernameKosong.length}`,
       );
       lines.push(`Sudah : ${Sudah.length}`);
-      Sudah.forEach((u) => {
+      sortByRank(Sudah).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.jumlah_like}`);
       });
       lines.push(`Kurang : ${Kurang.length}`);
-      Kurang.forEach((u) => {
+      sortByRank(Kurang).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.jumlah_like}`);
       });
       lines.push(`Belum : ${Belum.length}`);
-      Belum.forEach((u) => {
+      sortByRank(Belum).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.username}`);
       });
       lines.push(`Username Kosong : ${UsernameKosong.length}`);
-      UsernameKosong.forEach((u) => {
+      sortByRank(UsernameKosong).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}`);
       });
