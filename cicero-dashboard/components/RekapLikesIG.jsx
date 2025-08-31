@@ -137,7 +137,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const sorted = useMemo(() => {
     const rank = (u) => {
       const t = String(u.title || "").toUpperCase();
-      if (t.includes("KOMBES POL")) return 0;
+      if (t.includes("KOMISARIS BESAR POLISI")) return 0;
       if (t.includes("AKBP")) return 1;
       return 2;
     };
