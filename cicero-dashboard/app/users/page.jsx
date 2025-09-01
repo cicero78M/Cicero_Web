@@ -12,6 +12,7 @@ import {
 import { Pencil, Check, X } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
 const PAGE_SIZE = 50;
 
@@ -73,9 +74,14 @@ export default function UserDirectoryPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const sortedUsers = useMemo(
+    () => [...users].sort(compareUsersByPangkatAndNrp),
+    [users],
+  );
+
   const rekapUsers = useMemo(() => {
     const grouped = {};
-    users
+    sortedUsers
       .filter((u) => !u.exception)
       .filter((u) => {
         if (isDitbinmasClient && !showAllDitbinmas) {
@@ -92,7 +98,7 @@ export default function UserDirectoryPage() {
         grouped[key].push(u);
       });
     return grouped;
-  }, [users, isDitbinmasClient, showAllDitbinmas]);
+  }, [sortedUsers, isDitbinmasClient, showAllDitbinmas]);
 
   async function fetchUsers() {
     if (!token) {
@@ -274,7 +280,7 @@ export default function UserDirectoryPage() {
   // Filter: tidak tampilkan user dengan exception
   const filtered = useMemo(
     () =>
-      users
+      sortedUsers
         .filter((u) => !u.exception)
         .filter((u) => {
           if (isDitbinmasClient && !showAllDitbinmas) {
@@ -300,19 +306,10 @@ export default function UserDirectoryPage() {
             (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
             String(u.status).toLowerCase().includes(search.toLowerCase()),
         ),
-    [users, search, isDitbinmasClient, showAllDitbinmas],
+    [sortedUsers, search, isDitbinmasClient, showAllDitbinmas],
   );
 
-  // Urutkan sehingga pangkat KOMBES POL dan AKBP berada di atas
-  const sorted = useMemo(() => {
-    const rank = (u) => {
-      const t = String(u.title || "").toUpperCase();
-      if (t.includes("KOMISARIS BESAR POLISI")) return 0;
-      if (t.includes("AKBP")) return 1;
-      return 2;
-    };
-    return [...filtered].sort((a, b) => rank(a) - rank(b));
-  }, [filtered]);
+  const sorted = filtered;
 
   // Paging logic menggunakan data yang sudah diurutkan
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);

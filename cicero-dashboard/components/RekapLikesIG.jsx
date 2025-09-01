@@ -8,6 +8,7 @@ import {
 } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
 // Utility: handle boolean/string/number for exception
 function isException(val) {
@@ -35,19 +36,27 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   },
   ref,
 ) {
-  const totalUser = users.length;
-  const hasClient = useMemo(
-    () => users.some((u) => u.nama_client || u.client_name || u.client),
+  const sortedUsers = useMemo(
+    () => [...users].sort(compareUsersByPangkatAndNrp),
     [users],
   );
 
+  const totalUser = sortedUsers.length;
+  const hasClient = useMemo(
+    () =>
+      sortedUsers.some((u) => u.nama_client || u.client_name || u.client),
+    [sortedUsers],
+  );
+
   const validUsers = useMemo(
-    () => users.filter((u) => String(u.username || "").trim() !== ""),
-    [users],
+    () =>
+      sortedUsers.filter((u) => String(u.username || "").trim() !== ""),
+    [sortedUsers],
   );
   const tanpaUsernameUsers = useMemo(
-    () => users.filter((u) => String(u.username || "").trim() === ""),
-    [users],
+    () =>
+      sortedUsers.filter((u) => String(u.username || "").trim() === ""),
+    [sortedUsers],
   );
 
   // Klasifikasi pengguna
@@ -119,9 +128,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   // Search/filter
   const [search, setSearch] = useState("");
-  const filtered = useMemo(
+  const sorted = useMemo(
     () =>
-      users.filter((u) => {
+      sortedUsers.filter((u) => {
         const term = search.toLowerCase();
         return (
           (u.nama || "").toLowerCase().includes(term) ||
@@ -130,52 +139,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           (u.nama_client || u.client_name || u.client || "").toLowerCase().includes(term)
         );
       }),
-    [users, search],
+    [sortedUsers, search],
   );
-
-  // Sorting
-  const sorted = useMemo(() => {
-    const rank = (u) => {
-      const t = String(u.title || "").toUpperCase();
-      if (t.includes("KOMISARIS BESAR POLISI")) return 0;
-      if (t.includes("AKBP")) return 1;
-      return 2;
-    };
-    return [...filtered].sort((a, b) => {
-      const rankDiff = rank(a) - rank(b);
-      if (rankDiff !== 0) return rankDiff;
-      const aException = isException(a.exception);
-      const bException = isException(b.exception);
-
-      const aLike = Number(a.jumlah_like);
-      const bLike = Number(b.jumlah_like);
-
-      // 1. User sudah like (bukan exception) DAN jumlah_like == max → paling atas
-      if (!aException && aLike === maxJumlahLike && (bException || bLike < maxJumlahLike)) return -1;
-      if (!bException && bLike === maxJumlahLike && (aException || aLike < maxJumlahLike)) return 1;
-
-      // 2. User exception, jumlah_like == max → tepat di bawah user sudah like max
-      if (aException && bException) return 0;
-      if (aException && !bException && bLike === maxJumlahLike) return 1;
-      if (!aException && bException && aLike === maxJumlahLike) return -1;
-
-      // 3. User sudah like (non-exception) dengan jumlah_like < max → berikutnya
-      if (!aException && !bException) {
-        if (aLike > 0 && bLike === 0) return -1;
-        if (aLike === 0 && bLike > 0) return 1;
-        // Di dalam kelompok, urut jumlah_like desc, lalu nama
-        if (aLike !== bLike) return bLike - aLike;
-        return (a.nama || "").localeCompare(b.nama || "");
-      }
-
-      // 4. User exception vs user belum like
-      if (aException && !bException) return -1;
-      if (!aException && bException) return 1;
-
-      // 5. Sisa: belum like, urut nama
-      return (a.nama || "").localeCompare(b.nama || "");
-    });
-  }, [filtered, maxJumlahLike]);
 
   // Pagination
   const [page, setPage] = usePersistentState("rekapLikesIG_page", 1);
@@ -242,7 +207,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   function handleDownloadRekap() {
     const clients = {};
-    users.forEach((u) => {
+    sortedUsers.forEach((u) => {
       const client = u.nama_client || u.client_name || u.client || "Lainnya";
       if (!clients[client])
         clients[client] = { Sudah: [], Kurang: [], Belum: [], UsernameKosong: [] };
@@ -260,17 +225,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       clients[client][status].push(u);
     });
 
-    const rank = (u) => {
-      const t = String(u.title || "").toUpperCase();
-      if (t.includes("KOMISARIS BESAR POLISI")) return 0;
-      if (t.includes("AKBP")) return 1;
-      return 2;
-    };
-
     const sortByRank = (arr) =>
-      [...arr].sort(
-        (a, b) => rank(a) - rank(b) || (a.nama || "").localeCompare(b.nama || ""),
-      );
+      [...arr].sort(compareUsersByPangkatAndNrp);
 
     const sortedClients = Object.keys(clients).sort((a, b) => {
       if (a === "Direktorat Binmas") return -1;
