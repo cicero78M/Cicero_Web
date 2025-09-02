@@ -501,3 +501,68 @@ export async function getTiktokPosts(token: string, client_id: string): Promise<
   return res.json();
 }
 
+// === Claim & User Update without auth token ===
+
+// Fetch user data by NRP without requiring auth
+export async function getUserById(nrp: string): Promise<any> {
+  const url = `${API_BASE_URL}/api/users/${encodeURIComponent(nrp)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch user");
+  return res.json();
+}
+
+// Request OTP to be sent via WhatsApp
+export async function requestClaimOtp(
+  nrp: string,
+  whatsapp: string,
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/claim/request-otp`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nrp, whatsapp }),
+  });
+  if (!res.ok) throw new Error("Failed to request OTP");
+  return res.json();
+}
+
+// Verify OTP provided by user
+export async function verifyClaimOtp(
+  nrp: string,
+  whatsapp: string,
+  otp: string,
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/claim/verify-otp`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nrp, whatsapp, otp }),
+  });
+  if (!res.ok) throw new Error("Failed to verify OTP");
+  return res.json();
+}
+
+// Update user data after OTP verification
+export async function updateUserViaClaim(
+  data: {
+    nrp: string;
+    whatsapp: string;
+    nama?: string;
+    title?: string;
+    divisi?: string;
+    jabatan?: string;
+    desa?: string;
+    insta?: string;
+    tiktok?: string;
+  },
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/claim/update`;
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update user");
+  return res.json();
+}
+
