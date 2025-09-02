@@ -5,9 +5,11 @@ import Header from "./Header";
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isStandalone =
+    pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/claim");
 
-  // Landing and login pages render without sidebar or header
-  if (pathname === "/" || pathname === "/login") {
+  // Landing, login, and claim-related pages render without sidebar or header
+  if (isStandalone) {
     return (
       <main id="main-content" className="min-h-screen">
         {children}
