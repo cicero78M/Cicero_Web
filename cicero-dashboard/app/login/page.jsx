@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DarkModeToggle from "@/components/DarkModeToggle";
+import { normalizeWhatsapp } from "@/utils/api";
 
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
@@ -82,10 +83,10 @@ export default function LoginPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const trimmedUsername = username.trim();
-      const trimmedRole = role.trim();
-      const trimmedClientId = client_id.trim();
-      const trimmedWhatsapp = whatsapp.trim();
+    const trimmedUsername = username.trim();
+    const trimmedRole = role.trim();
+    const trimmedClientId = client_id.trim();
+    const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
       const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,7 +95,7 @@ export default function LoginPage() {
           password: trimmedPassword,
           role: trimmedRole ? trimmedRole.toLowerCase() : undefined,
           client_id: trimmedClientId || undefined,
-          whatsapp: trimmedWhatsapp,
+          whatsapp: normalizedWhatsapp,
         }),
       });
       const data = await res.json();

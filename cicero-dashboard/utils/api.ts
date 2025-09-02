@@ -7,6 +7,11 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
   );
 }
 
+export function normalizeWhatsapp(whatsapp: string): string {
+  const trimmed = whatsapp.trim();
+  return trimmed.startsWith("0") ? `62${trimmed.slice(1)}` : trimmed;
+}
+
 // Handle expired or invalid token by clearing storage and redirecting to login
 function handleTokenExpired(): void {
   if (typeof window !== "undefined") {
@@ -517,10 +522,11 @@ export async function requestClaimOtp(
   whatsapp: string,
 ): Promise<any> {
   const url = `${API_BASE_URL}/api/claim/request-otp`;
+  const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nrp, whatsapp }),
+    body: JSON.stringify({ nrp, whatsapp: normalizedWhatsapp }),
   });
   if (!res.ok) throw new Error("Failed to request OTP");
   return res.json();
@@ -533,13 +539,15 @@ export async function verifyClaimOtp(
   otp: string,
 ): Promise<any> {
   const url = `${API_BASE_URL}/api/claim/verify-otp`;
+  const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nrp, whatsapp, otp }),
+    body: JSON.stringify({ nrp, whatsapp: normalizedWhatsapp, otp }),
   });
   if (!res.ok) throw new Error("Failed to verify OTP");
-  return res.json();
+  const data = await res.json();
+  return { ...data, verified: data.verified ?? data.data?.verified };
 }
 
 // Update user data after OTP verification
