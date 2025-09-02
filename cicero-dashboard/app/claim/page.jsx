@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { requestClaimOtp } from "@/utils/api";
+import { requestClaimOtp, normalizeWhatsapp } from "@/utils/api";
 
 export default function ClaimPage() {
   const [nrp, setNrp] = useState("");
@@ -16,11 +16,12 @@ export default function ClaimPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await requestClaimOtp(nrp.trim(), whatsapp.trim());
+      const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
+      const res = await requestClaimOtp(nrp.trim(), normalizedWhatsapp);
       if (res.success) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("claim_nrp", nrp.trim());
-          sessionStorage.setItem("claim_whatsapp", whatsapp.trim());
+          sessionStorage.setItem("claim_whatsapp", normalizedWhatsapp);
         }
         router.push("/claim/otp");
       } else {

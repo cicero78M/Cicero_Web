@@ -31,7 +31,8 @@ export default function OtpPage() {
     setLoading(true);
     try {
       const res = await verifyClaimOtp(nrp, whatsapp, otp.trim());
-      if (res.success && res.verified) {
+      const verified = res.verified ?? res.data?.verified;
+      if (res.success && verified) {
         router.push("/claim/edit");
       } else {
         setError(res.message || "OTP tidak valid");
