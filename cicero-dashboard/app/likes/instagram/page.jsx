@@ -447,6 +447,7 @@ function ChartBox({
           totalPost={totalPost}
           fieldJumlah="jumlah_like"
           labelSudah="User Sudah Like"
+          labelKurang="User Kurang Like"
           labelBelum="User Belum Like"
           labelTotal="Total Likes"
           groupBy={groupBy}

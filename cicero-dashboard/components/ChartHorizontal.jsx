@@ -28,6 +28,7 @@ export default function ChartHorizontal({
   totalIGPost,
   fieldJumlah = "jumlah_like",
   labelSudah = "User Sudah Like",
+  labelKurang = "User Kurang Like",
   labelBelum = "User Belum Like",
   labelTotal = "Total Likes",
   showTotalUser = false,
@@ -55,20 +56,25 @@ export default function ChartHorizontal({
     // Logic: sudahLike hanya berlaku kalau ada post
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
-      !isZeroPost && (jumlah > 0 || isException(u.exception));
+      !isZeroPost && (jumlah >= effectiveTotal * 0.5 || isException(u.exception));
+    const kurang =
+      !sudah && !isZeroPost && jumlah > 0 && !isException(u.exception);
     const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,
         total_user: 0,
         user_sudah: 0,
+        user_kurang: 0,
         user_belum: 0,
         total_value: 0,
       };
     divisiMap[key].total_user += 1;
+    divisiMap[key].total_value += nilai;
     if (sudah) {
       divisiMap[key].user_sudah += 1;
-      divisiMap[key].total_value += nilai;
+    } else if (kurang) {
+      divisiMap[key].user_kurang += 1;
     } else {
       divisiMap[key].user_belum += 1;
     }
@@ -128,6 +134,8 @@ export default function ChartHorizontal({
                     ? labelTotalUser
                     : name === "user_sudah"
                     ? labelSudah
+                    : name === "user_kurang"
+                    ? labelKurang
                     : name === "user_belum"
                     ? labelBelum
                     : name === "total_value"
@@ -154,6 +162,14 @@ export default function ChartHorizontal({
             )}
             <Bar dataKey="user_sudah" fill="#22c55e" name={labelSudah} barSize={10}>
               <LabelList dataKey="user_sudah" position="right" fontSize={10} />
+            </Bar>
+            <Bar
+              dataKey="user_kurang"
+              fill="#f97316"
+              name={labelKurang}
+              barSize={10}
+            >
+              <LabelList dataKey="user_kurang" position="right" fontSize={10} />
             </Bar>
             <Bar dataKey="total_value" fill="#2563eb" name={labelTotal} barSize={10}>
               <LabelList dataKey="total_value" position="right" fontSize={10} />

@@ -34,6 +34,7 @@ export default function ChartDivisiAbsensi({
   totalTiktokPost, // fallback untuk tiktok (kompatibilitas lama)
   fieldJumlah = "jumlah_like", // bisa "jumlah_komentar" untuk tiktok
   labelSudah = "User Sudah Komentar",
+  labelKurang = "User Kurang Komentar",
   labelBelum = "User Belum Komentar",
   labelTotal = "Total Komentar",
   groupBy = "divisi",
@@ -134,12 +135,15 @@ export default function ChartDivisiAbsensi({
     const jumlah = Number(u[fieldJumlah] || 0);
     const sudah =
       !isZeroPost && (jumlah >= effectiveTotal * 0.5 || isException(u.exception));
+    const kurang =
+      !sudah && !isZeroPost && jumlah > 0 && !isException(u.exception);
     const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
         [labelKey]: display,
         total_user: 0,
         user_sudah: 0,
+        user_kurang: 0,
         user_belum: 0,
         total_value: 0,
       };
@@ -147,6 +151,8 @@ export default function ChartDivisiAbsensi({
     divisiMap[key].total_value += nilai;
     if (sudah) {
       divisiMap[key].user_sudah += 1;
+    } else if (kurang) {
+      divisiMap[key].user_kurang += 1;
     } else {
       divisiMap[key].user_belum += 1;
     }
@@ -237,6 +243,8 @@ export default function ChartDivisiAbsensi({
                     ? labelTotalUser
                     : name === "user_sudah"
                     ? labelSudah
+                    : name === "user_kurang"
+                    ? labelKurang
                     : name === "user_belum"
                     ? labelBelum
                     : name === "total_value"
@@ -271,6 +279,18 @@ export default function ChartDivisiAbsensi({
             >
               <LabelList
                 dataKey="user_sudah"
+                position={isHorizontal ? "right" : "top"}
+                fontSize={isHorizontal ? 10 : 12}
+              />
+            </Bar>
+            <Bar
+              dataKey="user_kurang"
+              fill="#f97316"
+              name={labelKurang}
+              barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
+            >
+              <LabelList
+                dataKey="user_kurang"
                 position={isHorizontal ? "right" : "top"}
                 fontSize={isHorizontal ? 10 : 12}
               />
