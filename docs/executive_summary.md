@@ -11,8 +11,7 @@ Dokumen ini merangkum arsitektur tinggi dan alur kerja antar komponen.
 
 ## Cicero_V2 Backend
 
-- Dirancang sebagai sistem otomasi monitoring multi-client, rekap otomatis likes
-  dan komentar, serta pengiriman laporan ke WhatsApp admin.【F:/tmp/Cicero_V2/README.md†L6-L7】
+- Dirancang sebagai sistem otomasi monitoring multi-client, rekap otomatis likes dan komentar.【F:/tmp/Cicero_V2/README.md†L6-L7】
 - Arsitektur meliputi REST API berbasis Express, database PostgreSQL, RabbitMQ
   untuk antrean, Redis untuk cache dan sesi, serta integrasi WhatsApp via
   `whatsapp-web.js`.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L8-L14】
@@ -51,9 +50,7 @@ Dokumen ini merangkum arsitektur tinggi dan alur kerja antar komponen.
    backend (misalnya `/api/insta/rapid-posts`) untuk memfetch data Instagram/TikTok.
    Backend menyimpan hasilnya di PostgreSQL dan Redis agar respons cepat dan konsisten.
    【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L48-L52】
-3. **Notifikasi & Laporan** – Cron job backend mengirim pengingat dan laporan via
-   WhatsApp sesuai jadwal yang tercantum. Ini memastikan admin mendapat rekap
-   harian atas aktivitas pengguna dan konten yang terpantau.【F:/tmp/Cicero_V2/docs/activity_schedule.md†L8-L17】
+3. **Laporan Harian** – Backend menyusun laporan harian atas aktivitas pengguna dan konten yang terpantau.【F:/tmp/Cicero_V2/docs/activity_schedule.md†L8-L17】
 4. **Queue Processing** – Untuk beban besar, tugas dapat dipublikasikan ke RabbitMQ
    dan diproses asinkron sehingga dashboard tetap responsif.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L56-L57】
 
