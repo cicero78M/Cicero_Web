@@ -40,6 +40,7 @@ export default function ChartDivisiAbsensi({
   orientation = "vertical",
   showTotalUser = false,
   labelTotalUser = "Jumlah User",
+  sortBy = "total_value",
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
 
@@ -151,9 +152,14 @@ export default function ChartDivisiAbsensi({
     }
   });
 
-  const dataChart = Object.values(divisiMap).sort(
-    (a, b) => b.total_value - a.total_value
-  );
+  const dataChart = Object.values(divisiMap).sort((a, b) => {
+    if (sortBy === "percentage") {
+      const percA = a.total_user ? a.user_sudah / a.total_user : 0;
+      const percB = b.total_user ? b.user_sudah / b.total_user : 0;
+      return percB - percA;
+    }
+    return b.total_value - a.total_value;
+  });
 
   // Dynamic height
   const isHorizontal = orientation === "horizontal";

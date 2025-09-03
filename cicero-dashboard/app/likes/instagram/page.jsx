@@ -364,6 +364,7 @@ export default function InstagramEngagementInsightPage() {
                 totalPost={rekapSummary.totalIGPost}
                 groupBy="client_id"
                 orientation="horizontal"
+                sortBy="percentage"
               />
             ) : (
               <div className="flex flex-col gap-6">
@@ -372,30 +373,35 @@ export default function InstagramEngagementInsightPage() {
                   users={kelompok.BAG}
                   totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
+                  sortBy="percentage"
                 />
                 <ChartBox
                   title="SAT"
                   users={kelompok.SAT}
                   totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
+                  sortBy="percentage"
                 />
                 <ChartBox
                   title="SI & SPKT"
                   users={kelompok["SI & SPKT"]}
                   totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
+                  sortBy="percentage"
                 />
                 <ChartBox
                   title="LAINNYA"
                   users={kelompok.LAINNYA}
                   totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi lainnya."
+                  sortBy="percentage"
                 />
                 <ChartHorizontal
                   title="POLSEK"
                   users={kelompok.POLSEK}
                   totalPost={rekapSummary.totalIGPost}
                   showTotalUser
+                  sortBy="percentage"
                 />
                 <Narrative>
                   Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
@@ -428,6 +434,7 @@ function ChartBox({
   totalPost,
   narrative,
   groupBy,
+  sortBy,
 }) {
   return (
     <div className="bg-white rounded-xl shadow p-4">
@@ -445,6 +452,7 @@ function ChartBox({
           groupBy={groupBy}
           showTotalUser
           labelTotalUser="Jumlah User"
+          sortBy={sortBy}
         />
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
