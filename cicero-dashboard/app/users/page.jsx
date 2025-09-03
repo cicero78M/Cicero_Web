@@ -160,16 +160,13 @@ export default function UserDirectoryPage() {
     setSubmitError("");
     setSubmitLoading(true);
     try {
-      const trimmedNama = nama.trim();
-      const trimmedPangkat = pangkat.trim();
       const trimmedNrpNip = nrpNip.trim();
-      const trimmedSatfung = satfung.trim();
       await createUser(token || "", {
         client_id,
-        nama: trimmedNama,
-        title: trimmedPangkat,
+        nama,
+        title: pangkat,
         user_id: trimmedNrpNip,
-        divisi: trimmedSatfung,
+        divisi: satfung,
       });
       setNama("");
       setPangkat("");
@@ -185,10 +182,10 @@ export default function UserDirectoryPage() {
 
   function handleEditClick(user) {
     setEditingRowId(user.user_id);
-    setEditNama((user.nama || "").trim());
-    setEditPangkat((user.title || "").trim());
+    setEditNama(user.nama || "");
+    setEditPangkat(user.title || "");
     setEditNrpNip((user.user_id || "").trim());
-    setEditSatfung((user.divisi || "").trim());
+    setEditSatfung(user.divisi || "");
     setUpdateError("");
   }
 
@@ -196,14 +193,11 @@ export default function UserDirectoryPage() {
     setUpdateLoading(true);
     setUpdateError("");
     try {
-      const trimmedNama = editNama.trim();
-      const trimmedPangkat = editPangkat.trim();
       const trimmedNrpNip = editNrpNip.trim();
-      const trimmedSatfung = editSatfung.trim();
       await updateUser(token || "", userId, {
-        nama: trimmedNama,
-        title: trimmedPangkat,
-        divisi: trimmedSatfung,
+        nama: editNama,
+        title: editPangkat,
+        divisi: editSatfung,
         user_id: trimmedNrpNip,
       });
       if (userId !== trimmedNrpNip) {
@@ -393,7 +387,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="Nama"
               value={nama}
-            onChange={(e) => setNama(e.target.value.trim())}
+            onChange={(e) => setNama(e.target.value)}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -401,7 +395,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="Pangkat"
               value={pangkat}
-            onChange={(e) => setPangkat(e.target.value.trim())}
+            onChange={(e) => setPangkat(e.target.value)}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -417,7 +411,7 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder={columnLabel}
               value={satfung}
-              onChange={(e) => setSatfung(e.target.value.trim())}
+              onChange={(e) => setSatfung(e.target.value)}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -467,13 +461,13 @@ export default function UserDirectoryPage() {
                       <div className="flex gap-1">
                         <input
                           value={editPangkat}
-                          onChange={(e) => setEditPangkat(e.target.value.trim())}
+                          onChange={(e) => setEditPangkat(e.target.value)}
                           placeholder="Pangkat"
                           className="w-20 border rounded px-1 text-xs"
                         />
                         <input
                           value={editNama}
-                          onChange={(e) => setEditNama(e.target.value.trim())}
+                          onChange={(e) => setEditNama(e.target.value)}
                           placeholder="Nama"
                           className="flex-1 border rounded px-1 text-xs"
                         />
@@ -500,7 +494,7 @@ export default function UserDirectoryPage() {
                     ) : editingRowId === u.user_id ? (
                       <input
                         value={editSatfung}
-                        onChange={(e) => setEditSatfung(e.target.value.trim())}
+                        onChange={(e) => setEditSatfung(e.target.value)}
                         placeholder={columnLabel}
                         className="border rounded px-1 text-xs"
                       />
