@@ -336,6 +336,7 @@ function ChartBox({
           totalPost={totalTiktokPost}
           fieldJumlah={fieldJumlah}
           labelSudah="User Sudah Komentar"
+          labelKurang="User Kurang Komentar"
           labelBelum="User Belum Komentar"
           labelTotal="Total Komentar"
           groupBy={groupBy}

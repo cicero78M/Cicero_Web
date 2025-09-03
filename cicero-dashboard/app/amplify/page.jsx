@@ -260,6 +260,7 @@ function ChartBox({
           totalPost={1}
           fieldJumlah="jumlah_link"
           labelSudah="User Sudah Post"
+          labelKurang="User Kurang Post"
           labelBelum="User Belum Post"
           labelTotal="Total Link Amplifikasi"
           groupBy={groupBy}
