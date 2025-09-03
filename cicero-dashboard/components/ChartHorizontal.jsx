@@ -32,6 +32,7 @@ export default function ChartHorizontal({
   labelTotal = "Total Likes",
   showTotalUser = false,
   labelTotalUser = "Jumlah User",
+  sortBy = "total_value",
 }) {
   const effectiveTotal =
     typeof totalPost !== "undefined" ? totalPost : totalIGPost;
@@ -72,7 +73,14 @@ export default function ChartHorizontal({
       divisiMap[key].user_belum += 1;
     }
   });
-  const dataChart = Object.values(divisiMap);
+  const dataChart = Object.values(divisiMap).sort((a, b) => {
+    if (sortBy === "percentage") {
+      const percA = a.total_user ? a.user_sudah / a.total_user : 0;
+      const percB = b.total_user ? b.user_sudah / b.total_user : 0;
+      return percB - percA;
+    }
+    return b.total_value - a.total_value;
+  });
 
   // Tinggi chart proporsional
   const barHeight = 34;
