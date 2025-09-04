@@ -9,7 +9,7 @@ import {
   getClientNames,
   updateUserRoles,
 } from "@/utils/api";
-import { Pencil, Check, X } from "lucide-react";
+import { Pencil, Check, X, RefreshCw } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
@@ -342,7 +342,14 @@ export default function UserDirectoryPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
-      <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8">
+      <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8 relative">
+        <button
+          onClick={() => window.location.reload()}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          aria-label="Refresh"
+        >
+          <RefreshCw className="w-5 h-5" />
+        </button>
         <h1 className="text-2xl font-bold text-blue-700">User Directory</h1>
         <div className="mb-4 text-sm text-gray-600">
           Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
