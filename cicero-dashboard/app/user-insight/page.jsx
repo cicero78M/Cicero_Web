@@ -47,7 +47,10 @@ export default function UserInsightPage() {
   const [chartPolres, setChartPolres] = useState([]);
 
   useEffect(() => {
-    async function fetchData() {
+    fetchData();
+  }, [token, clientId]);
+
+  async function fetchData() {
       if (!token || !clientId) {
         setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
         setLoading(false);
@@ -183,8 +186,6 @@ export default function UserInsightPage() {
         setLoading(false);
       }
     }
-    fetchData();
-  }, [token, clientId]);
 
   function handleCopyRekap() {
     const now = new Date();
@@ -255,7 +256,7 @@ export default function UserInsightPage() {
                   Salin Rekap
                 </button>
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={fetchData}
                   className="p-2 text-gray-500 hover:text-gray-700"
                   aria-label="Refresh"
                 >
