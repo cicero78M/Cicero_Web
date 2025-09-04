@@ -20,7 +20,7 @@ import { groupUsersByKelompok } from "@/utils/grouping";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { useAuth } from "@/context/AuthContext";
-import { User, Instagram, Music } from "lucide-react";
+import { User, Instagram, Music, RefreshCw } from "lucide-react";
 
 export default function UserInsightPage() {
   useRequireAuth();
@@ -247,12 +247,21 @@ export default function UserInsightPage() {
               <h1 className="text-2xl md:text-3xl font-bold text-blue-700">
                 User Insight
               </h1>
-              <button
-                onClick={handleCopyRekap}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-              >
-                Salin Rekap
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyRekap}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
+                >
+                  Salin Rekap
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="p-2 text-gray-500 hover:text-gray-700"
+                  aria-label="Refresh"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">

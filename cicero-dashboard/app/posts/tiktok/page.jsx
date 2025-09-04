@@ -12,6 +12,7 @@ import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { RefreshCw } from "lucide-react";
 import {
   getTiktokProfileViaBackend,
   getTiktokPostsViaBackend,
@@ -334,7 +335,18 @@ export default function TiktokPostAnalysisPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-5xl flex flex-col gap-8">
-        <h1 className="text-2xl font-bold text-blue-700">TikTok Post Analysis</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-blue-700">
+            TikTok Post Analysis
+          </h1>
+          <button
+            onClick={() => window.location.reload()}
+            className="p-2 text-gray-500 hover:text-gray-700"
+            aria-label="Refresh"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
+        </div>
         <p className="text-gray-600">Analisis performa postingan TikTok.</p>
 
         <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
