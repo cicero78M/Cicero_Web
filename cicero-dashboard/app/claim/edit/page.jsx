@@ -6,12 +6,12 @@ import { getUserById, updateUserViaClaim } from "@/utils/api";
 
 function isValidInstagram(url) {
   if (!url) return true;
-  return /^https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+\/?$/.test(url);
+  return /^https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+\/?(\?.*)?$/.test(url);
 }
 
 function isValidTiktok(url) {
   if (!url) return true;
-  return /^https?:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]+\/?$/.test(url);
+  return /^https?:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]+\/?(\?.*)?$/.test(url);
 }
 
 export default function EditUserPage() {
