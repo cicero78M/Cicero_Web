@@ -344,7 +344,7 @@ export default function UserDirectoryPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
       <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8 relative">
         <button
-          onClick={() => window.location.reload()}
+          onClick={fetchUsers}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
           aria-label="Refresh"
         >

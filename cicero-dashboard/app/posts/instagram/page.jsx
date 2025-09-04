@@ -42,7 +42,7 @@ export default function InstagramPostAnalysisPage() {
   const [endDate, setEndDate] = useState(lastDay);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
+  const fetchData = async () => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =
@@ -54,39 +54,39 @@ export default function InstagramPostAnalysisPage() {
       return;
     }
 
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const clientProfile = await getClientProfile(token, clientId);
-        const username =
-          clientProfile.client?.client_insta?.replace(/^@/, "") ||
-          clientProfile.client_insta?.replace(/^@/, "") ||
-          process.env.NEXT_PUBLIC_INSTAGRAM_USER ||
-          "instagram";
+    try {
+      setLoading(true);
+      const clientProfile = await getClientProfile(token, clientId);
+      const username =
+        clientProfile.client?.client_insta?.replace(/^@/, "") ||
+        clientProfile.client_insta?.replace(/^@/, "") ||
+        process.env.NEXT_PUBLIC_INSTAGRAM_USER ||
+        "instagram";
 
-        const profileRes = await getInstagramProfileViaBackend(token, username);
-        setProfile(profileRes.data || profileRes.profile || profileRes);
+      const profileRes = await getInstagramProfileViaBackend(token, username);
+      setProfile(profileRes.data || profileRes.profile || profileRes);
 
-        const infoRes = await getInstagramInfoViaBackend(token, username);
-        const infoData = infoRes.data || infoRes.info || infoRes;
-        setInfo(infoData);
+      const infoRes = await getInstagramInfoViaBackend(token, username);
+      const infoData = infoRes.data || infoRes.info || infoRes;
+      setInfo(infoData);
 
-        const postRes = await getInstagramPostsViaBackend(
-          token,
-          username,
-          12,
-          startDate,
-          endDate,
-        );
-        const postData = postRes.data || postRes.posts || postRes;
-        setPosts(Array.isArray(postData) ? postData : []);
-      } catch (err) {
-        setError("Gagal mengambil data: " + (err.message || err));
-      } finally {
-        setLoading(false);
-      }
+      const postRes = await getInstagramPostsViaBackend(
+        token,
+        username,
+        12,
+        startDate,
+        endDate,
+      );
+      const postData = postRes.data || postRes.posts || postRes;
+      setPosts(Array.isArray(postData) ? postData : []);
+    } catch (err) {
+      setError("Gagal mengambil data: " + (err.message || err));
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [startDate, endDate]);
 
@@ -339,7 +339,7 @@ export default function InstagramPostAnalysisPage() {
             Instagram Post Analysis
           </h1>
           <button
-            onClick={() => window.location.reload()}
+            onClick={fetchData}
             className="p-2 text-gray-500 hover:text-gray-700"
             aria-label="Refresh"
           >

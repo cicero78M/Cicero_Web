@@ -43,7 +43,7 @@ export default function TiktokPostAnalysisPage() {
   const [endDate, setEndDate] = useState(lastDay);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
+  const fetchData = async () => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =
@@ -55,39 +55,39 @@ export default function TiktokPostAnalysisPage() {
       return;
     }
 
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const clientProfile = await getClientProfile(token, clientId);
-        const username =
-          clientProfile.client?.client_tiktok?.replace(/^@/, "") ||
-          clientProfile.client_tiktok?.replace(/^@/, "") ||
-          process.env.NEXT_PUBLIC_TIKTOK_USER ||
-          "tiktok";
+    try {
+      setLoading(true);
+      const clientProfile = await getClientProfile(token, clientId);
+      const username =
+        clientProfile.client?.client_tiktok?.replace(/^@/, "") ||
+        clientProfile.client_tiktok?.replace(/^@/, "") ||
+        process.env.NEXT_PUBLIC_TIKTOK_USER ||
+        "tiktok";
 
-        const profileRes = await getTiktokProfileViaBackend(token, username);
-        setProfile(profileRes);
+      const profileRes = await getTiktokProfileViaBackend(token, username);
+      setProfile(profileRes);
 
-        const infoRes = await getTiktokInfoViaBackend(token, username);
-        const infoData = infoRes.data || infoRes.info || infoRes;
-        setInfo(infoData);
+      const infoRes = await getTiktokInfoViaBackend(token, username);
+      const infoData = infoRes.data || infoRes.info || infoRes;
+      setInfo(infoData);
 
-        const postRes = await getTiktokPostsViaBackend(
-          token,
-          clientId,
-          50,
-          startDate,
-          endDate,
-        );
-        const postData = postRes.data || postRes.posts || postRes;
-        setPosts(Array.isArray(postData) ? postData : []);
-      } catch (err) {
-        setError("Gagal mengambil data: " + (err.message || err));
-      } finally {
-        setLoading(false);
-      }
+      const postRes = await getTiktokPostsViaBackend(
+        token,
+        clientId,
+        50,
+        startDate,
+        endDate,
+      );
+      const postData = postRes.data || postRes.posts || postRes;
+      setPosts(Array.isArray(postData) ? postData : []);
+    } catch (err) {
+      setError("Gagal mengambil data: " + (err.message || err));
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [startDate, endDate]);
 
@@ -340,7 +340,7 @@ export default function TiktokPostAnalysisPage() {
             TikTok Post Analysis
           </h1>
           <button
-            onClick={() => window.location.reload()}
+            onClick={fetchData}
             className="p-2 text-gray-500 hover:text-gray-700"
             aria-label="Refresh"
           >
