@@ -6,12 +6,12 @@ import { getUserById, updateUserViaClaim } from "@/utils/api";
 
 function isValidInstagram(url) {
   if (!url) return true;
-  return /^https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+\/?(\?.*)?$/.test(url);
+  return /^https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+\/?$/.test(url);
 }
 
 function isValidTiktok(url) {
   if (!url) return true;
-  return /^https?:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]+\/?(\?.*)?$/.test(url);
+  return /^https?:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]+\/?$/.test(url);
 }
 
 export default function EditUserPage() {
@@ -184,6 +184,7 @@ export default function EditUserPage() {
             type="url"
             value={insta}
             onChange={(e) => setInsta(e.target.value)}
+            pattern="^https?:\\/\\/(www\\.)?instagram\\.com\\/[A-Za-z0-9._-]+\\/?$"
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
@@ -193,6 +194,7 @@ export default function EditUserPage() {
             type="url"
             value={tiktok}
             onChange={(e) => setTiktok(e.target.value)}
+            pattern="^https?:\\/\\/(www\\.)?tiktok\\.com\\/@[A-Za-z0-9._-]+\\/?$"
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
