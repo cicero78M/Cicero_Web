@@ -71,7 +71,7 @@ body {
 input::placeholder,
 textarea::placeholder,
 select::placeholder {
-  color: #9ca3af; /* gray */
+  color: #121315; /* gray */
 }
 
 input,
