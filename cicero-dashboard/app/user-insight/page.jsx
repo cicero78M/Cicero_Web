@@ -85,7 +85,9 @@ export default function UserInsightPage() {
             if (hasTT) map[key].tiktokFilled += 1;
             else map[key].tiktokEmpty += 1;
           });
-          return Object.values(map);
+          const result = Object.values(map);
+          const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
+          return result.sort((a, b) => score(b) - score(a));
         };
 
         // Cek tipe client
@@ -167,8 +169,9 @@ export default function UserInsightPage() {
             if (hasTT) clientMap[id].tiktokFilled += 1;
             else clientMap[id].tiktokEmpty += 1;
           });
+          const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
           setChartPolres(
-            Object.values(clientMap).sort((a, b) => b.total - a.total),
+            Object.values(clientMap).sort((a, b) => score(b) - score(a)),
           );
         } else {
           const grouped = groupUsersByKelompok(processedUsers);
