@@ -13,11 +13,6 @@ import {
 import { useEffect, useState } from "react";
 import { getClientNames } from "@/utils/api";
 
-// Helper: handle boolean/string/number for exception
-function isException(val) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
-
 // Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -109,14 +104,6 @@ export default function ChartDivisiAbsensi({
   // Jika tidak ada post, semua user dianggap belum
   const isZeroPost = (effectiveTotal || 0) === 0;
 
-  // Cari nilai jumlah_like tertinggi dari user non-exception
-  const maxJumlahLike = Math.max(
-    0,
-    ...enrichedUsers
-      .filter((u) => !isException(u.exception))
-      .map((u) => Number(u[fieldJumlah] || 0))
-  );
-
   // Group by divisi atau client_id jika diminta
   const divisiMap = {};
   const labelKey = groupBy === "client_id" ? "client_name" : "divisi";
@@ -133,11 +120,9 @@ export default function ChartDivisiAbsensi({
           ? u.nama_client || u.client_name || u.client || idKey
           : key;
     const jumlah = Number(u[fieldJumlah] || 0);
-    const sudah =
-      !isZeroPost && (jumlah >= effectiveTotal * 0.5 || isException(u.exception));
-    const kurang =
-      !sudah && !isZeroPost && jumlah > 0 && !isException(u.exception);
-    const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
+    const sudah = !isZeroPost && jumlah >= effectiveTotal * 0.5;
+    const kurang = !sudah && !isZeroPost && jumlah > 0;
+    const nilai = jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
         [labelKey]: display,

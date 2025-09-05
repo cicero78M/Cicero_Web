@@ -10,10 +10,6 @@ import {
   LabelList,
   Legend,
 } from "recharts";
-
-function isException(val) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
 function bersihkanSatfung(divisi = "") {
   return divisi
     .replace(/polsek\s*/i, "")
@@ -41,25 +37,15 @@ export default function ChartHorizontal({
   // Jika tidak ada post, semua user masuk belum (termasuk exception)
   const isZeroPost = (effectiveTotal || 0) === 0;
 
-  // Cari nilai jumlah_like tertinggi untuk user non-exception
-  const maxJumlahLike = Math.max(
-    0,
-    ...users
-      .filter((u) => !isException(u.exception))
-      .map((u) => Number(u[fieldJumlah] || 0))
-  );
-
   // Matrix 3 metrik per polsek
   const divisiMap = {};
   users.forEach((u) => {
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
     // Logic: sudahLike hanya berlaku kalau ada post
     const jumlah = Number(u[fieldJumlah] || 0);
-    const sudah =
-      !isZeroPost && (jumlah >= effectiveTotal * 0.5 || isException(u.exception));
-    const kurang =
-      !sudah && !isZeroPost && jumlah > 0 && !isException(u.exception);
-    const nilai = isException(u.exception) ? maxJumlahLike : jumlah;
+    const sudah = !isZeroPost && jumlah >= effectiveTotal * 0.5;
+    const kurang = !sudah && !isZeroPost && jumlah > 0;
+    const nilai = jumlah;
     if (!divisiMap[key])
       divisiMap[key] = {
         divisi: key,

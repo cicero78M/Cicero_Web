@@ -18,11 +18,6 @@ import ViewDataSelector, {
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
 
-// Helper: handle boolean/string/number for exception
-function isException(val) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
-
 export default function RekapLikesIGPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
@@ -235,7 +230,7 @@ export default function RekapLikesIGPage() {
             totalBelumLike += 1;
             return;
           }
-          if (isException(u.exception) || jumlah >= totalIGPost * 0.5) {
+          if (jumlah >= totalIGPost * 0.5) {
             totalSudahLike += 1;
           } else if (jumlah > 0) {
             totalKurangLike += 1;

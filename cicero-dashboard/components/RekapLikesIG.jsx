@@ -10,11 +10,6 @@ import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
-// Utility: handle boolean/string/number for exception
-function isException(val) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
-
 const PAGE_SIZE = 25;
 
 /**
@@ -63,42 +58,26 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const totalSudahLike =
     totalIGPost === 0
       ? 0
-      : validUsers.filter(
-          (u) =>
-            Number(u.jumlah_like) >= totalIGPost * 0.5 || isException(u.exception),
-        ).length;
+      : validUsers.filter((u) => Number(u.jumlah_like) >= totalIGPost * 0.5)
+          .length;
   const totalKurangLike =
     totalIGPost === 0
       ? 0
       : validUsers.filter((u) => {
           const likes = Number(u.jumlah_like) || 0;
-          return likes > 0 && likes < totalIGPost * 0.5 && !isException(u.exception);
+          return likes > 0 && likes < totalIGPost * 0.5;
         }).length;
   const totalBelumLike =
     totalIGPost === 0
       ? validUsers.length
-      : validUsers.filter(
-          (u) => Number(u.jumlah_like) === 0 && !isException(u.exception),
-        ).length;
+      : validUsers.filter((u) => Number(u.jumlah_like) === 0).length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
 
   // Hitung nilai jumlah_like tertinggi (max) di seluruh user
-  const maxJumlahLike = useMemo(
-    () =>
-      Math.max(
-        0,
-        ...validUsers
-          .filter((u) => !isException(u.exception))
-          .map((u) => parseInt(u.jumlah_like || 0, 10)),
-      ),
-    [validUsers],
-  );
-
   const sudahUsers = useMemo(() => {
     if (totalIGPost === 0) return [];
     return validUsers.filter(
-      (u) =>
-        Number(u.jumlah_like) >= totalIGPost * 0.5 || isException(u.exception),
+      (u) => Number(u.jumlah_like) >= totalIGPost * 0.5,
     );
   }, [validUsers, totalIGPost]);
 
@@ -106,15 +85,13 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     if (totalIGPost === 0) return [];
     return validUsers.filter((u) => {
       const likes = Number(u.jumlah_like) || 0;
-      return likes > 0 && likes < totalIGPost * 0.5 && !isException(u.exception);
+      return likes > 0 && likes < totalIGPost * 0.5;
     });
   }, [validUsers, totalIGPost]);
 
   const belumUsers = useMemo(() => {
     if (totalIGPost === 0) return validUsers;
-    return validUsers.filter(
-      (u) => Number(u.jumlah_like) === 0 && !isException(u.exception),
-    );
+    return validUsers.filter((u) => Number(u.jumlah_like) === 0);
   }, [validUsers, totalIGPost]);
 
   function groupByDivisi(arr) {
@@ -219,7 +196,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       const likes = Number(u.jumlah_like) || 0;
       let status = "Belum";
       if (totalIGPost !== 0) {
-        if (isException(u.exception) || likes >= totalIGPost * 0.5) status = "Sudah";
+        if (likes >= totalIGPost * 0.5) status = "Sudah";
         else if (likes > 0) status = "Kurang";
       }
       clients[client][status].push(u);
@@ -399,9 +376,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                   <X className="w-3 h-3" /> Belum
                 </span>
               );
-              let jumlahDisplay = isException(u.exception)
-                ? maxJumlahLike
-                : u.jumlah_like;
+              let jumlahDisplay = u.jumlah_like;
               if (!username) {
                 rowClass = "bg-gray-50";
                 statusEl = (
@@ -412,7 +387,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                 jumlahDisplay = 0;
               } else if (totalIGPost !== 0) {
                 const likes = Number(u.jumlah_like) || 0;
-                if (isException(u.exception) || likes >= totalIGPost * 0.5) {
+                if (likes >= totalIGPost * 0.5) {
                   rowClass = "bg-green-50";
                   statusEl = (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
