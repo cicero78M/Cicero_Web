@@ -82,7 +82,6 @@ export default function UserDirectoryPage() {
   const rekapUsers = useMemo(() => {
     const grouped = {};
     sortedUsers
-      .filter((u) => !u.exception)
       .filter((u) => {
         if (isDitbinmasClient && !showAllDitbinmas) {
           const cid = String(
@@ -271,11 +270,9 @@ export default function UserDirectoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client_id]);
 
-  // Filter: tidak tampilkan user dengan exception
   const filtered = useMemo(
     () =>
       sortedUsers
-        .filter((u) => !u.exception)
         .filter((u) => {
           if (isDitbinmasClient && !showAllDitbinmas) {
             return (
