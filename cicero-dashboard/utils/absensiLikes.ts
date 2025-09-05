@@ -1,9 +1,5 @@
 import { getDashboardStats, getRekapLikesIG, getClientProfile, getClientNames, getUserDirectory } from "@/utils/api";
 
-function isException(val: any) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
-
 interface FetchParams {
   periode: string;
   date?: string;
@@ -115,7 +111,7 @@ export async function fetchDitbinmasAbsensiLikes(
       totalBelumLike += 1;
       return;
     }
-    if (isException(u.exception) || jumlah >= totalIGPost * 0.5) {
+    if (jumlah >= totalIGPost * 0.5) {
       totalSudahLike += 1;
     } else if (jumlah > 0) {
       totalKurangLike += 1;

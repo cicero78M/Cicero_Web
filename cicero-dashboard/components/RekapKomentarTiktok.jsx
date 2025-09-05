@@ -3,10 +3,6 @@ import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Music, Users, Check, X } from "lucide-react";
 
-function isException(val) {
-  return val === true || val === "true" || val === 1 || val === "1";
-}
-
 function bersihkanSatfung(divisi = "") {
   return divisi
     .replace(/polsek\s*/i, "")
@@ -18,9 +14,10 @@ const PAGE_SIZE = 25;
 
 export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
   const totalUser = users.length;
-  const totalSudahKomentar = totalTiktokPost === 0
-    ? 0
-    : users.filter(u => Number(u.jumlah_komentar) > 0 || isException(u.exception)).length;
+  const totalSudahKomentar =
+    totalTiktokPost === 0
+      ? 0
+      : users.filter((u) => Number(u.jumlah_komentar) > 0).length;
   const totalBelumKomentar = totalUser - totalSudahKomentar;
 
   const hasClient = useMemo(
@@ -28,16 +25,6 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
     [users]
   );
 
-  const maxJumlahKomentar = useMemo(
-    () =>
-      Math.max(
-        0,
-        ...users
-          .filter(u => !isException(u.exception))
-          .map(u => parseInt(u.jumlah_komentar || 0, 10))
-      ),
-    [users]
-  );
 
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
@@ -55,30 +42,15 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const aExc = isException(a.exception);
-      const bExc = isException(b.exception);
       const aCom = Number(a.jumlah_komentar);
       const bCom = Number(b.jumlah_komentar);
 
-      if (!aExc && aCom === maxJumlahKomentar && (bExc || bCom < maxJumlahKomentar)) return -1;
-      if (!bExc && bCom === maxJumlahKomentar && (aExc || aCom < maxJumlahKomentar)) return 1;
-
-      if (aExc && bExc) return 0;
-      if (aExc && !bExc && bCom === maxJumlahKomentar) return 1;
-      if (!aExc && bExc && aCom === maxJumlahKomentar) return -1;
-
-      if (!aExc && !bExc) {
-        if (aCom > 0 && bCom === 0) return -1;
-        if (aCom === 0 && bCom > 0) return 1;
-        if (aCom !== bCom) return bCom - aCom;
-        return (a.nama || "").localeCompare(b.nama || "");
-      }
-
-      if (aExc && !bExc) return -1;
-      if (!aExc && bExc) return 1;
+      if (aCom > 0 && bCom === 0) return -1;
+      if (aCom === 0 && bCom > 0) return 1;
+      if (aCom !== bCom) return bCom - aCom;
       return (a.nama || "").localeCompare(b.nama || "");
     });
-  }, [filtered, maxJumlahKomentar]);
+  }, [filtered]);
 
   const [page, setPage] = usePersistentState("rekapKomentarTiktok_page", 1);
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
@@ -151,7 +123,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
               const sudahKomentar =
                 totalTiktokPost === 0
                   ? false
-                  : Number(u.jumlah_komentar) > 0 || isException(u.exception);
+                  : Number(u.jumlah_komentar) > 0;
               return (
                 <tr
                   key={u.user_id}
@@ -184,7 +156,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                     )}
                   </td>
                   <td className="py-1 px-2 text-center font-bold">
-                    {isException(u.exception) ? maxJumlahKomentar : u.jumlah_komentar}
+                    {u.jumlah_komentar}
                   </td>
                 </tr>
               );
