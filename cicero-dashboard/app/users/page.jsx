@@ -342,13 +342,13 @@ export default function UserDirectoryPage() {
       <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8 relative">
         <button
           onClick={fetchUsers}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className="absolute top-4 right-4 text-black hover:text-black"
           aria-label="Refresh"
         >
           <RefreshCw className="w-5 h-5" />
         </button>
         <h1 className="text-2xl font-bold text-blue-700">User Directory</h1>
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="mb-4 text-sm text-black">
           Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
         </div>
         <div className="flex flex-wrap items-center mb-4 gap-2">
@@ -369,7 +369,7 @@ export default function UserDirectoryPage() {
           {isDitbinmasClient && (
             <button
               onClick={() => setShowAllDitbinmas((s) => !s)}
-              className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
+              className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg text-sm"
             >
               {showAllDitbinmas
                 ? "Hanya DITBINMAS"
@@ -514,7 +514,7 @@ export default function UserDirectoryPage() {
                     {u.status === true || u.status === "true" ? (
                       <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-700 text-xs">Aktif</span>
                     ) : (
-                      <span className="inline-block px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">Nonaktif</span>
+                      <span className="inline-block px-2 py-1 rounded bg-gray-200 text-black text-xs">Nonaktif</span>
                     )}
                   </td>
                   <td className="py-1 px-2">
@@ -546,7 +546,7 @@ export default function UserDirectoryPage() {
               )}
               {currentRows.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="py-4 text-center text-gray-500">
+                  <td colSpan="8" className="py-4 text-center text-black">
                     Tidak ada pengguna
                   </td>
                 </tr>
@@ -558,17 +558,17 @@ export default function UserDirectoryPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-4">
             <button
-              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-black font-semibold disabled:opacity-50"
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               Prev
             </button>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-black">
               Halaman <b>{page}</b> dari <b>{totalPages}</b>
             </span>
             <button
-              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-black font-semibold disabled:opacity-50"
               disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
