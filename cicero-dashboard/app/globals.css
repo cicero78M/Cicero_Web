@@ -66,3 +66,16 @@ body {
   padding: 0.5rem 1rem;
   z-index: 50;
 }
+
+/* Input text should always be black while placeholders remain grey */
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: #9ca3af; /* gray */
+}
+
+input,
+textarea,
+select {
+  color: #000; /* black */
+}
