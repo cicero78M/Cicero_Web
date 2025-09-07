@@ -51,6 +51,7 @@ export default function InstagramEngagementInsightPage() {
     totalIGPost: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [clientName, setClientName] = useState("");
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -118,6 +119,13 @@ export default function InstagramEngagementInsightPage() {
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
+        setClientName(
+          profile.nama ||
+            profile.nama_client ||
+            profile.client_name ||
+            profile.client ||
+            ""
+        );
 
         let users = [];
         if (dir) {
@@ -296,7 +304,19 @@ export default function InstagramEngagementInsightPage() {
       totalTanpaUsername,
     } = rekapSummary;
 
-    const groups = groupUsersByKelompok(chartData);
+    const groups = chartData.reduce((acc, u) => {
+      const name = (
+        u.nama_client ||
+        u.client_name ||
+        u.client ||
+        clientName ||
+        "LAINNYA"
+      ).toUpperCase();
+      if (!acc[name]) acc[name] = [];
+      acc[name].push(u);
+      return acc;
+    }, {});
+
     const groupLines = Object.entries(groups)
       .map(([name, users]) => {
         const counts = users.reduce(
@@ -322,7 +342,7 @@ export default function InstagramEngagementInsightPage() {
       })
       .join("\n");
 
-    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nRekap per Satker:\n${groupLines}`;
+    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nRekap per Client:\n${groupLines}`;
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
