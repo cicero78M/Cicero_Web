@@ -276,7 +276,7 @@ export default function InstagramEngagementInsightPage() {
   // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
-  function handleCopySummary() {
+  function handleCopyRekap() {
     const now = new Date();
     const hour = now.getHours();
     let greeting = "Selamat Pagi";
@@ -295,7 +295,23 @@ export default function InstagramEngagementInsightPage() {
       totalBelumLike,
       totalTanpaUsername,
     } = rekapSummary;
-    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user`;
+
+    const detailLines = chartData
+      .map((u, i) => {
+        const username = String(u.username || "").trim();
+        const jumlah = Number(u.jumlah_like) || 0;
+        let status = "Belum";
+        if (!username) status = "Tanpa Username";
+        else if (totalIGPost === 0) status = "Belum";
+        else if (jumlah >= totalIGPost * 0.5) status = "Sudah";
+        else if (jumlah > 0) status = "Kurang";
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        const userDisplay = username ? `@${username}` : "-";
+        return `${i + 1}. ${name} ${userDisplay} - ${status} (${jumlah})`;
+      })
+      .join("\n");
+
+    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nDetail Rekap:\n${detailLines}`;
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
@@ -438,11 +454,11 @@ export default function InstagramEngagementInsightPage() {
 
             <div className="flex justify-end gap-2 my-2">
               <button
-                onClick={handleCopySummary}
+                onClick={handleCopyRekap}
                 className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
               >
                 <Copy className="w-5 h-5" />
-                Copy Rekap
+                Rekap Likes
               </button>
               <Link
                 href="/likes/instagram/rekap"
