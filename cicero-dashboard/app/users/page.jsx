@@ -13,6 +13,7 @@ import { Pencil, Check, X, RefreshCw } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import * as XLSX from "xlsx";
 
 const PAGE_SIZE = 50;
 
@@ -261,6 +262,24 @@ export default function UserDirectoryPage() {
     }
   }
 
+  function handleDownloadData() {
+    const data = users.map((u) => ({
+      Nama: (u.title ? `${u.title} ` : "") + (u.nama || "-"),
+      "NRP/NIP": u.user_id || "",
+      [columnLabel]: showKesatuanColumn
+        ? u.nama_client || u.client_name || u.client || u.nama || "-"
+        : u.divisi || "",
+      "Username IG": u.insta || "",
+      "Username TikTok": u.tiktok || "",
+      Status:
+        u.status === true || u.status === "true" ? "Aktif" : "Nonaktif",
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+    XLSX.writeFile(workbook, "user_directory.xlsx");
+  }
+
   useEffect(() => {
     fetchUsers();
     const interval = setInterval(() => {
@@ -365,6 +384,12 @@ export default function UserDirectoryPage() {
             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
           >
             Rekap User
+          </button>
+          <button
+            onClick={handleDownloadData}
+            className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm"
+          >
+            Download Data
           </button>
           {isDitbinmasClient && (
             <button
