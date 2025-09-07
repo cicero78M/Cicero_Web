@@ -26,6 +26,7 @@ import {
   ThumbsDown,
   ArrowRight,
   UserX,
+  Copy,
 } from "lucide-react";
 
 export default function InstagramEngagementInsightPage() {
@@ -275,6 +276,36 @@ export default function InstagramEngagementInsightPage() {
   // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
+  function handleCopySummary() {
+    const now = new Date();
+    const hour = now.getHours();
+    let greeting = "Selamat Pagi";
+    if (hour >= 18) greeting = "Selamat Malam";
+    else if (hour >= 12) greeting = "Selamat Siang";
+
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const jam = now.toLocaleTimeString("id-ID", { hour12: false });
+
+    const {
+      totalIGPost,
+      totalUser,
+      totalSudahLike,
+      totalKurangLike,
+      totalBelumLike,
+      totalTanpaUsername,
+    } = rekapSummary;
+    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user`;
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(message).then(() => {
+        alert("Rekap disalin ke clipboard");
+      });
+    } else {
+      alert(message);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="flex-1 flex items-start justify-center">
@@ -405,7 +436,14 @@ export default function InstagramEngagementInsightPage() {
               </div>
             )}
 
-            <div className="flex justify-end my-2">
+            <div className="flex justify-end gap-2 my-2">
+              <button
+                onClick={handleCopySummary}
+                className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
+              >
+                <Copy className="w-5 h-5" />
+                Copy Rekap
+              </button>
               <Link
                 href="/likes/instagram/rekap"
                 className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
