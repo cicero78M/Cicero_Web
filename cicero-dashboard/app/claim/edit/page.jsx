@@ -30,10 +30,8 @@ function extractTiktokUsername(url) {
     const u = new URL(link);
     if (!u.hostname.includes("tiktok.com")) return "";
     const segments = u.pathname.split("/").filter(Boolean);
-    if (segments[0] && segments[0].startsWith("@")) {
-      return segments[0].slice(1);
-    }
-    return "";
+    if (!segments[0]) return "";
+    return segments[0].startsWith("@") ? segments[0].slice(1) : segments[0];
   } catch {
     return "";
   }
@@ -83,28 +81,18 @@ export default function EditUserPage() {
     try {
       const res = await getUserById(n);
       const user = res.data || res.user || res;
-      setKesatuan(
-        user.nama_client || user.client_name || user.client_id || ""
-      );
+      setKesatuan(user.nama_client || user.client_name || user.client_id || "");
       setNama(user.nama || "");
       setPangkat(user.title || "");
       setSatfung(user.divisi || "");
       setJabatan(user.jabatan || "");
       setDesa(user.desa || "");
+      const instaUsername = extractInstagramUsername(user.insta);
       setInsta(
-        user.insta
-          ? user.insta.startsWith("http")
-            ? user.insta
-            : `https://www.instagram.com/${user.insta}`
-          : "",
+        instaUsername ? `https://www.instagram.com/${instaUsername}` : "",
       );
-      setTiktok(
-        user.tiktok
-          ? user.tiktok.startsWith("http")
-            ? user.tiktok
-            : `https://www.tiktok.com/@${user.tiktok}`
-          : "",
-      );
+      const tiktokUsername = extractTiktokUsername(user.tiktok);
+      setTiktok(tiktokUsername ? `https://tiktok.com/${tiktokUsername}` : "");
     } catch (err) {
       setError("Gagal mengambil data user");
     }
