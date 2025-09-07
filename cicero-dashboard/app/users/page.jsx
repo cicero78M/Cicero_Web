@@ -17,6 +17,50 @@ import * as XLSX from "xlsx";
 
 const PAGE_SIZE = 50;
 
+const PANGKAT_OPTIONS = [
+  "BHARADA",
+  "BHARATU",
+  "BHARAKA",
+  "BRIPDA",
+  "BRIPTU",
+  "BRIGADIR",
+  "BRIPKA",
+  "AIPDA",
+  "AIPTU",
+  "IPDA",
+  "IPTU",
+  "AKP",
+  "KOMPOL",
+  "AKBP",
+  "KOMISARIS BESAR POLISI",
+];
+
+const SATFUNG_OPTIONS = [
+  "BAG LOG",
+  "BAG SDM",
+  "BAG REN",
+  "BAG OPS",
+  "SAT SAMAPTA",
+  "SAT RESKRIM",
+  "SAT INTEL",
+  "SAT NARKOBA",
+  "SAT BINMAS",
+  "SI UM",
+  "SI TIK",
+  "SI WAS",
+  "SI PROPAM",
+  "SPKT",
+  "SAT TAHTI",
+  "DITBINMAS",
+  "SUBBAGRENMIN",
+  "BAGBINOPSNAL",
+  "SUBDIT BINPOLMAS",
+  "SUBDIT SATPAMPOLSUS",
+  "SUBDIT BHABINKAMTIBMAS",
+  "SUBDIT BINTIBSOS",
+  "POLSEK",
+];
+
 export default function UserDirectoryPage() {
   useRequireAuth();
   const [users, setUsers] = useState([]);
@@ -31,6 +75,7 @@ export default function UserDirectoryPage() {
   const [pangkat, setPangkat] = useState("");
   const [nrpNip, setNrpNip] = useState("");
   const [satfung, setSatfung] = useState("");
+  const [polsekName, setPolsekName] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
 
@@ -161,17 +206,40 @@ export default function UserDirectoryPage() {
     setSubmitLoading(true);
     try {
       const trimmedNrpNip = nrpNip.trim();
+      if (!/^\d+$/.test(trimmedNrpNip)) {
+        throw new Error("NRP hanya boleh angka");
+      }
+      if (!PANGKAT_OPTIONS.includes(pangkat)) {
+        throw new Error("Pangkat tidak valid");
+      }
+      const satfungValue =
+        satfung === "POLSEK"
+          ? polsekName.trim()
+            ? `POLSEK ${polsekName.trim()}`
+            : ""
+          : satfung;
+      if (
+        satfung === "POLSEK" && !polsekName.trim()
+      ) {
+        throw new Error("Nama Polsek wajib diisi");
+      }
+      if (
+        satfung !== "POLSEK" && !SATFUNG_OPTIONS.includes(satfung)
+      ) {
+        throw new Error("Satfung tidak valid");
+      }
       await createUser(token || "", {
         client_id,
         nama,
         title: pangkat,
         user_id: trimmedNrpNip,
-        divisi: satfung,
+        divisi: satfungValue,
       });
       setNama("");
       setPangkat("");
       setNrpNip("");
       setSatfung("");
+      setPolsekName("");
       setShowForm(false);
       fetchUsers();
     } catch (err) {
@@ -416,34 +484,61 @@ export default function UserDirectoryPage() {
               type="text"
               placeholder="Nama"
               value={nama}
-            onChange={(e) => setNama(e.target.value)}
+              onChange={(e) => setNama(e.target.value)}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
-            <input
-              type="text"
-              placeholder="Pangkat"
+            <select
               value={pangkat}
-            onChange={(e) => setPangkat(e.target.value)}
+              onChange={(e) => setPangkat(e.target.value)}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
+            >
+              <option value="">Pilih Pangkat</option>
+              {PANGKAT_OPTIONS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
             <input
               type="text"
               placeholder="NRP/NIP"
               value={nrpNip}
-            onChange={(e) => setNrpNip(e.target.value.trim())}
+              onChange={(e) =>
+                setNrpNip(e.target.value.replace(/[^0-9]/g, ""))
+              }
+              inputMode="numeric"
+              pattern="\d*"
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
-            <input
-              type="text"
-              placeholder={columnLabel}
+            <select
               value={satfung}
-              onChange={(e) => setSatfung(e.target.value)}
+              onChange={(e) => {
+                setSatfung(e.target.value);
+                if (e.target.value !== "POLSEK") setPolsekName("");
+              }}
               required
               className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
+            >
+              <option value="">Pilih {columnLabel}</option>
+              {SATFUNG_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            {satfung === "POLSEK" && (
+              <input
+                type="text"
+                placeholder="Nama Polsek"
+                value={polsekName}
+                onChange={(e) => setPolsekName(e.target.value)}
+                required
+                className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 md:col-span-2"
+              />
+            )}
             {submitError && (
               <div className="text-red-500 text-sm md:col-span-2">{submitError}</div>
             )}
