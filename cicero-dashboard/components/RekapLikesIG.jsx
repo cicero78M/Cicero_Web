@@ -73,36 +73,6 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       : validUsers.filter((u) => Number(u.jumlah_like) === 0).length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
 
-  // Hitung nilai jumlah_like tertinggi (max) di seluruh user
-  const sudahUsers = useMemo(() => {
-    if (totalIGPost === 0) return [];
-    return validUsers.filter(
-      (u) => Number(u.jumlah_like) >= totalIGPost * 0.5,
-    );
-  }, [validUsers, totalIGPost]);
-
-  const kurangUsers = useMemo(() => {
-    if (totalIGPost === 0) return [];
-    return validUsers.filter((u) => {
-      const likes = Number(u.jumlah_like) || 0;
-      return likes > 0 && likes < totalIGPost * 0.5;
-    });
-  }, [validUsers, totalIGPost]);
-
-  const belumUsers = useMemo(() => {
-    if (totalIGPost === 0) return validUsers;
-    return validUsers.filter((u) => Number(u.jumlah_like) === 0);
-  }, [validUsers, totalIGPost]);
-
-  function groupByDivisi(arr) {
-    return arr.reduce((acc, u) => {
-      const d = u.divisi || "Lainnya";
-      if (!acc[d]) acc[d] = [];
-      acc[d].push(u);
-      return acc;
-    }, {});
-  }
-
   // Search/filter
   const [search, setSearch] = useState("");
   const sorted = useMemo(
@@ -136,43 +106,65 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   function handleCopyRekap() {
     const now = new Date();
-    const hour = now.getHours();
-    let greeting = "Selamat Pagi";
-    if (hour >= 18) greeting = "Selamat Malam";
-    else if (hour >= 12) greeting = "Selamat Siang";
-
-    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-    const jam = now.toLocaleTimeString("id-ID", { hour12: false });
 
-    const jumlahKonten = Array.isArray(posts) && posts.length > 0 ? posts.length : totalIGPost;
-    const linkKonten = Array.isArray(posts) && posts.length > 0
-      ? posts
-          .map(p => p.permalink || p.permalink_url || p.media_url || p.link || p.url || "")
-          .filter(Boolean)
-          .join("\n")
-      : "-";
+    const satkerMap = {};
+    sortedUsers.forEach((u) => {
+      const client = (
+        u.nama_client ||
+        u.client_name ||
+        u.client ||
+        u.divisi ||
+        "LAINNYA"
+      ).toUpperCase();
+      if (!satkerMap[client]) {
+        satkerMap[client] = {
+          total: 0,
+          sudah: 0,
+          kurang: 0,
+          belum: 0,
+          tanpaUsername: 0,
+        };
+      }
+      satkerMap[client].total += 1;
+      const username = String(u.username || "").trim();
+      if (!username) {
+        satkerMap[client].tanpaUsername += 1;
+        return;
+      }
+      const likes = Number(u.jumlah_like) || 0;
+      if (totalIGPost === 0) {
+        satkerMap[client].belum += 1;
+      } else if (likes >= totalIGPost * 0.5) {
+        satkerMap[client].sudah += 1;
+      } else if (likes > 0) {
+        satkerMap[client].kurang += 1;
+      } else {
+        satkerMap[client].belum += 1;
+      }
+    });
 
-    const belumGroup = groupByDivisi(belumUsers);
-    const kurangGroup = groupByDivisi(kurangUsers);
-    const sudahGroup = groupByDivisi(sudahUsers);
-    const tanpaUsernameGroup = groupByDivisi(tanpaUsernameUsers);
+    const lines = [
+      `Rekap Likes Instagram (${tanggal})`,
+      `Jumlah IG Post: ${totalIGPost}`,
+      `Total User: ${totalUser}`,
+      `Sudah Like: ${totalSudahLike}`,
+      `Kurang Like: ${totalKurangLike}`,
+      `Belum Like: ${totalBelumLike}`,
+      `Tanpa Username IG: ${totalTanpaUsername}`,
+      "",
+      "Rekap per Satker:",
+    ];
 
-    const formatGroup = grp =>
-      Object.entries(grp)
-        .map(([div, arr]) => {
-          const list = arr
-            .map(u => {
-              const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-              return `- ${name} : @${u.username} (${u.jumlah_like}/${jumlahKonten} konten)`;
-            })
-            .join("\n");
-          return `${div} (${arr.length} user):\n${list}`;
-        })
-        .join("\n");
+    Object.entries(satkerMap)
+      .sort((a, b) => b[1].total - a[1].total)
+      .forEach(([name, data]) => {
+        lines.push(
+          `${name} (${data.total}): ✅ ${data.sudah}, ⚠️ ${data.kurang}, ❌ ${data.belum}, ⁉️ ${data.tanpaUsername}`,
+        );
+      });
 
-    const message = `${greeting},\n\nMohon ijin melaporkan Rekap Akumulasi Likes dan komentar Instagram Pada Konten Social Media Akun Official Ditbinmas Polda Jatim oleh Personil Bhabinkamtibmas ${clientName} : \n\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah Konten: ${jumlahKonten}\nDaftar Link Konten:\n${linkKonten}\n\nJumlah user: ${totalUser}\n✅ Sudah melaksanakan : ${totalSudahLike} user\n⚠️ Kurang like : ${totalKurangLike} user\n❌ Belum melaksanakan : ${totalBelumLike} user\n⁉️ Tanpa username IG : ${totalTanpaUsername} user\n\n⁉️ Tanpa Username IG (${totalTanpaUsername} user):\n${formatGroup(tanpaUsernameGroup)}\n\n❌ Belum melaksanakan (${totalBelumLike} user):\n${formatGroup(belumGroup)}\n\n⚠️ Kurang like (${totalKurangLike} user):\n${formatGroup(kurangGroup)}\n\n✅ Sudah melaksanakan (${totalSudahLike} user):\n${formatGroup(sudahGroup)}`;
-
+    const message = lines.join("\n");
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
         alert("Rekap disalin ke clipboard");
