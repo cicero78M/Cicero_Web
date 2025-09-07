@@ -11,6 +11,9 @@ export const PANGKAT_ORDER = [
   "BRIGADIR",
   "BRIPTU",
   "BRIPDA",
+  "BHARAKA",
+  "BHARATU",
+  "BHARADA",
 ];
 
 export function getPangkatRank(title?: string): number {
