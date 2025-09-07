@@ -296,22 +296,33 @@ export default function InstagramEngagementInsightPage() {
       totalTanpaUsername,
     } = rekapSummary;
 
-    const detailLines = chartData
-      .map((u, i) => {
-        const username = String(u.username || "").trim();
-        const jumlah = Number(u.jumlah_like) || 0;
-        let status = "Belum";
-        if (!username) status = "Tanpa Username";
-        else if (totalIGPost === 0) status = "Belum";
-        else if (jumlah >= totalIGPost * 0.5) status = "Sudah";
-        else if (jumlah > 0) status = "Kurang";
-        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        const userDisplay = username ? `@${username}` : "-";
-        return `${i + 1}. ${name} ${userDisplay} - ${status} (${jumlah})`;
+    const groups = groupUsersByKelompok(chartData);
+    const groupLines = Object.entries(groups)
+      .map(([name, users]) => {
+        const counts = users.reduce(
+          (acc, u) => {
+            const username = String(u.username || "").trim();
+            const jumlah = Number(u.jumlah_like) || 0;
+            if (!username) {
+              acc.tanpaUsername++;
+            } else if (totalIGPost === 0) {
+              acc.belum++;
+            } else if (jumlah >= totalIGPost * 0.5) {
+              acc.sudah++;
+            } else if (jumlah > 0) {
+              acc.kurang++;
+            } else {
+              acc.belum++;
+            }
+            return acc;
+          },
+          { total: users.length, sudah: 0, kurang: 0, belum: 0, tanpaUsername: 0 },
+        );
+        return `${name}: ${counts.total} user (✅ ${counts.sudah}, ⚠️ ${counts.kurang}, ❌ ${counts.belum}, ⁉️ ${counts.tanpaUsername})`;
       })
       .join("\n");
 
-    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nDetail Rekap:\n${detailLines}`;
+    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nRekap per Satker:\n${groupLines}`;
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
