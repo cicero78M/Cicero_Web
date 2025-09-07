@@ -4,14 +4,49 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUserById, updateUserViaClaim } from "@/utils/api";
 
+function extractInstagramUsername(url) {
+  if (!url) return "";
+  try {
+    const link = url.trim();
+    if (!/^https?:\/\//i.test(link)) {
+      return link.replace(/^@/, "");
+    }
+    const u = new URL(link);
+    if (!u.hostname.includes("instagram.com")) return "";
+    const segments = u.pathname.split("/").filter(Boolean);
+    return segments[0] ? segments[0].replace(/^@/, "") : "";
+  } catch {
+    return "";
+  }
+}
+
+function extractTiktokUsername(url) {
+  if (!url) return "";
+  try {
+    const link = url.trim();
+    if (!/^https?:\/\//i.test(link)) {
+      return link.replace(/^@/, "");
+    }
+    const u = new URL(link);
+    if (!u.hostname.includes("tiktok.com")) return "";
+    const segments = u.pathname.split("/").filter(Boolean);
+    if (segments[0] && segments[0].startsWith("@")) {
+      return segments[0].slice(1);
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
 function isValidInstagram(url) {
   if (!url) return true;
-  return /^https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+\/?$/.test(url);
+  return !!extractInstagramUsername(url);
 }
 
 function isValidTiktok(url) {
   if (!url) return true;
-  return /^https?:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]+\/?$/.test(url);
+  return !!extractTiktokUsername(url);
 }
 
 export default function EditUserPage() {
@@ -56,8 +91,20 @@ export default function EditUserPage() {
       setSatfung(user.divisi || "");
       setJabatan(user.jabatan || "");
       setDesa(user.desa || "");
-      setInsta(user.insta || "");
-      setTiktok(user.tiktok || "");
+      setInsta(
+        user.insta
+          ? user.insta.startsWith("http")
+            ? user.insta
+            : `https://www.instagram.com/${user.insta}`
+          : "",
+      );
+      setTiktok(
+        user.tiktok
+          ? user.tiktok.startsWith("http")
+            ? user.tiktok
+            : `https://www.tiktok.com/@${user.tiktok}`
+          : "",
+      );
     } catch (err) {
       setError("Gagal mengambil data user");
     }
@@ -67,11 +114,13 @@ export default function EditUserPage() {
     e.preventDefault();
     setError("");
     setMessage("");
-    if (!isValidInstagram(insta)) {
+    const instaUsername = extractInstagramUsername(insta);
+    if (insta && !instaUsername) {
       setError("Link Instagram tidak valid");
       return;
     }
-    if (!isValidTiktok(tiktok)) {
+    const tiktokUsername = extractTiktokUsername(tiktok);
+    if (tiktok && !tiktokUsername) {
       setError("Link TikTok tidak valid");
       return;
     }
@@ -85,8 +134,8 @@ export default function EditUserPage() {
         divisi: satfung.trim(),
         jabatan: jabatan.trim(),
         desa: desa.trim(),
-        insta: insta.trim(),
-        tiktok: tiktok.trim(),
+        insta: instaUsername,
+        tiktok: tiktokUsername,
       });
       if (res.success) {
         setMessage("Data berhasil diperbarui");
@@ -184,7 +233,7 @@ export default function EditUserPage() {
             type="url"
             value={insta}
             onChange={(e) => setInsta(e.target.value)}
-            pattern="^https?:\\/\\/(www\\.)?instagram\\.com\\/[A-Za-z0-9._-]+\\/?$"
+            pattern="^https?:\\/\\/(www\\.)?instagram\\.com\\/[A-Za-z0-9._-]+(\\/?(\\?.*)?)?$"
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
@@ -194,7 +243,7 @@ export default function EditUserPage() {
             type="url"
             value={tiktok}
             onChange={(e) => setTiktok(e.target.value)}
-            pattern="^https?:\\/\\/(www\\.)?tiktok\\.com\\/@[A-Za-z0-9._-]+\\/?$"
+            pattern="^https?:\\/\\/(www\\.)?tiktok\\.com\\/@[A-Za-z0-9._-]+(\\/?(\\?.*)?)?$"
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
         </div>
