@@ -14,6 +14,23 @@ export const PANGKAT_ORDER = [
   "BHARAKA",
   "BHARATU",
   "BHARADA",
+  "PEMBINA UTAMA",
+  "PEMBINA UTAMA MADYA",
+  "PEMBINA UTAMA MUDA",
+  "PEMBINA TINGKAT I",
+  "PEMBINA",
+  "PENATA TINGKAT I",
+  "PENATA",
+  "PENATA MUDA TINGKAT I",
+  "PENATA MUDA",
+  "PENGATUR TINGKAT I",
+  "PENGATUR",
+  "PENGATUR MUDA TINGKAT I",
+  "PENGATUR MUDA",
+  "JURU TINGKAT I",
+  "JURU",
+  "JURU MUDA TINGKAT I",
+  "JURU MUDA",
 ];
 
 export function getPangkatRank(title?: string): number {
