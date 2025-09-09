@@ -6,7 +6,7 @@ import { verifyClaimOtp } from "@/utils/api";
 
 export default function OtpPage() {
   const [nrp, setNrp] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,12 +15,12 @@ export default function OtpPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const n = sessionStorage.getItem("claim_nrp");
-      const w = sessionStorage.getItem("claim_whatsapp");
+      const w = sessionStorage.getItem("claim_email");
       if (!n || !w) {
         router.replace("/claim");
       } else {
         setNrp(n);
-        setWhatsapp(w);
+        setEmail(w);
       }
     }
   }, [router]);
@@ -30,7 +30,7 @@ export default function OtpPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await verifyClaimOtp(nrp, whatsapp, otp.trim());
+      const res = await verifyClaimOtp(nrp, email, otp.trim());
       const verified = res.verified ?? res.data?.verified;
       if (res.success && verified) {
         router.push("/claim/edit");

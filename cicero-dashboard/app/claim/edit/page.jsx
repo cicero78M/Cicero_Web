@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUserById, updateUserViaClaim } from "@/utils/api";
+import { getClaimUserData, updateUserViaClaim } from "@/utils/api";
 
 function extractInstagramUsername(url) {
   if (!url) return "";
@@ -49,7 +49,7 @@ function isValidTiktok(url) {
 
 export default function EditUserPage() {
   const [nrp, setNrp] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [kesatuan, setKesatuan] = useState("");
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
@@ -66,20 +66,20 @@ export default function EditUserPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const n = sessionStorage.getItem("claim_nrp");
-      const w = sessionStorage.getItem("claim_whatsapp");
+      const w = sessionStorage.getItem("claim_email");
       if (!n || !w) {
         router.replace("/claim");
         return;
       }
       setNrp(n);
-      setWhatsapp(w);
-      loadUser(n);
+      setEmail(w);
+      loadUser(n, w);
     }
   }, [router]);
 
-  async function loadUser(n) {
+  async function loadUser(n, w) {
     try {
-      const res = await getUserById(n);
+      const res = await getClaimUserData(n, w);
       const user = res.data || res.user || res;
       setKesatuan(user.nama_client || user.client_name || user.client_id || "");
       setNama(user.nama || "");
@@ -116,7 +116,7 @@ export default function EditUserPage() {
     try {
       const res = await updateUserViaClaim({
         nrp,
-        whatsapp,
+        email,
         nama: nama.trim(),
         title: pangkat.trim(),
         divisi: satfung.trim(),
