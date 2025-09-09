@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { requestClaimOtp, normalizeWhatsapp } from "@/utils/api";
+import { requestClaimOtp } from "@/utils/api";
 
 export default function ClaimPage() {
   const [nrp, setNrp] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -16,12 +16,11 @@ export default function ClaimPage() {
     setError("");
     setLoading(true);
     try {
-      const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
-      const res = await requestClaimOtp(nrp.trim(), normalizedWhatsapp);
+      const res = await requestClaimOtp(nrp.trim(), email.trim());
       if (res.success) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("claim_nrp", nrp.trim());
-          sessionStorage.setItem("claim_whatsapp", normalizedWhatsapp);
+          sessionStorage.setItem("claim_email", email.trim());
         }
         router.push("/claim/otp");
       } else {
@@ -60,15 +59,15 @@ export default function ClaimPage() {
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="wa" className="sr-only">
-            Nomor WhatsApp
+          <label htmlFor="email" className="sr-only">
+            Email
           </label>
           <input
-            id="wa"
-            type="tel"
-            placeholder="Nomor WhatsApp"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
+            id="email"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />

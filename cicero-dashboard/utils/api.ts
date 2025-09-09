@@ -516,17 +516,31 @@ export async function getUserById(nrp: string): Promise<any> {
   return res.json();
 }
 
-// Request OTP to be sent via WhatsApp
-export async function requestClaimOtp(
+// Fetch user data in claim flow after OTP verification
+export async function getClaimUserData(
   nrp: string,
-  whatsapp: string,
+  email: string,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/claim/request-otp`;
-  const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
+  const url = `${API_BASE_URL}/api/claim/user-data`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nrp, whatsapp: normalizedWhatsapp }),
+    body: JSON.stringify({ nrp, email }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch user");
+  return res.json();
+}
+
+// Request OTP to be sent via email
+export async function requestClaimOtp(
+  nrp: string,
+  email: string,
+): Promise<any> {
+  const url = `${API_BASE_URL}/api/claim/request-otp`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nrp, email }),
   });
   if (!res.ok) throw new Error("Failed to request OTP");
   return res.json();
@@ -535,15 +549,14 @@ export async function requestClaimOtp(
 // Verify OTP provided by user
 export async function verifyClaimOtp(
   nrp: string,
-  whatsapp: string,
+  email: string,
   otp: string,
 ): Promise<any> {
   const url = `${API_BASE_URL}/api/claim/verify-otp`;
-  const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nrp, whatsapp: normalizedWhatsapp, otp }),
+    body: JSON.stringify({ nrp, email, otp }),
   });
   if (!res.ok) throw new Error("Failed to verify OTP");
   const data = await res.json();
@@ -554,7 +567,7 @@ export async function verifyClaimOtp(
 export async function updateUserViaClaim(
   data: {
     nrp: string;
-    whatsapp: string;
+    email: string;
     nama?: string;
     title?: string;
     divisi?: string;
