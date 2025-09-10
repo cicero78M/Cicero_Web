@@ -268,6 +268,16 @@ export default function UserInsightPage() {
               </div>
             </div>
 
+            {!isDirectorate && (
+              <div className="self-start">
+                <span
+                  className="inline-block bg-blue-100 text-blue-800 text-xs md:text-sm font-medium px-3 py-1 rounded border border-blue-200"
+                >
+                  Polres Jajaran dapat mengajukan request sistem untuk diterapkan di kesatuan masing-masing, sekaligus melakukan absensi personil guna meningkatkan engagement media sosial resmi kesatuannya.
+                </span>
+              </div>
+            )}
+
             <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
               <SummaryItem
                 label="Total User"
