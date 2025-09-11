@@ -23,7 +23,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   const hasSatker = useMemo(
     () =>
       users.some(
-        (u) => u.client_id || u.nama_client || u.client_name || u.client,
+        (u) => u.nama_client || u.client_name || u.client || u.client_id,
       ),
     [users],
   );
@@ -37,7 +37,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
         (u.nama || "").toLowerCase().includes(term) ||
         (u.username || "").toLowerCase().includes(term) ||
         bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
-        String(u.client_id || u.nama_client || u.client_name || u.client || "")
+        String(u.nama_client || u.client_name || u.client || u.client_id || "")
           .toLowerCase()
           .includes(term)
     );
@@ -134,7 +134,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                 >
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">
-                    {u.client_id || u.nama_client || u.client_name || u.client || "-"}
+                    {u.nama_client || u.client_name || u.client || u.client_id || "-"}
                   </td>
                   <td className="py-1 px-2">
                     {u.title ? `${u.title} ${u.nama}` : u.nama}
