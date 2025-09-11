@@ -20,9 +20,12 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
       : users.filter((u) => Number(u.jumlah_komentar) > 0).length;
   const totalBelumKomentar = totalUser - totalSudahKomentar;
 
-  const hasClient = useMemo(
-    () => users.some(u => u.nama_client || u.client_name || u.client),
-    [users]
+  const hasSatker = useMemo(
+    () =>
+      users.some(
+        (u) => u.client_id || u.nama_client || u.client_name || u.client,
+      ),
+    [users],
   );
 
 
@@ -34,7 +37,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
         (u.nama || "").toLowerCase().includes(term) ||
         (u.username || "").toLowerCase().includes(term) ||
         bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
-        (u.nama_client || u.client_name || u.client || "")
+        String(u.client_id || u.nama_client || u.client_name || u.client || "")
           .toLowerCase()
           .includes(term)
     );
@@ -95,8 +98,8 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
         <input
           type="text"
           placeholder={
-            hasClient
-              ? "Cari nama, username, divisi, atau client"
+            hasSatker
+              ? "Cari nama, username, divisi, atau satker"
               : "Cari nama, username, atau divisi"
           }
           className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-pink-300"
@@ -110,7 +113,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
               <th className="py-2 px-2">No</th>
-              <th className="py-2 px-2">Client</th>
+              <th className="py-2 px-2">Satker</th>
               <th className="py-2 px-2">Nama</th>
               <th className="py-2 px-2">Username tiktok</th>
               <th className="py-2 px-2">Divisi/Satfung</th>
@@ -131,7 +134,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                 >
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">
-                    {u.nama_client || u.client_name || u.client || "-"}
+                    {u.client_id || u.nama_client || u.client_name || u.client || "-"}
                   </td>
                   <td className="py-1 px-2">
                     {u.title ? `${u.title} ${u.nama}` : u.nama}
