@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDashboardStats, getRekapKomentarTiktok } from "@/utils/api";
+import {
+  getDashboardStats,
+  getRekapKomentarTiktok,
+  getClientNames,
+} from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
 import Link from "next/link";
@@ -81,6 +85,28 @@ export default function RekapKomentarTiktokPage() {
         );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
+        // map client_id to client name for satker column
+        const nameMap = await getClientNames(
+          token,
+          users.map((u) =>
+            String(
+              u.client_id || u.clientId || u.client || u.clientID || "",
+            ),
+          ),
+        );
+        const enrichedUsers = users.map((u) => {
+          const cid = String(
+            u.client_id || u.clientId || u.client || u.clientID || "",
+          );
+          const cName =
+            nameMap[cid] ||
+            u.nama_client ||
+            u.client_name ||
+            u.client ||
+            cid;
+          return { ...u, nama_client: cName, client_name: cName, client: cName };
+        });
+
         // Sumber utama TikTok Post Hari Ini dari statsRes
         const totalTiktokPost =
           statsData?.ttPosts ||
@@ -103,7 +129,7 @@ export default function RekapKomentarTiktokPage() {
           totalBelumKomentar,
           totalTiktokPost,
         });
-        setChartData(users);
+        setChartData(enrichedUsers);
       } catch (err) {
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
