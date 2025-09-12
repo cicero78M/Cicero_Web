@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface SocialCardProps {
   platform: string;
@@ -9,7 +9,6 @@ interface SocialCardProps {
 
 export default function SocialCard({ platform, profile, posts }: SocialCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
 
   const getThumb = (url: string) => {
     if (!url) return null;
@@ -39,47 +38,13 @@ export default function SocialCard({ platform, profile, posts }: SocialCardProps
       : `https://www.tiktok.com/@${profile.username}`;
   const avatarSrc = getThumb(avatar);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function download() {
-      if (!avatarSrc) return;
-      const key = `${platform}_avatar_${profile.username}`;
-      const cached = typeof window !== "undefined" ? localStorage.getItem(key) : null;
-      if (cached) {
-        if (!cancelled) setLocalAvatar(cached);
-        return;
-      }
-      try {
-        const res = await fetch(avatarSrc);
-        const blob = await res.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          try {
-            localStorage.setItem(key, base64);
-          } catch (_) {
-            /* ignore quota errors */
-          }
-          if (!cancelled) setLocalAvatar(base64);
-        };
-        reader.readAsDataURL(blob);
-      } catch (err) {
-        console.error("Failed to download avatar", err);
-      }
-    }
-    download();
-    return () => {
-      cancelled = true;
-    };
-  }, [avatarSrc, platform, profile.username]);
-
   return (
     <div className="bg-white rounded-xl shadow p-4 flex flex-col">
       <h2 className="font-semibold capitalize mb-2">{platform} Profile</h2>
       <div className="flex items-center gap-3 flex-wrap">
-        {localAvatar && (
+        {avatarSrc && (
           <img
-            src={localAvatar}
+            src={avatarSrc}
             alt="avatar"
             loading="lazy"
             className="w-12 h-12 rounded-full object-cover"
