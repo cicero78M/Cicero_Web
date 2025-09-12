@@ -229,6 +229,7 @@ export default function TiktokInfoPage({ embedded = false, hideHeader = false })
             <img
               src={getProfilePicSrc(profilePic)}
               alt="profile"
+              loading="lazy"
               className="w-24 h-24 rounded-full object-cover flex-shrink-0"
               onError={(e) => {
                 e.currentTarget.src = "/file.svg";
