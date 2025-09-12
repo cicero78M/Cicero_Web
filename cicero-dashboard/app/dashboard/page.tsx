@@ -37,6 +37,13 @@ export default function DashboardPage() {
     fetchData();
   }, [token]);
 
+  useEffect(() => {
+    const comment = document.querySelector<HTMLElement>("#comm1");
+    if (comment) {
+      comment.style.border = "1px solid red";
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-6xl space-y-6">
