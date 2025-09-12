@@ -10,11 +10,13 @@ export default function TiktokPostsGrid({ posts = [] }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {posts.map((post) => (
         <div
-          key={post.id || post.post_id}
+          key={post.id || post.post_id || post.video_id}
           className="bg-white rounded-lg shadow border overflow-hidden"
         >
           <img
-            src={getThumbnailSrc(post.thumbnail)}
+            src={getThumbnailSrc(
+              post.thumbnail || post.thumbnail_url || post.cover_url
+            )}
             alt={post.caption || "thumbnail"}
             className="w-full h-48 object-cover"
             onError={(e) => {

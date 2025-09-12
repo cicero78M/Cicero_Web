@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import InstagramPostsGrid from "./InstagramPostsGrid";
+import TiktokPostsGrid from "./TiktokPostsGrid";
 
 interface SocialCardProps {
   platform: string;
@@ -10,7 +12,7 @@ interface SocialCardProps {
 export default function SocialCard({ platform, profile, posts }: SocialCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const getThumb = (url: string) => {
+  const getThumb = (url: string | undefined | null) => {
     if (!url) return null;
     return url.replace(/\.heic(\?|$)/, ".jpg$1");
   };
@@ -38,6 +40,12 @@ export default function SocialCard({ platform, profile, posts }: SocialCardProps
       : `https://www.tiktok.com/@${profile.username}`;
   const avatarSrc = getThumb(avatar);
 
+  const followers = profile.followers ?? profile.follower_count ?? 0;
+  const following = profile.following ?? profile.following_count ?? 0;
+  const postCount = profile.post_count ?? posts?.length ?? 0;
+  const bio = profile.bio ?? profile.biography;
+  const name = profile.full_name ?? profile.nickname;
+
   return (
     <div className="bg-white rounded-xl shadow p-4 flex flex-col">
       <h2 className="font-semibold capitalize mb-2">{platform} Profile</h2>
@@ -53,52 +61,44 @@ export default function SocialCard({ platform, profile, posts }: SocialCardProps
             }}
           />
         )}
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-blue-600 hover:underline"
-        >
-          @{profile.username}
-        </a>
+        <div className="flex flex-col">
+          {name && <span className="font-semibold">{name}</span>}
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            @{profile.username}
+          </a>
+        </div>
         <span
           className="text-sm text-gray-500 relative"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          {profile.followers} followers
+          {followers} followers
           {showTooltip && (
             <span className="absolute left-0 top-full mt-1 w-max bg-black text-white text-xs rounded px-2 py-1">
               Total pengikut akun
             </span>
           )}
         </span>
-        <span className="text-sm text-gray-500">{profile.following} following</span>
+        <span className="text-sm text-gray-500">{following} following</span>
+        <span className="text-sm text-gray-500">{postCount} posts</span>
       </div>
-      {profile.bio && (
-        <div className="text-sm text-gray-500 whitespace-pre-line mt-1">
-          {profile.bio}
+      {bio && (
+        <div className="text-sm text-gray-500 whitespace-pre-line mt-2">
+          {bio}
         </div>
       )}
       {posts && posts.length > 0 && (
-        <div className="flex gap-2 mt-4">
-          {posts.slice(0, 3).map((p) => {
-            const thumb = getThumb(p.thumbnail);
-            return (
-              thumb && (
-                <img
-                  key={p.id || p.post_id}
-                  src={thumb}
-                  alt="thumb"
-                  loading="lazy"
-                  className="w-16 h-16 object-cover rounded"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              )
-            );
-          })}
+        <div className="mt-4">
+          {platform === "instagram" ? (
+            <InstagramPostsGrid posts={posts.slice(0, 3)} />
+          ) : (
+            <TiktokPostsGrid posts={posts.slice(0, 3)} />
+          )}
         </div>
       )}
     </div>

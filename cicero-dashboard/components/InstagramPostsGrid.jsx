@@ -10,11 +10,16 @@ export default function InstagramPostsGrid({ posts = [] }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {posts.map((post) => (
         <div
-          key={post.id || post.post_id}
+          key={post.id || post.post_id || post.shortcode}
           className="bg-white rounded-lg shadow border overflow-hidden"
         >
           <img
-            src={getThumbnailSrc(post.thumbnail)}
+            src={getThumbnailSrc(
+              post.thumbnail ||
+                post.thumbnail_url ||
+                post.image_url ||
+                (post.images_url && post.images_url[0])
+            )}
             alt={post.caption || "thumbnail"}
             className="w-full h-48 object-cover"
             onError={(e) => {
