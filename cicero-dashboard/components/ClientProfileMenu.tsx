@@ -1,26 +1,11 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { getClientProfile } from "@/utils/api";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ClientProfileMenu() {
-  const { token, clientId } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const { profile } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      if (!token || !clientId) return;
-      try {
-        const res = await getClientProfile(token, clientId);
-        setProfile(res.client || res.profile || res);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    fetchProfile();
-  }, [token, clientId]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
