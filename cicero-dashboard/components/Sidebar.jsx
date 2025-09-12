@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -25,27 +25,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
-import { getClientProfile } from "@/utils/api";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { token, clientId, role } = useAuth();
-  const [profile, setProfile] = useState(null);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      if (!token || !clientId) return;
-      try {
-        const res = await getClientProfile(token, clientId);
-        setProfile(res.client || res.profile || res);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    fetchProfile();
-  }, [token, clientId]);
+  const { role, profile } = useAuth();
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
   }

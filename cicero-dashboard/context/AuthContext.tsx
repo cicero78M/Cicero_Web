@@ -1,11 +1,13 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
+import { getClientProfile } from "@/utils/api";
 
 type AuthState = {
   token: string | null;
   clientId: string | null;
   userId: string | null;
   role: string | null;
+  profile: any | null;
   setAuth: (
     token: string | null,
     clientId: string | null,
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [clientId, setClientId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("cicero_token");
@@ -32,6 +35,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserId(storedUser);
     setRole(storedRole);
   }, []);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!token || !clientId) return;
+      try {
+        const res = await getClientProfile(token, clientId);
+        setProfile(res.client || res.profile || res);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchProfile();
+  }, [token, clientId]);
 
   const setAuth = (
     newToken: string | null,
@@ -54,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, clientId, userId, role, setAuth }}>
+    <AuthContext.Provider value={{ token, clientId, userId, role, profile, setAuth }}>
       {children}
     </AuthContext.Provider>
   );
