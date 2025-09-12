@@ -1,15 +1,17 @@
 "use client";
 import { useState } from "react";
-import InstagramPostsGrid from "./InstagramPostsGrid";
-import TiktokPostsGrid from "./TiktokPostsGrid";
 
-interface SocialCardProps {
+interface SocialProfileCardProps {
   platform: string;
   profile: any;
-  posts: any[];
+  postCount?: number;
 }
 
-export default function SocialCard({ platform, profile, posts }: SocialCardProps) {
+export default function SocialProfileCard({
+  platform,
+  profile,
+  postCount = 0,
+}: SocialProfileCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const getThumb = (url: string | undefined | null) => {
@@ -42,7 +44,6 @@ export default function SocialCard({ platform, profile, posts }: SocialCardProps
 
   const followers = profile.followers ?? profile.follower_count ?? 0;
   const following = profile.following ?? profile.following_count ?? 0;
-  const postCount = profile.post_count ?? posts?.length ?? 0;
   const bio = profile.bio ?? profile.biography;
   const name = profile.full_name ?? profile.nickname;
 
@@ -92,16 +93,6 @@ export default function SocialCard({ platform, profile, posts }: SocialCardProps
           {bio}
         </div>
       )}
-      {posts && posts.length > 0 && (
-        <div className="mt-4">
-          {platform === "instagram" ? (
-            <InstagramPostsGrid posts={posts.slice(0, 3)} />
-          ) : (
-            <TiktokPostsGrid posts={posts.slice(0, 3)} />
-          )}
-        </div>
-      )}
     </div>
   );
 }
-

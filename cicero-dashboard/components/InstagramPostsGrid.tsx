@@ -27,49 +27,54 @@ export default function InstagramPostsGrid({ posts = [] }: InstagramPostsGridPro
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {posts.map((post) => (
-        <div
-          key={post.id || post.post_id || post.shortcode}
-          className="bg-white rounded-lg shadow border overflow-hidden"
-        >
-          <img
-            src={getThumbnailSrc(
-              post.thumbnail ||
-                post.thumbnail_url ||
-                post.image_url ||
-                (post.images_url && post.images_url[0])
-            )}
-            alt={post.caption || "thumbnail"}
-            loading="lazy"
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "/file.svg";
-            }}
-          />
-          <div className="p-4 flex flex-col gap-2">
-            <p className="font-semibold text-sm break-words">
-              {post.caption || "-"}
-            </p>
-            <div className="text-xs text-gray-600 flex gap-4">
-              {post.like_count != null && (
-                <span className="flex items-center gap-1">
-                  <Heart className="w-3 h-3" /> {post.like_count}
-                </span>
+      {posts.map((post) => {
+        const caption = post.caption || "-";
+        const truncated =
+          caption.length > 140 ? caption.slice(0, 140) + "..." : caption;
+        return (
+          <div
+            key={post.id || post.post_id || post.shortcode}
+            className="bg-white rounded-lg shadow border overflow-hidden"
+          >
+            <img
+              src={getThumbnailSrc(
+                post.thumbnail ||
+                  post.thumbnail_url ||
+                  post.image_url ||
+                  (post.images_url && post.images_url[0])
               )}
-              {post.comment_count != null && (
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="w-3 h-3" /> {post.comment_count}
-                </span>
-              )}
-              {post.view_count != null && (
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" /> {post.view_count}
-                </span>
-              )}
+              alt={post.caption || "thumbnail"}
+              loading="lazy"
+              className="w-full h-48 object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "/file.svg";
+              }}
+            />
+            <div className="p-4 flex flex-col gap-2">
+              <p className="font-semibold text-sm break-words">
+                {truncated}
+              </p>
+              <div className="text-xs text-gray-600 flex gap-4">
+                {post.like_count != null && (
+                  <span className="flex items-center gap-1">
+                    <Heart className="w-3 h-3" /> {post.like_count}
+                  </span>
+                )}
+                {post.comment_count != null && (
+                  <span className="flex items-center gap-1">
+                    <MessageCircle className="w-3 h-3" /> {post.comment_count}
+                  </span>
+                )}
+                {post.view_count != null && (
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> {post.view_count}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       {posts.length === 0 && (
         <div className="col-span-full text-center text-gray-500">
           No posts available
