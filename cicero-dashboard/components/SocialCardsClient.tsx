@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import SocialCard from "./SocialCard";
+import SocialProfileCard from "./SocialProfileCard";
+import SocialPostsCard from "./SocialPostsCard";
 
 interface Props {
   igProfile: any;
@@ -15,7 +16,9 @@ export default function SocialCardsClient({
   tiktokProfile,
   tiktokPosts,
 }: Props) {
-  const [platform, setPlatform] = useState<"all" | "instagram" | "tiktok">("all");
+  const [platform, setPlatform] = useState<"all" | "instagram" | "tiktok">(
+    "all"
+  );
 
   const buttons = [
     { key: "all", label: "Semua" },
@@ -29,7 +32,9 @@ export default function SocialCardsClient({
         {buttons.map((b) => (
           <button
             key={b.key}
-            className={`px-3 py-1 rounded ${platform === b.key ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+            className={`px-3 py-1 rounded ${
+              platform === b.key ? "bg-blue-500 text-white" : "bg-gray-200"
+            }`}
             onClick={() => setPlatform(b.key)}
           >
             {b.label}
@@ -38,17 +43,26 @@ export default function SocialCardsClient({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {(platform === "all" || platform === "instagram") && (
-          <SocialCard platform="instagram" profile={igProfile} posts={igPosts} />
+          <>
+            <SocialProfileCard
+              platform="instagram"
+              profile={igProfile}
+              postCount={igPosts.length}
+            />
+            <SocialPostsCard platform="instagram" posts={igPosts} />
+          </>
         )}
         {(platform === "all" || platform === "tiktok") && (
-          <SocialCard
-            platform="tiktok"
-            profile={tiktokProfile}
-            posts={tiktokPosts}
-          />
+          <>
+            <SocialProfileCard
+              platform="tiktok"
+              profile={tiktokProfile}
+              postCount={tiktokPosts.length}
+            />
+            <SocialPostsCard platform="tiktok" posts={tiktokPosts} />
+          </>
         )}
       </div>
     </>
   );
 }
-
