@@ -1,7 +1,25 @@
 "use client";
 import { Heart, MessageCircle, Eye } from "lucide-react";
-export default function TiktokPostsGrid({ posts = [] }) {
-  const getThumbnailSrc = (url) => {
+
+interface Post {
+  id?: string;
+  post_id?: string;
+  video_id?: string;
+  thumbnail?: string;
+  thumbnail_url?: string;
+  cover_url?: string;
+  caption?: string;
+  like_count?: number;
+  comment_count?: number;
+  view_count?: number;
+}
+
+interface TiktokPostsGridProps {
+  posts?: Post[];
+}
+
+export default function TiktokPostsGrid({ posts = [] }: TiktokPostsGridProps) {
+  const getThumbnailSrc = (url?: string | null) => {
     if (!url) return "/file.svg";
     return url.replace(/\.heic(\?|$)/, ".jpg$1");
   };

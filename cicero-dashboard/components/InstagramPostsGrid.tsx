@@ -1,7 +1,26 @@
 "use client";
 import { Heart, MessageCircle, Eye } from "lucide-react";
-export default function InstagramPostsGrid({ posts = [] }) {
-  const getThumbnailSrc = (url) => {
+
+interface Post {
+  id?: string;
+  post_id?: string;
+  shortcode?: string;
+  thumbnail?: string;
+  thumbnail_url?: string;
+  image_url?: string;
+  images_url?: string[];
+  caption?: string;
+  like_count?: number;
+  comment_count?: number;
+  view_count?: number;
+}
+
+interface InstagramPostsGridProps {
+  posts?: Post[];
+}
+
+export default function InstagramPostsGrid({ posts = [] }: InstagramPostsGridProps) {
+  const getThumbnailSrc = (url?: string | null) => {
     if (!url) return "/file.svg";
     return url.replace(/\.heic(\?|$)/, ".jpg$1");
   };
