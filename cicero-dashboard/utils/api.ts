@@ -48,7 +48,8 @@ export async function getDashboardStats(
   tanggal?: string,
   startDate?: string,
   endDate?: string,
-  client_id?: string
+  client_id?: string,
+  signal?: AbortSignal,
 ): Promise<any> {
   const params = new URLSearchParams();
   if (periode) params.append("periode", periode);
@@ -59,7 +60,7 @@ export async function getDashboardStats(
   const url = `${API_BASE_URL}/api/dashboard/stats${
     params.toString() ? `?${params.toString()}` : ""
   }`;
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Failed to fetch stats");
   const json = await res.json();
   const raw: any = json.data || json;
@@ -83,7 +84,8 @@ export async function getRekapLikesIG(
   periode: string = "harian",
   tanggal?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  signal?: AbortSignal,
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
@@ -91,7 +93,7 @@ export async function getRekapLikesIG(
   if (endDate) params.append("tanggal_selesai", endDate);
   const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
 
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Failed to fetch rekap");
   return res.json();
 }
@@ -100,11 +102,12 @@ export async function getRekapLikesIG(
 export async function getClientProfile(
   token: string,
   client_id: string,
+  signal?: AbortSignal,
 ): Promise<any> {
   const params = new URLSearchParams({ client_id });
   const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
 
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Gagal fetch profile client");
   const json = await res.json();
   return (
@@ -121,12 +124,13 @@ export async function getClientProfile(
 export async function getClientNames(
   token: string,
   clientIds: string[],
+  signal?: AbortSignal,
 ): Promise<Record<string, string>> {
   const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
   const entries = await Promise.all(
     uniqueIds.map(async (id) => {
       try {
-        const profile = await getClientProfile(token, id);
+        const profile = await getClientProfile(token, id, signal);
         const name =
           profile.nama ||
           profile.nama_client ||
@@ -143,10 +147,14 @@ export async function getClientNames(
 }
 
 // Ambil daftar user untuk User Directory
-export async function getUserDirectory(token: string, client_id: string): Promise<any> {
+export async function getUserDirectory(
+  token: string,
+  client_id: string,
+  signal?: AbortSignal,
+): Promise<any> {
   const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
 
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Gagal fetch daftar user");
   return res.json();
 }
