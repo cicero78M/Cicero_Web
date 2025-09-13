@@ -17,6 +17,7 @@ import useAuth from "@/hooks/useAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import * as XLSX from "xlsx";
 import { showToast } from "@/utils/showToast";
+import { validateNewUser } from "@/utils/validateUserForm";
 
 const PAGE_SIZE = 50;
 
@@ -212,28 +213,10 @@ export default function UserDirectoryPage() {
     setSubmitError("");
     setSubmitLoading(true);
     try {
-      const trimmedNrpNip = nrpNip.trim();
-      if (!/^\d+$/.test(trimmedNrpNip)) {
-        throw new Error("NRP hanya boleh angka");
-      }
-      if (!PANGKAT_OPTIONS.includes(pangkat)) {
-        throw new Error("Pangkat tidak valid");
-      }
-      const satfungValue =
-        satfung === "POLSEK"
-          ? polsekName.trim()
-            ? `POLSEK ${polsekName.trim()}`
-            : ""
-          : satfung;
-      if (
-        satfung === "POLSEK" && !polsekName.trim()
-      ) {
-        throw new Error("Nama Polsek wajib diisi");
-      }
-      if (
-        satfung !== "POLSEK" && !SATFUNG_OPTIONS.includes(satfung)
-      ) {
-        throw new Error("Satfung tidak valid");
+      const { error: validationError, nrpNip: trimmedNrpNip, satfungValue } =
+        validateNewUser({ nama, pangkat, nrpNip, satfung, polsekName });
+      if (validationError) {
+        throw new Error(validationError);
       }
       await createUser(token || "", {
         client_id,
