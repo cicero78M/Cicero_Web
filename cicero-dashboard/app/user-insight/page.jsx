@@ -17,6 +17,7 @@ import {
   getClientNames,
 } from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/grouping";
+import { accumulateContactStats } from "@/utils/contactStats";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
@@ -83,10 +84,7 @@ export default function UserInsightPage() {
             map[key].total += 1;
             const hasIG = u.insta && String(u.insta).trim() !== "";
             const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            if (hasIG) map[key].instagramFilled += 1;
-            else map[key].instagramEmpty += 1;
-            if (hasTT) map[key].tiktokFilled += 1;
-            else map[key].tiktokEmpty += 1;
+            accumulateContactStats(map[key], hasIG, hasTT);
           });
           const result = Object.values(map);
           const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
@@ -167,10 +165,7 @@ export default function UserInsightPage() {
             clientMap[id].total += 1;
             const hasIG = u.insta && String(u.insta).trim() !== "";
             const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            if (hasIG) clientMap[id].instagramFilled += 1;
-            else clientMap[id].instagramEmpty += 1;
-            if (hasTT) clientMap[id].tiktokFilled += 1;
-            else clientMap[id].tiktokEmpty += 1;
+            accumulateContactStats(clientMap[id], hasIG, hasTT);
           });
           const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
           setChartPolres(
