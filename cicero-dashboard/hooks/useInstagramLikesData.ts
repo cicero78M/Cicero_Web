@@ -52,11 +52,17 @@ export default function useInstagramLikesData({
     setLoading(true);
     setError("");
     const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+      typeof window !== "undefined"
+        ? localStorage.getItem("cicero_token") ?? ""
+        : "";
     const userClientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
+      typeof window !== "undefined"
+        ? localStorage.getItem("client_id") ?? ""
+        : "";
     const role =
-      typeof window !== "undefined" ? localStorage.getItem("user_role") : null;
+      typeof window !== "undefined"
+        ? localStorage.getItem("user_role") ?? ""
+        : "";
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
