@@ -10,6 +10,7 @@ import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramEngagement from "@/hooks/useInstagramEngagement";
 import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
+import { showToast } from "@/utils/showToast";
 import {
   Camera,
   User,
@@ -115,10 +116,10 @@ export default function InstagramEngagementInsightPage() {
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
-        alert("Rekap disalin ke clipboard");
+        showToast("Rekap disalin ke clipboard", "success");
       });
     } else {
-      alert(message);
+      showToast(message, "info");
     }
   }
 
