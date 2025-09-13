@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardStats from "@/components/DashboardStats";
 import SocialCardsClient from "@/components/SocialCardsClient";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 

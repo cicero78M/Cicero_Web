@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "@/components/Loader";
 import { getClientProfile } from "@/utils/api";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 import ProfileHeader from "../molecules/ProfileHeader";
 import StatsGrid from "../molecules/StatsGrid";
 import ActivityList from "../molecules/ActivityList";

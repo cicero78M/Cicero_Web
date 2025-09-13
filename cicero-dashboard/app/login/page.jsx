@@ -4,7 +4,7 @@ import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import { normalizeWhatsapp } from "@/utils/api";
 

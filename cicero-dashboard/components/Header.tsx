@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 import DarkModeToggle from "./DarkModeToggle";
 import { usePathname, useRouter } from "next/navigation";
 import ClientProfileMenu from "./ClientProfileMenu";

@@ -24,7 +24,7 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 
 export default function Sidebar() {
   const pathname = usePathname();

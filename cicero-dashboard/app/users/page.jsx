@@ -12,6 +12,7 @@ import {
 import { Pencil, Check, X, RefreshCw } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import * as XLSX from "xlsx";
 
@@ -109,16 +110,9 @@ export default function UserDirectoryPage() {
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
-
-  // Ambil client_id dan role dari localStorage
-  const client_id =
-    typeof window !== "undefined"
-      ? localStorage.getItem("client_id") || "BOJONEGORO"
-      : "BOJONEGORO";
-  const role =
-    typeof window !== "undefined" ? localStorage.getItem("role") || "" : "";
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
+  const { token, clientId, role: authRole } = useAuth();
+  const client_id = clientId || "BOJONEGORO";
+  const role = authRole || "";
 
   const isDitbinmasClient = client_id === "DITBINMAS";
   const isDitbinmas =
