@@ -16,6 +16,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import * as XLSX from "xlsx";
+import { showToast } from "@/utils/showToast";
 
 const PAGE_SIZE = 50;
 
@@ -330,9 +331,12 @@ export default function UserDirectoryPage() {
     });
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
-      alert("Rekap user berhasil disalin ke clipboard");
+      showToast("Rekap user berhasil disalin ke clipboard", "success");
     } catch (err) {
-      alert("Gagal menyalin rekap user: " + (err.message || err));
+      showToast(
+        "Gagal menyalin rekap user: " + (err.message || err),
+        "error",
+      );
     }
   }
 

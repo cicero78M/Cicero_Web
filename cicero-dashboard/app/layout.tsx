@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutClient from "@/components/LayoutClient";
 import { AuthProvider } from "@/context/AuthContext";
+import Toast from "@/components/Toast";
 
 export const metadata = {
   title: "CICERO Dashboard",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <AuthProvider>
+          <Toast />
           <LayoutClient>{children}</LayoutClient>
         </AuthProvider>
       </body>
