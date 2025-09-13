@@ -21,6 +21,10 @@ import {
   Copy,
 } from "lucide-react";
 
+const LIKE_THRESHOLD = Number(
+  process.env.NEXT_PUBLIC_LIKE_THRESHOLD ?? 1
+);
+
 export default function InstagramEngagementInsightPage() {
   useRequireAuth();
   const {
@@ -97,7 +101,7 @@ export default function InstagramEngagementInsightPage() {
               acc.tanpaUsername++;
             } else if (totalIGPost === 0) {
               acc.belum++;
-            } else if (jumlah >= totalIGPost * 0.5) {
+            } else if (jumlah >= totalIGPost * LIKE_THRESHOLD) {
               acc.sudah++;
             } else if (jumlah > 0) {
               acc.kurang++;
