@@ -123,22 +123,24 @@ export default function UserInsightPage() {
           }));
         }
 
-        const total = processedUsers.length;
-        const instagramFilled = processedUsers.filter(
-          (u) => u.insta && String(u.insta).trim() !== "",
-        ).length;
-        const tiktokFilled = processedUsers.filter(
-          (u) => u.tiktok && String(u.tiktok).trim() !== "",
-        ).length;
-        const instagramEmpty = total - instagramFilled;
-        const tiktokEmpty = total - tiktokFilled;
-        setSummary({
-          total,
-          instagramFilled,
-          instagramEmpty,
-          tiktokFilled,
-          tiktokEmpty,
-        });
+        const summaryCounts = processedUsers.reduce(
+          (acc, u) => {
+            const hasIG = u.insta && String(u.insta).trim() !== "";
+            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+            acc.total += 1;
+            hasIG ? acc.instagramFilled++ : acc.instagramEmpty++;
+            hasTT ? acc.tiktokFilled++ : acc.tiktokEmpty++;
+            return acc;
+          },
+          {
+            total: 0,
+            instagramFilled: 0,
+            instagramEmpty: 0,
+            tiktokFilled: 0,
+            tiktokEmpty: 0,
+          },
+        );
+        setSummary(summaryCounts);
 
         if (dir) {
           const clientMap = {};
