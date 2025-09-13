@@ -14,7 +14,7 @@ import {
 import {
   getUserDirectory,
   getClientProfile,
-  getClientNamesBatch,
+  getClientNames,
 } from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import { accumulateContactStats } from "@/utils/contactStats";
@@ -99,7 +99,7 @@ export default function UserInsightPage() {
 
         let processedUsers = users;
         if (dir) {
-          const nameMap = await getClientNamesBatch(
+          const nameMap = await getClientNames(
             token,
             users.map((u) =>
               String(
