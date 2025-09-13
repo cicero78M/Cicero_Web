@@ -12,6 +12,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
+import { buildInstagramRekap } from "@/utils/buildInstagramRekap";
 import {
   Camera,
   User,
@@ -21,10 +22,6 @@ import {
   UserX,
   Copy,
 } from "lucide-react";
-
-const LIKE_THRESHOLD = Number(
-  process.env.NEXT_PUBLIC_LIKE_THRESHOLD ?? 1
-);
 
 export default function InstagramEngagementInsightPage() {
   useRequireAuth();
@@ -58,64 +55,7 @@ export default function InstagramEngagementInsightPage() {
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
   function handleCopyRekap() {
-    const now = new Date();
-    const hour = now.getHours();
-    let greeting = "Selamat Pagi";
-    if (hour >= 18) greeting = "Selamat Malam";
-    else if (hour >= 12) greeting = "Selamat Siang";
-
-    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
-    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-    const jam = now.toLocaleTimeString("id-ID", { hour12: false });
-
-    const {
-      totalIGPost,
-      totalUser,
-      totalSudahLike,
-      totalKurangLike,
-      totalBelumLike,
-      totalTanpaUsername,
-    } = rekapSummary;
-
-    const groups = chartData.reduce((acc, u) => {
-      const name = (
-        u.nama_client ||
-        u.client_name ||
-        u.client ||
-        clientName ||
-        "LAINNYA"
-      ).toUpperCase();
-      if (!acc[name]) acc[name] = [];
-      acc[name].push(u);
-      return acc;
-    }, {});
-
-    const groupLines = Object.entries(groups)
-      .map(([name, users]) => {
-        const counts = users.reduce(
-          (acc, u) => {
-            const username = String(u.username || "").trim();
-            const jumlah = Number(u.jumlah_like) || 0;
-            if (!username) {
-              acc.tanpaUsername++;
-            } else if (totalIGPost === 0) {
-              acc.belum++;
-            } else if (jumlah >= totalIGPost * LIKE_THRESHOLD) {
-              acc.sudah++;
-            } else if (jumlah > 0) {
-              acc.kurang++;
-            } else {
-              acc.belum++;
-            }
-            return acc;
-          },
-          { total: users.length, sudah: 0, kurang: 0, belum: 0, tanpaUsername: 0 },
-        );
-        return `${name}: ${counts.total} user (✅ ${counts.sudah}, ⚠️ ${counts.kurang}, ❌ ${counts.belum}, ⁉️ ${counts.tanpaUsername})`;
-      })
-      .join("\n");
-
-    const message = `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nRekap per Client:\n${groupLines}`;
+    const message = buildInstagramRekap(rekapSummary, chartData, clientName);
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
