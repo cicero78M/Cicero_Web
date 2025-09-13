@@ -109,7 +109,28 @@ export default function RekapLikesIGPage() {
         setIgPosts(posts);
         const client_id = userClientId;
 
-        const profileRes = await getClientProfile(token, client_id);
+        const [profileRes, directoryRes, rekapRes] = await Promise.all([
+          getClientProfile(token, client_id).catch((err) => {
+            console.error("Error fetching client profile:", err);
+            return {};
+          }),
+          getUserDirectory(token, client_id).catch((err) => {
+            console.error("Error fetching user directory:", err);
+            return { data: [] };
+          }),
+          getRekapLikesIG(
+            token,
+            client_id,
+            periode,
+            date,
+            startDate,
+            endDate,
+          ).catch((err) => {
+            console.error("Error fetching rekap likes:", err);
+            return { data: [] };
+          }),
+        ]);
+
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
@@ -124,7 +145,6 @@ export default function RekapLikesIGPage() {
 
         let users = [];
         if (dir) {
-          const directoryRes = await getUserDirectory(token, client_id);
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
           const expectedRole = String(client_id).toLowerCase();
@@ -156,18 +176,21 @@ export default function RekapLikesIGPage() {
           if (!clientIds.includes(String(client_id))) {
             clientIds.push(String(client_id));
           }
-          const rekapAll = await Promise.all(
-            clientIds.map((cid) =>
-              getRekapLikesIG(
-                token,
-                cid,
-                periode,
-                date,
-                startDate,
-                endDate,
-              ).catch(() => ({ data: [] })),
-            ),
+
+          const rekapPromises = clientIds.map((cid) =>
+            cid === String(client_id)
+              ? Promise.resolve(rekapRes)
+              : getRekapLikesIG(
+                  token,
+                  cid,
+                  periode,
+                  date,
+                  startDate,
+                  endDate,
+                ).catch(() => ({ data: [] })),
           );
+
+          const rekapAll = await Promise.all(rekapPromises);
           users = rekapAll.flatMap((res) =>
             Array.isArray(res?.data)
               ? res.data
@@ -196,14 +219,6 @@ export default function RekapLikesIGPage() {
               u.client,
           }));
         } else {
-          const rekapRes = await getRekapLikesIG(
-            token,
-            client_id,
-            periode,
-            date,
-            startDate,
-            endDate,
-          );
           users = Array.isArray(rekapRes?.data)
             ? rekapRes.data
             : Array.isArray(rekapRes)
