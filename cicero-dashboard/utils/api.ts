@@ -146,6 +146,23 @@ export async function getClientNames(
   return Object.fromEntries(entries);
 }
 
+// Ambil nama-nama client secara batch lewat endpoint server
+export async function getClientNamesBatch(
+  token: string,
+  clientIds: string[],
+  signal?: AbortSignal,
+): Promise<Record<string, string>> {
+  const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
+  if (uniqueIds.length === 0) return {};
+  const res = await fetchWithAuth(`/api/clients/names`, token, {
+    method: "POST",
+    body: JSON.stringify({ client_id: uniqueIds }),
+    signal,
+  });
+  if (!res.ok) throw new Error("Gagal fetch nama client");
+  return res.json();
+}
+
 // Ambil daftar user untuk User Directory
 export async function getUserDirectory(
   token: string,
