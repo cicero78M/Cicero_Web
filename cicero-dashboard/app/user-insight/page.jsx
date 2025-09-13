@@ -57,8 +57,11 @@ export default function UserInsightPage() {
         return;
       }
       try {
-        const res = await getUserDirectory(token, clientId);
-        const raw = res.data || res.users || res;
+        const [usersRes, profileRes] = await Promise.all([
+          getUserDirectory(token, clientId),
+          getClientProfile(token, clientId),
+        ]);
+        const raw = usersRes.data || usersRes.users || usersRes;
         const users = Array.isArray(raw) ? raw : [];
 
         // helper untuk membuat data chart per divisi
@@ -89,9 +92,7 @@ export default function UserInsightPage() {
           const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
           return result.sort((a, b) => score(b) - score(a));
         };
-
         // Cek tipe client
-        const profileRes = await getClientProfile(token, clientId);
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
