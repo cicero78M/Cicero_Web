@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import usePersistentState from "@/hooks/usePersistentState";
 import {
   getUserDirectory,
@@ -85,8 +86,6 @@ export default function UserDirectoryPage() {
   useRequireAuth();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [page, setPage] = usePersistentState("users_page", 1);
 
   const [showForm, setShowForm] = useState(false);
@@ -128,6 +127,55 @@ export default function UserDirectoryPage() {
     : "Satfung";
   const showKesatuanColumn = columnLabel === "Kesatuan";
 
+  const { error, isLoading, mutate } = useSWR(
+    token && client_id ? ["user-directory", token, client_id] : null,
+    ([_, tk, cid]) => {
+      if (!tk) throw new Error("Token tidak ditemukan. Silakan login ulang.");
+      if (!cid) throw new Error("Client ID tidak ditemukan.");
+      return getUserDirectory(tk, cid);
+    },
+    {
+      refreshInterval: 10000,
+      onSuccess: async (res) => {
+        let data = res.data || res.users || res;
+        let arr = Array.isArray(data) ? data : [];
+
+        const profileRes = await getClientProfile(token, client_id);
+        const profile = profileRes.client || profileRes.profile || profileRes || {};
+        const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        setIsDirectorate(dir && !isDitbinmas);
+        setClientName(
+          profile.nama_client ||
+            profile.client_name ||
+            profile.client ||
+            profile.nama ||
+            client_id,
+        );
+
+        if (dir) {
+          const nameMap = await getClientNames(
+            token,
+            arr.map((u) =>
+              String(u.client_id || u.clientId || u.clientID || u.client || ""),
+            ),
+          );
+          arr = arr.map((u) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(u.client_id || u.clientId || u.clientID || u.client || "")
+              ] ||
+              u.nama_client ||
+              u.client_name ||
+              u.client,
+          }));
+        }
+
+        setUsers(arr);
+      },
+    },
+  );
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentDate(new Date()), 60000);
     return () => clearInterval(interval);
@@ -157,61 +205,6 @@ export default function UserDirectoryPage() {
       });
     return grouped;
   }, [sortedUsers, isDitbinmasClient, showAllDitbinmas]);
-
-  async function fetchUsers() {
-    if (!token) {
-      setError("Token tidak ditemukan. Silakan login ulang.");
-      setLoading(false);
-      return;
-    }
-    if (!client_id) {
-      setError("Client ID tidak ditemukan.");
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await getUserDirectory(token, client_id);
-      let data = res.data || res.users || res;
-      let arr = Array.isArray(data) ? data : [];
-
-      const profileRes = await getClientProfile(token, client_id);
-      const profile = profileRes.client || profileRes.profile || profileRes || {};
-      const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
-      setIsDirectorate(dir && !isDitbinmas);
-      setClientName(
-        profile.nama_client ||
-          profile.client_name ||
-          profile.client ||
-          profile.nama ||
-          client_id,
-      );
-
-      if (dir) {
-        const nameMap = await getClientNames(
-          token,
-          arr.map((u) =>
-            String(u.client_id || u.clientId || u.clientID || u.client || ""),
-          ),
-        );
-        arr = arr.map((u) => ({
-          ...u,
-          nama_client:
-            nameMap[
-              String(u.client_id || u.clientId || u.clientID || u.client || "")
-            ] ||
-            u.nama_client ||
-            u.client_name ||
-            u.client,
-        }));
-      }
-
-      setUsers(arr);
-    } catch (err) {
-      setError("Gagal mengambil data: " + (err.message || err));
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -254,7 +247,7 @@ export default function UserDirectoryPage() {
       setSatfung("");
       setPolsekName("");
       setShowForm(false);
-      fetchUsers();
+      mutate();
     } catch (err) {
       setSubmitError(err.message || "Gagal menambah user");
     }
@@ -284,7 +277,7 @@ export default function UserDirectoryPage() {
       if (userId !== trimmedNrpNip) {
         await updateUserRoles(token || "", userId, trimmedNrpNip);
       }
-      await fetchUsers();
+      await mutate();
       setEditingRowId(null);
     } catch (err) {
       setUpdateError(err.message || "Gagal mengubah user");
@@ -361,14 +354,7 @@ export default function UserDirectoryPage() {
     XLSX.writeFile(workbook, "user_directory.xlsx");
   }
 
-  useEffect(() => {
-    fetchUsers();
-    const interval = setInterval(() => {
-      fetchUsers();
-    }, 10000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client_id]);
+  // Data fetching handled by SWR
 
   const filtered = useMemo(
     () =>
@@ -427,12 +413,12 @@ export default function UserDirectoryPage() {
     minute: "2-digit",
   });
 
-  if (loading) return <Loader />;
+  if (isLoading) return <Loader />;
   if (error)
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="bg-white rounded-lg shadow-md p-6 text-red-500 font-bold">
-          {error}
+          {error.message || error}
         </div>
       </div>
     );
@@ -441,7 +427,7 @@ export default function UserDirectoryPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
       <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8 relative">
         <button
-          onClick={fetchUsers}
+          onClick={() => mutate()}
           className="absolute top-4 right-4 text-black hover:text-black"
           aria-label="Refresh"
         >
