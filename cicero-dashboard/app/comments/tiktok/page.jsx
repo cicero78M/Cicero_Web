@@ -30,7 +30,6 @@ import {
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
-  const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -94,7 +93,6 @@ export default function TiktokEngagementInsightPage() {
           endDate,
           taskClientId,
         );
-        setStats(statsData);
 
         const client_id = userClientId;
 
