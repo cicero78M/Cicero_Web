@@ -10,6 +10,7 @@ interface FetchParams {
 export async function fetchDitbinmasAbsensiLikes(
   token: string,
   { periode, date, startDate, endDate }: FetchParams,
+  signal?: AbortSignal,
 ) {
   const clientId = "DITBINMAS";
 
@@ -20,6 +21,7 @@ export async function fetchDitbinmasAbsensiLikes(
     startDate,
     endDate,
     clientId,
+    signal,
   );
   const posts =
     statsData.ig_posts ||
@@ -29,10 +31,10 @@ export async function fetchDitbinmasAbsensiLikes(
   const totalIGPost = Number(statsData.instagramPosts) || 0;
 
   // gather user directory
-  const profileRes = await getClientProfile(token, clientId);
+  const profileRes = await getClientProfile(token, clientId, signal);
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
-  const directoryRes = await getUserDirectory(token, clientId);
+  const directoryRes = await getUserDirectory(token, clientId, signal);
   const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
   const expectedRole = clientId.toLowerCase();
   const clientIds: string[] = Array.from(
@@ -63,6 +65,7 @@ export async function fetchDitbinmasAbsensiLikes(
         date,
         startDate,
         endDate,
+        signal,
       ).catch(() => ({ data: [] })),
     ),
   );
@@ -80,6 +83,7 @@ export async function fetchDitbinmasAbsensiLikes(
     users.map((u) =>
       String(u.client_id || u.clientId || u.clientID || u.client || ""),
     ),
+    signal,
   );
 
   users = users.map((u) => {

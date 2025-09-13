@@ -40,6 +40,7 @@ export default function useInstagramEngagement() {
   const [clientName, setClientName] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError("");
     const token =
@@ -51,7 +52,7 @@ export default function useInstagramEngagement() {
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
-      return;
+      return () => controller.abort();
     }
 
     const isDitbinmas = String(role).toLowerCase() === "ditbinmas";
@@ -68,12 +69,17 @@ export default function useInstagramEngagement() {
           selectedDate,
         );
         if (isDitbinmas) {
-          const { users, summary } = await fetchDitbinmasAbsensiLikes(token, {
-            periode,
-            date,
-            startDate,
-            endDate,
-          });
+          const { users, summary } = await fetchDitbinmasAbsensiLikes(
+            token,
+            {
+              periode,
+              date,
+              startDate,
+              endDate,
+            },
+            controller.signal,
+          );
+          if (controller.signal.aborted) return;
           setRekapSummary(summary);
           setChartData(users);
           setIsDirectorate(true);
@@ -87,13 +93,19 @@ export default function useInstagramEngagement() {
           startDate,
           endDate,
           taskClientId,
+          controller.signal,
         );
 
         const client_id = userClientId;
 
-        const profileRes = await getClientProfile(token, client_id);
+        const profileRes = await getClientProfile(
+          token,
+          client_id,
+          controller.signal,
+        );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        if (controller.signal.aborted) return;
         setIsDirectorate(dir);
         setClientName(
           profile.nama ||
@@ -105,8 +117,13 @@ export default function useInstagramEngagement() {
 
         let users: any[] = [];
         if (dir) {
-          const directoryRes = await getUserDirectory(token, client_id);
-          const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
+          const directoryRes = await getUserDirectory(
+            token,
+            client_id,
+            controller.signal,
+          );
+          const dirData =
+            directoryRes.data || directoryRes.users || directoryRes || [];
           const expectedRole = String(client_id).toLowerCase();
           const clientIds = Array.from(
             new Set(
@@ -138,7 +155,15 @@ export default function useInstagramEngagement() {
           }
           const rekapAll = await Promise.all(
             clientIds.map((cid: string) =>
-              getRekapLikesIG(token, cid, periode, date, startDate, endDate).catch(() => ({
+              getRekapLikesIG(
+                token,
+                cid,
+                periode,
+                date,
+                startDate,
+                endDate,
+                controller.signal,
+              ).catch(() => ({
                 data: [],
               })),
             ),
@@ -158,6 +183,7 @@ export default function useInstagramEngagement() {
             date,
             startDate,
             endDate,
+            controller.signal,
           );
           users = Array.isArray(rekapRes?.data)
             ? rekapRes.data
@@ -173,6 +199,7 @@ export default function useInstagramEngagement() {
             users.map((u: any) =>
               String(u.client_id || u.clientId || u.clientID || u.client || ""),
             ),
+            controller.signal,
           );
           enrichedUsers = users.map((u: any) => {
             const clientName =
@@ -219,6 +246,7 @@ export default function useInstagramEngagement() {
           }
         });
 
+        if (controller.signal.aborted) return;
         setRekapSummary({
           totalUser,
           totalSudahLike,
@@ -229,13 +257,17 @@ export default function useInstagramEngagement() {
         });
         setChartData(enrichedUsers);
       } catch (err: any) {
-        setError("Gagal mengambil data: " + (err.message || err));
+        if (!(err instanceof DOMException && err.name === "AbortError")) {
+          setError("Gagal mengambil data: " + (err.message || err));
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     fetchData();
+
+    return () => controller.abort();
   }, [viewBy, customDate, fromDate, toDate]);
 
   return {
