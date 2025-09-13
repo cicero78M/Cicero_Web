@@ -10,6 +10,13 @@ import {
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 
+interface Options {
+  viewBy: string;
+  customDate: string;
+  fromDate: string;
+  toDate: string;
+}
+
 interface RekapSummary {
   totalUser: number;
   totalSudahLike: number;
@@ -19,15 +26,16 @@ interface RekapSummary {
   totalIGPost: number;
 }
 
-export default function useInstagramEngagement() {
+export default function useInstagramLikesData({
+  viewBy,
+  customDate,
+  fromDate,
+  toDate,
+}: Options) {
   const [chartData, setChartData] = useState<any[]>([]);
+  const [igPosts, setIgPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [viewBy, setViewBy] = useState("today");
-  const today = new Date().toISOString().split("T")[0];
-  const [customDate, setCustomDate] = useState(today);
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
   const [rekapSummary, setRekapSummary] = useState<RekapSummary>({
     totalUser: 0,
     totalSudahLike: 0,
@@ -69,19 +77,22 @@ export default function useInstagramEngagement() {
           selectedDate,
         );
         if (isDitbinmas) {
-          const { users, summary } = await fetchDitbinmasAbsensiLikes(
-            token,
-            {
-              periode,
-              date,
-              startDate,
-              endDate,
-            },
-            controller.signal,
-          );
+          const { users, summary, posts, clientName } =
+            await fetchDitbinmasAbsensiLikes(
+              token,
+              {
+                periode,
+                date,
+                startDate,
+                endDate,
+              },
+              controller.signal,
+            );
           if (controller.signal.aborted) return;
-          setRekapSummary(summary);
           setChartData(users);
+          setRekapSummary(summary);
+          setIgPosts(posts || []);
+          setClientName(clientName || "");
           setIsDirectorate(true);
           return;
         }
@@ -95,6 +106,14 @@ export default function useInstagramEngagement() {
           taskClientId,
           controller.signal,
         );
+        const posts = Array.isArray((statsData as any).ig_posts)
+          ? (statsData as any).ig_posts
+          : Array.isArray((statsData as any).igPosts)
+          ? (statsData as any).igPosts
+          : Array.isArray((statsData as any).instagram_posts)
+          ? (statsData as any).instagram_posts
+          : [];
+        setIgPosts(posts);
 
         const client_id = userClientId;
 
@@ -163,9 +182,7 @@ export default function useInstagramEngagement() {
                 startDate,
                 endDate,
                 controller.signal,
-              ).catch(() => ({
-                data: [],
-              })),
+              ).catch(() => ({ data: [] })),
             ),
           );
           users = rekapAll.flatMap((res: any) =>
@@ -175,6 +192,26 @@ export default function useInstagramEngagement() {
               ? res
               : [],
           );
+          const nameMap = await getClientNames(
+            token,
+            users.map((u: any) =>
+              String(u.client_id || u.clientId || u.clientID || u.client || ""),
+            ),
+            controller.signal,
+          );
+          users = users.map((u: any) => ({
+            ...u,
+            nama_client:
+              nameMap[
+                String(
+                  u.client_id ||
+                    u.clientId ||
+                    u.clientID ||
+                    u.client ||
+                    "",
+                )
+              ] || u.nama_client,
+          }));
         } else {
           const rekapRes = await getRekapLikesIG(
             token,
@@ -192,41 +229,14 @@ export default function useInstagramEngagement() {
             : [];
         }
 
-        let enrichedUsers = users;
-        if (dir) {
-          const nameMap = await getClientNames(
-            token,
-            users.map((u: any) =>
-              String(u.client_id || u.clientId || u.clientID || u.client || ""),
-            ),
-            controller.signal,
-          );
-          enrichedUsers = users.map((u: any) => {
-            const clientName =
-              nameMap[
-                String(
-                  u.client_id || u.clientId || u.clientID || u.client || "",
-                )
-              ] ||
-              u.nama_client ||
-              u.client_name ||
-              u.client;
-            return {
-              ...u,
-              nama_client: clientName,
-              client_name: clientName,
-            };
-          });
-        }
-
-        const totalUser = enrichedUsers.length;
-        const totalIGPost = Number(statsData.instagramPosts) || 0;
+        const totalUser = users.length;
+        const totalIGPost = Number((statsData as any).instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         let totalSudahLike = 0;
         let totalKurangLike = 0;
         let totalBelumLike = 0;
         let totalTanpaUsername = 0;
-        enrichedUsers.forEach((u: any) => {
+        users.forEach((u: any) => {
           const username = String(u.username || "").trim();
           if (!username) {
             totalTanpaUsername += 1;
@@ -255,7 +265,7 @@ export default function useInstagramEngagement() {
           totalTanpaUsername,
           totalIGPost,
         });
-        setChartData(enrichedUsers);
+        setChartData(users);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err.message || err));
@@ -272,18 +282,11 @@ export default function useInstagramEngagement() {
 
   return {
     chartData,
-    loading,
-    error,
-    viewBy,
-    setViewBy,
-    customDate,
-    setCustomDate,
-    fromDate,
-    setFromDate,
-    toDate,
-    setToDate,
+    igPosts,
     rekapSummary,
     isDirectorate,
     clientName,
+    loading,
+    error,
   };
 }

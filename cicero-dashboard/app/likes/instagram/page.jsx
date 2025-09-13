@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Loader from "@/components/Loader";
 import ChartBox from "@/components/likes/instagram/ChartBox";
 import SummaryItem from "@/components/likes/instagram/SummaryItem";
@@ -8,7 +9,7 @@ import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import useInstagramEngagement from "@/hooks/useInstagramEngagement";
+import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
 import {
@@ -27,22 +28,20 @@ const LIKE_THRESHOLD = Number(
 
 export default function InstagramEngagementInsightPage() {
   useRequireAuth();
+  const [viewBy, setViewBy] = useState("today");
+  const today = new Date().toISOString().split("T")[0];
+  const [customDate, setCustomDate] = useState(today);
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
+
   const {
     chartData,
     loading,
     error,
-    viewBy,
-    setViewBy,
-    customDate,
-    setCustomDate,
-    fromDate,
-    setFromDate,
-    toDate,
-    setToDate,
     rekapSummary,
     isDirectorate,
     clientName,
-  } = useInstagramEngagement();
+  } = useInstagramLikesData({ viewBy, customDate, fromDate, toDate });
 
   const viewOptions = VIEW_OPTIONS;
   if (loading) return <Loader />;
