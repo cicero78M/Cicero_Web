@@ -19,7 +19,7 @@ import {
 import { groupUsersByKelompok } from "@/utils/grouping";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 import { User, Instagram, Music, RefreshCw } from "lucide-react";
 
 export default function UserInsightPage() {

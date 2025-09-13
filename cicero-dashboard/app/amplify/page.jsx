@@ -11,7 +11,7 @@ import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 import { Link as LinkIcon, User, Check, X, ArrowRight } from "lucide-react";
 
 export default function AmplifikasiLinkPage() {

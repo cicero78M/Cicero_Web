@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 import { getRekapAmplify, getClientProfile, getClientNames } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapAmplifikasi from "@/components/RekapAmplifikasi";

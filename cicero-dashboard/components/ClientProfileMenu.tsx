@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
+import useAuth from "@/hooks/useAuth";
 
 export default function ClientProfileMenu() {
   const { profile } = useAuth();
