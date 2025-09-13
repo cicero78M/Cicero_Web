@@ -172,9 +172,9 @@ export default function useInstagramLikesData({
                       "",
                   ),
                 )
-                .filter(Boolean),
+                .filter(Boolean) as string[],
             ),
-          );
+          ) as string[];
           if (!clientIds.includes(String(client_id))) {
             clientIds.push(String(client_id));
           }
