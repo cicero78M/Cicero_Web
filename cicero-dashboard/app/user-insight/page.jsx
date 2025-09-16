@@ -47,6 +47,44 @@ export default function UserInsightPage() {
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [chartPolres, setChartPolres] = useState([]);
 
+  const getHighestFillRatio = (entry) => {
+    if (!entry || !entry.total) {
+      return 0;
+    }
+    const instagramFilled = entry.instagramFilled || 0;
+    const tiktokFilled = entry.tiktokFilled || 0;
+    return Math.max(instagramFilled, tiktokFilled) / entry.total;
+  };
+
+  const compareByFillRatio = (a, b) => {
+    const ratioDiff = getHighestFillRatio(b) - getHighestFillRatio(a);
+    if (ratioDiff !== 0) {
+      return ratioDiff;
+    }
+    const totalDiff = (b.total || 0) - (a.total || 0);
+    if (totalDiff !== 0) {
+      return totalDiff;
+    }
+    const nameA = (a.divisi || a.nama_client || "").toString();
+    const nameB = (b.divisi || b.nama_client || "").toString();
+    return nameA.localeCompare(nameB);
+  };
+
+  const getDirectoratePriority = (entry) => {
+    const name = (entry.divisi || "").toString().trim();
+    if (name.toUpperCase().includes("DIREKTORAT BINMAS")) {
+      return 0;
+    }
+    const total = entry.total || 0;
+    if (total > 200) {
+      return 1;
+    }
+    if (total >= 100) {
+      return 2;
+    }
+    return 3;
+  };
+
   useEffect(() => {
     fetchData();
   }, [token, clientId]);
@@ -87,8 +125,7 @@ export default function UserInsightPage() {
             accumulateContactStats(map[key], hasIG, hasTT);
           });
           const result = Object.values(map);
-          const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
-          return result.sort((a, b) => score(b) - score(a));
+          return result.sort(compareByFillRatio);
         };
         // Cek tipe client
         const profile =
@@ -167,10 +204,15 @@ export default function UserInsightPage() {
             const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
             accumulateContactStats(clientMap[id], hasIG, hasTT);
           });
-          const score = (o) => o.total + o.instagramFilled + o.tiktokFilled;
-          setChartPolres(
-            Object.values(clientMap).sort((a, b) => score(b) - score(a)),
-          );
+          const sortedClients = Object.values(clientMap).sort((a, b) => {
+            const priorityDiff =
+              getDirectoratePriority(a) - getDirectoratePriority(b);
+            if (priorityDiff !== 0) {
+              return priorityDiff;
+            }
+            return compareByFillRatio(a, b);
+          });
+          setChartPolres(sortedClients);
         } else {
           const grouped = groupUsersByKelompok(processedUsers);
           setChartKelompok({
