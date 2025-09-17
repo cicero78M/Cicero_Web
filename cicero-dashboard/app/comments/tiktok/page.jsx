@@ -52,6 +52,16 @@ export default function TiktokEngagementInsightPage() {
 
   const viewOptions = VIEW_OPTIONS;
 
+  const getUserRole = (user) =>
+    String(
+      user?.role ||
+        user?.user_role ||
+        user?.userRole ||
+        user?.roleName ||
+        user?.role_name ||
+        "",
+    ).toLowerCase();
+
   useEffect(() => {
     setLoading(true);
     setError("");
@@ -177,6 +187,10 @@ export default function TiktokEngagementInsightPage() {
             : Array.isArray(rekapRes)
             ? rekapRes
             : [];
+        }
+
+        if (isDitbinmas) {
+          users = users.filter((u) => getUserRole(u) === "ditbinmas");
         }
 
         let enrichedUsers = users;
