@@ -152,6 +152,16 @@ export default function ChartDivisiAbsensi({
   });
 
   const DIRECTORATE_NAME = "direktorat binmas";
+  const normalizeClientName = (name = "") =>
+    String(name).toLowerCase().replace(/\s+/g, " ").trim();
+  const isDirektoratBinmas = (name = "") => {
+    const normalized = normalizeClientName(name);
+    if (!normalized.startsWith(DIRECTORATE_NAME)) {
+      return false;
+    }
+    const nextChar = normalized.charAt(DIRECTORATE_NAME.length);
+    return nextChar === "" || /[^a-z0-9]/.test(nextChar);
+  };
   const toUsernameCompletion = (entry) => {
     const withUsername =
       entry.user_with_username ??
@@ -159,11 +169,12 @@ export default function ChartDivisiAbsensi({
     return entry.total_user ? withUsername / entry.total_user : 0;
   };
   const getUserBucket = (totalUser) => {
-    if (totalUser > 250) return 1;
-    if (totalUser > 200) return 2;
-    if (totalUser > 150) return 3;
-    if (totalUser > 100) return 4;
-    if (totalUser > 50) return 5;
+    const count = Number(totalUser) || 0;
+    if (count > 250) return 1;
+    if (count >= 200) return 2;
+    if (count >= 150) return 3;
+    if (count >= 100) return 4;
+    if (count >= 50) return 5;
     return 6;
   };
 
@@ -174,8 +185,8 @@ export default function ChartDivisiAbsensi({
       const isDirectorateSort = groupBy === "client_id";
 
       if (isDirectorateSort) {
-        const isBinmasA = nameA.toLowerCase() === DIRECTORATE_NAME;
-        const isBinmasB = nameB.toLowerCase() === DIRECTORATE_NAME;
+        const isBinmasA = isDirektoratBinmas(nameA);
+        const isBinmasB = isDirektoratBinmas(nameB);
         if (isBinmasA !== isBinmasB) {
           return isBinmasA ? -1 : 1;
         }
