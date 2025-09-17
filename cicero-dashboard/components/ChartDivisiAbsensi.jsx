@@ -191,6 +191,12 @@ export default function ChartDivisiAbsensi({
           return isBinmasA ? -1 : 1;
         }
 
+        const totalLikesA = Number(a.total_value) || 0;
+        const totalLikesB = Number(b.total_value) || 0;
+        if (totalLikesA !== totalLikesB) {
+          return totalLikesB - totalLikesA;
+        }
+
         const bucketA = getUserBucket(a.total_user);
         const bucketB = getUserBucket(b.total_user);
         if (bucketA !== bucketB) {
