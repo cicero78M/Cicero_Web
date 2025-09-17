@@ -269,6 +269,17 @@ export default function TiktokEngagementInsightPage() {
     );
 
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
+  const DIRECTORATE_NAME = "direktorat binmas";
+  const normalizeClientName = (name = "") =>
+    String(name).toLowerCase().replace(/\s+/g, " ").trim();
+  const isDirektoratBinmas = (name = "") => {
+    const normalized = normalizeClientName(name);
+    if (!normalized.startsWith(DIRECTORATE_NAME)) {
+      return false;
+    }
+    const nextChar = normalized.charAt(DIRECTORATE_NAME.length);
+    return nextChar === "" || /[^a-z0-9]/.test(nextChar);
+  };
 
   function handleCopyRekap() {
     const now = new Date();
@@ -303,7 +314,31 @@ export default function TiktokEngagementInsightPage() {
       return acc;
     }, {});
 
-    const groupLines = Object.entries(groups)
+    const sortedGroupEntries = Object.entries(groups).sort(
+      ([nameA, usersA], [nameB, usersB]) => {
+        const isBinmasA = isDirektoratBinmas(nameA);
+        const isBinmasB = isDirektoratBinmas(nameB);
+        if (isBinmasA !== isBinmasB) {
+          return isBinmasA ? -1 : 1;
+        }
+
+        const totalKomentarA = usersA.reduce(
+          (acc, user) => acc + (Number(user.jumlah_komentar) || 0),
+          0,
+        );
+        const totalKomentarB = usersB.reduce(
+          (acc, user) => acc + (Number(user.jumlah_komentar) || 0),
+          0,
+        );
+        if (totalKomentarA !== totalKomentarB) {
+          return totalKomentarB - totalKomentarA;
+        }
+
+        return nameA.localeCompare(nameB);
+      },
+    );
+
+    const groupLines = sortedGroupEntries
       .map(([name, users]) => {
         const counts = users.reduce(
           (acc, u) => {
