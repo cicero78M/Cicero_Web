@@ -179,24 +179,23 @@ export default function ChartDivisiAbsensi({
   };
 
   const dataChart = Object.values(divisiMap).sort((a, b) => {
-    if (sortBy === "percentage") {
+    const isDirectorateSort = groupBy === "client_id";
+    if (isDirectorateSort) {
       const nameA = String(a[labelKey] || "").trim();
       const nameB = String(b[labelKey] || "").trim();
-      const isDirectorateSort = groupBy === "client_id";
+      const isBinmasA = isDirektoratBinmas(nameA);
+      const isBinmasB = isDirektoratBinmas(nameB);
+      if (isBinmasA !== isBinmasB) {
+        return isBinmasA ? -1 : 1;
+      }
 
-      if (isDirectorateSort) {
-        const isBinmasA = isDirektoratBinmas(nameA);
-        const isBinmasB = isDirektoratBinmas(nameB);
-        if (isBinmasA !== isBinmasB) {
-          return isBinmasA ? -1 : 1;
-        }
+      const totalLikesA = Number(a.total_value) || 0;
+      const totalLikesB = Number(b.total_value) || 0;
+      if (totalLikesA !== totalLikesB) {
+        return totalLikesB - totalLikesA;
+      }
 
-        const totalLikesA = Number(a.total_value) || 0;
-        const totalLikesB = Number(b.total_value) || 0;
-        if (totalLikesA !== totalLikesB) {
-          return totalLikesB - totalLikesA;
-        }
-
+      if (sortBy === "percentage") {
         const bucketA = getUserBucket(a.total_user);
         const bucketB = getUserBucket(b.total_user);
         if (bucketA !== bucketB) {
@@ -208,14 +207,16 @@ export default function ChartDivisiAbsensi({
         if (percUsernameA !== percUsernameB) {
           return percUsernameB - percUsernameA;
         }
-
-        if (a.total_user !== b.total_user) {
-          return b.total_user - a.total_user;
-        }
-
-        return nameA.localeCompare(nameB);
       }
 
+      if (a.total_user !== b.total_user) {
+        return b.total_user - a.total_user;
+      }
+
+      return nameA.localeCompare(nameB);
+    }
+
+    if (sortBy === "percentage") {
       const percA = a.total_user ? a.user_sudah / a.total_user : 0;
       const percB = b.total_user ? b.user_sudah / b.total_user : 0;
       return percB - percA;
