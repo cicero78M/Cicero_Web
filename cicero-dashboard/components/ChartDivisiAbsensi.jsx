@@ -115,11 +115,12 @@ export default function ChartDivisiAbsensi({
       groupBy === "client_id"
         ? idKey
         : bersihkanSatfung(u.divisi || "LAINNYA");
-      const display =
-        groupBy === "client_id"
-          ? u.nama_client || u.client_name || u.client || idKey
-          : key;
+    const display =
+      groupBy === "client_id"
+        ? u.nama_client || u.client_name || u.client || idKey
+        : key;
     const jumlah = Number(u[fieldJumlah] || 0);
+    const hasUsername = Boolean(String(u.username || "").trim());
     const sudah = !isZeroPost && jumlah >= effectiveTotal * 0.5;
     const kurang = !sudah && !isZeroPost && jumlah > 0;
     const nilai = jumlah;
@@ -131,9 +132,16 @@ export default function ChartDivisiAbsensi({
         user_kurang: 0,
         user_belum: 0,
         total_value: 0,
+        user_with_username: 0,
+        user_without_username: 0,
       };
     divisiMap[key].total_user += 1;
     divisiMap[key].total_value += nilai;
+    if (hasUsername) {
+      divisiMap[key].user_with_username += 1;
+    } else {
+      divisiMap[key].user_without_username += 1;
+    }
     if (sudah) {
       divisiMap[key].user_sudah += 1;
     } else if (kurang) {
@@ -143,8 +151,54 @@ export default function ChartDivisiAbsensi({
     }
   });
 
+  const DIRECTORATE_NAME = "direktorat binmas";
+  const toUsernameCompletion = (entry) => {
+    const withUsername =
+      entry.user_with_username ??
+      entry.total_user - (entry.user_without_username ?? 0);
+    return entry.total_user ? withUsername / entry.total_user : 0;
+  };
+  const getUserBucket = (totalUser) => {
+    if (totalUser > 250) return 1;
+    if (totalUser > 200) return 2;
+    if (totalUser > 150) return 3;
+    if (totalUser > 100) return 4;
+    if (totalUser > 50) return 5;
+    return 6;
+  };
+
   const dataChart = Object.values(divisiMap).sort((a, b) => {
     if (sortBy === "percentage") {
+      const nameA = String(a[labelKey] || "").trim();
+      const nameB = String(b[labelKey] || "").trim();
+      const isDirectorateSort = groupBy === "client_id";
+
+      if (isDirectorateSort) {
+        const isBinmasA = nameA.toLowerCase() === DIRECTORATE_NAME;
+        const isBinmasB = nameB.toLowerCase() === DIRECTORATE_NAME;
+        if (isBinmasA !== isBinmasB) {
+          return isBinmasA ? -1 : 1;
+        }
+
+        const bucketA = getUserBucket(a.total_user);
+        const bucketB = getUserBucket(b.total_user);
+        if (bucketA !== bucketB) {
+          return bucketA - bucketB;
+        }
+
+        const percUsernameA = toUsernameCompletion(a);
+        const percUsernameB = toUsernameCompletion(b);
+        if (percUsernameA !== percUsernameB) {
+          return percUsernameB - percUsernameA;
+        }
+
+        if (a.total_user !== b.total_user) {
+          return b.total_user - a.total_user;
+        }
+
+        return nameA.localeCompare(nameB);
+      }
+
       const percA = a.total_user ? a.user_sudah / a.total_user : 0;
       const percB = b.total_user ? b.user_sudah / b.total_user : 0;
       return percB - percA;
