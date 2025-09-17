@@ -71,18 +71,32 @@ export default function UserInsightPage() {
   };
 
   const getDirectoratePriority = (entry) => {
-    const name = (entry.divisi || "").toString().trim();
-    if (name.toUpperCase().includes("DIREKTORAT BINMAS")) {
+    const name = (
+      entry.divisi || entry.nama_client || ""
+    )
+      .toString()
+      .trim()
+      .toUpperCase();
+    if (name.includes("DIREKTORAT BINMAS")) {
       return 0;
     }
-    const total = entry.total || 0;
-    if (total > 200) {
+    const total = Number(entry.total) || 0;
+    if (total > 250) {
       return 1;
     }
-    if (total >= 100) {
+    if (total >= 200) {
       return 2;
     }
-    return 3;
+    if (total >= 150) {
+      return 3;
+    }
+    if (total >= 100) {
+      return 4;
+    }
+    if (total >= 50) {
+      return 5;
+    }
+    return 6;
   };
 
   useEffect(() => {
