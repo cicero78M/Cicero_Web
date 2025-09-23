@@ -116,6 +116,7 @@ export default function RekapKomentarTiktokPage() {
     viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError("");
     const token =
@@ -140,6 +141,8 @@ export default function RekapKomentarTiktokPage() {
           date,
           startDate,
           endDate,
+          undefined,
+          controller.signal,
         );
         const statsData = statsRes.data || statsRes;
 
@@ -160,6 +163,7 @@ export default function RekapKomentarTiktokPage() {
           date,
           startDate,
           endDate,
+          controller.signal,
         );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
@@ -171,6 +175,7 @@ export default function RekapKomentarTiktokPage() {
               u.client_id || u.clientId || u.client || u.clientID || "",
             ),
           ),
+          controller.signal,
         );
         const enrichedUsers = users.map((u) => {
           const cid = String(
@@ -209,13 +214,21 @@ export default function RekapKomentarTiktokPage() {
         });
         setChartData(enrichedUsers);
       } catch (err) {
+        if (err?.name === "AbortError") {
+          return;
+        }
         setError("Gagal mengambil data: " + (err.message || err));
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchData();
+    return () => {
+      controller.abort();
+    };
   }, [viewBy, normalizedCustomDate, normalizedRangeStart, normalizedRangeEnd]);
 
   const selectorDateValue =
