@@ -5,13 +5,22 @@ import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
-import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
+import ViewDataSelector, {
+  VIEW_OPTIONS,
+} from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
+
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function RekapLikesIGPage() {
   useRequireAuth();
   const [viewBy, setViewBy] = useState("today");
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalDateString();
   const [customDate, setCustomDate] = useState(today);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
