@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useEffect, useState } from "react";
 import { getClientNames } from "@/utils/api";
+import ChartDataTable from "@/components/ChartDataTable";
 
 // Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
@@ -238,6 +239,55 @@ export default function ChartDivisiAbsensi({
     Math.max(minHeight, barHeight * dataChart.length),
   );
 
+  const numberFormatter = new Intl.NumberFormat("id-ID");
+  const percentFormatter = new Intl.NumberFormat("id-ID", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  const entityColumnLabel =
+    groupBy === "client_id" ? "Client" : "Divisi/Client";
+  const tableColumns = [
+    { key: "entity", header: entityColumnLabel, isRowHeader: true },
+    { key: "total_user", header: labelTotalUser, align: "right" },
+    { key: "user_sudah", header: labelSudah, align: "right" },
+    {
+      key: "user_sudah_pct",
+      header: `${labelSudah} (%)`,
+      align: "right",
+    },
+    { key: "user_kurang", header: labelKurang, align: "right" },
+    {
+      key: "user_kurang_pct",
+      header: `${labelKurang} (%)`,
+      align: "right",
+    },
+    { key: "user_belum", header: labelBelum, align: "right" },
+    {
+      key: "user_belum_pct",
+      header: `${labelBelum} (%)`,
+      align: "right",
+    },
+    { key: "total_value", header: labelTotal, align: "right" },
+  ];
+  const tableRows = dataChart.map((entry) => {
+    const totalUser = entry.total_user ?? 0;
+    const safeRatio = (value) =>
+      totalUser ? Number(value || 0) / totalUser : 0;
+    return {
+      id: entry[labelKey] || entry.divisi,
+      entity: entry[labelKey] || entry.divisi || "-",
+      total_user: numberFormatter.format(entry.total_user ?? 0),
+      user_sudah: numberFormatter.format(entry.user_sudah ?? 0),
+      user_sudah_pct: percentFormatter.format(safeRatio(entry.user_sudah)),
+      user_kurang: numberFormatter.format(entry.user_kurang ?? 0),
+      user_kurang_pct: percentFormatter.format(safeRatio(entry.user_kurang)),
+      user_belum: numberFormatter.format(entry.user_belum ?? 0),
+      user_belum_pct: percentFormatter.format(safeRatio(entry.user_belum)),
+      total_value: numberFormatter.format(entry.total_value ?? 0),
+    };
+  });
+
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
       <div className="w-full px-2 pb-4">
@@ -378,6 +428,11 @@ export default function ChartDivisiAbsensi({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        <ChartDataTable
+          title={title}
+          columns={tableColumns}
+          rows={tableRows}
+        />
       </div>
     </div>
   );
