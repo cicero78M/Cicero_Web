@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
-import { Music, Users, Check, X, Minus } from "lucide-react";
+import { Music, User, MessageCircle, Check, X, Minus, UserX } from "lucide-react";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -13,13 +13,54 @@ function bersihkanSatfung(divisi = "") {
 const PAGE_SIZE = 25;
 
 export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
-  const tidakAdaPost = totalTiktokPost === 0;
-  const totalUser = users.length;
-  const totalSudahKomentar =
-    tidakAdaPost ? 0 : users.filter((u) => Number(u.jumlah_komentar) > 0).length;
-  const totalBelumKomentar = tidakAdaPost
-    ? 0
-    : totalUser - totalSudahKomentar;
+  const totalTiktokPostCount = Number(totalTiktokPost) || 0;
+  const summary = useMemo(() => {
+    const totalUser = users.length;
+    let totalSudahKomentar = 0;
+    let totalKurangKomentar = 0;
+    let totalBelumKomentar = 0;
+    let totalTanpaUsername = 0;
+
+    users.forEach((user) => {
+      const username = String(user.username || "").trim();
+      if (!username) {
+        totalTanpaUsername += 1;
+        return;
+      }
+
+      const jumlahKomentar = Number(user.jumlah_komentar) || 0;
+
+      if (totalTiktokPostCount === 0) {
+        totalBelumKomentar += 1;
+        return;
+      }
+
+      if (jumlahKomentar >= totalTiktokPostCount * 0.5) {
+        totalSudahKomentar += 1;
+      } else if (jumlahKomentar > 0) {
+        totalKurangKomentar += 1;
+      } else {
+        totalBelumKomentar += 1;
+      }
+    });
+
+    return {
+      totalUser,
+      totalSudahKomentar,
+      totalKurangKomentar,
+      totalBelumKomentar,
+      totalTanpaUsername,
+    };
+  }, [users, totalTiktokPostCount]);
+
+  const {
+    totalUser,
+    totalSudahKomentar,
+    totalKurangKomentar,
+    totalBelumKomentar,
+    totalTanpaUsername,
+  } = summary;
+  const tidakAdaPost = totalTiktokPostCount === 0;
 
   const hasSatker = useMemo(
     () =>
@@ -97,37 +138,54 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
 
   return (
     <div className="flex flex-col gap-6 mt-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SummaryCard
-          title="TikTok Post Hari Ini"
-          value={totalTiktokPost}
-          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
-          icon={<Music />}
-          note={
-            tidakAdaPost
-              ? "Tidak ada posting aktif. Tidak diperlukan aksi komentar."
-              : undefined
-          }
+      <div className="bg-gradient-to-tr from-fuchsia-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+        <SummaryStatItem
+          label="Jumlah TikTok Post"
+          value={totalTiktokPostCount}
+          color="fuchsia"
+          icon={<Music className="h-6 w-6 text-fuchsia-400" />}
         />
-        <SummaryCard
-          title="Total User"
+        <SummaryDivider />
+        <SummaryStatItem
+          label="Total User"
           value={totalUser}
-          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
-          icon={<Users />}
+          color="gray"
+          icon={<User className="h-6 w-6 text-gray-400" />}
         />
-        <SummaryCard
-          title="Sudah Komentar"
+        <SummaryDivider />
+        <SummaryStatItem
+          label="Sudah Komentar"
           value={totalSudahKomentar}
-          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
-          icon={<Check />}
+          color="green"
+          icon={<MessageCircle className="h-6 w-6 text-green-500" />}
         />
-        <SummaryCard
-          title="Belum Komentar"
+        <SummaryDivider />
+        <SummaryStatItem
+          label="Kurang Komentar"
+          value={totalKurangKomentar}
+          color="orange"
+          icon={<MessageCircle className="h-6 w-6 text-orange-500" />}
+        />
+        <SummaryDivider />
+        <SummaryStatItem
+          label="Belum Komentar"
           value={totalBelumKomentar}
-          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
-          icon={<X />}
+          color="red"
+          icon={<X className="h-6 w-6 text-red-500" />}
+        />
+        <SummaryDivider />
+        <SummaryStatItem
+          label="Tanpa Username"
+          value={totalTanpaUsername}
+          color="gray"
+          icon={<UserX className="h-6 w-6 text-gray-400" />}
         />
       </div>
+      {tidakAdaPost && (
+        <p className="text-xs text-gray-500 italic text-center md:text-right">
+          Tidak ada posting aktif. Tidak diperlukan aksi komentar.
+        </p>
+      )}
 
       <div className="flex justify-end mb-2">
         <div className="flex flex-col items-end">
@@ -282,21 +340,28 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   );
 }
 
-function SummaryCard({ title, value, color, icon, note }) {
+function SummaryStatItem({ label, value, color = "gray", icon }) {
+  const colorMap = {
+    fuchsia: "text-fuchsia-700",
+    green: "text-green-600",
+    red: "text-red-500",
+    gray: "text-gray-700",
+    orange: "text-orange-500",
+  };
+
   return (
-    <div
-      className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}
-    >
-      <div className="flex items-center gap-2 text-3xl font-bold">
-        {icon}
-        <span>{value}</span>
+    <div className="flex-1 flex flex-col items-center justify-center py-2 text-center">
+      <div className="mb-1 flex items-center justify-center">{icon}</div>
+      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color] || colorMap.gray}`}>
+        {value}
       </div>
-      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">
-        {title}
+      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide">
+        {label}
       </div>
-      {note && (
-        <p className="text-[11px] text-white/80 text-center leading-tight">{note}</p>
-      )}
     </div>
   );
+}
+
+function SummaryDivider() {
+  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2" />;
 }
