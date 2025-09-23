@@ -477,7 +477,7 @@ export default function TiktokEngagementInsightPage() {
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 mb-2">
+            <div className="flex flex-wrap items-center justify-end gap-3 mb-2 w-full">
               <ViewDataSelector
                 value={viewBy}
                 onChange={setViewBy}
