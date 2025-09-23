@@ -366,13 +366,22 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
       {/* Search bar */}
       <div className="flex justify-end mb-2">
-        <input
-          type="text"
-          placeholder="Cari nama, username, divisi, atau client"
-          className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <label
+          className="flex flex-col items-end gap-1 w-full md:w-auto"
+          htmlFor="rekap-likes-ig-search"
+        >
+          <span className="text-sm font-medium text-gray-700">
+            Cari personel Instagram
+          </span>
+          <input
+            id="rekap-likes-ig-search"
+            type="text"
+            placeholder="Cari nama, username, divisi, atau client"
+            className="px-3 py-2 border rounded-lg text-sm w-full md:w-64 shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
       </div>
 
       {/* Tabel */}
