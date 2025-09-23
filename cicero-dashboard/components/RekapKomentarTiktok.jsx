@@ -192,8 +192,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                   </div>
                 </td>
               </tr>
-            ) : (
-              currentRows.map((u, i) => {
+            ) : currentRows.map((u, i) => {
                 const sudahKomentar =
                   tidakAdaPost ? false : Number(u.jumlah_komentar) > 0;
                 const rowClass = tidakAdaPost
@@ -249,7 +248,7 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                     </td>
                   </tr>
                 );
-            })}
+              })}
           </tbody>
         </table>
       </div>
