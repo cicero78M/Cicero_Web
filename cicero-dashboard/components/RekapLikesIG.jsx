@@ -95,6 +95,11 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
   const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  // Reset ke halaman 1 ketika data pengguna berubah dari parent
+  useEffect(() => {
+    setPage(1);
+  }, [users, setPage]);
+
   // Reset ke halaman 1 jika search berubah
   useEffect(() => setPage(1), [search, setPage]);
 
