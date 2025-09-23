@@ -232,7 +232,8 @@ export async function getRekapKomentarTiktok(
   periode: string = "harian",
   tanggal?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  signal?: AbortSignal,
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
@@ -240,7 +241,7 @@ export async function getRekapKomentarTiktok(
   if (endDate) params.append("end_date", endDate);
   const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
 
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`Failed to fetch rekap komentar tiktok: ${errText}`);
