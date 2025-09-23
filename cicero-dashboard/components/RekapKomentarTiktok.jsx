@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
-import { Music, User, MessageCircle, Check, X, Minus, UserX } from "lucide-react";
+import { AlertTriangle, Music, User, Check, X, Minus, UserX } from "lucide-react";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -137,48 +137,43 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   }, [page, totalPages, setPage]);
 
   return (
-    <div className="flex flex-col gap-6 mt-8">
-      <div className="bg-gradient-to-tr from-fuchsia-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
-        <SummaryStatItem
-          label="Jumlah TikTok Post"
+    <div className="flex flex-col gap-6 mt-8 min-h-screen pb-24">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <SummaryCard
+          title="TikTok Post Hari Ini"
           value={totalTiktokPostCount}
-          color="fuchsia"
-          icon={<Music className="h-6 w-6 text-fuchsia-400" />}
+          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
+          icon={<Music className="h-7 w-7" />}
         />
-        <SummaryDivider />
-        <SummaryStatItem
-          label="Total User"
+        <SummaryCard
+          title="Total User"
           value={totalUser}
-          color="gray"
-          icon={<User className="h-6 w-6 text-gray-400" />}
+          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
+          icon={<User className="h-7 w-7" />}
         />
-        <SummaryDivider />
-        <SummaryStatItem
-          label="Sudah Komentar"
+        <SummaryCard
+          title="Sudah Komentar"
           value={totalSudahKomentar}
-          color="green"
-          icon={<MessageCircle className="h-6 w-6 text-green-500" />}
+          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
+          icon={<Check className="h-7 w-7" />}
         />
-        <SummaryDivider />
-        <SummaryStatItem
-          label="Kurang Komentar"
+        <SummaryCard
+          title="Kurang Komentar"
           value={totalKurangKomentar}
-          color="orange"
-          icon={<MessageCircle className="h-6 w-6 text-orange-500" />}
+          color="bg-gradient-to-r from-yellow-400 via-orange-500 to-orange-600 text-white"
+          icon={<AlertTriangle className="h-7 w-7" />}
         />
-        <SummaryDivider />
-        <SummaryStatItem
-          label="Belum Komentar"
+        <SummaryCard
+          title="Belum Komentar"
           value={totalBelumKomentar}
-          color="red"
-          icon={<X className="h-6 w-6 text-red-500" />}
+          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
+          icon={<X className="h-7 w-7" />}
         />
-        <SummaryDivider />
-        <SummaryStatItem
-          label="Tanpa Username"
+        <SummaryCard
+          title="Tanpa Username"
           value={totalTanpaUsername}
-          color="gray"
-          icon={<UserX className="h-6 w-6 text-gray-400" />}
+          color="bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 text-gray-800"
+          icon={<UserX className="h-7 w-7" />}
         />
       </div>
       {tidakAdaPost && (
@@ -340,28 +335,18 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   );
 }
 
-function SummaryStatItem({ label, value, color = "gray", icon }) {
-  const colorMap = {
-    fuchsia: "text-fuchsia-700",
-    green: "text-green-600",
-    red: "text-red-500",
-    gray: "text-gray-700",
-    orange: "text-orange-500",
-  };
-
+function SummaryCard({ title, value, color, icon }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-2 text-center">
-      <div className="mb-1 flex items-center justify-center">{icon}</div>
-      <div className={`text-3xl md:text-4xl font-bold ${colorMap[color] || colorMap.gray}`}>
-        {value}
+    <div
+      className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 text-center ${color}`}
+    >
+      <div className="flex items-center gap-2 text-3xl font-bold">
+        {icon}
+        <span>{value}</span>
       </div>
-      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide">
-        {label}
+      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">
+        {title}
       </div>
     </div>
   );
-}
-
-function SummaryDivider() {
-  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2" />;
 }
