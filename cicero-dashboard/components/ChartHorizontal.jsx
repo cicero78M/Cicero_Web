@@ -10,6 +10,7 @@ import {
   LabelList,
   Legend,
 } from "recharts";
+import ChartDataTable from "@/components/ChartDataTable";
 function bersihkanSatfung(divisi = "") {
   return divisi
     .replace(/polsek\s*/i, "")
@@ -77,6 +78,53 @@ export default function ChartHorizontal({
   // Tinggi chart proporsional
   const barHeight = 34;
   const chartHeight = Math.max(50, barHeight * dataChart.length);
+
+  const numberFormatter = new Intl.NumberFormat("id-ID");
+  const percentFormatter = new Intl.NumberFormat("id-ID", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  const tableColumns = [
+    { key: "divisi", header: "Divisi/Client", isRowHeader: true },
+    { key: "total_user", header: labelTotalUser, align: "right" },
+    { key: "user_sudah", header: labelSudah, align: "right" },
+    {
+      key: "user_sudah_pct",
+      header: `${labelSudah} (%)`,
+      align: "right",
+    },
+    { key: "user_kurang", header: labelKurang, align: "right" },
+    {
+      key: "user_kurang_pct",
+      header: `${labelKurang} (%)`,
+      align: "right",
+    },
+    { key: "user_belum", header: labelBelum, align: "right" },
+    {
+      key: "user_belum_pct",
+      header: `${labelBelum} (%)`,
+      align: "right",
+    },
+    { key: "total_value", header: labelTotal, align: "right" },
+  ];
+  const tableRows = dataChart.map((entry) => {
+    const totalUser = entry.total_user ?? 0;
+    const safeRatio = (value) =>
+      totalUser ? Number(value || 0) / totalUser : 0;
+    return {
+      id: entry.divisi,
+      divisi: entry.divisi || "-",
+      total_user: numberFormatter.format(entry.total_user ?? 0),
+      user_sudah: numberFormatter.format(entry.user_sudah ?? 0),
+      user_sudah_pct: percentFormatter.format(safeRatio(entry.user_sudah)),
+      user_kurang: numberFormatter.format(entry.user_kurang ?? 0),
+      user_kurang_pct: percentFormatter.format(safeRatio(entry.user_kurang)),
+      user_belum: numberFormatter.format(entry.user_belum ?? 0),
+      user_belum_pct: percentFormatter.format(safeRatio(entry.user_belum)),
+      total_value: numberFormatter.format(entry.total_value ?? 0),
+    };
+  });
 
   return (
     <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
@@ -165,6 +213,11 @@ export default function ChartHorizontal({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        <ChartDataTable
+          title={title}
+          columns={tableColumns}
+          rows={tableRows}
+        />
       </div>
     </div>
   );
