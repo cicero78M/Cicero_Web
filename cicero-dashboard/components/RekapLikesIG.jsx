@@ -399,64 +399,88 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             </tr>
           </thead>
           <tbody>
-            {currentRows.map((u, i) => {
-              const username = String(u.username || "").trim();
-              let rowClass = "bg-red-50";
-              let statusEl = (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                  <X className="w-3 h-3" /> Belum
-                </span>
-              );
-              let jumlahDisplay = u.jumlah_like;
-              if (!username) {
-                rowClass = "bg-gray-50";
-                statusEl = (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-500 text-white font-semibold">
-                    <UserX className="w-3 h-3" /> Tanpa Username
+            {currentRows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={hasClient ? 7 : 6}
+                  className="h-48 py-12 px-4 text-center text-sm text-gray-500"
+                >
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="font-medium">
+                      Data tidak ditemukan untuk filter saat ini.
+                    </p>
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch("")}
+                        className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+                      >
+                        Reset pencarian
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              currentRows.map((u, i) => {
+                const username = String(u.username || "").trim();
+                let rowClass = "bg-red-50";
+                let statusEl = (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
+                    <X className="w-3 h-3" /> Belum
                   </span>
                 );
-                jumlahDisplay = 0;
-              } else if (totalIGPost !== 0) {
-                const likes = Number(u.jumlah_like) || 0;
-                if (likes >= totalIGPost * 0.5) {
-                  rowClass = "bg-green-50";
+                let jumlahDisplay = u.jumlah_like;
+                if (!username) {
+                  rowClass = "bg-gray-50";
                   statusEl = (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                      <Check className="w-3 h-3" /> Sudah
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-500 text-white font-semibold">
+                      <UserX className="w-3 h-3" /> Tanpa Username
                     </span>
                   );
-                } else if (likes > 0) {
-                  rowClass = "bg-yellow-50";
-                  statusEl = (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-500 text-white font-semibold">
-                      <AlertTriangle className="w-3 h-3" /> Kurang
-                    </span>
-                  );
+                  jumlahDisplay = 0;
+                } else if (totalIGPost !== 0) {
+                  const likes = Number(u.jumlah_like) || 0;
+                  if (likes >= totalIGPost * 0.5) {
+                    rowClass = "bg-green-50";
+                    statusEl = (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
+                        <Check className="w-3 h-3" /> Sudah
+                      </span>
+                    );
+                  } else if (likes > 0) {
+                    rowClass = "bg-yellow-50";
+                    statusEl = (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-500 text-white font-semibold">
+                        <AlertTriangle className="w-3 h-3" /> Kurang
+                      </span>
+                    );
+                  }
                 }
-              }
 
-              return (
-                <tr key={u.user_id} className={rowClass}>
-                  <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                  {hasClient && (
+                return (
+                  <tr key={u.user_id} className={rowClass}>
+                    <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                    {hasClient && (
+                      <td className="py-1 px-2">
+                        {u.nama_client || u.client_name || u.client || "-"}
+                      </td>
+                    )}
                     <td className="py-1 px-2">
-                      {u.nama_client || u.client_name || u.client || "-"}
+                      {u.title ? `${u.title} ${u.nama}` : u.nama}
                     </td>
-                  )}
-                  <td className="py-1 px-2">
-                    {u.title ? `${u.title} ${u.nama}` : u.nama}
-                  </td>
-                  <td className="py-1 px-2 font-mono text-blue-700">@{u.username}</td>
-                  <td className="py-1 px-2">
-                    <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
-                      {u.divisi || "-"}
-                    </span>
-                  </td>
-                  <td className="py-1 px-2 text-center">{statusEl}</td>
-                  <td className="py-1 px-2 text-center font-bold">{jumlahDisplay}</td>
-                </tr>
-              );
-            })}
+                    <td className="py-1 px-2 font-mono text-blue-700">@{u.username}</td>
+                    <td className="py-1 px-2">
+                      <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
+                        {u.divisi || "-"}
+                      </span>
+                    </td>
+                    <td className="py-1 px-2 text-center">{statusEl}</td>
+                    <td className="py-1 px-2 text-center font-bold">{jumlahDisplay}</td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
