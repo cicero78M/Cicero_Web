@@ -31,6 +31,11 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
 
 
   const [search, setSearch] = useState("");
+  const searchInputId = "rekap-komentar-tiktok-search";
+  const searchHelpId = "rekap-komentar-tiktok-search-help";
+  const searchDescription = hasSatker
+    ? "Pencarian mencakup nama, username, divisi, atau satker."
+    : "Pencarian mencakup nama, username, atau divisi.";
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
     return users.filter(
@@ -125,17 +130,27 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
       </div>
 
       <div className="flex justify-end mb-2">
-        <input
-          type="text"
-          placeholder={
-            hasSatker
-              ? "Cari nama, username, divisi, atau satker"
-              : "Cari nama, username, atau divisi"
-          }
-          className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-pink-300"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex flex-col items-end">
+          <label htmlFor={searchInputId} className="sr-only">
+            Cari komentar TikTok
+          </label>
+          <p id={searchHelpId} className="sr-only">
+            {searchDescription}
+          </p>
+          <input
+            id={searchInputId}
+            type="text"
+            placeholder={
+              hasSatker
+                ? "Cari nama, username, divisi, atau satker"
+                : "Cari nama, username, atau divisi"
+            }
+            aria-describedby={searchHelpId}
+            className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-pink-300"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       {tidakAdaPost && (
