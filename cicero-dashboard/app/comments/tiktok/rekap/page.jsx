@@ -251,7 +251,7 @@ export default function RekapKomentarTiktokPage() {
               Kembali
             </Link>
           </div>
-          <div className="flex items-center justify-end gap-3 mb-2">
+          <div className="flex flex-wrap items-center justify-start md:justify-end gap-3 mb-2">
             <ViewDataSelector
               value={viewBy}
               onChange={handleViewChange}
