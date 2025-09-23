@@ -432,6 +432,17 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
   const barPosition = isHorizontal ? "right" : "top";
   const perItem = 35 * thicknessMultiplier;
   const height = isHorizontal ? Math.max(minHeight, perItem * data.length) : 300;
+  const longestLabelLength = data.reduce(
+    (max, item) => Math.max(max, (item?.divisi || "").length),
+    0,
+  );
+  const estimatedCharWidth = 7;
+  const horizontalLabelWidth = isHorizontal
+    ? Math.max(140, Math.min(320, longestLabelLength * estimatedCharWidth + 32))
+    : undefined;
+  const chartMargin = isHorizontal
+    ? { top: 4, right: 20, left: 4, bottom: 8 }
+    : { top: 4, right: 20, left: 4, bottom: 52 };
 
   return (
     <div className="w-full h-full">
@@ -439,36 +450,33 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
         <BarChart
           data={data}
           layout={isHorizontal ? "vertical" : "horizontal"}
-          margin={{ top: 4, right: 20, left: 4, bottom: 4 }}
+          margin={chartMargin}
           barCategoryGap="16%"
         >
           <CartesianGrid strokeDasharray="3 3" />
           {isHorizontal ? (
             <XAxis type="number" />
           ) : (
-            <XAxis dataKey="divisi" interval={0} />
+            <XAxis
+              dataKey="divisi"
+              interval={0}
+              height={90}
+              tickMargin={12}
+              tick={<CustomAxisTick orientation="vertical" />}
+            />
           )}
           {isHorizontal ? (
             <YAxis
               dataKey="divisi"
               type="category"
-              width={220}
+              width={horizontalLabelWidth}
               interval={0}
-              tick={({ x, y, payload }) => (
-                <>
-                  <title>{payload.value}</title>
-                  <text
-                    x={x - 200}
-                    y={y + 10}
-                    fontSize={12}
-                    fontWeight={700}
-                    fill="#1e293b"
-                    textAnchor="start"
-                  >
-                    {payload.value}
-                  </text>
-                </>
-              )}
+              tick={
+                <CustomAxisTick
+                  orientation="horizontal"
+                  maxWidth={horizontalLabelWidth - 24}
+                />
+              }
             />
           ) : (
             <YAxis allowDecimals={false} />
@@ -525,6 +533,73 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
         </BarChart>
       </ResponsiveContainer>
     </div>
+  );
+}
+
+function CustomAxisTick({
+  x = 0,
+  y = 0,
+  payload = {},
+  orientation = "vertical",
+  maxWidth = 160,
+}) {
+  const value = (payload?.value ?? "").toString();
+  const words = value.split(/\s+/).filter(Boolean);
+
+  if (orientation === "vertical") {
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <title>{value}</title>
+        <text
+          transform="rotate(-40)"
+          textAnchor="end"
+          fill="#1e293b"
+          fontSize={12}
+          fontWeight={600}
+        >
+          {(words.length > 0 ? words : [value]).map((word, index) => (
+            <tspan x={0} dy={index === 0 ? 0 : 14} key={`${word}-${index}`}>
+              {word}
+            </tspan>
+          ))}
+        </text>
+      </g>
+    );
+  }
+
+  const estimatedCharWidth = 7;
+  const maxCharsPerLine = Math.max(4, Math.floor(maxWidth / estimatedCharWidth));
+  const lines = [];
+  let currentLine = "";
+
+  (words.length > 0 ? words : [value]).forEach((word) => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (testLine.length <= maxCharsPerLine) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      currentLine = word;
+    }
+  });
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  const textStartX = x - maxWidth + 8;
+
+  return (
+    <g transform={`translate(${textStartX},${y})`}>
+      <title>{value}</title>
+      <text textAnchor="start" fill="#1e293b" fontSize={12} fontWeight={600}>
+        {lines.map((line, index) => (
+          <tspan key={`${line}-${index}`} x={0} dy={index === 0 ? 4 : 14}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    </g>
   );
 }
 
