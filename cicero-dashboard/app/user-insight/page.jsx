@@ -21,6 +21,7 @@ import { accumulateContactStats } from "@/utils/contactStats";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
+import { showToast } from "@/utils/showToast";
 import { User, Instagram, Music, RefreshCw } from "lucide-react";
 
 export default function UserInsightPage() {
@@ -278,11 +279,16 @@ export default function UserInsightPage() {
     }
     const message = lines.join("\n");
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(message).then(() => {
-        alert("Rekap disalin ke clipboard");
-      });
+      navigator.clipboard
+        .writeText(message)
+        .then(() => {
+          showToast("Rekap disalin ke clipboard", "success");
+        })
+        .catch(() => {
+          showToast("Gagal menyalin rekap ke clipboard", "error");
+        });
     } else {
-      alert(message);
+      showToast(message, "info");
     }
   }
 
