@@ -202,7 +202,7 @@ export default function InstagramEngagementInsightPage() {
                 className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-150 text-lg flex items-center gap-2"
               >
                 <Copy className="w-5 h-5" />
-                Rekap Likes
+                Salin Rekap
               </button>
               <Link
                 href="/likes/instagram/rekap"

@@ -111,6 +111,13 @@ export default function RekapLikesIGPage() {
 
   const rekapRef = useRef(null);
 
+  const selectorDateValue =
+    viewBy === "custom_range"
+      ? dateRange
+      : viewBy === "month"
+        ? monthlyDate
+        : dailyDate;
+
   const viewOptions = VIEW_OPTIONS;
 
   if (loading) return <Loader />;
@@ -139,37 +146,26 @@ export default function RekapLikesIGPage() {
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-3 mb-2">
-            <button
-              onClick={() => rekapRef.current?.copyRekap()}
-              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-            >
-              Rekap Likes
-            </button>
             <ViewDataSelector
               value={viewBy}
               onChange={handleViewChange}
               options={viewOptions}
-              date=
-                {viewBy === "custom_range"
-                  ? dateRange
-                  : viewBy === "month"
-                  ? monthlyDate
-                  : dailyDate}
+              date={selectorDateValue}
               onDateChange={handleDateChange}
             />
           </div>
 
           {/* Kirim data dari fetch ke komponen rekap likes */}
-            <RekapLikesIG
-              ref={rekapRef}
-              users={chartData}
-              totalIGPost={rekapSummary.totalIGPost}
-              posts={igPosts}
-              showRekapButton
-              clientName={clientName}
-            />
-          </div>
+          <RekapLikesIG
+            ref={rekapRef}
+            users={chartData}
+            totalIGPost={rekapSummary.totalIGPost}
+            posts={igPosts}
+            showRekapButton
+            clientName={clientName}
+          />
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}

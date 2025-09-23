@@ -323,7 +323,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   }));
 
   return (
-    <div className="flex flex-col gap-6 mt-8 min-h-screen">
+    <div className="flex flex-col gap-6 mt-8 min-h-screen pb-24">
       {/* Ringkasan */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <SummaryCard
@@ -489,19 +489,21 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       )}
 
       {showRekapButton && (
-        <div className="mt-auto flex justify-end gap-2 pt-4">
-          <button
-            onClick={handleDownloadRekap}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
-          >
-            Download Rekap
-          </button>
-          <button
-            onClick={handleCopyRekap}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-          >
-            Salin Rekap
-          </button>
+        <div className="sticky bottom-4 z-20 flex w-full justify-end px-4">
+          <div className="flex w-full max-w-xl flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur-sm sm:flex-row sm:items-center">
+            <button
+              onClick={handleDownloadRekap}
+              className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow sm:w-auto"
+            >
+              Download Rekap
+            </button>
+            <button
+              onClick={handleCopyRekap}
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow sm:w-auto"
+            >
+              Salin Rekap
+            </button>
+          </div>
         </div>
       )}
     </div>
