@@ -72,6 +72,16 @@ export default function RekapLikesIGPage() {
         if (!nextRange.endDate) {
           nextRange.endDate = nextRange.startDate;
         }
+        if (nextRange.startDate && nextRange.endDate) {
+          const start = new Date(nextRange.startDate);
+          const end = new Date(nextRange.endDate);
+          if (start > end) {
+            return {
+              startDate: nextRange.endDate,
+              endDate: nextRange.startDate,
+            };
+          }
+        }
         return nextRange;
       });
       return;
