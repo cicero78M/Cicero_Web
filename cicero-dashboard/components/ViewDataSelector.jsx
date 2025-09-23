@@ -61,6 +61,10 @@ export default function ViewDataSelector({
   const showDateInput = value === "date";
   const showRangeInput = value === "custom_range";
   const showMonthInput = value === "month";
+  const dateInputId = `${id}-date`;
+  const monthInputId = `${id}-month`;
+  const rangeStartId = `${id}-start`;
+  const rangeEndId = `${id}-end`;
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="text-sm font-semibold">
@@ -79,24 +83,40 @@ export default function ViewDataSelector({
         ))}
       </select>
       {showDateInput && (
-        <input
-          type="date"
-          className="border rounded px-2 py-1 text-sm"
-          value={date}
-          onChange={(e) => onDateChange?.(e.target.value)}
-        />
+        <>
+          <label htmlFor={dateInputId} className="sr-only">
+            Pilih tanggal
+          </label>
+          <input
+            id={dateInputId}
+            type="date"
+            className="border rounded px-2 py-1 text-sm"
+            value={date}
+            onChange={(e) => onDateChange?.(e.target.value)}
+          />
+        </>
       )}
       {showMonthInput && (
-        <input
-          type="month"
-          className="border rounded px-2 py-1 text-sm"
-          value={date}
-          onChange={(e) => onDateChange?.(e.target.value)}
-        />
+        <>
+          <label htmlFor={monthInputId} className="sr-only">
+            Pilih bulan
+          </label>
+          <input
+            id={monthInputId}
+            type="month"
+            className="border rounded px-2 py-1 text-sm"
+            value={date}
+            onChange={(e) => onDateChange?.(e.target.value)}
+          />
+        </>
       )}
       {showRangeInput && (
         <>
+          <label htmlFor={rangeStartId} className="sr-only">
+            Mulai
+          </label>
           <input
+            id={rangeStartId}
             type="date"
             className="border rounded px-2 py-1 text-sm"
             value={date?.startDate || ""}
@@ -104,7 +124,11 @@ export default function ViewDataSelector({
               onDateChange?.({ ...date, startDate: e.target.value })
             }
           />
+          <label htmlFor={rangeEndId} className="sr-only">
+            Selesai
+          </label>
           <input
+            id={rangeEndId}
             type="date"
             className="border rounded px-2 py-1 text-sm"
             value={date?.endDate || ""}
