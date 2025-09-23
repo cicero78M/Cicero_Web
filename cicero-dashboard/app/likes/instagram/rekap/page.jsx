@@ -17,13 +17,83 @@ function getLocalDateString(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+function getLocalMonthString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
 export default function RekapLikesIGPage() {
   useRequireAuth();
   const [viewBy, setViewBy] = useState("today");
   const today = getLocalDateString();
-  const [customDate, setCustomDate] = useState(today);
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
+  const currentMonth = getLocalMonthString();
+  const [dailyDate, setDailyDate] = useState(today);
+  const [monthlyDate, setMonthlyDate] = useState(currentMonth);
+  const [dateRange, setDateRange] = useState({
+    startDate: today,
+    endDate: today,
+  });
+
+  const handleViewChange = (nextView) => {
+    setViewBy((prevView) => {
+      if (nextView === "today") {
+        setDailyDate(today);
+      }
+      if (nextView === "date" && prevView !== "date") {
+        setDailyDate(today);
+      }
+      if (nextView === "month" && prevView !== "month") {
+        setMonthlyDate(currentMonth);
+      }
+      if (nextView === "custom_range" && prevView !== "custom_range") {
+        setDateRange({
+          startDate: today,
+          endDate: today,
+        });
+      }
+      return nextView;
+    });
+  };
+
+  const handleDateChange = (val) => {
+    if (viewBy === "custom_range") {
+      if (!val || typeof val !== "object") {
+        return;
+      }
+      setDateRange((prev) => {
+        const nextRange = {
+          startDate: val.startDate ?? prev.startDate ?? today,
+          endDate: val.endDate ?? prev.endDate ?? prev.startDate ?? today,
+        };
+        if (!nextRange.startDate) {
+          nextRange.startDate = today;
+        }
+        if (!nextRange.endDate) {
+          nextRange.endDate = nextRange.startDate;
+        }
+        return nextRange;
+      });
+      return;
+    }
+    if (viewBy === "month") {
+      setMonthlyDate(val || currentMonth);
+      return;
+    }
+    setDailyDate(val || today);
+  };
+
+  const normalizedDailyDate = dailyDate || today;
+  const normalizedMonthlyDate = monthlyDate || currentMonth;
+  const normalizedRangeStart = dateRange.startDate || today;
+  const normalizedRangeEnd = dateRange.endDate || normalizedRangeStart;
+  const normalizedRange = {
+    startDate: normalizedRangeStart,
+    endDate: normalizedRangeEnd,
+  };
+
+  const normalizedCustomDate =
+    viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
 
   const {
     chartData,
@@ -32,7 +102,12 @@ export default function RekapLikesIGPage() {
     rekapSummary,
     igPosts,
     clientName,
-  } = useInstagramLikesData({ viewBy, customDate, fromDate, toDate });
+  } = useInstagramLikesData({
+    viewBy,
+    customDate: normalizedCustomDate,
+    fromDate: normalizedRange.startDate,
+    toDate: normalizedRange.endDate,
+  });
 
   const rekapRef = useRef(null);
 
@@ -72,20 +147,15 @@ export default function RekapLikesIGPage() {
             </button>
             <ViewDataSelector
               value={viewBy}
-              onChange={setViewBy}
+              onChange={handleViewChange}
               options={viewOptions}
               date=
                 {viewBy === "custom_range"
-                  ? { startDate: fromDate, endDate: toDate }
-                  : customDate}
-              onDateChange={(val) => {
-                if (viewBy === "custom_range") {
-                  setFromDate(val.startDate || "");
-                  setToDate(val.endDate || "");
-                } else {
-                  setCustomDate(val);
-                }
-              }}
+                  ? dateRange
+                  : viewBy === "month"
+                  ? monthlyDate
+                  : dailyDate}
+              onDateChange={handleDateChange}
             />
           </div>
 
