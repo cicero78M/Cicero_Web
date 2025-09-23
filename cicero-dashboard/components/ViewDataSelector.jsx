@@ -68,15 +68,20 @@ export default function ViewDataSelector({
   const rangeEndId = `${id}-end`;
   return (
     <div
-      className={`flex items-center gap-2 ${disabled ? "opacity-60" : ""}`}
+      className={`flex flex-wrap items-center gap-2 justify-between sm:justify-start w-full ${
+        disabled ? "opacity-60" : ""
+      }`}
       aria-disabled={disabled}
     >
-      <label htmlFor={id} className="text-sm font-semibold">
+      <label
+        htmlFor={id}
+        className="text-sm font-semibold w-full sm:w-auto"
+      >
         View Data By:
       </label>
       <select
         id={id}
-        className="border rounded px-2 py-1 text-sm"
+        className="border rounded px-2 py-1 text-sm w-full sm:w-auto"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
@@ -95,7 +100,7 @@ export default function ViewDataSelector({
           <input
             id={dateInputId}
             type="date"
-            className="border rounded px-2 py-1 text-sm"
+            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -110,7 +115,7 @@ export default function ViewDataSelector({
           <input
             id={monthInputId}
             type="month"
-            className="border rounded px-2 py-1 text-sm"
+            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -125,7 +130,7 @@ export default function ViewDataSelector({
           <input
             id={rangeStartId}
             type="date"
-            className="border rounded px-2 py-1 text-sm"
+            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
             value={date?.startDate || ""}
             onChange={(e) =>
               onDateChange?.({ ...date, startDate: e.target.value })
@@ -138,7 +143,7 @@ export default function ViewDataSelector({
           <input
             id={rangeEndId}
             type="date"
-            className="border rounded px-2 py-1 text-sm"
+            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
             value={date?.endDate || ""}
             onChange={(e) =>
               onDateChange?.({ ...date, endDate: e.target.value })
