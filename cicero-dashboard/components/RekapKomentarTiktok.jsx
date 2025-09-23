@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
-import { Music, Users, Check, X } from "lucide-react";
+import { Music, Users, Check, X, Minus } from "lucide-react";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -13,12 +13,13 @@ function bersihkanSatfung(divisi = "") {
 const PAGE_SIZE = 25;
 
 export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
+  const tidakAdaPost = totalTiktokPost === 0;
   const totalUser = users.length;
   const totalSudahKomentar =
-    totalTiktokPost === 0
-      ? 0
-      : users.filter((u) => Number(u.jumlah_komentar) > 0).length;
-  const totalBelumKomentar = totalUser - totalSudahKomentar;
+    tidakAdaPost ? 0 : users.filter((u) => Number(u.jumlah_komentar) > 0).length;
+  const totalBelumKomentar = tidakAdaPost
+    ? 0
+    : totalUser - totalSudahKomentar;
 
   const hasSatker = useMemo(
     () =>
@@ -73,6 +74,11 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           value={totalTiktokPost}
           color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
           icon={<Music />}
+          note={
+            tidakAdaPost
+              ? "Tidak ada posting aktif. Tidak diperlukan aksi komentar."
+              : undefined
+          }
         />
         <SummaryCard
           title="Total User"
@@ -108,6 +114,13 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
         />
       </div>
 
+      {tidakAdaPost && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+          Tidak ada posting TikTok yang perlu dikomentari hari ini. Tim kamu bisa
+          beristirahat sejenak.
+        </div>
+      )}
+
       <div className="relative overflow-x-auto rounded-xl shadow">
         <table className="w-full text-sm text-left">
           <thead className="sticky top-0 bg-gray-50 z-10">
@@ -124,13 +137,21 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           <tbody>
             {currentRows.map((u, i) => {
               const sudahKomentar =
-                totalTiktokPost === 0
-                  ? false
-                  : Number(u.jumlah_komentar) > 0;
+                tidakAdaPost ? false : Number(u.jumlah_komentar) > 0;
+              const rowClass = tidakAdaPost
+                ? "bg-gray-50"
+                : sudahKomentar
+                ? "bg-green-50"
+                : "bg-red-50";
+              const statusClass = tidakAdaPost
+                ? "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-400 text-white font-semibold"
+                : sudahKomentar
+                ? "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold"
+                : "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold";
               return (
                 <tr
                   key={u.user_id}
-                  className={sudahKomentar ? "bg-green-50" : "bg-red-50"}
+                  className={rowClass}
                 >
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                   <td className="py-1 px-2">
@@ -146,20 +167,27 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
                     </span>
                   </td>
                   <td className="py-1 px-2 text-center">
-                    {sudahKomentar ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                        <Check className="w-3 h-3" />
-                        Sudah
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                        <X className="w-3 h-3" />
-                        Belum
-                      </span>
-                    )}
+                    <span className={statusClass}>
+                      {tidakAdaPost ? (
+                        <>
+                          <Minus className="w-3 h-3" />
+                          Tidak ada posting hari ini
+                        </>
+                      ) : sudahKomentar ? (
+                        <>
+                          <Check className="w-3 h-3" />
+                          Sudah
+                        </>
+                      ) : (
+                        <>
+                          <X className="w-3 h-3" />
+                          Belum
+                        </>
+                      )}
+                    </span>
                   </td>
                   <td className="py-1 px-2 text-center font-bold">
-                    {u.jumlah_komentar}
+                    {tidakAdaPost ? "-" : u.jumlah_komentar}
                   </td>
                 </tr>
               );
@@ -197,14 +225,21 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   );
 }
 
-function SummaryCard({ title, value, color, icon }) {
+function SummaryCard({ title, value, color, icon, note }) {
   return (
-    <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
+    <div
+      className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}
+    >
       <div className="flex items-center gap-2 text-3xl font-bold">
         {icon}
         <span>{value}</span>
       </div>
-      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
+      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">
+        {title}
+      </div>
+      {note && (
+        <p className="text-[11px] text-white/80 text-center leading-tight">{note}</p>
+      )}
     </div>
   );
 }
