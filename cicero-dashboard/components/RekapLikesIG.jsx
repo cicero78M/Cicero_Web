@@ -9,6 +9,7 @@ import {
 import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { showToast } from "@/utils/showToast";
 
 const PAGE_SIZE = 25;
 
@@ -104,6 +105,20 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }, [page, totalPages, setPage]);
 
+  function copyToClipboardFallback(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "absolute";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return successful;
+  }
+
   function handleCopyRekap() {
     const now = new Date();
     const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
@@ -166,11 +181,26 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
     const message = lines.join("\n");
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(message).then(() => {
-        alert("Rekap disalin ke clipboard");
-      });
+      navigator.clipboard
+        .writeText(message)
+        .then(() => {
+          showToast("Rekap disalin ke clipboard", "success");
+        })
+        .catch(() => {
+          const fallbackSuccess = copyToClipboardFallback(message);
+          if (fallbackSuccess) {
+            showToast("Rekap disalin ke clipboard", "success");
+          } else {
+            showToast(message, "info");
+          }
+        });
     } else {
-      alert(message);
+      const fallbackSuccess = copyToClipboardFallback(message);
+      if (fallbackSuccess) {
+        showToast("Rekap disalin ke clipboard", "success");
+      } else {
+        showToast(message, "info");
+      }
     }
   }
 
