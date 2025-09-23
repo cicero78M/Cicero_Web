@@ -15,16 +15,33 @@ import ViewDataSelector, {
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
 
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getLocalMonthString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
 export default function RekapKomentarTiktokPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewBy, setViewBy] = useState("today");
-  const today = new Date().toISOString().split("T")[0];
-  const [customDate, setCustomDate] = useState(today);
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
+  const today = getLocalDateString();
+  const currentMonth = getLocalMonthString();
+  const [dailyDate, setDailyDate] = useState(today);
+  const [monthlyDate, setMonthlyDate] = useState(currentMonth);
+  const [dateRange, setDateRange] = useState({
+    startDate: today,
+    endDate: today,
+  });
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -34,6 +51,69 @@ export default function RekapKomentarTiktokPage() {
 
   const viewOptions = VIEW_OPTIONS;
 
+  const handleViewChange = (nextView) => {
+    setViewBy((prevView) => {
+      if (nextView === "today") {
+        setDailyDate(today);
+      }
+      if (nextView === "date" && prevView !== "date") {
+        setDailyDate(today);
+      }
+      if (nextView === "month" && prevView !== "month") {
+        setMonthlyDate(currentMonth);
+      }
+      if (nextView === "custom_range" && prevView !== "custom_range") {
+        setDateRange({
+          startDate: today,
+          endDate: today,
+        });
+      }
+      return nextView;
+    });
+  };
+
+  const handleDateChange = (val) => {
+    if (viewBy === "custom_range") {
+      if (!val || typeof val !== "object") {
+        return;
+      }
+      setDateRange((prev) => {
+        const nextRange = {
+          startDate: val.startDate ?? prev.startDate ?? today,
+          endDate: val.endDate ?? prev.endDate ?? prev.startDate ?? today,
+        };
+        if (!nextRange.startDate) {
+          nextRange.startDate = today;
+        }
+        if (!nextRange.endDate) {
+          nextRange.endDate = nextRange.startDate;
+        }
+        return nextRange;
+      });
+      return;
+    }
+    if (viewBy === "month") {
+      const nextMonth =
+        typeof val === "string" && val
+          ? val.slice(0, 7)
+          : currentMonth;
+      setMonthlyDate(nextMonth || currentMonth);
+      return;
+    }
+    setDailyDate(val || today);
+  };
+
+  const normalizedDailyDate = dailyDate || today;
+  const normalizedMonthlyDate = monthlyDate || currentMonth;
+  const normalizedRangeStart = dateRange.startDate || today;
+  const normalizedRangeEnd = dateRange.endDate || normalizedRangeStart;
+  const normalizedRange = {
+    startDate: normalizedRangeStart,
+    endDate: normalizedRangeEnd,
+  };
+
+  const normalizedCustomDate =
+    viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
 
   useEffect(() => {
     setLoading(true);
@@ -51,9 +131,7 @@ export default function RekapKomentarTiktokPage() {
     async function fetchData() {
       try {
         const selectedDate =
-          viewBy === "custom_range"
-            ? { startDate: fromDate, endDate: toDate }
-            : customDate;
+          viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
         const { periode, date, startDate, endDate } =
           getPeriodeDateForView(viewBy, selectedDate);
         const statsRes = await getDashboardStats(
@@ -138,7 +216,14 @@ export default function RekapKomentarTiktokPage() {
     }
 
     fetchData();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [viewBy, normalizedCustomDate, normalizedRangeStart, normalizedRangeEnd]);
+
+  const selectorDateValue =
+    viewBy === "custom_range"
+      ? normalizedRange
+      : viewBy === "month"
+        ? normalizedMonthlyDate
+        : normalizedDailyDate;
 
   if (loading) return <Loader />;
   if (error)
@@ -169,20 +254,10 @@ export default function RekapKomentarTiktokPage() {
           <div className="flex items-center justify-end gap-3 mb-2">
             <ViewDataSelector
               value={viewBy}
-              onChange={setViewBy}
+              onChange={handleViewChange}
               options={viewOptions}
-              date=
-                {viewBy === "custom_range"
-                  ? { startDate: fromDate, endDate: toDate }
-                  : customDate}
-              onDateChange={(val) => {
-                if (viewBy === "custom_range") {
-                  setFromDate(val.startDate || "");
-                  setToDate(val.endDate || "");
-                } else {
-                  setCustomDate(val);
-                }
-              }}
+              date={selectorDateValue}
+              onDateChange={handleDateChange}
             />
           </div>
 
