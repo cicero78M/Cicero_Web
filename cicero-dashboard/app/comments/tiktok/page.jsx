@@ -31,7 +31,8 @@ import {
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
   const [chartData, setChartData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
@@ -53,7 +54,6 @@ export default function TiktokEngagementInsightPage() {
   const viewOptions = VIEW_OPTIONS;
 
   useEffect(() => {
-    setLoading(true);
     setError("");
     const token =
       typeof window !== "undefined"
@@ -69,12 +69,19 @@ export default function TiktokEngagementInsightPage() {
         : null;
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
-      setLoading(false);
+      setIsInitialLoad(false);
+      setIsRefreshing(false);
       return;
     }
 
     const isDitbinmas = String(role).toLowerCase() === "ditbinmas";
     const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
+
+    if (!isInitialLoad) {
+      setIsRefreshing(true);
+    }
+
+    let isCancelled = false;
 
     async function fetchData() {
       try {
@@ -101,6 +108,7 @@ export default function TiktokEngagementInsightPage() {
           profileRes.client || profileRes.profile || profileRes || {};
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        if (isCancelled) return;
         setIsDirectorate(dir || isDitbinmas);
         setClientName(
           profile.nama ||
@@ -239,6 +247,8 @@ export default function TiktokEngagementInsightPage() {
           }
         });
 
+        if (isCancelled) return;
+
         setRekapSummary({
           totalUser,
           totalSudahKomentar,
@@ -249,16 +259,26 @@ export default function TiktokEngagementInsightPage() {
         });
         setChartData(enrichedUsers);
       } catch (err) {
-        setError("Gagal mengambil data: " + (err.message || err));
+        if (!isCancelled) {
+          setError("Gagal mengambil data: " + (err.message || err));
+        }
       } finally {
-        setLoading(false);
+        if (isCancelled) return;
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
+        setIsRefreshing(false);
       }
     }
 
     fetchData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [viewBy, customDate, fromDate, toDate]);
 
-  if (loading) return <Loader />;
+  if (isInitialLoad) return <Loader />;
   if (error)
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -375,9 +395,25 @@ export default function TiktokEngagementInsightPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div
+      className="min-h-screen bg-gray-100 flex flex-col"
+      aria-busy={isRefreshing}
+    >
       <div className="flex-1 flex items-start justify-center">
-        <div className="w-full max-w-5xl px-2 md:px-8 py-8">
+        <div className="relative w-full max-w-5xl px-2 md:px-8 py-8">
+          {isRefreshing && (
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center sm:justify-end px-2">
+              <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 shadow-md text-pink-700">
+                <span
+                  className="h-4 w-4 rounded-full border-2 border-pink-500 border-t-transparent animate-spin"
+                  aria-hidden="true"
+                ></span>
+                <span className="text-xs font-semibold tracking-wide uppercase">
+                  Memuat data...
+                </span>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-8">
             <h1 className="text-2xl md:text-3xl font-bold text-pink-700 mb-2">
               TikTok Engagement Insight
@@ -445,6 +481,7 @@ export default function TiktokEngagementInsightPage() {
                     setCustomDate(val);
                   }
                 }}
+                disabled={isRefreshing}
               />
             </div>
 
