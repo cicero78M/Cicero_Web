@@ -11,6 +11,7 @@ import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok } from "@/utils/grouping";
+import { showToast } from "@/utils/showToast";
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -301,7 +302,7 @@ export default function TiktokEngagementInsightPage() {
     return nextChar === "" || /[^a-z0-9]/.test(nextChar);
   };
 
-  function handleCopyRekap() {
+  async function handleCopyRekap() {
     const now = new Date();
     const hour = now.getHours();
     let greeting = "Selamat Pagi";
@@ -386,11 +387,24 @@ export default function TiktokEngagementInsightPage() {
     const message = `${greeting},\n\nRekap Akumulasi Komentar TikTok:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah TikTok Post: ${totalTiktokPost}\nJumlah User: ${totalUser}\n✅ Sudah Komentar: ${totalSudahKomentar} user\n⚠️ Kurang Komentar: ${totalKurangKomentar} user\n❌ Belum Komentar: ${totalBelumKomentar} user\n⁉️ Tanpa Username TikTok: ${totalTanpaUsername} user\n\nRekap per Client:\n${groupLines}`;
 
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(message).then(() => {
-        alert("Rekap disalin ke clipboard");
-      });
-    } else {
-      alert(message);
+      try {
+        await navigator.clipboard.writeText(message);
+        showToast("Rekap disalin ke clipboard.", "success");
+        return;
+      } catch (error) {
+        showToast(
+          "Gagal menyalin rekap. Izinkan akses clipboard di browser Anda.",
+          "error",
+        );
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.prompt("Salin rekap komentar secara manual:", message);
+      showToast(
+        "Clipboard tidak tersedia. Silakan salin rekap secara manual.",
+        "info",
+      );
     }
   }
 
