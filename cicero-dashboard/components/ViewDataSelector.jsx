@@ -56,6 +56,7 @@ export default function ViewDataSelector({
   date,
   onDateChange,
   options = VIEW_OPTIONS,
+  disabled = false,
 }) {
   const id = useId();
   const showDateInput = value === "date";
@@ -66,7 +67,10 @@ export default function ViewDataSelector({
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={`flex items-center gap-2 ${disabled ? "opacity-60" : ""}`}
+      aria-disabled={disabled}
+    >
       <label htmlFor={id} className="text-sm font-semibold">
         View Data By:
       </label>
@@ -75,6 +79,7 @@ export default function ViewDataSelector({
         className="border rounded px-2 py-1 text-sm"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -93,6 +98,7 @@ export default function ViewDataSelector({
             className="border rounded px-2 py-1 text-sm"
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
+            disabled={disabled}
           />
         </>
       )}
@@ -107,6 +113,7 @@ export default function ViewDataSelector({
             className="border rounded px-2 py-1 text-sm"
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
+            disabled={disabled}
           />
         </>
       )}
@@ -123,6 +130,7 @@ export default function ViewDataSelector({
             onChange={(e) =>
               onDateChange?.({ ...date, startDate: e.target.value })
             }
+            disabled={disabled}
           />
           <label htmlFor={rangeEndId} className="sr-only">
             Selesai
@@ -135,6 +143,7 @@ export default function ViewDataSelector({
             onChange={(e) =>
               onDateChange?.({ ...date, endDate: e.target.value })
             }
+            disabled={disabled}
           />
         </>
       )}
