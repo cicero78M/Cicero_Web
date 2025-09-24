@@ -1,11 +1,20 @@
 "use client";
 
-import useAuthRedirect from "@/hooks/useAuthRedirect";
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import useAuth from "@/hooks/useAuth";
+
 import DarkModeToggle from "@/components/DarkModeToggle";
+import useAuth from "@/hooks/useAuth";
+import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { normalizeWhatsapp } from "@/utils/api";
 
 export default function LoginPage() {
@@ -26,6 +35,30 @@ export default function LoginPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const router = useRouter();
   const handleTrim = (setter) => (e) => setter(e.target.value.trim());
+
+  const highlightItems = useMemo(
+    () => [
+      {
+        icon: <Sparkles className="h-4 w-4 text-cyan-300" />,
+        title: "Operasional Terpadu",
+        description:
+          "Cicero mengorkestrasi workflow harian, dari laporan lapangan hingga analisis pengendalian.",
+      },
+      {
+        icon: <ShieldCheck className="h-4 w-4 text-emerald-300" />,
+        title: "Keamanan Terkendali",
+        description:
+          "Proteksi berlapis memastikan data sensitif hanya diakses oleh personel berwenang.",
+      },
+      {
+        icon: <Zap className="h-4 w-4 text-amber-300" />,
+        title: "Insight Seketika",
+        description:
+          "Visualisasi realtime menghadirkan intel penting untuk keputusan lapangan yang presisi.",
+      },
+    ],
+    []
+  );
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -83,10 +116,10 @@ export default function LoginPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    const trimmedUsername = username.trim();
-    const trimmedRole = role.trim();
-    const trimmedClientId = client_id.trim();
-    const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
+      const trimmedUsername = username.trim();
+      const trimmedRole = role.trim();
+      const trimmedClientId = client_id.trim();
+      const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
       const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,209 +154,348 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4 relative">
-      <div className="absolute top-4 right-4">
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-50">
+      <div className="absolute top-4 right-4 z-30">
         <DarkModeToggle />
       </div>
-      <form
-        onSubmit={isRegister ? handleRegister : handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm"
-      >
-        <h2 className="mb-6 text-2xl font-bold text-blue-600 text-center">
-          {isRegister ? "Register" : "Login"} Cicero
-        </h2>
-        <div className="mb-4">
-          <label htmlFor="username" className="sr-only">
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onBlur={handleTrim(setUsername)}
-            required
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
-        <div className="mb-4 relative">
-          <label htmlFor="password" className="sr-only">
-            Password
-          </label>
-          <input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onBlur={handleTrim(setPassword)}
-            required
-            autoComplete={isRegister ? "new-password" : "current-password"}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute inset-y-0 right-3 flex items-center text-gray-500"
-            tabIndex={-1}
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-        </div>
-        {isRegister && (
-          <div className="space-y-4">
-            <div className="relative">
-              <label htmlFor="confirm_password" className="sr-only">
-                Konfirmasi Password
-              </label>
-              <input
-                id="confirm_password"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Konfirmasi Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                onBlur={handleTrim(setConfirmPassword)}
-                required
-                autoComplete="new-password"
-                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400 pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500"
-                tabIndex={-1}
-              >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-            <div>
-              <label htmlFor="whatsapp" className="sr-only">
-                Nomor WhatsApp
-              </label>
-              <input
-                id="whatsapp"
-                type="tel"
-                placeholder="Nomor WhatsApp"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                onBlur={handleTrim(setWhatsapp)}
-                required
-                inputMode="tel"
-                autoComplete="tel"
-                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-              />
-            </div>
-            <div>
-              <label htmlFor="role" className="sr-only">
-                Role
-              </label>
-              <input
-                id="role"
-                type="text"
-                list="role-options"
-                placeholder="Role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                onBlur={handleTrim(setRole)}
-                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-              />
-              <datalist id="role-options">
-                <option value="OPERATOR" />
-                <option value="DITBINMAS" />
-                <option value="DITLANTAS" />
-                <option value="BIDHUMAS" />
 
-              </datalist>
+      <motion.div
+        className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-cyan-500/30 blur-[120px]"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.div
+        className="pointer-events-none absolute -right-32 bottom-0 h-[22rem] w-[22rem] rounded-full bg-violet-600/30 blur-[140px]"
+        animate={{ rotate: -360 }}
+        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+      />
+
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
+        <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-[1.1fr_1fr]">
+          <section className="relative flex flex-col justify-between gap-8">
+            <div className="space-y-6">
+              <motion.span
+                className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                Portal Operasional Cicero
+              </motion.span>
+              <motion.h1
+                className="text-4xl font-bold leading-tight text-white md:text-5xl"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+              >
+                Sentral komando untuk <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-500 bg-clip-text text-transparent">respon cepat</span> dan koordinasi berbasis data.
+              </motion.h1>
+              <motion.p
+                className="max-w-xl text-balance text-sm text-slate-200/80 md:text-base"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+              >
+                Kelola operasi, pengawasan publik, dan tindak lanjut strategis secara terintegrasi. Dashboard Cicero memastikan tiap tim menerima informasi relevan untuk mengeksekusi mandat keamanan dengan percaya diri.
+              </motion.p>
             </div>
-            <div>
-              <label htmlFor="client_id" className="sr-only">
-                Client ID
-              </label>
-              <input
-                id="client_id"
-                type="text"
-                list="client-options"
-                placeholder="Client ID"
-                value={client_id}
-                onChange={(e) => setClientId(e.target.value)}
-                onBlur={handleTrim(setClientId)}
-                className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-              />
-              <datalist id="client-options">
-                <option value="DITBINMAS" />
-                <option value="DITLANTAS" />
-                <option value="BIDHUMAS" />
-                <option value="KEDIRI" />
-                <option value="BANGKALAN" />
-                <option value="BANYUWANGI" />
-                <option value="BATU" />
-                <option value="BLITAR" />
-                <option value="BLITAR KOTA" />
-                <option value="BOJONEGORO" />
-                <option value="BONDOWOSO" />
-                <option value="GRESIK" />
-                <option value="JEMBER" />
-                <option value="JOMBANG" />
-                <option value="KEDIRI KOTA" />
-                <option value="KP3 TANJUNG PERAK" />
-                <option value="LAMONGAN" />
-                <option value="LUMAJANG" />
-                <option value="MADIUN" />
-                <option value="MADIUN KOTA" />
-                <option value="MAGETAN" />
-                <option value="MALANG" />
-                <option value="MALANG KOTA" />
-                <option value="MOJOKERTO" />
-                <option value="MOJOKERTO KOTA" />
-                <option value="NGANJUK" />
-                <option value="NGAWI" />
-                <option value="PACITAN" />
-                <option value="PAMEKASAN" />
-                <option value="PASURUAN" />
-                <option value="PASURUAN KOTA" />
-                <option value="PONOROGO" />
-                <option value="PROBOLINGGO" />
-                <option value="PROBOLINGGO KOTA" />
-                <option value="SAMPANG" />
-                <option value="SIDOARJO" />
-                <option value="SITUBONDO" />
-                <option value="SUMENEP" />
-                <option value="SURABAYA" />
-                <option value="TRENGGALEK" />
-                <option value="TUBAN" />
-                <option value="TULUNGAGUNG" />
-              </datalist>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {highlightItems.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.15 * index }}
+                >
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-slate-900/60 px-3 py-1 text-[0.7rem] font-semibold text-white/80">
+                    {item.icon}
+                    {item.title}
+                  </div>
+                  <p className="text-sm text-slate-200/80">
+                    {item.description}
+                  </p>
+                  <motion.div
+                    className="absolute -bottom-24 -right-20 h-32 w-32 rounded-full bg-cyan-400/30 blur-3xl transition-transform duration-500 group-hover:translate-y-16"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 6, repeat: Infinity }}
+                  />
+                </motion.div>
+              ))}
             </div>
-          </div>
-        )}
-        {error && (
-          <div className="text-red-600 text-sm mb-2 text-center">{error}</div>
-        )}
-        {message && (
-          <div className="text-green-600 text-sm mb-2 text-center">{message}</div>
-        )}
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full py-2 rounded-lg text-white font-semibold text-lg transition
-            ${loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}
-          `}
-        >
-          {loading ? (isRegister ? "Registering..." : "Logging in...") : isRegister ? "Register" : "Login"}
-        </button>
-        <div className="text-sm text-center mt-4">
-          {isRegister ? (
-            <button type="button" onClick={() => setIsRegister(false)} className="text-blue-600 hover:underline">
-              Sudah punya akun? Login
-            </button>
-          ) : (
-            <button type="button" onClick={() => setIsRegister(true)} className="text-blue-600 hover:underline">
-              Belum punya akun? Register
-            </button>
-          )}
+
+            <motion.div
+              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-white/10 via-white/5 to-white/10 p-5 backdrop-blur-xl"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-200">
+                <ArrowRight className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Onboarding terarah</p>
+                <p className="text-xs text-slate-200/70">
+                  Tim keamanan Cicero memvalidasi registrasi baru dalam 1x24 jam demi menjaga integritas akses dan tata kelola data.
+                </p>
+              </div>
+            </motion.div>
+          </section>
+
+          <section className="relative">
+            <motion.div
+              className="absolute -right-6 -top-6 hidden h-32 w-32 rounded-full border border-cyan-400/40 lg:block"
+              animate={{ rotate: [0, 12, -8, 0] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="relative z-20 rounded-3xl border border-white/10 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-2xl"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="mb-6 flex items-center justify-between gap-2">
+                <h2 className="text-2xl font-semibold text-white">
+                  {isRegister ? "Aktivasi Akun" : "Masuk Dashboard"}
+                </h2>
+                <div className="flex rounded-full border border-white/10 bg-white/5 p-1 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setIsRegister(false)}
+                    className={`rounded-full px-3 py-1 transition ${
+                      !isRegister ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950" : "text-white/70"
+                    }`}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsRegister(true)}
+                    className={`rounded-full px-3 py-1 transition ${
+                      isRegister ? "bg-gradient-to-r from-violet-500 to-blue-500 text-slate-950" : "text-white/70"
+                    }`}
+                  >
+                    Register
+                  </button>
+                </div>
+              </div>
+
+              <p className="mb-6 text-xs text-slate-200/70">
+                Autentikasi menggunakan kredensial Cicero resmi. Pastikan nomor WhatsApp aktif untuk menerima notifikasi verifikasi dan arahan operasional.
+              </p>
+
+              <form className="space-y-4" onSubmit={isRegister ? handleRegister : handleLogin}>
+                <div>
+                  <label htmlFor="username" className="sr-only">
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    placeholder="Username dinas"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    onBlur={handleTrim(setUsername)}
+                    required
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+                <div className="relative">
+                  <label htmlFor="password" className="sr-only">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={handleTrim(setPassword)}
+                    required
+                    autoComplete={isRegister ? "new-password" : "current-password"}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-4 flex items-center text-white/60"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
+                {isRegister && (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <label htmlFor="confirm_password" className="sr-only">
+                        Konfirmasi Password
+                      </label>
+                      <input
+                        id="confirm_password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Konfirmasi Password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onBlur={handleTrim(setConfirmPassword)}
+                        required
+                        autoComplete="new-password"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-4 flex items-center text-white/60"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <div>
+                      <label htmlFor="whatsapp" className="sr-only">
+                        Nomor WhatsApp
+                      </label>
+                      <input
+                        id="whatsapp"
+                        type="tel"
+                        placeholder="Nomor WhatsApp aktif"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
+                        onBlur={handleTrim(setWhatsapp)}
+                        required
+                        inputMode="tel"
+                        autoComplete="tel"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none"
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="role" className="sr-only">
+                          Role
+                        </label>
+                        <input
+                          id="role"
+                          type="text"
+                          list="role-options"
+                          placeholder="Role penugasan"
+                          value={role}
+                          onChange={(e) => setRole(e.target.value)}
+                          onBlur={handleTrim(setRole)}
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none"
+                        />
+                        <datalist id="role-options">
+                          <option value="OPERATOR" />
+                          <option value="DITBINMAS" />
+                          <option value="DITLANTAS" />
+                          <option value="BIDHUMAS" />
+                        </datalist>
+                      </div>
+                      <div>
+                        <label htmlFor="client_id" className="sr-only">
+                          Client ID
+                        </label>
+                        <input
+                          id="client_id"
+                          type="text"
+                          list="client-options"
+                          placeholder="Satker / Wilayah"
+                          value={client_id}
+                          onChange={(e) => setClientId(e.target.value)}
+                          onBlur={handleTrim(setClientId)}
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none"
+                        />
+                        <datalist id="client-options">
+                          <option value="DITBINMAS" />
+                          <option value="DITLANTAS" />
+                          <option value="BIDHUMAS" />
+                          <option value="KEDIRI" />
+                          <option value="BANGKALAN" />
+                          <option value="BANYUWANGI" />
+                          <option value="BATU" />
+                          <option value="BLITAR" />
+                          <option value="BLITAR KOTA" />
+                          <option value="BOJONEGORO" />
+                          <option value="BONDOWOSO" />
+                          <option value="GRESIK" />
+                          <option value="JEMBER" />
+                          <option value="JOMBANG" />
+                          <option value="KEDIRI KOTA" />
+                          <option value="KP3 TANJUNG PERAK" />
+                          <option value="LAMONGAN" />
+                          <option value="LUMAJANG" />
+                          <option value="MADIUN" />
+                          <option value="MADIUN KOTA" />
+                          <option value="MAGETAN" />
+                          <option value="MALANG" />
+                          <option value="MALANG KOTA" />
+                          <option value="MOJOKERTO" />
+                          <option value="MOJOKERTO KOTA" />
+                          <option value="NGANJUK" />
+                          <option value="NGAWI" />
+                          <option value="PACITAN" />
+                          <option value="PAMEKASAN" />
+                          <option value="PASURUAN" />
+                          <option value="PASURUAN KOTA" />
+                          <option value="PONOROGO" />
+                          <option value="PROBOLINGGO" />
+                          <option value="PROBOLINGGO KOTA" />
+                          <option value="SAMPANG" />
+                          <option value="SIDOARJO" />
+                          <option value="SITUBONDO" />
+                          <option value="SUMENEP" />
+                          <option value="SURABAYA" />
+                          <option value="TRENGGALEK" />
+                          <option value="TUBAN" />
+                          <option value="TULUNGAGUNG" />
+                        </datalist>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-center text-sm text-red-200">
+                    {error}
+                  </div>
+                )}
+                {message && (
+                  <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-center text-sm text-emerald-200">
+                    {message}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full rounded-2xl border border-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg transition focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                    loading ? "opacity-60" : "hover:shadow-xl"
+                  }`}
+                >
+                  {loading
+                    ? isRegister
+                      ? "Memproses registrasi..."
+                      : "Memverifikasi login..."
+                    : isRegister
+                      ? "Buat akun baru"
+                      : "Masuk sekarang"}
+                </button>
+
+                <p className="text-center text-[0.7rem] text-white/50">
+                  Dengan masuk, Anda menyetujui protokol keamanan Cicero dan penggunaan data sesuai kebijakan internal.
+                </p>
+              </form>
+            </motion.div>
+
+            <motion.div
+              className="absolute inset-x-10 top-6 -z-10 h-[90%] rounded-[32px] bg-gradient-to-br from-white/10 via-white/5 to-transparent blur-2xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+            />
+          </section>
         </div>
-      </form>
+      </div>
     </main>
   );
 }
