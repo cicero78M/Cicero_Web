@@ -7,6 +7,7 @@ interface SocialProfileCardProps {
   platform: PlatformKey;
   profile: any;
   postCount?: number;
+  className?: string;
 }
 
 const formatNumber = (value?: number) => {
@@ -22,6 +23,7 @@ export default function SocialProfileCard({
   platform,
   profile,
   postCount = 0,
+  className,
 }: SocialProfileCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -38,8 +40,11 @@ export default function SocialProfileCard({
       : "from-emerald-500/40 via-cyan-500/40 to-blue-500/40";
 
   if (!profile) {
+    const emptyStateClassName =
+      "relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-center text-sm text-slate-300";
+
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-center text-sm text-slate-300">
+      <div className={`${emptyStateClassName}${className ? ` ${className}` : ""}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-slate-800/40 to-transparent" />
         <div className="relative space-y-2">
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/70 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
@@ -77,11 +82,14 @@ export default function SocialProfileCard({
     { label: "Posts", value: formatNumber(postCount) },
   ];
 
+  const baseClassName =
+    "relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(79,70,229,0.2)]";
+
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(79,70,229,0.2)]">
+    <div className={`${baseClassName}${className ? ` ${className}` : ""}`}>
       <div className={`absolute inset-0 bg-gradient-to-br ${platformGradient} opacity-40`} />
       <div className="absolute -right-16 top-10 h-32 w-32 rounded-full bg-white/5 blur-3xl" />
-      <div className="relative space-y-5">
+      <div className="relative flex flex-1 flex-col gap-5">
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative">
             {avatarSrc ? (
