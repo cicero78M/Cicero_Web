@@ -92,8 +92,7 @@ export default function InstagramEngagementInsightPage() {
                       Instagram Engagement Insight
                     </h1>
                     <p className="mt-1 max-w-2xl text-sm text-slate-300">
-                      Pantau performa likes harian secara futuristik dengan visualisasi
-                      yang selaras dengan dashboard utama.
+                      Pantau performa likes dan komentar harian dengan visualisasi chart bar.
                     </p>
                   </div>
                 </header>

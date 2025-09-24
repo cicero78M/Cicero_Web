@@ -152,10 +152,10 @@ export default function RekapLikesIGPage() {
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold tracking-tight text-sky-100">
-                    Rekapitulasi Likes Instagram
+                    Rekapitulasi Engagement Instagram
                   </h1>
                   <p className="mt-1 max-w-2xl text-sm text-slate-300">
-                    Lihat rekap detail keterlibatan likes dari seluruh personel dengan nuansa futuristik yang senada dengan dashboard utama.
+                    Lihat rekap detail keterlibatan likes dan komentar dari seluruh personel.
                   </p>
                 </div>
                 <Link

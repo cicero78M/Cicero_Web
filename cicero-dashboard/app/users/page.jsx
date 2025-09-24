@@ -468,8 +468,7 @@ export default function UserDirectoryPage() {
           <span className="text-xs uppercase tracking-[0.35em] text-cyan-300/70">User Directory</span>
           <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">User Matrix</h1>
           <p className="max-w-2xl text-sm text-slate-300">
-            Kelola personel dan pantau aktivitas akun melalui antarmuka futuristik yang selaras dengan pusat kendali
-            dashboard.
+            Kelola personel dan pantau aktivitas akun Personil.
           </p>
         </div>
 
@@ -550,22 +549,6 @@ export default function UserDirectoryPage() {
                     aria-label="Pencarian pengguna"
                   />
                 </label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-xl border border-slate-700/60 bg-slate-900/80 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-                  aria-label="Filter status user"
-                >
-                  <option value="ALL" className="bg-slate-900 text-slate-100">
-                    Semua Status
-                  </option>
-                  <option value="ACTIVE" className="bg-slate-900 text-slate-100">
-                    Aktif
-                  </option>
-                  <option value="INACTIVE" className="bg-slate-900 text-slate-100">
-                    Nonaktif
-                  </option>
-                </select>
               </div>
             </div>
 

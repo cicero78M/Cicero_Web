@@ -42,13 +42,13 @@ export default function LoginPage() {
         icon: <Sparkles className="h-4 w-4 text-cyan-300" />,
         title: "Operasional Terpadu",
         description:
-          "Cicero mengorkestrasi workflow harian, dari laporan lapangan hingga analisis pengendalian.",
+          "Cicero mengorkestrasi workflow harian, dari laporan lapangan hingga analisis data.",
       },
       {
         icon: <ShieldCheck className="h-4 w-4 text-emerald-300" />,
         title: "Keamanan Terkendali",
         description:
-          "Proteksi berlapis memastikan data sensitif hanya diakses oleh personel berwenang.",
+          "Proteksi berlapis memastikan data sensitif hanya diakses oleh akses yang disetujui.",
       },
     ],
     []
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
               >
-                Kelola operasi, pengawasan publik, dan tindak lanjut strategis secara terintegrasi. Dashboard Cicero memastikan tiap tim menerima informasi relevan untuk mengeksekusi mandat keamanan dengan percaya diri.
+                Kelola Tugas, pengawasan personel, dan tindak lanjut strategis secara terintegrasi. Dashboard Cicero memastikan tiap satker menerima informasi relevan untuk mengeksekusi mandat keamanan dengan percaya diri.
               </motion.p>
             </div>
 
@@ -258,7 +258,7 @@ export default function LoginPage() {
               </div>
 
               <p className="mb-7 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-slate-200/70">
-                Autentikasi menggunakan kredensial Cicero resmi. Pastikan nomor WhatsApp aktif untuk menerima notifikasi verifikasi dan arahan operasional.
+                Autentikasi menggunakan kredensial User Cicero. Pastikan nomor WhatsApp aktif untuk menerima notifikasi verifikasi dan panduan operasional.
               </p>
 
               <form className="space-y-5" onSubmit={isRegister ? handleRegister : handleLogin}>

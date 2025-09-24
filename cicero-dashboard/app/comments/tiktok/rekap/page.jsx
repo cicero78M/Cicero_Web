@@ -276,9 +276,9 @@ export default function RekapKomentarTiktokPage() {
                   Rekapitulasi Komentar TikTok
                 </h1>
                 <p className="max-w-3xl text-sm text-slate-300 md:text-base">
-                  Selaraskan laporan komentar harian hingga rentang tanggal tertentu.
+                  Pantau laporan engagement Tiktok harian / rentang tanggal tertentu.
                   Panel rekap memberikan ringkasan kepatuhan serta detail pengguna
-                  sehingga Anda bisa menindaklanjuti satuan yang belum aktif.
+                  sehingga Anda bisa menindaklanjuti satker dan personil yang belum / kurang aktif.
                 </p>
               </div>
               <Link

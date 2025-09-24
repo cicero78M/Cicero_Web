@@ -332,7 +332,7 @@ export default function UserInsightPage() {
                       USER INSIGHT
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                      Monitor keterisian kanal media sosial secara futuristik dengan tampilan yang selaras dengan dasbor utama.
+                      Pantau Update Data User secara real-time.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

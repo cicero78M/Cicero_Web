@@ -460,12 +460,12 @@ export default function TiktokEngagementInsightPage() {
               TikTok Engagement Command Center
             </h1>
             <p className="max-w-3xl text-sm text-slate-300 md:text-base">
-              Pantau performa komentar personel TikTok untuk{" "}
+              Pantau performa enggagement personel TikTok untuk{" "}
               <span className="font-semibold text-cyan-200">
                 {clientName || "satuan Anda"}
               </span>
               . Gunakan panel ini untuk melihat kepatuhan komentar, memantau
-              divisi yang aktif, dan mengambil tindakan cepat ketika komentar
+              Satker yang aktif / kurang aktif / belum aktif dan mengambil tindakan cepat ketika komentar
               belum terpenuhi.
             </p>
           </div>
