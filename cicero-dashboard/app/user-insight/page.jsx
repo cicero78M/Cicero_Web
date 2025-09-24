@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
 import {
   BarChart,
   Bar,
@@ -410,16 +410,98 @@ function ChartBox({
   minHeight,
   thicknessMultiplier = 1,
 }) {
+  const titleId = useId();
+  const hasData = Array.isArray(data) && data.length > 0;
+
   return (
     <div className="bg-white rounded-xl shadow p-4">
-      <div className="font-bold text-blue-700 mb-2 text-center">{title}</div>
-      {data && data.length > 0 ? (
-        <ContactChart
-          data={data}
-          orientation={orientation}
-          minHeight={minHeight}
-          thicknessMultiplier={thicknessMultiplier}
-        />
+      <h3 id={titleId} className="font-bold text-blue-700 mb-2 text-center">
+        {title}
+      </h3>
+      {hasData ? (
+        <>
+          <ContactChart
+            data={data}
+            orientation={orientation}
+            minHeight={minHeight}
+            thicknessMultiplier={thicknessMultiplier}
+          />
+          <div className="mt-4 overflow-x-auto">
+            <table
+              aria-labelledby={titleId}
+              tabIndex={0}
+              className="min-w-full text-sm text-left text-gray-700 border border-gray-200 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <caption className="sr-only">{title}</caption>
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    Divisi
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    Total User
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    Instagram Terisi
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    Instagram Belum Diisi
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    TikTok Terisi
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    TikTok Belum Diisi
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((item, index) => {
+                  const divisionName =
+                    (item?.divisi || item?.nama_client || "").toString() ||
+                    `Baris ${index + 1}`;
+                  const key = `${divisionName}-${index}`;
+                  return (
+                    <tr
+                      key={key}
+                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <th
+                        scope="row"
+                        className="px-3 py-2 font-medium text-gray-900"
+                      >
+                        {divisionName}
+                      </th>
+                      <td className="px-3 py-2">
+                        {Number(item?.total ?? 0).toLocaleString("id-ID")}
+                      </td>
+                      <td className="px-3 py-2">
+                        {Number(item?.instagramFilled ?? 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {Number(item?.instagramEmpty ?? 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {Number(item?.tiktokFilled ?? 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {Number(item?.tiktokEmpty ?? 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : (
         <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
       )}
