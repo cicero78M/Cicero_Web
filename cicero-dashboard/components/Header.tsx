@@ -29,7 +29,7 @@ export default function Header() {
           href="/dashboard"
           className="group flex items-center gap-3 font-semibold text-sky-100"
         >
-          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-sky-400/50 bg-slate-950/80 shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-shadow group-hover:shadow-[0_0_32px_rgba(125,211,252,0.6)]">
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-sky-200/70 bg-slate-100/90 shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-shadow group-hover:shadow-[0_0_32px_rgba(125,211,252,0.6)]">
             <Image
               src="/CICERO.png"
               alt="CICERO Logo"
