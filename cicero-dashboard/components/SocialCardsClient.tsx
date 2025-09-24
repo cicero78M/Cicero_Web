@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SocialProfileCard from "./SocialProfileCard";
 import SocialPostsCard from "./SocialPostsCard";
 
@@ -47,6 +47,9 @@ export default function SocialCardsClient({
   platformMetrics,
 }: Props) {
   const [platform, setPlatform] = useState<"all" | PlatformKey>("all");
+  const instagramProfileRef = useRef<HTMLDivElement>(null);
+  const tiktokProfileRef = useRef<HTMLDivElement>(null);
+  const [profileCardHeight, setProfileCardHeight] = useState<number | null>(null);
 
   const metrics = useMemo(() => {
     const selectedPlatforms: PlatformKey[] =
@@ -68,24 +71,56 @@ export default function SocialCardsClient({
     metricsWrapperClasses.push("sm:grid-cols-2", "xl:grid-cols-3");
   }
 
-  const renderPlatform = (key: PlatformKey) => (
-    <div
-      key={key}
-      className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
-    >
-      <SocialProfileCard
-        className="h-full"
-        platform={key}
-        profile={key === "instagram" ? igProfile : tiktokProfile}
-        postCount={key === "instagram" ? igPosts.length : tiktokPosts.length}
-      />
-      <SocialPostsCard
-        className="h-full"
-        platform={key}
-        posts={key === "instagram" ? igPosts : tiktokPosts}
-      />
-    </div>
-  );
+  useEffect(() => {
+    if (platform !== "all") {
+      setProfileCardHeight(null);
+      return;
+    }
+
+    const measureHeights = () => {
+      const heights = [instagramProfileRef.current?.offsetHeight ?? 0, tiktokProfileRef.current?.offsetHeight ?? 0];
+      const maxHeight = Math.max(...heights);
+      setProfileCardHeight((prev) => {
+        if (maxHeight <= 0) {
+          return null;
+        }
+        return prev === maxHeight ? prev : maxHeight;
+      });
+    };
+
+    const frame = requestAnimationFrame(measureHeights);
+    window.addEventListener("resize", measureHeights);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", measureHeights);
+    };
+  }, [platform, igProfile, tiktokProfile, igPosts, tiktokPosts]);
+
+  const renderPlatform = (key: PlatformKey) => {
+    const ref = key === "instagram" ? instagramProfileRef : tiktokProfileRef;
+
+    return (
+      <div key={key} className="grid grid-cols-1 gap-6">
+        <div
+          ref={ref}
+          style={{ minHeight: profileCardHeight ? `${profileCardHeight}px` : undefined }}
+        >
+          <SocialProfileCard
+            className="h-full"
+            platform={key}
+            profile={key === "instagram" ? igProfile : tiktokProfile}
+            postCount={key === "instagram" ? igPosts.length : tiktokPosts.length}
+          />
+        </div>
+        <SocialPostsCard
+          className="h-full"
+          platform={key}
+          posts={key === "instagram" ? igPosts : tiktokPosts}
+        />
+      </div>
+    );
+  };
 
   const buttons = [
     { key: "all" as const, label: "Semua" },
