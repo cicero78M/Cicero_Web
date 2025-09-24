@@ -58,14 +58,29 @@ export default function SocialCardsClient({
     }));
   }, [platform, platformMetrics]);
 
+  const metricsWrapperClasses = ["grid grid-cols-1 gap-4", "auto-rows-fr"];
+
+  if (metrics.length === 1) {
+    metricsWrapperClasses.push("mx-auto", "max-w-md", "sm:max-w-xl");
+  } else if (metrics.length === 2) {
+    metricsWrapperClasses.push("sm:grid-cols-2", "xl:grid-cols-2");
+  } else {
+    metricsWrapperClasses.push("sm:grid-cols-2", "xl:grid-cols-3");
+  }
+
   const renderPlatform = (key: PlatformKey) => (
-    <div key={key} className="space-y-6">
+    <div
+      key={key}
+      className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
+    >
       <SocialProfileCard
+        className="h-full"
         platform={key}
         profile={key === "instagram" ? igProfile : tiktokProfile}
         postCount={key === "instagram" ? igPosts.length : tiktokPosts.length}
       />
       <SocialPostsCard
+        className="h-full"
         platform={key}
         posts={key === "instagram" ? igPosts : tiktokPosts}
       />
@@ -110,18 +125,14 @@ export default function SocialCardsClient({
           </div>
         </div>
 
-        <div
-          className={`grid gap-4 ${
-            metrics.length > 1 ? "md:grid-cols-2 xl:grid-cols-3" : "md:grid-cols-2 lg:max-w-lg"
-          }`}
-        >
+        <div className={metricsWrapperClasses.join(" ")}>
           {metrics.map(({ key, metric }) => (
             <div
               key={key}
-              className="relative overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5"
+              className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-900/70 p-5"
             >
               <div className="absolute -top-12 right-0 h-28 w-28 rounded-full bg-cyan-500/10 blur-3xl" />
-              <div className="relative space-y-3">
+              <div className="relative flex flex-1 flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
                     {key}
@@ -155,13 +166,19 @@ export default function SocialCardsClient({
                   <span>{metric ? metric.engagementRate.toFixed(2) : "0.00"}%</span>
                 </div>
                 {metric?.shares && (
-                  <div className="grid grid-cols-3 gap-2 text-[0.65rem] text-slate-400">
-                    <span>Followers {metric.shares.followers.toFixed(1)}%</span>
-                    <span>Likes {metric.shares.likes.toFixed(1)}%</span>
-                    <span>Komentar {metric.shares.comments.toFixed(1)}%</span>
+                  <div className="flex flex-wrap gap-2 text-[0.65rem] text-slate-400">
+                    <span className="rounded-full bg-slate-800/60 px-2 py-1">
+                      Followers {metric.shares.followers.toFixed(1)}%
+                    </span>
+                    <span className="rounded-full bg-slate-800/60 px-2 py-1">
+                      Likes {metric.shares.likes.toFixed(1)}%
+                    </span>
+                    <span className="rounded-full bg-slate-800/60 px-2 py-1">
+                      Komentar {metric.shares.comments.toFixed(1)}%
+                    </span>
                   </div>
                 )}
-                <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+                <div className="mt-auto h-1.5 overflow-hidden rounded-full bg-slate-800">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-300"
                     style={{
@@ -176,9 +193,7 @@ export default function SocialCardsClient({
 
         <div
           className={`grid gap-6 ${
-            platform === "all"
-              ? "lg:grid-cols-2"
-              : "grid-cols-1"
+            platform === "all" ? "lg:grid-cols-2" : "grid-cols-1"
           }`}
         >
           {metrics.map(({ key }) => renderPlatform(key))}
