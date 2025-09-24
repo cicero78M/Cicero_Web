@@ -453,11 +453,8 @@ export default function TiktokEngagementInsightPage() {
 
         <div className="flex flex-1 flex-col gap-10">
           <div className="space-y-3">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-cyan-200">
-              TikTok Command
-            </span>
             <h1 className="text-3xl font-semibold leading-tight text-slate-50 md:text-4xl">
-              TikTok Engagement Command Center
+              TikTok Engagement Insight
             </h1>
             <p className="max-w-3xl text-sm text-slate-300 md:text-base">
               Pantau performa enggagement personel TikTok untuk{" "}
