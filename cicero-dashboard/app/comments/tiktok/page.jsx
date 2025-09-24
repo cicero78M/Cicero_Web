@@ -433,70 +433,75 @@ export default function TiktokEngagementInsightPage() {
               TikTok Engagement Insight
             </h1>
 
-            <div className="bg-gradient-to-tr from-fuchsia-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
-              <SummaryItem
-                label="Jumlah TikTok Post"
-                value={rekapSummary.totalTiktokPost}
-                color="fuchsia"
-                icon={<Music className="text-fuchsia-400" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Total User"
-                value={rekapSummary.totalUser}
-                color="gray"
-                icon={<User className="text-gray-400" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Sudah Komentar"
-                value={rekapSummary.totalSudahKomentar}
-                color="green"
-                icon={<MessageCircle className="text-green-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Kurang Komentar"
-                value={rekapSummary.totalKurangKomentar}
-                color="orange"
-                icon={<MessageCircle className="text-orange-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Belum Komentar"
-                value={rekapSummary.totalBelumKomentar}
-                color="red"
-                icon={<X className="text-red-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Tanpa Username"
-                value={rekapSummary.totalTanpaUsername}
-                color="gray"
-                icon={<UserX className="text-gray-400" />}
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-end gap-3 mb-2 w-full">
-              <ViewDataSelector
-                value={viewBy}
-                onChange={setViewBy}
-                options={viewOptions}
-                date={
-                  viewBy === "custom_range"
-                    ? { startDate: fromDate, endDate: toDate }
-                    : customDate
-                }
-                onDateChange={(val) => {
-                  if (viewBy === "custom_range") {
-                    setFromDate(val.startDate || "");
-                    setToDate(val.endDate || "");
-                  } else {
-                    setCustomDate(val);
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <span className="text-sm font-semibold text-gray-600">
+                  View Data By:
+                </span>
+                <ViewDataSelector
+                  value={viewBy}
+                  onChange={setViewBy}
+                  options={viewOptions}
+                  date={
+                    viewBy === "custom_range"
+                      ? { startDate: fromDate, endDate: toDate }
+                      : customDate
                   }
-                }}
-                disabled={isRefreshing}
-              />
+                  onDateChange={(val) => {
+                    if (viewBy === "custom_range") {
+                      setFromDate(val.startDate || "");
+                      setToDate(val.endDate || "");
+                    } else {
+                      setCustomDate(val);
+                    }
+                  }}
+                  disabled={isRefreshing}
+                />
+              </div>
+
+              <div className="bg-gradient-to-tr from-fuchsia-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+                <SummaryItem
+                  label="Jumlah TikTok Post"
+                  value={rekapSummary.totalTiktokPost}
+                  color="fuchsia"
+                  icon={<Music className="text-fuchsia-400" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Total User"
+                  value={rekapSummary.totalUser}
+                  color="gray"
+                  icon={<User className="text-gray-400" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Sudah Komentar"
+                  value={rekapSummary.totalSudahKomentar}
+                  color="green"
+                  icon={<MessageCircle className="text-green-500" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Kurang Komentar"
+                  value={rekapSummary.totalKurangKomentar}
+                  color="orange"
+                  icon={<MessageCircle className="text-orange-500" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Belum Komentar"
+                  value={rekapSummary.totalBelumKomentar}
+                  color="red"
+                  icon={<X className="text-red-500" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Tanpa Username"
+                  value={rekapSummary.totalTanpaUsername}
+                  color="gray"
+                  icon={<UserX className="text-gray-400" />}
+                />
+              </div>
             </div>
 
             {isDirectorate ? (

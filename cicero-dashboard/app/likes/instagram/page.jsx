@@ -77,69 +77,73 @@ export default function InstagramEngagementInsightPage() {
             </h1>
 
             {/* Card Ringkasan */}
-            <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
-              <SummaryItem
-                label="Jumlah IG Post"
-                value={rekapSummary.totalIGPost}
-                color="blue"
-                icon={<Camera className="text-blue-400" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Total User"
-                value={rekapSummary.totalUser}
-                color="gray"
-                icon={<User className="text-gray-400" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Sudah Likes"
-                value={rekapSummary.totalSudahLike}
-                color="green"
-                icon={<ThumbsUp className="text-green-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Kurang Likes"
-                value={rekapSummary.totalKurangLike}
-                color="orange"
-                icon={<ThumbsDown className="text-orange-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Belum Likes"
-                value={rekapSummary.totalBelumLike}
-                color="red"
-                icon={<ThumbsDown className="text-red-500" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Tanpa Username"
-                value={rekapSummary.totalTanpaUsername}
-                color="gray"
-                icon={<UserX className="text-gray-400" />}
-              />
-            </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <span className="text-sm font-semibold text-gray-600">
+                  View Data By:
+                </span>
+                <ViewDataSelector
+                  value={viewBy}
+                  onChange={setViewBy}
+                  options={viewOptions}
+                  date=
+                    {viewBy === "custom_range"
+                      ? { startDate: fromDate, endDate: toDate }
+                      : customDate}
+                  onDateChange={(val) => {
+                    if (viewBy === "custom_range") {
+                      setFromDate(val.startDate || "");
+                      setToDate(val.endDate || "");
+                    } else {
+                      setCustomDate(val);
+                    }
+                  }}
+                />
+              </div>
 
-            {/* Switch Periode */}
-            <div className="flex items-center justify-end gap-3 mb-2">
-              <ViewDataSelector
-                value={viewBy}
-                onChange={setViewBy}
-                options={viewOptions}
-                date=
-                  {viewBy === "custom_range"
-                    ? { startDate: fromDate, endDate: toDate }
-                    : customDate}
-                onDateChange={(val) => {
-                  if (viewBy === "custom_range") {
-                    setFromDate(val.startDate || "");
-                    setToDate(val.endDate || "");
-                  } else {
-                    setCustomDate(val);
-                  }
-                }}
-              />
+              <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+                <SummaryItem
+                  label="Jumlah IG Post"
+                  value={rekapSummary.totalIGPost}
+                  color="blue"
+                  icon={<Camera className="text-blue-400" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Total User"
+                  value={rekapSummary.totalUser}
+                  color="gray"
+                  icon={<User className="text-gray-400" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Sudah Likes"
+                  value={rekapSummary.totalSudahLike}
+                  color="green"
+                  icon={<ThumbsUp className="text-green-500" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Kurang Likes"
+                  value={rekapSummary.totalKurangLike}
+                  color="orange"
+                  icon={<ThumbsDown className="text-orange-500" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Belum Likes"
+                  value={rekapSummary.totalBelumLike}
+                  color="red"
+                  icon={<ThumbsDown className="text-red-500" />}
+                />
+                <Divider />
+                <SummaryItem
+                  label="Tanpa Username"
+                  value={rekapSummary.totalTanpaUsername}
+                  color="gray"
+                  icon={<UserX className="text-gray-400" />}
+                />
+              </div>
             </div>
 
             {/* Chart per kelompok / polres */}
