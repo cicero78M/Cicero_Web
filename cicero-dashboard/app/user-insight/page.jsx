@@ -412,12 +412,22 @@ function ChartBox({
 }) {
   const titleId = useId();
   const hasData = Array.isArray(data) && data.length > 0;
+  const totalUsers = hasData
+    ? data.reduce((acc, item) => acc + Number(item?.total ?? 0), 0)
+    : 0;
 
   return (
     <div className="bg-white rounded-xl shadow p-4">
-      <h3 id={titleId} className="font-bold text-blue-700 mb-2 text-center">
-        {title}
-      </h3>
+      <div className="flex flex-col items-center gap-1 mb-2">
+        <h3 id={titleId} className="font-bold text-blue-700 text-center">
+          {title}
+        </h3>
+        {hasData && (
+          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-0.5 text-xs font-semibold text-blue-700">
+            Total {totalUsers.toLocaleString("id-ID")}
+          </span>
+        )}
+      </div>
       {hasData ? (
         <>
           <ContactChart
@@ -526,6 +536,14 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
     ? { top: 4, right: 20, left: 4, bottom: 8 }
     : { top: 4, right: 20, left: 4, bottom: 52 };
 
+  const tooltipFormatter = (value, name) => [
+    Number(value ?? 0).toLocaleString("id-ID"),
+    name,
+  ];
+
+  const tooltipLabelFormatter = (label) =>
+    (label ?? "").toString().trim() || "Tidak diketahui";
+
   return (
     <div className="w-full h-full">
       <ResponsiveContainer width="100%" height={height}>
@@ -563,15 +581,17 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
           ) : (
             <YAxis allowDecimals={false} />
           )}
-          <Tooltip />
+          <Tooltip
+            formatter={tooltipFormatter}
+            labelFormatter={tooltipLabelFormatter}
+            cursor={{ fill: "rgba(148, 163, 184, 0.12)" }}
+          />
           <Legend />
-          <Bar dataKey="total" name="Jumlah User" fill="#3b82f6">
-            <LabelList dataKey="total" position={barPosition} fontSize={12} />
-          </Bar>
           <Bar
             dataKey="instagramFilled"
             name="Instagram Terisi"
             fill="#e1306c"
+            stackId="instagram"
           >
             <LabelList
               dataKey="instagramFilled"
@@ -583,6 +603,7 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
             dataKey="instagramEmpty"
             name="Instagram Belum Diisi"
             fill="#fca5a5"
+            stackId="instagram"
           >
             <LabelList
               dataKey="instagramEmpty"
@@ -594,6 +615,7 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
             dataKey="tiktokFilled"
             name="TikTok Terisi"
             fill="#000000"
+            stackId="tiktok"
           >
             <LabelList
               dataKey="tiktokFilled"
@@ -605,6 +627,7 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
             dataKey="tiktokEmpty"
             name="TikTok Belum Diisi"
             fill="#6b7280"
+            stackId="tiktok"
           >
             <LabelList
               dataKey="tiktokEmpty"
