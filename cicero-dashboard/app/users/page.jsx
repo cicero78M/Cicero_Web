@@ -449,337 +449,380 @@ export default function UserDirectoryPage() {
   if (isLoading) return <Loader />;
   if (error)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="bg-white rounded-lg shadow-md p-6 text-red-500 font-bold">
-          {error.message || error}
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
+        <div className="rounded-3xl border border-red-500/40 bg-red-500/10 px-6 py-5 text-sm font-semibold shadow-lg backdrop-blur-md">
+          {error.message || String(error)}
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4 sm:px-6">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-md p-6 sm:p-8 relative">
-        <button
-          onClick={() => mutate()}
-          className="absolute top-4 right-4 text-black hover:text-black"
-          aria-label="Refresh"
-        >
-          <RefreshCw className="w-5 h-5" />
-        </button>
-        <h1 className="text-2xl font-bold text-blue-700">User Directory</h1>
-        <div className="mb-6 text-sm text-slate-600">
-          Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-          <SummaryCard label="Total User" value={summaryStats.total} tone="primary" />
-          <SummaryCard label="Aktif" value={summaryStats.aktif} tone="success" />
-          <SummaryCard label="Nonaktif" value={summaryStats.nonaktif} tone="muted" />
-          <SummaryCard label="Update Instagram" value={summaryStats.insta} tone="info" />
-          <SummaryCard label="Update TikTok" value={summaryStats.tiktok} tone="pink" />
-        </div>
-        <div className="flex flex-wrap items-center mb-6 gap-2">
-          <button
-            onClick={() => {
-              setShowForm((s) => !s);
-            }}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-          >
-            {showForm ? "Tutup" : "Tambah User"}
-          </button>
-          <button
-            onClick={handleCopyRekap}
-            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-          >
-            Rekap User
-          </button>
-          <button
-            onClick={handleDownloadData}
-            className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm"
-          >
-            Download Data
-          </button>
-          {isDitbinmasClient && (
-            <button
-              onClick={() => setShowAllDitbinmas((s) => !s)}
-              className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg text-sm"
-            >
-              {showAllDitbinmas
-                ? "Hanya DITBINMAS"
-                : "Semua Ditbinmas"}
-            </button>
-          )}
-          <label
-            className="ml-auto flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow focus-within:ring-2 focus-within:ring-blue-300 text-sm flex-1 min-w-[220px]"
-          >
-            <span className="sr-only">Cari pengguna</span>
-            <input
-              type="search"
-              placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full border-0 focus:outline-none text-sm text-black"
-              aria-label="Pencarian pengguna"
-            />
-          </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            aria-label="Filter status user"
-          >
-            <option value="ALL">Semua Status</option>
-            <option value="ACTIVE">Aktif</option>
-            <option value="INACTIVE">Nonaktif</option>
-          </select>
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute bottom-0 right-[-10rem] h-[26rem] w-[26rem] rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute inset-x-0 top-1/3 h-1/3 bg-gradient-to-b from-slate-900/0 via-slate-900/40 to-slate-950" />
+      </div>
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-3">
+          <span className="text-xs uppercase tracking-[0.35em] text-cyan-300/70">User Directory</span>
+          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">User Matrix</h1>
+          <p className="max-w-2xl text-sm text-slate-300">
+            Kelola personel dan pantau aktivitas akun melalui antarmuka futuristik yang selaras dengan pusat kendali
+            dashboard.
+          </p>
         </div>
 
-        {showForm && (
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <input
-              type="text"
-              placeholder="Nama"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
-              required
-              className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-            <select
-              value={pangkat}
-              onChange={(e) => setPangkat(e.target.value)}
-              required
-              className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            >
-              <option value="">Pilih Pangkat</option>
-              {PANGKAT_OPTIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="NRP/NIP"
-              value={nrpNip}
-              onChange={(e) =>
-                setNrpNip(e.target.value.replace(/[^0-9]/g, ""))
-              }
-              inputMode="numeric"
-              pattern="\d*"
-              required
-              className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-            <select
-              value={satfung}
-              onChange={(e) => {
-                setSatfung(e.target.value);
-                if (e.target.value !== "POLSEK") setPolsekName("");
-              }}
-              required
-              className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            >
-              <option value="">Pilih {columnLabel}</option>
-              {SATFUNG_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            {satfung === "POLSEK" && (
-              <input
-                type="text"
-                placeholder="Nama Polsek"
-                value={polsekName}
-                onChange={(e) => setPolsekName(e.target.value)}
-                required
-                className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 md:col-span-2"
-              />
-            )}
-            {submitError && (
-              <div
-                className="text-red-500 text-sm md:col-span-2"
-                role="alert"
-                aria-live="polite"
-              >
-                {submitError}
+        <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-[0_0_40px_rgba(14,165,233,0.25)] backdrop-blur-xl sm:p-8">
+          <div className="absolute inset-x-12 top-0 h-36 bg-gradient-to-b from-slate-200/10 via-transparent to-transparent blur-3xl" />
+          <button
+            onClick={() => mutate()}
+            className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/40 bg-slate-900/70 text-cyan-200 shadow-lg transition hover:border-cyan-300 hover:text-cyan-100"
+            aria-label="Refresh"
+            type="button"
+          >
+            <RefreshCw className="h-5 w-5" />
+          </button>
+
+          <div className="relative flex flex-col gap-2 pr-14 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-100">Directory Overview</h2>
+              <p className="text-sm text-slate-400">
+                Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
+              </p>
+            </div>
+            <div className="text-xs uppercase tracking-[0.25em] text-cyan-300/70">
+              Real-time sync
+            </div>
+          </div>
+
+          <div className="relative mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <SummaryCard label="Total User" value={summaryStats.total} tone="primary" />
+            <SummaryCard label="Aktif" value={summaryStats.aktif} tone="success" />
+            <SummaryCard label="Nonaktif" value={summaryStats.nonaktif} tone="muted" />
+            <SummaryCard label="Update Instagram" value={summaryStats.insta} tone="info" />
+            <SummaryCard label="Update TikTok" value={summaryStats.tiktok} tone="pink" />
+          </div>
+
+          <div className="relative mt-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4 shadow-inner backdrop-blur">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowForm((s) => !s);
+                  }}
+                  className="relative overflow-hidden rounded-xl bg-gradient-to-r from-cyan-500/80 via-sky-500/70 to-blue-600/70 px-4 py-2 text-sm font-medium text-slate-50 shadow-lg ring-1 ring-cyan-400/40 transition hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                  type="button"
+                >
+                  {showForm ? "Tutup" : "Tambah User"}
+                </button>
+                <button
+                  onClick={handleCopyRekap}
+                  className="rounded-xl bg-gradient-to-r from-emerald-500/70 to-teal-500/70 px-4 py-2 text-sm font-medium text-slate-50 shadow-lg ring-1 ring-emerald-400/40 transition hover:from-emerald-400 hover:to-teal-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+                  type="button"
+                >
+                  Rekap User
+                </button>
+                <button
+                  onClick={handleDownloadData}
+                  className="rounded-xl bg-gradient-to-r from-fuchsia-500/70 to-purple-600/70 px-4 py-2 text-sm font-medium text-slate-50 shadow-lg ring-1 ring-fuchsia-400/40 transition hover:from-fuchsia-400 hover:to-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
+                  type="button"
+                >
+                  Download Data
+                </button>
+                {isDitbinmasClient && (
+                  <button
+                    onClick={() => setShowAllDitbinmas((s) => !s)}
+                    className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                    type="button"
+                  >
+                    {showAllDitbinmas ? "Hanya DITBINMAS" : "Semua Ditbinmas"}
+                  </button>
+                )}
+                <label className="ml-auto flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-2 text-sm text-slate-200 shadow-inner transition focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/40">
+                  <span className="sr-only">Cari pengguna</span>
+                  <input
+                    type="search"
+                    placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+                    aria-label="Pencarian pengguna"
+                  />
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="rounded-xl border border-slate-700/60 bg-slate-900/80 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  aria-label="Filter status user"
+                >
+                  <option value="ALL" className="bg-slate-900 text-slate-100">
+                    Semua Status
+                  </option>
+                  <option value="ACTIVE" className="bg-slate-900 text-slate-100">
+                    Aktif
+                  </option>
+                  <option value="INACTIVE" className="bg-slate-900 text-slate-100">
+                    Nonaktif
+                  </option>
+                </select>
               </div>
+            </div>
+
+            {showForm && (
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4 shadow-inner backdrop-blur md:grid-cols-2">
+                <input
+                  type="text"
+                  placeholder="Nama"
+                  value={nama}
+                  onChange={(e) => setNama(e.target.value)}
+                  required
+                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                />
+                <select
+                  value={pangkat}
+                  onChange={(e) => setPangkat(e.target.value)}
+                  required
+                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                >
+                  <option value="" className="bg-slate-900 text-slate-100">
+                    Pilih Pangkat
+                  </option>
+                  {PANGKAT_OPTIONS.map((p) => (
+                    <option key={p} value={p} className="bg-slate-900 text-slate-100">
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="NRP/NIP"
+                  value={nrpNip}
+                  onChange={(e) => setNrpNip(e.target.value.replace(/[^0-9]/g, ""))}
+                  inputMode="numeric"
+                  pattern="\\d*"
+                  required
+                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                />
+                <select
+                  value={satfung}
+                  onChange={(e) => {
+                    setSatfung(e.target.value);
+                    if (e.target.value !== "POLSEK") setPolsekName("");
+                  }}
+                  required
+                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                >
+                  <option value="" className="bg-slate-900 text-slate-100">
+                    Pilih {columnLabel}
+                  </option>
+                  {SATFUNG_OPTIONS.map((s) => (
+                    <option key={s} value={s} className="bg-slate-900 text-slate-100">
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                {satfung === "POLSEK" && (
+                  <input
+                    type="text"
+                    placeholder="Nama Polsek"
+                    value={polsekName}
+                    onChange={(e) => setPolsekName(e.target.value)}
+                    required
+                    className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 md:col-span-2"
+                  />
+                )}
+                {submitError && (
+                  <div
+                    className="md:col-span-2 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {submitError}
+                  </div>
+                )}
+                <div className="md:col-span-2 flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={submitLoading}
+                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-slate-50 shadow-lg ring-1 ring-cyan-400/40 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${submitLoading ? "cursor-not-allowed bg-cyan-500/40" : "bg-gradient-to-r from-cyan-500/80 via-sky-500/70 to-blue-600/70 hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500"}`
+                  >
+                    {submitLoading ? "Menyimpan..." : "Simpan"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForm(false);
+                    }}
+                    className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </form>
             )}
-            <div className="flex gap-2 md:col-span-2">
+          </div>
+
+          <div className="relative mt-6 overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/70 shadow-2xl backdrop-blur">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-900/80 text-slate-300">
+                <tr className="text-left text-xs uppercase tracking-wider">
+                  <th className="px-4 py-3 font-medium">No</th>
+                  <th className="px-4 py-3 font-medium">Nama</th>
+                  <th className="px-4 py-3 font-medium">NRP/NIP</th>
+                  <th className="px-4 py-3 font-medium">{columnLabel}</th>
+                  <th className="px-4 py-3 font-medium">Instagram</th>
+                  <th className="px-4 py-3 font-medium">TikTok</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentRows.map((u, idx) => (
+                  <tr
+                    key={u.user_id || idx}
+                    className={`border-t border-slate-800/60 transition hover:bg-slate-800/50 ${editingRowId === u.user_id ? "bg-cyan-500/10" : "bg-transparent"}`}
+                  >
+                    <td className="px-4 py-3 text-slate-300">{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                    <td className="px-4 py-3 text-slate-100">
+                      {editingRowId === u.user_id ? (
+                        <div className="flex gap-2">
+                          <input
+                            value={editPangkat}
+                            onChange={(e) => setEditPangkat(e.target.value)}
+                            placeholder="Pangkat"
+                            className="w-24 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                          />
+                          <input
+                            value={editNama}
+                            onChange={(e) => setEditNama(e.target.value)}
+                            placeholder="Nama"
+                            className="flex-1 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                          />
+                        </div>
+                      ) : (
+                        (u.title ? `${u.title} ` : "") + (u.nama || "-")
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-slate-200">
+                      {editingRowId === u.user_id ? (
+                        <input
+                          value={editNrpNip}
+                          onChange={(e) => setEditNrpNip(e.target.value.trim())}
+                          placeholder="NRP/NIP"
+                          className="w-32 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs font-mono text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                        />
+                      ) : (
+                        u.user_id || "-"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-200">
+                      {showKesatuanColumn ? (
+                        u.nama_client || u.client_name || u.client || u.nama || "-"
+                      ) : editingRowId === u.user_id ? (
+                        <input
+                          value={editSatfung}
+                          onChange={(e) => setEditSatfung(e.target.value)}
+                          placeholder={columnLabel}
+                          className="w-full rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                        />
+                      ) : (
+                        u.divisi || "-"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-cyan-300">{u.insta ? `@${u.insta}` : "-"}</td>
+                    <td className="px-4 py-3 font-mono text-fuchsia-300">{u.tiktok || "-"}</td>
+                    <td className="px-4 py-3">
+                      {u.status === true || u.status === "true" ? (
+                        <span className="inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
+                          Aktif
+                        </span>
+                      ) : (
+                        <span className="inline-flex rounded-full border border-slate-500/40 bg-slate-500/15 px-3 py-1 text-xs font-medium text-slate-300">
+                          Nonaktif
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {editingRowId === u.user_id ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleUpdateRow(u.user_id)}
+                            disabled={updateLoading}
+                            className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 p-2 text-emerald-300 transition hover:border-emerald-300 hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+                            type="button"
+                            aria-label="Simpan perubahan"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingRowId(null)}
+                            className="rounded-lg border border-rose-400/40 bg-rose-500/15 p-2 text-rose-300 transition hover:border-rose-300 hover:text-rose-200"
+                            type="button"
+                            aria-label="Batalkan perubahan"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleEditClick(u)}
+                          className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:border-cyan-300 hover:text-cyan-100"
+                          type="button"
+                          aria-label={`Edit data ${u.nama || "user"}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {editingRowId && updateError && (
+                  <tr>
+                    <td
+                      colSpan="8"
+                      className="px-4 py-3 text-sm text-rose-300"
+                      role="alert"
+                    >
+                      {updateError}
+                    </td>
+                  </tr>
+                )}
+                {currentRows.length === 0 && (
+                  <tr>
+                    <td colSpan="8" className="px-4 py-8 text-center text-slate-400">
+                      Tidak ada pengguna
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-200">
               <button
-                type="submit"
-                disabled={submitLoading}
-                className={`px-4 py-2 rounded-lg text-white text-sm flex-1 ${submitLoading ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
-              >
-                {submitLoading ? "Menyimpan..." : "Simpan"}
-              </button>
-              <button
+                className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 font-semibold shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                }}
-                className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
               >
-                Batal
+                Prev
+              </button>
+              <span>
+                Halaman <b>{page}</b> dari <b>{totalPages}</b>
+              </span>
+              <button
+                className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 font-semibold shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                type="button"
+              >
+                Next
               </button>
             </div>
-          </form>
-        )}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr>
-                <th className="py-2 px-2 text-left">No</th>
-                <th className="py-2 px-2 text-left">Nama</th>
-                <th className="py-2 px-2 text-left">NRP/NIP</th>
-                <th className="py-2 px-2 text-left">{columnLabel}</th>
-                <th className="py-2 px-2 text-left">Instagram</th>
-                <th className="py-2 px-2 text-left">TikTok</th>
-                <th className="py-2 px-2 text-left">Status</th>
-                <th className="py-2 px-2 text-left">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRows.map((u, idx) => (
-                <tr
-                  key={u.user_id || idx}
-                  className={`border-t ${
-                    editingRowId === u.user_id ? "bg-blue-50" : "bg-white"
-                  }`}
-                >
-                  <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                  <td className="py-1 px-2">
-                    {editingRowId === u.user_id ? (
-                      <div className="flex gap-1">
-                        <input
-                          value={editPangkat}
-                          onChange={(e) => setEditPangkat(e.target.value)}
-                          placeholder="Pangkat"
-                          className="w-20 border rounded px-1 text-xs"
-                        />
-                        <input
-                          value={editNama}
-                          onChange={(e) => setEditNama(e.target.value)}
-                          placeholder="Nama"
-                          className="flex-1 border rounded px-1 text-xs"
-                        />
-                      </div>
-                    ) : (
-                      (u.title ? `${u.title} ` : "") + (u.nama || "-")
-                    )}
-                  </td>
-                  <td className="py-1 px-2 font-mono">
-                    {editingRowId === u.user_id ? (
-                      <input
-                        value={editNrpNip}
-                        onChange={(e) => setEditNrpNip(e.target.value.trim())}
-                        placeholder="NRP/NIP"
-                        className="w-28 border rounded px-1 text-xs font-mono"
-                      />
-                    ) : (
-                      u.user_id || "-"
-                    )}
-                  </td>
-                  <td className="py-1 px-2">
-                    {showKesatuanColumn ? (
-                      u.nama_client || u.client_name || u.client || u.nama || "-"
-                    ) : editingRowId === u.user_id ? (
-                      <input
-                        value={editSatfung}
-                        onChange={(e) => setEditSatfung(e.target.value)}
-                        placeholder={columnLabel}
-                        className="border rounded px-1 text-xs"
-                      />
-                    ) : (
-                      u.divisi || "-"
-                    )}
-                  </td>
-                  <td className="py-1 px-2 font-mono text-blue-700">
-                    {u.insta ? `@${u.insta}` : "-"}
-                  </td>
-                  <td className="py-1 px-2 font-mono text-pink-700">{u.tiktok || "-"}</td>
-                  <td className="py-1 px-2">
-                    {u.status === true || u.status === "true" ? (
-                      <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-700 text-xs">Aktif</span>
-                    ) : (
-                      <span className="inline-block px-2 py-1 rounded bg-gray-200 text-black text-xs">Nonaktif</span>
-                    )}
-                  </td>
-                  <td className="py-1 px-2">
-                    {editingRowId === u.user_id ? (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleUpdateRow(u.user_id)}
-                          disabled={updateLoading}
-                          className="text-green-600"
-                          type="button"
-                          aria-label="Simpan perubahan"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingRowId(null)}
-                          className="text-red-600"
-                          type="button"
-                          aria-label="Batalkan perubahan"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleEditClick(u)}
-                        className="text-blue-600"
-                        type="button"
-                        aria-label={`Edit data ${u.nama || "user"}`}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {editingRowId && updateError && (
-                <tr>
-                  <td
-                    colSpan="8"
-                    className="py-1 px-2 text-red-500 text-xs"
-                    role="alert"
-                  >
-                    {updateError}
-                  </td>
-                </tr>
-              )}
-              {currentRows.length === 0 && (
-                <tr>
-                  <td colSpan="8" className="py-4 text-center text-black">
-                    Tidak ada pengguna
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          )}
         </div>
-        {/* Paging Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <button
-              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-black font-semibold disabled:opacity-50"
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Prev
-            </button>
-            <span className="text-sm text-black">
-              Halaman <b>{page}</b> dari <b>{totalPages}</b>
-            </span>
-            <button
-              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-black font-semibold disabled:opacity-50"
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -787,25 +830,34 @@ export default function UserDirectoryPage() {
 
 function SummaryCard({ label, value, tone = "primary" }) {
   const toneStyles = {
-    primary: "bg-blue-50 text-blue-700 border-blue-100",
-    success: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    info: "bg-sky-50 text-sky-700 border-sky-100",
-    muted: "bg-slate-50 text-slate-700 border-slate-200",
-    pink: "bg-pink-50 text-pink-700 border-pink-100",
+    primary:
+      "from-cyan-500/30 via-sky-500/20 to-blue-600/30 text-cyan-100 border-cyan-400/40",
+    success:
+      "from-emerald-500/25 via-emerald-500/15 to-teal-500/25 text-emerald-100 border-emerald-400/40",
+    info:
+      "from-sky-500/25 via-cyan-500/15 to-slate-500/20 text-sky-100 border-sky-400/40",
+    muted:
+      "from-slate-500/20 via-slate-600/10 to-slate-800/20 text-slate-200 border-slate-500/40",
+    pink:
+      "from-fuchsia-500/30 via-pink-500/20 to-purple-600/30 text-pink-100 border-fuchsia-400/40",
   };
   const displayValue =
     typeof value === "number" ? value.toLocaleString("id-ID") : value;
 
   return (
     <div
-      className={`rounded-xl border px-4 py-3 flex flex-col gap-1 ${
+      className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br px-4 py-4 shadow-lg backdrop-blur ${
         toneStyles[tone] || toneStyles.primary
       }`}
     >
-      <span className="text-xs uppercase tracking-wide text-slate-500">
-        {label}
-      </span>
-      <span className="text-2xl font-semibold">{displayValue}</span>
+      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-2xl" />
+      <div className="absolute inset-x-2 top-6 h-16 bg-white/10 blur-3xl" />
+      <div className="relative flex flex-col gap-2">
+        <span className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-200/70">
+          {label}
+        </span>
+        <span className="text-3xl font-semibold text-slate-50">{displayValue}</span>
+      </div>
     </div>
   );
 }
