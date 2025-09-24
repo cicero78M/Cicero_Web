@@ -75,7 +75,7 @@ export default function DashboardStats({
   if (!cards.length) return null;
 
   return (
-    <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-4", className)}>
+    <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2", className)}>
       {cards.map((item) => (
         <div
           key={item.key || item.title}
