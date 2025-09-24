@@ -336,211 +336,240 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   }));
 
   return (
-    <div className="flex flex-col gap-6 mt-8 min-h-screen pb-24">
-      {/* Ringkasan */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+    <div className="mt-10 flex flex-col gap-10 pb-32">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <SummaryCard
           title="IG Post Hari Ini"
           value={totalIGPost}
-          color="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-blue-400 text-white"
-          icon={<Camera />}
+          accent="sky"
+          icon={
+            <Camera className="h-6 w-6 text-sky-200 drop-shadow-[0_0_12px_rgba(56,189,248,0.55)]" />
+          }
         />
         <SummaryCard
           title="Total User"
           value={totalUser}
-          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
-          icon={<Users />}
+          accent="slate"
+          icon={
+            <Users className="h-6 w-6 text-slate-200 drop-shadow-[0_0_12px_rgba(148,163,184,0.45)]" />
+          }
         />
         <SummaryCard
           title="Sudah Like"
           value={totalSudahLike}
-          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
-          icon={<Check />}
+          accent="emerald"
+          icon={
+            <Check className="h-6 w-6 text-emerald-200 drop-shadow-[0_0_12px_rgba(16,185,129,0.55)]" />
+          }
           percentage={getPercentage(totalSudahLike)}
         />
         <SummaryCard
           title="Kurang Like"
           value={totalKurangLike}
-          color="bg-gradient-to-r from-yellow-400 via-orange-500 to-orange-600 text-white"
-          icon={<AlertTriangle />}
+          accent="amber"
+          icon={
+            <AlertTriangle className="h-6 w-6 text-amber-100 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+          }
           percentage={getPercentage(totalKurangLike)}
         />
         <SummaryCard
           title="Belum Like"
           value={totalBelumLike}
-          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
-          icon={<X />}
+          accent="rose"
+          icon={
+            <X className="h-6 w-6 text-rose-200 drop-shadow-[0_0_12px_rgba(244,63,94,0.55)]" />
+          }
           percentage={getPercentage(totalBelumLike)}
         />
         <SummaryCard
           title="Tanpa Username"
           value={totalTanpaUsername}
-          color="bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 text-gray-800"
-          icon={<UserX />}
+          accent="violet"
+          icon={
+            <UserX className="h-6 w-6 text-violet-200 drop-shadow-[0_0_12px_rgba(139,92,246,0.55)]" />
+          }
           percentage={getPercentage(totalTanpaUsername, totalUser)}
         />
       </div>
 
-      {/* Search bar */}
-      <div className="flex justify-end mb-2">
-        <label
-          className="flex flex-col items-end gap-1 w-full md:w-auto"
-          htmlFor="rekap-likes-ig-search"
-        >
-          <span className="text-sm font-medium text-gray-700">
-            Cari personel Instagram
-          </span>
-          <input
-            id="rekap-likes-ig-search"
-            type="text"
-            placeholder="Cari nama, username, divisi, atau client"
-            className="px-3 py-2 border rounded-lg text-sm w-full md:w-64 shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
-      </div>
+      <div className="relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur">
+        <div className="pointer-events-none absolute -left-24 top-0 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="relative flex flex-col gap-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-sky-100">
+                Rekap Personel Instagram
+              </h2>
+              <p className="text-sm text-slate-300">
+                Filter dan telusuri status likes setiap personel pada periode terpilih.
+              </p>
+            </div>
+            <label
+              className="flex w-full max-w-xs flex-col gap-2 text-slate-200 md:max-w-sm"
+              htmlFor="rekap-likes-ig-search"
+            >
+              <span className="text-[11px] uppercase tracking-[0.35em] text-slate-400">
+                Cari personel Instagram
+              </span>
+              <input
+                id="rekap-likes-ig-search"
+                type="text"
+                placeholder="Cari nama, username, divisi, atau client"
+                className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-inner transition focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
+          </div>
 
-      {/* Tabel */}
-      <div className="relative overflow-x-auto rounded-xl shadow">
-        <table className="w-full text-sm text-left">
-          <thead className="sticky top-0 bg-gray-50 z-10">
-            <tr>
-              <th className="py-2 px-2">No</th>
-              {hasClient && <th className="py-2 px-2">Client</th>}
-              <th className="py-2 px-2">Nama</th>
-              <th className="py-2 px-2">Username IG</th>
-              <th className="py-2 px-2">Divisi/Satfung</th>
-              <th className="py-2 px-2 text-center">Status</th>
-              <th className="py-2 px-2 text-center">Jumlah Like</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentRows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={hasClient ? 7 : 6}
-                  className="h-48 py-12 px-4 text-center text-sm text-gray-500"
-                >
-                  <div className="flex flex-col items-center gap-3">
-                    <p className="font-medium">
-                      Data tidak ditemukan untuk filter saat ini.
-                    </p>
-                    {search && (
-                      <button
-                        type="button"
-                        onClick={() => setSearch("")}
-                        className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
-                      >
-                        Reset pencarian
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              currentRows.map((u, i) => {
-                const username = String(u.username || "").trim();
-                let rowClass = "bg-red-50";
-                let statusEl = (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                    <X className="w-3 h-3" /> Belum
-                  </span>
-                );
-                let jumlahDisplay = u.jumlah_like;
-                if (!username) {
-                  rowClass = "bg-gray-50";
-                  statusEl = (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-500 text-white font-semibold">
-                      <UserX className="w-3 h-3" /> Tanpa Username
-                    </span>
-                  );
-                  jumlahDisplay = 0;
-                } else if (totalIGPost !== 0) {
-                  const likes = Number(u.jumlah_like) || 0;
-                  if (likes >= totalIGPost * 0.5) {
-                    rowClass = "bg-green-50";
-                    statusEl = (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                        <Check className="w-3 h-3" /> Sudah
-                      </span>
-                    );
-                  } else if (likes > 0) {
-                    rowClass = "bg-yellow-50";
-                    statusEl = (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-yellow-500 text-white font-semibold">
-                        <AlertTriangle className="w-3 h-3" /> Kurang
-                      </span>
-                    );
-                  }
-                }
-
-                return (
-                  <tr key={u.user_id} className={rowClass}>
-                    <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                    {hasClient && (
-                      <td className="py-1 px-2">
-                        {u.nama_client || u.client_name || u.client || "-"}
-                      </td>
-                    )}
-                    <td className="py-1 px-2">
-                      {u.title ? `${u.title} ${u.nama}` : u.nama}
+          <div className="overflow-hidden rounded-2xl border border-white/10">
+            <table className="w-full border-collapse text-left text-sm text-slate-200">
+              <thead className="sticky top-0 z-10 bg-slate-950/80 text-xs uppercase tracking-[0.3em] text-slate-300">
+                <tr>
+                  <th className="px-3 py-3">No</th>
+                  {hasClient && <th className="px-3 py-3">Client</th>}
+                  <th className="px-3 py-3">Nama</th>
+                  <th className="px-3 py-3">Username IG</th>
+                  <th className="px-3 py-3">Divisi/Satfung</th>
+                  <th className="px-3 py-3 text-center">Status</th>
+                  <th className="px-3 py-3 text-center">Jumlah Like</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 bg-slate-950/40">
+                {currentRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={hasClient ? 7 : 6}
+                      className="h-48 px-4 text-center text-sm text-slate-300"
+                    >
+                      <div className="flex flex-col items-center gap-3">
+                        <p className="font-semibold text-slate-100">
+                          Data tidak ditemukan untuk filter saat ini.
+                        </p>
+                        {search && (
+                          <button
+                            type="button"
+                            onClick={() => setSearch("")}
+                            className="rounded-xl border border-sky-400/40 bg-sky-500/20 px-4 py-1.5 text-sm font-semibold text-sky-200 shadow-[0_0_18px_rgba(56,189,248,0.25)] transition hover:border-sky-300/60 hover:bg-sky-400/30"
+                          >
+                            Reset pencarian
+                          </button>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-1 px-2 font-mono text-blue-700">@{u.username}</td>
-                    <td className="py-1 px-2">
-                      <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
-                        {u.divisi || "-"}
-                      </span>
-                    </td>
-                    <td className="py-1 px-2 text-center">{statusEl}</td>
-                    <td className="py-1 px-2 text-center font-bold">{jumlahDisplay}</td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-2 text-sm text-gray-500 italic">
-        Tabel ini menampilkan status like Instagram setiap user serta jumlah
-        like yang berhasil dihimpun.
-      </p>
+                ) : (
+                  currentRows.map((u, i) => {
+                    const username = String(u.username || "").trim();
+                    let rowClass = "bg-rose-500/10";
+                    let statusEl = (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/20 px-2 py-0.5 text-xs font-semibold text-rose-200 shadow-[0_0_14px_rgba(244,63,94,0.35)]">
+                        <X className="h-3 w-3" /> Belum
+                      </span>
+                    );
+                    let jumlahDisplay = u.jumlah_like;
+                    if (!username) {
+                      rowClass = "bg-slate-500/10";
+                      statusEl = (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-slate-400/40 bg-slate-500/20 px-2 py-0.5 text-xs font-semibold text-slate-200 shadow-[0_0_12px_rgba(148,163,184,0.35)]">
+                          <UserX className="h-3 w-3" /> Tanpa Username
+                        </span>
+                      );
+                      jumlahDisplay = 0;
+                    } else if (totalIGPost !== 0) {
+                      const likes = Number(u.jumlah_like) || 0;
+                      if (likes >= totalIGPost * 0.5) {
+                        rowClass = "bg-emerald-500/10";
+                        statusEl = (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.35)]">
+                            <Check className="h-3 w-3" /> Sudah
+                          </span>
+                        );
+                      } else if (likes > 0) {
+                        rowClass = "bg-amber-500/10";
+                        statusEl = (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-100 shadow-[0_0_14px_rgba(251,191,36,0.35)]">
+                            <AlertTriangle className="h-3 w-3" /> Kurang
+                          </span>
+                        );
+                      }
+                    }
 
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
-            disabled={page === 1}
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-          >
-            Prev
-          </button>
-          <span className="text-sm text-gray-600">
-            Halaman <b>{page}</b> dari <b>{totalPages}</b>
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
-            disabled={page === totalPages}
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-          >
-            Next
-          </button>
+                    return (
+                      <tr
+                        key={u.user_id}
+                        className={`${rowClass} text-slate-100 transition-colors`}
+                      >
+                        <td className="px-3 py-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                        {hasClient && (
+                          <td className="px-3 py-2">
+                            {u.nama_client || u.client_name || u.client || "-"}
+                          </td>
+                        )}
+                        <td className="px-3 py-2">
+                          {u.title ? `${u.title} ${u.nama}` : u.nama}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-sky-300">
+                          @{u.username}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="inline-block rounded-full border border-sky-400/40 bg-sky-500/20 px-2 py-0.5 text-xs font-semibold text-sky-200">
+                            {u.divisi || "-"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-center">{statusEl}</td>
+                        <td className="px-3 py-2 text-center font-semibold text-sky-100">
+                          {jumlahDisplay}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm italic text-slate-300">
+            Tabel ini menampilkan status like Instagram setiap user serta jumlah like yang berhasil dihimpun.
+          </p>
+
+          {totalPages > 1 && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-slate-200 shadow-inner sm:flex-row sm:items-center sm:justify-between">
+              <button
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold text-slate-200 transition hover:border-sky-400/40 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/5"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </button>
+              <span className="text-sm text-slate-300">
+                Halaman <b className="text-sky-200">{page}</b> dari {" "}
+                <b className="text-sky-200">{totalPages}</b>
+              </span>
+              <button
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold text-slate-200 transition hover:border-sky-400/40 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/5"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {showRekapButton && (
-        <div className="sticky bottom-4 z-20 flex w-full justify-end px-4">
-          <div className="flex w-full max-w-xl flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur-sm sm:flex-row sm:items-center">
+        <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
+          <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4 shadow-[0_20px_60px_rgba(15,118,110,0.2)] backdrop-blur md:flex-row md:items-center md:justify-end">
             <button
               onClick={handleDownloadRekap}
-              className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow sm:w-auto"
+              className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.35)] transition hover:border-emerald-300/60 hover:bg-emerald-400/30 md:w-auto"
             >
               Download Rekap
             </button>
             <button
               onClick={handleCopyRekap}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow sm:w-auto"
+              className="w-full rounded-2xl border border-sky-400/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.35)] transition hover:border-sky-300/60 hover:bg-sky-400/30 md:w-auto"
             >
               Salin Rekap
             </button>
@@ -554,7 +583,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 export default RekapLikesIG;
 
 // Semua card mengikuti style IG Post Hari Ini
-function SummaryCard({ title, value, color, icon, percentage }) {
+function SummaryCard({ title, value, icon, percentage, accent = "sky" }) {
   const formattedPercentage =
     typeof percentage === "number" && !Number.isNaN(percentage)
       ? `${percentage.toFixed(1).replace(".0", "")}%`
@@ -563,43 +592,80 @@ function SummaryCard({ title, value, color, icon, percentage }) {
     typeof percentage === "number"
       ? Math.min(100, Math.max(0, percentage))
       : 0;
-  const hasDarkText = /text-(gray|slate|zinc)-(8|9)00/.test(color);
-  const labelTextClass = hasDarkText ? "text-gray-900" : "text-white";
-  const percentageTextClass = hasDarkText ? "text-gray-900/80" : "text-white/80";
-  const progressBackground = hasDarkText ? "bg-gray-300/80" : "bg-white/30";
-  const progressFill = hasDarkText ? "bg-gray-700" : "bg-white";
+
+  const accentStyles = {
+    sky: {
+      border: "border-sky-400/40",
+      glow: "bg-sky-500/30",
+      text: "text-sky-200",
+      progress: "bg-sky-400",
+    },
+    slate: {
+      border: "border-slate-400/40",
+      glow: "bg-slate-500/25",
+      text: "text-slate-200",
+      progress: "bg-slate-400",
+    },
+    emerald: {
+      border: "border-emerald-400/40",
+      glow: "bg-emerald-500/25",
+      text: "text-emerald-200",
+      progress: "bg-emerald-400",
+    },
+    amber: {
+      border: "border-amber-400/50",
+      glow: "bg-amber-500/30",
+      text: "text-amber-100",
+      progress: "bg-amber-400",
+    },
+    rose: {
+      border: "border-rose-400/50",
+      glow: "bg-rose-500/30",
+      text: "text-rose-200",
+      progress: "bg-rose-400",
+    },
+    violet: {
+      border: "border-violet-400/50",
+      glow: "bg-violet-500/30",
+      text: "text-violet-200",
+      progress: "bg-violet-400",
+    },
+  };
+
+  const styles = accentStyles[accent] || accentStyles.sky;
 
   return (
-    <div
-      className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 text-center ${color}`}
-    >
-      <div className="flex items-center gap-2 text-3xl font-bold">
-        {icon}
-        <span>{value}</span>
-      </div>
-      <div
-        className={`text-xs mt-1 font-semibold uppercase tracking-wider ${labelTextClass}`}
-      >
-        {title}
-      </div>
-      {formattedPercentage && (
-        <div className="mt-1 flex flex-col items-center gap-1 w-full max-w-[180px]">
-          <span className={`text-[11px] font-medium ${percentageTextClass}`}>
-            {formattedPercentage}
+    <div className={`relative overflow-hidden rounded-2xl border ${styles.border} bg-slate-900/60 p-6 text-center shadow-[0_0_25px_rgba(56,189,248,0.08)] backdrop-blur`}>
+      <div className={`pointer-events-none absolute -right-10 top-0 h-24 w-24 rounded-full blur-3xl ${styles.glow}`} />
+      <div className="relative flex flex-col items-center gap-3">
+        <div className={`flex items-center gap-3 text-3xl font-semibold ${styles.text}`}>
+          <span className="rounded-full bg-white/5 p-2 shadow-inner">
+            {icon}
           </span>
-          <div className={`h-1.5 w-full rounded-full ${progressBackground}`}>
-            <div
-              className={`h-full rounded-full transition-all duration-300 ease-out ${progressFill}`}
-              style={{ width: `${clampedPercentage}%` }}
-              role="progressbar"
-              aria-valuenow={Math.round(Number(percentage) || 0)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`${title} ${formattedPercentage}`}
-            />
-          </div>
+          <span>{value}</span>
         </div>
-      )}
+        <div className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-300">
+          {title}
+        </div>
+        {formattedPercentage && (
+          <div className="mt-1 flex w-full max-w-[200px] flex-col items-center gap-1">
+            <span className="text-[11px] font-medium text-slate-200">
+              {formattedPercentage}
+            </span>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800/70">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ease-out ${styles.progress}`}
+                style={{ width: `${clampedPercentage}%` }}
+                role="progressbar"
+                aria-valuenow={Math.round(Number(percentage) || 0)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${title} ${formattedPercentage}`}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

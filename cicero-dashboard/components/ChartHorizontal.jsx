@@ -127,18 +127,28 @@ export default function ChartHorizontal({
   });
 
   return (
-    <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
-      <h3 className="font-bold text-lg mb-2 px-6 pt-6">{title}</h3>
-      <div className="w-full px-2 pb-4">
-        <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart
-            data={dataChart}
-            layout="vertical"
-            margin={{ top: 4, right: 20, left: 4, bottom: 4 }} // left besar!
-            barCategoryGap="16%"
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" fontSize={12} />
+    <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur">
+      <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-500/15 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/10 to-transparent blur-2xl" />
+      <div className="relative flex flex-col gap-6">
+        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.4em] text-cyan-200/80">
+          {title}
+        </h3>
+        <div className="w-full">
+          <ResponsiveContainer width="100%" height={chartHeight}>
+            <BarChart
+              data={dataChart}
+              layout="vertical"
+              margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+              barCategoryGap="16%"
+            >
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+            <XAxis
+              type="number"
+              tick={{ fill: "#cbd5f5", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
+            />
             <YAxis
               dataKey="divisi"
               type="category"
@@ -151,7 +161,7 @@ export default function ChartHorizontal({
                     x={x - 160} // mundur sedikit agar makin lepas dari bar
                     y={y + 10}
                     fontSize={12}
-                    fill="#444"
+                    fill="#cbd5f5"
                     style={{ fontWeight: 500 }}
                     textAnchor="start"
                   >
@@ -177,9 +187,22 @@ export default function ChartHorizontal({
                     : name,
                 ]
               }
-              labelFormatter={label => `Divisi: ${label}`}
+              labelFormatter={(label) => `Divisi: ${label}`}
+              wrapperStyle={{ outline: "none" }}
+              contentStyle={{
+                backgroundColor: "rgba(15,23,42,0.92)",
+                borderRadius: 16,
+                borderColor: "rgba(148,163,184,0.4)",
+                boxShadow: "0 20px 45px rgba(15,118,110,0.2)",
+                color: "#e2e8f0",
+              }}
             />
-            <Legend />
+            <Legend
+              wrapperStyle={{
+                color: "#cbd5f5",
+                paddingTop: 8,
+              }}
+            />
             {showTotalUser && (
               <Bar
                 dataKey="total_user"
@@ -212,7 +235,8 @@ export default function ChartHorizontal({
               <LabelList dataKey="user_belum" position="right" fontSize={10} />
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
         <ChartDataTable
           title={title}
           columns={tableColumns}
