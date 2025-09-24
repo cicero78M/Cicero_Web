@@ -645,7 +645,7 @@ export default function UserDirectoryPage() {
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-slate-50 shadow-lg ring-1 ring-cyan-400/40 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${submitLoading ? "cursor-not-allowed bg-cyan-500/40" : "bg-gradient-to-r from-cyan-500/80 via-sky-500/70 to-blue-600/70 hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500"}`
+                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-slate-50 shadow-lg ring-1 ring-cyan-400/40 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${submitLoading ? "cursor-not-allowed bg-cyan-500/40" : "bg-gradient-to-r from-cyan-500/80 via-sky-500/70 to-blue-600/70 hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500"}`}
                   >
                     {submitLoading ? "Menyimpan..." : "Simpan"}
                   </button>
