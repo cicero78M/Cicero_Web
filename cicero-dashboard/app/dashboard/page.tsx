@@ -415,8 +415,8 @@ export default function DashboardPage() {
         <div className="absolute right-1/3 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-12">
-        <section className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
-          <div className="space-y-4">
+        <section className="grid gap-8 lg:grid-cols-[1.15fr,0.85fr] xl:grid-cols-[1.1fr,0.9fr] lg:items-start">
+          <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/70 px-4 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0.6rem_rgba(52,211,153,0.7)]" />
               Command Center
@@ -428,7 +428,7 @@ export default function DashboardPage() {
               Pantau detik demi detik perkembangan audiens, reaksi komunitas, dan percakapan yang
               terjadi di Instagram serta TikTok melalui satu kanvas visual yang imersif.
             </p>
-            <div className="flex flex-wrap gap-4 text-sm text-slate-300">
+            <div className="grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
               <div className="flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1.5">
                 <span className="text-emerald-300">◎</span>
                 <span>Data terintegrasi lintas platform</span>
@@ -439,55 +439,65 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="relative rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/10 p-6 shadow-[0_0_2rem_rgba(56,189,248,0.25)]">
-            <div className="absolute inset-x-10 top-4 h-24 rounded-full bg-gradient-to-b from-cyan-400/30 via-transparent to-transparent blur-2xl" />
-            <div className="relative space-y-4">
-              <h2 className="text-lg font-semibold text-slate-100">Snapshot Hari Ini</h2>
-              <p className="text-sm text-slate-300">
-                {analytics.totals.posts > 0
-                  ? `Analisis ${analytics.totals.posts} konten terbaru dengan rata-rata ${formatCompactNumber(
-                      analytics.totals.averageViews
-                    )} views per konten.`
-                  : "Menunggu konten terbaru untuk dianalisis."}
-              </p>
-              <div className="grid grid-cols-2 gap-4 text-sm text-slate-200">
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">Total Views</span>
-                  <p className="text-xl font-semibold text-cyan-300">
-                    {formatCompactNumber(analytics.totals.views)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">Total Konten</span>
-                  <p className="text-xl font-semibold text-emerald-300">
-                    {analytics.totals.posts}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">Followers Aktif</span>
-                  <p className="text-xl font-semibold text-fuchsia-300">
-                    {formatCompactNumber(analytics.totals.followers)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">Engagement Rate</span>
-                  <p className="text-xl font-semibold text-amber-300">
-                    {analytics.totals.engagementRate.toFixed(2)}%
-                  </p>
+          <div className="space-y-6">
+            <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/10 p-6 shadow-[0_0_2rem_rgba(56,189,248,0.25)]">
+              <div className="absolute inset-x-10 top-4 h-24 rounded-full bg-gradient-to-b from-cyan-400/30 via-transparent to-transparent blur-2xl" />
+              <div className="relative space-y-5">
+                <h2 className="text-lg font-semibold text-slate-100">Snapshot Hari Ini</h2>
+                <p className="text-sm text-slate-300">
+                  {analytics.totals.posts > 0
+                    ? `Analisis ${analytics.totals.posts} konten terbaru dengan rata-rata ${formatCompactNumber(
+                        analytics.totals.averageViews
+                      )} views per konten.`
+                    : "Menunggu konten terbaru untuk dianalisis."}
+                </p>
+                <div className="grid grid-cols-2 gap-4 text-sm text-slate-200">
+                  <div>
+                    <span className="text-xs uppercase tracking-wide text-slate-400">Total Views</span>
+                    <p className="text-xl font-semibold text-cyan-300">
+                      {formatCompactNumber(analytics.totals.views)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wide text-slate-400">Total Konten</span>
+                    <p className="text-xl font-semibold text-emerald-300">
+                      {analytics.totals.posts}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wide text-slate-400">Followers Aktif</span>
+                    <p className="text-xl font-semibold text-fuchsia-300">
+                      {formatCompactNumber(analytics.totals.followers)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs uppercase tracking-wide text-slate-400">Engagement Rate</span>
+                    <p className="text-xl font-semibold text-amber-300">
+                      {analytics.totals.engagementRate.toFixed(2)}%
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
+            <DashboardStats
+              highlights={highlightCards}
+              igProfile={igProfile}
+              igPosts={igPosts}
+              tiktokProfile={tiktokProfile}
+              tiktokPosts={tiktokPosts}
+              className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-2"
+              cardClassName="border-slate-800/70 bg-slate-900/70"
+            />
           </div>
         </section>
 
         <section className="space-y-6">
-          <DashboardStats
-            highlights={highlightCards}
-            igProfile={igProfile}
-            igPosts={igPosts}
-            tiktokProfile={tiktokProfile}
-            tiktokPosts={tiktokPosts}
-          />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold text-slate-50">Rincian Kinerja Platform</h2>
+            <p className="text-sm text-slate-300">
+              Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
+            </p>
+          </div>
           <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
             {analytics.platforms.map((platform) => (
               <div

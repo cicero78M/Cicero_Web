@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 
+import { cn } from "@/lib/utils";
+
 const formatValue = (value) => {
   if (typeof value === "number") {
     const formatter = new Intl.NumberFormat("id-ID", {
@@ -40,6 +42,8 @@ export default function DashboardStats({
   igPosts,
   tiktokProfile,
   tiktokPosts,
+  className,
+  cardClassName,
 }) {
   const fallbackHighlights = useMemo(() => {
     if (!igProfile && !tiktokProfile && !igPosts?.length && !tiktokPosts?.length) {
@@ -71,11 +75,14 @@ export default function DashboardStats({
   if (!cards.length) return null;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-4", className)}>
       {cards.map((item) => (
         <div
           key={item.key || item.title}
-          className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 shadow-[0_0_32px_rgba(14,165,233,0.15)] transition duration-300 hover:border-cyan-400/60 hover:shadow-[0_0_40px_rgba(34,211,238,0.35)]"
+          className={cn(
+            "group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 shadow-[0_0_32px_rgba(14,165,233,0.15)] transition duration-300 hover:border-cyan-400/60 hover:shadow-[0_0_40px_rgba(34,211,238,0.35)]",
+            cardClassName,
+          )}
         >
           <div className="absolute -right-10 top-0 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl transition duration-300 group-hover:bg-cyan-400/20" />
           <div className="absolute inset-x-6 top-8 h-16 rounded-full bg-gradient-to-b from-slate-100/10 to-transparent blur-2xl" />
