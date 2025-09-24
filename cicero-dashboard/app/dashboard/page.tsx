@@ -474,9 +474,9 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-            <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/10 p-6 shadow-[0_0_2rem_rgba(56,189,248,0.25)]">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/10 p-6 shadow-[0_0_2rem_rgba(56,189,248,0.25)]">
               <div className="absolute inset-x-10 top-4 h-24 rounded-full bg-gradient-to-b from-cyan-400/30 via-transparent to-transparent blur-2xl" />
-              <div className="relative flex h-full flex-col gap-6">
+              <div className="relative flex flex-1 flex-col gap-6">
                 <h2 className="text-lg font-semibold text-slate-100">Snapshot Hari Ini</h2>
                 <p className="text-sm text-slate-300">
                   {analytics.totals.posts > 0
@@ -501,14 +501,14 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col justify-center gap-6">
+            <div className="flex h-full flex-col justify-center gap-6">
               <DashboardStats
                 highlights={highlightCards}
                 igProfile={igProfile}
                 igPosts={igPosts}
                 tiktokProfile={tiktokProfile}
                 tiktokPosts={tiktokPosts}
-                className="grid-cols-1 sm:grid-cols-2"
+                className="grid-cols-1 sm:grid-cols-2 h-full"
                 cardClassName="border-slate-800/70 bg-slate-900/70"
               />
             </div>
