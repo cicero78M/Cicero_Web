@@ -473,7 +473,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr] xl:items-stretch">
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
             <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/10 p-6 shadow-[0_0_2rem_rgba(56,189,248,0.25)]">
               <div className="absolute inset-x-10 top-4 h-24 rounded-full bg-gradient-to-b from-cyan-400/30 via-transparent to-transparent blur-2xl" />
               <div className="relative flex h-full flex-col gap-6">
@@ -508,7 +508,7 @@ export default function DashboardPage() {
                 igPosts={igPosts}
                 tiktokProfile={tiktokProfile}
                 tiktokPosts={tiktokPosts}
-                className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-2"
+                className="grid-cols-1 sm:grid-cols-2"
                 cardClassName="border-slate-800/70 bg-slate-900/70"
               />
             </div>
@@ -522,7 +522,7 @@ export default function DashboardPage() {
               Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
             {analytics.platforms.map((platform) => {
               const primaryMetrics = [
                 {
