@@ -73,6 +73,14 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       ? validUsers.length
       : validUsers.filter((u) => Number(u.jumlah_like) === 0).length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
+  const validUserCount = validUsers.length;
+
+  const getPercentage = (value, base = validUserCount) => {
+    const denominator = Number(base);
+    if (!denominator) return undefined;
+    const numerator = Number(value) || 0;
+    return (numerator / denominator) * 100;
+  };
 
   // Search/filter
   const [search, setSearch] = useState("");
@@ -348,24 +356,28 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalSudahLike}
           color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
           icon={<Check />}
+          percentage={getPercentage(totalSudahLike)}
         />
         <SummaryCard
           title="Kurang Like"
           value={totalKurangLike}
           color="bg-gradient-to-r from-yellow-400 via-orange-500 to-orange-600 text-white"
           icon={<AlertTriangle />}
+          percentage={getPercentage(totalKurangLike)}
         />
         <SummaryCard
           title="Belum Like"
           value={totalBelumLike}
           color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
           icon={<X />}
+          percentage={getPercentage(totalBelumLike)}
         />
         <SummaryCard
           title="Tanpa Username"
           value={totalTanpaUsername}
           color="bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 text-gray-800"
           icon={<UserX />}
+          percentage={getPercentage(totalTanpaUsername, totalUser)}
         />
       </div>
 
@@ -542,14 +554,52 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 export default RekapLikesIG;
 
 // Semua card mengikuti style IG Post Hari Ini
-function SummaryCard({ title, value, color, icon }) {
+function SummaryCard({ title, value, color, icon, percentage }) {
+  const formattedPercentage =
+    typeof percentage === "number" && !Number.isNaN(percentage)
+      ? `${percentage.toFixed(1).replace(".0", "")}%`
+      : null;
+  const clampedPercentage =
+    typeof percentage === "number"
+      ? Math.min(100, Math.max(0, percentage))
+      : 0;
+  const hasDarkText = /text-(gray|slate|zinc)-(8|9)00/.test(color);
+  const labelTextClass = hasDarkText ? "text-gray-900" : "text-white";
+  const percentageTextClass = hasDarkText ? "text-gray-900/80" : "text-white/80";
+  const progressBackground = hasDarkText ? "bg-gray-300/80" : "bg-white/30";
+  const progressFill = hasDarkText ? "bg-gray-700" : "bg-white";
+
   return (
-    <div className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 ${color}`}>
+    <div
+      className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 text-center ${color}`}
+    >
       <div className="flex items-center gap-2 text-3xl font-bold">
         {icon}
         <span>{value}</span>
       </div>
-      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">{title}</div>
+      <div
+        className={`text-xs mt-1 font-semibold uppercase tracking-wider ${labelTextClass}`}
+      >
+        {title}
+      </div>
+      {formattedPercentage && (
+        <div className="mt-1 flex flex-col items-center gap-1 w-full max-w-[180px]">
+          <span className={`text-[11px] font-medium ${percentageTextClass}`}>
+            {formattedPercentage}
+          </span>
+          <div className={`h-1.5 w-full rounded-full ${progressBackground}`}>
+            <div
+              className={`h-full rounded-full transition-all duration-300 ease-out ${progressFill}`}
+              style={{ width: `${clampedPercentage}%` }}
+              role="progressbar"
+              aria-valuenow={Math.round(Number(percentage) || 0)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${title} ${formattedPercentage}`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

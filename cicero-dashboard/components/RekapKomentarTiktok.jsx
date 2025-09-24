@@ -62,6 +62,14 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
     totalTanpaUsername,
   } = summary;
   const tidakAdaPost = totalTiktokPostCount === 0;
+  const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
+
+  const getPercentage = (value, base = validUserCount) => {
+    const denominator = Number(base);
+    if (!denominator) return undefined;
+    const numerator = Number(value) || 0;
+    return (numerator / denominator) * 100;
+  };
 
   const hasSatker = useMemo(
     () =>
@@ -376,24 +384,28 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           value={totalSudahKomentar}
           color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
           icon={<Check className="h-7 w-7" />}
+          percentage={getPercentage(totalSudahKomentar)}
         />
         <SummaryCard
           title="Kurang Komentar"
           value={totalKurangKomentar}
           color="bg-gradient-to-r from-yellow-400 via-orange-500 to-orange-600 text-white"
           icon={<AlertTriangle className="h-7 w-7" />}
+          percentage={getPercentage(totalKurangKomentar)}
         />
         <SummaryCard
           title="Belum Komentar"
           value={totalBelumKomentar}
           color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
           icon={<X className="h-7 w-7" />}
+          percentage={getPercentage(totalBelumKomentar)}
         />
         <SummaryCard
           title="Tanpa Username"
           value={totalTanpaUsername}
           color="bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 text-gray-800"
           icon={<UserX className="h-7 w-7" />}
+          percentage={getPercentage(totalTanpaUsername, totalUser)}
         />
       </div>
       {tidakAdaPost && (
@@ -572,7 +584,21 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
   );
 }
 
-function SummaryCard({ title, value, color, icon }) {
+function SummaryCard({ title, value, color, icon, percentage }) {
+  const formattedPercentage =
+    typeof percentage === "number" && !Number.isNaN(percentage)
+      ? `${percentage.toFixed(1).replace(".0", "")}%`
+      : null;
+  const clampedPercentage =
+    typeof percentage === "number"
+      ? Math.min(100, Math.max(0, percentage))
+      : 0;
+  const hasDarkText = /text-(gray|slate|zinc)-(8|9)00/.test(color);
+  const labelTextClass = hasDarkText ? "text-gray-900" : "text-white";
+  const percentageTextClass = hasDarkText ? "text-gray-900/80" : "text-white/80";
+  const progressBackground = hasDarkText ? "bg-gray-300/80" : "bg-white/30";
+  const progressFill = hasDarkText ? "bg-gray-700" : "bg-white";
+
   return (
     <div
       className={`rounded-2xl shadow-md p-6 flex flex-col items-center gap-2 text-center ${color}`}
@@ -581,9 +607,29 @@ function SummaryCard({ title, value, color, icon }) {
         {icon}
         <span>{value}</span>
       </div>
-      <div className="text-xs mt-1 text-white font-semibold uppercase tracking-wider">
+      <div
+        className={`text-xs mt-1 font-semibold uppercase tracking-wider ${labelTextClass}`}
+      >
         {title}
       </div>
+      {formattedPercentage && (
+        <div className="mt-1 flex flex-col items-center gap-1 w-full max-w-[180px]">
+          <span className={`text-[11px] font-medium ${percentageTextClass}`}>
+            {formattedPercentage}
+          </span>
+          <div className={`h-1.5 w-full rounded-full ${progressBackground}`}>
+            <div
+              className={`h-full rounded-full transition-all duration-300 ease-out ${progressFill}`}
+              style={{ width: `${clampedPercentage}%` }}
+              role="progressbar"
+              aria-valuenow={Math.round(Number(percentage) || 0)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${title} ${formattedPercentage}`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
