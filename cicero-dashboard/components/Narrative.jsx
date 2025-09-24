@@ -1,7 +1,7 @@
 "use client";
 export default function Narrative({ children }) {
   return (
-    <p className="mt-2 text-sm text-gray-500 italic leading-snug">
+    <p className="mt-2 text-sm italic leading-snug text-slate-300">
       {children}
     </p>
   );
