@@ -166,7 +166,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-10">
-        <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
+        <div className="grid w-full max-w-6xl items-start gap-10 lg:grid-cols-[1.05fr_1fr]">
           <section className="relative flex h-full flex-col justify-between gap-10 rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
             <div className="space-y-7">
               <motion.span
@@ -220,25 +220,9 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <motion.div
-              className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-white/10 via-white/5 to-white/10 p-5 backdrop-blur-xl"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-200">
-                <ArrowRight className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">Onboarding terarah</p>
-                <p className="text-xs text-slate-200/70">
-                  Tim keamanan Cicero memvalidasi registrasi baru dalam 1x24 jam demi menjaga integritas akses dan tata kelola data.
-                </p>
-              </div>
-            </motion.div>
           </section>
 
-          <section className="relative">
+          <div className="relative flex flex-col gap-6">
             <motion.div
               className="absolute -right-6 -top-6 hidden h-32 w-32 rounded-full border border-cyan-400/40 lg:block"
               animate={{ rotate: [0, 12, -8, 0] }}
@@ -254,8 +238,8 @@ export default function LoginPage() {
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/80">Cicero Access</p>
                   <h2 className="text-2xl font-semibold text-white">
-                  {isRegister ? "Aktivasi Akun" : "Masuk Dashboard"}
-                </h2>
+                    {isRegister ? "Aktivasi Akun" : "Masuk Dashboard"}
+                  </h2>
                 </div>
                 <div className="flex self-start rounded-full border border-white/10 bg-white/5 p-1 text-xs font-medium sm:self-auto">
                   <button
@@ -336,15 +320,15 @@ export default function LoginPage() {
                         placeholder="Konfirmasi Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                      onBlur={handleTrim(setConfirmPassword)}
-                      required
-                      autoComplete="new-password"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((prev) => !prev)}
-                      className="absolute inset-y-0 right-4 flex items-center text-white/60"
+                        onBlur={handleTrim(setConfirmPassword)}
+                        required
+                        autoComplete="new-password"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-4 flex items-center text-white/60"
                         tabIndex={-1}
                       >
                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -360,15 +344,15 @@ export default function LoginPage() {
                         placeholder="Nomor WhatsApp aktif"
                         value={whatsapp}
                         onChange={(e) => setWhatsapp(e.target.value)}
-                      onBlur={handleTrim(setWhatsapp)}
-                      required
-                      inputMode="tel"
-                      autoComplete="tel"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
-                    />
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
+                        onBlur={handleTrim(setWhatsapp)}
+                        required
+                        inputMode="tel"
+                        autoComplete="tel"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
                         <label htmlFor="role" className="sr-only">
                           Role
                         </label>
@@ -486,12 +470,30 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div
+              className="relative z-10 flex items-start gap-4 rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 via-blue-400/20 to-violet-400/20 text-cyan-200">
+                <ArrowRight className="h-5 w-5" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Onboarding Terarah</p>
+                <h3 className="text-lg font-semibold text-white">Validasi akses dalam 1x24 jam</h3>
+                <p className="text-sm leading-relaxed text-slate-200/80">
+                  Tim keamanan Cicero akan menghubungi Anda melalui WhatsApp untuk memverifikasi mandat dan memastikan akses dashboard hanya diberikan kepada personel yang tepat.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
               className="absolute inset-x-6 top-6 -z-10 h-[92%] rounded-[36px] bg-gradient-to-br from-white/10 via-white/5 to-transparent blur-2xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
             />
-          </section>
+          </div>
         </div>
       </div>
     </main>
