@@ -100,6 +100,9 @@ export default function UserDirectoryPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   // inline edit state
   const [editingRowId, setEditingRowId] = useState(null);
   const [editNama, setEditNama] = useState("");
@@ -183,6 +186,14 @@ export default function UserDirectoryPage() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 250);
+
+    return () => clearTimeout(handler);
+  }, [search]);
+
   const sortedUsers = useMemo(
     () => [...users].sort(compareUsersByPangkatAndNrp),
     [users],
@@ -204,9 +215,22 @@ export default function UserDirectoryPage() {
         const key = u.divisi || "-";
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(u);
-      });
+    });
     return grouped;
   }, [sortedUsers, isDitbinmasClient, showAllDitbinmas]);
+
+  const summaryStats = useMemo(() => {
+    const list = Object.values(rekapUsers).flat();
+    const total = list.length;
+    const aktif = list.filter(
+      (u) => u.status === true || String(u.status).toLowerCase() === "true",
+    ).length;
+    const nonaktif = total - aktif;
+    const insta = list.filter((u) => Boolean(u.insta)).length;
+    const tiktok = list.filter((u) => Boolean(u.tiktok)).length;
+
+    return { total, aktif, nonaktif, insta, tiktok };
+  }, [rekapUsers]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -231,6 +255,7 @@ export default function UserDirectoryPage() {
       setSatfung("");
       setPolsekName("");
       setShowForm(false);
+      showToast("User berhasil ditambahkan", "success");
       mutate();
     } catch (err) {
       setSubmitError(err.message || "Gagal menambah user");
@@ -263,6 +288,7 @@ export default function UserDirectoryPage() {
       }
       await mutate();
       setEditingRowId(null);
+      showToast("Data user berhasil diperbarui", "success");
     } catch (err) {
       setUpdateError(err.message || "Gagal mengubah user");
     }
@@ -356,21 +382,38 @@ export default function UserDirectoryPage() {
           }
           return true;
         })
-        .filter(
-          (u) =>
+        .filter((u) => {
+          if (statusFilter === "ALL") return true;
+          const isActive =
+            u.status === true || String(u.status).toLowerCase() === "true";
+          if (statusFilter === "ACTIVE") return isActive;
+          if (statusFilter === "INACTIVE") return !isActive;
+          return true;
+        })
+        .filter((u) => {
+          if (!debouncedSearch) return true;
+          const term = debouncedSearch.toLowerCase();
+          return (
             (u.nama_client || u.nama || "")
               .toLowerCase()
-              .includes(search.toLowerCase()) ||
-            (u.title || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.user_id || "").toLowerCase().includes(search.toLowerCase()) ||
+              .includes(term) ||
+            (u.title || "").toLowerCase().includes(term) ||
+            (u.user_id || "").toLowerCase().includes(term) ||
             (u.divisi || "")
               .toLowerCase()
-              .includes(search.toLowerCase()) ||
-            (u.insta || "").toLowerCase().includes(search.toLowerCase()) ||
-            (u.tiktok || "").toLowerCase().includes(search.toLowerCase()) ||
-            String(u.status).toLowerCase().includes(search.toLowerCase()),
-        ),
-    [sortedUsers, search, isDitbinmasClient, showAllDitbinmas],
+              .includes(term) ||
+            (u.insta || "").toLowerCase().includes(term) ||
+            (u.tiktok || "").toLowerCase().includes(term) ||
+            String(u.status).toLowerCase().includes(term)
+          );
+        }),
+    [
+      sortedUsers,
+      debouncedSearch,
+      isDitbinmasClient,
+      showAllDitbinmas,
+      statusFilter,
+    ],
   );
 
   const sorted = filtered;
@@ -379,8 +422,11 @@ export default function UserDirectoryPage() {
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
   const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Reset ke halaman 1 saat search berubah
-  useEffect(() => setPage(1), [search, setPage]);
+    // Reset ke halaman 1 saat filter berubah
+    useEffect(
+      () => setPage(1),
+      [debouncedSearch, statusFilter, showAllDitbinmas, setPage],
+    );
 
   // Pastikan halaman tetap valid saat totalPages berubah
   useEffect(() => {
@@ -403,7 +449,7 @@ export default function UserDirectoryPage() {
   if (isLoading) return <Loader />;
   if (error)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="bg-white rounded-lg shadow-md p-6 text-red-500 font-bold">
           {error.message || error}
         </div>
@@ -411,8 +457,8 @@ export default function UserDirectoryPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
-      <div className="max-w-6xl w-full bg-white rounded-2xl shadow-md p-8 relative">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4 sm:px-6">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-md p-6 sm:p-8 relative">
         <button
           onClick={() => mutate()}
           className="absolute top-4 right-4 text-black hover:text-black"
@@ -421,10 +467,17 @@ export default function UserDirectoryPage() {
           <RefreshCw className="w-5 h-5" />
         </button>
         <h1 className="text-2xl font-bold text-blue-700">User Directory</h1>
-        <div className="mb-4 text-sm text-black">
+        <div className="mb-6 text-sm text-slate-600">
           Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
         </div>
-        <div className="flex flex-wrap items-center mb-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+          <SummaryCard label="Total User" value={summaryStats.total} tone="primary" />
+          <SummaryCard label="Aktif" value={summaryStats.aktif} tone="success" />
+          <SummaryCard label="Nonaktif" value={summaryStats.nonaktif} tone="muted" />
+          <SummaryCard label="Update Instagram" value={summaryStats.insta} tone="info" />
+          <SummaryCard label="Update TikTok" value={summaryStats.tiktok} tone="pink" />
+        </div>
+        <div className="flex flex-wrap items-center mb-6 gap-2">
           <button
             onClick={() => {
               setShowForm((s) => !s);
@@ -455,13 +508,29 @@ export default function UserDirectoryPage() {
                 : "Semua Ditbinmas"}
             </button>
           )}
-          <input
-            type="text"
-            placeholder="Cari pengguna..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="ml-auto px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 flex-1"
-          />
+          <label
+            className="ml-auto flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow focus-within:ring-2 focus-within:ring-blue-300 text-sm flex-1 min-w-[220px]"
+          >
+            <span className="sr-only">Cari pengguna</span>
+            <input
+              type="search"
+              placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full border-0 focus:outline-none text-sm text-black"
+              aria-label="Pencarian pengguna"
+            />
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+            aria-label="Filter status user"
+          >
+            <option value="ALL">Semua Status</option>
+            <option value="ACTIVE">Aktif</option>
+            <option value="INACTIVE">Nonaktif</option>
+          </select>
         </div>
 
         {showForm && (
@@ -526,7 +595,13 @@ export default function UserDirectoryPage() {
               />
             )}
             {submitError && (
-              <div className="text-red-500 text-sm md:col-span-2">{submitError}</div>
+              <div
+                className="text-red-500 text-sm md:col-span-2"
+                role="alert"
+                aria-live="polite"
+              >
+                {submitError}
+              </div>
             )}
             <div className="flex gap-2 md:col-span-2">
               <button
@@ -548,23 +623,28 @@ export default function UserDirectoryPage() {
             </div>
           </form>
         )}
-        <div className="overflow-x-auto rounded-xl border">
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100 text-gray-700">
               <tr>
                 <th className="py-2 px-2 text-left">No</th>
                 <th className="py-2 px-2 text-left">Nama</th>
                 <th className="py-2 px-2 text-left">NRP/NIP</th>
                 <th className="py-2 px-2 text-left">{columnLabel}</th>
-                <th className="py-2 px-2 text-left">Username IG</th>
-                <th className="py-2 px-2 text-left">Username TikTok</th>
+                <th className="py-2 px-2 text-left">Instagram</th>
+                <th className="py-2 px-2 text-left">TikTok</th>
                 <th className="py-2 px-2 text-left">Status</th>
                 <th className="py-2 px-2 text-left">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {currentRows.map((u, idx) => (
-                <tr key={u.user_id || idx} className="border-t">
+                <tr
+                  key={u.user_id || idx}
+                  className={`border-t ${
+                    editingRowId === u.user_id ? "bg-blue-50" : "bg-white"
+                  }`}
+                >
                   <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="py-1 px-2">
                     {editingRowId === u.user_id ? (
@@ -630,15 +710,27 @@ export default function UserDirectoryPage() {
                           onClick={() => handleUpdateRow(u.user_id)}
                           disabled={updateLoading}
                           className="text-green-600"
+                          type="button"
+                          aria-label="Simpan perubahan"
                         >
                           <Check className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setEditingRowId(null)} className="text-red-600">
+                        <button
+                          onClick={() => setEditingRowId(null)}
+                          className="text-red-600"
+                          type="button"
+                          aria-label="Batalkan perubahan"
+                        >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
-                      <button onClick={() => handleEditClick(u)} className="text-blue-600">
+                      <button
+                        onClick={() => handleEditClick(u)}
+                        className="text-blue-600"
+                        type="button"
+                        aria-label={`Edit data ${u.nama || "user"}`}
+                      >
                         <Pencil className="w-4 h-4" />
                       </button>
                     )}
@@ -647,7 +739,13 @@ export default function UserDirectoryPage() {
               ))}
               {editingRowId && updateError && (
                 <tr>
-                  <td colSpan="8" className="py-1 px-2 text-red-500 text-xs">{updateError}</td>
+                  <td
+                    colSpan="8"
+                    className="py-1 px-2 text-red-500 text-xs"
+                    role="alert"
+                  >
+                    {updateError}
+                  </td>
                 </tr>
               )}
               {currentRows.length === 0 && (
@@ -683,6 +781,31 @@ export default function UserDirectoryPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function SummaryCard({ label, value, tone = "primary" }) {
+  const toneStyles = {
+    primary: "bg-blue-50 text-blue-700 border-blue-100",
+    success: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    info: "bg-sky-50 text-sky-700 border-sky-100",
+    muted: "bg-slate-50 text-slate-700 border-slate-200",
+    pink: "bg-pink-50 text-pink-700 border-pink-100",
+  };
+  const displayValue =
+    typeof value === "number" ? value.toLocaleString("id-ID") : value;
+
+  return (
+    <div
+      className={`rounded-xl border px-4 py-3 flex flex-col gap-1 ${
+        toneStyles[tone] || toneStyles.primary
+      }`}
+    >
+      <span className="text-xs uppercase tracking-wide text-slate-500">
+        {label}
+      </span>
+      <span className="text-2xl font-semibold">{displayValue}</span>
     </div>
   );
 }
