@@ -54,6 +54,16 @@ export default function InstagramEngagementInsightPage() {
   // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
+  const totalUser = Number(rekapSummary.totalUser) || 0;
+  const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
+  const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
+  const getPercentage = (value, base = validUserCount) => {
+    const denominator = Number(base);
+    if (!denominator) return undefined;
+    const numerator = Number(value) || 0;
+    return (numerator / denominator) * 100;
+  };
+
   function handleCopyRekap() {
     const message = buildInstagramRekap(rekapSummary, chartData, clientName);
 
@@ -118,6 +128,7 @@ export default function InstagramEngagementInsightPage() {
                   value={rekapSummary.totalSudahLike}
                   color="green"
                   icon={<ThumbsUp className="text-green-500" />}
+                  percentage={getPercentage(rekapSummary.totalSudahLike)}
                 />
                 <Divider />
                 <SummaryItem
@@ -125,6 +136,7 @@ export default function InstagramEngagementInsightPage() {
                   value={rekapSummary.totalKurangLike}
                   color="orange"
                   icon={<ThumbsDown className="text-orange-500" />}
+                  percentage={getPercentage(rekapSummary.totalKurangLike)}
                 />
                 <Divider />
                 <SummaryItem
@@ -132,6 +144,7 @@ export default function InstagramEngagementInsightPage() {
                   value={rekapSummary.totalBelumLike}
                   color="red"
                   icon={<ThumbsDown className="text-red-500" />}
+                  percentage={getPercentage(rekapSummary.totalBelumLike)}
                 />
                 <Divider />
                 <SummaryItem
@@ -139,6 +152,10 @@ export default function InstagramEngagementInsightPage() {
                   value={rekapSummary.totalTanpaUsername}
                   color="gray"
                   icon={<UserX className="text-gray-400" />}
+                  percentage={getPercentage(
+                    rekapSummary.totalTanpaUsername,
+                    totalUser,
+                  )}
                 />
               </div>
             </div>
