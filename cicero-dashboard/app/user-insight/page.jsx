@@ -315,121 +315,122 @@ export default function UserInsightPage() {
       </div>
     );
 
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-cyan-500/25 blur-3xl" />
-        <div className="absolute -right-10 top-72 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
-        <div className="absolute left-1/2 top-0 h-96 w-[34rem] -translate-x-1/2 bg-gradient-to-b from-cyan-400/10 via-transparent to-transparent blur-3xl" />
-      </div>
-      <div className="relative flex min-h-screen flex-col">
-        <div className="flex-1">
-          <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-12">
-            <div className="flex flex-col gap-10">
-              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-cyan-200 md:text-4xl">
-                    USER INSIGHT
-                  </h1>
-                  <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                    Monitor keterisian kanal media sosial secara futuristik dengan tampilan yang selaras dengan dasbor utama.
-                  </p>
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+        <div className="pointer-events-none absolute inset-0 opacity-70">
+          <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-cyan-500/25 blur-3xl" />
+          <div className="absolute -right-10 top-72 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
+          <div className="absolute left-1/2 top-0 h-96 w-[34rem] -translate-x-1/2 bg-gradient-to-b from-cyan-400/10 via-transparent to-transparent blur-3xl" />
+        </div>
+        <div className="relative flex min-h-screen flex-col">
+          <div className="flex-1">
+            <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-12">
+              <div className="flex flex-col gap-10">
+                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h1 className="text-3xl font-semibold tracking-[0.2em] text-cyan-200 md:text-4xl">
+                      USER INSIGHT
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                      Monitor keterisian kanal media sosial secara futuristik dengan tampilan yang selaras dengan dasbor utama.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleCopyRekap}
+                      className="relative overflow-hidden rounded-full border border-cyan-400/40 bg-cyan-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,0.25)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-500/20"
+                    >
+                      <span className="relative">Salin Rekap</span>
+                    </button>
+                    <button
+                      onClick={fetchData}
+                      className="rounded-full border border-slate-700/70 bg-slate-900/80 p-2 text-slate-300 transition duration-300 hover:border-cyan-400 hover:text-cyan-300"
+                      aria-label="Refresh"
+                    >
+                      <RefreshCw className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleCopyRekap}
-                    className="relative overflow-hidden rounded-full border border-cyan-400/40 bg-cyan-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,0.25)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-500/20"
-                  >
-                    <span className="relative">Salin Rekap</span>
-                  </button>
-                  <button
-                    onClick={fetchData}
-                    className="rounded-full border border-slate-700/70 bg-slate-900/80 p-2 text-slate-300 transition duration-300 hover:border-cyan-400 hover:text-cyan-300"
-                    aria-label="Refresh"
-                  >
-                    <RefreshCw className="h-5 w-5" />
-                  </button>
+
+                {!isDirectorate && (
+                  <div className="self-start">
+                    <span className="inline-flex max-w-xl items-center rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+                      Polres Jajaran dapat mengajukan request sistem untuk diterapkan di kesatuan masing-masing, sekaligus melakukan absensi personil guna meningkatkan engagement media sosial resmi kesatuannya.
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 shadow-[0_0_60px_rgba(14,165,233,0.25)] backdrop-blur-xl md:flex-row md:gap-4 md:p-6">
+                  <SummaryItem
+                    label="Total User"
+                    value={summary.total}
+                    color="blue"
+                    icon={<User className="h-7 w-7 text-cyan-300" />}
+                  />
+                  <Divider />
+                  <SummaryItem
+                    label="Instagram Terisi"
+                    value={summary.instagramFilled}
+                    color="red"
+                    icon={<Instagram className="h-7 w-7 text-rose-300" />}
+                    percentage={summary.instagramFilledPercent}
+                    showProgress
+                  />
+                  <Divider />
+                  <SummaryItem
+                    label="Instagram Belum Diisi"
+                    value={summary.instagramEmpty}
+                    color="gray"
+                    icon={<Instagram className="h-7 w-7 text-slate-300" />}
+                    percentage={summary.instagramEmptyPercent}
+                  />
+                  <Divider />
+                  <SummaryItem
+                    label="TikTok Terisi"
+                    value={summary.tiktokFilled}
+                    color="green"
+                    icon={<Music className="h-7 w-7 text-emerald-300" />}
+                    percentage={summary.tiktokFilledPercent}
+                    showProgress
+                  />
+                  <Divider />
+                  <SummaryItem
+                    label="TikTok Belum Diisi"
+                    value={summary.tiktokEmpty}
+                    color="gray"
+                    icon={<Music className="h-7 w-7 text-slate-300" />}
+                    percentage={summary.tiktokEmptyPercent}
+                  />
                 </div>
+
+                {isDirectorate ? (
+                  <ChartBox
+                    title="POLRES JAJARAN"
+                    data={chartPolres}
+                    orientation="horizontal"
+                    minHeight={420}
+                    thicknessMultiplier={3}
+                  />
+                ) : (
+                  <div className="flex flex-col gap-6">
+                    <ChartBox title="BAG" data={chartKelompok.BAG} />
+                    <ChartBox title="SAT" data={chartKelompok.SAT} />
+                    <ChartBox title="SI & SPKT" data={chartKelompok["SI & SPKT"]} />
+                    <ChartBox title="LAINNYA" data={chartKelompok.LAINNYA} />
+                    <ChartBox
+                      title="POLSEK"
+                      data={chartKelompok.POLSEK}
+                      orientation="horizontal"
+                    />
+                  </div>
+                )}
               </div>
-
-              {!isDirectorate && (
-                <div className="self-start">
-                  <span className="inline-flex max-w-xl items-center rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
-                    Polres Jajaran dapat mengajukan request sistem untuk diterapkan di kesatuan masing-masing, sekaligus melakukan absensi personil guna meningkatkan engagement media sosial resmi kesatuannya.
-                  </span>
-                </div>
-              )}
-
-              <div className="flex flex-col items-stretch justify-between gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 shadow-[0_0_60px_rgba(14,165,233,0.25)] backdrop-blur-xl md:flex-row md:gap-4 md:p-6">
-              <SummaryItem
-                label="Total User"
-                value={summary.total}
-                color="blue"
-                icon={<User className="h-7 w-7 text-cyan-300" />}
-              />
-              <Divider />
-              <SummaryItem
-                label="Instagram Terisi"
-                value={summary.instagramFilled}
-                color="red"
-                icon={<Instagram className="h-7 w-7 text-rose-300" />}
-                percentage={summary.instagramFilledPercent}
-                showProgress
-              />
-              <Divider />
-              <SummaryItem
-                label="Instagram Belum Diisi"
-                value={summary.instagramEmpty}
-                color="gray"
-                icon={<Instagram className="h-7 w-7 text-slate-300" />}
-                percentage={summary.instagramEmptyPercent}
-              />
-              <Divider />
-              <SummaryItem
-                label="TikTok Terisi"
-                value={summary.tiktokFilled}
-                color="green"
-                icon={<Music className="h-7 w-7 text-emerald-300" />}
-                percentage={summary.tiktokFilledPercent}
-                showProgress
-              />
-              <Divider />
-              <SummaryItem
-                label="TikTok Belum Diisi"
-                value={summary.tiktokEmpty}
-                color="gray"
-                icon={<Music className="h-7 w-7 text-slate-300" />}
-                percentage={summary.tiktokEmptyPercent}
-              />
             </div>
-
-            {isDirectorate ? (
-              <ChartBox
-                title="POLRES JAJARAN"
-                data={chartPolres}
-                orientation="horizontal"
-                minHeight={420}
-                thicknessMultiplier={3}
-              />
-            ) : (
-              <div className="flex flex-col gap-6">
-                <ChartBox title="BAG" data={chartKelompok.BAG} />
-                <ChartBox title="SAT" data={chartKelompok.SAT} />
-                <ChartBox title="SI & SPKT" data={chartKelompok["SI & SPKT"]} />
-                <ChartBox title="LAINNYA" data={chartKelompok.LAINNYA} />
-                <ChartBox
-                  title="POLSEK"
-                  data={chartKelompok.POLSEK}
-                  orientation="horizontal"
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 function ChartBox({
   title,
