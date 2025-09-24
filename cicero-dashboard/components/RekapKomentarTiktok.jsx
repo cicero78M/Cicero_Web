@@ -2,6 +2,7 @@
 import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { AlertTriangle, Music, User, Check, X, Minus, UserX } from "lucide-react";
+import { showToast } from "@/utils/showToast";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -135,6 +136,225 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
       setPage(totalPages || 1);
     }
   }, [page, totalPages, setPage]);
+
+  function copyToClipboardFallback(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "absolute";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return successful;
+  }
+
+  function handleCopyRekap() {
+    const now = new Date();
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+
+    const satkerMap = {};
+    users.forEach((u) => {
+      const client = (
+        u.nama_client ||
+        u.client_name ||
+        u.client ||
+        bersihkanSatfung(u.divisi || "LAINNYA") ||
+        "LAINNYA"
+      )
+        .toString()
+        .toUpperCase();
+      if (!satkerMap[client]) {
+        satkerMap[client] = {
+          total: 0,
+          sudah: 0,
+          kurang: 0,
+          belum: 0,
+          tanpaUsername: 0,
+        };
+      }
+      satkerMap[client].total += 1;
+      const username = String(u.username || "").trim();
+      if (!username) {
+        satkerMap[client].tanpaUsername += 1;
+        return;
+      }
+      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+      if (totalTiktokPostCount === 0) {
+        satkerMap[client].belum += 1;
+      } else if (jumlahKomentar >= totalTiktokPostCount * 0.5) {
+        satkerMap[client].sudah += 1;
+      } else if (jumlahKomentar > 0) {
+        satkerMap[client].kurang += 1;
+      } else {
+        satkerMap[client].belum += 1;
+      }
+    });
+
+    const lines = [
+      `Rekap Komentar TikTok (${tanggal})`,
+      `Jumlah TikTok Post: ${totalTiktokPostCount}`,
+      `Total User: ${totalUser}`,
+      `Sudah Komentar: ${totalSudahKomentar}`,
+      `Kurang Komentar: ${totalKurangKomentar}`,
+      `Belum Komentar: ${totalBelumKomentar}`,
+      `Tanpa Username TikTok: ${totalTanpaUsername}`,
+      "",
+      "Rekap per Satker:",
+    ];
+
+    Object.entries(satkerMap)
+      .sort((a, b) => b[1].total - a[1].total)
+      .forEach(([name, data]) => {
+        lines.push(
+          `${name} (${data.total}): ✅ ${data.sudah}, ⚠️ ${data.kurang}, ❌ ${data.belum}, ⁉️ ${data.tanpaUsername}`,
+        );
+      });
+
+    const message = lines.join("\n");
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(message)
+        .then(() => {
+          showToast("Rekap disalin ke clipboard", "success");
+        })
+        .catch(() => {
+          const fallbackSuccess = copyToClipboardFallback(message);
+          if (fallbackSuccess) {
+            showToast("Rekap disalin ke clipboard", "success");
+          } else {
+            showToast(message, "info");
+          }
+        });
+    } else {
+      const fallbackSuccess = copyToClipboardFallback(message);
+      if (fallbackSuccess) {
+        showToast("Rekap disalin ke clipboard", "success");
+      } else {
+        showToast(message, "info");
+      }
+    }
+  }
+
+  function handleDownloadRekap() {
+    const clients = {};
+    users.forEach((u) => {
+      const clientName =
+        u.nama_client ||
+        u.client_name ||
+        u.client ||
+        bersihkanSatfung(u.divisi || "Lainnya") ||
+        "Lainnya";
+      if (!clients[clientName]) {
+        clients[clientName] = {
+          Sudah: [],
+          Kurang: [],
+          Belum: [],
+          UsernameKosong: [],
+        };
+      }
+      const username = String(u.username || "").trim();
+      if (!username) {
+        clients[clientName].UsernameKosong.push(u);
+        return;
+      }
+      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+      let status = "Belum";
+      if (totalTiktokPostCount !== 0) {
+        if (jumlahKomentar >= totalTiktokPostCount * 0.5) {
+          status = "Sudah";
+        } else if (jumlahKomentar > 0) {
+          status = "Kurang";
+        }
+      }
+      clients[clientName][status].push(u);
+    });
+
+    const sortByName = (arr) =>
+      [...arr].sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
+
+    const sortedClients = Object.keys(clients).sort((a, b) => {
+      if (a === "Direktorat Binmas") return -1;
+      if (b === "Direktorat Binmas") return 1;
+      return a.localeCompare(b);
+    });
+
+    const now = new Date();
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const tanggalFile = `${String(now.getDate()).padStart(2, "0")}_${String(
+      now.getMonth() + 1,
+    ).padStart(2, "0")}_${now.getFullYear()}`;
+    const jam = now.toLocaleTimeString("id-ID", { hour12: false });
+
+    const lines = [
+      "Mohon ijin Komandan,",
+      "",
+      "📋 Rekap Akumulasi Komentar TikTok",
+      `${hari}, ${tanggal}`,
+      `Jam: ${jam}`,
+      "",
+      `Jumlah Konten TikTok: ${totalTiktokPostCount}`,
+      `Jumlah Total Personil : ${totalUser} pers`,
+      `Sudah melaksanakan : ${totalSudahKomentar} pers`,
+      `Melaksanakan kurang lengkap : ${totalKurangKomentar} pers`,
+      `Belum melaksanakan : ${totalBelumKomentar} pers`,
+      `Belum Update Username TikTok : ${totalTanpaUsername} pers`,
+      "",
+    ];
+
+    if (tidakAdaPost) {
+      lines.push("Catatan: Tidak ada posting TikTok pada periode ini.");
+      lines.push("");
+    }
+
+    sortedClients.forEach((client) => {
+      const { Sudah, Kurang, Belum, UsernameKosong } = clients[client];
+      lines.push(
+        `${client.toUpperCase()} : ${Sudah.length}/${Kurang.length}/${Belum.length}/${UsernameKosong.length}`,
+      );
+      lines.push(`Sudah : ${Sudah.length}`);
+      sortByName(Sudah).forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        const divisi = bersihkanSatfung(u.divisi || "-");
+        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}, ${u.jumlah_komentar} komentar`);
+      });
+      lines.push(`Kurang : ${Kurang.length}`);
+      sortByName(Kurang).forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        const divisi = bersihkanSatfung(u.divisi || "-");
+        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}, ${u.jumlah_komentar} komentar`);
+      });
+      lines.push(`Belum : ${Belum.length}`);
+      sortByName(Belum).forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        const username = String(u.username || "-").trim() || "-";
+        const divisi = bersihkanSatfung(u.divisi || "-");
+        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}, ${username}`);
+      });
+      lines.push(`Username Kosong : ${UsernameKosong.length}`);
+      sortByName(UsernameKosong).forEach((u) => {
+        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+        const divisi = bersihkanSatfung(u.divisi || "-");
+        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}`);
+      });
+      lines.push("");
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Rekap_Komentar_TikTok_${hari}_${tanggalFile}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast("File rekap berhasil diunduh", "success");
+  }
 
   return (
     <div className="flex flex-col gap-6 mt-8 min-h-screen pb-24">
@@ -331,6 +551,23 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           </button>
         </div>
       )}
+
+      <div className="sticky bottom-4 z-20 flex w-full justify-end px-4">
+        <div className="flex w-full max-w-xl flex-col gap-2 rounded-2xl border border-pink-200 bg-white/95 p-3 shadow-xl backdrop-blur-sm sm:flex-row sm:items-center">
+          <button
+            onClick={handleDownloadRekap}
+            className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow sm:w-auto"
+          >
+            Download Rekap
+          </button>
+          <button
+            onClick={handleCopyRekap}
+            className="w-full px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg shadow sm:w-auto"
+          >
+            Salin Rekap
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
