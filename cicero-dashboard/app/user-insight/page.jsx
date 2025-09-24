@@ -308,62 +308,71 @@ export default function UserInsightPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white rounded-lg shadow-md p-6 text-red-500 font-bold">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <div className="rounded-3xl border border-red-500/40 bg-red-500/10 px-6 py-5 text-sm font-semibold text-red-200 shadow-[0_0_45px_rgba(248,113,113,0.25)]">
           {error}
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <div className="flex-1 flex items-start justify-center">
-        <div className="w-full max-w-5xl px-2 md:px-8 py-8">
-          <div className="flex flex-col gap-8">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-blue-700">
-                User Insight
-              </h1>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCopyRekap}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-                >
-                  Salin Rekap
-                </button>
-                <button
-                  onClick={fetchData}
-                  className="p-2 text-gray-500 hover:text-gray-700"
-                  aria-label="Refresh"
-                >
-                  <RefreshCw className="w-5 h-5" />
-                </button>
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-cyan-500/25 blur-3xl" />
+        <div className="absolute -right-10 top-72 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-96 w-[34rem] -translate-x-1/2 bg-gradient-to-b from-cyan-400/10 via-transparent to-transparent blur-3xl" />
+      </div>
+      <div className="relative flex min-h-screen flex-col">
+        <div className="flex-1">
+          <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-12">
+            <div className="flex flex-col gap-10">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-cyan-200 md:text-4xl">
+                    USER INSIGHT
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                    Monitor keterisian kanal media sosial secara futuristik dengan tampilan yang selaras dengan dasbor utama.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleCopyRekap}
+                    className="relative overflow-hidden rounded-full border border-cyan-400/40 bg-cyan-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,0.25)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-500/20"
+                  >
+                    <span className="relative">Salin Rekap</span>
+                  </button>
+                  <button
+                    onClick={fetchData}
+                    className="rounded-full border border-slate-700/70 bg-slate-900/80 p-2 text-slate-300 transition duration-300 hover:border-cyan-400 hover:text-cyan-300"
+                    aria-label="Refresh"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {!isDirectorate && (
-              <div className="self-start">
-                <span
-                  className="inline-block bg-blue-100 text-blue-800 text-xs md:text-sm font-medium px-3 py-1 rounded border border-blue-200"
-                >
-                  Polres Jajaran dapat mengajukan request sistem untuk diterapkan di kesatuan masing-masing, sekaligus melakukan absensi personil guna meningkatkan engagement media sosial resmi kesatuannya.
-                </span>
-              </div>
-            )}
+              {!isDirectorate && (
+                <div className="self-start">
+                  <span className="inline-flex max-w-xl items-center rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+                    Polres Jajaran dapat mengajukan request sistem untuk diterapkan di kesatuan masing-masing, sekaligus melakukan absensi personil guna meningkatkan engagement media sosial resmi kesatuannya.
+                  </span>
+                </div>
+              )}
 
-            <div className="bg-gradient-to-tr from-blue-50 to-white rounded-2xl shadow flex flex-col md:flex-row items-stretch justify-between p-3 md:p-5 gap-2 md:gap-4 border">
+              <div className="flex flex-col items-stretch justify-between gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 shadow-[0_0_60px_rgba(14,165,233,0.25)] backdrop-blur-xl md:flex-row md:gap-4 md:p-6">
               <SummaryItem
                 label="Total User"
                 value={summary.total}
                 color="blue"
-                icon={<User className="text-blue-400" />}
+                icon={<User className="h-7 w-7 text-cyan-300" />}
               />
               <Divider />
               <SummaryItem
                 label="Instagram Terisi"
                 value={summary.instagramFilled}
                 color="red"
-                icon={<Instagram className="text-red-500" />}
+                icon={<Instagram className="h-7 w-7 text-rose-300" />}
                 percentage={summary.instagramFilledPercent}
                 showProgress
               />
@@ -372,7 +381,7 @@ export default function UserInsightPage() {
                 label="Instagram Belum Diisi"
                 value={summary.instagramEmpty}
                 color="gray"
-                icon={<Instagram className="text-gray-500" />}
+                icon={<Instagram className="h-7 w-7 text-slate-300" />}
                 percentage={summary.instagramEmptyPercent}
               />
               <Divider />
@@ -380,7 +389,7 @@ export default function UserInsightPage() {
                 label="TikTok Terisi"
                 value={summary.tiktokFilled}
                 color="green"
-                icon={<Music className="text-green-500" />}
+                icon={<Music className="h-7 w-7 text-emerald-300" />}
                 percentage={summary.tiktokFilledPercent}
                 showProgress
               />
@@ -389,7 +398,7 @@ export default function UserInsightPage() {
                 label="TikTok Belum Diisi"
                 value={summary.tiktokEmpty}
                 color="gray"
-                icon={<Music className="text-gray-500" />}
+                icon={<Music className="h-7 w-7 text-slate-300" />}
                 percentage={summary.tiktokEmptyPercent}
               />
             </div>
@@ -436,13 +445,17 @@ function ChartBox({
     : 0;
 
   return (
-    <div className="bg-white rounded-xl shadow p-4">
-      <div className="flex flex-col items-center gap-1 mb-2">
-        <h3 id={titleId} className="font-bold text-blue-700 text-center">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 shadow-[0_0_45px_rgba(14,165,233,0.18)] backdrop-blur-lg">
+      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/5" />
+      <div className="relative flex flex-col items-center gap-2 pb-2 text-center">
+        <h3
+          id={titleId}
+          className="text-lg font-semibold uppercase tracking-[0.3em] text-cyan-200"
+        >
           {title}
         </h3>
         {hasData && (
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-0.5 text-xs font-semibold text-blue-700">
+          <span className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold tracking-[0.15em] text-cyan-100">
             Total {totalUsers.toLocaleString("id-ID")}
           </span>
         )}
@@ -455,31 +468,31 @@ function ChartBox({
             minHeight={minHeight}
             thicknessMultiplier={thicknessMultiplier}
           />
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-6 overflow-x-auto">
             <table
               aria-labelledby={titleId}
               tabIndex={0}
-              className="min-w-full text-sm text-left text-gray-700 border border-gray-200 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="min-w-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950/40 text-left text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:ring-offset-0"
             >
               <caption className="sr-only">{title}</caption>
-              <thead className="bg-gray-50 text-gray-600">
+              <thead className="bg-slate-900/80 text-[13px] uppercase tracking-[0.2em] text-slate-300">
                 <tr>
-                  <th scope="col" className="px-3 py-2 font-semibold">
+                  <th scope="col" className="px-4 py-3 font-semibold">
                     Divisi
                   </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
+                  <th scope="col" className="px-4 py-3 font-semibold">
                     Total User
                   </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
+                  <th scope="col" className="px-4 py-3 font-semibold">
                     Instagram Terisi
                   </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
+                  <th scope="col" className="px-4 py-3 font-semibold">
                     Instagram Belum Diisi
                   </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
+                  <th scope="col" className="px-4 py-3 font-semibold">
                     TikTok Terisi
                   </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
+                  <th scope="col" className="px-4 py-3 font-semibold">
                     TikTok Belum Diisi
                   </th>
                 </tr>
@@ -493,33 +506,33 @@ function ChartBox({
                   return (
                     <tr
                       key={key}
-                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      className="border-t border-slate-800/60 bg-slate-900/40 transition hover:bg-slate-800/40"
                     >
                       <th
                         scope="row"
-                        className="px-3 py-2 font-medium text-gray-900"
+                        className="px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-100"
                       >
                         {divisionName}
                       </th>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3 text-slate-200">
                         {Number(item?.total ?? 0).toLocaleString("id-ID")}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3 text-cyan-200">
                         {Number(item?.instagramFilled ?? 0).toLocaleString(
                           "id-ID",
                         )}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3 text-slate-300">
                         {Number(item?.instagramEmpty ?? 0).toLocaleString(
                           "id-ID",
                         )}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3 text-fuchsia-200">
                         {Number(item?.tiktokFilled ?? 0).toLocaleString(
                           "id-ID",
                         )}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3 text-slate-300">
                         {Number(item?.tiktokEmpty ?? 0).toLocaleString(
                           "id-ID",
                         )}
@@ -532,7 +545,7 @@ function ChartBox({
           </div>
         </>
       ) : (
-        <div className="text-center text-gray-400 text-sm">Tidak ada data</div>
+        <div className="py-6 text-center text-sm text-slate-400">Tidak ada data</div>
       )}
     </div>
   );
@@ -572,9 +585,14 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
           margin={chartMargin}
           barCategoryGap="16%"
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid stroke="rgba(148, 163, 184, 0.2)" strokeDasharray="3 3" />
           {isHorizontal ? (
-            <XAxis type="number" />
+            <XAxis
+              type="number"
+              tick={{ fill: "#cbd5f5", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={false}
+            />
           ) : (
             <XAxis
               dataKey="divisi"
@@ -582,6 +600,8 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
               height={90}
               tickMargin={12}
               tick={<CustomAxisTick orientation="vertical" />}
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={false}
             />
           )}
           {isHorizontal ? (
@@ -596,62 +616,84 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
                   maxWidth={horizontalLabelWidth - 24}
                 />
               }
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={false}
             />
           ) : (
-            <YAxis allowDecimals={false} />
+            <YAxis
+              allowDecimals={false}
+              tick={{ fill: "#cbd5f5", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tickLine={false}
+            />
           )}
           <Tooltip
             formatter={tooltipFormatter}
             labelFormatter={tooltipLabelFormatter}
             cursor={{ fill: "rgba(148, 163, 184, 0.12)" }}
+            contentStyle={{
+              backgroundColor: "#0f172a",
+              borderRadius: 16,
+              border: "1px solid rgba(148,163,184,0.35)",
+              color: "#e2e8f0",
+              padding: 12,
+            }}
+            itemStyle={{ color: "#e2e8f0" }}
           />
-          <Legend />
+          <Legend
+            iconType="circle"
+            wrapperStyle={{ color: "#cbd5f5", fontSize: 12, paddingTop: 12 }}
+          />
           <Bar
             dataKey="instagramFilled"
             name="Instagram Terisi"
-            fill="#e1306c"
+            fill="#22d3ee"
             stackId="instagram"
           >
             <LabelList
               dataKey="instagramFilled"
               position={barPosition}
               fontSize={12}
+              fill="#e2e8f0"
             />
           </Bar>
           <Bar
             dataKey="instagramEmpty"
             name="Instagram Belum Diisi"
-            fill="#fca5a5"
+            fill="rgba(34,211,238,0.28)"
             stackId="instagram"
           >
             <LabelList
               dataKey="instagramEmpty"
               position={barPosition}
               fontSize={12}
+              fill="#cbd5f5"
             />
           </Bar>
           <Bar
             dataKey="tiktokFilled"
             name="TikTok Terisi"
-            fill="#000000"
+            fill="#a855f7"
             stackId="tiktok"
           >
             <LabelList
               dataKey="tiktokFilled"
               position={barPosition}
               fontSize={12}
+              fill="#ede9fe"
             />
           </Bar>
           <Bar
             dataKey="tiktokEmpty"
             name="TikTok Belum Diisi"
-            fill="#6b7280"
+            fill="rgba(168,85,247,0.35)"
             stackId="tiktok"
           >
             <LabelList
               dataKey="tiktokEmpty"
               position={barPosition}
               fontSize={12}
+              fill="#d6bcfa"
             />
           </Bar>
         </BarChart>
@@ -677,7 +719,7 @@ function CustomAxisTick({
         <text
           transform="rotate(-40)"
           textAnchor="end"
-          fill="#1e293b"
+          fill="#cbd5f5"
           fontSize={12}
           fontWeight={600}
         >
@@ -716,7 +758,7 @@ function CustomAxisTick({
   return (
     <g transform={`translate(${textStartX},${y})`}>
       <title>{value}</title>
-      <text textAnchor="start" fill="#1e293b" fontSize={12} fontWeight={600}>
+      <text textAnchor="start" fill="#cbd5f5" fontSize={12} fontWeight={600}>
         {lines.map((line, index) => (
           <tspan key={`${line}-${index}`} x={0} dy={index === 0 ? 4 : 14}>
             {line}
@@ -736,10 +778,30 @@ function SummaryItem({
   showProgress = false,
 }) {
   const colorMap = {
-    blue: { text: "text-blue-700", bar: "bg-blue-500" },
-    green: { text: "text-green-600", bar: "bg-green-500" },
-    red: { text: "text-red-500", bar: "bg-red-500" },
-    gray: { text: "text-gray-700", bar: "bg-gray-500" },
+    blue: {
+      text: "text-cyan-100",
+      bar: "bg-cyan-400",
+      accent: "from-cyan-500/25 via-transparent to-transparent",
+      glow: "shadow-[0_0_35px_rgba(34,211,238,0.35)]",
+    },
+    green: {
+      text: "text-emerald-100",
+      bar: "bg-emerald-400",
+      accent: "from-emerald-500/25 via-transparent to-transparent",
+      glow: "shadow-[0_0_35px_rgba(16,185,129,0.35)]",
+    },
+    red: {
+      text: "text-rose-100",
+      bar: "bg-rose-400",
+      accent: "from-rose-500/25 via-transparent to-transparent",
+      glow: "shadow-[0_0_40px_rgba(244,63,94,0.3)]",
+    },
+    gray: {
+      text: "text-slate-200",
+      bar: "bg-slate-500",
+      accent: "from-slate-500/20 via-transparent to-transparent",
+      glow: "shadow-[0_0_30px_rgba(148,163,184,0.25)]",
+    },
   };
   const displayColor = colorMap[color] || colorMap.gray;
   const formattedPercentage =
@@ -750,37 +812,49 @@ function SummaryItem({
     typeof percentage === "number" ? `${Math.min(100, Math.max(0, percentage))}%` : "0%";
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-2 px-2 w-full">
-      <div className="mb-1 flex items-center justify-center text-xl">{icon}</div>
-      <div className={`text-3xl md:text-4xl font-bold ${displayColor.text}`}>{value}</div>
-      <div className="text-xs md:text-sm font-semibold text-gray-500 mt-1 uppercase tracking-wide text-center">
-        {label}
-      </div>
-      {formattedPercentage && (
-        <div className="mt-1 flex flex-col items-center gap-1 w-full max-w-[160px]">
-          <span className="text-[11px] md:text-xs font-medium text-gray-600">
-            {formattedPercentage}
-          </span>
-          {showProgress && (
-            <div className="h-1.5 w-full rounded-full bg-gray-200">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ease-out ${displayColor.bar}`}
-                style={{ width: progressWidth }}
-                role="progressbar"
-                aria-valuenow={Math.round(Number(percentage) || 0)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${label} ${formattedPercentage}`}
-              />
-            </div>
-          )}
+    <div
+      className={`group relative flex w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-950/40 px-4 py-6 text-center backdrop-blur-sm transition duration-300 hover:border-cyan-400/50 ${displayColor.glow}`}
+    >
+      <div
+        className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br ${displayColor.accent}`}
+      />
+      <div className="pointer-events-none absolute inset-x-6 top-2 h-12 rounded-full bg-white/10 blur-2xl" />
+      <div className="relative flex w-full flex-col items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xl">
+          {icon}
         </div>
-      )}
+        <div className={`text-3xl font-semibold md:text-4xl ${displayColor.text}`}>
+          {value}
+        </div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-400">
+          {label}
+        </div>
+        {formattedPercentage && (
+          <div className="mt-1 flex w-full flex-col items-center gap-1">
+            <span className="text-[11px] font-medium text-slate-300">
+              {formattedPercentage}
+            </span>
+            {showProgress && (
+              <div className="h-2 w-full max-w-[180px] rounded-full bg-slate-800/80">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${displayColor.bar}`}
+                  style={{ width: progressWidth }}
+                  role="progressbar"
+                  aria-valuenow={Math.round(Number(percentage) || 0)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${label} ${formattedPercentage}`}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 function Divider() {
-  return <div className="hidden md:block w-px bg-gray-200 mx-2 my-2" />;
+  return <div className="hidden h-full w-px self-stretch bg-slate-800/60 md:block" />;
 }
 
