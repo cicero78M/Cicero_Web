@@ -50,12 +50,6 @@ export default function LoginPage() {
         description:
           "Proteksi berlapis memastikan data sensitif hanya diakses oleh personel berwenang.",
       },
-      {
-        icon: <Zap className="h-4 w-4 text-amber-300" />,
-        title: "Insight Seketika",
-        description:
-          "Visualisasi realtime menghadirkan intel penting untuk keputusan lapangan yang presisi.",
-      },
     ],
     []
   );
