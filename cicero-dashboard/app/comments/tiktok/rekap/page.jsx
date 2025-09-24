@@ -241,45 +241,72 @@ export default function RekapKomentarTiktokPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center text-red-500 font-bold">
-          {error}
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
+        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-rose-500/40 bg-slate-900/80 p-8 text-center shadow-[0_0_40px_rgba(244,63,94,0.25)]">
+          <div className="absolute inset-x-12 -top-8 h-24 rounded-full bg-gradient-to-b from-rose-500/30 to-transparent blur-2xl" />
+          <div className="relative space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-rose-200/80">
+              System Alert
+            </p>
+            <p className="text-lg font-semibold text-rose-100">{error}</p>
+            <p className="text-sm text-slate-300">
+              Coba muat ulang halaman atau periksa kembali koneksi data Anda.
+            </p>
+          </div>
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-pink-700">
-              Rekapitulasi Komentar TikTok
-            </h1>
-            <Link
-              href="/comments/tiktok"
-              className="inline-block bg-gray-100 hover:bg-pink-50 text-pink-700 border border-pink-300 font-semibold px-4 py-2 rounded-lg transition-all duration-150 shadow flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kembali
-            </Link>
-          </div>
-          <div className="flex flex-wrap items-center justify-start md:justify-end gap-3 mb-2">
-            <ViewDataSelector
-              value={viewBy}
-              onChange={handleViewChange}
-              options={viewOptions}
-              date={selectorDateValue}
-              onDateChange={handleDateChange}
-            />
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 top-[-100px] h-[360px] w-[360px] rounded-full bg-fuchsia-500/20 blur-[150px]" />
+        <div className="absolute right-[-120px] top-1/4 h-[400px] w-[400px] rounded-full bg-cyan-500/20 blur-[160px]" />
+        <div className="absolute inset-x-0 bottom-[-200px] h-[320px] bg-gradient-to-t from-slate-900 via-slate-950/60 to-transparent" />
+      </div>
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 pb-16 pt-10 sm:px-6 lg:px-10">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-fuchsia-200">
+              Rekap Komentar
+            </span>
+            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-semibold leading-tight text-slate-50 md:text-4xl">
+                  Rekapitulasi Komentar TikTok
+                </h1>
+                <p className="max-w-3xl text-sm text-slate-300 md:text-base">
+                  Selaraskan laporan komentar harian hingga rentang tanggal tertentu.
+                  Panel rekap memberikan ringkasan kepatuhan serta detail pengguna
+                  sehingga Anda bisa menindaklanjuti satuan yang belum aktif.
+                </p>
+              </div>
+              <Link
+                href="/comments/tiktok"
+                className="group inline-flex items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-slate-200 transition hover:border-fuchsia-400/60 hover:bg-fuchsia-500/10"
+              >
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                Kembali
+              </Link>
+            </div>
           </div>
 
-          {/* Kirim data ke komponen detail rekap TikTok */}
-          <RekapKomentarTiktok
-            users={chartData}
-            totalTiktokPost={rekapSummary.totalTiktokPost}
+          <ViewDataSelector
+            value={viewBy}
+            onChange={handleViewChange}
+            options={viewOptions}
+            date={selectorDateValue}
+            onDateChange={handleDateChange}
+            className="justify-start gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur"
+            labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
+            controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30"
           />
         </div>
+
+        <RekapKomentarTiktok
+          users={chartData}
+          totalTiktokPost={rekapSummary.totalTiktokPost}
+        />
       </div>
     </div>
   );
