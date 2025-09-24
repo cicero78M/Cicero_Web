@@ -1,5 +1,6 @@
 "use client";
 import { useId } from "react";
+import { cn } from "@/lib/utils";
 
 export const VIEW_OPTIONS = [
   { value: "today", label: "Hari ini", periode: "harian" },
@@ -57,6 +58,9 @@ export default function ViewDataSelector({
   onDateChange,
   options = VIEW_OPTIONS,
   disabled = false,
+  className,
+  controlClassName,
+  labelClassName,
 }) {
   const id = useId();
   const showDateInput = value === "date";
@@ -66,22 +70,28 @@ export default function ViewDataSelector({
   const monthInputId = `${id}-month`;
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
+  const baseContainerClass = cn(
+    "flex w-full flex-wrap items-center gap-2 justify-between sm:justify-start",
+    disabled && "opacity-60",
+    className,
+  );
+  const baseLabelClass = cn(
+    "text-sm font-semibold w-full sm:w-auto",
+    labelClassName,
+  );
+  const baseControlClass = cn(
+    "w-full rounded border px-2 py-1 text-sm transition sm:w-auto",
+    controlClassName,
+  );
+
   return (
-    <div
-      className={`flex flex-wrap items-center gap-2 justify-between sm:justify-start w-full ${
-        disabled ? "opacity-60" : ""
-      }`}
-      aria-disabled={disabled}
-    >
-      <label
-        htmlFor={id}
-        className="text-sm font-semibold w-full sm:w-auto"
-      >
+    <div className={baseContainerClass} aria-disabled={disabled}>
+      <label htmlFor={id} className={baseLabelClass}>
         View Data By:
       </label>
       <select
         id={id}
-        className="border rounded px-2 py-1 text-sm w-full sm:w-auto"
+        className={baseControlClass}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
@@ -100,7 +110,7 @@ export default function ViewDataSelector({
           <input
             id={dateInputId}
             type="date"
-            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
+            className={cn(baseControlClass, "mt-2 sm:mt-0")}
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -115,7 +125,7 @@ export default function ViewDataSelector({
           <input
             id={monthInputId}
             type="month"
-            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
+            className={cn(baseControlClass, "mt-2 sm:mt-0")}
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -130,7 +140,7 @@ export default function ViewDataSelector({
           <input
             id={rangeStartId}
             type="date"
-            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
+            className={cn(baseControlClass, "mt-2 sm:mt-0")}
             value={date?.startDate || ""}
             onChange={(e) =>
               onDateChange?.({ ...date, startDate: e.target.value })
@@ -143,7 +153,7 @@ export default function ViewDataSelector({
           <input
             id={rangeEndId}
             type="date"
-            className="border rounded px-2 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0"
+            className={cn(baseControlClass, "mt-2 sm:mt-0")}
             value={date?.endDate || ""}
             onChange={(e) =>
               onDateChange?.({ ...date, endDate: e.target.value })
