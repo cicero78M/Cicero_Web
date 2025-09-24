@@ -26,39 +26,54 @@ export default function Header() {
   if (pathname === "/" || pathname === "/login") return null;
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-800/60 bg-slate-950/90 backdrop-blur supports-[backdrop-filter]:bg-slate-950/70">
+      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),_transparent_55%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,_rgba(129,140,248,0.18),_rgba(56,189,248,0.08),_rgba(59,130,246,0.24))] opacity-80" />
+        </div>
         <Link
           href="/dashboard"
-          className="flex items-center font-bold text-blue-700 dark:text-blue-300"
+          className="group flex items-center gap-3 font-semibold text-sky-100"
         >
-          <Image
-            src="/CICERO.png"
-            alt="CICERO Logo"
-            width={24}
-            height={24}
-            className="mr-2"
-            priority
-          />
-          CICERO
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-sky-400/50 bg-slate-950/80 shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-shadow group-hover:shadow-[0_0_32px_rgba(125,211,252,0.6)]">
+            <Image
+              src="/CICERO.png"
+              alt="CICERO Logo"
+              fill
+              sizes="40px"
+              className="h-6 w-6 object-contain p-2"
+              priority
+            />
+          </span>
+          <span className="text-lg tracking-[0.35em] text-sky-100">CICERO</span>
         </Link>
-        <nav className="hidden md:flex gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              className={`hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${pathname.startsWith(item.path) ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden gap-6 md:flex">
+          {navItems.map((item) => {
+            const isActive = pathname.startsWith(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                aria-current={isActive ? "page" : undefined}
+                className={`group relative text-xs font-semibold uppercase tracking-[0.35em] text-slate-200 transition-colors duration-200 hover:text-sky-200 ${isActive ? "text-sky-300" : ""}`}
+              >
+                <span className="relative z-10">{item.label}</span>
+                <span
+                  aria-hidden
+                  className={`absolute inset-x-0 -bottom-2 h-0.5 origin-center rounded-full bg-sky-300/80 transition-transform duration-200 ease-out ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                />
+              </Link>
+            );
+          })}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 text-slate-200">
           <DarkModeToggle />
           <ClientProfileMenu />
           <button
             onClick={handleLogout}
-            className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            className="text-xs font-semibold uppercase tracking-[0.3em] text-rose-300 transition-colors hover:text-rose-200"
           >
             Logout
           </button>
