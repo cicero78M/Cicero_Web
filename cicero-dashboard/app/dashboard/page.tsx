@@ -422,7 +422,7 @@ export default function DashboardPage() {
               Command Center
             </span>
             <h1 className="text-3xl font-semibold leading-tight text-slate-50 md:text-4xl">
-              Panorama Interaksi Sosial yang Futuristik & Real-time
+              Ikhtisar Data Keterlibatan Audiens Instagram & TikTok secara Real-time
             </h1>
             <p className="max-w-2xl text-base text-slate-300 md:text-lg">
               Pantau detik demi detik perkembangan audiens, reaksi komunitas, dan percakapan yang
