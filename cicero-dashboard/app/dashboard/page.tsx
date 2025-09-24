@@ -481,7 +481,13 @@ export default function DashboardPage() {
         </section>
 
         <section className="space-y-6">
-          <DashboardStats highlights={highlightCards} />
+          <DashboardStats
+            highlights={highlightCards}
+            igProfile={igProfile}
+            igPosts={igPosts}
+            tiktokProfile={tiktokProfile}
+            tiktokPosts={tiktokPosts}
+          />
           <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
             {analytics.platforms.map((platform) => (
               <div
