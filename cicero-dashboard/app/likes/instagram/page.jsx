@@ -79,9 +79,6 @@ export default function InstagramEngagementInsightPage() {
             {/* Card Ringkasan */}
             <div className="flex flex-col gap-3">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span className="text-sm font-semibold text-gray-600">
-                  View Data By:
-                </span>
                 <ViewDataSelector
                   value={viewBy}
                   onChange={setViewBy}
