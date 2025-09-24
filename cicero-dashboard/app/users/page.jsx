@@ -477,84 +477,60 @@ export default function UserDirectoryPage() {
           <SummaryCard label="Update Instagram" value={summaryStats.insta} tone="info" />
           <SummaryCard label="Update TikTok" value={summaryStats.tiktok} tone="pink" />
         </div>
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center mb-6 gap-2">
+          <button
+            onClick={() => {
+              setShowForm((s) => !s);
+            }}
+            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+          >
+            {showForm ? "Tutup" : "Tambah User"}
+          </button>
+          <button
+            onClick={handleCopyRekap}
+            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
+          >
+            Rekap User
+          </button>
+          <button
+            onClick={handleDownloadData}
+            className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm"
+          >
+            Download Data
+          </button>
+          {isDitbinmasClient && (
             <button
-              onClick={() => {
-                setShowForm((s) => !s);
-              }}
-              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+              onClick={() => setShowAllDitbinmas((s) => !s)}
+              className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg text-sm"
             >
-              {showForm ? "Tutup" : "Tambah User"}
+              {showAllDitbinmas
+                ? "Hanya DITBINMAS"
+                : "Semua Ditbinmas"}
             </button>
-            <button
-              onClick={handleCopyRekap}
-              className="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2"
-            >
-              Rekap User
-            </button>
-            <button
-              onClick={handleDownloadData}
-              className="inline-flex items-center rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 shadow-sm transition hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2"
-            >
-              Download Data
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            {isDitbinmasClient && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
-                <div className="text-xs leading-tight text-slate-600">
-                  <p className="font-semibold text-slate-700">Tampilkan semua Ditbinmas</p>
-                  <p>
-                    {showAllDitbinmas
-                      ? "Menampilkan seluruh kesatuan Ditbinmas"
-                      : "Hanya Ditbinmas Anda"}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={showAllDitbinmas}
-                  onClick={() => setShowAllDitbinmas((s) => !s)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 ${
-                    showAllDitbinmas ? "bg-blue-600" : "bg-slate-300"
-                  }`}
-                >
-                  <span className="sr-only">Toggle semua Ditbinmas</span>
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                      showAllDitbinmas ? "translate-x-5" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-            )}
-
-            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-              <label className="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow focus-within:ring-2 focus-within:ring-blue-300">
-                <span className="sr-only">Cari pengguna</span>
-                <input
-                  type="search"
-                  placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border-0 text-sm text-black focus:outline-none"
-                  aria-label="Pencarian pengguna"
-                />
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-                aria-label="Filter status user"
-              >
-                <option value="ALL">Semua Status</option>
-                <option value="ACTIVE">Aktif</option>
-                <option value="INACTIVE">Nonaktif</option>
-              </select>
-            </div>
-          </div>
+          )}
+          <label
+            className="ml-auto flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow focus-within:ring-2 focus-within:ring-blue-300 text-sm flex-1 min-w-[220px]"
+          >
+            <span className="sr-only">Cari pengguna</span>
+            <input
+              type="search"
+              placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full border-0 focus:outline-none text-sm text-black"
+              aria-label="Pencarian pengguna"
+            />
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
+            aria-label="Filter status user"
+          >
+            <option value="ALL">Semua Status</option>
+            <option value="ACTIVE">Aktif</option>
+            <option value="INACTIVE">Nonaktif</option>
+          </select>
         </div>
 
         {showForm && (
