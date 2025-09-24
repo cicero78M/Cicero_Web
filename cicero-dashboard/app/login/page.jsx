@@ -154,26 +154,21 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-50">
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#0f172a,_#020617_55%)] text-slate-50">
+      <div className="pointer-events-none absolute inset-0 opacity-40">
+        <div className="absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/20 blur-[160px]" />
+        <div className="absolute -left-32 top-[18%] h-64 w-64 rounded-full bg-violet-500/20 blur-[130px]" />
+        <div className="absolute -right-20 bottom-[10%] h-72 w-72 rounded-full bg-blue-500/20 blur-[140px]" />
+      </div>
+
       <div className="absolute top-4 right-4 z-30">
         <DarkModeToggle />
       </div>
 
-      <motion.div
-        className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-cyan-500/30 blur-[120px]"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.div
-        className="pointer-events-none absolute -right-32 bottom-0 h-[22rem] w-[22rem] rounded-full bg-violet-600/30 blur-[140px]"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-      />
-
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
-        <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-[1.1fr_1fr]">
-          <section className="relative flex flex-col justify-between gap-8">
-            <div className="space-y-6">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-10">
+        <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
+          <section className="relative flex h-full flex-col justify-between gap-10 rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+            <div className="space-y-7">
               <motion.span
                 className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
                 initial={{ opacity: 0, y: -10 }}
@@ -191,7 +186,7 @@ export default function LoginPage() {
                 Sentral komando untuk <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-500 bg-clip-text text-transparent">respon cepat</span> dan koordinasi berbasis data.
               </motion.h1>
               <motion.p
-                className="max-w-xl text-balance text-sm text-slate-200/80 md:text-base"
+                className="max-w-xl text-balance text-sm leading-relaxed text-slate-200/80 md:text-base"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
@@ -204,7 +199,7 @@ export default function LoginPage() {
               {highlightItems.map((item, index) => (
                 <motion.div
                   key={item.title}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
+                  className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 via-white/5 to-transparent p-4 shadow-lg backdrop-blur-xl"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.15 * index }}
@@ -217,7 +212,7 @@ export default function LoginPage() {
                     {item.description}
                   </p>
                   <motion.div
-                    className="absolute -bottom-24 -right-20 h-32 w-32 rounded-full bg-cyan-400/30 blur-3xl transition-transform duration-500 group-hover:translate-y-16"
+                    className="absolute -bottom-24 -right-20 h-32 w-32 rounded-full bg-cyan-400/30 blur-3xl transition-transform duration-500 group-hover:translate-y-12"
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 6, repeat: Infinity }}
                   />
@@ -226,7 +221,7 @@ export default function LoginPage() {
             </div>
 
             <motion.div
-              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-white/10 via-white/5 to-white/10 p-5 backdrop-blur-xl"
+              className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-white/10 via-white/5 to-white/10 p-5 backdrop-blur-xl"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
@@ -250,16 +245,19 @@ export default function LoginPage() {
               transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
-              className="relative z-20 rounded-3xl border border-white/10 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-2xl"
+              className="relative z-20 rounded-[32px] border border-white/10 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-2xl"
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <div className="mb-6 flex items-center justify-between gap-2">
-                <h2 className="text-2xl font-semibold text-white">
+              <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/80">Cicero Access</p>
+                  <h2 className="text-2xl font-semibold text-white">
                   {isRegister ? "Aktivasi Akun" : "Masuk Dashboard"}
                 </h2>
-                <div className="flex rounded-full border border-white/10 bg-white/5 p-1 text-xs font-medium">
+                </div>
+                <div className="flex self-start rounded-full border border-white/10 bg-white/5 p-1 text-xs font-medium sm:self-auto">
                   <button
                     type="button"
                     onClick={() => setIsRegister(false)}
@@ -281,11 +279,11 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <p className="mb-6 text-xs text-slate-200/70">
+              <p className="mb-7 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-slate-200/70">
                 Autentikasi menggunakan kredensial Cicero resmi. Pastikan nomor WhatsApp aktif untuk menerima notifikasi verifikasi dan arahan operasional.
               </p>
 
-              <form className="space-y-4" onSubmit={isRegister ? handleRegister : handleLogin}>
+              <form className="space-y-5" onSubmit={isRegister ? handleRegister : handleLogin}>
                 <div>
                   <label htmlFor="username" className="sr-only">
                     Username
@@ -298,7 +296,7 @@ export default function LoginPage() {
                     onChange={(e) => setUsername(e.target.value)}
                     onBlur={handleTrim(setUsername)}
                     required
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
                   />
                 </div>
                 <div className="relative">
@@ -314,7 +312,7 @@ export default function LoginPage() {
                     onBlur={handleTrim(setPassword)}
                     required
                     autoComplete={isRegister ? "new-password" : "current-password"}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none pr-12"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/40 transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
                   />
                   <button
                     type="button"
@@ -338,15 +336,15 @@ export default function LoginPage() {
                         placeholder="Konfirmasi Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        onBlur={handleTrim(setConfirmPassword)}
-                        required
-                        autoComplete="new-password"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none pr-12"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-4 flex items-center text-white/60"
+                      onBlur={handleTrim(setConfirmPassword)}
+                      required
+                      autoComplete="new-password"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className="absolute inset-y-0 right-4 flex items-center text-white/60"
                         tabIndex={-1}
                       >
                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -362,15 +360,15 @@ export default function LoginPage() {
                         placeholder="Nomor WhatsApp aktif"
                         value={whatsapp}
                         onChange={(e) => setWhatsapp(e.target.value)}
-                        onBlur={handleTrim(setWhatsapp)}
-                        required
-                        inputMode="tel"
-                        autoComplete="tel"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none"
-                      />
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
+                      onBlur={handleTrim(setWhatsapp)}
+                      required
+                      inputMode="tel"
+                      autoComplete="tel"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+                    />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
                         <label htmlFor="role" className="sr-only">
                           Role
                         </label>
@@ -382,7 +380,7 @@ export default function LoginPage() {
                           value={role}
                           onChange={(e) => setRole(e.target.value)}
                           onBlur={handleTrim(setRole)}
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
                         />
                         <datalist id="role-options">
                           <option value="OPERATOR" />
@@ -403,7 +401,7 @@ export default function LoginPage() {
                           value={client_id}
                           onChange={(e) => setClientId(e.target.value)}
                           onBlur={handleTrim(setClientId)}
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-violet-400 focus:outline-none"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
                         />
                         <datalist id="client-options">
                           <option value="DITBINMAS" />
@@ -469,7 +467,7 @@ export default function LoginPage() {
                   type="submit"
                   disabled={loading}
                   className={`w-full rounded-2xl border border-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg transition focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                    loading ? "opacity-60" : "hover:shadow-xl"
+                    loading ? "opacity-60" : "hover:shadow-xl hover:shadow-cyan-500/30"
                   }`}
                 >
                   {loading
@@ -488,7 +486,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div
-              className="absolute inset-x-10 top-6 -z-10 h-[90%] rounded-[32px] bg-gradient-to-br from-white/10 via-white/5 to-transparent blur-2xl"
+              className="absolute inset-x-6 top-6 -z-10 h-[92%] rounded-[36px] bg-gradient-to-br from-white/10 via-white/5 to-transparent blur-2xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
