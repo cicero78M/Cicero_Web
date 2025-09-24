@@ -91,31 +91,47 @@ export default function Sidebar() {
   const navLinks = (isSheet = false, isCollapsed = false) => (
     <>
       <div className="mb-6 px-4 flex justify-center">
-        <Image
-          src="/CICERO.png"
-          alt="CICERO Logo"
-          width={isCollapsed ? 32 : 150}
-          height={40}
-          priority
-        />
+        <div className="rounded-xl bg-white/90 px-3 py-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] backdrop-blur">
+          <Image
+            src="/CICERO.png"
+            alt="CICERO Logo"
+            width={isCollapsed ? 32 : 150}
+            height={40}
+            priority
+          />
+        </div>
       </div>
-      <nav className="flex-1 space-y-1 px-2">
+      <nav
+        className={`flex-1 space-y-1 px-2 ${
+          isSheet
+            ? ""
+            : "[&>*]:shadow-[0_0_10px_rgba(56,189,248,0.15)]"
+        }`}
+      >
         {menu.map((item) => {
           const ItemIcon = item.icon;
           return (
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                 pathname.startsWith(item.path)
-                  ? "bg-blue-100 text-blue-700"
+                  ? "bg-gradient-to-r from-cyan-400/30 via-sky-500/30 to-indigo-500/30 text-sky-100 ring-1 ring-cyan-400/60"
                   : isSheet
-                  ? "text-blue-700 hover:bg-blue-50"
-                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                  ? "text-slate-100 hover:bg-white/10"
+                  : "text-slate-300 hover:bg-white/10 hover:text-slate-100"
               } ${isCollapsed ? "justify-center" : ""}`}
               {...(isSheet ? { onClick: () => setOpen(false) } : {})}
             >
-              <ItemIcon className={`${isSheet ? 'w-7 h-7 text-blue-700' : 'w-5 h-5'}`} />
+              <ItemIcon
+                className={`${
+                  isSheet
+                    ? "h-7 w-7 text-sky-300"
+                    : pathname.startsWith(item.path)
+                    ? "h-5 w-5 text-cyan-300 drop-shadow-[0_0_4px_rgba(34,211,238,0.9)]"
+                    : "h-5 w-5 text-slate-400 group-hover:text-cyan-200"
+                }`}
+              />
               {!isCollapsed && <span>{item.label}</span>}
             </Link>
           );
@@ -130,7 +146,7 @@ export default function Sidebar() {
         <SheetTrigger asChild className="md:hidden">
           <button
             aria-label={open ? "Tutup Sidebar" : "Buka Sidebar"}
-            className="fixed z-50 top-4 left-4 flex items-center justify-center bg-white shadow-lg border border-blue-200 text-blue-700 rounded-full w-12 h-12 transition-all hover:bg-blue-700 hover:text-white focus:outline-none"
+            className="fixed z-50 top-4 left-4 flex h-12 w-12 items-center justify-center rounded-full border border-cyan-500/40 bg-slate-900/80 text-sky-200 shadow-[0_0_20px_rgba(56,189,248,0.45)] transition-all hover:bg-cyan-500/40 hover:text-white focus:outline-none"
           >
             {open ? (
               <IconX size={28} strokeWidth={2.5} />
@@ -139,19 +155,24 @@ export default function Sidebar() {
             )}
           </button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-20 p-4 flex flex-col md:hidden">
+        <SheetContent
+          side="left"
+          className="flex w-24 flex-col bg-slate-950/95 p-4 text-slate-100 backdrop-blur-xl md:hidden"
+        >
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           {navLinks(true, true)}
         </SheetContent>
       </Sheet>
 
       <div
-        className={`hidden md:flex ${collapsed ? "md:w-20" : "md:w-64"} md:flex-col md:border-r md:bg-white md:shadow-sm md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:overflow-y-auto transition-all`}
+        className={`hidden md:sticky md:top-16 md:flex ${
+          collapsed ? "md:w-20" : "md:w-64"
+        } md:h-[calc(100vh-4rem)] md:flex-col md:overflow-y-auto border-r border-cyan-500/40 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-[0_0_35px_rgba(15,23,42,0.6)] transition-all`}
       >
         <div className="flex justify-end p-2">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="text-gray-500 hover:text-gray-700"
+            className="rounded-full bg-white/5 p-1 text-slate-400 transition hover:bg-cyan-500/30 hover:text-white"
             aria-label="Toggle Sidebar"
           >
             {collapsed ? (
