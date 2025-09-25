@@ -38,7 +38,7 @@ const formatPercent = (value) => {
   })}%`;
 };
 
-const formatPolresName = (rawName) => {
+const beautifyDivisionName = (rawName) => {
   const cleaned = (rawName || "").toString().replace(/[_]+/g, " ").trim();
   if (!cleaned) {
     return "Unit Lainnya";
@@ -55,48 +55,26 @@ const formatPolresName = (rawName) => {
     .join(" ");
 };
 
-const shortenPolresName = (name) => {
-  const formatted = formatPolresName(name);
+const shortenDivisionName = (name) => {
+  const formatted = beautifyDivisionName(name);
   return formatted.length > 20 ? `${formatted.slice(0, 19)}…` : formatted;
 };
 
 const extractPolresInfo = (user) => {
-  const polresCandidates = [
+  const primaryCandidates = [
+    user?.nama_client,
+    user?.client_name,
+    user?.client,
+    user?.kesatuan,
+    user?.satker,
     user?.polres,
-    user?.polres_name,
-    user?.nama_polres,
-    user?.kode_polres,
-    user?.polresId,
+    user?.divisi,
+    user?.unit,
   ];
 
-  let chosen = polresCandidates
+  let chosen = primaryCandidates
     .map((value) => (value == null ? "" : String(value).trim()))
     .find((value) => value.length > 0);
-
-  if (!chosen) {
-    const organizationalCandidates = [
-      user?.satker,
-      user?.kesatuan,
-      user?.divisi,
-      user?.unit,
-    ];
-
-    chosen = organizationalCandidates
-      .map((value) => (value == null ? "" : String(value).trim()))
-      .find((value) => value.length > 0);
-  }
-
-  if (!chosen) {
-    const clientCandidates = [
-      user?.nama_client,
-      user?.client_name,
-      user?.client,
-    ];
-
-    chosen = clientCandidates
-      .map((value) => (value == null ? "" : String(value).trim()))
-      .find((value) => value.length > 0);
-  }
 
   if (!chosen) {
     const fallbackCandidates = [
@@ -114,7 +92,7 @@ const extractPolresInfo = (user) => {
 
   return {
     key: normalized.toUpperCase(),
-    label: formatPolresName(normalized),
+    label: beautifyDivisionName(normalized),
   };
 };
 
@@ -177,7 +155,8 @@ const buildUserNarrative = ({
   }
 
   if (bestPolres) {
-    const bestName = bestPolres.displayName || formatPolresName(bestPolres.polres);
+    const bestName =
+      bestPolres.displayName || beautifyDivisionName(bestPolres.division);
     sentences.push(
       `${bestName} menjadi Polres paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestPolres.completionPercent,
@@ -185,9 +164,9 @@ const buildUserNarrative = ({
     );
   }
 
-  if (lowestPolres && lowestPolres.polres !== bestPolres?.polres) {
+  if (lowestPolres && lowestPolres.division !== bestPolres?.division) {
     const lowestName =
-      lowestPolres.displayName || formatPolresName(lowestPolres.polres);
+      lowestPolres.displayName || beautifyDivisionName(lowestPolres.division);
     sentences.push(
       `Pendampingan perlu difokuskan pada Polres ${lowestName} yang baru mencapai ${formatPercent(
         lowestPolres.completionPercent,
@@ -241,7 +220,7 @@ const computeUserInsight = (users = []) => {
 
     if (!polresMap.has(polresKey)) {
       polresMap.set(polresKey, {
-        polres: polresKey,
+        division: polresKey,
         displayName: label,
         total: 0,
         igFilled: 0,
@@ -284,8 +263,9 @@ const computeUserInsight = (users = []) => {
   });
 
   const barData = sortedByTotal.slice(0, 5).map((item) => ({
-    polres: shortenPolresName(item.displayName || item.polres),
-    fullPolres: item.displayName || formatPolresName(item.polres),
+    division: shortenDivisionName(item.displayName || item.division),
+    fullDivision:
+      item.displayName || beautifyDivisionName(item.division),
     instagram: Number(item.igPercent.toFixed(1)),
     tiktok: Number(item.tiktokPercent.toFixed(1)),
     total: item.total,
@@ -982,10 +962,10 @@ export default function ExecutiveSummaryPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Rasio Kelengkapan per Polres
+                      Rasio Kelengkapan per Divisi
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Menampilkan lima polres dengan jumlah User terbesar.
+                      Menampilkan lima divisi dengan jumlah User terbesar.
                     </p>
                   </div>
                 </div>
@@ -995,7 +975,7 @@ export default function ExecutiveSummaryPage() {
                       <BarChart data={barData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" />
                         <XAxis
-                          dataKey="polres"
+                          dataKey="division"
                           tick={{ fill: "#94a3b8", fontSize: 11 }}
                           axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
                         />
@@ -1020,7 +1000,7 @@ export default function ExecutiveSummaryPage() {
                               : "TikTok Lengkap",
                           ]}
                           labelFormatter={(_, payload) =>
-                            payload?.[0]?.payload?.fullPolres ?? "Polres"
+                            payload?.[0]?.payload?.fullDivision ?? "Divisi"
                           }
                         />
                         <Legend
@@ -1054,7 +1034,7 @@ export default function ExecutiveSummaryPage() {
                   </div>
                 ) : (
                   <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
-                    Belum ada data polres yang bisa ditampilkan.
+                    Belum ada data divisi yang bisa ditampilkan.
                   </div>
                 )}
               </div>
