@@ -73,23 +73,23 @@ const buildUserNarrative = ({
   lowestDivision,
 }) => {
   if (!totalUsers) {
-    return "Belum ada data pengguna yang dapat dianalisis. Mintalah tim untuk memperbarui direktori terlebih dahulu.";
+    return "Belum ada data pengguna yang dapat dianalisis. Minta pada satker untuk memperbarui direktori terlebih dahulu.";
   }
 
   const sentences = [];
   sentences.push(
-    `Direktori saat ini memuat ${formatNumber(totalUsers, { maximumFractionDigits: 0 })} admin aktif.`,
+    `Direktori saat ini memuat ${formatNumber(totalUsers, { maximumFractionDigits: 0 })} personil aktif.`,
   );
 
   if (bothCount > 0) {
     sentences.push(
       `${formatNumber(bothCount, { maximumFractionDigits: 0 })} admin (${formatPercent(
         bothPercent,
-      )}) telah melengkapi data Instagram dan TikTok sekaligus sehingga koordinasi lintas kanal berjalan mulus.`,
+      )}) telah melengkapi data Instagram dan TikTok sekaligus sehingga absensi pada platform Instagram dan Tiktok berjalan mulus.`,
     );
   } else {
     sentences.push(
-      `Belum ada admin yang melengkapi kedua kanal sekaligus, sehingga perlu kampanye internal untuk menyatukan kanal komunikasi.`,
+      `Belum ada personil yang melengkapi kedua akun sosial media sekaligus, sehingga perlu kampanye internal untuk melakukan update username pada Instagram dan Tiktok.`,
     );
   }
 
@@ -106,7 +106,7 @@ const buildUserNarrative = ({
         instagramPercent,
       )}, sementara TikTok berada di ${formatPercent(
         tiktokPercent,
-      )}; dorong tim agar mengejar ketertinggalan kanal video pendek.`,
+      )}; dorong satker agar mengejar ketertinggalan dengan melakukan update username.`,
     );
   } else {
     sentences.push(
@@ -114,7 +114,7 @@ const buildUserNarrative = ({
         tiktokPercent,
       )}) dibanding Instagram (${formatPercent(
         instagramPercent,
-      )}); perlu penguatan edukasi konten foto dan carousel.`,
+      )}); perlu penguatan dorongan update username.`,
     );
   }
 
@@ -122,7 +122,7 @@ const buildUserNarrative = ({
     sentences.push(
       `${beautifyDivisionName(bestDivision.division)} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestDivision.completionPercent,
-      )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} admin aktif.`,
+      )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
   }
 
@@ -130,17 +130,17 @@ const buildUserNarrative = ({
     sentences.push(
       `Pendampingan perlu difokuskan pada ${beautifyDivisionName(lowestDivision.division)} yang baru mencapai ${formatPercent(
         lowestDivision.completionPercent,
-      )} rata-rata kelengkapan kanal.`,
+      )} rata-rata kelengkapan data username.`,
     );
   }
 
   if (nonePercent > 0) {
     sentences.push(
-      `${formatPercent(nonePercent)} admin belum mengisi data sama sekali; jadwalkan klinik onboarding agar mereka segera produktif.`,
+      `${formatPercent(nonePercent)} personil belum mengisi data sama sekali; jadwalkan klinik onboarding agar mereka segera produktif.`,
     );
   } else if (onlyInstagramPercent > 0 || onlyTikTokPercent > 0) {
     sentences.push(
-      `Sisanya tersebar pada admin yang baru melengkapi satu kanal (${formatPercent(
+      `Sisanya tersebar pada personil yang baru melengkapi satu username (${formatPercent(
         onlyInstagramPercent + onlyTikTokPercent,
       )}); targetkan follow-up ringan agar profil mereka seratus persen siap.`,
     );
