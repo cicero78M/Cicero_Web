@@ -38,6 +38,41 @@ const formatPercent = (value) => {
   })}%`;
 };
 
+const formatDateTime = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return new Intl.DateTimeFormat("id-ID", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: "Asia/Jakarta",
+    }).format(date);
+  } catch (error) {
+    console.warn("Gagal memformat tanggal", error);
+    return "";
+  }
+};
+
+const truncateText = (text, limit = 160) => {
+  const value = (text ?? "").trim();
+  if (!value) {
+    return "";
+  }
+
+  if (value.length <= limit) {
+    return value;
+  }
+
+  return `${value.slice(0, limit - 1)}…`;
+};
+
 const beautifyDivisionName = (rawName) => {
   const cleaned = (rawName || "").toString().replace(/[_]+/g, " ").trim();
   if (!cleaned) {
@@ -551,14 +586,60 @@ const monthlyData = {
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
 const PPTX_SCRIPT_URL =
   "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
+const INSTAGRAM_FEATURED_POST = {
+  shortcode: "DPAi_0mD7Aa",
+  clientId: "DITBINMAS",
+  title: "Polisi Sahabat Anak di TK Dharma Wanita I Guyung",
+  caption:
+    "Aipda Slamet Budiono Bhabinkamtibmas Polsubsektor Gerih melaksanakan kegiatan Polisi Sahabat Anak di TK Dharma Wanita I Guyung",
+  likeCount: 900,
+  commentCount: 545,
+  createdAt: "2025-09-25T02:32:41.000Z",
+  thumbnailUrl:
+    "https://scontent-vie1-1.cdninstagram.com/v/t51.71878-15/552770049_842059164823040_7406954497169326846_n.jpg?stp=dst-jpg_e15_s360x360_tt6&_nc_cat=110&ig_cache_key=MzcyOTEzNDQxMDg0NDMxOTc3MA%3D%3D.3-ccb1-7&ccb=1-7&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6InhwaWRzLjY0MHgzNjAuc2RyLkMzIn0%3D&_nc_ohc=YNRtRb3BdQgQ7kNvwGCMHWj&_nc_oc=AdlYd4ovAAnDRVrQdbyEMXU6T32eF2UP1FIZlregp2Jp25aR_P2vsqPdVuT9uU1UQfs&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-vie1-1.cdninstagram.com&_nc_gid=uE8KphEXQ5R443H6gPCTLw&oh=00_AfaJvzuSXkAG4DbHMgEuDgVS2xaIXFLoNFKxYPMF1OznLA&oe=68DB2D25",
+  isVideo: true,
+  insightHeadline:
+    "Konten video edukasi anak memicu percakapan aktif: 545 komentar dan 900 like menunjukkan tingginya atensi orang tua dan guru.",
+};
+
+INSTAGRAM_FEATURED_POST.totalInteractions =
+  (INSTAGRAM_FEATURED_POST.likeCount ?? 0) +
+  (INSTAGRAM_FEATURED_POST.commentCount ?? 0);
+INSTAGRAM_FEATURED_POST.commentShare = INSTAGRAM_FEATURED_POST.totalInteractions
+  ? (INSTAGRAM_FEATURED_POST.commentCount / INSTAGRAM_FEATURED_POST.totalInteractions) * 100
+  : 0;
+INSTAGRAM_FEATURED_POST.permalink = `https://www.instagram.com/p/${INSTAGRAM_FEATURED_POST.shortcode}/`;
+
 const SOCIAL_INSIGHT_CARDS = [
   {
     title: "Instagram Insight",
     subtitle: "Ringkasan performa utama kanal Instagram",
+    featured: INSTAGRAM_FEATURED_POST,
+    metrics: [
+      {
+        label: "Total Interaksi",
+        value: INSTAGRAM_FEATURED_POST.totalInteractions,
+      },
+      {
+        label: "Jumlah Like",
+        value: INSTAGRAM_FEATURED_POST.likeCount,
+      },
+      {
+        label: "Jumlah Komentar",
+        value: INSTAGRAM_FEATURED_POST.commentCount,
+      },
+      {
+        label: "Proporsi Komentar",
+        value: INSTAGRAM_FEATURED_POST.commentShare,
+        suffix: "%",
+        formatOptions: { maximumFractionDigits: 1, minimumFractionDigits: 1 },
+      },
+    ],
   },
   {
     title: "TikTok Insight",
     subtitle: "Gambaran kinerja kanal TikTok selama periode ini",
+    metrics: null,
   },
 ];
 
@@ -1119,10 +1200,80 @@ export default function ExecutiveSummaryPage() {
               {card.title}
             </h2>
             <p className="mt-3 text-sm text-slate-300">{card.subtitle}</p>
+            {card.featured ? (
+              <div className="mt-6 rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-slate-900/70 via-slate-900/40 to-slate-900/70 p-5">
+                <div className="flex flex-col gap-5 sm:flex-row">
+                  <div className="relative w-full overflow-hidden rounded-2xl sm:w-40">
+                    <img
+                      src={card.featured.thumbnailUrl}
+                      alt={card.featured.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                    {card.featured.isVideo ? (
+                      <span className="absolute left-3 top-3 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-950">
+                        Video
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-1 flex-col justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        Konten Teratas
+                      </p>
+                      <h3 className="mt-2 text-lg font-semibold text-slate-100">
+                        {card.featured.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                        {truncateText(card.featured.caption)}
+                      </p>
+                      <p className="mt-3 text-xs text-slate-400">
+                        Dipublikasikan {formatDateTime(card.featured.createdAt)} WIB
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-emerald-300/90">
+                        {card.featured.insightHeadline}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/70">
+                        <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-200">
+                          {card.featured.clientId}
+                        </span>
+                        <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-emerald-300">
+                          Engagement Tinggi
+                        </span>
+                      </div>
+                      <a
+                        href={card.featured.permalink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-md border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-200 transition hover:border-blue-400 hover:text-blue-100"
+                      >
+                        Lihat Konten di Instagram
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-              {insightMetrics.map((metric) => {
+              {(card.metrics ?? insightMetrics).map((metric) => {
                 const isNegativeChange = metric.change?.trim().startsWith("-");
                 const changeColor = isNegativeChange ? "text-rose-400" : "text-emerald-400";
+                const formatOptions = metric.formatOptions ?? {};
+                const maximumFractionDigits =
+                  formatOptions.maximumFractionDigits ?? (metric.suffix ? 1 : 0);
+                const minimumFractionDigits =
+                  formatOptions.minimumFractionDigits ??
+                  (formatOptions.maximumFractionDigits !== undefined
+                    ? formatOptions.maximumFractionDigits
+                    : 0);
+                const displayValue =
+                  metric.displayValue ??
+                  `${formatNumber(metric.value, {
+                    maximumFractionDigits,
+                    minimumFractionDigits,
+                  })}${metric.suffix ? metric.suffix : ""}`;
 
                 return (
                   <div
@@ -1133,12 +1284,7 @@ export default function ExecutiveSummaryPage() {
                       {metric.label}
                     </dt>
                     <dd className="mt-3">
-                      <p className="text-2xl font-semibold text-slate-100">
-                        {formatNumber(metric.value, {
-                          maximumFractionDigits: metric.suffix ? 1 : 0,
-                        })}
-                        {metric.suffix ? metric.suffix : ""}
-                      </p>
+                      <p className="text-2xl font-semibold text-slate-100">{displayValue}</p>
                       {metric.change ? (
                         <p className={`mt-1 text-xs ${changeColor}`}>{metric.change}</p>
                       ) : null}
