@@ -60,6 +60,42 @@ const shortenDivisionName = (name) => {
   return formatted.length > 20 ? `${formatted.slice(0, 19)}…` : formatted;
 };
 
+const extractPolresInfo = (user) => {
+  const primaryCandidates = [
+    user?.nama_client,
+    user?.client_name,
+    user?.client,
+    user?.kesatuan,
+    user?.satker,
+    user?.polres,
+    user?.divisi,
+    user?.unit,
+  ];
+
+  let chosen = primaryCandidates
+    .map((value) => (value == null ? "" : String(value).trim()))
+    .find((value) => value.length > 0);
+
+  if (!chosen) {
+    const fallbackCandidates = [
+      user?.client_id,
+      user?.clientId,
+      user?.clientID,
+    ];
+
+    chosen = fallbackCandidates
+      .map((value) => (value == null ? "" : String(value).trim()))
+      .find((value) => value.length > 0);
+  }
+
+  const normalized = chosen && chosen.length > 0 ? chosen : "LAINNYA";
+
+  return {
+    key: normalized.toUpperCase(),
+    label: beautifyDivisionName(normalized),
+  };
+};
+
 const buildUserNarrative = ({
   totalUsers,
   bothCount,
@@ -69,8 +105,8 @@ const buildUserNarrative = ({
   onlyInstagramPercent,
   onlyTikTokPercent,
   nonePercent,
-  bestDivision,
-  lowestDivision,
+  bestPolres,
+  lowestPolres,
 }) => {
   if (!totalUsers) {
     return "Belum ada data pengguna yang dapat dianalisis. Minta pada satker untuk memperbarui direktori terlebih dahulu.";
@@ -118,18 +154,22 @@ const buildUserNarrative = ({
     );
   }
 
-  if (bestDivision) {
+  if (bestPolres) {
+    const bestName =
+      bestPolres.displayName || beautifyDivisionName(bestPolres.division);
     sentences.push(
-      `${beautifyDivisionName(bestDivision.division)} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
-        bestDivision.completionPercent,
-      )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} personil aktif.`,
+      `${bestName} menjadi Polres paling siap dengan kelengkapan rata-rata ${formatPercent(
+        bestPolres.completionPercent,
+      )} dan basis ${formatNumber(bestPolres.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
   }
 
-  if (lowestDivision && lowestDivision.division !== bestDivision?.division) {
+  if (lowestPolres && lowestPolres.division !== bestPolres?.division) {
+    const lowestName =
+      lowestPolres.displayName || beautifyDivisionName(lowestPolres.division);
     sentences.push(
-      `Pendampingan perlu difokuskan pada ${beautifyDivisionName(lowestDivision.division)} yang baru mencapai ${formatPercent(
-        lowestDivision.completionPercent,
+      `Pendampingan perlu difokuskan pada Polres ${lowestName} yang baru mencapai ${formatPercent(
+        lowestPolres.completionPercent,
       )} rata-rata kelengkapan data username.`,
     );
   }
@@ -158,7 +198,7 @@ const computeUserInsight = (users = []) => {
   let onlyTikTok = 0;
   let none = 0;
 
-  const divisionMap = new Map();
+  const polresMap = new Map();
 
   users.forEach((user) => {
     const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
@@ -176,21 +216,19 @@ const computeUserInsight = (users = []) => {
       none += 1;
     }
 
-    const divisionKey = (user?.divisi || user?.unit || "LAINNYA")
-      .toString()
-      .trim()
-      .toUpperCase();
+    const { key: polresKey, label } = extractPolresInfo(user);
 
-    if (!divisionMap.has(divisionKey)) {
-      divisionMap.set(divisionKey, {
-        division: divisionKey,
+    if (!polresMap.has(polresKey)) {
+      polresMap.set(polresKey, {
+        division: polresKey,
+        displayName: label,
         total: 0,
         igFilled: 0,
         ttFilled: 0,
       });
     }
 
-    const record = divisionMap.get(divisionKey);
+    const record = polresMap.get(polresKey);
     record.total += 1;
     if (hasInstagram) record.igFilled += 1;
     if (hasTikTok) record.ttFilled += 1;
@@ -203,7 +241,7 @@ const computeUserInsight = (users = []) => {
   const onlyTikTokPercent = totalUsers ? (onlyTikTok / totalUsers) * 100 : 0;
   const nonePercent = totalUsers ? (none / totalUsers) * 100 : 0;
 
-  const divisionArray = Array.from(divisionMap.values()).map((item) => {
+  const polresArray = Array.from(polresMap.values()).map((item) => {
     const igPercent = item.total ? (item.igFilled / item.total) * 100 : 0;
     const tiktokPercentDivision = item.total ? (item.ttFilled / item.total) * 100 : 0;
     const completionPercent = item.total
@@ -217,7 +255,7 @@ const computeUserInsight = (users = []) => {
     };
   });
 
-  const sortedByTotal = [...divisionArray].sort((a, b) => {
+  const sortedByTotal = [...polresArray].sort((a, b) => {
     if (b.total !== a.total) {
       return b.total - a.total;
     }
@@ -225,14 +263,15 @@ const computeUserInsight = (users = []) => {
   });
 
   const barData = sortedByTotal.slice(0, 5).map((item) => ({
-    division: shortenDivisionName(item.division),
-    fullDivision: beautifyDivisionName(item.division),
+    division: shortenDivisionName(item.displayName || item.division),
+    fullDivision:
+      item.displayName || beautifyDivisionName(item.division),
     instagram: Number(item.igPercent.toFixed(1)),
     tiktok: Number(item.tiktokPercent.toFixed(1)),
     total: item.total,
   }));
 
-  const bestDivision = [...divisionArray]
+  const bestPolres = [...polresArray]
     .sort((a, b) => {
       if (b.completionPercent !== a.completionPercent) {
         return b.completionPercent - a.completionPercent;
@@ -241,7 +280,7 @@ const computeUserInsight = (users = []) => {
     })
     .find((item) => item.total > 0);
 
-  const lowestDivision = [...divisionArray]
+  const lowestPolres = [...polresArray]
     .sort((a, b) => {
       if (a.completionPercent !== b.completionPercent) {
         return a.completionPercent - b.completionPercent;
@@ -268,8 +307,8 @@ const computeUserInsight = (users = []) => {
     onlyInstagramPercent,
     onlyTikTokPercent,
     nonePercent,
-    bestDivision,
-    lowestDivision,
+    bestPolres,
+    lowestPolres,
   });
 
   return {
