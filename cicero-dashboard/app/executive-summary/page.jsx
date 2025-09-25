@@ -136,7 +136,7 @@ const buildUserNarrative = ({
 
   const sentences = [];
   sentences.push(
-    `Direktori saat ini memuat ${formatNumber(totalUsers, { maximumFractionDigits: 0 })} personil aktif lintas satker.`,
+    `Direktori saat ini memuat ${formatNumber(totalUsers, { maximumFractionDigits: 0 })} personil aktif.`,
   );
 
   if (bothCount > 0) {
@@ -179,7 +179,7 @@ const buildUserNarrative = ({
   if (bestPolres) {
     const bestName = bestPolres.displayName || formatPolresName(bestPolres.polres);
     sentences.push(
-      `${bestName} menjadi satker paling siap dengan kelengkapan rata-rata ${formatPercent(
+      `${bestName} menjadi Polres paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestPolres.completionPercent,
       )} dan basis ${formatNumber(bestPolres.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
@@ -189,7 +189,7 @@ const buildUserNarrative = ({
     const lowestName =
       lowestPolres.displayName || formatPolresName(lowestPolres.polres);
     sentences.push(
-      `Pendampingan perlu difokuskan pada satker ${lowestName} yang baru mencapai ${formatPercent(
+      `Pendampingan perlu difokuskan pada Polres ${lowestName} yang baru mencapai ${formatPercent(
         lowestPolres.completionPercent,
       )} rata-rata kelengkapan data username.`,
     );
