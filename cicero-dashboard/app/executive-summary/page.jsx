@@ -845,178 +845,7 @@ export default function ExecutiveSummaryPage() {
         </div>
       </header>
 
-      <section
-        aria-label="Insight Kanal Sosial"
-        className="grid gap-6 lg:grid-cols-2"
-      >
-        {SOCIAL_INSIGHT_CARDS.map((card) => (
-          <article
-            key={card.title}
-            className="rounded-3xl border border-cyan-500/25 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
-          >
-            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              {card.title}
-            </h2>
-            <p className="mt-3 text-sm text-slate-300">{card.subtitle}</p>
-            <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-              {insightMetrics.map((metric) => {
-                const isNegativeChange = metric.change?.trim().startsWith("-");
-                const changeColor = isNegativeChange ? "text-rose-400" : "text-emerald-400";
-
-                return (
-                  <div
-                    key={`${card.title}-${metric.label}`}
-                    className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4"
-                  >
-                    <dt className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200/70">
-                      {metric.label}
-                    </dt>
-                    <dd className="mt-3">
-                      <p className="text-2xl font-semibold text-slate-100">
-                        {formatNumber(metric.value, {
-                          maximumFractionDigits: metric.suffix ? 1 : 0,
-                        })}
-                        {metric.suffix ? metric.suffix : ""}
-                      </p>
-                      {metric.change ? (
-                        <p className={`mt-1 text-xs ${changeColor}`}>{metric.change}</p>
-                      ) : null}
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </article>
-        ))}
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-5">
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.4)] lg:col-span-3">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Narasi Utama Bulanan
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-200">
-            {data.overviewNarrative}
-          </p>
-          <ul className="mt-4 space-y-3 text-sm text-slate-300">
-            {data.highlights.map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" aria-hidden="true" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Aktivitas Personil
-          </h2>
-          <div className="mt-5 space-y-5">
-            {data.userInsightMetrics.map((metric) => (
-              <div key={metric.label} className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-200">{metric.label}</p>
-                  <p className="text-xs text-slate-400">Perbandingan bulan sebelumnya</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-semibold text-white">
-                    {formatNumber(metric.value, { maximumFractionDigits: metric.suffix ? 1 : 0 })}
-                    {metric.suffix ? metric.suffix : ""}
-                  </p>
-                  <p className="text-xs text-emerald-400">{metric.change}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-7" aria-label="Visualisasi Kinerja">
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.4)] lg:col-span-4">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Sebaran Reach & Engagement per Kanal
-          </h2>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.engagementByChannel}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
-                <XAxis dataKey="channel" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
-                <Tooltip
-                  cursor={{ fill: "rgba(15,23,42,0.3)" }}
-                  contentStyle={{
-                    backgroundColor: "rgba(15,23,42,0.92)",
-                    borderRadius: 16,
-                    borderColor: "rgba(148,163,184,0.4)",
-                    boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
-                    color: "#e2e8f0",
-                  }}
-                  formatter={(value, name) => {
-                    if (name === "reach") {
-                      return [formatNumber(value, { maximumFractionDigits: 0 }), "Reach"];
-                    }
-                    return [`${formatNumber(value, { maximumFractionDigits: 1 })}%`, "Engagement Rate"];
-                  }}
-                />
-                <Legend wrapperStyle={{ color: "#e2e8f0" }} />
-                <Bar dataKey="reach" name="Reach" fill="#38bdf8" radius={[8, 8, 0, 0]}>
-                  <LabelList
-                    dataKey="reach"
-                    position="top"
-                    formatter={(value) => formatNumber(value, { maximumFractionDigits: 0 })}
-                    fill="#e2e8f0"
-                    fontSize={11}
-                  />
-                </Bar>
-                <Bar dataKey="engagementRate" name="Engagement Rate" fill="#a855f7" radius={[8, 8, 0, 0]}>
-                  <LabelList
-                    dataKey="engagementRate"
-                    position="top"
-                    formatter={(value) => `${formatNumber(value, { maximumFractionDigits: 1 })}%`}
-                    fill="#f5f3ff"
-                    fontSize={11}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-3">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Komposisi Audiens
-          </h2>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data.audienceComposition}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                >
-                  {data.audienceComposition.map((entry, index) => (
-                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15,23,42,0.92)",
-                    borderRadius: 16,
-                    borderColor: "rgba(148,163,184,0.4)",
-                    color: "#e2e8f0",
-                  }}
-                  formatter={(value) => [`${value}%`, "Kontribusi"]}
-                />
-                <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </section>
-
-      <section
+            <section
         aria-label="Insight Pengguna Aktual"
         className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
       >
@@ -1241,6 +1070,177 @@ export default function ExecutiveSummaryPage() {
             </article>
           </div>
         )}
+      </section>
+
+      <section
+        aria-label="Insight Kanal Sosial"
+        className="grid gap-6 lg:grid-cols-2"
+      >
+        {SOCIAL_INSIGHT_CARDS.map((card) => (
+          <article
+            key={card.title}
+            className="rounded-3xl border border-cyan-500/25 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+          >
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              {card.title}
+            </h2>
+            <p className="mt-3 text-sm text-slate-300">{card.subtitle}</p>
+            <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+              {insightMetrics.map((metric) => {
+                const isNegativeChange = metric.change?.trim().startsWith("-");
+                const changeColor = isNegativeChange ? "text-rose-400" : "text-emerald-400";
+
+                return (
+                  <div
+                    key={`${card.title}-${metric.label}`}
+                    className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4"
+                  >
+                    <dt className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200/70">
+                      {metric.label}
+                    </dt>
+                    <dd className="mt-3">
+                      <p className="text-2xl font-semibold text-slate-100">
+                        {formatNumber(metric.value, {
+                          maximumFractionDigits: metric.suffix ? 1 : 0,
+                        })}
+                        {metric.suffix ? metric.suffix : ""}
+                      </p>
+                      {metric.change ? (
+                        <p className={`mt-1 text-xs ${changeColor}`}>{metric.change}</p>
+                      ) : null}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-5">
+        <div className="rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.4)] lg:col-span-3">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+            Narasi Utama Bulanan
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-slate-200">
+            {data.overviewNarrative}
+          </p>
+          <ul className="mt-4 space-y-3 text-sm text-slate-300">
+            {data.highlights.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+            Aktivitas Personil
+          </h2>
+          <div className="mt-5 space-y-5">
+            {data.userInsightMetrics.map((metric) => (
+              <div key={metric.label} className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-200">{metric.label}</p>
+                  <p className="text-xs text-slate-400">Perbandingan bulan sebelumnya</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-semibold text-white">
+                    {formatNumber(metric.value, { maximumFractionDigits: metric.suffix ? 1 : 0 })}
+                    {metric.suffix ? metric.suffix : ""}
+                  </p>
+                  <p className="text-xs text-emerald-400">{metric.change}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-7" aria-label="Visualisasi Kinerja">
+        <div className="rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.4)] lg:col-span-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+            Sebaran Reach & Engagement per Kanal
+          </h2>
+          <div className="mt-6 h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.engagementByChannel}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+                <XAxis dataKey="channel" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                <Tooltip
+                  cursor={{ fill: "rgba(15,23,42,0.3)" }}
+                  contentStyle={{
+                    backgroundColor: "rgba(15,23,42,0.92)",
+                    borderRadius: 16,
+                    borderColor: "rgba(148,163,184,0.4)",
+                    boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
+                    color: "#e2e8f0",
+                  }}
+                  formatter={(value, name) => {
+                    if (name === "reach") {
+                      return [formatNumber(value, { maximumFractionDigits: 0 }), "Reach"];
+                    }
+                    return [`${formatNumber(value, { maximumFractionDigits: 1 })}%`, "Engagement Rate"];
+                  }}
+                />
+                <Legend wrapperStyle={{ color: "#e2e8f0" }} />
+                <Bar dataKey="reach" name="Reach" fill="#38bdf8" radius={[8, 8, 0, 0]}>
+                  <LabelList
+                    dataKey="reach"
+                    position="top"
+                    formatter={(value) => formatNumber(value, { maximumFractionDigits: 0 })}
+                    fill="#e2e8f0"
+                    fontSize={11}
+                  />
+                </Bar>
+                <Bar dataKey="engagementRate" name="Engagement Rate" fill="#a855f7" radius={[8, 8, 0, 0]}>
+                  <LabelList
+                    dataKey="engagementRate"
+                    position="top"
+                    formatter={(value) => `${formatNumber(value, { maximumFractionDigits: 1 })}%`}
+                    fill="#f5f3ff"
+                    fontSize={11}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-3">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+            Komposisi Audiens
+          </h2>
+          <div className="mt-6 h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data.audienceComposition}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={4}
+                >
+                  {data.audienceComposition.map((entry, index) => (
+                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(15,23,42,0.92)",
+                    borderRadius: 16,
+                    borderColor: "rgba(148,163,184,0.4)",
+                    color: "#e2e8f0",
+                  }}
+                  formatter={(value) => [`${value}%`, "Kontribusi"]}
+                />
+                <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </section>
 
       <section className="space-y-6" aria-label="Analisis Mendalam">
