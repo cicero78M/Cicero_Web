@@ -62,14 +62,8 @@ const shortenDivisionName = (name) => {
 
 const extractUserGroupInfo = (user) => {
   const candidateFields = [
-    user?.polres_name,
-    user?.polres,
-    user?.satker_name,
-    user?.satker,
-    user?.kesatuan_name,
-    user?.kesatuan,
-    user?.unit,
-    user?.divisi,
+    user?.client_id,
+    user?.client_name,
   ];
 
   for (const field of candidateFields) {
