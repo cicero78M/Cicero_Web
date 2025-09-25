@@ -19,7 +19,12 @@ import { Download } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { getUserDirectory } from "@/utils/api";
+import {
+  getUserDirectory,
+  getDashboardStats,
+  getRekapLikesIG,
+  getRekapKomentarTiktok,
+} from "@/utils/api";
 import { cn } from "@/lib/utils";
 
 const formatCompactNumber = (value) => {
@@ -333,6 +338,267 @@ const computeUserInsight = (users = []) => {
     pieData,
     pieTotal,
     narrative,
+  };
+};
+
+const getMonthDateRange = (monthKey) => {
+  if (typeof monthKey !== "string") {
+    return null;
+  }
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = Number(yearStr);
+  const monthIndex = Number(monthStr) - 1;
+  if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) {
+    return null;
+  }
+  const pad = (value) => String(value).padStart(2, "0");
+  const startDate = `${year}-${pad(monthIndex + 1)}-01`;
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+  const endDate = `${year}-${pad(monthIndex + 1)}-${pad(lastDay)}`;
+  return { startDate, endDate };
+};
+
+const extractNumericValue = (...candidates) => {
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null) {
+      continue;
+    }
+    if (Array.isArray(candidate)) {
+      return candidate.length;
+    }
+    const numeric = Number(candidate);
+    if (!Number.isNaN(numeric)) {
+      return numeric;
+    }
+  }
+  return 0;
+};
+
+const normalizeLookupKey = (value) => {
+  if (value === undefined || value === null) {
+    return "";
+  }
+  return String(value).trim().toLowerCase();
+};
+
+const createActivityLookup = (records = [], countFields = []) => {
+  const map = new Map();
+  const addKey = (prefix, rawValue, count) => {
+    const normalized = normalizeLookupKey(rawValue);
+    if (!normalized) {
+      return;
+    }
+    const key = `${prefix}:${normalized}`;
+    if (map.has(key)) {
+      map.set(key, Math.max(map.get(key), count));
+    } else {
+      map.set(key, count);
+    }
+  };
+
+  records.forEach((record) => {
+    const count = extractNumericValue(
+      ...countFields.map((field) => record?.[field]),
+    );
+    if (!Number.isFinite(count) || count < 0) {
+      return;
+    }
+
+    const usernameFields = [
+      "username",
+      "user_name",
+      "insta",
+      "instagram",
+      "tiktok",
+      "tiktok_username",
+    ];
+    const idFields = [
+      "user_id",
+      "userId",
+      "id",
+      "nrp",
+      "nip",
+      "personil_id",
+      "nip_nrp",
+    ];
+    const nameFields = ["nama", "name", "full_name"];
+
+    usernameFields.forEach((field) => addKey("username", record?.[field], count));
+    idFields.forEach((field) => addKey("id", record?.[field], count));
+    nameFields.forEach((field) => addKey("name", record?.[field], count));
+  });
+
+  return map;
+};
+
+const getCountForUser = (lookup, user) => {
+  if (!(lookup instanceof Map) || lookup.size === 0 || !user) {
+    return 0;
+  }
+
+  const tried = new Set();
+  const tryValue = (prefix, rawValue) => {
+    const normalized = normalizeLookupKey(rawValue);
+    if (!normalized) {
+      return undefined;
+    }
+    const key = `${prefix}:${normalized}`;
+    if (tried.has(key)) {
+      return undefined;
+    }
+    tried.add(key);
+    if (lookup.has(key)) {
+      return lookup.get(key);
+    }
+    return undefined;
+  };
+
+  const usernameFields = [
+    "username",
+    "user_name",
+    "insta",
+    "instagram",
+    "tiktok",
+    "tiktok_username",
+  ];
+  const idFields = [
+    "user_id",
+    "userId",
+    "id",
+    "nrp",
+    "nip",
+    "personil_id",
+    "nip_nrp",
+  ];
+  const nameFields = ["nama", "name", "full_name"];
+
+  for (const field of usernameFields) {
+    const result = tryValue("username", user?.[field]);
+    if (result !== undefined) {
+      return result;
+    }
+  }
+
+  for (const field of idFields) {
+    const result = tryValue("id", user?.[field]);
+    if (result !== undefined) {
+      return result;
+    }
+  }
+
+  for (const field of nameFields) {
+    const result = tryValue("name", user?.[field]);
+    if (result !== undefined) {
+      return result;
+    }
+  }
+
+  return 0;
+};
+
+const computeActivityBuckets = ({
+  users = [],
+  likes = [],
+  comments = [],
+  totalIGPosts = 0,
+  totalTikTokPosts = 0,
+}) => {
+  const likesLookup = createActivityLookup(likes, [
+    "jumlah_like",
+    "jumlahLike",
+    "total_like",
+    "totalLikes",
+    "likes",
+    "like_count",
+  ]);
+  const commentsLookup = createActivityLookup(comments, [
+    "jumlah_komentar",
+    "jumlahKomentar",
+    "total_komentar",
+    "komentar",
+    "comments",
+    "comment_count",
+  ]);
+
+  const safeIGPosts = Math.max(0, Number(totalIGPosts) || 0);
+  const safeTikTokPosts = Math.max(0, Number(totalTikTokPosts) || 0);
+  const totalContent = safeIGPosts + safeTikTokPosts;
+
+  let mostActive = 0;
+  let moderate = 0;
+  let low = 0;
+  let zero = 0;
+  let evaluatedUsers = 0;
+
+  users.forEach((user) => {
+    evaluatedUsers += 1;
+    const likeCount = getCountForUser(likesLookup, user);
+    const commentCount = getCountForUser(commentsLookup, user);
+    const hasAction = likeCount > 0 || commentCount > 0;
+
+    if (!hasAction) {
+      zero += 1;
+      return;
+    }
+
+    const completedLikes =
+      safeIGPosts > 0 ? Math.min(likeCount, safeIGPosts) : likeCount > 0 ? 1 : 0;
+    const completedComments =
+      safeTikTokPosts > 0
+        ? Math.min(commentCount, safeTikTokPosts)
+        : commentCount > 0
+        ? 1
+        : 0;
+
+    const denominator = totalContent;
+    let ratio = 0;
+    if (denominator > 0) {
+      ratio = (completedLikes + completedComments) / denominator;
+    } else {
+      ratio = 1;
+    }
+
+    ratio = Math.max(0, Math.min(ratio, 1));
+
+    if (ratio >= 0.9) {
+      mostActive += 1;
+    } else if (ratio >= 0.5) {
+      moderate += 1;
+    } else {
+      low += 1;
+    }
+  });
+
+  return {
+    totalUsers: users.length,
+    evaluatedUsers,
+    totalContent,
+    categories: [
+      {
+        key: "most-active",
+        label: "Paling Aktif",
+        description: "Likes & komentar > 90% konten",
+        count: mostActive,
+      },
+      {
+        key: "moderate",
+        label: "Aktivitas Sedang",
+        description: "Likes & komentar 50-90% konten",
+        count: moderate,
+      },
+      {
+        key: "low",
+        label: "Aktivitas Rendah",
+        description: "Likes & komentar 0-50% konten",
+        count: low,
+      },
+      {
+        key: "inactive",
+        label: "Tanpa Aktivitas",
+        description: "Belum melakukan likes/komentar",
+        count: zero,
+      },
+    ],
   };
 };
 
@@ -674,6 +940,7 @@ export default function ExecutiveSummaryPage() {
     pieData: [],
     pieTotal: 0,
     narrative: "",
+    activityBuckets: null,
   });
 
   useEffect(() => {
@@ -744,6 +1011,7 @@ export default function ExecutiveSummaryPage() {
         setUserInsightState((prev) => ({
           ...prev,
           loading: true,
+          activityBuckets: null,
         }));
         return;
       }
@@ -752,23 +1020,107 @@ export default function ExecutiveSummaryPage() {
         ...prev,
         loading: true,
         error: "",
+        activityBuckets: null,
       }));
 
+      const periodRange = getMonthDateRange(selectedMonth);
+      const periodeParam = periodRange ? "bulanan" : undefined;
+      const tanggalParam = periodRange?.startDate;
+
       try {
-        const response = await getUserDirectory(token, clientId, controller.signal);
+        const [directoryResponse, statsResult, likesResult, commentsResult] =
+          await Promise.all([
+            getUserDirectory(token, clientId, controller.signal),
+            getDashboardStats(
+              token,
+              periodeParam,
+              tanggalParam,
+              undefined,
+              undefined,
+              clientId,
+              controller.signal,
+            ),
+            getRekapLikesIG(
+              token,
+              clientId,
+              periodeParam ?? "bulanan",
+              tanggalParam,
+              undefined,
+              undefined,
+              controller.signal,
+            ).catch((error) => {
+              console.warn("Gagal memuat rekap likes IG", error);
+              return { data: [] };
+            }),
+            getRekapKomentarTiktok(
+              token,
+              clientId,
+              periodeParam ?? "bulanan",
+              tanggalParam,
+              undefined,
+              undefined,
+              controller.signal,
+            ).catch((error) => {
+              console.warn("Gagal memuat rekap komentar TikTok", error);
+              return { data: [] };
+            }),
+          ]);
+
         if (cancelled) {
           return;
         }
-        const raw = response?.data || response?.users || response;
-        const users = Array.isArray(raw) ? raw : [];
+
+        const rawDirectory =
+          directoryResponse?.data || directoryResponse?.users || directoryResponse;
+        const users = Array.isArray(rawDirectory) ? rawDirectory : [];
         const insight = computeUserInsight(users);
+
+        const stats = statsResult ?? {};
+        const totalIGPosts = extractNumericValue(
+          stats.instagramPosts,
+          stats.igPosts,
+          stats.ig_posts,
+          stats.instagram_posts,
+          stats.totalIGPost,
+          stats.total_ig_post,
+        );
+        const totalTikTokPosts = extractNumericValue(
+          stats.tiktokPosts,
+          stats.ttPosts,
+          stats.tt_posts,
+          stats.tiktok_posts,
+          stats.totalTikTokPost,
+          stats.total_tiktok_post,
+        );
+
+        const likesRaw =
+          likesResult?.data || likesResult?.users || likesResult?.rekap || likesResult;
+        const likesRecords = Array.isArray(likesRaw) ? likesRaw : [];
+
+        const commentsRaw =
+          commentsResult?.data ||
+          commentsResult?.users ||
+          commentsResult?.rekap ||
+          commentsResult;
+        const commentsRecords = Array.isArray(commentsRaw) ? commentsRaw : [];
+
+        const activityBuckets = computeActivityBuckets({
+          users,
+          likes: likesRecords,
+          comments: commentsRecords,
+          totalIGPosts,
+          totalTikTokPosts,
+        });
+
         if (cancelled) {
           return;
         }
+
         setUserInsightState({
           loading: false,
           error: "",
           ...insight,
+          activityBuckets,
         });
       } catch (error) {
         if (cancelled || error?.name === "AbortError") {
@@ -781,6 +1133,7 @@ export default function ExecutiveSummaryPage() {
             error instanceof Error
               ? error.message
               : "Gagal memuat insight pengguna.",
+          activityBuckets: null,
         }));
       }
     };
@@ -791,7 +1144,7 @@ export default function ExecutiveSummaryPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [token, clientId]);
+  }, [token, clientId, selectedMonth]);
 
   const pptSummary = useMemo(() => {
     return [
@@ -917,8 +1270,19 @@ export default function ExecutiveSummaryPage() {
     });
   };
 
-  const { summary: userSummary, barData, pieData, pieTotal, narrative } =
-    userInsightState;
+  const {
+    summary: userSummary,
+    barData,
+    pieData,
+    pieTotal,
+    narrative,
+    activityBuckets,
+  } = userInsightState;
+  const activityCategories = Array.isArray(activityBuckets?.categories)
+    ? activityBuckets.categories
+    : [];
+  const totalEvaluated = Number(activityBuckets?.evaluatedUsers) || 0;
+  const totalContentEvaluated = Number(activityBuckets?.totalContent) || 0;
 
   return (
     <div className="space-y-8">
@@ -1321,22 +1685,53 @@ export default function ExecutiveSummaryPage() {
           <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
             Aktivitas Personil
           </h2>
+          {!userInsightState.loading && !userInsightState.error && activityBuckets ? (
+            <p className="mt-2 text-xs text-slate-400">
+              {formatNumber(totalEvaluated, { maximumFractionDigits: 0 })} personil dievaluasi
+              {totalContentEvaluated > 0
+                ? ` dari ${formatNumber(totalContentEvaluated, { maximumFractionDigits: 0 })} konten`
+                : " (tidak ada konten yang terbit)"}
+              .
+            </p>
+          ) : null}
           <div className="mt-5 space-y-5">
-            {data.userInsightMetrics.map((metric) => (
-              <div key={metric.label} className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-200">{metric.label}</p>
-                  <p className="text-xs text-slate-400">Perbandingan bulan sebelumnya</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-semibold text-white">
-                    {formatNumber(metric.value, { maximumFractionDigits: metric.suffix ? 1 : 0 })}
-                    {metric.suffix ? metric.suffix : ""}
-                  </p>
-                  <p className="text-xs text-emerald-400">{metric.change}</p>
-                </div>
+            {userInsightState.loading ? (
+              <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                Memuat aktivitas personil…
               </div>
-            ))}
+            ) : userInsightState.error ? (
+              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                {userInsightState.error}
+              </div>
+            ) : activityCategories.length > 0 ? (
+              activityCategories.map((category) => {
+                const percent =
+                  totalEvaluated > 0 ? (category.count / totalEvaluated) * 100 : 0;
+                return (
+                  <div
+                    key={category.key}
+                    className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-200">{category.label}</p>
+                      <p className="text-xs text-slate-400">{category.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-semibold text-white">
+                        {formatNumber(category.count, { maximumFractionDigits: 0 })}
+                      </p>
+                      {totalEvaluated > 0 ? (
+                        <p className="text-xs text-cyan-300">{formatPercent(percent)}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                Aktivitas personil belum tersedia untuk periode ini.
+              </div>
+            )}
           </div>
         </div>
       </section>
