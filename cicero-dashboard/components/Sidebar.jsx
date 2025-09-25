@@ -53,7 +53,6 @@ export default function Sidebar() {
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
-    { label: "Executive Summary", path: "/executive-summary", icon: FilePieChart },
     { label: "User Directory", path: "/users", icon: Users },
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
     ...(instagramEnabled
@@ -87,6 +86,7 @@ export default function Sidebar() {
           },
         ]
       : []),
+    { label: "Executive Summary", path: "/executive-summary", icon: FilePieChart },
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },
   ];
 
