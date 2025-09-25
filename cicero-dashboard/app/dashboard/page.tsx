@@ -560,8 +560,8 @@ export default function DashboardPage() {
                 <p className="text-sm text-slate-300">
                   {analytics.totals.posts > 0
                     ? `Analisis ${analytics.totals.posts} konten terbaru dengan rata-rata ${formatCompactNumber(
-                        analytics.totals.averageViews
-                      )} views per konten.`
+                        analytics.totals.engagements
+                      )} likes per konten.`
                     : "Menunggu konten terbaru untuk dianalisis."}
                 </p>
                 <div className="grid gap-4 text-sm text-slate-200 sm:grid-cols-2 xl:grid-cols-2">
