@@ -874,7 +874,7 @@ export default function ExecutiveSummaryPage() {
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    Total Admin
+                    Total Personil
                   </p>
                   <p className="mt-2 text-3xl font-semibold text-slate-100">
                     {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })}
@@ -888,7 +888,7 @@ export default function ExecutiveSummaryPage() {
                     {formatNumber(userSummary.instagramFilled, { maximumFractionDigits: 0 })}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {formatPercent(userSummary.instagramPercent)} dari total admin
+                    {formatPercent(userSummary.instagramPercent)} dari total Personil
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
@@ -899,7 +899,7 @@ export default function ExecutiveSummaryPage() {
                     {formatNumber(userSummary.tiktokFilled, { maximumFractionDigits: 0 })}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {formatPercent(userSummary.tiktokPercent)} dari total admin
+                    {formatPercent(userSummary.tiktokPercent)} dari total Personil
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5 sm:col-span-2 xl:col-span-3">
