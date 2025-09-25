@@ -960,7 +960,7 @@ export default function ExecutiveSummaryPage() {
                       Rasio Kelengkapan per Satker / Polres
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Menampilkan lima satker atau polres dengan jumlah Personil terbesar.
+                      Menampilkan lima Polres dengan jumlah Personil terbesar.
                     </p>
                   </div>
                 </div>
