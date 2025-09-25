@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -16,7 +16,6 @@ import {
   Cell,
 } from "recharts";
 import { Download } from "lucide-react";
-import pptxgen from "pptxgenjs";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { Button } from "@/components/ui/button";
 
@@ -254,11 +253,69 @@ const monthlyData = {
 };
 
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
+const PPTX_SCRIPT_URL =
+  "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
 
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const monthKeys = Object.keys(monthlyData);
   const [selectedMonth, setSelectedMonth] = useState(monthKeys[0]);
+  const [pptxFactory, setPptxFactory] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    const assignFactory = () => {
+      if (!isMounted) {
+        return;
+      }
+
+      const globalFactory = window.PptxGenJS;
+      if (globalFactory) {
+        setPptxFactory(() => globalFactory);
+      }
+    };
+
+    const handleError = (event) => {
+      if (!isMounted) {
+        return;
+      }
+
+      console.error("Gagal memuat pustaka PptxGenJS", event);
+      setPptxFactory(null);
+    };
+
+    if (window.PptxGenJS) {
+      assignFactory();
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const scriptId = "pptxgenjs-cdn-script";
+    let scriptElement = document.getElementById(scriptId);
+
+    if (!(scriptElement instanceof HTMLScriptElement)) {
+      scriptElement = document.createElement("script");
+      scriptElement.id = scriptId;
+      scriptElement.src = PPTX_SCRIPT_URL;
+      scriptElement.async = true;
+      document.body.appendChild(scriptElement);
+    }
+
+    scriptElement.addEventListener("load", assignFactory);
+    scriptElement.addEventListener("error", handleError);
+
+    return () => {
+      isMounted = false;
+      scriptElement?.removeEventListener("load", assignFactory);
+      scriptElement?.removeEventListener("error", handleError);
+    };
+  }, []);
 
   const data = monthlyData[selectedMonth];
 
@@ -272,7 +329,12 @@ export default function ExecutiveSummaryPage() {
   }, [data]);
 
   const handleDownload = () => {
-    const pptx = new pptxgen();
+    if (!pptxFactory) {
+      console.error("PptxGenJS belum siap digunakan.");
+      return;
+    }
+
+    const pptx = new pptxFactory();
     pptx.layout = "LAYOUT_16x9";
 
     const titleSlide = pptx.addSlide();
@@ -409,7 +471,8 @@ export default function ExecutiveSummaryPage() {
             </label>
             <Button
               onClick={handleDownload}
-              className="flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-2 text-white shadow-[0_10px_30px_rgba(6,182,212,0.25)] transition hover:bg-cyan-400"
+              disabled={!pptxFactory}
+              className="flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-2 text-white shadow-[0_10px_30px_rgba(6,182,212,0.25)] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-500/60 disabled:shadow-none"
             >
               <Download className="h-4 w-4" /> Unduh PPT
             </Button>
