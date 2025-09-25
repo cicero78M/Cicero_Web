@@ -480,7 +480,7 @@ export default function DashboardPage() {
       {
         key: "engagement",
         title: "Engagement",
-        value: `${analytics.totals.engagements,
+        value: `${analytics.totals.engagement,
         subtitle: "Likes + Komentar",
         icon: "⚡",
       },
