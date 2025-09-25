@@ -17,7 +17,9 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { getUserDirectory } from "@/utils/api";
 
 const formatNumber = (value, options = {}) => {
   const formatter = new Intl.NumberFormat("id-ID", {
@@ -25,6 +27,266 @@ const formatNumber = (value, options = {}) => {
     minimumFractionDigits: options.minimumFractionDigits ?? 0,
   });
   return formatter.format(value ?? 0);
+};
+
+const formatPercent = (value) => {
+  const safeValue = Number.isFinite(value) ? Math.max(0, value) : 0;
+  const fractionDigits = safeValue < 10 && safeValue > 0 ? 1 : 0;
+  return `${formatNumber(safeValue, {
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
+  })}%`;
+};
+
+const beautifyDivisionName = (rawName) => {
+  const cleaned = (rawName || "").toString().replace(/[_]+/g, " ").trim();
+  if (!cleaned) {
+    return "Unit Lainnya";
+  }
+  return cleaned
+    .split(/\s+/)
+    .map((segment) => {
+      if (!segment) return segment;
+      if (segment.length <= 3) {
+        return segment.toUpperCase();
+      }
+      return segment.charAt(0) + segment.slice(1).toLowerCase();
+    })
+    .join(" ");
+};
+
+const shortenDivisionName = (name) => {
+  const formatted = beautifyDivisionName(name);
+  return formatted.length > 20 ? `${formatted.slice(0, 19)}…` : formatted;
+};
+
+const buildUserNarrative = ({
+  totalUsers,
+  bothCount,
+  bothPercent,
+  instagramPercent,
+  tiktokPercent,
+  onlyInstagramPercent,
+  onlyTikTokPercent,
+  nonePercent,
+  bestDivision,
+  lowestDivision,
+}) => {
+  if (!totalUsers) {
+    return "Belum ada data pengguna yang dapat dianalisis. Mintalah tim untuk memperbarui direktori terlebih dahulu.";
+  }
+
+  const sentences = [];
+  sentences.push(
+    `Direktori saat ini memuat ${formatNumber(totalUsers, { maximumFractionDigits: 0 })} admin aktif.`,
+  );
+
+  if (bothCount > 0) {
+    sentences.push(
+      `${formatNumber(bothCount, { maximumFractionDigits: 0 })} admin (${formatPercent(
+        bothPercent,
+      )}) telah melengkapi data Instagram dan TikTok sekaligus sehingga koordinasi lintas kanal berjalan mulus.`,
+    );
+  } else {
+    sentences.push(
+      `Belum ada admin yang melengkapi kedua kanal sekaligus, sehingga perlu kampanye internal untuk menyatukan kanal komunikasi.`,
+    );
+  }
+
+  const igVsTtGap = Math.abs(instagramPercent - tiktokPercent);
+  if (igVsTtGap < 5) {
+    sentences.push(
+      `Kelengkapan akun Instagram (${formatPercent(instagramPercent)}) dan TikTok (${formatPercent(
+        tiktokPercent,
+      )}) sudah relatif seimbang, menandakan prosedur input berjalan konsisten.`,
+    );
+  } else if (instagramPercent > tiktokPercent) {
+    sentences.push(
+      `Instagram masih unggul dengan kelengkapan ${formatPercent(
+        instagramPercent,
+      )}, sementara TikTok berada di ${formatPercent(
+        tiktokPercent,
+      )}; dorong tim agar mengejar ketertinggalan kanal video pendek.`,
+    );
+  } else {
+    sentences.push(
+      `TikTok justru lebih siap (${formatPercent(
+        tiktokPercent,
+      )}) dibanding Instagram (${formatPercent(
+        instagramPercent,
+      )}); perlu penguatan edukasi konten foto dan carousel.`,
+    );
+  }
+
+  if (bestDivision) {
+    sentences.push(
+      `${beautifyDivisionName(bestDivision.division)} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
+        bestDivision.completionPercent,
+      )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} admin aktif.`,
+    );
+  }
+
+  if (lowestDivision && lowestDivision.division !== bestDivision?.division) {
+    sentences.push(
+      `Pendampingan perlu difokuskan pada ${beautifyDivisionName(lowestDivision.division)} yang baru mencapai ${formatPercent(
+        lowestDivision.completionPercent,
+      )} rata-rata kelengkapan kanal.`,
+    );
+  }
+
+  if (nonePercent > 0) {
+    sentences.push(
+      `${formatPercent(nonePercent)} admin belum mengisi data sama sekali; jadwalkan klinik onboarding agar mereka segera produktif.`,
+    );
+  } else if (onlyInstagramPercent > 0 || onlyTikTokPercent > 0) {
+    sentences.push(
+      `Sisanya tersebar pada admin yang baru melengkapi satu kanal (${formatPercent(
+        onlyInstagramPercent + onlyTikTokPercent,
+      )}); targetkan follow-up ringan agar profil mereka seratus persen siap.`,
+    );
+  }
+
+  return sentences.join(" ");
+};
+
+const computeUserInsight = (users = []) => {
+  const totalUsers = users.length;
+  let instagramFilled = 0;
+  let tiktokFilled = 0;
+  let bothCount = 0;
+  let onlyInstagram = 0;
+  let onlyTikTok = 0;
+  let none = 0;
+
+  const divisionMap = new Map();
+
+  users.forEach((user) => {
+    const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
+    const hasTikTok = Boolean(user?.tiktok && String(user.tiktok).trim() !== "");
+
+    if (hasInstagram) instagramFilled += 1;
+    if (hasTikTok) tiktokFilled += 1;
+    if (hasInstagram && hasTikTok) {
+      bothCount += 1;
+    } else if (hasInstagram) {
+      onlyInstagram += 1;
+    } else if (hasTikTok) {
+      onlyTikTok += 1;
+    } else {
+      none += 1;
+    }
+
+    const divisionKey = (user?.divisi || user?.unit || "LAINNYA")
+      .toString()
+      .trim()
+      .toUpperCase();
+
+    if (!divisionMap.has(divisionKey)) {
+      divisionMap.set(divisionKey, {
+        division: divisionKey,
+        total: 0,
+        igFilled: 0,
+        ttFilled: 0,
+      });
+    }
+
+    const record = divisionMap.get(divisionKey);
+    record.total += 1;
+    if (hasInstagram) record.igFilled += 1;
+    if (hasTikTok) record.ttFilled += 1;
+  });
+
+  const instagramPercent = totalUsers ? (instagramFilled / totalUsers) * 100 : 0;
+  const tiktokPercent = totalUsers ? (tiktokFilled / totalUsers) * 100 : 0;
+  const bothPercent = totalUsers ? (bothCount / totalUsers) * 100 : 0;
+  const onlyInstagramPercent = totalUsers ? (onlyInstagram / totalUsers) * 100 : 0;
+  const onlyTikTokPercent = totalUsers ? (onlyTikTok / totalUsers) * 100 : 0;
+  const nonePercent = totalUsers ? (none / totalUsers) * 100 : 0;
+
+  const divisionArray = Array.from(divisionMap.values()).map((item) => {
+    const igPercent = item.total ? (item.igFilled / item.total) * 100 : 0;
+    const tiktokPercentDivision = item.total ? (item.ttFilled / item.total) * 100 : 0;
+    const completionPercent = item.total
+      ? ((item.igFilled + item.ttFilled) / (item.total * 2)) * 100
+      : 0;
+    return {
+      ...item,
+      igPercent,
+      tiktokPercent: tiktokPercentDivision,
+      completionPercent,
+    };
+  });
+
+  const sortedByTotal = [...divisionArray].sort((a, b) => {
+    if (b.total !== a.total) {
+      return b.total - a.total;
+    }
+    return b.completionPercent - a.completionPercent;
+  });
+
+  const barData = sortedByTotal.slice(0, 5).map((item) => ({
+    division: shortenDivisionName(item.division),
+    fullDivision: beautifyDivisionName(item.division),
+    instagram: Number(item.igPercent.toFixed(1)),
+    tiktok: Number(item.tiktokPercent.toFixed(1)),
+    total: item.total,
+  }));
+
+  const bestDivision = [...divisionArray]
+    .sort((a, b) => {
+      if (b.completionPercent !== a.completionPercent) {
+        return b.completionPercent - a.completionPercent;
+      }
+      return b.total - a.total;
+    })
+    .find((item) => item.total > 0);
+
+  const lowestDivision = [...divisionArray]
+    .sort((a, b) => {
+      if (a.completionPercent !== b.completionPercent) {
+        return a.completionPercent - b.completionPercent;
+      }
+      return b.total - a.total;
+    })
+    .find((item) => item.total > 0);
+
+  const pieData = [
+    { name: "IG & TikTok Lengkap", value: bothCount },
+    { name: "Hanya IG", value: onlyInstagram },
+    { name: "Hanya TikTok", value: onlyTikTok },
+    { name: "Belum Diisi", value: none },
+  ];
+
+  const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
+
+  const narrative = buildUserNarrative({
+    totalUsers,
+    bothCount,
+    bothPercent,
+    instagramPercent,
+    tiktokPercent,
+    onlyInstagramPercent,
+    onlyTikTokPercent,
+    nonePercent,
+    bestDivision,
+    lowestDivision,
+  });
+
+  return {
+    summary: {
+      totalUsers,
+      instagramFilled,
+      instagramPercent,
+      tiktokFilled,
+      tiktokPercent,
+      bothCount,
+      bothPercent,
+    },
+    barData,
+    pieData,
+    pieTotal,
+    narrative,
+  };
 };
 
 const monthlyData = {
@@ -268,9 +530,19 @@ const SOCIAL_INSIGHT_CARDS = [
 
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
+  const { token, clientId } = useAuth();
   const monthKeys = Object.keys(monthlyData);
   const [selectedMonth, setSelectedMonth] = useState(monthKeys[0]);
   const [pptxFactory, setPptxFactory] = useState(null);
+  const [userInsightState, setUserInsightState] = useState({
+    loading: true,
+    error: "",
+    summary: null,
+    barData: [],
+    pieData: [],
+    pieTotal: 0,
+    narrative: "",
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -328,6 +600,64 @@ export default function ExecutiveSummaryPage() {
   }, []);
 
   const data = monthlyData[selectedMonth];
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    const loadUserInsight = async () => {
+      if (!token || !clientId) {
+        setUserInsightState((prev) => ({
+          ...prev,
+          loading: true,
+        }));
+        return;
+      }
+
+      setUserInsightState((prev) => ({
+        ...prev,
+        loading: true,
+        error: "",
+      }));
+
+      try {
+        const response = await getUserDirectory(token, clientId, controller.signal);
+        if (cancelled) {
+          return;
+        }
+        const raw = response?.data || response?.users || response;
+        const users = Array.isArray(raw) ? raw : [];
+        const insight = computeUserInsight(users);
+        if (cancelled) {
+          return;
+        }
+        setUserInsightState({
+          loading: false,
+          error: "",
+          ...insight,
+        });
+      } catch (error) {
+        if (cancelled || error?.name === "AbortError") {
+          return;
+        }
+        setUserInsightState((prev) => ({
+          ...prev,
+          loading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat insight pengguna.",
+        }));
+      }
+    };
+
+    loadUserInsight();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [token, clientId]);
 
   const summaryMetricMap = useMemo(() => {
     return data.summaryMetrics.reduce((accumulator, metric) => {
@@ -472,6 +802,9 @@ export default function ExecutiveSummaryPage() {
       fileName: `Executive-Summary-${data.monthLabel.replace(/\s+/g, "-")}.pptx`,
     });
   };
+
+  const { summary: userSummary, barData, pieData, pieTotal, narrative } =
+    userInsightState;
 
   return (
     <div className="space-y-8">
@@ -681,6 +1014,233 @@ export default function ExecutiveSummaryPage() {
             </ResponsiveContainer>
           </div>
         </div>
+      </section>
+
+      <section
+        aria-label="Insight Pengguna Aktual"
+        className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+      >
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              Insight Pengguna Aktual
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+              Data ini ditarik langsung dari direktori admin untuk memotret kesiapan kanal sosial setiap saat.
+            </p>
+          </div>
+        </div>
+
+        {userInsightState.loading ? (
+          <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+            Memuat insight pengguna…
+          </div>
+        ) : userInsightState.error ? (
+          <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {userInsightState.error}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {userSummary && (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    Total Admin
+                  </p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-100">
+                    {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                    Instagram Lengkap
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-100">
+                    {formatNumber(userSummary.instagramFilled, { maximumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {formatPercent(userSummary.instagramPercent)} dari total admin
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-200/80">
+                    TikTok Lengkap
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-100">
+                    {formatNumber(userSummary.tiktokFilled, { maximumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {formatPercent(userSummary.tiktokPercent)} dari total admin
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5 sm:col-span-2 xl:col-span-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">
+                    Kedua Kanal Lengkap
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
+                    <p className="text-2xl font-semibold text-slate-100">
+                      {formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })} Admin
+                    </p>
+                    <p className="text-sm text-emerald-300">
+                      {formatPercent(userSummary.bothPercent)} dari keseluruhan basis admin
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+              <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                      Rasio Kelengkapan per Divisi
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Menampilkan lima divisi dengan jumlah admin terbesar.
+                    </p>
+                  </div>
+                </div>
+                {barData.length > 0 ? (
+                  <div className="mt-6 h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={barData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" />
+                        <XAxis
+                          dataKey="division"
+                          tick={{ fill: "#94a3b8", fontSize: 11 }}
+                          axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                        />
+                        <YAxis
+                          tickFormatter={(value) => `${value}%`}
+                          tick={{ fill: "#94a3b8", fontSize: 11 }}
+                          domain={[0, 100]}
+                          axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
+                          contentStyle={{
+                            backgroundColor: "rgba(15,23,42,0.92)",
+                            borderRadius: 16,
+                            borderColor: "rgba(148,163,184,0.4)",
+                            color: "#e2e8f0",
+                          }}
+                          formatter={(value, name) => [
+                            `${value}%`,
+                            name === "instagram"
+                              ? "Instagram Lengkap"
+                              : "TikTok Lengkap",
+                          ]}
+                          labelFormatter={(_, payload) =>
+                            payload?.[0]?.payload?.fullDivision ?? "Divisi"
+                          }
+                        />
+                        <Legend
+                          wrapperStyle={{ color: "#e2e8f0" }}
+                          formatter={(value) =>
+                            value === "instagram"
+                              ? "Instagram Lengkap"
+                              : "TikTok Lengkap"
+                          }
+                        />
+                        <Bar dataKey="instagram" fill="#38bdf8" radius={[6, 6, 0, 0]}>
+                          <LabelList
+                            dataKey="instagram"
+                            position="top"
+                            formatter={(value) => `${value}%`}
+                            fill="#e2e8f0"
+                            fontSize={11}
+                          />
+                        </Bar>
+                        <Bar dataKey="tiktok" fill="#a855f7" radius={[6, 6, 0, 0]}>
+                          <LabelList
+                            dataKey="tiktok"
+                            position="top"
+                            formatter={(value) => `${value}%`}
+                            fill="#e2e8f0"
+                            fontSize={11}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                    Belum ada data divisi yang bisa ditampilkan.
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                      Komposisi Kelengkapan Kanal
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Distribusi admin berdasarkan status pengisian akun.
+                    </p>
+                  </div>
+                </div>
+                {pieData.length > 0 && pieTotal > 0 ? (
+                  <div className="mt-6 h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius={55}
+                          outerRadius={100}
+                          paddingAngle={4}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          ))}
+                          <LabelList
+                            dataKey="value"
+                            position="outside"
+                            formatter={(value) =>
+                              pieTotal
+                                ? `${formatPercent((value / pieTotal) * 100)}`
+                                : "0%"
+                            }
+                            fill="#e2e8f0"
+                            fontSize={11}
+                          />
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(15,23,42,0.92)",
+                            borderRadius: 16,
+                            borderColor: "rgba(148,163,184,0.4)",
+                            color: "#e2e8f0",
+                          }}
+                          formatter={(value) => [
+                            `${formatNumber(value, { maximumFractionDigits: 0 })} admin`,
+                            "Jumlah",
+                          ]}
+                        />
+                        <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                    Belum ada distribusi data yang bisa divisualisasikan.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <article className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                Catatan Insight Otomatis
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
+            </article>
+          </div>
+        )}
       </section>
 
       <section className="space-y-6" aria-label="Analisis Mendalam">
