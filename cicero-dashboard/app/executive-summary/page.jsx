@@ -904,14 +904,14 @@ export default function ExecutiveSummaryPage() {
                 </div>
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5 sm:col-span-2 xl:col-span-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">
-                    Kedua Kanal Lengkap
+                    Personil dengan data Username Sosial Media lengkap
                   </p>
                   <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
                     <p className="text-2xl font-semibold text-slate-100">
-                      {formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })} Admin
+                      {formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })} Personil
                     </p>
                     <p className="text-sm text-emerald-300">
-                      {formatPercent(userSummary.bothPercent)} dari keseluruhan basis admin
+                      {formatPercent(userSummary.bothPercent)} dari keseluruhan data Personil
                     </p>
                   </div>
                 </div>
