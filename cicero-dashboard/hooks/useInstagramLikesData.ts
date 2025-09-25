@@ -24,15 +24,7 @@ function normalizeClientId(value: any) {
   return String(value || "").toUpperCase();
 }
 
-function normalizeUsers(value: any): any[] {
-  if (Array.isArray(value)) return value;
-  if (!value || typeof value !== "object") return [];
-  const maybeArray = Object.values(value);
-  return Array.isArray(maybeArray) ? maybeArray : [];
-}
-
 function calculateSummary(users: any[], totalIGPost: number): RekapSummary {
-  const normalizedUsers = Array.isArray(users) ? users : [];
   const normalizedTotal = Number(totalIGPost) || 0;
   const isZeroPost = normalizedTotal === 0;
   let totalSudahLike = 0;
@@ -40,7 +32,7 @@ function calculateSummary(users: any[], totalIGPost: number): RekapSummary {
   let totalBelumLike = 0;
   let totalTanpaUsername = 0;
 
-  normalizedUsers.forEach((u: any) => {
+  users.forEach((u: any) => {
     const username = String(u.username || "").trim();
     if (!username) {
       totalTanpaUsername += 1;
@@ -61,7 +53,7 @@ function calculateSummary(users: any[], totalIGPost: number): RekapSummary {
   });
 
   return {
-    totalUser: normalizedUsers.length,
+    totalUser: users.length,
     totalSudahLike,
     totalKurangLike,
     totalBelumLike,
@@ -153,10 +145,9 @@ export default function useInstagramLikesData({
               controller.signal,
             );
           if (controller.signal.aborted) return;
-          const normalizedUsers = normalizeUsers(users);
           const filteredUsers =
             ditbinmasScope === "self"
-              ? normalizedUsers.filter((u: any) =>
+              ? users.filter((u: any) =>
                   normalizeClientId(
                     u.client_id ||
                       u.clientId ||
@@ -165,7 +156,7 @@ export default function useInstagramLikesData({
                       "",
                   ) === normalizedClientId,
                 )
-              : normalizedUsers;
+              : users;
           const totalIGPost =
             Number(summary?.totalIGPost ?? 0) ||
             (Array.isArray(posts) ? posts.length : 0);
@@ -175,7 +166,7 @@ export default function useInstagramLikesData({
           );
           setChartData(filteredUsers);
           setRekapSummary(computedSummary);
-          setIgPosts(Array.isArray(posts) ? posts : []);
+          setIgPosts(posts || []);
           setClientName(clientName || "");
           setIsDirectorate(ditbinmasScope !== "self");
           return;
@@ -313,12 +304,11 @@ export default function useInstagramLikesData({
             : [];
         }
 
-        const normalizedUsers = normalizeUsers(users);
         const totalIGPost = Number((statsData as any).instagramPosts) || 0;
         if (controller.signal.aborted) return;
-        const computedSummary = calculateSummary(normalizedUsers, totalIGPost);
+        const computedSummary = calculateSummary(users, totalIGPost);
         setRekapSummary(computedSummary);
-        setChartData(normalizedUsers);
+        setChartData(users);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err.message || err));
