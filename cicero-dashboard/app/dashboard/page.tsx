@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
+type PlatformKey = "instagram" | "tiktok";
+type PostType = "video" | "carousel" | "image";
+
 const formatCompactNumber = (value: number) => {
   if (!value || Number.isNaN(value)) return "0";
   const formatter = new Intl.NumberFormat("id-ID", {
@@ -15,6 +18,73 @@ const formatCompactNumber = (value: number) => {
     maximumFractionDigits: value >= 1000 ? 1 : 0,
   });
   return formatter.format(value);
+};
+
+const isVideoLikeUrl = (url: unknown) =>
+  typeof url === "string" && /\.(mp4|mov|m4v|webm|avi)(?:\?.*)?$/i.test(url);
+
+const detectPostType = (post: any, platform: PlatformKey): PostType => {
+  if (platform === "tiktok") return "video";
+
+  const typeCandidates = [
+    post?.media_type,
+    post?.mediaType,
+    post?.product_type,
+    post?.productType,
+    post?.type,
+    post?.__typename,
+    post?.media?.type,
+    post?.media?.media_type,
+  ]
+    .map((value: unknown) => (typeof value === "string" ? value.toLowerCase() : ""))
+    .filter(Boolean);
+
+  const hasVideoIndicator =
+    typeCandidates.some((type) =>
+      ["video", "reel", "igtv", "clip"].some((keyword) => type.includes(keyword))
+    ) ||
+    post?.is_video === true ||
+    post?.isVideo === true ||
+    Boolean(post?.video_url || post?.videoUrl) ||
+    (Array.isArray(post?.video_versions) && post.video_versions.length > 0) ||
+    isVideoLikeUrl(post?.media_url) ||
+    isVideoLikeUrl(post?.display_url);
+
+  if (hasVideoIndicator) return "video";
+
+  const hasCarouselIndicator =
+    typeCandidates.some((type) =>
+      ["carousel", "album", "sidecar"].some((keyword) => type.includes(keyword))
+    ) ||
+    Array.isArray(post?.carousel_media) ||
+    Array.isArray(post?.children) ||
+    Array.isArray(post?.slides) ||
+    Array.isArray(post?.resources);
+
+  if (hasCarouselIndicator) return "carousel";
+
+  const hasImageIndicator =
+    typeCandidates.some((type) =>
+      ["image", "photo", "graphimage", "picture"].some((keyword) => type.includes(keyword))
+    ) ||
+    typeof post?.image_versions2 !== "undefined" ||
+    typeof post?.display_url === "string" ||
+    (typeof post?.media_url === "string" && !isVideoLikeUrl(post.media_url));
+
+  if (hasImageIndicator) return "image";
+
+  return "image";
+};
+
+const countPostTypes = (posts: any[], platform: PlatformKey): Record<PostType, number> => {
+  return posts.reduce<Record<PostType, number>>(
+    (acc, post) => {
+      const type = detectPostType(post, platform);
+      acc[type] += 1;
+      return acc;
+    },
+    { video: 0, carousel: 0, image: 0 }
+  );
 };
 
 const pickNumericValue = (source: any, paths: string[]): number => {
@@ -170,6 +240,9 @@ export default function DashboardPage() {
       0
     );
 
+    const instagramTypeCounts = countPostTypes(igPosts, "instagram");
+    const tiktokTypeCounts = countPostTypes(tiktokPosts, "tiktok");
+
     const totals = {
       followers: instagramFollowers + tiktokFollowers,
       following: instagramFollowing + tiktokFollowing,
@@ -177,9 +250,13 @@ export default function DashboardPage() {
       comments: instagramComments + tiktokComments,
       views: instagramViews + tiktokViews,
       posts: igPosts.length + tiktokPosts.length,
+      videoPosts: instagramTypeCounts.video + tiktokTypeCounts.video,
+      carouselPosts: instagramTypeCounts.carousel + tiktokTypeCounts.carousel,
+      imagePosts: instagramTypeCounts.image + tiktokTypeCounts.image,
     };
 
     const totalEngagements = totals.likes + totals.comments;
+    const carouselImagePosts = totals.carouselPosts + totals.imagePosts;
     const engagementRate = totals.followers
       ? (totalEngagements / totals.followers) * 100
       : 0;
@@ -350,6 +427,8 @@ export default function DashboardPage() {
     return {
       totals: {
         ...totals,
+        engagements: totalEngagements,
+        carouselImagePosts,
         engagementRate,
         averageViews,
       },
@@ -411,13 +490,6 @@ export default function DashboardPage() {
   const snapshotMetrics = useMemo(
     () => [
       {
-        key: "views",
-        label: "Total Views",
-        value: formatCompactNumber(analytics.totals.views),
-        accent: "text-cyan-300",
-        helper: "Akumulasi views lintas platform",
-      },
-      {
         key: "posts",
         label: "Total Konten",
         value: analytics.totals.posts,
@@ -425,18 +497,25 @@ export default function DashboardPage() {
         helper: "Konten dianalisis hari ini",
       },
       {
-        key: "followers",
-        label: "Followers Aktif",
-        value: formatCompactNumber(analytics.totals.followers),
+        key: "videos",
+        label: "Total Video",
+        value: analytics.totals.videoPosts,
+        accent: "text-cyan-300",
+        helper: "Video lintas platform",
+      },
+      {
+        key: "carousel-image",
+        label: "Total Carousel / Image",
+        value: analytics.totals.carouselImagePosts,
         accent: "text-fuchsia-300",
-        helper: "Audiens siap terlibat",
+        helper: "Konten gambar & carousel",
       },
       {
         key: "engagement",
-        label: "Engagement Rate",
-        value: `${analytics.totals.engagementRate.toFixed(2)}%`,
+        label: "Total Engagement",
+        value: formatCompactNumber(analytics.totals.engagements),
         accent: "text-amber-300",
-        helper: "Rasio interaksi terkini",
+        helper: "Akumulasi likes & komentar",
       },
     ],
     [analytics]
