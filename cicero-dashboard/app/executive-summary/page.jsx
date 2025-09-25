@@ -20,7 +20,6 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getUserDirectory } from "@/utils/api";
-import { groupUsersByKelompok } from "@/utils/grouping";
 
 const formatNumber = (value, options = {}) => {
   const formatter = new Intl.NumberFormat("id-ID", {
@@ -196,17 +195,7 @@ const buildUserNarrative = ({
 };
 
 const computeUserInsight = (users = []) => {
-  const processedUsers = users.map((user) => {
-    const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
-    const hasTikTok = Boolean(user?.tiktok && String(user.tiktok).trim() !== "");
-    return {
-      ...user,
-      hasInstagramFlag: hasInstagram,
-      hasTikTokFlag: hasTikTok,
-    };
-  });
-
-  const totalUsers = processedUsers.length;
+  const totalUsers = users.length;
   let instagramFilled = 0;
   let tiktokFilled = 0;
   let bothCount = 0;
@@ -216,9 +205,9 @@ const computeUserInsight = (users = []) => {
 
   const divisionMap = new Map();
 
-  processedUsers.forEach((user) => {
-    const hasInstagram = user.hasInstagramFlag;
-    const hasTikTok = user.hasTikTokFlag;
+  users.forEach((user) => {
+    const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
+    const hasTikTok = Boolean(user?.tiktok && String(user.tiktok).trim() !== "");
 
     if (hasInstagram) instagramFilled += 1;
     if (hasTikTok) tiktokFilled += 1;
@@ -279,41 +268,13 @@ const computeUserInsight = (users = []) => {
     return b.completionPercent - a.completionPercent;
   });
 
-  const kelompokGroups = groupUsersByKelompok(processedUsers);
-  const kelompokBarData = Object.entries(kelompokGroups)
-    .map(([kelompokName, groupedUsers]) => {
-      let igFilledCount = 0;
-      let ttFilledCount = 0;
-
-      groupedUsers.forEach((groupUser) => {
-        if (groupUser.hasInstagramFlag) igFilledCount += 1;
-        if (groupUser.hasTikTokFlag) ttFilledCount += 1;
-      });
-
-      const total = groupedUsers.length;
-      const igPercent = total ? (igFilledCount / total) * 100 : 0;
-      const tiktokPercentGroup = total ? (ttFilledCount / total) * 100 : 0;
-
-      return {
-        division: kelompokName,
-        fullDivision: kelompokName,
-        instagram: Number(igPercent.toFixed(1)),
-        tiktok: Number(tiktokPercentGroup.toFixed(1)),
-        total,
-      };
-    })
-    .filter((item) => item.total > 0)
-    .sort((a, b) => b.total - a.total);
-
-  const fallbackBarData = sortedByTotal.slice(0, 5).map((item) => ({
+  const barData = sortedByTotal.slice(0, 5).map((item) => ({
     division: shortenDivisionName(item.displayName ?? item.division),
     fullDivision: beautifyDivisionName(item.displayName ?? item.division),
     instagram: Number(item.igPercent.toFixed(1)),
     tiktok: Number(item.tiktokPercent.toFixed(1)),
     total: item.total,
   }));
-
-  const barData = kelompokBarData.length > 0 ? kelompokBarData : fallbackBarData;
 
   const bestDivision = [...divisionArray]
     .sort((a, b) => {
