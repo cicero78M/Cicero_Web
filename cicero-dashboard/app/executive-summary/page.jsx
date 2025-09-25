@@ -255,6 +255,16 @@ const monthlyData = {
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
 const PPTX_SCRIPT_URL =
   "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
+const SOCIAL_INSIGHT_CARDS = [
+  {
+    title: "Instagram Insight",
+    subtitle: "Ringkasan performa utama kanal Instagram",
+  },
+  {
+    title: "TikTok Insight",
+    subtitle: "Gambaran kinerja kanal TikTok selama periode ini",
+  },
+];
 
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
@@ -318,6 +328,26 @@ export default function ExecutiveSummaryPage() {
   }, []);
 
   const data = monthlyData[selectedMonth];
+
+  const summaryMetricMap = useMemo(() => {
+    return data.summaryMetrics.reduce((accumulator, metric) => {
+      accumulator[metric.label] = metric;
+      return accumulator;
+    }, {});
+  }, [data.summaryMetrics]);
+
+  const insightMetrics = useMemo(() => {
+    const orderedLabels = [
+      "Total Reach",
+      "Engagement Rate",
+      "Konten Dipublikasikan",
+      "Sentimen Positif",
+    ];
+
+    return orderedLabels
+      .map((label) => summaryMetricMap[label])
+      .filter((metric) => Boolean(metric));
+  }, [summaryMetricMap]);
 
   const pptSummary = useMemo(() => {
     return [
@@ -500,6 +530,51 @@ export default function ExecutiveSummaryPage() {
             </p>
             <p className="mt-2 text-sm text-emerald-400">{metric.change}</p>
           </div>
+        ))}
+      </section>
+
+      <section
+        aria-label="Insight Kanal Sosial"
+        className="grid gap-6 lg:grid-cols-2"
+      >
+        {SOCIAL_INSIGHT_CARDS.map((card) => (
+          <article
+            key={card.title}
+            className="rounded-3xl border border-cyan-500/25 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+          >
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              {card.title}
+            </h2>
+            <p className="mt-3 text-sm text-slate-300">{card.subtitle}</p>
+            <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+              {insightMetrics.map((metric) => {
+                const isNegativeChange = metric.change?.trim().startsWith("-");
+                const changeColor = isNegativeChange ? "text-rose-400" : "text-emerald-400";
+
+                return (
+                  <div
+                    key={`${card.title}-${metric.label}`}
+                    className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4"
+                  >
+                    <dt className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200/70">
+                      {metric.label}
+                    </dt>
+                    <dd className="mt-3">
+                      <p className="text-2xl font-semibold text-slate-100">
+                        {formatNumber(metric.value, {
+                          maximumFractionDigits: metric.suffix ? 1 : 0,
+                        })}
+                        {metric.suffix ? metric.suffix : ""}
+                      </p>
+                      {metric.change ? (
+                        <p className={`mt-1 text-xs ${changeColor}`}>{metric.change}</p>
+                      ) : null}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </article>
         ))}
       </section>
 
