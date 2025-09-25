@@ -559,9 +559,9 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-semibold text-slate-100">Snapshot Hari Ini</h2>
                 <p className="text-sm text-slate-300">
                   {analytics.totals.posts > 0
-                    ? `Analisis ${analytics.totals.posts} konten terbaru dengan rata-rata ${formatCompactNumber(
+                    ? `Analisis ${analytics.totals.posts} konten terbaru dengan akumulasi likes dan komentar sebanyak ${formatCompactNumber(
                         analytics.totals.engagements
-                      )} likes per konten.`
+                      )}`
                     : "Menunggu konten terbaru untuk dianalisis."}
                 </p>
                 <div className="grid gap-4 text-sm text-slate-200 sm:grid-cols-2 xl:grid-cols-2">
