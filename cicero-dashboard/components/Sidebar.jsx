@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Link as LinkIcon,
+  FilePieChart,
   Book,
 } from "lucide-react";
 import {
@@ -52,6 +53,7 @@ export default function Sidebar() {
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
+    { label: "Executive Summary", path: "/executive-summary", icon: FilePieChart },
     { label: "User Directory", path: "/users", icon: Users },
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
     ...(instagramEnabled
