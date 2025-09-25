@@ -513,27 +513,6 @@ export default function ExecutiveSummaryPage() {
       </header>
 
       <section
-        aria-label="Ikhtisar Kinerja"
-        className="grid gap-4 md:grid-cols-4"
-      >
-        {data.summaryMetrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,118,110,0.15)]"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              {metric.label}
-            </p>
-            <p className="mt-3 text-3xl font-bold text-slate-100">
-              {formatNumber(metric.value, { maximumFractionDigits: metric.suffix ? 1 : 0 })}
-              {metric.suffix ? metric.suffix : ""}
-            </p>
-            <p className="mt-2 text-sm text-emerald-400">{metric.change}</p>
-          </div>
-        ))}
-      </section>
-
-      <section
         aria-label="Insight Kanal Sosial"
         className="grid gap-6 lg:grid-cols-2"
       >
