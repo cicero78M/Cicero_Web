@@ -20,6 +20,19 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getUserDirectory } from "@/utils/api";
+import { cn } from "@/lib/utils";
+
+const formatCompactNumber = (value) => {
+  const numericValue = typeof value === "number" ? value : Number(value);
+  if (!numericValue || Number.isNaN(numericValue)) return "0";
+
+  const formatter = new Intl.NumberFormat("id-ID", {
+    notation: Math.abs(numericValue) >= 1000 ? "compact" : "standard",
+    maximumFractionDigits: Math.abs(numericValue) >= 1000 ? 1 : 0,
+  });
+
+  return formatter.format(numericValue);
+};
 
 const formatNumber = (value, options = {}) => {
   const formatter = new Intl.NumberFormat("id-ID", {
@@ -363,6 +376,38 @@ const monthlyData = {
       { label: "Alert Ditindaklanjuti", value: 214, change: "+12%" },
       { label: "Respons Rata-rata", value: 37, suffix: "mnt", change: "-9 mnt" },
     ],
+    platformAnalytics: {
+      platforms: [
+        {
+          key: "instagram",
+          label: "Instagram",
+          followers: 189400,
+          posts: 42,
+          likes: 86420,
+          comments: 3120,
+          engagementRate: 7.4,
+          shares: {
+            followers: 58.6,
+            likes: 61.2,
+            comments: 55.8,
+          },
+        },
+        {
+          key: "tiktok",
+          label: "TikTok",
+          followers: 133800,
+          posts: 34,
+          likes: 54780,
+          comments: 2470,
+          engagementRate: 6.1,
+          shares: {
+            followers: 41.4,
+            likes: 38.8,
+            comments: 44.2,
+          },
+        },
+      ],
+    },
     contentTable: [
       {
         platform: "Instagram",
@@ -437,6 +482,38 @@ const monthlyData = {
       { label: "Alert Ditindaklanjuti", value: 191, change: "+5%" },
       { label: "Respons Rata-rata", value: 42, suffix: "mnt", change: "-4 mnt" },
     ],
+    platformAnalytics: {
+      platforms: [
+        {
+          key: "instagram",
+          label: "Instagram",
+          followers: 186200,
+          posts: 39,
+          likes: 79210,
+          comments: 2810,
+          engagementRate: 6.1,
+          shares: {
+            followers: 57.4,
+            likes: 59.3,
+            comments: 53.2,
+          },
+        },
+        {
+          key: "tiktok",
+          label: "TikTok",
+          followers: 138200,
+          posts: 33,
+          likes: 54310,
+          comments: 2470,
+          engagementRate: 5.2,
+          shares: {
+            followers: 42.6,
+            likes: 40.7,
+            comments: 46.8,
+          },
+        },
+      ],
+    },
     contentTable: [
       {
         platform: "Instagram",
@@ -511,6 +588,38 @@ const monthlyData = {
       { label: "Alert Ditindaklanjuti", value: 176, change: "+8%" },
       { label: "Respons Rata-rata", value: 48, suffix: "mnt", change: "-2 mnt" },
     ],
+    platformAnalytics: {
+      platforms: [
+        {
+          key: "instagram",
+          label: "Instagram",
+          followers: 182900,
+          posts: 37,
+          likes: 75640,
+          comments: 2650,
+          engagementRate: 5.9,
+          shares: {
+            followers: 56.1,
+            likes: 58.0,
+            comments: 52.4,
+          },
+        },
+        {
+          key: "tiktok",
+          label: "TikTok",
+          followers: 143200,
+          posts: 31,
+          likes: 54780,
+          comments: 2410,
+          engagementRate: 5.4,
+          shares: {
+            followers: 43.9,
+            likes: 42.0,
+            comments: 47.6,
+          },
+        },
+      ],
+    },
     contentTable: [
       {
         platform: "Instagram",
@@ -551,17 +660,6 @@ const monthlyData = {
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
 const PPTX_SCRIPT_URL =
   "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
-const SOCIAL_INSIGHT_CARDS = [
-  {
-    title: "Instagram Insight",
-    subtitle: "Ringkasan performa utama kanal Instagram",
-  },
-  {
-    title: "TikTok Insight",
-    subtitle: "Gambaran kinerja kanal TikTok selama periode ini",
-  },
-];
-
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const { token, clientId } = useAuth();
@@ -634,6 +732,8 @@ export default function ExecutiveSummaryPage() {
   }, []);
 
   const data = monthlyData[selectedMonth];
+  const analytics = data.platformAnalytics ?? { platforms: [] };
+  const platforms = Array.isArray(analytics.platforms) ? analytics.platforms : [];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -692,26 +792,6 @@ export default function ExecutiveSummaryPage() {
       controller.abort();
     };
   }, [token, clientId]);
-
-  const summaryMetricMap = useMemo(() => {
-    return data.summaryMetrics.reduce((accumulator, metric) => {
-      accumulator[metric.label] = metric;
-      return accumulator;
-    }, {});
-  }, [data.summaryMetrics]);
-
-  const insightMetrics = useMemo(() => {
-    const orderedLabels = [
-      "Total Reach",
-      "Engagement Rate",
-      "Konten Dipublikasikan",
-      "Sentimen Positif",
-    ];
-
-    return orderedLabels
-      .map((label) => summaryMetricMap[label])
-      .filter((metric) => Boolean(metric));
-  }, [summaryMetricMap]);
 
   const pptSummary = useMemo(() => {
     return [
@@ -1106,49 +1186,118 @@ export default function ExecutiveSummaryPage() {
         )}
       </section>
 
-      <section
-        aria-label="Insight Kanal Sosial"
-        className="grid gap-6 lg:grid-cols-2"
-      >
-        {SOCIAL_INSIGHT_CARDS.map((card) => (
-          <article
-            key={card.title}
-            className="rounded-3xl border border-cyan-500/25 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
-          >
-            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              {card.title}
-            </h2>
-            <p className="mt-3 text-sm text-slate-300">{card.subtitle}</p>
-            <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-              {insightMetrics.map((metric) => {
-                const isNegativeChange = metric.change?.trim().startsWith("-");
-                const changeColor = isNegativeChange ? "text-rose-400" : "text-emerald-400";
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold text-slate-50">Rincian Kinerja Platform</h2>
+          <p className="text-sm text-slate-300">
+            Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
+          {platforms.length > 0 ? (
+            platforms.map((platform) => {
+              const primaryMetrics = [
+                {
+                  key: "likes",
+                  label: "Likes",
+                  value: formatCompactNumber(platform.likes),
+                  accent: "text-cyan-300",
+                },
+                {
+                  key: "comments",
+                  label: "Komentar",
+                  value: formatCompactNumber(platform.comments),
+                  accent: "text-emerald-300",
+                },
+                {
+                  key: "engagement",
+                  label: "Engagement",
+                  value: `${Number(platform.engagementRate ?? 0).toFixed(2)}%`,
+                  accent: "text-fuchsia-300",
+                },
+              ];
 
-                return (
-                  <div
-                    key={`${card.title}-${metric.label}`}
-                    className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4"
-                  >
-                    <dt className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200/70">
-                      {metric.label}
-                    </dt>
-                    <dd className="mt-3">
-                      <p className="text-2xl font-semibold text-slate-100">
-                        {formatNumber(metric.value, {
-                          maximumFractionDigits: metric.suffix ? 1 : 0,
-                        })}
-                        {metric.suffix ? metric.suffix : ""}
-                      </p>
-                      {metric.change ? (
-                        <p className={`mt-1 text-xs ${changeColor}`}>{metric.change}</p>
-                      ) : null}
-                    </dd>
+              const shareMetrics = [
+                {
+                  key: "followers",
+                  label: "Followers",
+                  value: platform.shares?.followers ?? 0,
+                  gradient: "from-violet-500 via-fuchsia-400 to-cyan-300",
+                },
+                {
+                  key: "likes",
+                  label: "Likes",
+                  value: platform.shares?.likes ?? 0,
+                  gradient: "from-sky-500 via-cyan-400 to-emerald-300",
+                },
+                {
+                  key: "comments",
+                  label: "Komentar",
+                  value: platform.shares?.comments ?? 0,
+                  gradient: "from-amber-400 via-orange-400 to-rose-400",
+                },
+              ];
+
+              return (
+                <div
+                  key={platform.key}
+                  className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/50 p-6 shadow-[0_0_30px_rgba(79,70,229,0.25)] transition duration-200 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-[0_0_45px_rgba(34,211,238,0.22)]"
+                >
+                  <div className="absolute -top-12 right-4 h-32 w-32 rounded-full bg-gradient-to-br from-cyan-400/40 via-transparent to-transparent blur-2xl transition group-hover:from-cyan-400/60" />
+                  <div className="relative flex h-full flex-col gap-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-[0.25em] text-slate-400">Platform</p>
+                        <h3 className="text-xl font-semibold text-slate-50">{platform.label}</h3>
+                      </div>
+                      <div className="flex flex-col items-end rounded-2xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
+                        <span className="font-medium text-slate-200">Followers</span>
+                        <span>{formatCompactNumber(platform.followers)}</span>
+                        <span className="mt-1 text-slate-400">Posts: {platform.posts}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 text-sm text-slate-200 sm:grid-cols-3">
+                      {primaryMetrics.map((metric) => (
+                        <div
+                          key={metric.key}
+                          className="flex flex-col gap-2 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4"
+                        >
+                          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                            {metric.label}
+                          </span>
+                          <span className={cn("text-lg font-semibold", metric.accent)}>{metric.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-auto space-y-3 text-xs text-slate-300">
+                      {shareMetrics.map((share) => (
+                        <div
+                          key={share.key}
+                          className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-3"
+                        >
+                          <div className="mb-2 flex justify-between text-[0.7rem] font-medium uppercase tracking-wider text-slate-400">
+                            <span>{share.label}</span>
+                            <span>{Number(share.value).toFixed(1)}%</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-slate-800">
+                            <div
+                              className={cn("h-full rounded-full bg-gradient-to-r", share.gradient)}
+                              style={{ width: `${Math.min(Number(share.value) || 0, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                );
-              })}
-            </dl>
-          </article>
-        ))}
+                </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+              Belum ada data performa kanal untuk periode ini.
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-5">
