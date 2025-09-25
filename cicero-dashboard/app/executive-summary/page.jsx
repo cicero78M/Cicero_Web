@@ -446,33 +446,35 @@ export default function ExecutiveSummaryPage() {
   return (
     <div className="space-y-8">
       <header className="rounded-3xl border border-slate-800/60 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-8 shadow-[0_0_35px_rgba(15,23,42,0.4)]">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-center">
+          <div className="space-y-3">
             <h1 className="text-3xl font-bold text-slate-100">Executive Summary</h1>
             <p className="max-w-2xl text-sm text-slate-300">
               Rangkuman performa dashboard, insight pengguna, serta kinerja Instagram dan TikTok
               selama satu bulan penuh. Pilih periode untuk melihat insight dan unduh presentasi PPT.
             </p>
           </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <label className="flex flex-col text-sm font-medium text-slate-200">
-              Pilih Bulan
-              <select
-                value={selectedMonth}
-                onChange={(event) => setSelectedMonth(event.target.value)}
-                className="mt-1 w-56 rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
-              >
-                {monthKeys.map((key) => (
-                  <option key={key} value={key}>
-                    {monthlyData[key].monthLabel}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-end lg:justify-end">
+            <div className="w-full sm:w-64">
+              <label className="flex flex-col text-sm font-medium text-slate-200">
+                Pilih Bulan
+                <select
+                  value={selectedMonth}
+                  onChange={(event) => setSelectedMonth(event.target.value)}
+                  className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                >
+                  {monthKeys.map((key) => (
+                    <option key={key} value={key}>
+                      {monthlyData[key].monthLabel}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <Button
               onClick={handleDownload}
               disabled={!pptxFactory}
-              className="flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-2 text-white shadow-[0_10px_30px_rgba(6,182,212,0.25)] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-500/60 disabled:shadow-none"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-2 text-white shadow-[0_10px_30px_rgba(6,182,212,0.25)] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-500/60 disabled:shadow-none sm:w-auto"
             >
               <Download className="h-4 w-4" /> Unduh PPT
             </Button>
