@@ -1,5 +1,9 @@
 "use client";
 
+import { cloneElement } from "react";
+
+import { cn } from "@/lib/utils";
+
 export default function SummaryItem({
   label,
   value,
@@ -7,34 +11,39 @@ export default function SummaryItem({
   icon,
   percentage,
 }) {
-  const colorMap = {
+  const palettes = {
     blue: {
-      text: "text-sky-300",
-      bar: "bg-sky-400",
-      glow: "shadow-[0_0_20px_rgba(56,189,248,0.35)]",
+      icon: "text-sky-300",
+      border: "border-sky-500/40",
+      glow: "from-sky-500/25 via-sky-500/10 to-transparent",
+      bar: "from-sky-400 to-cyan-400",
     },
     green: {
-      text: "text-emerald-300",
-      bar: "bg-emerald-400",
-      glow: "shadow-[0_0_20px_rgba(16,185,129,0.35)]",
+      icon: "text-emerald-300",
+      border: "border-emerald-500/40",
+      glow: "from-emerald-500/25 via-emerald-500/10 to-transparent",
+      bar: "from-emerald-400 to-lime-400",
     },
     red: {
-      text: "text-rose-300",
-      bar: "bg-rose-400",
-      glow: "shadow-[0_0_20px_rgba(244,63,94,0.35)]",
+      icon: "text-rose-300",
+      border: "border-rose-500/40",
+      glow: "from-rose-500/25 via-rose-500/10 to-transparent",
+      bar: "from-rose-400 to-orange-400",
     },
     gray: {
-      text: "text-slate-200",
-      bar: "bg-slate-400",
-      glow: "shadow-[0_0_20px_rgba(148,163,184,0.2)]",
+      icon: "text-slate-300",
+      border: "border-slate-500/40",
+      glow: "from-slate-500/20 via-slate-500/10 to-transparent",
+      bar: "from-slate-300 to-slate-400",
     },
     orange: {
-      text: "text-amber-300",
-      bar: "bg-amber-400",
-      glow: "shadow-[0_0_20px_rgba(251,191,36,0.35)]",
+      icon: "text-amber-200",
+      border: "border-amber-400/40",
+      glow: "from-amber-400/25 via-amber-500/10 to-transparent",
+      bar: "from-amber-300 to-orange-400",
     },
   };
-  const displayColor = colorMap[color] || colorMap.gray;
+  const palette = palettes[color] || palettes.gray;
   const formattedPercentage =
     typeof percentage === "number" && !Number.isNaN(percentage)
       ? `${percentage.toFixed(1).replace(".0", "")} %`
@@ -43,35 +52,62 @@ export default function SummaryItem({
     typeof percentage === "number"
       ? `${Math.min(100, Math.max(0, percentage))}%`
       : "0%";
+  const iconElement = icon
+    ? cloneElement(icon, {
+        className: cn("h-6 w-6", palette.icon, icon.props?.className),
+      })
+    : null;
+
   return (
-    <div
-      className={`flex-1 flex min-w-[140px] flex-col items-center justify-center rounded-2xl border border-white/5 bg-white/5 py-4 text-center shadow-lg backdrop-blur-sm ${displayColor.glow}`}
-    >
-      <div className="mb-2 text-slate-200">{icon}</div>
-      <div className={`text-3xl md:text-4xl font-semibold ${displayColor.text}`}>
-        {value}
-      </div>
-      <div className="mt-2 text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">
-        {label}
-      </div>
-      {formattedPercentage && (
-        <div className="mt-3 flex w-full max-w-[180px] flex-col items-center gap-1">
-          <span className="text-[11px] md:text-xs font-medium text-slate-200">
-            {formattedPercentage}
-          </span>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800/80">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ease-out ${displayColor.bar}`}
-              style={{ width: progressWidth }}
-              role="progressbar"
-              aria-valuenow={Math.round(Number(percentage) || 0)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`${label} ${formattedPercentage}`}
-            />
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-[0_0_24px_rgba(56,189,248,0.25)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_0_36px_rgba(56,189,248,0.3)]">
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-px rounded-[1.35rem] bg-gradient-to-br opacity-70 blur-2xl",
+          palette.glow,
+        )}
+      />
+      <div className="relative flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950/80">
+              {iconElement}
+            </span>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+              {label}
+            </div>
           </div>
+          <span
+            className={cn(
+              "h-10 w-10 rounded-full border bg-slate-950/70",
+              palette.border,
+            )}
+          />
         </div>
-      )}
+        <div className="text-3xl font-semibold text-slate-50 md:text-4xl">
+          {value}
+        </div>
+        {formattedPercentage && (
+          <div className="mt-1 flex flex-col gap-2">
+            <span className="text-[11px] font-medium text-slate-300">
+              {formattedPercentage}
+            </span>
+            <div className="h-1.5 w-full rounded-full bg-slate-800/80">
+              <div
+                className={cn(
+                  "h-full rounded-full bg-gradient-to-r",
+                  palette.bar,
+                )}
+                style={{ width: progressWidth }}
+                role="progressbar"
+                aria-valuenow={Math.round(Number(percentage) || 0)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${label} ${formattedPercentage}`}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
