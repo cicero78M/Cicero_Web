@@ -341,128 +341,6 @@ const computeUserInsight = (users = []) => {
   };
 };
 
-const sumByFields = (records = [], fields = []) => {
-  if (!Array.isArray(records) || !Array.isArray(fields) || fields.length === 0) {
-    return 0;
-  }
-
-  return records.reduce((total, record) => {
-    const value = extractNumericValue(...fields.map((field) => record?.[field]));
-    if (!Number.isFinite(value) || value <= 0) {
-      return total;
-    }
-    return total + value;
-  }, 0);
-};
-
-const countUniqueParticipants = (records = []) => {
-  if (!Array.isArray(records) || records.length === 0) {
-    return 0;
-  }
-
-  const candidateFields = [
-    "username",
-    "user_name",
-    "insta",
-    "instagram",
-    "tiktok",
-    "tiktok_username",
-    "user_id",
-    "userId",
-    "id",
-    "nrp",
-    "nip",
-    "personil_id",
-    "nip_nrp",
-  ];
-
-  const seen = new Set();
-  records.forEach((record) => {
-    for (const field of candidateFields) {
-      const normalized = normalizeLookupKey(record?.[field]);
-      if (normalized) {
-        seen.add(normalized);
-        break;
-      }
-    }
-  });
-
-  return seen.size;
-};
-
-const clampPercentage = (value) => {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  if (value < 0) {
-    return 0;
-  }
-  if (value > 100) {
-    return 100;
-  }
-  return value;
-};
-
-const computeEngagementCompletion = (
-  totalInteractions,
-  participantCount,
-  totalPosts,
-) => {
-  const safeInteractions = Math.max(0, Number(totalInteractions) || 0);
-  const safeParticipants = Math.max(0, Number(participantCount) || 0);
-  const safePosts = Math.max(0, Number(totalPosts) || 0);
-  const denominator = safeParticipants * safePosts;
-
-  if (denominator === 0) {
-    return safeInteractions > 0 ? 100 : 0;
-  }
-
-  return clampPercentage((safeInteractions / denominator) * 100);
-};
-
-const PLATFORM_TASK_FIELDS = {
-  instagram: {
-    likes: [
-      "jumlah_like",
-      "jumlahLike",
-      "total_like",
-      "totalLikes",
-      "likes",
-      "like_count",
-    ],
-    comments: [
-      "jumlah_komentar",
-      "jumlahKomentar",
-      "total_komentar",
-      "totalKomentar",
-      "komentar",
-      "comments",
-      "comment_count",
-    ],
-  },
-  tiktok: {
-    likes: [
-      "jumlah_like",
-      "jumlahLike",
-      "total_like",
-      "totalLikes",
-      "likes",
-      "like_count",
-    ],
-    comments: [
-      "jumlah_komentar",
-      "jumlahKomentar",
-      "total_komentar",
-      "totalKomentar",
-      "komentar",
-      "comments",
-      "comment_count",
-    ],
-  },
-};
-
-const DITBINMAS_CLIENT_ID = "DITBINMAS";
-
 const getMonthDateRange = (monthKey) => {
   if (typeof monthKey !== "string") {
     return null;
@@ -1121,212 +999,8 @@ export default function ExecutiveSummaryPage() {
   }, []);
 
   const data = monthlyData[selectedMonth];
-  const fallbackPlatforms = useMemo(() => {
-    const analytics = data?.platformAnalytics;
-    return Array.isArray(analytics?.platforms) ? analytics.platforms : [];
-  }, [data]);
-
-  const [platformPerformance, setPlatformPerformance] = useState({
-    loading: true,
-    error: "",
-    data: [],
-  });
-
-  useEffect(() => {
-    if (!token) {
-      setPlatformPerformance((prev) => ({
-        ...prev,
-        loading: true,
-        error: "",
-        data: [],
-      }));
-      return undefined;
-    }
-
-    const controller = new AbortController();
-    let cancelled = false;
-
-    const periodRange = getMonthDateRange(selectedMonth);
-    const periodeParam = periodRange ? "bulanan" : undefined;
-    const tanggalParam = periodRange?.startDate;
-    const loadPlatformPerformance = async () => {
-      setPlatformPerformance({ loading: true, error: "", data: [] });
-
-      try {
-        const [statsResult, likesResult, commentsResult] = await Promise.all([
-          getDashboardStats(
-            token,
-            periodeParam,
-            tanggalParam,
-            undefined,
-            undefined,
-            DITBINMAS_CLIENT_ID,
-            controller.signal,
-          ),
-          getRekapLikesIG(
-            token,
-            DITBINMAS_CLIENT_ID,
-            periodeParam ?? "bulanan",
-            tanggalParam,
-            undefined,
-            undefined,
-            controller.signal,
-          ).catch((error) => {
-            console.warn("Gagal memuat rekap likes IG DITBINMAS", error);
-            return { data: [] };
-          }),
-          getRekapKomentarTiktok(
-            token,
-            DITBINMAS_CLIENT_ID,
-            periodeParam ?? "bulanan",
-            tanggalParam,
-            undefined,
-            undefined,
-            controller.signal,
-          ).catch((error) => {
-            console.warn("Gagal memuat rekap komentar TikTok DITBINMAS", error);
-            return { data: [] };
-          }),
-        ]);
-
-        if (cancelled) {
-          return;
-        }
-
-        const stats = statsResult ?? {};
-        const totalIGPosts = extractNumericValue(
-          stats.instagramPosts,
-          stats.igPosts,
-          stats.ig_posts,
-          stats.instagram_posts,
-          stats.totalIGPost,
-          stats.total_ig_post,
-        );
-        const totalTikTokPosts = extractNumericValue(
-          stats.tiktokPosts,
-          stats.ttPosts,
-          stats.tt_posts,
-          stats.tiktok_posts,
-          stats.totalTikTokPost,
-          stats.total_tiktok_post,
-        );
-
-        const likesRaw =
-          likesResult?.data || likesResult?.users || likesResult?.rekap || likesResult;
-        const commentsRaw =
-          commentsResult?.data ||
-          commentsResult?.users ||
-          commentsResult?.rekap ||
-          commentsResult;
-
-        const likesRecords = Array.isArray(likesRaw) ? likesRaw : [];
-        const commentsRecords = Array.isArray(commentsRaw) ? commentsRaw : [];
-
-        const instagramLikes = sumByFields(
-          likesRecords,
-          PLATFORM_TASK_FIELDS.instagram.likes,
-        );
-        const instagramComments = sumByFields(
-          likesRecords,
-          PLATFORM_TASK_FIELDS.instagram.comments,
-        );
-        const instagramParticipants = countUniqueParticipants(likesRecords);
-
-        const tiktokLikes = sumByFields(
-          commentsRecords,
-          PLATFORM_TASK_FIELDS.tiktok.likes,
-        );
-        const tiktokComments = sumByFields(
-          commentsRecords,
-          PLATFORM_TASK_FIELDS.tiktok.comments,
-        );
-        const tiktokParticipants = countUniqueParticipants(commentsRecords);
-
-        const platformsComputed = [
-          {
-            key: "instagram",
-            label: "Instagram",
-            followers: instagramParticipants,
-            posts: totalIGPosts,
-            likes: instagramLikes,
-            comments: instagramComments,
-            engagementRate: computeEngagementCompletion(
-              instagramLikes + instagramComments,
-              instagramParticipants,
-              totalIGPosts,
-            ),
-          },
-          {
-            key: "tiktok",
-            label: "TikTok",
-            followers: tiktokParticipants,
-            posts: totalTikTokPosts,
-            likes: tiktokLikes,
-            comments: tiktokComments,
-            engagementRate: computeEngagementCompletion(
-              tiktokLikes + tiktokComments,
-              tiktokParticipants,
-              totalTikTokPosts,
-            ),
-          },
-        ];
-
-        const totalFollowers = platformsComputed.reduce(
-          (acc, item) => acc + (Number(item.followers) || 0),
-          0,
-        );
-        const totalLikes = platformsComputed.reduce(
-          (acc, item) => acc + (Number(item.likes) || 0),
-          0,
-        );
-        const totalComments = platformsComputed.reduce(
-          (acc, item) => acc + (Number(item.comments) || 0),
-          0,
-        );
-
-        const normalizedPlatforms = platformsComputed.map((item) => ({
-          ...item,
-          shares: {
-            followers: clampPercentage(
-              totalFollowers ? (Number(item.followers) / totalFollowers) * 100 : 0,
-            ),
-            likes: clampPercentage(totalLikes ? (Number(item.likes) / totalLikes) * 100 : 0),
-            comments: clampPercentage(
-              totalComments ? (Number(item.comments) / totalComments) * 100 : 0,
-            ),
-          },
-        }));
-
-        setPlatformPerformance({
-          loading: false,
-          error: "",
-          data: normalizedPlatforms,
-        });
-      } catch (error) {
-        if (cancelled || error?.name === "AbortError") {
-          return;
-        }
-        setPlatformPerformance({
-          loading: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Gagal memuat kinerja platform.",
-          data: fallbackPlatforms,
-        });
-      }
-    };
-
-    loadPlatformPerformance();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [token, selectedMonth, fallbackPlatforms]);
-
-  const platformCards =
-    platformPerformance.data?.length > 0 ? platformPerformance.data : fallbackPlatforms;
+  const analytics = data.platformAnalytics ?? { platforms: [] };
+  const platforms = Array.isArray(analytics.platforms) ? analytics.platforms : [];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1883,18 +1557,9 @@ export default function ExecutiveSummaryPage() {
             Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
           </p>
         </div>
-        {platformPerformance.error && (
-          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-            {platformPerformance.error}
-          </div>
-        )}
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-          {platformPerformance.loading ? (
-            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/50 text-sm text-slate-300">
-              Memuat kinerja platform…
-            </div>
-          ) : platformCards.length > 0 ? (
-            platformCards.map((platform) => {
+          {platforms.length > 0 ? (
+            platforms.map((platform) => {
               const primaryMetrics = [
                 {
                   key: "likes",
@@ -1911,7 +1576,7 @@ export default function ExecutiveSummaryPage() {
                 {
                   key: "engagement",
                   label: "Engagement",
-                  value: formatPercent(Number(platform.engagementRate ?? 0)),
+                  value: `${Number(platform.engagementRate ?? 0).toFixed(2)}%`,
                   accent: "text-fuchsia-300",
                 },
               ];
@@ -1939,7 +1604,7 @@ export default function ExecutiveSummaryPage() {
 
               return (
                 <div
-                  key={platform.key || platform.label}
+                  key={platform.key}
                   className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/50 p-6 shadow-[0_0_30px_rgba(79,70,229,0.25)] transition duration-200 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-[0_0_45px_rgba(34,211,238,0.22)]"
                 >
                   <div className="absolute -top-12 right-4 h-32 w-32 rounded-full bg-gradient-to-br from-cyan-400/40 via-transparent to-transparent blur-2xl transition group-hover:from-cyan-400/60" />
@@ -1952,9 +1617,7 @@ export default function ExecutiveSummaryPage() {
                       <div className="flex flex-col items-end rounded-2xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
                         <span className="font-medium text-slate-200">Followers</span>
                         <span>{formatCompactNumber(platform.followers)}</span>
-                        <span className="mt-1 text-slate-400">
-                          Posts: {formatNumber(Number(platform.posts) || 0, { maximumFractionDigits: 0 })}
-                        </span>
+                        <span className="mt-1 text-slate-400">Posts: {platform.posts}</span>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-3 text-sm text-slate-200 sm:grid-cols-3">
@@ -1994,8 +1657,8 @@ export default function ExecutiveSummaryPage() {
               );
             })
           ) : (
-            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/50 text-sm text-slate-300">
-              Belum ada data kinerja platform untuk periode ini.
+            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+              Belum ada data performa kanal untuk periode ini.
             </div>
           )}
         </div>
