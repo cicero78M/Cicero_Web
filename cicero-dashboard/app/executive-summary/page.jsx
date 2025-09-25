@@ -153,7 +153,7 @@ const buildUserNarrative = ({
     sentences.push(
       `${beautifyDivisionName(
         bestDivision.displayName ?? bestDivision.division,
-      )} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
+      )} menjadi Polres paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestDivision.completionPercent,
       )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
