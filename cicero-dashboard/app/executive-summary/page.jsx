@@ -576,7 +576,7 @@ export default function ExecutiveSummaryPage() {
         </div>
         <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2">
           <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Aktivitas Admin
+            Aktivitas Personil
           </h2>
           <div className="mt-5 space-y-5">
             {data.userInsightMetrics.map((metric) => (
