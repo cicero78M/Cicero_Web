@@ -6,7 +6,6 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
@@ -111,7 +110,25 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   );
 
   // Pagination
-  const [page, setPage] = usePersistentState("rekapLikesIG_page", 1);
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("rekapLikesIG_page");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored);
+      const nextPage = Number(parsed);
+      if (Number.isFinite(nextPage) && nextPage > 0) {
+        setPage(Math.floor(nextPage));
+      }
+    } catch {
+      // Ignore malformed storage value
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("rekapLikesIG_page", JSON.stringify(page));
+  }, [page]);
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
   const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
