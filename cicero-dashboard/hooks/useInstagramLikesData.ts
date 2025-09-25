@@ -10,11 +10,56 @@ import {
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 
+type DitbinmasScope = "all" | "self";
+
 interface Options {
   viewBy: string;
   customDate: string;
   fromDate: string;
   toDate: string;
+  ditbinmasScope?: DitbinmasScope;
+}
+
+function normalizeClientId(value: any) {
+  return String(value || "").toUpperCase();
+}
+
+function calculateSummary(users: any[], totalIGPost: number): RekapSummary {
+  const normalizedTotal = Number(totalIGPost) || 0;
+  const isZeroPost = normalizedTotal === 0;
+  let totalSudahLike = 0;
+  let totalKurangLike = 0;
+  let totalBelumLike = 0;
+  let totalTanpaUsername = 0;
+
+  users.forEach((u: any) => {
+    const username = String(u.username || "").trim();
+    if (!username) {
+      totalTanpaUsername += 1;
+      return;
+    }
+    const jumlah = Number(u.jumlah_like) || 0;
+    if (isZeroPost) {
+      totalBelumLike += 1;
+      return;
+    }
+    if (jumlah >= normalizedTotal * 0.5) {
+      totalSudahLike += 1;
+    } else if (jumlah > 0) {
+      totalKurangLike += 1;
+    } else {
+      totalBelumLike += 1;
+    }
+  });
+
+  return {
+    totalUser: users.length,
+    totalSudahLike,
+    totalKurangLike,
+    totalBelumLike,
+    totalTanpaUsername,
+    totalIGPost: normalizedTotal,
+  };
 }
 
 interface RekapSummary {
@@ -31,6 +76,7 @@ export default function useInstagramLikesData({
   customDate,
   fromDate,
   toDate,
+  ditbinmasScope,
 }: Options) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
@@ -69,8 +115,12 @@ export default function useInstagramLikesData({
       return () => controller.abort();
     }
 
-    const isDitbinmas = String(role).toLowerCase() === "ditbinmas";
-    const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
+    const isDitbinmasRole = String(role).toLowerCase() === "ditbinmas";
+    const normalizedClientId = normalizeClientId(userClientId);
+    const isDitbinmasClient = normalizedClientId === "DITBINMAS";
+    const taskClientId = isDitbinmasRole && isDitbinmasClient
+      ? "DITBINMAS"
+      : userClientId;
 
     async function fetchData() {
       try {
@@ -82,7 +132,7 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (isDitbinmas) {
+        if (isDitbinmasRole && isDitbinmasClient) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
@@ -95,11 +145,30 @@ export default function useInstagramLikesData({
               controller.signal,
             );
           if (controller.signal.aborted) return;
-          setChartData(users);
-          setRekapSummary(summary);
+          const filteredUsers =
+            ditbinmasScope === "self"
+              ? users.filter((u: any) =>
+                  normalizeClientId(
+                    u.client_id ||
+                      u.clientId ||
+                      u.clientID ||
+                      u.client ||
+                      "",
+                  ) === normalizedClientId,
+                )
+              : users;
+          const totalIGPost =
+            Number(summary?.totalIGPost ?? 0) ||
+            (Array.isArray(posts) ? posts.length : 0);
+          const computedSummary = calculateSummary(
+            filteredUsers,
+            totalIGPost,
+          );
+          setChartData(filteredUsers);
+          setRekapSummary(computedSummary);
           setIgPosts(posts || []);
           setClientName(clientName || "");
-          setIsDirectorate(true);
+          setIsDirectorate(ditbinmasScope !== "self");
           return;
         }
 
@@ -235,42 +304,10 @@ export default function useInstagramLikesData({
             : [];
         }
 
-        const totalUser = users.length;
         const totalIGPost = Number((statsData as any).instagramPosts) || 0;
-        const isZeroPost = (totalIGPost || 0) === 0;
-        let totalSudahLike = 0;
-        let totalKurangLike = 0;
-        let totalBelumLike = 0;
-        let totalTanpaUsername = 0;
-        users.forEach((u: any) => {
-          const username = String(u.username || "").trim();
-          if (!username) {
-            totalTanpaUsername += 1;
-            return;
-          }
-          const jumlah = Number(u.jumlah_like) || 0;
-          if (isZeroPost) {
-            totalBelumLike += 1;
-            return;
-          }
-          if (jumlah >= totalIGPost * 0.5) {
-            totalSudahLike += 1;
-          } else if (jumlah > 0) {
-            totalKurangLike += 1;
-          } else {
-            totalBelumLike += 1;
-          }
-        });
-
         if (controller.signal.aborted) return;
-        setRekapSummary({
-          totalUser,
-          totalSudahLike,
-          totalKurangLike,
-          totalBelumLike,
-          totalTanpaUsername,
-          totalIGPost,
-        });
+        const computedSummary = calculateSummary(users, totalIGPost);
+        setRekapSummary(computedSummary);
         setChartData(users);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
@@ -284,7 +321,7 @@ export default function useInstagramLikesData({
     fetchData();
 
     return () => controller.abort();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [viewBy, customDate, fromDate, toDate, ditbinmasScope]);
 
   return {
     chartData,
