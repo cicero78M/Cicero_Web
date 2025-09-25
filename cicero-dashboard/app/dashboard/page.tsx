@@ -479,9 +479,9 @@ export default function DashboardPage() {
       },
       {
         key: "engagement",
-        title: "Engagement Rate",
-        value: `${analytics.totals.engagementRate.toFixed(2)}%`,
-        subtitle: "(Likes + Komentar) ÷ Followers",
+        title: "Engagement",
+        value: `${analytics.totals.engagements,
+        subtitle: "Likes + Komentar",
         icon: "⚡",
       },
     ];
