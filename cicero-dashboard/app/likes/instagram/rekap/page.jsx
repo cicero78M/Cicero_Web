@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
@@ -34,6 +34,22 @@ export default function RekapLikesIGPage() {
     startDate: today,
     endDate: today,
   });
+  const [ditbinmasScope, setDitbinmasScope] = useState<"all" | "self">("all");
+  const [canChooseDitbinmasScope, setCanChooseDitbinmasScope] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storedRole = localStorage.getItem("user_role") || "";
+    const storedClientId = localStorage.getItem("client_id") || "";
+    const isDitbinmasRole = storedRole.toLowerCase() === "ditbinmas";
+    const isDitbinmasClient = storedClientId.toUpperCase() === "DITBINMAS";
+    if (isDitbinmasRole && isDitbinmasClient) {
+      setCanChooseDitbinmasScope(true);
+      setDitbinmasScope("all");
+    } else {
+      setDitbinmasScope("self");
+    }
+  }, []);
 
   const handleViewChange = (nextView) => {
     setViewBy((prevView) => {
@@ -117,6 +133,7 @@ export default function RekapLikesIGPage() {
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
+    ditbinmasScope,
   });
 
   const rekapRef = useRef(null);
@@ -167,6 +184,29 @@ export default function RekapLikesIGPage() {
                 </Link>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur">
+                {canChooseDitbinmasScope && (
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+                      Mode Data
+                    </span>
+                    <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setDitbinmasScope("self")}
+                        className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${ditbinmasScope === "self" ? "bg-sky-500/30 text-sky-100" : "text-slate-300 hover:bg-white/10"}`}
+                      >
+                        Hanya Ditbinmas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDitbinmasScope("all")}
+                        className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${ditbinmasScope === "all" ? "bg-sky-500/30 text-sky-100" : "text-slate-300 hover:bg-white/10"}`}
+                      >
+                        Semua Polres Ditbinmas
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <ViewDataSelector
                   value={viewBy}
                   onChange={handleViewChange}
