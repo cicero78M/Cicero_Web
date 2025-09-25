@@ -60,33 +60,6 @@ const shortenDivisionName = (name) => {
   return formatted.length > 20 ? `${formatted.slice(0, 19)}…` : formatted;
 };
 
-const resolveUserGrouping = (user = {}) => {
-  const candidates = [
-    user?.satker,
-    user?.polres,
-    user?.polsek,
-    user?.nama_client,
-    user?.client_name,
-    user?.client,
-    user?.client_id,
-    user?.divisi,
-    user?.unit,
-  ];
-
-  for (const candidate of candidates) {
-    if (candidate === undefined || candidate === null) continue;
-    const stringValue = String(candidate).trim();
-    if (stringValue) {
-      return stringValue;
-    }
-  }
-
-  return "Lainnya";
-};
-
-const extractGroupingName = (grouping) =>
-  grouping?.division || grouping?.label || grouping?.unit || grouping?.name || "";
-
 const buildUserNarrative = ({
   totalUsers,
   bothCount,
@@ -110,7 +83,7 @@ const buildUserNarrative = ({
 
   if (bothCount > 0) {
     sentences.push(
-      `${formatNumber(bothCount, { maximumFractionDigits: 0 })} admin (${formatPercent(
+      `${formatNumber(bothCount, { maximumFractionDigits: 0 })} personil (${formatPercent(
         bothPercent,
       )}) telah melengkapi data Instagram dan TikTok sekaligus sehingga absensi pada platform Instagram dan Tiktok berjalan mulus.`,
     );
@@ -145,23 +118,17 @@ const buildUserNarrative = ({
     );
   }
 
-  const bestDivisionName = beautifyDivisionName(extractGroupingName(bestDivision));
-  if (bestDivision && bestDivisionName) {
+  if (bestDivision) {
     sentences.push(
-      `${bestDivisionName} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
+      `${beautifyDivisionName(bestDivision.division)} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestDivision.completionPercent,
       )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
   }
 
-  const lowestDivisionName = beautifyDivisionName(extractGroupingName(lowestDivision));
-  if (
-    lowestDivision &&
-    lowestDivisionName &&
-    lowestDivisionName !== bestDivisionName
-  ) {
+  if (lowestDivision && lowestDivision.division !== bestDivision?.division) {
     sentences.push(
-      `Pendampingan perlu difokuskan pada ${lowestDivisionName} yang baru mencapai ${formatPercent(
+      `Pendampingan perlu difokuskan pada ${beautifyDivisionName(lowestDivision.division)} yang baru mencapai ${formatPercent(
         lowestDivision.completionPercent,
       )} rata-rata kelengkapan data username.`,
     );
@@ -191,7 +158,7 @@ const computeUserInsight = (users = []) => {
   let onlyTikTok = 0;
   let none = 0;
 
-  const unitMap = new Map();
+  const divisionMap = new Map();
 
   users.forEach((user) => {
     const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
@@ -209,23 +176,21 @@ const computeUserInsight = (users = []) => {
       none += 1;
     }
 
-    const resolvedGrouping = resolveUserGrouping(user);
-    const groupingKey = resolvedGrouping.toString().trim().toUpperCase() || "LAINNYA";
+    const divisionKey = (user?.divisi || user?.unit || "LAINNYA")
+      .toString()
+      .trim()
+      .toUpperCase();
 
-    if (!unitMap.has(groupingKey)) {
-      unitMap.set(groupingKey, {
-        key: groupingKey,
-        division: resolvedGrouping,
+    if (!divisionMap.has(divisionKey)) {
+      divisionMap.set(divisionKey, {
+        division: divisionKey,
         total: 0,
         igFilled: 0,
         ttFilled: 0,
       });
     }
 
-    const record = unitMap.get(groupingKey);
-    if (!record.division || record.division === record.key) {
-      record.division = resolvedGrouping;
-    }
+    const record = divisionMap.get(divisionKey);
     record.total += 1;
     if (hasInstagram) record.igFilled += 1;
     if (hasTikTok) record.ttFilled += 1;
@@ -238,7 +203,7 @@ const computeUserInsight = (users = []) => {
   const onlyTikTokPercent = totalUsers ? (onlyTikTok / totalUsers) * 100 : 0;
   const nonePercent = totalUsers ? (none / totalUsers) * 100 : 0;
 
-  const divisionArray = Array.from(unitMap.values()).map((item) => {
+  const divisionArray = Array.from(divisionMap.values()).map((item) => {
     const igPercent = item.total ? (item.igFilled / item.total) * 100 : 0;
     const tiktokPercentDivision = item.total ? (item.ttFilled / item.total) * 100 : 0;
     const completionPercent = item.total
@@ -338,7 +303,7 @@ const monthlyData = {
     dashboardNarrative:
       "Traffic dashboard menunjukkan lonjakan impresi sebesar 8% dibanding bulan sebelumnya, dipicu oleh konten sinergi pengamanan libur panjang dan quick response terhadap isu lalu lintas.",
     userInsightNarrative:
-      "83% admin aktif melakukan monitoring harian dan 61% di antaranya memanfaatkan fitur alert. Divisi Humas tetap menjadi kontributor utama percakapan dengan pertumbuhan partisipasi 6%.",
+      "83% personil  aktif melakukan monitoring harian dan 61% di antaranya memanfaatkan fitur alert. Divisi Humas tetap menjadi kontributor utama percakapan dengan pertumbuhan partisipasi 6%.",
     instagramNarrative:
       "Instagram fokus pada storytelling humanis. Konten carousel edukasi keselamatan meraih reach tertinggi dengan 7,4% engagement rate dan menyumbang 31% dari total interaksi.",
     tiktokNarrative:
@@ -360,7 +325,7 @@ const monthlyData = {
       "Pemanfaatan fitur Q&A Instagram Live meningkatkan partisipasi komunitas hingga 18%.",
     ],
     userInsightMetrics: [
-      { label: "Admin Aktif Harian", value: 1230, change: "+6%" },
+      { label: "Personil Aktif Harian", value: 1230, change: "+6%" },
       { label: "Alert Ditindaklanjuti", value: 214, change: "+12%" },
       { label: "Respons Rata-rata", value: 37, suffix: "mnt", change: "-9 mnt" },
     ],
@@ -412,7 +377,7 @@ const monthlyData = {
     dashboardNarrative:
       "Panel dashboard memperlihatkan pertumbuhan reach 3% dan dominasi trafik mobile sebesar 92%, menandakan konsumsi konten mayoritas terjadi di perjalanan.",
     userInsightNarrative:
-      "Adopsi fitur scheduling meningkat 14% seiring koordinasi antar divisi. Sebanyak 76% admin konsisten menutup laporan harian tepat waktu.",
+      "Adopsi fitur scheduling meningkat 14% seiring koordinasi antar divisi. Sebanyak 76% personil konsisten menutup laporan harian tepat waktu.",
     instagramNarrative:
       "Instagram fokus pada edukasi visual. Postingan infografik rawan kecelakaan menjadi konten dengan save tertinggi dan menjaga engagement stabil.",
     tiktokNarrative:
@@ -434,7 +399,7 @@ const monthlyData = {
       "Kolaborasi dengan Dishub memperbanyak mention organik.",
     ],
     userInsightMetrics: [
-      { label: "Admin Aktif Harian", value: 1160, change: "+4%" },
+      { label: "Personil Aktif Harian", value: 1160, change: "+4%" },
       { label: "Alert Ditindaklanjuti", value: 191, change: "+5%" },
       { label: "Respons Rata-rata", value: 42, suffix: "mnt", change: "-4 mnt" },
     ],
@@ -508,7 +473,7 @@ const monthlyData = {
       "Sentimen negatif muncul dari isu kemacetan lokal dan telah tertangani.",
     ],
     userInsightMetrics: [
-      { label: "Admin Aktif Harian", value: 1085, change: "+3%" },
+      { label: "Personil Aktif Harian", value: 1085, change: "+3%" },
       { label: "Alert Ditindaklanjuti", value: 176, change: "+8%" },
       { label: "Respons Rata-rata", value: 48, suffix: "mnt", change: "-2 mnt" },
     ],
@@ -890,7 +855,7 @@ export default function ExecutiveSummaryPage() {
               Insight Pengguna Aktual
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              Data ini ditarik langsung dari direktori admin untuk memotret kesiapan kanal sosial setiap saat.
+              Data ini ditarik langsung dari Database User.
             </p>
           </div>
         </div>
@@ -958,10 +923,10 @@ export default function ExecutiveSummaryPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Rasio Kelengkapan per Satker
+                      Rasio Kelengkapan per Divisi
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Menampilkan lima satker dengan jumlah admin terbesar.
+                      Menampilkan lima divisi dengan jumlah User terbesar.
                     </p>
                   </div>
                 </div>
@@ -996,7 +961,7 @@ export default function ExecutiveSummaryPage() {
                               : "TikTok Lengkap",
                           ]}
                           labelFormatter={(_, payload) =>
-                            payload?.[0]?.payload?.fullDivision ?? "Satker"
+                            payload?.[0]?.payload?.fullDivision ?? "Divisi"
                           }
                         />
                         <Legend
@@ -1042,7 +1007,7 @@ export default function ExecutiveSummaryPage() {
                       Komposisi Kelengkapan Data Username
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Distribusi personil berdasarkan status pengisian akun username sosial media.
+                      Distribusi personil berdasarkan status pengisian akun.
                     </p>
                   </div>
                 </div>
