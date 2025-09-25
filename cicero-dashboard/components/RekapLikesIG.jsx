@@ -21,6 +21,13 @@ const PAGE_SIZE = 25;
  * @param {boolean} showRekapButton - tampilkan tombol salin rekap jika true
  * @param {string} clientName - nama client ORG
  */
+function normalizeUsers(value) {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== "object") return [];
+  const maybeArray = Object.values(value);
+  return Array.isArray(maybeArray) ? maybeArray : [];
+}
+
 const RekapLikesIG = forwardRef(function RekapLikesIG(
   {
     users = [],
@@ -32,10 +39,13 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   },
   ref,
 ) {
+  const normalizedUsers = useMemo(() => normalizeUsers(users), [users]);
   const sortedUsers = useMemo(
-    () => [...users].sort(compareUsersByPangkatAndNrp),
-    [users],
+    () => [...normalizedUsers].sort(compareUsersByPangkatAndNrp),
+    [normalizedUsers],
   );
+
+  const normalizedTotalIGPost = Number(totalIGPost) || 0;
 
   const totalUser = sortedUsers.length;
   const hasClient = useMemo(
@@ -57,19 +67,21 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   // Klasifikasi pengguna
   const totalSudahLike =
-    totalIGPost === 0
+    normalizedTotalIGPost === 0
       ? 0
-      : validUsers.filter((u) => Number(u.jumlah_like) >= totalIGPost * 0.5)
+      : validUsers.filter(
+          (u) => Number(u.jumlah_like) >= normalizedTotalIGPost * 0.5,
+        )
           .length;
   const totalKurangLike =
-    totalIGPost === 0
+    normalizedTotalIGPost === 0
       ? 0
       : validUsers.filter((u) => {
           const likes = Number(u.jumlah_like) || 0;
-          return likes > 0 && likes < totalIGPost * 0.5;
+          return likes > 0 && likes < normalizedTotalIGPost * 0.5;
         }).length;
   const totalBelumLike =
-    totalIGPost === 0
+    normalizedTotalIGPost === 0
       ? validUsers.length
       : validUsers.filter((u) => Number(u.jumlah_like) === 0).length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
@@ -161,9 +173,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
         return;
       }
       const likes = Number(u.jumlah_like) || 0;
-      if (totalIGPost === 0) {
+      if (normalizedTotalIGPost === 0) {
         satkerMap[client].belum += 1;
-      } else if (likes >= totalIGPost * 0.5) {
+      } else if (likes >= normalizedTotalIGPost * 0.5) {
         satkerMap[client].sudah += 1;
       } else if (likes > 0) {
         satkerMap[client].kurang += 1;
@@ -174,7 +186,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
     const lines = [
       `Rekap Likes Instagram (${tanggal})`,
-      `Jumlah IG Post: ${totalIGPost}`,
+      `Jumlah IG Post: ${normalizedTotalIGPost}`,
       `Total User: ${totalUser}`,
       `Sudah Like: ${totalSudahLike}`,
       `Kurang Like: ${totalKurangLike}`,
@@ -230,8 +242,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       }
       const likes = Number(u.jumlah_like) || 0;
       let status = "Belum";
-      if (totalIGPost !== 0) {
-        if (likes >= totalIGPost * 0.5) status = "Sudah";
+      if (normalizedTotalIGPost !== 0) {
+        if (likes >= normalizedTotalIGPost * 0.5) status = "Sudah";
         else if (likes > 0) status = "Kurang";
       }
       clients[client][status].push(u);
@@ -254,7 +266,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     ).padStart(2, "0")}_${now.getFullYear()}`;
     const jam = now.toLocaleTimeString("id-ID", { hour12: false });
     const jumlahKonten =
-      Array.isArray(posts) && posts.length > 0 ? posts.length : totalIGPost;
+      Array.isArray(posts) && posts.length > 0
+        ? posts.length
+        : normalizedTotalIGPost;
     const linkKonten =
       Array.isArray(posts) && posts.length > 0
         ? posts
@@ -340,7 +354,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <SummaryCard
           title="IG Post Hari Ini"
-          value={totalIGPost}
+          value={normalizedTotalIGPost}
           accent="sky"
           icon={
             <Camera className="h-6 w-6 text-sky-200 drop-shadow-[0_0_12px_rgba(56,189,248,0.55)]" />
@@ -477,9 +491,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                         </span>
                       );
                       jumlahDisplay = 0;
-                    } else if (totalIGPost !== 0) {
+                    } else if (normalizedTotalIGPost !== 0) {
                       const likes = Number(u.jumlah_like) || 0;
-                      if (likes >= totalIGPost * 0.5) {
+                      if (likes >= normalizedTotalIGPost * 0.5) {
                         rowClass = "bg-emerald-500/10";
                         statusEl = (
                           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.35)]">
