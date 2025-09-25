@@ -56,7 +56,7 @@ const detectPostType = (post: any, platform: PlatformKey): PostType => {
     typeCandidates.some((type) =>
       ["carousel", "album", "sidecar"].some((keyword) => type.includes(keyword))
     ) ||
-    Array.isArray(post?.carousel_media) ||
+    Array.isArray(post?.is_carousel) ||
     Array.isArray(post?.children) ||
     Array.isArray(post?.slides) ||
     Array.isArray(post?.resources);
