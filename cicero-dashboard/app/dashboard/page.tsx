@@ -627,19 +627,19 @@ export default function DashboardPage() {
               const shareMetrics = [
                 {
                   key: "followers",
-                  label: "Share Followers",
+                  label: "Followers",
                   value: platform.shares.followers,
                   gradient: "from-violet-500 via-fuchsia-400 to-cyan-300",
                 },
                 {
                   key: "likes",
-                  label: "Share Likes",
+                  label: "Likes",
                   value: platform.shares.likes,
                   gradient: "from-sky-500 via-cyan-400 to-emerald-300",
                 },
                 {
                   key: "comments",
-                  label: "Share Komentar",
+                  label: "Komentar",
                   value: platform.shares.comments,
                   gradient: "from-amber-400 via-orange-400 to-rose-400",
                 },
