@@ -1098,7 +1098,7 @@ export default function ExecutiveSummaryPage() {
 
             <article className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
               <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Catatan Insight Otomatis
+                Catatan Insight User
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
             </article>
