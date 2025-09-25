@@ -1004,10 +1004,10 @@ export default function ExecutiveSummaryPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Komposisi Kelengkapan Kanal
+                      Komposisi Kelengkapan Data Username
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Distribusi admin berdasarkan status pengisian akun.
+                      Distribusi personil berdasarkan status pengisian akun username sosial media.
                     </p>
                   </div>
                 </div>
