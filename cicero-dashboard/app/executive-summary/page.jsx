@@ -60,6 +60,33 @@ const shortenDivisionName = (name) => {
   return formatted.length > 20 ? `${formatted.slice(0, 19)}…` : formatted;
 };
 
+const resolveUserGrouping = (user = {}) => {
+  const candidates = [
+    user?.satker,
+    user?.polres,
+    user?.polsek,
+    user?.nama_client,
+    user?.client_name,
+    user?.client,
+    user?.client_id,
+    user?.divisi,
+    user?.unit,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null) continue;
+    const stringValue = String(candidate).trim();
+    if (stringValue) {
+      return stringValue;
+    }
+  }
+
+  return "Lainnya";
+};
+
+const extractGroupingName = (grouping) =>
+  grouping?.division || grouping?.label || grouping?.unit || grouping?.name || "";
+
 const buildUserNarrative = ({
   totalUsers,
   bothCount,
@@ -118,17 +145,23 @@ const buildUserNarrative = ({
     );
   }
 
-  if (bestDivision) {
+  const bestDivisionName = beautifyDivisionName(extractGroupingName(bestDivision));
+  if (bestDivision && bestDivisionName) {
     sentences.push(
-      `${beautifyDivisionName(bestDivision.division)} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
+      `${bestDivisionName} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestDivision.completionPercent,
       )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
   }
 
-  if (lowestDivision && lowestDivision.division !== bestDivision?.division) {
+  const lowestDivisionName = beautifyDivisionName(extractGroupingName(lowestDivision));
+  if (
+    lowestDivision &&
+    lowestDivisionName &&
+    lowestDivisionName !== bestDivisionName
+  ) {
     sentences.push(
-      `Pendampingan perlu difokuskan pada ${beautifyDivisionName(lowestDivision.division)} yang baru mencapai ${formatPercent(
+      `Pendampingan perlu difokuskan pada ${lowestDivisionName} yang baru mencapai ${formatPercent(
         lowestDivision.completionPercent,
       )} rata-rata kelengkapan data username.`,
     );
@@ -158,7 +191,7 @@ const computeUserInsight = (users = []) => {
   let onlyTikTok = 0;
   let none = 0;
 
-  const divisionMap = new Map();
+  const unitMap = new Map();
 
   users.forEach((user) => {
     const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
@@ -176,21 +209,23 @@ const computeUserInsight = (users = []) => {
       none += 1;
     }
 
-    const divisionKey = (user?.divisi || user?.unit || "LAINNYA")
-      .toString()
-      .trim()
-      .toUpperCase();
+    const resolvedGrouping = resolveUserGrouping(user);
+    const groupingKey = resolvedGrouping.toString().trim().toUpperCase() || "LAINNYA";
 
-    if (!divisionMap.has(divisionKey)) {
-      divisionMap.set(divisionKey, {
-        division: divisionKey,
+    if (!unitMap.has(groupingKey)) {
+      unitMap.set(groupingKey, {
+        key: groupingKey,
+        division: resolvedGrouping,
         total: 0,
         igFilled: 0,
         ttFilled: 0,
       });
     }
 
-    const record = divisionMap.get(divisionKey);
+    const record = unitMap.get(groupingKey);
+    if (!record.division || record.division === record.key) {
+      record.division = resolvedGrouping;
+    }
     record.total += 1;
     if (hasInstagram) record.igFilled += 1;
     if (hasTikTok) record.ttFilled += 1;
@@ -203,7 +238,7 @@ const computeUserInsight = (users = []) => {
   const onlyTikTokPercent = totalUsers ? (onlyTikTok / totalUsers) * 100 : 0;
   const nonePercent = totalUsers ? (none / totalUsers) * 100 : 0;
 
-  const divisionArray = Array.from(divisionMap.values()).map((item) => {
+  const divisionArray = Array.from(unitMap.values()).map((item) => {
     const igPercent = item.total ? (item.igFilled / item.total) * 100 : 0;
     const tiktokPercentDivision = item.total ? (item.ttFilled / item.total) * 100 : 0;
     const completionPercent = item.total
@@ -923,10 +958,10 @@ export default function ExecutiveSummaryPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Rasio Kelengkapan per Divisi
+                      Rasio Kelengkapan per Satker
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Menampilkan lima divisi dengan jumlah admin terbesar.
+                      Menampilkan lima satker dengan jumlah admin terbesar.
                     </p>
                   </div>
                 </div>
@@ -961,7 +996,7 @@ export default function ExecutiveSummaryPage() {
                               : "TikTok Lengkap",
                           ]}
                           labelFormatter={(_, payload) =>
-                            payload?.[0]?.payload?.fullDivision ?? "Divisi"
+                            payload?.[0]?.payload?.fullDivision ?? "Satker"
                           }
                         />
                         <Legend
