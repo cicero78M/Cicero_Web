@@ -60,6 +60,47 @@ const shortenDivisionName = (name) => {
   return formatted.length > 20 ? `${formatted.slice(0, 19)}…` : formatted;
 };
 
+const extractUserGroupInfo = (user) => {
+  const candidateFields = [
+    user?.nama_client,
+    user?.client_name,
+    user?.client,
+    user?.polres,
+    user?.polres_name,
+    user?.satker,
+    user?.satker_name,
+    user?.kesatuan,
+    user?.kesatuan_name,
+    user?.unit,
+    user?.divisi,
+  ];
+
+  for (const field of candidateFields) {
+    if (typeof field === "string" && field.trim() !== "") {
+      const label = field.trim();
+      return {
+        key: label.toUpperCase(),
+        label,
+      };
+    }
+  }
+
+  const clientIdentifier =
+    user?.client_id ?? user?.clientId ?? user?.clientID ?? user?.id;
+  if (clientIdentifier) {
+    const label = String(clientIdentifier).trim();
+    return {
+      key: label.toUpperCase(),
+      label,
+    };
+  }
+
+  return {
+    key: "LAINNYA",
+    label: "LAINNYA",
+  };
+};
+
 const buildUserNarrative = ({
   totalUsers,
   bothCount,
@@ -120,7 +161,9 @@ const buildUserNarrative = ({
 
   if (bestDivision) {
     sentences.push(
-      `${beautifyDivisionName(bestDivision.division)} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
+      `${beautifyDivisionName(
+        bestDivision.displayName ?? bestDivision.division,
+      )} menjadi unit paling siap dengan kelengkapan rata-rata ${formatPercent(
         bestDivision.completionPercent,
       )} dan basis ${formatNumber(bestDivision.total, { maximumFractionDigits: 0 })} personil aktif.`,
     );
@@ -128,7 +171,9 @@ const buildUserNarrative = ({
 
   if (lowestDivision && lowestDivision.division !== bestDivision?.division) {
     sentences.push(
-      `Pendampingan perlu difokuskan pada ${beautifyDivisionName(lowestDivision.division)} yang baru mencapai ${formatPercent(
+      `Pendampingan perlu difokuskan pada ${beautifyDivisionName(
+        lowestDivision.displayName ?? lowestDivision.division,
+      )} yang baru mencapai ${formatPercent(
         lowestDivision.completionPercent,
       )} rata-rata kelengkapan data username.`,
     );
@@ -176,14 +221,12 @@ const computeUserInsight = (users = []) => {
       none += 1;
     }
 
-    const divisionKey = (user?.divisi || user?.unit || "LAINNYA")
-      .toString()
-      .trim()
-      .toUpperCase();
+    const { key: divisionKey, label: divisionLabel } = extractUserGroupInfo(user);
 
     if (!divisionMap.has(divisionKey)) {
       divisionMap.set(divisionKey, {
         division: divisionKey,
+        displayName: divisionLabel,
         total: 0,
         igFilled: 0,
         ttFilled: 0,
@@ -211,6 +254,7 @@ const computeUserInsight = (users = []) => {
       : 0;
     return {
       ...item,
+      displayName: item.displayName ?? item.division,
       igPercent,
       tiktokPercent: tiktokPercentDivision,
       completionPercent,
@@ -225,8 +269,8 @@ const computeUserInsight = (users = []) => {
   });
 
   const barData = sortedByTotal.slice(0, 5).map((item) => ({
-    division: shortenDivisionName(item.division),
-    fullDivision: beautifyDivisionName(item.division),
+    division: shortenDivisionName(item.displayName ?? item.division),
+    fullDivision: beautifyDivisionName(item.displayName ?? item.division),
     instagram: Number(item.igPercent.toFixed(1)),
     tiktok: Number(item.tiktokPercent.toFixed(1)),
     total: item.total,
@@ -923,10 +967,10 @@ export default function ExecutiveSummaryPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Rasio Kelengkapan per Divisi
+                      Rasio Kelengkapan per Satker / Polres
                     </h3>
                     <p className="mt-1 text-xs text-slate-400">
-                      Menampilkan lima divisi dengan jumlah User terbesar.
+                      Menampilkan lima satker atau polres dengan jumlah Personil terbesar.
                     </p>
                   </div>
                 </div>
