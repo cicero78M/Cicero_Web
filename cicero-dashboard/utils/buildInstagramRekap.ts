@@ -1,5 +1,3 @@
-const LIKE_THRESHOLD = Number(process.env.NEXT_PUBLIC_LIKE_THRESHOLD ?? 1);
-
 interface RekapSummary {
   totalIGPost: number;
   totalUser: number;
@@ -56,7 +54,7 @@ export function buildInstagramRekap(
             acc.tanpaUsername++;
           } else if (totalIGPost === 0) {
             acc.belum++;
-          } else if (jumlah >= totalIGPost * LIKE_THRESHOLD) {
+          } else if (jumlah >= totalIGPost) {
             acc.sudah++;
           } else if (jumlah > 0) {
             acc.kurang++;

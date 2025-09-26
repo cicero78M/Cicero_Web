@@ -122,7 +122,7 @@ export default function ChartDivisiAbsensi({
         : key;
     const jumlah = Number(u[fieldJumlah] || 0);
     const hasUsername = Boolean(String(u.username || "").trim());
-    const sudah = !isZeroPost && jumlah >= effectiveTotal * 0.5;
+    const sudah = !isZeroPost && jumlah >= effectiveTotal;
     const kurang = !sudah && !isZeroPost && jumlah > 0;
     const nilai = jumlah;
     if (!divisiMap[key])

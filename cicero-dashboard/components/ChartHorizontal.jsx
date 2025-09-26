@@ -44,7 +44,7 @@ export default function ChartHorizontal({
     const key = bersihkanSatfung(u.divisi || "LAINNYA");
     // Logic: sudahLike hanya berlaku kalau ada post
     const jumlah = Number(u[fieldJumlah] || 0);
-    const sudah = !isZeroPost && jumlah >= effectiveTotal * 0.5;
+    const sudah = !isZeroPost && jumlah >= effectiveTotal;
     const kurang = !sudah && !isZeroPost && jumlah > 0;
     const nilai = jumlah;
     if (!divisiMap[key])

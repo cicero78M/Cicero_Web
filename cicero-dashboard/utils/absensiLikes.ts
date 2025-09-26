@@ -115,7 +115,7 @@ export async function fetchDitbinmasAbsensiLikes(
       totalBelumLike += 1;
       return;
     }
-    if (jumlah >= totalIGPost * 0.5) {
+    if (jumlah >= totalIGPost) {
       totalSudahLike += 1;
     } else if (jumlah > 0) {
       totalKurangLike += 1;
