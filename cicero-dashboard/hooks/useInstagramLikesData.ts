@@ -73,8 +73,7 @@ export default function useInstagramLikesData({
     const clientIdLower = String(userClientId).toLowerCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
     const isDitbinmasAccount = isDitbinmasRole && clientIdLower === "ditbinmas";
-    const isDitbinmasMember = isDitbinmasRole && !isDitbinmasAccount;
-    const taskClientId = isDitbinmasRole ? "DITBINMAS" : userClientId;
+    const taskClientId = isDitbinmasAccount ? "DITBINMAS" : userClientId;
 
     async function fetchData() {
       try {
@@ -127,7 +126,7 @@ export default function useInstagramLikesData({
 
         const client_id = userClientId;
 
-        const profileClientId = isDitbinmasMember ? taskClientId : client_id;
+        const profileClientId = client_id;
         const profileRes = await getClientProfile(
           token,
           profileClientId,
@@ -135,7 +134,8 @@ export default function useInstagramLikesData({
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const dir =
-          isDitbinmasMember || (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+          isDitbinmasAccount ||
+          (String(profile.client_type || "").toUpperCase() === "DIREKTORAT");
         if (controller.signal.aborted) return;
         setIsDirectorate(dir);
         setClientName(
@@ -148,7 +148,7 @@ export default function useInstagramLikesData({
 
         let users: any[] = [];
         if (dir) {
-          const directoryClientId = isDitbinmasMember ? taskClientId : client_id;
+          const directoryClientId = client_id;
           const directoryRes = await getUserDirectory(
             token,
             directoryClientId,
@@ -158,74 +158,34 @@ export default function useInstagramLikesData({
             directoryRes.data || directoryRes.users || directoryRes || [];
           let clientIds: string[] = [];
 
-          if (isDitbinmasMember) {
-            clientIds = Array.from(
-              new Set(
-                dirData
-                  .filter((u: any) => {
-                    const roleName = String(
+          const expectedRole = String(directoryClientId).toLowerCase();
+          clientIds = Array.from(
+            new Set(
+              dirData
+                .filter(
+                  (u: any) =>
+                    String(
                       u.role ||
                         u.user_role ||
                         u.userRole ||
                         u.roleName ||
                         "",
-                    ).toLowerCase();
-                    const directoryClient = String(
-                      u.client_id ||
-                        u.clientId ||
-                        u.clientID ||
-                        u.client ||
-                        "",
-                    );
-                    return (
-                      roleName === "ditbinmas" &&
-                      directoryClient.toLowerCase() === String(client_id).toLowerCase()
-                    );
-                  })
-                  .map((u: any) =>
-                    String(
-                      u.client_id ||
-                        u.clientId ||
-                        u.clientID ||
-                        u.client ||
-                        "",
-                    ),
-                  )
-                  .filter(Boolean) as string[],
-              ),
-            ) as string[];
-          } else {
-            const expectedRole = String(directoryClientId).toLowerCase();
-            clientIds = Array.from(
-              new Set(
-                dirData
-                  .filter(
-                    (u: any) =>
-                      String(
-                        u.role ||
-                          u.user_role ||
-                          u.userRole ||
-                          u.roleName ||
-                          "",
-                      ).toLowerCase() === expectedRole,
-                  )
-                  .map((u: any) =>
-                    String(
-                      u.client_id ||
-                        u.clientId ||
-                        u.clientID ||
-                        u.client ||
-                        "",
-                    ),
-                  )
-                  .filter(Boolean) as string[],
-              ),
-            ) as string[];
-          }
+                    ).toLowerCase() === expectedRole,
+                )
+                .map((u: any) =>
+                  String(
+                    u.client_id ||
+                      u.clientId ||
+                      u.clientID ||
+                      u.client ||
+                      "",
+                  ),
+                )
+                .filter(Boolean) as string[],
+            ),
+          ) as string[];
 
-          const fallbackClientId = isDitbinmasMember
-            ? client_id
-            : directoryClientId;
+          const fallbackClientId = directoryClientId;
           if (!clientIds.includes(String(fallbackClientId))) {
             clientIds.push(String(fallbackClientId));
           }
