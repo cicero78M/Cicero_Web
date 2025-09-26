@@ -73,7 +73,8 @@ export default function useInstagramLikesData({
     const clientIdLower = String(userClientId).toLowerCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
     const isDitbinmasAccount = isDitbinmasRole && clientIdLower === "ditbinmas";
-    const taskClientId = isDitbinmasAccount ? "DITBINMAS" : userClientId;
+    const isDitbinmasMember = isDitbinmasRole && !isDitbinmasAccount;
+    const taskClientId = isDitbinmasRole ? "DITBINMAS" : userClientId;
 
     async function fetchData() {
       try {
@@ -126,13 +127,15 @@ export default function useInstagramLikesData({
 
         const client_id = userClientId;
 
+        const profileClientId = isDitbinmasMember ? taskClientId : client_id;
         const profileRes = await getClientProfile(
           token,
-          client_id,
+          profileClientId,
           controller.signal,
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
-        const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        const dir =
+          isDitbinmasMember || (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         if (controller.signal.aborted) return;
         setIsDirectorate(dir);
         setClientName(
@@ -145,14 +148,17 @@ export default function useInstagramLikesData({
 
         let users: any[] = [];
         if (dir) {
+          const directoryClientId = isDitbinmasMember ? taskClientId : client_id;
           const directoryRes = await getUserDirectory(
             token,
-            client_id,
+            directoryClientId,
             controller.signal,
           );
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
-          const expectedRole = String(client_id).toLowerCase();
+          const expectedRole = isDitbinmasMember
+            ? "ditbinmas"
+            : String(directoryClientId).toLowerCase();
           const clientIds = Array.from(
             new Set(
               dirData
@@ -178,8 +184,11 @@ export default function useInstagramLikesData({
                 .filter(Boolean) as string[],
             ),
           ) as string[];
-          if (!clientIds.includes(String(client_id))) {
-            clientIds.push(String(client_id));
+          const fallbackClientId = isDitbinmasMember
+            ? directoryClientId
+            : client_id;
+          if (!clientIds.includes(String(fallbackClientId))) {
+            clientIds.push(String(fallbackClientId));
           }
           const rekapAll = await Promise.all(
             clientIds.map((cid: string) =>
