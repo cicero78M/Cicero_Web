@@ -545,7 +545,7 @@ export default function UserDirectoryPage() {
                     placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-300 focus:outline-none"
                     aria-label="Pencarian pengguna"
                   />
                 </label>
