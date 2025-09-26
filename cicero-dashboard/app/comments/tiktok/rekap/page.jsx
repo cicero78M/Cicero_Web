@@ -134,8 +134,7 @@ export default function RekapKomentarTiktokPage() {
     const roleLower = String(role || "").toLowerCase();
     const clientIdUpper = String(userClientId || "").toUpperCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
-    const isRootDitbinmas = isDitbinmasRole && clientIdUpper === "DITBINMAS";
-    const taskClientId = isRootDitbinmas ? "DITBINMAS" : userClientId;
+    const taskClientId = isDitbinmasRole ? "DITBINMAS" : userClientId;
     const rekapClientId = userClientId;
 
     if (!token) {
