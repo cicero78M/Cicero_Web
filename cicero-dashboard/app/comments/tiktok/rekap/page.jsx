@@ -123,8 +123,26 @@ export default function RekapKomentarTiktokPage() {
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token")
         : null;
+    const userClientId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("client_id")
+        : null;
+    const role =
+      typeof window !== "undefined"
+        ? localStorage.getItem("user_role")
+        : null;
+    const isDitbinmas = String(role || "").toLowerCase() === "ditbinmas";
+    const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
+    const rekapClientId = userClientId;
+
     if (!token) {
       setError("Token tidak ditemukan. Silakan login ulang.");
+      setLoading(false);
+      return;
+    }
+
+    if (!rekapClientId) {
+      setError("Client ID pengguna tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return;
     }
@@ -141,24 +159,14 @@ export default function RekapKomentarTiktokPage() {
           date,
           startDate,
           endDate,
-          undefined,
+          taskClientId,
           controller.signal,
         );
         const statsData = statsRes.data || statsRes;
 
-        const client_id =
-          statsData?.client_id ||
-          statsData.client_id ||
-          localStorage.getItem("client_id");
-        if (!client_id) {
-          setError("Client ID tidak ditemukan.");
-          setLoading(false);
-          return;
-        }
-
         const rekapRes = await getRekapKomentarTiktok(
           token,
-          client_id,
+          rekapClientId,
           periode,
           date,
           startDate,
