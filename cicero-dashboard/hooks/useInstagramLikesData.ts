@@ -286,14 +286,37 @@ export default function useInstagramLikesData({
             : [];
         }
 
-        const totalUser = users.length;
+        let filteredUsers = users;
+        if (!dir) {
+          const normalizedClientId = String(client_id || "")
+            .trim()
+            .toLowerCase();
+          if (normalizedClientId) {
+            const normalizeValue = (value: unknown) =>
+              String(value || "")
+                .trim()
+                .toLowerCase();
+            filteredUsers = users.filter((u: any) => {
+              const userClientId = normalizeValue(
+                u.client_id ??
+                  u.clientId ??
+                  u.clientID ??
+                  u.client ??
+                  "",
+              );
+              return userClientId === normalizedClientId;
+            });
+          }
+        }
+
+        const totalUser = filteredUsers.length;
         const totalIGPost = Number((statsData as any).instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         let totalSudahLike = 0;
         let totalKurangLike = 0;
         let totalBelumLike = 0;
         let totalTanpaUsername = 0;
-        users.forEach((u: any) => {
+        filteredUsers.forEach((u: any) => {
           const username = String(u.username || "").trim();
           if (!username) {
             totalTanpaUsername += 1;
@@ -322,7 +345,7 @@ export default function useInstagramLikesData({
           totalTanpaUsername,
           totalIGPost,
         });
-        setChartData(users);
+        setChartData(filteredUsers);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err.message || err));
