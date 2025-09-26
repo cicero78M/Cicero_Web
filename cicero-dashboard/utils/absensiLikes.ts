@@ -11,6 +11,7 @@ export async function fetchDitbinmasAbsensiLikes(
   token: string,
   { periode, date, startDate, endDate }: FetchParams,
   signal?: AbortSignal,
+  loginClientId?: string,
 ) {
   const clientId = "DITBINMAS";
 
@@ -77,6 +78,22 @@ export async function fetchDitbinmasAbsensiLikes(
       ? res
       : [],
   );
+
+  const normalizedLoginClientId = String(loginClientId || "")
+    .trim()
+    .toLowerCase();
+  if (normalizedLoginClientId) {
+    const normalizeValue = (value: unknown) =>
+      String(value || "")
+        .trim()
+        .toLowerCase();
+    users = users.filter((u) => {
+      const userClientId = normalizeValue(
+        u.client_id || u.clientId || u.clientID || u.client || "",
+      );
+      return userClientId === normalizedLoginClientId;
+    });
+  }
 
   const nameMap = await getClientNames(
     token,
