@@ -94,6 +94,7 @@ export default function useInstagramLikesData({
                 endDate,
               },
               controller.signal,
+              userClientId,
             );
           if (controller.signal.aborted) return;
           setChartData(users);
