@@ -37,6 +37,7 @@ export default function InstagramEngagementInsightPage() {
     rekapSummary,
     isDirectorate,
     clientName,
+    isDitbinmasScopedClient,
   } = useInstagramLikesData({ viewBy, customDate, fromDate, toDate });
 
   const viewOptions = VIEW_OPTIONS;
@@ -52,6 +53,12 @@ export default function InstagramEngagementInsightPage() {
 
   // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
+  const shouldGroupByClient = isDirectorate && !isDitbinmasScopedClient;
+  const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
+  const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
+  const directorateTitle = shouldGroupByClient
+    ? "POLRES JAJARAN"
+    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
 
   const totalUser = Number(rekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
@@ -178,12 +185,17 @@ export default function InstagramEngagementInsightPage() {
             {/* Chart per kelompok / polres */}
             {isDirectorate ? (
               <ChartBox
-                title="POLRES JAJARAN"
+                title={directorateTitle}
                 users={chartData}
                 totalPost={rekapSummary.totalIGPost}
-                groupBy="client_id"
-                orientation="horizontal"
+                groupBy={directorateGroupBy}
+                orientation={directorateOrientation}
                 sortBy="percentage"
+                narrative={
+                  shouldGroupByClient
+                    ? undefined
+                    : "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
+                }
               />
             ) : (
               <div className="flex flex-col gap-6">

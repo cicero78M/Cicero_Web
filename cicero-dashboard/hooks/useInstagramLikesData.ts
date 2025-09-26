@@ -46,6 +46,7 @@ export default function useInstagramLikesData({
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
+  const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -71,6 +72,10 @@ export default function useInstagramLikesData({
 
     const roleLower = String(role).toLowerCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
+    const normalizedClientId = String(userClientId || "").trim();
+    const normalizedClientIdUpper = normalizedClientId.toUpperCase();
+    const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
+    setIsDitbinmasScopedClient(isDitbinmasRole && !isDitbinmasClient);
     const dashboardClientId = isDitbinmasRole ? "DITBINMAS" : userClientId;
 
     async function fetchData() {
@@ -324,6 +329,7 @@ export default function useInstagramLikesData({
     igPosts,
     rekapSummary,
     isDirectorate,
+    isDitbinmasScopedClient,
     clientName,
     loading,
     error,
