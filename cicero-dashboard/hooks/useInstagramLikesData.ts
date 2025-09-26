@@ -69,8 +69,11 @@ export default function useInstagramLikesData({
       return () => controller.abort();
     }
 
-    const isDitbinmas = String(role).toLowerCase() === "ditbinmas";
-    const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
+    const roleLower = String(role).toLowerCase();
+    const clientIdLower = String(userClientId).toLowerCase();
+    const isDitbinmasRole = roleLower === "ditbinmas";
+    const isDitbinmasAccount = isDitbinmasRole && clientIdLower === "ditbinmas";
+    const taskClientId = isDitbinmasAccount ? "DITBINMAS" : userClientId;
 
     async function fetchData() {
       try {
@@ -82,7 +85,7 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (isDitbinmas) {
+        if (isDitbinmasAccount) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
