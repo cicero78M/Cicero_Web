@@ -59,14 +59,13 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const totalSudahLike =
     totalIGPost === 0
       ? 0
-      : validUsers.filter((u) => Number(u.jumlah_like) >= totalIGPost * 0.5)
-          .length;
+      : validUsers.filter((u) => Number(u.jumlah_like) >= totalIGPost).length;
   const totalKurangLike =
     totalIGPost === 0
       ? 0
       : validUsers.filter((u) => {
           const likes = Number(u.jumlah_like) || 0;
-          return likes > 0 && likes < totalIGPost * 0.5;
+          return likes > 0 && likes < totalIGPost;
         }).length;
   const totalBelumLike =
     totalIGPost === 0
@@ -163,7 +162,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       const likes = Number(u.jumlah_like) || 0;
       if (totalIGPost === 0) {
         satkerMap[client].belum += 1;
-      } else if (likes >= totalIGPost * 0.5) {
+      } else if (likes >= totalIGPost) {
         satkerMap[client].sudah += 1;
       } else if (likes > 0) {
         satkerMap[client].kurang += 1;
@@ -231,7 +230,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       const likes = Number(u.jumlah_like) || 0;
       let status = "Belum";
       if (totalIGPost !== 0) {
-        if (likes >= totalIGPost * 0.5) status = "Sudah";
+        if (likes >= totalIGPost) status = "Sudah";
         else if (likes > 0) status = "Kurang";
       }
       clients[client][status].push(u);
@@ -479,7 +478,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                       jumlahDisplay = 0;
                     } else if (totalIGPost !== 0) {
                       const likes = Number(u.jumlah_like) || 0;
-                      if (likes >= totalIGPost * 0.5) {
+                      if (likes >= totalIGPost) {
                         rowClass = "bg-emerald-500/10";
                         statusEl = (
                           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.35)]">
