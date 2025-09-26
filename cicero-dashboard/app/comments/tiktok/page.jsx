@@ -86,8 +86,11 @@ export default function TiktokEngagementInsightPage() {
       return;
     }
 
-    const isDitbinmas = String(role).toLowerCase() === "ditbinmas";
-    const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
+    const roleLower = String(role || "").toLowerCase();
+    const clientIdUpper = String(userClientId || "").toUpperCase();
+    const isDitbinmasRole = roleLower === "ditbinmas";
+    const isRootDitbinmas = isDitbinmasRole && clientIdUpper === "DITBINMAS";
+    const taskClientId = isRootDitbinmas ? "DITBINMAS" : userClientId;
 
     if (!isInitialLoad) {
       setIsRefreshing(true);
@@ -118,10 +121,12 @@ export default function TiktokEngagementInsightPage() {
         const profileRes = await getClientProfile(token, client_id);
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
-        const dir =
+        const isDirectorateProfile =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        const allowDirectorateScope =
+          isDirectorateProfile || isRootDitbinmas;
         if (isCancelled) return;
-        setIsDirectorate(dir || isDitbinmas);
+        setIsDirectorate(allowDirectorateScope);
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -131,7 +136,7 @@ export default function TiktokEngagementInsightPage() {
         );
 
         let users = [];
-        if (dir || isDitbinmas) {
+        if (allowDirectorateScope) {
           const directoryRes = await getUserDirectory(token, client_id);
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
@@ -200,7 +205,7 @@ export default function TiktokEngagementInsightPage() {
         }
 
         let enrichedUsers = users;
-        if (dir || isDitbinmas) {
+        if (allowDirectorateScope) {
           const nameMap = await getClientNames(
             token,
             users.map((u) =>
