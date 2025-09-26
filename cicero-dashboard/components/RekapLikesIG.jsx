@@ -32,10 +32,57 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   },
   ref,
 ) {
-  const sortedUsers = useMemo(
-    () => [...users].sort(compareUsersByPangkatAndNrp),
-    [users],
-  );
+  const sortedUsers = useMemo(() => {
+    const getClientIdentifier = (user) => {
+      const rawClientId =
+        user.client_id ??
+        user.clientId ??
+        user.clientID ??
+        user.client ??
+        "";
+      const clientString = String(rawClientId).trim();
+      if (!clientString) {
+        return { hasValue: false, stringValue: "", numericValue: NaN };
+      }
+
+      const numericValue = Number(clientString);
+      return {
+        hasValue: true,
+        stringValue: clientString,
+        numericValue: Number.isFinite(numericValue) ? numericValue : NaN,
+      };
+    };
+
+    const compareByClientId = (a, b) => {
+      const clientA = getClientIdentifier(a);
+      const clientB = getClientIdentifier(b);
+
+      if (clientA.hasValue && clientB.hasValue) {
+        const bothNumeric =
+          !Number.isNaN(clientA.numericValue) &&
+          !Number.isNaN(clientB.numericValue);
+
+        if (bothNumeric && clientA.numericValue !== clientB.numericValue) {
+          return clientA.numericValue - clientB.numericValue;
+        }
+
+        const stringCompare = clientA.stringValue.localeCompare(
+          clientB.stringValue,
+          "id",
+          { sensitivity: "base" },
+        );
+        if (stringCompare !== 0) {
+          return stringCompare;
+        }
+      } else if (clientA.hasValue !== clientB.hasValue) {
+        return clientA.hasValue ? -1 : 1;
+      }
+
+      return compareUsersByPangkatAndNrp(a, b);
+    };
+
+    return [...users].sort(compareByClientId);
+  }, [users]);
 
   const totalUser = sortedUsers.length;
   const hasClient = useMemo(
