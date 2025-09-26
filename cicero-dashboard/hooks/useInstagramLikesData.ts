@@ -156,37 +156,76 @@ export default function useInstagramLikesData({
           );
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
-          const expectedRole = isDitbinmasMember
-            ? "ditbinmas"
-            : String(directoryClientId).toLowerCase();
-          const clientIds = Array.from(
-            new Set(
-              dirData
-                .filter(
-                  (u: any) =>
-                    String(
+          let clientIds: string[] = [];
+
+          if (isDitbinmasMember) {
+            clientIds = Array.from(
+              new Set(
+                dirData
+                  .filter((u: any) => {
+                    const roleName = String(
                       u.role ||
                         u.user_role ||
                         u.userRole ||
                         u.roleName ||
                         "",
-                    ).toLowerCase() === expectedRole,
-                )
-                .map((u: any) =>
-                  String(
-                    u.client_id ||
-                      u.clientId ||
-                      u.clientID ||
-                      u.client ||
-                      "",
-                  ),
-                )
-                .filter(Boolean) as string[],
-            ),
-          ) as string[];
+                    ).toLowerCase();
+                    const directoryClient = String(
+                      u.client_id ||
+                        u.clientId ||
+                        u.clientID ||
+                        u.client ||
+                        "",
+                    );
+                    return (
+                      roleName === "ditbinmas" &&
+                      directoryClient.toLowerCase() === String(client_id).toLowerCase()
+                    );
+                  })
+                  .map((u: any) =>
+                    String(
+                      u.client_id ||
+                        u.clientId ||
+                        u.clientID ||
+                        u.client ||
+                        "",
+                    ),
+                  )
+                  .filter(Boolean) as string[],
+              ),
+            ) as string[];
+          } else {
+            const expectedRole = String(directoryClientId).toLowerCase();
+            clientIds = Array.from(
+              new Set(
+                dirData
+                  .filter(
+                    (u: any) =>
+                      String(
+                        u.role ||
+                          u.user_role ||
+                          u.userRole ||
+                          u.roleName ||
+                          "",
+                      ).toLowerCase() === expectedRole,
+                  )
+                  .map((u: any) =>
+                    String(
+                      u.client_id ||
+                        u.clientId ||
+                        u.clientID ||
+                        u.client ||
+                        "",
+                    ),
+                  )
+                  .filter(Boolean) as string[],
+              ),
+            ) as string[];
+          }
+
           const fallbackClientId = isDitbinmasMember
-            ? directoryClientId
-            : client_id;
+            ? client_id
+            : directoryClientId;
           if (!clientIds.includes(String(fallbackClientId))) {
             clientIds.push(String(fallbackClientId));
           }
