@@ -131,8 +131,11 @@ export default function RekapKomentarTiktokPage() {
       typeof window !== "undefined"
         ? localStorage.getItem("user_role")
         : null;
-    const isDitbinmas = String(role || "").toLowerCase() === "ditbinmas";
-    const taskClientId = isDitbinmas ? "DITBINMAS" : userClientId;
+    const roleLower = String(role || "").toLowerCase();
+    const clientIdUpper = String(userClientId || "").toUpperCase();
+    const isDitbinmasRole = roleLower === "ditbinmas";
+    const isRootDitbinmas = isDitbinmasRole && clientIdUpper === "DITBINMAS";
+    const taskClientId = isRootDitbinmas ? "DITBINMAS" : userClientId;
     const rekapClientId = userClientId;
 
     if (!token) {
