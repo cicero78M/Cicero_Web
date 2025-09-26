@@ -70,10 +70,8 @@ export default function useInstagramLikesData({
     }
 
     const roleLower = String(role).toLowerCase();
-    const clientIdLower = String(userClientId).toLowerCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
-    const isDitbinmasAccount = isDitbinmasRole && clientIdLower === "ditbinmas";
-    const taskClientId = isDitbinmasAccount ? "DITBINMAS" : userClientId;
+    const dashboardClientId = isDitbinmasRole ? "DITBINMAS" : userClientId;
 
     async function fetchData() {
       try {
@@ -85,7 +83,7 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (isDitbinmasAccount) {
+        if (isDitbinmasRole) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
@@ -112,7 +110,7 @@ export default function useInstagramLikesData({
           date,
           startDate,
           endDate,
-          taskClientId,
+          dashboardClientId,
           controller.signal,
         );
         const posts = Array.isArray((statsData as any).ig_posts)
@@ -134,7 +132,7 @@ export default function useInstagramLikesData({
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const dir =
-          isDitbinmasAccount ||
+          isDitbinmasRole ||
           (String(profile.client_type || "").toUpperCase() === "DIREKTORAT");
         if (controller.signal.aborted) return;
         setIsDirectorate(dir);
