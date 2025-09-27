@@ -4,6 +4,8 @@ import {
   getDashboardStats,
   getRekapKomentarTiktok,
   getClientNames,
+  getClientProfile,
+  getUserDirectory,
 } from "@/utils/api";
 import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
@@ -134,14 +136,12 @@ export default function RekapKomentarTiktokPage() {
     const roleLower = String(role || "").toLowerCase();
     const normalizedClientId = String(userClientId || "").trim();
     const clientIdUpper = normalizedClientId.toUpperCase();
+    const clientIdLower = normalizedClientId.toLowerCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
     const ditbinmasClientId = "DITBINMAS";
-    const isRootDitbinmas =
-      isDitbinmasRole && clientIdUpper === ditbinmasClientId;
+    const isDitbinmasClient = clientIdUpper === ditbinmasClientId;
+    const isScopedDirectorateClient = isDitbinmasRole && !isDitbinmasClient;
     const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
-    const rekapClientId = isDitbinmasRole
-      ? ditbinmasClientId
-      : normalizedClientId;
 
     if (!token) {
       setError("Token tidak ditemukan. Silakan login ulang.");
@@ -149,7 +149,7 @@ export default function RekapKomentarTiktokPage() {
       return;
     }
 
-    if (!rekapClientId) {
+    if (!normalizedClientId) {
       setError("Client ID pengguna tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return;
@@ -171,47 +171,138 @@ export default function RekapKomentarTiktokPage() {
           controller.signal,
         );
         const statsData = statsRes.data || statsRes;
-
-        const rekapRes = await getRekapKomentarTiktok(
+        const profileRes = await getClientProfile(
           token,
-          rekapClientId,
-          periode,
-          date,
-          startDate,
-          endDate,
+          normalizedClientId,
           controller.signal,
         );
-        const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
+        const profileData =
+          profileRes?.client || profileRes?.profile || profileRes || {};
+        const profileType = String(
+          profileData?.client_type ||
+            profileRes?.client_type ||
+            profileData?.type ||
+            profileRes?.type ||
+            "",
+        ).toUpperCase();
+        const isDirectorate = isDitbinmasRole || profileType === "DIREKTORAT";
 
-        const normalizedRekapClientId = String(rekapClientId || "")
-          .trim()
-          .toUpperCase();
-        const filteredUsers = normalizedRekapClientId
-          ? users.filter((u) => {
-              const possibleIds = [
-                u.client_id,
-                u.clientId,
-                u.client,
-                u.clientID,
-                u.clientid,
-              ];
-              return possibleIds.some((cid) =>
-                String(cid || "").trim().toUpperCase() ===
-                normalizedRekapClientId,
-              );
-            })
-          : users;
-
-        // map client_id to client name for satker column
-        const nameMap = await getClientNames(
-          token,
-          filteredUsers.map((u) =>
-            String(
-              u.client_id || u.clientId || u.client || u.clientID || "",
+        let users = [];
+        if (isDirectorate) {
+          const directoryRes = await getUserDirectory(
+            token,
+            normalizedClientId,
+            controller.signal,
+          );
+          const directoryData =
+            directoryRes?.data || directoryRes?.users || directoryRes || [];
+          const expectedRole = clientIdLower;
+          const clientIds = Array.from(
+            new Set(
+              (Array.isArray(directoryData) ? directoryData : [])
+                .filter((entry) => {
+                  const roleValue = String(
+                    entry?.role ||
+                      entry?.user_role ||
+                      entry?.userRole ||
+                      entry?.roleName ||
+                      "",
+                  ).toLowerCase();
+                  return roleValue === expectedRole;
+                })
+                .map((entry) =>
+                  String(
+                    entry?.client_id ||
+                      entry?.clientId ||
+                      entry?.clientID ||
+                      entry?.client ||
+                      "",
+                  ).trim(),
+                )
+                .filter(Boolean),
             ),
+          );
+
+          if (!clientIds.includes(normalizedClientId)) {
+            clientIds.push(normalizedClientId);
+          }
+
+          const rekapResponses = await Promise.all(
+            clientIds.map((cid) =>
+              getRekapKomentarTiktok(
+                token,
+                cid,
+                periode,
+                date,
+                startDate,
+                endDate,
+                controller.signal,
+              ).catch(() => ({ data: [] })),
+            ),
+          );
+
+          users = rekapResponses.flatMap((res) => {
+            if (Array.isArray(res?.data)) return res.data;
+            if (Array.isArray(res)) return res;
+            return [];
+          });
+        } else {
+          const rekapRes = await getRekapKomentarTiktok(
+            token,
+            normalizedClientId,
+            periode,
+            date,
+            startDate,
+            endDate,
+            controller.signal,
+          );
+          users = Array.isArray(rekapRes?.data)
+            ? rekapRes.data
+            : Array.isArray(rekapRes)
+              ? rekapRes
+              : [];
+        }
+
+        let filteredUsers = users;
+        const shouldFilterByClient =
+          Boolean(clientIdLower) && (!isDirectorate || isScopedDirectorateClient);
+        if (shouldFilterByClient) {
+          const normalizeValue = (value) =>
+            String(value || "").trim().toLowerCase();
+          filteredUsers = users.filter((u) => {
+            const possibleIds = [
+              u.client_id,
+              u.clientId,
+              u.client,
+              u.clientID,
+              u.clientid,
+            ];
+            return possibleIds.some(
+              (cid) => normalizeValue(cid) === clientIdLower,
+            );
+          });
+        }
+
+        const clientIdsForNames = Array.from(
+          new Set(
+            filteredUsers
+              .map((u) =>
+                String(
+                  u.client_id || u.clientId || u.client || u.clientID || "",
+                ),
+              )
+              .filter(Boolean),
           ),
-          controller.signal,
         );
+
+        let nameMap = {};
+        if (clientIdsForNames.length > 0) {
+          nameMap = await getClientNames(
+            token,
+            clientIdsForNames,
+            controller.signal,
+          );
+        }
         const enrichedUsers = filteredUsers.map((u) => {
           const cid = String(
             u.client_id || u.clientId || u.client || u.clientID || "",
@@ -240,6 +331,10 @@ export default function RekapKomentarTiktokPage() {
               (u) => Number(u.jumlah_komentar) > 0 || u.exception
             ).length;
         const totalBelumKomentar = totalUser - totalSudahKomentar;
+
+        if (controller.signal.aborted) {
+          return;
+        }
 
         setRekapSummary({
           totalUser,
