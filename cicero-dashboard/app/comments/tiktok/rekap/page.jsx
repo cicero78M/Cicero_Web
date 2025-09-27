@@ -132,11 +132,16 @@ export default function RekapKomentarTiktokPage() {
         ? localStorage.getItem("user_role")
         : null;
     const roleLower = String(role || "").toLowerCase();
-    const clientIdUpper = String(userClientId || "").toUpperCase();
+    const normalizedClientId = String(userClientId || "").trim();
+    const clientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasRole = roleLower === "ditbinmas";
-    const isRootDitbinmas = isDitbinmasRole && clientIdUpper === "DITBINMAS";
-    const taskClientId = isRootDitbinmas ? "DITBINMAS" : userClientId;
-    const rekapClientId = userClientId;
+    const ditbinmasClientId = "DITBINMAS";
+    const isRootDitbinmas =
+      isDitbinmasRole && clientIdUpper === ditbinmasClientId;
+    const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
+    const rekapClientId = isDitbinmasRole
+      ? ditbinmasClientId
+      : normalizedClientId;
 
     if (!token) {
       setError("Token tidak ditemukan. Silakan login ulang.");
