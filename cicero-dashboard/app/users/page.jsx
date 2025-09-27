@@ -581,7 +581,12 @@ export default function UserDirectoryPage() {
                   type="text"
                   placeholder="NRP/NIP"
                   value={nrpNip}
-                  onChange={(e) => setNrpNip(e.target.value.replace(/[^0-9]/g, ""))}
+                  onChange={(e) => {
+                    const { value } = e.target;
+                    if (/^\d*$/.test(value)) {
+                      setNrpNip(value);
+                    }
+                  }}
                   inputMode="numeric"
                   pattern="\\d*"
                   required
