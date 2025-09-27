@@ -235,7 +235,9 @@ export default function useTiktokCommentsData({
         }
 
         let filteredUsers = users;
-        const shouldFilterByClient = Boolean(normalizedClientIdLower) && (!directorate || isScopedDirectorateClient);
+        const shouldFilterByClient =
+          Boolean(normalizedClientIdLower) &&
+          (isDitbinmasRoleValue || !directorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value: unknown) =>
             String(value || "").trim().toLowerCase();
