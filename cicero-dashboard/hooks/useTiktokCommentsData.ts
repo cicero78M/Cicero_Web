@@ -77,8 +77,10 @@ export default function useTiktokCommentsData({
     setIsDitbinmasRole(isDitbinmasRoleValue);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
+    const normalizedClientIdLower = normalizedClientId.toLowerCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
-    setIsDitbinmasScopedClient(isDitbinmasRoleValue && !isDitbinmasClient);
+    const isScopedDirectorateClient = isDitbinmasRoleValue && !isDitbinmasClient;
+    setIsDitbinmasScopedClient(isScopedDirectorateClient);
     const dashboardClientId = isDitbinmasRoleValue
       ? "DITBINMAS"
       : userClientId;
@@ -233,18 +235,16 @@ export default function useTiktokCommentsData({
         }
 
         let filteredUsers = users;
-        if (!directorate) {
-          const normalizedClientIdLower = normalizedClientId.toLowerCase();
-          if (normalizedClientIdLower) {
-            const normalizeValue = (value: unknown) =>
-              String(value || "").trim().toLowerCase();
-            filteredUsers = users.filter((u: any) => {
-              const userClient = normalizeValue(
-                u.client_id || u.clientId || u.clientID || u.client || "",
-              );
-              return userClient === normalizedClientIdLower;
-            });
-          }
+        const shouldFilterByClient = Boolean(normalizedClientIdLower) && (!directorate || isScopedDirectorateClient);
+        if (shouldFilterByClient) {
+          const normalizeValue = (value: unknown) =>
+            String(value || "").trim().toLowerCase();
+          filteredUsers = users.filter((u: any) => {
+            const userClient = normalizeValue(
+              u.client_id || u.clientId || u.clientID || u.client || "",
+            );
+            return userClient === normalizedClientIdLower;
+          });
         }
 
         const totalUser = filteredUsers.length;
