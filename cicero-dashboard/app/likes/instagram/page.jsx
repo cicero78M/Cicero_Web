@@ -38,6 +38,7 @@ export default function InstagramEngagementInsightPage() {
     isDirectorate,
     clientName,
     isDitbinmasScopedClient,
+    isDitbinmasRole,
   } = useInstagramLikesData({ viewBy, customDate, fromDate, toDate });
 
   const viewOptions = VIEW_OPTIONS;
@@ -53,7 +54,8 @@ export default function InstagramEngagementInsightPage() {
 
   // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
-  const shouldGroupByClient = isDirectorate && !isDitbinmasScopedClient;
+  const shouldGroupByClient =
+    isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
