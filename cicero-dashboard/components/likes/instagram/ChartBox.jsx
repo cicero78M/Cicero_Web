@@ -1,6 +1,14 @@
 "use client";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import Narrative from "@/components/Narrative";
+import { cn } from "@/lib/utils";
+
+const defaultDecorations = (
+  <>
+    <div className="pointer-events-none absolute -right-12 top-6 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
+    <div className="pointer-events-none absolute inset-x-10 top-0 h-16 bg-gradient-to-b from-white/10 to-transparent blur-2xl" />
+  </>
+);
 
 export default function ChartBox({
   title,
@@ -10,12 +18,35 @@ export default function ChartBox({
   narrative,
   groupBy,
   sortBy,
+  fieldJumlah = "jumlah_like",
+  labelSudah = "User Sudah Like",
+  labelKurang = "User Kurang Like",
+  labelBelum = "User Belum Like",
+  labelTotal = "Total Likes",
+  labelTotalUser = "Jumlah User",
+  showTotalUser = true,
+  containerClassName,
+  emptyStateClassName,
+  useDefaultContainerStyle = true,
+  decorations = defaultDecorations,
+  titleClassName = "text-cyan-200/80",
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur">
-      <div className="pointer-events-none absolute -right-12 top-6 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute inset-x-10 top-0 h-16 bg-gradient-to-b from-white/10 to-transparent blur-2xl" />
-      <div className="relative mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em] text-cyan-200/80">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-3xl",
+        useDefaultContainerStyle &&
+          "p-6 border border-slate-800/60 bg-slate-900/60 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur",
+        containerClassName,
+      )}
+    >
+      {decorations}
+      <div
+        className={cn(
+          "relative mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]",
+          titleClassName,
+        )}
+      >
         {title}
       </div>
       {users && users.length > 0 ? (
@@ -24,18 +55,23 @@ export default function ChartBox({
           title={title}
           orientation={orientation}
           totalPost={totalPost}
-          fieldJumlah="jumlah_like"
-          labelSudah="User Sudah Like"
-          labelKurang="User Kurang Like"
-          labelBelum="User Belum Like"
-          labelTotal="Total Likes"
+          fieldJumlah={fieldJumlah}
+          labelSudah={labelSudah}
+          labelKurang={labelKurang}
+          labelBelum={labelBelum}
+          labelTotal={labelTotal}
           groupBy={groupBy}
-          showTotalUser
-          labelTotalUser="Jumlah User"
+          showTotalUser={showTotalUser}
+          labelTotalUser={labelTotalUser}
           sortBy={sortBy}
         />
       ) : (
-        <div className="relative text-center text-sm text-slate-400">
+        <div
+          className={cn(
+            "relative text-center text-sm text-slate-400",
+            emptyStateClassName,
+          )}
+        >
           Tidak ada data
         </div>
       )}
