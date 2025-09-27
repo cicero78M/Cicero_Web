@@ -301,9 +301,6 @@ export default function RekapKomentarTiktok({
     const now = new Date();
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-    const tanggalFile = `${String(now.getDate()).padStart(2, "0")}_${String(
-      now.getMonth() + 1,
-    ).padStart(2, "0")}_${now.getFullYear()}`;
     const jam = now.toLocaleTimeString("id-ID", { hour12: false });
 
     const lines = [
@@ -360,17 +357,35 @@ export default function RekapKomentarTiktok({
       lines.push("");
     });
 
-    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Rekap_Komentar_TikTok_${hari}_${tanggalFile}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const message = lines.join("\n");
 
-    showToast("File rekap berhasil diunduh", "success");
+    const copyMessage = () => {
+      showToast(
+        "Teks rekap siap kirim WhatsApp berhasil disalin",
+        "success",
+      );
+    };
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(message)
+        .then(copyMessage)
+        .catch(() => {
+          const fallbackSuccess = copyToClipboardFallback(message);
+          if (fallbackSuccess) {
+            copyMessage();
+          } else {
+            showToast(message, "info");
+          }
+        });
+    } else {
+      const fallbackSuccess = copyToClipboardFallback(message);
+      if (fallbackSuccess) {
+        copyMessage();
+      } else {
+        showToast(message, "info");
+      }
+    }
   }
 
   return (
@@ -587,7 +602,7 @@ export default function RekapKomentarTiktok({
             onClick={handleDownloadRekap}
             className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-emerald-200 transition hover:border-emerald-300/60 hover:bg-emerald-400/20 sm:w-auto"
           >
-            Download Rekap
+            Salin Teks Rekap
           </button>
           {showCopyButton && (
             <button
