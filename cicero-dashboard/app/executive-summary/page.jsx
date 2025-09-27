@@ -923,14 +923,78 @@ const monthlyData = {
   },
 };
 
+const buildMonthKey = (year, monthIndexZeroBased) => {
+  const monthNumber = String(monthIndexZeroBased + 1).padStart(2, "0");
+  return `${year}-${monthNumber}`;
+};
+
+const extractYearFromMonthKey = (monthKey) => {
+  if (typeof monthKey !== "string") {
+    return null;
+  }
+
+  const [yearPart] = monthKey.split("-");
+  const parsedYear = Number.parseInt(yearPart, 10);
+  return Number.isFinite(parsedYear) ? parsedYear : null;
+};
+
+const generateMonthOptions = ({ year, locale } = {}) => {
+  const now = new Date();
+  const targetYear = Number.isFinite(year) ? year : now.getFullYear();
+  const monthFormatter = new Intl.DateTimeFormat(locale ?? "id-ID", {
+    month: "long",
+  });
+
+  return Array.from({ length: 12 }, (_, index) => {
+    const displayDate = new Date(targetYear, index, 1);
+    return {
+      key: buildMonthKey(targetYear, index),
+      label: `${monthFormatter.format(displayDate)} ${targetYear}`,
+    };
+  });
+};
+
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
 const PPTX_SCRIPT_URL =
   "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const { token, clientId } = useAuth();
-  const monthKeys = Object.keys(monthlyData);
-  const [selectedMonth, setSelectedMonth] = useState(monthKeys[0]);
+  const availableYears = useMemo(() => {
+    return Object.keys(monthlyData)
+      .map((key) => extractYearFromMonthKey(key))
+      .filter((year) => Number.isFinite(year));
+  }, []);
+  const resolvedYear = useMemo(() => {
+    if (availableYears.length > 0) {
+      return Math.max(...availableYears);
+    }
+    return new Date().getFullYear();
+  }, [availableYears]);
+  const monthOptions = useMemo(
+    () => generateMonthOptions({ year: resolvedYear }),
+    [resolvedYear],
+  );
+  const defaultSelectedMonth = useMemo(() => {
+    const now = new Date();
+    const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
+    if (monthOptions.some((option) => option.key === currentMonthKey)) {
+      return currentMonthKey;
+    }
+
+    const availableDataKeys = Object.keys(monthlyData).sort().reverse();
+    for (const key of availableDataKeys) {
+      if (monthOptions.some((option) => option.key === key)) {
+        return key;
+      }
+    }
+
+    return monthOptions[0]?.key ?? currentMonthKey;
+  }, [monthOptions]);
+  const [selectedMonth, setSelectedMonth] = useState(defaultSelectedMonth);
+  const selectedMonthOption = useMemo(() => {
+    return monthOptions.find((option) => option.key === selectedMonth) ?? null;
+  }, [monthOptions, selectedMonth]);
   const [pptxFactory, setPptxFactory] = useState(null);
   const [userInsightState, setUserInsightState] = useState({
     loading: true,
@@ -998,7 +1062,59 @@ export default function ExecutiveSummaryPage() {
     };
   }, []);
 
-  const data = monthlyData[selectedMonth];
+  const rawMonthlyData = monthlyData[selectedMonth];
+  const fallbackMonthLabel =
+    rawMonthlyData?.monthLabel ??
+    selectedMonthOption?.label ??
+    (selectedMonth ? selectedMonth : "Periode Tidak Tersedia");
+  const defaultMonthlyEntry = {
+    monthLabel: fallbackMonthLabel,
+    overviewNarrative: "Belum ada ringkasan kinerja untuk periode ini.",
+    summaryMetrics: [],
+    highlights: [],
+    engagementByChannel: [],
+    audienceComposition: [],
+    contentTable: [],
+    dashboardNarrative: "Belum ada narasi dashboard untuk periode ini.",
+    userInsightNarrative: "Belum ada insight pengguna untuk periode ini.",
+    instagramNarrative: "Belum ada ringkasan Instagram untuk periode ini.",
+    tiktokNarrative: "Belum ada ringkasan TikTok untuk periode ini.",
+    platformAnalytics: { platforms: [] },
+  };
+  const data = {
+    ...defaultMonthlyEntry,
+    ...(rawMonthlyData ?? {}),
+    monthLabel: rawMonthlyData?.monthLabel ?? defaultMonthlyEntry.monthLabel,
+    summaryMetrics: Array.isArray(rawMonthlyData?.summaryMetrics)
+      ? rawMonthlyData.summaryMetrics
+      : defaultMonthlyEntry.summaryMetrics,
+    highlights: Array.isArray(rawMonthlyData?.highlights)
+      ? rawMonthlyData.highlights
+      : defaultMonthlyEntry.highlights,
+    engagementByChannel: Array.isArray(rawMonthlyData?.engagementByChannel)
+      ? rawMonthlyData.engagementByChannel
+      : defaultMonthlyEntry.engagementByChannel,
+    audienceComposition: Array.isArray(rawMonthlyData?.audienceComposition)
+      ? rawMonthlyData.audienceComposition
+      : defaultMonthlyEntry.audienceComposition,
+    contentTable: Array.isArray(rawMonthlyData?.contentTable)
+      ? rawMonthlyData.contentTable
+      : defaultMonthlyEntry.contentTable,
+    platformAnalytics: (() => {
+      if (rawMonthlyData?.platformAnalytics) {
+        const platforms = Array.isArray(
+          rawMonthlyData.platformAnalytics.platforms,
+        )
+          ? rawMonthlyData.platformAnalytics.platforms
+          : [];
+        return {
+          ...rawMonthlyData.platformAnalytics,
+          platforms,
+        };
+      }
+      return defaultMonthlyEntry.platformAnalytics;
+    })(),
+  };
   const analytics = data.platformAnalytics ?? { platforms: [] };
   const platforms = Array.isArray(analytics.platforms) ? analytics.platforms : [];
 
@@ -1304,9 +1420,9 @@ export default function ExecutiveSummaryPage() {
                   onChange={(event) => setSelectedMonth(event.target.value)}
                   className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
                 >
-                  {monthKeys.map((key) => (
-                    <option key={key} value={key}>
-                      {monthlyData[key].monthLabel}
+                  {monthOptions.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
@@ -1672,14 +1788,20 @@ export default function ExecutiveSummaryPage() {
           <p className="mt-4 text-base leading-relaxed text-slate-200">
             {data.overviewNarrative}
           </p>
-          <ul className="mt-4 space-y-3 text-sm text-slate-300">
-            {data.highlights.map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" aria-hidden="true" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          {data.highlights.length > 0 ? (
+            <ul className="mt-4 space-y-3 text-sm text-slate-300">
+              {data.highlights.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" aria-hidden="true" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-slate-400">
+              Belum ada highlight untuk periode ini.
+            </p>
+          )}
         </div>
         <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2">
           <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
@@ -1742,48 +1864,54 @@ export default function ExecutiveSummaryPage() {
             Sebaran Reach & Engagement per Kanal
           </h2>
           <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.engagementByChannel}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
-                <XAxis dataKey="channel" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
-                <Tooltip
-                  cursor={{ fill: "rgba(15,23,42,0.3)" }}
-                  contentStyle={{
-                    backgroundColor: "rgba(15,23,42,0.92)",
-                    borderRadius: 16,
-                    borderColor: "rgba(148,163,184,0.4)",
-                    boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
-                    color: "#e2e8f0",
-                  }}
-                  formatter={(value, name) => {
-                    if (name === "reach") {
-                      return [formatNumber(value, { maximumFractionDigits: 0 }), "Reach"];
-                    }
-                    return [`${formatNumber(value, { maximumFractionDigits: 1 })}%`, "Engagement Rate"];
-                  }}
-                />
-                <Legend wrapperStyle={{ color: "#e2e8f0" }} />
-                <Bar dataKey="reach" name="Reach" fill="#38bdf8" radius={[8, 8, 0, 0]}>
-                  <LabelList
-                    dataKey="reach"
-                    position="top"
-                    formatter={(value) => formatNumber(value, { maximumFractionDigits: 0 })}
-                    fill="#e2e8f0"
-                    fontSize={11}
+            {data.engagementByChannel.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.engagementByChannel}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+                  <XAxis dataKey="channel" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                  <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                  <Tooltip
+                    cursor={{ fill: "rgba(15,23,42,0.3)" }}
+                    contentStyle={{
+                      backgroundColor: "rgba(15,23,42,0.92)",
+                      borderRadius: 16,
+                      borderColor: "rgba(148,163,184,0.4)",
+                      boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
+                      color: "#e2e8f0",
+                    }}
+                    formatter={(value, name) => {
+                      if (name === "reach") {
+                        return [formatNumber(value, { maximumFractionDigits: 0 }), "Reach"];
+                      }
+                      return [`${formatNumber(value, { maximumFractionDigits: 1 })}%`, "Engagement Rate"];
+                    }}
                   />
-                </Bar>
-                <Bar dataKey="engagementRate" name="Engagement Rate" fill="#a855f7" radius={[8, 8, 0, 0]}>
-                  <LabelList
-                    dataKey="engagementRate"
-                    position="top"
-                    formatter={(value) => `${formatNumber(value, { maximumFractionDigits: 1 })}%`}
-                    fill="#f5f3ff"
-                    fontSize={11}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                  <Legend wrapperStyle={{ color: "#e2e8f0" }} />
+                  <Bar dataKey="reach" name="Reach" fill="#38bdf8" radius={[8, 8, 0, 0]}>
+                    <LabelList
+                      dataKey="reach"
+                      position="top"
+                      formatter={(value) => formatNumber(value, { maximumFractionDigits: 0 })}
+                      fill="#e2e8f0"
+                      fontSize={11}
+                    />
+                  </Bar>
+                  <Bar dataKey="engagementRate" name="Engagement Rate" fill="#a855f7" radius={[8, 8, 0, 0]}>
+                    <LabelList
+                      dataKey="engagementRate"
+                      position="top"
+                      formatter={(value) => `${formatNumber(value, { maximumFractionDigits: 1 })}%`}
+                      fill="#f5f3ff"
+                      fontSize={11}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                Belum ada data engagement kanal untuk periode ini.
+              </div>
+            )}
           </div>
         </div>
         <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-3">
@@ -1791,32 +1919,38 @@ export default function ExecutiveSummaryPage() {
             Komposisi Audiens
           </h2>
           <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data.audienceComposition}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                >
-                  {data.audienceComposition.map((entry, index) => (
-                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15,23,42,0.92)",
-                    borderRadius: 16,
-                    borderColor: "rgba(148,163,184,0.4)",
-                    color: "#e2e8f0",
-                  }}
-                  formatter={(value) => [`${value}%`, "Kontribusi"]}
-                />
-                <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {data.audienceComposition.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.audienceComposition}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={4}
+                  >
+                    {data.audienceComposition.map((entry, index) => (
+                      <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "rgba(15,23,42,0.92)",
+                      borderRadius: 16,
+                      borderColor: "rgba(148,163,184,0.4)",
+                      color: "#e2e8f0",
+                    }}
+                    formatter={(value) => [`${value}%`, "Kontribusi"]}
+                  />
+                  <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                Belum ada data komposisi audiens untuk periode ini.
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -1880,16 +2014,24 @@ export default function ExecutiveSummaryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
-              {data.contentTable.map((row) => (
-                <tr key={`${row.platform}-${row.title}`} className="hover:bg-slate-900/40">
-                  <td className="px-4 py-3 font-medium text-cyan-200">{row.platform}</td>
-                  <td className="px-4 py-3">{row.title}</td>
-                  <td className="px-4 py-3">{row.format}</td>
-                  <td className="px-4 py-3 text-right">{formatNumber(row.reach, { maximumFractionDigits: 0 })}</td>
-                  <td className="px-4 py-3 text-right">{row.engagement}%</td>
-                  <td className="px-4 py-3 text-slate-300">{row.takeaway}</td>
+              {data.contentTable.length > 0 ? (
+                data.contentTable.map((row) => (
+                  <tr key={`${row.platform}-${row.title}`} className="hover:bg-slate-900/40">
+                    <td className="px-4 py-3 font-medium text-cyan-200">{row.platform}</td>
+                    <td className="px-4 py-3">{row.title}</td>
+                    <td className="px-4 py-3">{row.format}</td>
+                    <td className="px-4 py-3 text-right">{formatNumber(row.reach, { maximumFractionDigits: 0 })}</td>
+                    <td className="px-4 py-3 text-right">{row.engagement}%</td>
+                    <td className="px-4 py-3 text-slate-300">{row.takeaway}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-4 py-6 text-center text-slate-400" colSpan={6}>
+                    Belum ada data konten untuk periode ini.
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
