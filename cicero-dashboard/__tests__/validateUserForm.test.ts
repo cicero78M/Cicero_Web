@@ -1,15 +1,15 @@
 import { validateNewUser } from "@/utils/validateUserForm";
 
 describe("validateNewUser", () => {
-  it("returns trimmed values for valid input", () => {
+  it("returns sanitized values for valid input", () => {
     const res = validateNewUser({
       nama: "John",
       pangkat: "BRIPDA",
-      nrpNip: " 12345 ",
+      nrpNip: " 12 345-678 ",
       satfung: "SAT LANTAS",
       polsekName: "",
     });
-    expect(res).toEqual({ nrpNip: "12345", satfungValue: "SAT LANTAS" });
+    expect(res).toEqual({ nrpNip: "12345678", satfungValue: "SAT LANTAS" });
   });
 
   it("returns error for non numeric nrp", () => {
@@ -21,6 +21,17 @@ describe("validateNewUser", () => {
       polsekName: "",
     });
     expect(res.error).toBe("NRP hanya boleh angka");
+  });
+
+  it("returns error when sanitized nrp is empty", () => {
+    const res = validateNewUser({
+      nama: "Empty",
+      pangkat: "BRIPDA",
+      nrpNip: " -  ",
+      satfung: "SAT LANTAS",
+      polsekName: "",
+    });
+    expect(res.error).toBe("NRP/NIP wajib diisi");
   });
 
   it("returns error for invalid pangkat", () => {

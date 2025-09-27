@@ -237,7 +237,7 @@ export default function UserDirectoryPage() {
     setSubmitError("");
     setSubmitLoading(true);
     try {
-      const { error: validationError, nrpNip: trimmedNrpNip, satfungValue } =
+      const { error: validationError, nrpNip: sanitizedNrpNip, satfungValue } =
         validateNewUser({ nama, pangkat, nrpNip, satfung, polsekName });
       if (validationError) {
         throw new Error(validationError);
@@ -246,7 +246,7 @@ export default function UserDirectoryPage() {
         client_id,
         nama,
         title: pangkat,
-        user_id: trimmedNrpNip,
+        user_id: sanitizedNrpNip,
         divisi: satfungValue,
       });
       setNama("");
@@ -267,7 +267,7 @@ export default function UserDirectoryPage() {
     setEditingRowId(user.user_id);
     setEditNama(user.nama || "");
     setEditPangkat(user.title || "");
-    setEditNrpNip((user.user_id || "").trim());
+    setEditNrpNip((user.user_id || "").replace(/\D/g, ""));
     setEditSatfung(user.divisi || "");
     setUpdateError("");
   }
@@ -276,15 +276,18 @@ export default function UserDirectoryPage() {
     setUpdateLoading(true);
     setUpdateError("");
     try {
-      const trimmedNrpNip = editNrpNip.trim();
+      const sanitizedNrpNip = editNrpNip.replace(/\D/g, "");
+      if (!sanitizedNrpNip) {
+        throw new Error("NRP/NIP wajib diisi");
+      }
       await updateUser(token || "", userId, {
         nama: editNama,
         title: editPangkat,
         divisi: editSatfung,
-        user_id: trimmedNrpNip,
+        user_id: sanitizedNrpNip,
       });
-      if (userId !== trimmedNrpNip) {
-        await updateUserRoles(token || "", userId, trimmedNrpNip);
+      if (userId !== sanitizedNrpNip) {
+        await updateUserRoles(token || "", userId, sanitizedNrpNip);
       }
       await mutate();
       setEditingRowId(null);
@@ -582,10 +585,8 @@ export default function UserDirectoryPage() {
                   placeholder="NRP/NIP"
                   value={nrpNip}
                   onChange={(e) => {
-                    const { value } = e.target;
-                    if (/^\d*$/.test(value)) {
-                      setNrpNip(value);
-                    }
+                    const sanitizedValue = e.target.value.replace(/\D/g, "");
+                    setNrpNip(sanitizedValue);
                   }}
                   inputMode="numeric"
                   pattern="\\d*"
@@ -696,7 +697,9 @@ export default function UserDirectoryPage() {
                       {editingRowId === u.user_id ? (
                         <input
                           value={editNrpNip}
-                          onChange={(e) => setEditNrpNip(e.target.value.trim())}
+                          onChange={(e) =>
+                            setEditNrpNip(e.target.value.replace(/\D/g, ""))
+                          }
                           placeholder="NRP/NIP"
                           className="w-32 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs font-mono text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
                         />

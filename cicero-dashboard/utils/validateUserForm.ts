@@ -76,8 +76,11 @@ interface ValidationResult {
 }
 
 export function validateNewUser({ nama, pangkat, nrpNip, satfung, polsekName }: NewUserData): ValidationResult {
-  const trimmedNrpNip = nrpNip.trim();
-  if (!/^\d+$/.test(trimmedNrpNip)) {
+  const sanitizedNrpNip = nrpNip.replace(/\D/g, "");
+  if (!sanitizedNrpNip) {
+    return { error: "NRP/NIP wajib diisi" };
+  }
+  if (/[A-Za-z]/.test(nrpNip)) {
     return { error: "NRP hanya boleh angka" };
   }
   if (!PANGKAT_OPTIONS.includes(pangkat)) {
@@ -96,6 +99,6 @@ export function validateNewUser({ nama, pangkat, nrpNip, satfung, polsekName }: 
   if (satfung !== "POLSEK" && !SATFUNG_OPTIONS.includes(satfung)) {
     return { error: "Satfung tidak valid" };
   }
-  return { nrpNip: trimmedNrpNip, satfungValue };
+  return { nrpNip: sanitizedNrpNip, satfungValue };
 }
 
