@@ -18,7 +18,8 @@ const PAGE_SIZE = 25;
  * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
  * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
  * @param {Array} posts - daftar posting IG untuk rekap ORG
- * @param {boolean} showRekapButton - tampilkan tombol salin rekap jika true
+ * @param {boolean} showRekapButton - tampilkan panel aksi rekap jika true
+ * @param {boolean} showCopyButton - tampilkan tombol salin rekap jika true
  * @param {string} clientName - nama client ORG
  */
 const RekapLikesIG = forwardRef(function RekapLikesIG(
@@ -28,6 +29,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     posts = [],
     // tampilkan tombol rekap secara default
     showRekapButton = true,
+    showCopyButton = true,
     clientName = "",
   },
   ref,
@@ -613,12 +615,14 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             >
               Download Rekap
             </button>
-            <button
-              onClick={handleCopyRekap}
-              className="w-full rounded-2xl border border-sky-400/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.35)] transition hover:border-sky-300/60 hover:bg-sky-400/30 md:w-auto"
-            >
-              Salin Rekap
-            </button>
+            {showCopyButton && (
+              <button
+                onClick={handleCopyRekap}
+                className="w-full rounded-2xl border border-sky-400/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.35)] transition hover:border-sky-300/60 hover:bg-sky-400/30 md:w-auto"
+              >
+                Salin Rekap
+              </button>
+            )}
           </div>
         </div>
       )}

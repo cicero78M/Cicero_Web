@@ -184,6 +184,7 @@ export default function RekapLikesIGPage() {
             totalIGPost={rekapSummary.totalIGPost}
             posts={igPosts}
             showRekapButton
+            showCopyButton={false}
             clientName={clientName}
           />
         </div>

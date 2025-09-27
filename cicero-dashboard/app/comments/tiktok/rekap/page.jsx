@@ -437,6 +437,7 @@ export default function RekapKomentarTiktokPage() {
         <RekapKomentarTiktok
           users={chartData}
           totalTiktokPost={rekapSummary.totalTiktokPost}
+          showCopyButton={false}
         />
       </div>
     </div>
