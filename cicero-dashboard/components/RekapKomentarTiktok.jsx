@@ -300,22 +300,52 @@ export default function RekapKomentarTiktok({
 
     const now = new Date();
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
-    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const tanggal = now.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
     const jam = now.toLocaleTimeString("id-ID", { hour12: false });
 
+    const uniqueClients = Array.from(
+      new Set(
+        sortedClients.length
+          ? sortedClients
+          : users.map((u) =>
+              u.nama_client ||
+              u.client_name ||
+              u.client ||
+              bersihkanSatfung(u.divisi || "Lainnya") ||
+              "Lainnya",
+            ),
+      ),
+    );
+    const headerClientName =
+      uniqueClients.length === 0
+        ? "-"
+        : uniqueClients.length === 1
+        ? uniqueClients[0]
+        : uniqueClients.join(", ");
+
     const lines = [
-      "Mohon ijin Komandan,",
+      "*Mohon ijin Komandan,*",
       "",
-      "📋 Rekap Akumulasi Komentar TikTok",
-      `${hari}, ${tanggal}`,
-      `Jam: ${jam}`,
+      "📋 *Rekapitulasi Akumulasi Komentar TikTok*",
+      "Konten dari akun official Direktorat Binmas",
+      `Oleh Personel ${headerClientName}`,
+      `Hari/Tanggal: ${hari}, ${tanggal}`,
+      `Waktu: ${jam} WIB`,
       "",
-      `Jumlah Konten TikTok: ${totalTiktokPostCount}`,
-      `Jumlah Total Personil : ${totalUser} pers`,
-      `Sudah melaksanakan : ${totalSudahKomentar} pers`,
-      `Melaksanakan kurang lengkap : ${totalKurangKomentar} pers`,
-      `Belum melaksanakan : ${totalBelumKomentar} pers`,
-      `Belum Update Username TikTok : ${totalTanpaUsername} pers`,
+      "Ringkasan Data:",
+      "",
+      `- Jumlah Konten TikTok : ${totalTiktokPostCount}`,
+      `- Jumlah Total Personel : ${totalUser} pers`,
+      `- Sudah Melaksanakan : ${totalSudahKomentar} pers`,
+      `- Melaksanakan Kurang Lengkap : ${totalKurangKomentar} pers`,
+      `- Belum Melaksanakan : ${totalBelumKomentar} pers`,
+      `- Belum Update Username TikTok : ${totalTanpaUsername} pers`,
+      "",
+      "Rincian terperinci sebagai berikut:",
       "",
     ];
 

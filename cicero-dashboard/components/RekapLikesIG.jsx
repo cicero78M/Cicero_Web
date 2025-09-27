@@ -296,7 +296,11 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
     const now = new Date();
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
-    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const tanggal = now.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
     const jam = now.toLocaleTimeString("id-ID", { hour12: false });
     const jumlahKonten =
       Array.isArray(posts) && posts.length > 0 ? posts.length : totalIGPost;
@@ -316,23 +320,30 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             .join("\n")
         : "-";
 
+    const headerClientName = clientName || "-";
+
     const lines = [
-      "Mohon ijin Komandan,",
+      "*Mohon ijin Komandan,*",
       "",
-      "📋 Rekap Akumulasi Likes Instagram",
-      `Polres: ${clientName || "-"}`,
-      `${hari}, ${tanggal}`,
-      `Jam: ${jam}`,
+      "📋 *Rekapitulasi Akumulasi Likes Instagram*",
+      "Konten dari akun official Direktorat Binmas",
+      `Oleh Personel ${headerClientName}`,
+      `Hari/Tanggal: ${hari}, ${tanggal}`,
+      `Waktu: ${jam} WIB`,
       "",
-      `Jumlah Konten: ${jumlahKonten}`,
+      "Ringkasan Data:",
+      "",
+      `- Jumlah Konten Instagram : ${jumlahKonten}`,
+      `- Jumlah Total Personel : ${totalUser} pers`,
+      `- Sudah Melaksanakan : ${totalSudahLike} pers`,
+      `- Melaksanakan Kurang Lengkap : ${totalKurangLike} pers`,
+      `- Belum Melaksanakan : ${totalBelumLike} pers`,
+      `- Belum Update Username Instagram : ${totalTanpaUsername} pers`,
+      "",
       "Daftar Link Konten:",
       linkKonten,
       "",
-      `Jumlah Total Personil : ${totalUser} pers`,
-      `Sudah melaksanakan : ${totalSudahLike} pers`,
-      `Melaksanakan kurang lengkap : ${totalKurangLike} pers`,
-      `Belum melaksanakan : ${totalBelumLike} pers`,
-      `Belum Update Username Instagram : ${totalTanpaUsername} pers`,
+      "Rincian terperinci sebagai berikut:",
       "",
     ];
 
