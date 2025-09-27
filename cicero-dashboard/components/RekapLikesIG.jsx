@@ -329,7 +329,6 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       "Mohon ijin Komandan,",
       "📋 Laporan Rekap Likes Instagram Ditbinmas",
       "Sumber: Konten akun official Direktorat Binmas",
-      `Dilaporkan oleh personel: ${headerClientName}`,
       periodeLabel ? `Periode data: ${periodeLabel}` : null,
       viewLabel ? `Mode tampilan: ${viewLabel}` : null,
       `Waktu kompilasi: ${jam} WIB`,
