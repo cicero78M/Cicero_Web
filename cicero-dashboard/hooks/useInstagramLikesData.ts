@@ -47,6 +47,7 @@ export default function useInstagramLikesData({
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
   const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] = useState(false);
+  const [isDitbinmasRole, setIsDitbinmasRole] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -71,12 +72,15 @@ export default function useInstagramLikesData({
     }
 
     const roleLower = String(role).toLowerCase();
-    const isDitbinmasRole = roleLower === "ditbinmas";
+    const isDitbinmasRoleValue = roleLower === "ditbinmas";
+    setIsDitbinmasRole(isDitbinmasRoleValue);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
-    setIsDitbinmasScopedClient(isDitbinmasRole && !isDitbinmasClient);
-    const dashboardClientId = isDitbinmasRole ? "DITBINMAS" : userClientId;
+    setIsDitbinmasScopedClient(isDitbinmasRoleValue && !isDitbinmasClient);
+    const dashboardClientId = isDitbinmasRoleValue
+      ? "DITBINMAS"
+      : userClientId;
 
     async function fetchData() {
       try {
@@ -88,7 +92,7 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (isDitbinmasRole) {
+        if (isDitbinmasRoleValue) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
@@ -138,7 +142,7 @@ export default function useInstagramLikesData({
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const dir =
-          isDitbinmasRole ||
+          isDitbinmasRoleValue ||
           (String(profile.client_type || "").toUpperCase() === "DIREKTORAT");
         if (controller.signal.aborted) return;
         setIsDirectorate(dir);
@@ -330,6 +334,7 @@ export default function useInstagramLikesData({
     rekapSummary,
     isDirectorate,
     isDitbinmasScopedClient,
+    isDitbinmasRole,
     clientName,
     loading,
     error,
