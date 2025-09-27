@@ -589,7 +589,7 @@ export default function UserDirectoryPage() {
                     setNrpNip(sanitizedValue);
                   }}
                   inputMode="numeric"
-                  pattern="\\d*"
+                  pattern="[0-9]*"
                   required
                   className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
                 />
