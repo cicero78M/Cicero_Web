@@ -265,7 +265,8 @@ export default function RekapKomentarTiktokPage() {
 
         let filteredUsers = users;
         const shouldFilterByClient =
-          Boolean(clientIdLower) && (!isDirectorate || isScopedDirectorateClient);
+          Boolean(clientIdLower) &&
+          (isDitbinmasRole || !isDirectorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value) =>
             String(value || "").trim().toLowerCase();
