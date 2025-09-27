@@ -178,17 +178,36 @@ export default function RekapKomentarTiktokPage() {
         );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
+        const normalizedRekapClientId = String(rekapClientId || "")
+          .trim()
+          .toUpperCase();
+        const filteredUsers = normalizedRekapClientId
+          ? users.filter((u) => {
+              const possibleIds = [
+                u.client_id,
+                u.clientId,
+                u.client,
+                u.clientID,
+                u.clientid,
+              ];
+              return possibleIds.some((cid) =>
+                String(cid || "").trim().toUpperCase() ===
+                normalizedRekapClientId,
+              );
+            })
+          : users;
+
         // map client_id to client name for satker column
         const nameMap = await getClientNames(
           token,
-          users.map((u) =>
+          filteredUsers.map((u) =>
             String(
               u.client_id || u.clientId || u.client || u.clientID || "",
             ),
           ),
           controller.signal,
         );
-        const enrichedUsers = users.map((u) => {
+        const enrichedUsers = filteredUsers.map((u) => {
           const cid = String(
             u.client_id || u.clientId || u.client || u.clientID || "",
           );
@@ -209,10 +228,10 @@ export default function RekapKomentarTiktokPage() {
           statsData.tiktokPosts ||
           0;
         const isZeroPost = (totalTiktokPost || 0) === 0;
-        const totalUser = users.length;
+        const totalUser = filteredUsers.length;
         const totalSudahKomentar = isZeroPost
           ? 0
-          : users.filter(
+          : filteredUsers.filter(
               (u) => Number(u.jumlah_komentar) > 0 || u.exception
             ).length;
         const totalBelumKomentar = totalUser - totalSudahKomentar;
