@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getDashboardStats,
   getRekapKomentarTiktok,
@@ -28,6 +28,43 @@ function getLocalMonthString(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
+}
+
+const fullDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const monthFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "long",
+  year: "numeric",
+});
+
+function formatDisplayDate(value) {
+  if (!value || typeof value !== "string") return "-";
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+  if (!year || !month || !day) return value;
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return value;
+  return fullDateFormatter.format(date);
+}
+
+function formatDisplayMonth(value) {
+  if (!value || typeof value !== "string") return "-";
+  const [year, month] = value.split("-").map((part) => Number(part));
+  if (!year || !month) return value;
+  const date = new Date(year, month - 1, 1);
+  if (Number.isNaN(date.getTime())) return value;
+  return monthFormatter.format(date);
+}
+
+function formatDisplayRange(start, end) {
+  if (!start) return "-";
+  if (!end || start === end) {
+    return formatDisplayDate(start);
+  }
+  return `${formatDisplayDate(start)} s.d. ${formatDisplayDate(end)}`;
 }
 
 export default function RekapKomentarTiktokPage() {
@@ -116,6 +153,22 @@ export default function RekapKomentarTiktokPage() {
 
   const normalizedCustomDate =
     viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
+
+  const reportPeriodeLabel = useMemo(() => {
+    if (viewBy === "custom_range") {
+      return formatDisplayRange(normalizedRangeStart, normalizedRangeEnd);
+    }
+    if (viewBy === "month") {
+      return formatDisplayMonth(normalizedMonthlyDate);
+    }
+    return formatDisplayDate(normalizedDailyDate);
+  }, [
+    viewBy,
+    normalizedRangeStart,
+    normalizedRangeEnd,
+    normalizedMonthlyDate,
+    normalizedDailyDate,
+  ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -265,8 +318,7 @@ export default function RekapKomentarTiktokPage() {
 
         let filteredUsers = users;
         const shouldFilterByClient =
-          Boolean(clientIdLower) &&
-          (isDitbinmasRole || !isDirectorate || isScopedDirectorateClient);
+          Boolean(clientIdLower) && (!isDirectorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value) =>
             String(value || "").trim().toLowerCase();
@@ -282,6 +334,7 @@ export default function RekapKomentarTiktokPage() {
               (cid) => normalizeValue(cid) === clientIdLower,
             );
           });
+
         }
 
         const clientIdsForNames = Array.from(
@@ -438,6 +491,11 @@ export default function RekapKomentarTiktokPage() {
           users={chartData}
           totalTiktokPost={rekapSummary.totalTiktokPost}
           showCopyButton={false}
+          reportContext={{
+            periodeLabel: reportPeriodeLabel,
+            viewLabel:
+              viewOptions.find((option) => option.value === viewBy)?.label,
+          }}
         />
       </div>
     </div>
