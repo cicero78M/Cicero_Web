@@ -330,24 +330,22 @@ export default function RekapKomentarTiktok({
         : uniqueClients.join(", ");
 
     const headerLines = [
-      "*Mohon ijin Komandan,*",
-      "",
-      "📋 *Laporan Rekap Komentar TikTok Ditbinmas*",
+      "Mohon ijin Komandan,",
+      "📋 Laporan Rekap Komentar TikTok Ditbinmas",
       "Sumber: Konten akun official Direktorat Binmas",
       `Dilaporkan oleh personel: ${headerClientName}`,
-      periodeLabel ? `Periode data: ${periodeLabel}` : null,
+      periodeLabel
+        ? `Periode data: ${periodeLabel}`
+        : `Periode data: ${hari}, ${tanggal}`,
       viewLabel ? `Mode tampilan: ${viewLabel}` : null,
       `Waktu kompilasi: ${jam} WIB`,
-      "",
       "Ringkasan Data:",
-      "",
       `- Jumlah Konten TikTok : ${totalTiktokPostCount}`,
       `- Jumlah Total Personel : ${totalUser} pers`,
       `- Sudah Melaksanakan : ${totalSudahKomentar} pers`,
       `- Melaksanakan Kurang Lengkap : ${totalKurangKomentar} pers`,
       `- Belum Melaksanakan : ${totalBelumKomentar} pers`,
       `- Belum Update Username TikTok : ${totalTanpaUsername} pers`,
-      "",
       "Rincian terperinci sebagai berikut:",
       "",
     ].filter(Boolean);
@@ -367,7 +365,7 @@ export default function RekapKomentarTiktok({
         return;
       }
 
-      lines.push(`*${client.toUpperCase()}*`);
+      lines.push(client.toUpperCase());
 
       const pushSection = (title, entries, formatter) => {
         if (!entries.length) return;
