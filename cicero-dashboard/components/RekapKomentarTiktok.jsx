@@ -14,7 +14,11 @@ function bersihkanSatfung(divisi = "") {
 
 const PAGE_SIZE = 25;
 
-export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 }) {
+export default function RekapKomentarTiktok({
+  users = [],
+  totalTiktokPost = 0,
+  showCopyButton = true,
+}) {
   const totalTiktokPostCount = Number(totalTiktokPost) || 0;
   const summary = useMemo(() => {
     const totalUser = users.length;
@@ -585,12 +589,14 @@ export default function RekapKomentarTiktok({ users = [], totalTiktokPost = 0 })
           >
             Download Rekap
           </button>
-          <button
-            onClick={handleCopyRekap}
-            className="w-full rounded-2xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-200 transition hover:border-fuchsia-300/60 hover:bg-fuchsia-500/20 sm:w-auto"
-          >
-            Salin Rekap
-          </button>
+          {showCopyButton && (
+            <button
+              onClick={handleCopyRekap}
+              className="w-full rounded-2xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-200 transition hover:border-fuchsia-300/60 hover:bg-fuchsia-500/20 sm:w-auto"
+            >
+              Salin Rekap
+            </button>
+          )}
         </div>
       </div>
     </div>
