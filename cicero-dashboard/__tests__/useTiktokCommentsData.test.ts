@@ -94,7 +94,7 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 
-  it("keeps aggregated directorate data for the root Ditbinmas account", async () => {
+  it("filters directorate data for the root Ditbinmas account to match recap", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITBINMAS");
     localStorage.setItem("user_role", "ditbinmas");
@@ -145,10 +145,9 @@ describe("useTiktokCommentsData", () => {
 
     expect(result.current.isDirectorate).toBe(true);
     expect(result.current.isDitbinmasScopedClient).toBe(false);
-    expect(result.current.chartData).toHaveLength(3);
+    expect(result.current.chartData).toHaveLength(1);
     const clientIds = result.current.chartData.map((item: any) => item.client_id);
-    expect(clientIds).toEqual(
-      expect.arrayContaining(["CLIENT_A", "CLIENT_B", "DITBINMAS"]),
-    );
+    expect(clientIds).toEqual(["DITBINMAS"]);
+    expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 });
