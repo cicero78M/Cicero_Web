@@ -18,7 +18,9 @@ export default function RekapKomentarTiktok({
   users = [],
   totalTiktokPost = 0,
   showCopyButton = true,
+  reportContext = {},
 }) {
+  const { periodeLabel, viewLabel } = reportContext || {};
   const totalTiktokPostCount = Number(totalTiktokPost) || 0;
   const summary = useMemo(() => {
     const totalUser = users.length;
@@ -327,14 +329,15 @@ export default function RekapKomentarTiktok({
         ? uniqueClients[0]
         : uniqueClients.join(", ");
 
-    const lines = [
+    const headerLines = [
       "*Mohon ijin Komandan,*",
       "",
-      "📋 *Rekapitulasi Akumulasi Komentar TikTok*",
-      "Konten dari akun official Direktorat Binmas",
-      `Oleh Personel ${headerClientName}`,
-      `Hari/Tanggal: ${hari}, ${tanggal}`,
-      `Waktu: ${jam} WIB`,
+      "📋 *Laporan Rekap Komentar TikTok Ditbinmas*",
+      "Sumber: Konten akun official Direktorat Binmas",
+      `Dilaporkan oleh personel: ${headerClientName}`,
+      periodeLabel ? `Periode data: ${periodeLabel}` : null,
+      viewLabel ? `Mode tampilan: ${viewLabel}` : null,
+      `Waktu kompilasi: ${jam} WIB`,
       "",
       "Ringkasan Data:",
       "",
@@ -347,7 +350,9 @@ export default function RekapKomentarTiktok({
       "",
       "Rincian terperinci sebagai berikut:",
       "",
-    ];
+    ].filter(Boolean);
+
+    const lines = [...headerLines];
 
     if (tidakAdaPost) {
       lines.push("Catatan: Tidak ada posting TikTok pada periode ini.");
@@ -356,34 +361,52 @@ export default function RekapKomentarTiktok({
 
     sortedClients.forEach((client) => {
       const { Sudah, Kurang, Belum, UsernameKosong } = clients[client];
-      lines.push(
-        `${client.toUpperCase()} : ${Sudah.length}/${Kurang.length}/${Belum.length}/${UsernameKosong.length}`,
-      );
-      lines.push(`Sudah : ${Sudah.length}`);
-      sortByName(Sudah).forEach((u) => {
-        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        const divisi = bersihkanSatfung(u.divisi || "-");
-        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}, ${u.jumlah_komentar} komentar`);
-      });
-      lines.push(`Kurang : ${Kurang.length}`);
-      sortByName(Kurang).forEach((u) => {
-        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        const divisi = bersihkanSatfung(u.divisi || "-");
-        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}, ${u.jumlah_komentar} komentar`);
-      });
-      lines.push(`Belum : ${Belum.length}`);
-      sortByName(Belum).forEach((u) => {
-        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        const username = String(u.username || "-").trim() || "-";
-        const divisi = bersihkanSatfung(u.divisi || "-");
-        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}, ${username}`);
-      });
-      lines.push(`Username Kosong : ${UsernameKosong.length}`);
-      sortByName(UsernameKosong).forEach((u) => {
-        const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        const divisi = bersihkanSatfung(u.divisi || "-");
-        lines.push(`- ${name}${divisi ? ` (${divisi})` : ""}`);
-      });
+      const totalEntries =
+        Sudah.length + Kurang.length + Belum.length + UsernameKosong.length;
+      if (totalEntries === 0) {
+        return;
+      }
+
+      lines.push(`*${client.toUpperCase()}*`);
+
+      const pushSection = (title, entries, formatter) => {
+        if (!entries.length) return;
+        lines.push(`${title} (${entries.length} personel):`);
+        formatter(entries).forEach((entry) => lines.push(entry));
+        lines.push("");
+      };
+
+      const formatKomentar = (arr) =>
+        sortByName(arr).map((u) => {
+          const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+          const divisi = bersihkanSatfung(u.divisi || "-");
+          const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+          return `- ${name}${divisi ? ` (${divisi})` : ""}, ${jumlahKomentar} komentar`;
+        });
+
+      const formatBelum = (arr) =>
+        sortByName(arr).map((u) => {
+          const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+          const username = String(u.username || "-").trim() || "-";
+          const divisi = bersihkanSatfung(u.divisi || "-");
+          return `- ${name}${divisi ? ` (${divisi})` : ""}, ${username}`;
+        });
+
+      const formatUsernameKosong = (arr) =>
+        sortByName(arr).map((u) => {
+          const name = u.title ? `${u.title} ${u.nama}` : u.nama;
+          const divisi = bersihkanSatfung(u.divisi || "-");
+          return `- ${name}${divisi ? ` (${divisi})` : ""}`;
+        });
+
+      pushSection("Sudah", Sudah, formatKomentar);
+      pushSection("Kurang", Kurang, formatKomentar);
+      pushSection("Belum", Belum, formatBelum);
+      pushSection("Username belum tersedia", UsernameKosong, formatUsernameKosong);
+
+      if (lines[lines.length - 1] === "") {
+        lines.pop();
+      }
       lines.push("");
     });
 
