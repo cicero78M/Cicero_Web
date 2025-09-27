@@ -1,12 +1,5 @@
 "use client";
-import { cloneElement, useEffect, useState } from "react";
-import {
-  getDashboardStats,
-  getRekapKomentarTiktok,
-  getClientProfile,
-  getClientNames,
-  getUserDirectory,
-} from "@/utils/api";
+import { cloneElement, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -15,10 +8,7 @@ import { showToast } from "@/utils/showToast";
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import ViewDataSelector, {
-  getPeriodeDateForView,
-  VIEW_OPTIONS,
-} from "@/components/ViewDataSelector";
+import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 import { cn } from "@/lib/utils";
 import {
   Music,
@@ -29,31 +19,37 @@ import {
   UserX,
   Copy,
 } from "lucide-react";
+import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
-  const [chartData, setChartData] = useState([]);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState("");
   const [viewBy, setViewBy] = useState("today");
   const today = new Date().toISOString().split("T")[0];
   const [customDate, setCustomDate] = useState(today);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
-
-  const [rekapSummary, setRekapSummary] = useState({
-    totalUser: 0,
-    totalSudahKomentar: 0,
-    totalKurangKomentar: 0,
-    totalBelumKomentar: 0,
-    totalTanpaUsername: 0,
-    totalTiktokPost: 0,
-  });
-  const [isDirectorate, setIsDirectorate] = useState(false);
-  const [clientName, setClientName] = useState("");
-
   const viewOptions = VIEW_OPTIONS;
+
+  const {
+    chartData,
+    rekapSummary,
+    isDirectorate,
+    clientName,
+    isDitbinmasRole,
+    isDitbinmasScopedClient,
+    loading,
+    error,
+  } = useTiktokCommentsData({ viewBy, customDate, fromDate, toDate });
+
+  if (loading) return <Loader />;
+  if (error)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 text-slate-100">
+        <div className="rounded-3xl border border-red-500/40 bg-slate-900/70 px-8 py-6 text-center text-red-200 shadow-[0_0_35px_rgba(248,113,113,0.25)]">
+          {error}
+        </div>
+      </div>
+    );
 
   const totalUser = Number(rekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
@@ -65,254 +61,13 @@ export default function TiktokEngagementInsightPage() {
     return (numerator / denominator) * 100;
   };
 
-  useEffect(() => {
-    setError("");
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("cicero_token")
-        : null;
-    const userClientId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("client_id")
-        : null;
-    const role =
-      typeof window !== "undefined"
-        ? localStorage.getItem("user_role")
-        : null;
-    if (!token || !userClientId) {
-      setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
-      setIsInitialLoad(false);
-      setIsRefreshing(false);
-      return;
-    }
-
-    const roleLower = String(role || "").toLowerCase();
-    const clientIdUpper = String(userClientId || "").toUpperCase();
-    const isDitbinmasRole = roleLower === "ditbinmas";
-    const isRootDitbinmas = isDitbinmasRole && clientIdUpper === "DITBINMAS";
-    const taskClientId = isRootDitbinmas ? "DITBINMAS" : userClientId;
-
-    if (!isInitialLoad) {
-      setIsRefreshing(true);
-    }
-
-    let isCancelled = false;
-
-    async function fetchData() {
-      try {
-        const selectedDate =
-          viewBy === "custom_range"
-            ? { startDate: fromDate, endDate: toDate }
-            : customDate;
-        const { periode, date, startDate, endDate } =
-          getPeriodeDateForView(viewBy, selectedDate);
-
-        const statsData = await getDashboardStats(
-          token,
-          periode,
-          date,
-          startDate,
-          endDate,
-          taskClientId,
-        );
-
-        const client_id = userClientId;
-
-        const profileRes = await getClientProfile(token, client_id);
-        const profile =
-          profileRes.client || profileRes.profile || profileRes || {};
-        const isDirectorateProfile =
-          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
-        const allowDirectorateScope =
-          isDirectorateProfile || isRootDitbinmas;
-        if (isCancelled) return;
-        setIsDirectorate(allowDirectorateScope);
-        setClientName(
-          profile.nama ||
-            profile.nama_client ||
-            profile.client_name ||
-            profile.client ||
-            "",
-        );
-
-        let users = [];
-        if (allowDirectorateScope) {
-          const directoryRes = await getUserDirectory(token, client_id);
-          const dirData =
-            directoryRes.data || directoryRes.users || directoryRes || [];
-          const expectedRole = String(client_id).toLowerCase();
-          const clientIds = Array.from(
-            new Set(
-              dirData
-                .filter(
-                  (u) =>
-                    String(
-                      u.role ||
-                        u.user_role ||
-                        u.userRole ||
-                        u.roleName ||
-                        "",
-                    ).toLowerCase() === expectedRole,
-                )
-                .map((u) =>
-                  String(
-                    u.client_id ||
-                      u.clientId ||
-                      u.clientID ||
-                      u.client ||
-                      "",
-                  ),
-                )
-                .filter(Boolean),
-            ),
-          );
-          if (!clientIds.includes(String(client_id))) {
-            clientIds.push(String(client_id));
-          }
-          const rekapAll = await Promise.all(
-            clientIds.map((cid) =>
-              getRekapKomentarTiktok(
-                token,
-                cid,
-                periode,
-                date,
-                startDate,
-                endDate,
-              ).catch(() => ({ data: [] })),
-            ),
-          );
-          users = rekapAll.flatMap((res) =>
-            Array.isArray(res?.data)
-              ? res.data
-              : Array.isArray(res)
-              ? res
-              : [],
-          );
-        } else {
-          const rekapRes = await getRekapKomentarTiktok(
-            token,
-            client_id,
-            periode,
-            date,
-            startDate,
-            endDate,
-          );
-          users = Array.isArray(rekapRes?.data)
-            ? rekapRes.data
-            : Array.isArray(rekapRes)
-            ? rekapRes
-            : [];
-        }
-
-        let enrichedUsers = users;
-        if (allowDirectorateScope) {
-          const nameMap = await getClientNames(
-            token,
-            users.map((u) =>
-              String(
-                u.client_id || u.clientId || u.clientID || u.client || "",
-              ),
-            ),
-          );
-          enrichedUsers = users.map((u) => {
-            const cName =
-              nameMap[
-                String(
-                  u.client_id || u.clientId || u.clientID || u.client || "",
-                )
-              ] ||
-              u.nama_client ||
-              u.client_name ||
-              u.client;
-            return {
-              ...u,
-              nama_client: cName,
-              client_name: cName,
-            };
-          });
-        }
-
-        const totalUser = enrichedUsers.length;
-        const totalTiktokPost =
-          statsData?.ttPosts ||
-          statsData?.tiktokPosts ||
-          statsData.ttPosts ||
-          statsData.tiktokPosts ||
-          0;
-        const isZeroPost = (totalTiktokPost || 0) === 0;
-        let totalSudahKomentar = 0;
-        let totalKurangKomentar = 0;
-        let totalBelumKomentar = 0;
-        let totalTanpaUsername = 0;
-        enrichedUsers.forEach((u) => {
-          const username = String(u.username || "").trim();
-          if (!username) {
-            totalTanpaUsername += 1;
-            return;
-          }
-          const jumlah = Number(u.jumlah_komentar) || 0;
-          if (isZeroPost) {
-            totalBelumKomentar += 1;
-            return;
-          }
-          if (jumlah >= totalTiktokPost * 0.5) {
-            totalSudahKomentar += 1;
-          } else if (jumlah > 0) {
-            totalKurangKomentar += 1;
-          } else {
-            totalBelumKomentar += 1;
-          }
-        });
-
-        if (isCancelled) return;
-
-        setRekapSummary({
-          totalUser,
-          totalSudahKomentar,
-          totalKurangKomentar,
-          totalBelumKomentar,
-          totalTanpaUsername,
-          totalTiktokPost,
-        });
-        setChartData(enrichedUsers);
-      } catch (err) {
-        if (!isCancelled) {
-          setError("Gagal mengambil data: " + (err.message || err));
-        }
-      } finally {
-        if (isCancelled) return;
-        if (isInitialLoad) {
-          setIsInitialLoad(false);
-        }
-        setIsRefreshing(false);
-      }
-    }
-
-    fetchData();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [viewBy, customDate, fromDate, toDate]);
-
-  if (isInitialLoad) return <Loader />;
-  if (error)
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
-        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-rose-500/40 bg-slate-900/80 p-8 text-center shadow-[0_0_40px_rgba(244,63,94,0.25)]">
-          <div className="absolute inset-x-12 -top-8 h-24 rounded-full bg-gradient-to-b from-rose-500/30 to-transparent blur-2xl" />
-          <div className="relative space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-rose-200/80">
-              System Alert
-            </p>
-            <p className="text-lg font-semibold text-rose-100">{error}</p>
-            <p className="text-sm text-slate-300">
-              Coba muat ulang halaman atau periksa kembali koneksi data Anda.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+  const shouldGroupByClient =
+    isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
+  const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
+  const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
+  const directorateTitle = shouldGroupByClient
+    ? "POLRES JAJARAN"
+    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
 
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
   const DIRECTORATE_NAME = "direktorat binmas";
@@ -436,7 +191,7 @@ export default function TiktokEngagementInsightPage() {
   return (
     <div
       className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100"
-      aria-busy={isRefreshing}
+      aria-busy={loading}
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 top-[-120px] h-[420px] w-[420px] rounded-full bg-fuchsia-500/20 blur-[160px]" />
@@ -444,18 +199,6 @@ export default function TiktokEngagementInsightPage() {
         <div className="absolute inset-x-0 bottom-[-180px] h-[320px] bg-gradient-to-t from-slate-900 via-slate-950/60 to-transparent" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-10">
-        {isRefreshing && (
-          <div className="pointer-events-none absolute inset-x-0 top-6 z-20 flex justify-center sm:justify-end">
-            <div className="flex items-center gap-2 rounded-full border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.25)]">
-              <span
-                className="h-4 w-4 rounded-full border-2 border-cyan-400/80 border-t-transparent animate-spin"
-                aria-hidden="true"
-              ></span>
-              Memuat data
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-1 flex-col gap-10">
           <div className="space-y-3">
             <h1 className="text-3xl font-semibold leading-tight text-slate-50 md:text-4xl">
@@ -490,7 +233,6 @@ export default function TiktokEngagementInsightPage() {
                   setCustomDate(val);
                 }
               }}
-              disabled={isRefreshing}
               className="justify-start gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur"
               labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
               controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
@@ -545,12 +287,16 @@ export default function TiktokEngagementInsightPage() {
 
           {isDirectorate ? (
             <ChartBox
-              title="POLRES JAJARAN"
+              title={directorateTitle}
               users={chartData}
               totalPost={rekapSummary.totalTiktokPost}
-              groupBy="client_id"
-              orientation="horizontal"
+              groupBy={directorateGroupBy}
+              orientation={directorateOrientation}
               sortBy="percentage"
+              narrative=
+                shouldGroupByClient
+                  ? undefined
+                  : "Grafik ini menampilkan perbandingan capaian komentar berdasarkan divisi/satfung."
             />
           ) : (
             <div className="flex flex-col gap-6">
