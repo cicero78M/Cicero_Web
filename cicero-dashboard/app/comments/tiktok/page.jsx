@@ -255,10 +255,11 @@ export default function TiktokEngagementInsightPage() {
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
               sortBy="percentage"
-              narrative=
+              narrative={
                 shouldGroupByClient
                   ? undefined
                   : "Grafik ini menampilkan perbandingan capaian komentar berdasarkan divisi/satfung."
+              }
             />
           ) : (
             <div className="flex flex-col gap-6">
