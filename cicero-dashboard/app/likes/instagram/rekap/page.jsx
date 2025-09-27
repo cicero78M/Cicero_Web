@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
@@ -21,6 +21,43 @@ function getLocalMonthString(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
+}
+
+const fullDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const monthFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "long",
+  year: "numeric",
+});
+
+function formatDisplayDate(value) {
+  if (!value || typeof value !== "string") return "-";
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+  if (!year || !month || !day) return value;
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return value;
+  return fullDateFormatter.format(date);
+}
+
+function formatDisplayMonth(value) {
+  if (!value || typeof value !== "string") return "-";
+  const [year, month] = value.split("-").map((part) => Number(part));
+  if (!year || !month) return value;
+  const date = new Date(year, month - 1, 1);
+  if (Number.isNaN(date.getTime())) return value;
+  return monthFormatter.format(date);
+}
+
+function formatDisplayRange(start, end) {
+  if (!start) return "-";
+  if (!end || start === end) {
+    return formatDisplayDate(start);
+  }
+  return `${formatDisplayDate(start)} s.d. ${formatDisplayDate(end)}`;
 }
 
 export default function RekapLikesIGPage() {
@@ -105,6 +142,22 @@ export default function RekapLikesIGPage() {
   const normalizedCustomDate =
     viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
 
+  const reportPeriodeLabel = useMemo(() => {
+    if (viewBy === "custom_range") {
+      return formatDisplayRange(normalizedRangeStart, normalizedRangeEnd);
+    }
+    if (viewBy === "month") {
+      return formatDisplayMonth(normalizedMonthlyDate);
+    }
+    return formatDisplayDate(normalizedDailyDate);
+  }, [
+    viewBy,
+    normalizedRangeStart,
+    normalizedRangeEnd,
+    normalizedMonthlyDate,
+    normalizedDailyDate,
+  ]);
+
   const {
     chartData,
     loading,
@@ -186,6 +239,11 @@ export default function RekapLikesIGPage() {
             showRekapButton
             showCopyButton={false}
             clientName={clientName}
+            reportContext={{
+              periodeLabel: reportPeriodeLabel,
+              viewLabel:
+                viewOptions.find((option) => option.value === viewBy)?.label,
+            }}
           />
         </div>
       </div>

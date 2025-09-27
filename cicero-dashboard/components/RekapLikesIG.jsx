@@ -21,6 +21,7 @@ const PAGE_SIZE = 25;
  * @param {boolean} showRekapButton - tampilkan panel aksi rekap jika true
  * @param {boolean} showCopyButton - tampilkan tombol salin rekap jika true
  * @param {string} clientName - nama client ORG
+ * @param {{ periodeLabel?: string, viewLabel?: string }} reportContext - konteks laporan untuk header rekap
  */
 const RekapLikesIG = forwardRef(function RekapLikesIG(
   {
@@ -31,9 +32,11 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     showRekapButton = true,
     showCopyButton = true,
     clientName = "",
+    reportContext = {},
   },
   ref,
 ) {
+  const { periodeLabel, viewLabel } = reportContext || {};
   const sortedUsers = useMemo(() => {
     const getClientIdentifier = (user) => {
       const rawClientId =
@@ -320,19 +323,22 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             .join("\n")
         : "-";
 
-    const headerClientName = clientName || "-";
+    const headerClientName = clientName ? String(clientName).trim() : "-";
+
+    const headerLines = [
+      "Mohon ijin Komandan,",
+      "📋 Laporan Rekap Likes Instagram Ditbinmas",
+      "Sumber: Konten akun official Direktorat Binmas",
+      `Dilaporkan oleh personel: ${headerClientName}`,
+      periodeLabel ? `Periode data: ${periodeLabel}` : null,
+      viewLabel ? `Mode tampilan: ${viewLabel}` : null,
+      `Waktu kompilasi: ${jam} WIB`,
+      "",
+    ].filter(Boolean);
 
     const lines = [
-      "*Mohon ijin Komandan,*",
-      "",
-      "📋 *Rekapitulasi Akumulasi Likes Instagram*",
-      "Konten dari akun official Direktorat Binmas",
-      `Oleh Personel ${headerClientName}`,
-      `Hari/Tanggal: ${hari}, ${tanggal}`,
-      `Waktu: ${jam} WIB`,
-      "",
+      ...headerLines,
       "Ringkasan Data:",
-      "",
       `- Jumlah Konten Instagram : ${jumlahKonten}`,
       `- Jumlah Total Personel : ${totalUser} pers`,
       `- Sudah Melaksanakan : ${totalSudahLike} pers`,
