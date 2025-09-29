@@ -27,6 +27,21 @@ import {
 } from "@/utils/api";
 import { cn } from "@/lib/utils";
 
+const normalizeNumericInput = (value) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === "string") {
+    const sanitized = value.replace(/[^0-9,.-]+/g, "").replace(/,/g, ".");
+    const parsed = parseFloat(sanitized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  const coerced = Number(value);
+  return Number.isFinite(coerced) ? coerced : 0;
+};
+
 const formatCompactNumber = (value) => {
   const numericValue = typeof value === "number" ? value : Number(value);
   if (!numericValue || Number.isNaN(numericValue)) return "0";
@@ -1676,6 +1691,8 @@ export default function ExecutiveSummaryPage() {
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
           {platforms.length > 0 ? (
             platforms.map((platform) => {
+              const engagementRate = normalizeNumericInput(platform.engagementRate);
+
               const primaryMetrics = [
                 {
                   key: "likes",
@@ -1692,7 +1709,7 @@ export default function ExecutiveSummaryPage() {
                 {
                   key: "engagement",
                   label: "Engagement",
-                  value: `${Number(platform.engagementRate ?? 0).toFixed(2)}%`,
+                  value: `${engagementRate.toFixed(2)}%`,
                   accent: "text-fuchsia-300",
                 },
               ];
