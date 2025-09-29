@@ -95,6 +95,31 @@ const formatPercent = (value) => {
   })}%`;
 };
 
+const CompletionTooltip = ({ active, payload }) => {
+  if (!active || !payload || payload.length === 0) {
+    return null;
+  }
+
+  const data = payload?.[0]?.payload;
+  if (!data) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-700/60 bg-slate-900/90 px-4 py-3 text-xs text-slate-200 shadow-xl">
+      <p className="font-semibold text-slate-100">{data.fullDivision}</p>
+      <p className="mt-2 text-slate-300">
+        Rasio Kelengkapan: {formatPercent(data.completion)}
+      </p>
+      <p className="text-slate-400">Instagram Lengkap: {formatPercent(data.instagram)}</p>
+      <p className="text-slate-400">TikTok Lengkap: {formatPercent(data.tiktok)}</p>
+      <p className="mt-1 text-slate-500">
+        Total Personil: {formatNumber(data.total, { maximumFractionDigits: 0 })}
+      </p>
+    </div>
+  );
+};
+
 const beautifyDivisionName = (rawName) => {
   const cleaned = (rawName || "").toString().replace(/[_]+/g, " ").trim();
   if (!cleaned) {
@@ -315,13 +340,39 @@ const computeUserInsight = (users = []) => {
     return b.completionPercent - a.completionPercent;
   });
 
-  const barData = sortedByTotal.slice(0, 5).map((item) => ({
+  const completionBarData = sortedByTotal.slice(0, 5).map((item) => ({
     division: shortenDivisionName(item.displayName ?? item.division),
     fullDivision: beautifyDivisionName(item.displayName ?? item.division),
+    completion: Number(item.completionPercent.toFixed(1)),
     instagram: Number(item.igPercent.toFixed(1)),
     tiktok: Number(item.tiktokPercent.toFixed(1)),
     total: item.total,
   }));
+
+  const lowestCompletionDivisions = divisionArray
+    .filter((item) => item.total > 0)
+    .sort((a, b) => {
+      if (a.completionPercent !== b.completionPercent) {
+        return a.completionPercent - b.completionPercent;
+      }
+      if (a.total !== b.total) {
+        return a.total - b.total;
+      }
+      return beautifyDivisionName(a.displayName ?? a.division).localeCompare(
+        beautifyDivisionName(b.displayName ?? b.division),
+        "id-ID",
+        { sensitivity: "base" },
+      );
+    })
+    .slice(0, 10)
+    .map((item) => ({
+      division: shortenDivisionName(item.displayName ?? item.division),
+      fullDivision: beautifyDivisionName(item.displayName ?? item.division),
+      completion: Number(item.completionPercent.toFixed(1)),
+      instagram: Number(item.igPercent.toFixed(1)),
+      tiktok: Number(item.tiktokPercent.toFixed(1)),
+      total: item.total,
+    }));
 
   const bestDivision = [...divisionArray]
     .sort((a, b) => {
@@ -373,7 +424,8 @@ const computeUserInsight = (users = []) => {
       bothCount,
       bothPercent,
     },
-    barData,
+    completionBarData,
+    lowestCompletionDivisions,
     pieData,
     pieTotal,
     narrative,
@@ -1549,7 +1601,8 @@ export default function ExecutiveSummaryPage() {
     loading: true,
     error: "",
     summary: null,
-    barData: [],
+    completionBarData: [],
+    lowestCompletionDivisions: [],
     pieData: [],
     pieTotal: 0,
     narrative: "",
@@ -2014,7 +2067,8 @@ export default function ExecutiveSummaryPage() {
 
   const {
     summary: userSummary,
-    barData,
+    completionBarData,
+    lowestCompletionDivisions,
     pieData,
     pieTotal,
     narrative,
@@ -2145,86 +2199,109 @@ export default function ExecutiveSummaryPage() {
               </div>
             )}
 
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-              <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Rasio Kelengkapan per Satker / Polres
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Menampilkan lima Polres dengan jumlah Personil terbesar.
-                    </p>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        Rasio Kelengkapan per Satker / Polres
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Menampilkan lima Polres dengan jumlah Personil terbesar.
+                      </p>
+                    </div>
                   </div>
+                  {completionBarData.length > 0 ? (
+                    <div className="mt-6 h-[360px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={completionBarData}
+                          layout="vertical"
+                          margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="rgba(148, 163, 184, 0.2)"
+                            horizontal={false}
+                          />
+                          <XAxis
+                            type="number"
+                            domain={[0, 100]}
+                            ticks={[0, 25, 50, 75, 100]}
+                            tickFormatter={(value) => `${value}%`}
+                            tick={{ fill: "#94a3b8", fontSize: 11 }}
+                            axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                          />
+                          <YAxis
+                            dataKey="division"
+                            type="category"
+                            width={120}
+                            tick={{ fill: "#e2e8f0", fontSize: 12 }}
+                            axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                          />
+                          <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
+                          <Bar dataKey="completion" fill="#38bdf8" radius={[0, 6, 6, 0]} maxBarSize={26}>
+                            <LabelList
+                              dataKey="completion"
+                              position="right"
+                              formatter={(value) => `${value}%`}
+                              fill="#e2e8f0"
+                              fontSize={11}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                      Belum ada data divisi yang bisa ditampilkan.
+                    </div>
+                  )}
                 </div>
-                {barData.length > 0 ? (
-                  <div className="mt-6 h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" />
-                        <XAxis
-                          dataKey="division"
-                          tick={{ fill: "#94a3b8", fontSize: 11 }}
-                          axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                        />
-                        <YAxis
-                          tickFormatter={(value) => `${value}%`}
-                          tick={{ fill: "#94a3b8", fontSize: 11 }}
-                          domain={[0, 100]}
-                          axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
-                          contentStyle={{
-                            backgroundColor: "rgba(15,23,42,0.92)",
-                            borderRadius: 16,
-                            borderColor: "rgba(148,163,184,0.4)",
-                            color: "#e2e8f0",
-                          }}
-                          formatter={(value, name) => [
-                            `${value}%`,
-                            name === "instagram"
-                              ? "Instagram Lengkap"
-                              : "TikTok Lengkap",
-                          ]}
-                          labelFormatter={(_, payload) =>
-                            payload?.[0]?.payload?.fullDivision ?? "Divisi"
-                          }
-                        />
-                        <Legend
-                          wrapperStyle={{ color: "#e2e8f0" }}
-                          formatter={(value) =>
-                            value === "instagram"
-                              ? "Instagram Lengkap"
-                              : "TikTok Lengkap"
-                          }
-                        />
-                        <Bar dataKey="instagram" fill="#38bdf8" radius={[6, 6, 0, 0]}>
-                          <LabelList
-                            dataKey="instagram"
-                            position="top"
-                            formatter={(value) => `${value}%`}
-                            fill="#e2e8f0"
-                            fontSize={11}
-                          />
-                        </Bar>
-                        <Bar dataKey="tiktok" fill="#a855f7" radius={[6, 6, 0, 0]}>
-                          <LabelList
-                            dataKey="tiktok"
-                            position="top"
-                            formatter={(value) => `${value}%`}
-                            fill="#e2e8f0"
-                            fontSize={11}
-                          />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
-                    Belum ada data divisi yang bisa ditampilkan.
-                  </div>
-                )}
+
+                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                    10 Polres dengan Rasio Kelengkapan Terendah
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Fokuskan pendampingan pada satuan kerja dengan performa terendah.
+                  </p>
+                  {lowestCompletionDivisions.length > 0 ? (
+                    <ul className="mt-5 space-y-4">
+                      {lowestCompletionDivisions.map((item, index) => (
+                        <li key={item.fullDivision} className="rounded-xl border border-slate-800/60 bg-slate-950/60 p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                {String(index + 1).padStart(2, "0")}
+                              </span>
+                              <p className="text-sm font-semibold text-slate-100">{item.fullDivision}</p>
+                            </div>
+                            <span className="text-sm font-semibold text-cyan-300">
+                              {formatPercent(item.completion)}
+                            </span>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+                            <span>Instagram Lengkap: {formatPercent(item.instagram)}</span>
+                            <span>TikTok Lengkap: {formatPercent(item.tiktok)}</span>
+                            <span>Total Personil: {formatNumber(item.total, { maximumFractionDigits: 0 })}</span>
+                          </div>
+                          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400"
+                              style={{ width: `${Math.max(0, Math.min(100, item.completion))}%` }}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
+                      Belum ada data satker yang bisa dibandingkan.
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
