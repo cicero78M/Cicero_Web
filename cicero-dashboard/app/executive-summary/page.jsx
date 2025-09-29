@@ -42,6 +42,28 @@ const normalizeNumericInput = (value) => {
   return Number.isFinite(coerced) ? coerced : 0;
 };
 
+const clamp = (value, min, max) => {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.min(Math.max(value, min), max);
+};
+
+const parsePercent = (value) => {
+  if (typeof value === "number") {
+    return clamp(value, 0, 100);
+  }
+
+  if (typeof value === "string") {
+    const sanitized = value.replace(/[^0-9,.-]+/g, "").replace(/,/g, ".");
+    const parsed = parseFloat(sanitized);
+    return Number.isFinite(parsed) ? clamp(parsed, 0, 100) : 0;
+  }
+
+  const coerced = Number(value);
+  return Number.isFinite(coerced) ? clamp(coerced, 0, 100) : 0;
+};
+
 const formatCompactNumber = (value) => {
   const numericValue = typeof value === "number" ? value : Number(value);
   if (!numericValue || Number.isNaN(numericValue)) return "0";
@@ -1767,23 +1789,27 @@ export default function ExecutiveSummaryPage() {
                       ))}
                     </div>
                     <div className="mt-auto space-y-3 text-xs text-slate-300">
-                      {shareMetrics.map((share) => (
-                        <div
-                          key={share.key}
-                          className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-3"
-                        >
-                          <div className="mb-2 flex justify-between text-[0.7rem] font-medium uppercase tracking-wider text-slate-400">
-                            <span>{share.label}</span>
-                            <span>{Number(share.value).toFixed(1)}%</span>
+                      {shareMetrics.map((share) => {
+                        const percent = clamp(parsePercent(share.value), 0, 100);
+
+                        return (
+                          <div
+                            key={share.key}
+                            className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-3"
+                          >
+                            <div className="mb-2 flex justify-between text-[0.7rem] font-medium uppercase tracking-wider text-slate-400">
+                              <span>{share.label}</span>
+                              <span>{percent.toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-slate-800">
+                              <div
+                                className={cn("h-full rounded-full bg-gradient-to-r", share.gradient)}
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-2 rounded-full bg-slate-800">
-                            <div
-                              className={cn("h-full rounded-full bg-gradient-to-r", share.gradient)}
-                              style={{ width: `${Math.min(Number(share.value) || 0, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
