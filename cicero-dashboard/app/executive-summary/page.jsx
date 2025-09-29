@@ -27,6 +27,8 @@ import {
 } from "@/utils/api";
 import { cn } from "@/lib/utils";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
 const normalizeNumericInput = (value) => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
@@ -411,6 +413,483 @@ const extractNumericValue = (...candidates) => {
   return 0;
 };
 
+const normalizePlatformKey = (value, fallback = "") => {
+  if (typeof value === "string") {
+    const cleaned = value.trim().toLowerCase();
+    if (cleaned) {
+      return cleaned.replace(/[^a-z0-9]+/g, "-");
+    }
+  }
+  if (fallback) {
+    return normalizePlatformKey(fallback);
+  }
+  return "";
+};
+
+const pickNestedNumeric = (source, paths = []) => {
+  if (!source) {
+    return 0;
+  }
+
+  for (const path of paths) {
+    if (!path) {
+      continue;
+    }
+
+    const segments = Array.isArray(path) ? path : String(path).split(".");
+    let current = source;
+    let valid = true;
+
+    for (const segment of segments) {
+      if (current == null) {
+        valid = false;
+        break;
+      }
+      current = current[segment];
+    }
+
+    if (!valid || current == null) {
+      continue;
+    }
+
+    const numeric = normalizeNumericInput(current);
+
+    if (typeof current === "number" || typeof current === "string") {
+      return numeric;
+    }
+
+    if (Number.isFinite(numeric) && numeric !== 0) {
+      return numeric;
+    }
+  }
+
+  return 0;
+};
+
+const ensureArray = (...candidates) => {
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+
+    if (Array.isArray(candidate?.data)) {
+      return candidate.data;
+    }
+
+    if (Array.isArray(candidate?.items)) {
+      return candidate.items;
+    }
+
+    if (Array.isArray(candidate?.results)) {
+      return candidate.results;
+    }
+
+    if (Array.isArray(candidate?.records)) {
+      return candidate.records;
+    }
+  }
+
+  return [];
+};
+
+const normalizePlatformRecord = (record, fallbackKey = "", fallbackLabel = "") => {
+  if (!record || typeof record !== "object") {
+    return null;
+  }
+
+  const labelSource =
+    record.label ?? record.platform ?? record.name ?? fallbackLabel ?? fallbackKey;
+  const label =
+    typeof labelSource === "string" && labelSource.trim()
+      ? labelSource.trim()
+      : "Platform";
+  const keySource = record.key ?? record.platform ?? record.slug ?? fallbackKey ?? label;
+  const key = normalizePlatformKey(keySource, label);
+
+  const followers = pickNestedNumeric(record, [
+    "followers",
+    "follower_count",
+    "followers_count",
+    "stats.followers",
+    "stats.followerCount",
+    "metrics.followers",
+    "metrics.follower_count",
+    "counts.followers",
+    "audience.followers",
+    "audience.followers_count",
+    "profile.followers",
+  ]);
+
+  const posts = pickNestedNumeric(record, [
+    "posts",
+    "post_count",
+    "posts_count",
+    "stats.posts",
+    "stats.postCount",
+    "stats.media_count",
+    "metrics.posts",
+    "metrics.post_count",
+    "counts.posts",
+    "content.posts",
+  ]);
+
+  const likes = pickNestedNumeric(record, [
+    "likes",
+    "like_count",
+    "likes_count",
+    "metrics.likes",
+    "metrics.like_count",
+    "stats.likes",
+    "stats.likeCount",
+    "interactions.likes",
+  ]);
+
+  const comments = pickNestedNumeric(record, [
+    "comments",
+    "comment_count",
+    "comments_count",
+    "metrics.comments",
+    "metrics.comment_count",
+    "stats.comments",
+    "stats.commentCount",
+    "interactions.comments",
+  ]);
+
+  const engagementRate = pickNestedNumeric(record, [
+    "engagementRate",
+    "engagement_rate",
+    "metrics.engagementRate",
+    "metrics.engagement_rate",
+    "stats.engagementRate",
+    "stats.engagement_rate",
+    "engagement.rate",
+  ]);
+
+  const shares = {
+    followers: pickNestedNumeric(record, [
+      "shares.followers",
+      "shares.followers_share",
+      "sharesFollowers",
+      "shareFollowers",
+      "share.followers",
+    ]),
+    likes: pickNestedNumeric(record, [
+      "shares.likes",
+      "shares.likes_share",
+      "sharesLikes",
+      "shareLikes",
+      "share.likes",
+    ]),
+    comments: pickNestedNumeric(record, [
+      "shares.comments",
+      "shares.comments_share",
+      "sharesComments",
+      "shareComments",
+      "share.comments",
+    ]),
+  };
+
+  return {
+    key,
+    label,
+    followers,
+    posts,
+    likes,
+    comments,
+    engagementRate,
+    shares,
+  };
+};
+
+const buildAggregatorPlatform = ({
+  key,
+  label,
+  profiles = [],
+  stats = [],
+  posts = [],
+}) => {
+  const profileSource =
+    profiles.find((candidate) => candidate && typeof candidate === "object") ?? null;
+  const statsSource =
+    stats.find((candidate) => candidate && typeof candidate === "object") ?? null;
+  const postsArray = ensureArray(...posts);
+
+  if (!profileSource && !statsSource && postsArray.length === 0) {
+    return null;
+  }
+
+  const combined = { ...(profileSource ?? {}), ...(statsSource ?? {}) };
+
+  const followers = pickNestedNumeric(combined, [
+    "followers",
+    "follower_count",
+    "followers_count",
+    "stats.followers",
+    "stats.followerCount",
+    "metrics.followers",
+    "metrics.follower_count",
+    "edge_followed_by.count",
+    "fan_count",
+  ]);
+
+  const postsFromStats = pickNestedNumeric(combined, [
+    "posts",
+    "post_count",
+    "posts_count",
+    "media_count",
+    "stats.media_count",
+    "stats.postCount",
+    "counts.media",
+  ]);
+
+  const likes = postsArray.reduce((acc, post) => {
+    return (
+      acc +
+      Math.max(
+        0,
+        pickNestedNumeric(post, [
+          "like_count",
+          "likes",
+          "statistics.like_count",
+          "metrics.like_count",
+          "metrics.likes",
+        ]),
+      )
+    );
+  }, 0);
+
+  const comments = postsArray.reduce((acc, post) => {
+    return (
+      acc +
+      Math.max(
+        0,
+        pickNestedNumeric(post, [
+          "comment_count",
+          "comments",
+          "statistics.comment_count",
+          "metrics.comment_count",
+          "metrics.comments",
+        ]),
+      )
+    );
+  }, 0);
+
+  const postCount = postsArray.length > 0 ? postsArray.length : postsFromStats;
+
+  const engagementCandidate = pickNestedNumeric(combined, [
+    "engagementRate",
+    "engagement_rate",
+    "stats.engagementRate",
+    "stats.engagement_rate",
+    "metrics.engagementRate",
+    "metrics.engagement_rate",
+  ]);
+
+  const totalInteractions = likes + comments;
+
+  const computedEngagement =
+    followers > 0
+      ? (totalInteractions / followers) * 100
+      : postCount > 0
+      ? totalInteractions / postCount
+      : 0;
+
+  return {
+    key,
+    label,
+    followers,
+    posts: postCount,
+    likes,
+    comments,
+    engagementRate: engagementCandidate || computedEngagement,
+    shares: { followers: 0, likes: 0, comments: 0 },
+  };
+};
+
+const normalizePlatformMetrics = (rawData) => {
+  if (!rawData || typeof rawData !== "object") {
+    return [];
+  }
+
+  const usedKeys = new Set();
+  const entries = [];
+
+  const pushEntry = (entry) => {
+    if (!entry) {
+      return;
+    }
+
+    const sanitizedKeyBase = normalizePlatformKey(entry.key, entry.label);
+    let candidateKey = sanitizedKeyBase || `platform-${entries.length + 1}`;
+    let suffix = 1;
+    while (usedKeys.has(candidateKey)) {
+      candidateKey = `${sanitizedKeyBase || "platform"}-${suffix++}`;
+    }
+    usedKeys.add(candidateKey);
+
+    const followers = Math.max(0, Math.round(normalizeNumericInput(entry.followers)));
+    const posts = Math.max(0, Math.round(normalizeNumericInput(entry.posts)));
+    const likes = Math.max(0, Math.round(normalizeNumericInput(entry.likes)));
+    const comments = Math.max(0, Math.round(normalizeNumericInput(entry.comments)));
+    const engagementRate = parsePercent(
+      Number.isFinite(entry.engagementRate)
+        ? entry.engagementRate
+        : normalizeNumericInput(entry.engagementRate),
+    );
+    const shares = {
+      followers: parsePercent(entry.shares?.followers ?? 0),
+      likes: parsePercent(entry.shares?.likes ?? 0),
+      comments: parsePercent(entry.shares?.comments ?? 0),
+    };
+
+    entries.push({
+      key: candidateKey,
+      label: entry.label || "Platform",
+      followers,
+      posts,
+      likes,
+      comments,
+      engagementRate,
+      shares,
+    });
+  };
+
+  const platformArrays = [
+    rawData.platforms,
+    rawData.data?.platforms,
+    rawData.metrics,
+    rawData.data?.metrics,
+  ];
+
+  for (const candidate of platformArrays) {
+    if (!candidate) {
+      continue;
+    }
+
+    const records = Array.isArray(candidate)
+      ? candidate
+      : Array.isArray(candidate?.platforms)
+      ? candidate.platforms
+      : [];
+
+    records.forEach((record) => {
+      const normalized = normalizePlatformRecord(record);
+      pushEntry(normalized);
+    });
+  }
+
+  const aggregatorConfigs = [
+    {
+      key: "instagram",
+      label: "Instagram",
+      profiles: [
+        rawData.igProfile,
+        rawData.instagramProfile,
+        rawData.instagram?.profile,
+        rawData.profiles?.instagram,
+        rawData.ig?.profile,
+      ],
+      stats: [
+        rawData.igStats,
+        rawData.instagramStats,
+        rawData.instagram?.stats,
+        rawData.stats?.instagram,
+        rawData.ig?.stats,
+      ],
+      posts: [
+        rawData.igPosts,
+        rawData.instagramPosts,
+        rawData.instagram?.posts,
+        rawData.posts?.instagram,
+        rawData.ig?.posts,
+      ],
+    },
+    {
+      key: "tiktok",
+      label: "TikTok",
+      profiles: [
+        rawData.tiktokProfile,
+        rawData.ttProfile,
+        rawData.tiktok?.profile,
+        rawData.profiles?.tiktok,
+        rawData.tt?.profile,
+      ],
+      stats: [
+        rawData.tiktokStats,
+        rawData.ttStats,
+        rawData.tiktok?.stats,
+        rawData.stats?.tiktok,
+        rawData.tt?.stats,
+      ],
+      posts: [
+        rawData.tiktokPosts,
+        rawData.ttPosts,
+        rawData.tiktok?.posts,
+        rawData.posts?.tiktok,
+        rawData.tt?.posts,
+      ],
+    },
+  ];
+
+  aggregatorConfigs.forEach((config) => {
+    const normalizedKey = normalizePlatformKey(config.key, config.label);
+    const hasExistingLabel = entries.some((entry) => {
+      if (!entry?.label || !config.label) {
+        return false;
+      }
+      return entry.label.toLowerCase() === config.label.toLowerCase();
+    });
+
+    if ((normalizedKey && usedKeys.has(normalizedKey)) || hasExistingLabel) {
+      return;
+    }
+    const entry = buildAggregatorPlatform(config);
+    pushEntry(entry);
+  });
+
+  if (entries.length === 0) {
+    return [];
+  }
+
+  const totals = entries.reduce(
+    (acc, entry) => {
+      acc.followers += entry.followers;
+      acc.likes += entry.likes;
+      acc.comments += entry.comments;
+      return acc;
+    },
+    { followers: 0, likes: 0, comments: 0 },
+  );
+
+  const result = entries.map((entry) => {
+    const followerShare =
+      totals.followers > 0
+        ? (entry.followers / totals.followers) * 100
+        : entry.shares.followers;
+    const likeShare =
+      totals.likes > 0 ? (entry.likes / totals.likes) * 100 : entry.shares.likes;
+    const commentShare =
+      totals.comments > 0
+        ? (entry.comments / totals.comments) * 100
+        : entry.shares.comments;
+
+    return {
+      ...entry,
+      shares: {
+        followers: parsePercent(followerShare),
+        likes: parsePercent(likeShare),
+        comments: parsePercent(commentShare),
+      },
+    };
+  });
+
+  return result.sort((a, b) => b.followers - a.followers);
+};
+
 const normalizeLookupKey = (value) => {
   if (value === undefined || value === null) {
     return "";
@@ -679,38 +1158,6 @@ const monthlyData = {
       { label: "Alert Ditindaklanjuti", value: 214, change: "+12%" },
       { label: "Respons Rata-rata", value: 37, suffix: "mnt", change: "-9 mnt" },
     ],
-    platformAnalytics: {
-      platforms: [
-        {
-          key: "instagram",
-          label: "Instagram",
-          followers: 189400,
-          posts: 42,
-          likes: 86420,
-          comments: 3120,
-          engagementRate: 7.4,
-          shares: {
-            followers: 58.6,
-            likes: 61.2,
-            comments: 55.8,
-          },
-        },
-        {
-          key: "tiktok",
-          label: "TikTok",
-          followers: 133800,
-          posts: 34,
-          likes: 54780,
-          comments: 2470,
-          engagementRate: 6.1,
-          shares: {
-            followers: 41.4,
-            likes: 38.8,
-            comments: 44.2,
-          },
-        },
-      ],
-    },
     contentTable: [
       {
         platform: "Instagram",
@@ -785,38 +1232,6 @@ const monthlyData = {
       { label: "Alert Ditindaklanjuti", value: 191, change: "+5%" },
       { label: "Respons Rata-rata", value: 42, suffix: "mnt", change: "-4 mnt" },
     ],
-    platformAnalytics: {
-      platforms: [
-        {
-          key: "instagram",
-          label: "Instagram",
-          followers: 186200,
-          posts: 39,
-          likes: 79210,
-          comments: 2810,
-          engagementRate: 6.1,
-          shares: {
-            followers: 57.4,
-            likes: 59.3,
-            comments: 53.2,
-          },
-        },
-        {
-          key: "tiktok",
-          label: "TikTok",
-          followers: 138200,
-          posts: 33,
-          likes: 54310,
-          comments: 2470,
-          engagementRate: 5.2,
-          shares: {
-            followers: 42.6,
-            likes: 40.7,
-            comments: 46.8,
-          },
-        },
-      ],
-    },
     contentTable: [
       {
         platform: "Instagram",
@@ -891,38 +1306,6 @@ const monthlyData = {
       { label: "Alert Ditindaklanjuti", value: 176, change: "+8%" },
       { label: "Respons Rata-rata", value: 48, suffix: "mnt", change: "-2 mnt" },
     ],
-    platformAnalytics: {
-      platforms: [
-        {
-          key: "instagram",
-          label: "Instagram",
-          followers: 182900,
-          posts: 37,
-          likes: 75640,
-          comments: 2650,
-          engagementRate: 5.9,
-          shares: {
-            followers: 56.1,
-            likes: 58.0,
-            comments: 52.4,
-          },
-        },
-        {
-          key: "tiktok",
-          label: "TikTok",
-          followers: 143200,
-          posts: 31,
-          likes: 54780,
-          comments: 2410,
-          engagementRate: 5.4,
-          shares: {
-            followers: 43.9,
-            likes: 42.0,
-            comments: 47.6,
-          },
-        },
-      ],
-    },
     contentTable: [
       {
         platform: "Instagram",
@@ -1043,6 +1426,11 @@ export default function ExecutiveSummaryPage() {
     narrative: "",
     activityBuckets: null,
   });
+  const [platformState, setPlatformState] = useState({
+    loading: true,
+    error: "",
+    platforms: [],
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1137,23 +1525,8 @@ export default function ExecutiveSummaryPage() {
     contentTable: Array.isArray(rawMonthlyData?.contentTable)
       ? rawMonthlyData.contentTable
       : defaultMonthlyEntry.contentTable,
-    platformAnalytics: (() => {
-      if (rawMonthlyData?.platformAnalytics) {
-        const platforms = Array.isArray(
-          rawMonthlyData.platformAnalytics.platforms,
-        )
-          ? rawMonthlyData.platformAnalytics.platforms
-          : [];
-        return {
-          ...rawMonthlyData.platformAnalytics,
-          platforms,
-        };
-      }
-      return defaultMonthlyEntry.platformAnalytics;
-    })(),
+    platformAnalytics: { platforms: [] },
   };
-  const analytics = data.platformAnalytics ?? { platforms: [] };
-  const platforms = Array.isArray(analytics.platforms) ? analytics.platforms : [];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1299,6 +1672,93 @@ export default function ExecutiveSummaryPage() {
     };
   }, [token, clientId, selectedMonth]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (!token || !clientId) {
+      setPlatformState({
+        loading: false,
+        error: "",
+        platforms: [],
+      });
+      return () => {
+        controller.abort();
+      };
+    }
+
+    setPlatformState((prev) => ({
+      ...prev,
+      loading: true,
+      error: "",
+    }));
+
+    const fetchPlatformMetrics = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set("periode", "bulanan");
+
+        const range = getMonthDateRange(selectedMonth);
+        if (range?.startDate) {
+          params.set("tanggal", range.startDate);
+        }
+
+        if (clientId) {
+          params.set("clientId", String(clientId));
+        }
+
+        const baseUrl = (API_BASE_URL || "").replace(/\/+$/, "");
+        const endpoint = `${baseUrl}/api/aggregator`;
+        const response = await fetch(
+          `${endpoint}?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            signal: controller.signal,
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Gagal memuat data agregasi (${response.status})`,
+          );
+        }
+
+        const payload = await response.json();
+        const normalizedPlatforms = normalizePlatformMetrics(
+          payload?.data ?? payload,
+        );
+
+        setPlatformState({
+          loading: false,
+          error: "",
+          platforms: normalizedPlatforms,
+        });
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          return;
+        }
+
+        setPlatformState({
+          loading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat data performa platform.",
+          platforms: [],
+        });
+      }
+    };
+
+    fetchPlatformMetrics();
+
+    return () => {
+      controller.abort();
+    };
+  }, [token, clientId, selectedMonth]);
+
   const pptSummary = useMemo(() => {
     return [
       data.dashboardNarrative,
@@ -1436,6 +1896,11 @@ export default function ExecutiveSummaryPage() {
     : [];
   const totalEvaluated = Number(activityBuckets?.evaluatedUsers) || 0;
   const totalContentEvaluated = Number(activityBuckets?.totalContent) || 0;
+  const {
+    platforms: platformMetrics,
+    loading: platformsLoading,
+    error: platformError,
+  } = platformState;
 
   return (
     <div className="space-y-8">
@@ -1711,8 +2176,16 @@ export default function ExecutiveSummaryPage() {
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
-          {platforms.length > 0 ? (
-            platforms.map((platform) => {
+          {platformsLoading ? (
+            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+              Memuat data performa kanal…
+            </div>
+          ) : platformError ? (
+            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
+              {platformError}
+            </div>
+          ) : platformMetrics.length > 0 ? (
+            platformMetrics.map((platform) => {
               const engagementRate = normalizeNumericInput(platform.engagementRate);
 
               const primaryMetrics = [
@@ -1731,7 +2204,7 @@ export default function ExecutiveSummaryPage() {
                 {
                   key: "engagement",
                   label: "Engagement",
-                  value: `${engagementRate.toFixed(2)}%`,
+                  value: formatPercent(engagementRate),
                   accent: "text-fuchsia-300",
                 },
               ];
