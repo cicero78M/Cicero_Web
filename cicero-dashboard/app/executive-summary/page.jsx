@@ -1909,8 +1909,10 @@ export default function ExecutiveSummaryPage() {
           <div className="space-y-3">
             <h1 className="text-3xl font-bold text-slate-100">Executive Summary</h1>
             <p className="max-w-2xl text-sm text-slate-300">
-              Rangkuman performa dashboard, insight pengguna, serta kinerja Instagram dan TikTok
-              selama satu bulan penuh. Pilih periode untuk melihat insight dan unduh presentasi PPT.
+              Sistem Cicero dibangun sebagai sarana pengawasan dan pengendalian terhadap kepatuhan personil Ditbinmas Polda Jatim dan Bhabinkamtibmas Polres Jajaran 
+              dalam melaksanakan tugas likes dan komentar pada konten akun official Instagram dan TikTok. 
+              Melalui data yang dihimpun secara otomatis, Cicero menyajikan gambaran menyeluruh terkait kinerja personil, 
+              tingkat partisipasi, serta kualitas pelaksanaan tugas dalam mendukung komunikasi publik Polri.
             </p>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-end lg:justify-end">
