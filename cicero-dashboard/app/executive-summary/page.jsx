@@ -897,6 +897,79 @@ const normalizeLookupKey = (value) => {
   return String(value).trim().toLowerCase();
 };
 
+const participantIdentifierFields = {
+  id: ["user_id", "userId", "id", "nrp", "nip", "personil_id", "nip_nrp"],
+  username: [
+    "username",
+    "user_name",
+    "insta",
+    "instagram",
+    "tiktok",
+    "tiktok_username",
+  ],
+  name: ["nama", "name", "full_name"],
+};
+
+const participantCopyFields = [
+  ...participantIdentifierFields.id,
+  ...participantIdentifierFields.username,
+  ...participantIdentifierFields.name,
+];
+
+const mergeParticipantData = (target, source) => {
+  if (!source) {
+    return target;
+  }
+
+  participantCopyFields.forEach((field) => {
+    if (target[field] === undefined && source?.[field] !== undefined) {
+      target[field] = source[field];
+    }
+  });
+
+  return target;
+};
+
+const buildParticipantKey = (source, fallbackKey = "") => {
+  if (source) {
+    for (const [prefix, fields] of Object.entries(participantIdentifierFields)) {
+      for (const field of fields) {
+        const normalized = normalizeLookupKey(source?.[field]);
+        if (normalized) {
+          return `${prefix}:${normalized}`;
+        }
+      }
+    }
+  }
+
+  return fallbackKey || null;
+};
+
+const buildParticipantMap = (users = [], likes = [], comments = []) => {
+  const participants = new Map();
+
+  const ensureParticipant = (source, fallbackKey) => {
+    if (!source) {
+      return;
+    }
+
+    const key = buildParticipantKey(source, fallbackKey);
+    if (!key) {
+      return;
+    }
+
+    const existing = participants.get(key) || {};
+    mergeParticipantData(existing, source);
+    participants.set(key, existing);
+  };
+
+  users.forEach((user, index) => ensureParticipant(user, `user:${index}`));
+  likes.forEach((record, index) => ensureParticipant(record, `like:${index}`));
+  comments.forEach((record, index) => ensureParticipant(record, `comment:${index}`));
+
+  return participants;
+};
+
 const createActivityLookup = (records = [], countFields = []) => {
   const map = new Map();
   const addKey = (prefix, rawValue, count) => {
@@ -1040,16 +1113,18 @@ const computeActivityBuckets = ({
   const safeTikTokPosts = Math.max(0, Number(totalTikTokPosts) || 0);
   const totalContent = safeIGPosts + safeTikTokPosts;
 
+  const participantMap = buildParticipantMap(users, likes, comments);
+  const participants = Array.from(participantMap.values());
+
   let mostActive = 0;
   let moderate = 0;
   let low = 0;
   let zero = 0;
-  let evaluatedUsers = 0;
+  const evaluatedUsers = participants.length;
 
-  users.forEach((user) => {
-    evaluatedUsers += 1;
-    const likeCount = getCountForUser(likesLookup, user);
-    const commentCount = getCountForUser(commentsLookup, user);
+  participants.forEach((participant) => {
+    const likeCount = getCountForUser(likesLookup, participant);
+    const commentCount = getCountForUser(commentsLookup, participant);
     const hasAction = likeCount > 0 || commentCount > 0;
 
     if (!hasAction) {
@@ -1057,28 +1132,25 @@ const computeActivityBuckets = ({
       return;
     }
 
-    const completedLikes =
-      safeIGPosts > 0 ? Math.min(likeCount, safeIGPosts) : likeCount > 0 ? 1 : 0;
-    const completedComments =
-      safeTikTokPosts > 0
-        ? Math.min(commentCount, safeTikTokPosts)
-        : commentCount > 0
-        ? 1
-        : 0;
+    let numerator = 0;
+    let denominator = 0;
 
-    const denominator = totalContent;
-    let ratio = 0;
-    if (denominator > 0) {
-      ratio = (completedLikes + completedComments) / denominator;
-    } else {
-      ratio = 1;
+    if (safeIGPosts > 0) {
+      denominator += safeIGPosts;
+      numerator += Math.min(likeCount, safeIGPosts);
     }
 
-    ratio = Math.max(0, Math.min(ratio, 1));
+    if (safeTikTokPosts > 0) {
+      denominator += safeTikTokPosts;
+      numerator += Math.min(commentCount, safeTikTokPosts);
+    }
 
-    if (ratio >= 0.9) {
+    const ratio = denominator > 0 ? numerator / denominator : 1;
+    const clampedRatio = Math.max(0, Math.min(ratio, 1));
+
+    if (clampedRatio >= 0.9) {
       mostActive += 1;
-    } else if (ratio >= 0.5) {
+    } else if (clampedRatio >= 0.5) {
       moderate += 1;
     } else {
       low += 1;
@@ -1086,7 +1158,7 @@ const computeActivityBuckets = ({
   });
 
   return {
-    totalUsers: users.length,
+    totalUsers: participants.length,
     evaluatedUsers,
     totalContent,
     categories: [
