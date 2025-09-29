@@ -398,18 +398,75 @@ const getMonthDateRange = (monthKey) => {
 };
 
 const extractNumericValue = (...candidates) => {
+  const normalizeFormattedNumber = (raw) => {
+    if (typeof raw !== "string") {
+      return raw;
+    }
+
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return trimmed;
+    }
+
+    const direct = Number(trimmed);
+    if (Number.isFinite(direct)) {
+      return direct;
+    }
+
+    const match = trimmed.match(/-?\d+(?:[.,]\d+)?/);
+    if (!match) {
+      return trimmed;
+    }
+
+    const primary = match[0];
+    const thousandStyleDot = /^-?\d{1,3}(\.\d{3})+(,\d+)?$/;
+    const thousandStyleComma = /^-?\d{1,3}(,\d{3})+(\.\d+)?$/;
+
+    if (thousandStyleDot.test(primary)) {
+      return primary.replace(/\./g, "").replace(/,/g, ".");
+    }
+
+    if (thousandStyleComma.test(primary)) {
+      return primary.replace(/,/g, "").replace(/\./g, ".");
+    }
+
+    return primary.replace(/,/g, ".");
+  };
+
   for (const candidate of candidates) {
     if (candidate === undefined || candidate === null) {
       continue;
     }
+
     if (Array.isArray(candidate)) {
       return candidate.length;
     }
-    const numeric = Number(candidate);
-    if (!Number.isNaN(numeric)) {
+
+    if (typeof candidate === "number") {
+      if (Number.isFinite(candidate)) {
+        return candidate;
+      }
+      continue;
+    }
+
+    const normalized = normalizeFormattedNumber(candidate);
+    const numeric = Number(normalized);
+    if (Number.isFinite(numeric)) {
       return numeric;
     }
+
+    if (
+      typeof candidate === "object" &&
+      candidate !== null &&
+      "value" in candidate
+    ) {
+      const nested = Number(candidate.value);
+      if (Number.isFinite(nested)) {
+        return nested;
+      }
+    }
   }
+
   return 0;
 };
 
