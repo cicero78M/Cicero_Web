@@ -2399,34 +2399,46 @@ export default function ExecutiveSummaryPage() {
                         Fokuskan pendampingan pada satuan kerja dengan performa terendah.
                       </p>
                       {lowestCompletionDivisions.length > 0 ? (
-                        <ul className="mt-5 space-y-4">
-                          {lowestCompletionDivisions.map((item, index) => (
-                            <li key={item.fullDivision} className="rounded-xl border border-slate-800/60 bg-slate-950/70 p-4 shadow-inner">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                                    {String(index + 1).padStart(2, "0")}
-                                  </span>
-                                  <p className="text-sm font-semibold text-slate-100">{item.fullDivision}</p>
-                                </div>
-                                <span className="text-sm font-semibold text-cyan-300">
-                                  {formatPercent(item.completion)}
-                                </span>
-                              </div>
-                              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
-                                <span>Instagram Lengkap: {formatPercent(item.instagram)}</span>
-                                <span>TikTok Lengkap: {formatPercent(item.tiktok)}</span>
-                                <span>Total Personil: {formatNumber(item.total, { maximumFractionDigits: 0 })}</span>
-                              </div>
-                              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400"
-                                  style={{ width: `${Math.max(0, Math.min(100, item.completion))}%` }}
+                        <div className="mt-6 h-[360px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={lowestCompletionDivisions}
+                              layout="vertical"
+                              margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
+                            >
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="rgba(148, 163, 184, 0.2)"
+                                horizontal={false}
+                              />
+                              <XAxis
+                                type="number"
+                                domain={[0, 100]}
+                                ticks={[0, 25, 50, 75, 100]}
+                                tickFormatter={(value) => `${value}%`}
+                                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                              />
+                              <YAxis
+                                dataKey="division"
+                                type="category"
+                                width={120}
+                                tick={{ fill: "#e2e8f0", fontSize: 12 }}
+                                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                              />
+                              <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
+                              <Bar dataKey="completion" fill="#f97316" radius={[0, 6, 6, 0]} maxBarSize={26}>
+                                <LabelList
+                                  dataKey="completion"
+                                  position="right"
+                                  formatter={(value) => `${value}%`}
+                                  fill="#e2e8f0"
+                                  fontSize={11}
                                 />
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
                       ) : (
                         <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
                           Belum ada data satker yang bisa dibandingkan.
