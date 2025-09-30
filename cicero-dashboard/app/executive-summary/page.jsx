@@ -41,8 +41,6 @@ import {
   mergeAvailableMonthOptions,
 } from "./monthOptions";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
-
 const clamp = (value, min, max) => {
   if (!Number.isFinite(value)) {
     return min;
@@ -1934,6 +1932,542 @@ const computeActivityBuckets = ({
   };
 };
 
+const INSTAGRAM_LIKE_FIELD_PATHS = [
+  "jumlah_like",
+  "jumlahLike",
+  "total_like",
+  "totalLike",
+  "totalLikes",
+  "likes",
+  "like_count",
+  "metrics.likes",
+  "rekap.jumlah_like",
+  "rekap.total_like",
+];
+
+const INSTAGRAM_COMMENT_FIELD_PATHS = [
+  "jumlah_komentar",
+  "jumlahKomentar",
+  "total_komentar",
+  "totalKomentar",
+  "komentar",
+  "comments",
+  "comment_count",
+  "metrics.comments",
+  "rekap.jumlah_komentar",
+  "rekap.total_komentar",
+];
+
+const TIKTOK_LIKE_FIELD_PATHS = [
+  "jumlah_like",
+  "jumlahLike",
+  "total_like",
+  "likes",
+  "like_count",
+  "metrics.likes",
+  "rekap.jumlah_like",
+  "rekap.total_like",
+];
+
+const TIKTOK_COMMENT_FIELD_PATHS = [
+  "jumlah_komentar",
+  "jumlahKomentar",
+  "total_komentar",
+  "totalKomentar",
+  "komentar",
+  "comments",
+  "comment_count",
+  "metrics.comments",
+  "rekap.jumlah_komentar",
+  "rekap.total_komentar",
+];
+
+const INSTAGRAM_FOLLOWER_PATHS = [
+  "instagramFollowers",
+  "instagram_followers",
+  "followersInstagram",
+  "followers_instagram",
+  "total_followers_instagram",
+  "totalFollowersInstagram",
+  "igFollowers",
+  "ig_followers",
+  "instagram.followers",
+  "instagram.profile.followers",
+  "instagram.profile.follower_count",
+  "profiles.instagram.followers",
+  "profiles.instagram.follower_count",
+  "instagramProfile.followers",
+  "igProfile.followers",
+];
+
+const TIKTOK_FOLLOWER_PATHS = [
+  "tiktokFollowers",
+  "tiktok_followers",
+  "followersTiktok",
+  "followers_tiktok",
+  "total_followers_tiktok",
+  "totalFollowersTiktok",
+  "ttFollowers",
+  "tt_followers",
+  "tiktok.followers",
+  "tiktok.profile.followers",
+  "tiktok.profile.follower_count",
+  "profiles.tiktok.followers",
+  "profiles.tiktok.follower_count",
+  "tiktokProfile.followers",
+  "ttProfile.followers",
+];
+
+const INSTAGRAM_USERNAME_PATHS = [
+  "instagramUsername",
+  "instagram_username",
+  "igUsername",
+  "ig_username",
+  "instagram.profile.username",
+  "instagram.profile.user_name",
+  "profiles.instagram.username",
+  "instagramProfile.username",
+  "igProfile.username",
+  "instagram.username",
+  "ig.username",
+];
+
+const TIKTOK_USERNAME_PATHS = [
+  "tiktokUsername",
+  "tiktok_username",
+  "ttUsername",
+  "tt_username",
+  "tiktok.profile.username",
+  "tiktok.profile.user_name",
+  "profiles.tiktok.username",
+  "tiktokProfile.username",
+  "ttProfile.username",
+  "tiktok.username",
+  "tt.username",
+];
+
+const INSTAGRAM_URL_PATHS = [
+  "instagramProfileUrl",
+  "instagram_profile_url",
+  "instagram.profile.url",
+  "instagram.profile.profile_url",
+  "profiles.instagram.url",
+  "profiles.instagram.profile_url",
+  "instagramProfile.url",
+  "instagramProfile.profileUrl",
+  "igProfile.url",
+  "igProfile.profileUrl",
+  "instagram_url",
+  "instagramUrl",
+];
+
+const TIKTOK_URL_PATHS = [
+  "tiktokProfileUrl",
+  "tiktok_profile_url",
+  "tiktok.profile.url",
+  "tiktok.profile.profile_url",
+  "profiles.tiktok.url",
+  "profiles.tiktok.profile_url",
+  "tiktokProfile.url",
+  "tiktokProfile.profileUrl",
+  "ttProfile.url",
+  "ttProfile.profileUrl",
+  "tiktok_url",
+  "tiktokUrl",
+];
+
+const INSTAGRAM_BIO_PATHS = [
+  "instagramBio",
+  "instagram_bio",
+  "instagram.profile.biography",
+  "instagram.profile.bio",
+  "profiles.instagram.bio",
+  "instagramProfile.bio",
+  "igProfile.bio",
+  "instagram.bio",
+];
+
+const TIKTOK_BIO_PATHS = [
+  "tiktokBio",
+  "tiktok_bio",
+  "tiktok.profile.biography",
+  "tiktok.profile.bio",
+  "profiles.tiktok.bio",
+  "tiktokProfile.bio",
+  "ttProfile.bio",
+  "tiktok.bio",
+];
+
+const INSTAGRAM_ENGAGEMENT_PATHS = [
+  "instagramEngagementRate",
+  "instagram_engagement_rate",
+  "engagementInstagram",
+  "engagement_instagram",
+  "instagram.engagementRate",
+  "instagram.engagement_rate",
+  "profiles.instagram.engagementRate",
+  "profiles.instagram.engagement_rate",
+  "instagramProfile.engagementRate",
+  "igProfile.engagementRate",
+];
+
+const TIKTOK_ENGAGEMENT_PATHS = [
+  "tiktokEngagementRate",
+  "tiktok_engagement_rate",
+  "engagementTiktok",
+  "engagement_tiktok",
+  "tiktok.engagementRate",
+  "tiktok.engagement_rate",
+  "profiles.tiktok.engagementRate",
+  "profiles.tiktok.engagement_rate",
+  "tiktokProfile.engagementRate",
+  "ttProfile.engagementRate",
+];
+
+const sanitizeHandle = (value) => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const withoutAt = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
+  const normalized = withoutAt.replace(/\s+/g, "_");
+  return normalized ? normalized : undefined;
+};
+
+const sumActivityRecords = (records, fields) => {
+  if (!Array.isArray(records) || records.length === 0) {
+    return 0;
+  }
+
+  return records.reduce((total, record) => {
+    if (!record || typeof record !== "object") {
+      return total;
+    }
+
+    const candidates = fields
+      .map((path) => pickNestedValue(record, [path]))
+      .filter((value) => value !== undefined && value !== null);
+
+    if (candidates.length === 0) {
+      return total;
+    }
+
+    const value = extractNumericValue(...candidates);
+    if (!Number.isFinite(value)) {
+      return total;
+    }
+
+    return total + Math.max(0, Number(value) || 0);
+  }, 0);
+};
+
+const getNumericFromPaths = (source, paths) => {
+  if (!source || typeof source !== "object" || !Array.isArray(paths)) {
+    return 0;
+  }
+
+  const candidates = paths
+    .map((path) => pickNestedValue(source, [path]))
+    .filter((value) => value !== undefined && value !== null);
+
+  if (candidates.length === 0) {
+    return 0;
+  }
+
+  const value = extractNumericValue(...candidates);
+  return Number.isFinite(value) ? Math.max(0, Number(value) || 0) : 0;
+};
+
+const getStringFromPaths = (source, paths) => {
+  if (!source || typeof source !== "object" || !Array.isArray(paths)) {
+    return undefined;
+  }
+  const value = pickNestedString(source, paths);
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+};
+
+const buildPlatformMetricsFromActivity = ({
+  stats = {},
+  likes = [],
+  comments = [],
+  totalIGPosts = 0,
+  totalTikTokPosts = 0,
+  totalUsers = 0,
+  clientId,
+}) => {
+  const safeStats = stats && typeof stats === "object" ? stats : {};
+  const safeTotalUsers = Math.max(
+    0,
+    Number(
+      totalUsers ||
+        getNumericFromPaths(safeStats, [
+          "totalUsers",
+          "total_user",
+          "userCount",
+          "total_personil",
+          "summary.totalUsers",
+          "summary.total_user",
+        ]),
+    ) || 0,
+  );
+  const igPosts = Math.max(0, Math.round(Number(totalIGPosts) || 0));
+  const tiktokPosts = Math.max(0, Math.round(Number(totalTikTokPosts) || 0));
+
+  const instagramLikes = sumActivityRecords(likes, INSTAGRAM_LIKE_FIELD_PATHS);
+  const instagramComments = sumActivityRecords(
+    likes,
+    INSTAGRAM_COMMENT_FIELD_PATHS,
+  );
+  const instagramLikesFallback = getNumericFromPaths(safeStats, [
+    "instagramLikes",
+    "instagram_likes",
+    "likesInstagram",
+    "likes_instagram",
+    "total_like_instagram",
+    "igLikes",
+    "ig_likes",
+    "instagram.metrics.likes",
+    "instagram.stats.likes",
+  ]);
+  const instagramCommentsFallback = getNumericFromPaths(safeStats, [
+    "instagramComments",
+    "instagram_comments",
+    "commentsInstagram",
+    "comments_instagram",
+    "total_comment_instagram",
+    "igComments",
+    "ig_comments",
+    "instagram.metrics.comments",
+    "instagram.stats.comments",
+  ]);
+
+  const combinedInstagramLikes =
+    instagramLikes > 0 ? instagramLikes : instagramLikesFallback;
+  const combinedInstagramComments =
+    instagramComments > 0 ? instagramComments : instagramCommentsFallback;
+
+  const tiktokComments = sumActivityRecords(
+    comments,
+    TIKTOK_COMMENT_FIELD_PATHS,
+  );
+  const tiktokLikes = sumActivityRecords(comments, TIKTOK_LIKE_FIELD_PATHS);
+  const tiktokCommentsFallback = getNumericFromPaths(safeStats, [
+    "tiktokComments",
+    "tiktok_comments",
+    "commentsTiktok",
+    "comments_tiktok",
+    "total_comment_tiktok",
+    "ttComments",
+    "tt_comments",
+    "tiktok.metrics.comments",
+    "tiktok.stats.comments",
+  ]);
+  const tiktokLikesFallback = getNumericFromPaths(safeStats, [
+    "tiktokLikes",
+    "tiktok_likes",
+    "likesTiktok",
+    "likes_tiktok",
+    "total_like_tiktok",
+    "ttLikes",
+    "tt_likes",
+    "tiktok.metrics.likes",
+    "tiktok.stats.likes",
+  ]);
+
+  const combinedTiktokComments =
+    tiktokComments > 0 ? tiktokComments : tiktokCommentsFallback;
+  const combinedTiktokLikes =
+    tiktokLikes > 0 ? tiktokLikes : tiktokLikesFallback;
+
+  const instagramFollowers = getNumericFromPaths(
+    safeStats,
+    INSTAGRAM_FOLLOWER_PATHS,
+  );
+  const tiktokFollowers = getNumericFromPaths(safeStats, TIKTOK_FOLLOWER_PATHS);
+
+  const instagramTotalInteractions =
+    combinedInstagramLikes + combinedInstagramComments;
+  const tiktokTotalInteractions =
+    combinedTiktokLikes + combinedTiktokComments;
+
+  const expectedIGInteractions =
+    safeTotalUsers > 0 && igPosts > 0 ? safeTotalUsers * igPosts : 0;
+  const expectedTikTokInteractions =
+    safeTotalUsers > 0 && tiktokPosts > 0 ? safeTotalUsers * tiktokPosts : 0;
+
+  const instagramEngagementCandidate =
+    expectedIGInteractions > 0
+      ? (instagramTotalInteractions / expectedIGInteractions) * 100
+      : 0;
+  const tiktokEngagementCandidate =
+    expectedTikTokInteractions > 0
+      ? (tiktokTotalInteractions / expectedTikTokInteractions) * 100
+      : 0;
+
+  const instagramEngagementFallback = getNumericFromPaths(
+    safeStats,
+    INSTAGRAM_ENGAGEMENT_PATHS,
+  );
+  const tiktokEngagementFallback = getNumericFromPaths(
+    safeStats,
+    TIKTOK_ENGAGEMENT_PATHS,
+  );
+
+  const instagramEngagement =
+    instagramEngagementCandidate > 0
+      ? instagramEngagementCandidate
+      : instagramEngagementFallback;
+  const tiktokEngagement =
+    tiktokEngagementCandidate > 0
+      ? tiktokEngagementCandidate
+      : tiktokEngagementFallback;
+
+  const instagramAverageInteractions =
+    igPosts > 0 ? instagramTotalInteractions / igPosts : 0;
+  const tiktokAverageInteractions =
+    tiktokPosts > 0 ? tiktokTotalInteractions / tiktokPosts : 0;
+
+  const clientNameFallback =
+    getStringFromPaths(safeStats, [
+      "client_name",
+      "clientName",
+      "nama_client",
+      "client",
+      "client_label",
+      "clientLabel",
+    ]) || undefined;
+
+  const instagramHandle =
+    sanitizeHandle(getStringFromPaths(safeStats, INSTAGRAM_USERNAME_PATHS)) ||
+    sanitizeHandle(
+      getStringFromPaths(safeStats, [
+        "instagramProfile.username",
+        "igProfile.username",
+      ]),
+    ) ||
+    sanitizeHandle(clientNameFallback) ||
+    sanitizeHandle(clientId ? String(clientId) : "");
+
+  const tiktokHandle =
+    sanitizeHandle(getStringFromPaths(safeStats, TIKTOK_USERNAME_PATHS)) ||
+    sanitizeHandle(
+      getStringFromPaths(safeStats, [
+        "tiktokProfile.username",
+        "ttProfile.username",
+      ]),
+    ) ||
+    sanitizeHandle(clientNameFallback) ||
+    sanitizeHandle(clientId ? String(clientId) : "");
+
+  const instagramBio =
+    getStringFromPaths(safeStats, INSTAGRAM_BIO_PATHS) || undefined;
+  const tiktokBio = getStringFromPaths(safeStats, TIKTOK_BIO_PATHS) || undefined;
+
+  const instagramProfileUrl =
+    getStringFromPaths(safeStats, INSTAGRAM_URL_PATHS) || undefined;
+  const tiktokProfileUrl =
+    getStringFromPaths(safeStats, TIKTOK_URL_PATHS) || undefined;
+
+  const instagramProfile = instagramHandle
+    ? {
+        username: instagramHandle,
+        label: clientNameFallback || "Instagram",
+        followers: instagramFollowers,
+        posts: igPosts,
+        bio: instagramBio,
+        externalUrl: instagramProfileUrl,
+      }
+    : clientNameFallback
+    ? {
+        label: clientNameFallback,
+        username: sanitizeHandle(clientNameFallback) || null,
+        followers: instagramFollowers,
+        posts: igPosts,
+        bio: instagramBio,
+        externalUrl: instagramProfileUrl,
+      }
+    : null;
+
+  const tiktokProfile = tiktokHandle
+    ? {
+        username: tiktokHandle,
+        label: clientNameFallback || "TikTok",
+        followers: tiktokFollowers,
+        posts: tiktokPosts,
+        bio: tiktokBio,
+        externalUrl: tiktokProfileUrl,
+      }
+    : clientNameFallback
+    ? {
+        label: clientNameFallback,
+        username: sanitizeHandle(clientNameFallback) || null,
+        followers: tiktokFollowers,
+        posts: tiktokPosts,
+        bio: tiktokBio,
+        externalUrl: tiktokProfileUrl,
+      }
+    : null;
+
+  const platforms = [];
+
+  if (
+    igPosts > 0 ||
+    instagramFollowers > 0 ||
+    instagramTotalInteractions > 0 ||
+    instagramProfile
+  ) {
+    platforms.push({
+      key: "instagram",
+      label: "Instagram",
+      followers: instagramFollowers,
+      posts: igPosts,
+      likes: combinedInstagramLikes,
+      comments: combinedInstagramComments,
+      engagementRate: instagramEngagement,
+      shares: { followers: 0, likes: 0, comments: 0 },
+      derived: {
+        totalInteractions: instagramTotalInteractions,
+        averageInteractions: instagramAverageInteractions,
+        averageEngagementRate: instagramEngagement,
+      },
+      profile: instagramProfile,
+    });
+  }
+
+  if (
+    tiktokPosts > 0 ||
+    tiktokFollowers > 0 ||
+    tiktokTotalInteractions > 0 ||
+    tiktokProfile
+  ) {
+    platforms.push({
+      key: "tiktok",
+      label: "TikTok",
+      followers: tiktokFollowers,
+      posts: tiktokPosts,
+      likes: combinedTiktokLikes,
+      comments: combinedTiktokComments,
+      engagementRate: tiktokEngagement,
+      shares: { followers: 0, likes: 0, comments: 0 },
+      derived: {
+        totalInteractions: tiktokTotalInteractions,
+        averageInteractions: tiktokAverageInteractions,
+        averageEngagementRate: tiktokEngagement,
+      },
+      profile: tiktokProfile,
+    });
+  }
+
+  return { platforms };
+};
+
 const monthlyData = {
   "2024-11": {
     monthLabel: "November 2024",
@@ -2863,9 +3397,16 @@ export default function ExecutiveSummaryPage() {
       if (!token || !clientId) {
         setUserInsightState((prev) => ({
           ...prev,
-          loading: true,
+          loading: false,
+          error: prev.error || "",
           activityBuckets: null,
         }));
+        setPlatformState({
+          loading: false,
+          error: "",
+          platforms: [],
+          profiles: { byKey: {} },
+        });
         return;
       }
 
@@ -2874,6 +3415,11 @@ export default function ExecutiveSummaryPage() {
         loading: true,
         error: "",
         activityBuckets: null,
+      }));
+      setPlatformState((prev) => ({
+        ...prev,
+        loading: true,
+        error: "",
       }));
 
       const periodRange = getMonthDateRange(selectedMonth);
@@ -2930,7 +3476,7 @@ export default function ExecutiveSummaryPage() {
         const users = Array.isArray(rawDirectory) ? rawDirectory : [];
         const insight = computeUserInsight(users);
 
-        const stats = statsResult ?? {};
+        const stats = statsResult?.data ?? statsResult ?? {};
         const totalIGPosts = extractNumericValue(
           stats.instagramPosts,
           stats.igPosts,
@@ -2967,9 +3513,29 @@ export default function ExecutiveSummaryPage() {
           totalTikTokPosts,
         });
 
+        const platformMetrics = buildPlatformMetricsFromActivity({
+          stats,
+          likes: likesRecords,
+          comments: commentsRecords,
+          totalIGPosts,
+          totalTikTokPosts,
+          totalUsers: insight?.summary?.totalUsers ?? users.length ?? 0,
+          clientId,
+        });
+        const normalizedPlatformMetrics = normalizePlatformMetrics(
+          platformMetrics,
+        );
+
         if (cancelled) {
           return;
         }
+
+        setPlatformState({
+          loading: false,
+          error: "",
+          platforms: normalizedPlatformMetrics.platforms,
+          profiles: normalizedPlatformMetrics.profiles,
+        });
 
         setUserInsightState({
           loading: false,
@@ -2990,99 +3556,6 @@ export default function ExecutiveSummaryPage() {
               : "Gagal memuat insight pengguna.",
           activityBuckets: null,
         }));
-      }
-    };
-
-    loadUserInsight();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [token, clientId, selectedMonth]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    if (!token || !clientId) {
-      setPlatformState({
-        loading: false,
-        error: "",
-        platforms: [],
-        profiles: { byKey: {} },
-      });
-      return () => {
-        controller.abort();
-      };
-    }
-
-    setPlatformState((prev) => ({
-      ...prev,
-      loading: true,
-      error: "",
-    }));
-
-    const fetchPlatformMetrics = async () => {
-      try {
-        const params = new URLSearchParams();
-        params.set("periode", "bulanan");
-
-        const range = getMonthDateRange(selectedMonth);
-        if (range?.startDate) {
-          params.set("tanggal_mulai", range.startDate);
-          params.set("start_date", range.startDate);
-          params.set("tanggal", range.startDate);
-        }
-
-        if (range?.endDate) {
-          params.set("tanggal_selesai", range.endDate);
-          params.set("end_date", range.endDate);
-        }
-
-        if (selectedMonth) {
-          params.set("month", selectedMonth);
-        }
-
-        if (clientId) {
-          params.set("client_id", String(clientId));
-        }
-
-        const baseUrl = (API_BASE_URL || "").replace(/\/+$/, "");
-        const endpoint = `${baseUrl}/api/aggregator`;
-        const response = await fetch(
-          `${endpoint}?${params.toString()}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            signal: controller.signal,
-            cache: "no-store",
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Gagal memuat data agregasi (${response.status})`,
-          );
-        }
-
-        const payload = await response.json();
-        const normalizedPlatforms = normalizePlatformMetrics(
-          payload?.data ?? payload,
-        );
-
-        setPlatformState({
-          loading: false,
-          error: "",
-          platforms: normalizedPlatforms.platforms,
-          profiles: normalizedPlatforms.profiles,
-        });
-      } catch (error) {
-        if (error?.name === "AbortError") {
-          return;
-        }
-
         setPlatformState({
           loading: false,
           error:
@@ -3095,9 +3568,10 @@ export default function ExecutiveSummaryPage() {
       }
     };
 
-    fetchPlatformMetrics();
+    loadUserInsight();
 
     return () => {
+      cancelled = true;
       controller.abort();
     };
   }, [token, clientId, selectedMonth]);
