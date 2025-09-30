@@ -24,10 +24,6 @@ import {
   getDashboardStats,
   getRekapLikesIG,
   getRekapKomentarTiktok,
-  getInstagramPostsViaBackend,
-  getInstagramPosts,
-  getTiktokPostsViaBackend,
-  getTiktokPosts,
 } from "@/utils/api";
 import { cn } from "@/lib/utils";
 import {
@@ -2205,8 +2201,6 @@ const buildPlatformMetricsFromActivity = ({
   totalTikTokPosts = 0,
   totalUsers = 0,
   clientId,
-  instagramPostsRaw = [],
-  tiktokPostsRaw = [],
 }) => {
   const safeStats = stats && typeof stats === "object" ? stats : {};
   const safeTotalUsers = Math.max(
@@ -2223,8 +2217,8 @@ const buildPlatformMetricsFromActivity = ({
         ]),
     ) || 0,
   );
-  const instagramPostCount = Math.max(0, Math.round(Number(totalIGPosts) || 0));
-  const tiktokPostCount = Math.max(0, Math.round(Number(totalTikTokPosts) || 0));
+  const igPosts = Math.max(0, Math.round(Number(totalIGPosts) || 0));
+  const tiktokPosts = Math.max(0, Math.round(Number(totalTikTokPosts) || 0));
 
   const instagramLikes = sumActivityRecords(likes, INSTAGRAM_LIKE_FIELD_PATHS);
   const instagramComments = sumActivityRecords(
@@ -2304,13 +2298,9 @@ const buildPlatformMetricsFromActivity = ({
     combinedTiktokLikes + combinedTiktokComments;
 
   const expectedIGInteractions =
-    safeTotalUsers > 0 && instagramPostCount > 0
-      ? safeTotalUsers * instagramPostCount
-      : 0;
+    safeTotalUsers > 0 && igPosts > 0 ? safeTotalUsers * igPosts : 0;
   const expectedTikTokInteractions =
-    safeTotalUsers > 0 && tiktokPostCount > 0
-      ? safeTotalUsers * tiktokPostCount
-      : 0;
+    safeTotalUsers > 0 && tiktokPosts > 0 ? safeTotalUsers * tiktokPosts : 0;
 
   const instagramEngagementCandidate =
     expectedIGInteractions > 0
@@ -2340,77 +2330,9 @@ const buildPlatformMetricsFromActivity = ({
       : tiktokEngagementFallback;
 
   const instagramAverageInteractions =
-    instagramPostCount > 0
-      ? instagramTotalInteractions / instagramPostCount
-      : 0;
+    igPosts > 0 ? instagramTotalInteractions / igPosts : 0;
   const tiktokAverageInteractions =
-    tiktokPostCount > 0 ? tiktokTotalInteractions / tiktokPostCount : 0;
-
-  const instagramPostsArray = ensureArray(instagramPostsRaw);
-  const tiktokPostsArray = ensureArray(tiktokPostsRaw);
-
-  const normalizedInstagramPosts = instagramPostsArray
-    .map((post, index) =>
-      normalizePlatformPost(post, {
-        platformKey: "instagram",
-        fallbackIndex: index,
-        platformLabel: "Instagram",
-      }),
-    )
-    .filter(Boolean);
-  const normalizedTiktokPosts = tiktokPostsArray
-    .map((post, index) =>
-      normalizePlatformPost(post, {
-        platformKey: "tiktok",
-        fallbackIndex: index,
-        platformLabel: "TikTok",
-      }),
-    )
-    .filter(Boolean);
-
-  const instagramDerivedFromPosts = computeDerivedPostStats({
-    posts: normalizedInstagramPosts,
-    fallbackLikes: combinedInstagramLikes,
-    fallbackComments: combinedInstagramComments,
-    fallbackPostCount: instagramPostCount,
-  });
-  const tiktokDerivedFromPosts = computeDerivedPostStats({
-    posts: normalizedTiktokPosts,
-    fallbackLikes: combinedTiktokLikes,
-    fallbackComments: combinedTiktokComments,
-    fallbackPostCount: tiktokPostCount,
-  });
-
-  const instagramDerived = {
-    ...instagramDerivedFromPosts,
-    totalInteractions:
-      instagramDerivedFromPosts.totalInteractions > 0
-        ? instagramDerivedFromPosts.totalInteractions
-        : instagramTotalInteractions,
-    averageInteractions:
-      instagramDerivedFromPosts.averageInteractions > 0
-        ? instagramDerivedFromPosts.averageInteractions
-        : instagramAverageInteractions,
-    averageEngagementRate:
-      instagramDerivedFromPosts.averageEngagementRate > 0
-        ? instagramDerivedFromPosts.averageEngagementRate
-        : instagramEngagement,
-  };
-  const tiktokDerived = {
-    ...tiktokDerivedFromPosts,
-    totalInteractions:
-      tiktokDerivedFromPosts.totalInteractions > 0
-        ? tiktokDerivedFromPosts.totalInteractions
-        : tiktokTotalInteractions,
-    averageInteractions:
-      tiktokDerivedFromPosts.averageInteractions > 0
-        ? tiktokDerivedFromPosts.averageInteractions
-        : tiktokAverageInteractions,
-    averageEngagementRate:
-      tiktokDerivedFromPosts.averageEngagementRate > 0
-        ? tiktokDerivedFromPosts.averageEngagementRate
-        : tiktokEngagement,
-  };
+    tiktokPosts > 0 ? tiktokTotalInteractions / tiktokPosts : 0;
 
   const clientNameFallback =
     getStringFromPaths(safeStats, [
@@ -2458,7 +2380,7 @@ const buildPlatformMetricsFromActivity = ({
         username: instagramHandle,
         label: clientNameFallback || "Instagram",
         followers: instagramFollowers,
-        posts: instagramPostCount,
+        posts: igPosts,
         bio: instagramBio,
         externalUrl: instagramProfileUrl,
       }
@@ -2467,7 +2389,7 @@ const buildPlatformMetricsFromActivity = ({
         label: clientNameFallback,
         username: sanitizeHandle(clientNameFallback) || null,
         followers: instagramFollowers,
-        posts: instagramPostCount,
+        posts: igPosts,
         bio: instagramBio,
         externalUrl: instagramProfileUrl,
       }
@@ -2478,7 +2400,7 @@ const buildPlatformMetricsFromActivity = ({
         username: tiktokHandle,
         label: clientNameFallback || "TikTok",
         followers: tiktokFollowers,
-        posts: tiktokPostCount,
+        posts: tiktokPosts,
         bio: tiktokBio,
         externalUrl: tiktokProfileUrl,
       }
@@ -2487,7 +2409,7 @@ const buildPlatformMetricsFromActivity = ({
         label: clientNameFallback,
         username: sanitizeHandle(clientNameFallback) || null,
         followers: tiktokFollowers,
-        posts: tiktokPostCount,
+        posts: tiktokPosts,
         bio: tiktokBio,
         externalUrl: tiktokProfileUrl,
       }
@@ -2496,7 +2418,7 @@ const buildPlatformMetricsFromActivity = ({
   const platforms = [];
 
   if (
-    instagramPostCount > 0 ||
+    igPosts > 0 ||
     instagramFollowers > 0 ||
     instagramTotalInteractions > 0 ||
     instagramProfile
@@ -2505,20 +2427,22 @@ const buildPlatformMetricsFromActivity = ({
       key: "instagram",
       label: "Instagram",
       followers: instagramFollowers,
-      posts: instagramPostCount,
+      posts: igPosts,
       likes: combinedInstagramLikes,
       comments: combinedInstagramComments,
       engagementRate: instagramEngagement,
       shares: { followers: 0, likes: 0, comments: 0 },
-      rawPosts: instagramPostsArray,
-      postsData: normalizedInstagramPosts,
-      derived: instagramDerived,
+      derived: {
+        totalInteractions: instagramTotalInteractions,
+        averageInteractions: instagramAverageInteractions,
+        averageEngagementRate: instagramEngagement,
+      },
       profile: instagramProfile,
     });
   }
 
   if (
-    tiktokPostCount > 0 ||
+    tiktokPosts > 0 ||
     tiktokFollowers > 0 ||
     tiktokTotalInteractions > 0 ||
     tiktokProfile
@@ -2527,14 +2451,16 @@ const buildPlatformMetricsFromActivity = ({
       key: "tiktok",
       label: "TikTok",
       followers: tiktokFollowers,
-      posts: tiktokPostCount,
+      posts: tiktokPosts,
       likes: combinedTiktokLikes,
       comments: combinedTiktokComments,
       engagementRate: tiktokEngagement,
       shares: { followers: 0, likes: 0, comments: 0 },
-      rawPosts: tiktokPostsArray,
-      postsData: normalizedTiktokPosts,
-      derived: tiktokDerived,
+      derived: {
+        totalInteractions: tiktokTotalInteractions,
+        averageInteractions: tiktokAverageInteractions,
+        averageEngagementRate: tiktokEngagement,
+      },
       profile: tiktokProfile,
     });
   }
@@ -3579,129 +3505,6 @@ export default function ExecutiveSummaryPage() {
           commentsResult;
         const commentsRecords = Array.isArray(commentsRaw) ? commentsRaw : [];
 
-        const clientNameFallbackFromStats =
-          getStringFromPaths(stats, [
-            "client_name",
-            "clientName",
-            "nama_client",
-            "client",
-            "client_label",
-            "clientLabel",
-          ]) || undefined;
-        const sanitizedClientIdentifier = sanitizeHandle(
-          clientId ? String(clientId) : "",
-        );
-        const instagramUsername =
-          sanitizeHandle(getStringFromPaths(stats, INSTAGRAM_USERNAME_PATHS)) ||
-          sanitizeHandle(
-            getStringFromPaths(stats, [
-              "instagramProfile.username",
-              "igProfile.username",
-            ]),
-          ) ||
-          sanitizeHandle(clientNameFallbackFromStats) ||
-          sanitizedClientIdentifier ||
-          (clientId ? String(clientId) : "");
-
-        const highlightPostLimit = 20;
-
-        let instagramPostsRaw = [];
-        let tiktokPostsRaw = [];
-        let instagramPostsError = null;
-        let tiktokPostsError = null;
-
-        if (instagramUsername) {
-          try {
-            const instagramResponse = await getInstagramPostsViaBackend(
-              token,
-              instagramUsername,
-              highlightPostLimit,
-              startDateParam,
-              endDateParam,
-            );
-            instagramPostsRaw = ensureArray(instagramResponse);
-          } catch (error) {
-            console.warn("Gagal memuat konten Instagram", error);
-            instagramPostsError = error;
-
-            if (clientId) {
-              try {
-                const instagramFallback = await getInstagramPosts(token, clientId);
-                instagramPostsRaw = ensureArray(instagramFallback);
-                instagramPostsError = null;
-              } catch (fallbackError) {
-                console.warn(
-                  "Gagal memuat konten Instagram (fallback)",
-                  fallbackError,
-                );
-                instagramPostsRaw = [];
-                instagramPostsError = fallbackError;
-              }
-            } else {
-              instagramPostsRaw = [];
-            }
-          }
-        } else if (clientId) {
-          try {
-            const instagramFallback = await getInstagramPosts(token, clientId);
-            instagramPostsRaw = ensureArray(instagramFallback);
-          } catch (fallbackError) {
-            console.warn(
-              "Gagal memuat konten Instagram (tanpa username)",
-              fallbackError,
-            );
-            instagramPostsError = fallbackError;
-          }
-        }
-
-        try {
-          const tiktokResponse = await getTiktokPostsViaBackend(
-            token,
-            clientId,
-            highlightPostLimit,
-            startDateParam,
-            endDateParam,
-          );
-          tiktokPostsRaw = ensureArray(tiktokResponse);
-        } catch (error) {
-          console.warn("Gagal memuat konten TikTok", error);
-          tiktokPostsError = error;
-
-          try {
-            const fallbackTikTok = await getTiktokPosts(token, clientId);
-            tiktokPostsRaw = ensureArray(fallbackTikTok);
-            tiktokPostsError = null;
-          } catch (fallbackError) {
-            console.warn(
-              "Gagal memuat konten TikTok (fallback)",
-              fallbackError,
-            );
-            tiktokPostsRaw = [];
-            tiktokPostsError = fallbackError;
-          }
-        }
-
-        if (cancelled) {
-          return;
-        }
-
-        const platformErrorMessage = (() => {
-          const targets = [];
-          if (instagramPostsError) {
-            targets.push("Instagram");
-          }
-          if (tiktokPostsError) {
-            targets.push("TikTok");
-          }
-          if (targets.length === 0) {
-            return "";
-          }
-          if (targets.length === 1) {
-            return `Gagal memuat highlight konten ${targets[0]}.`;
-          }
-          return `Gagal memuat highlight konten ${targets.join(" dan ")}.`;
-        })();
-
         const activityBuckets = computeActivityBuckets({
           users,
           likes: likesRecords,
@@ -3718,8 +3521,6 @@ export default function ExecutiveSummaryPage() {
           totalTikTokPosts,
           totalUsers: insight?.summary?.totalUsers ?? users.length ?? 0,
           clientId,
-          instagramPostsRaw,
-          tiktokPostsRaw,
         });
         const normalizedPlatformMetrics = normalizePlatformMetrics(
           platformMetrics,
@@ -3731,7 +3532,7 @@ export default function ExecutiveSummaryPage() {
 
         setPlatformState({
           loading: false,
-          error: platformErrorMessage,
+          error: "",
           platforms: normalizedPlatformMetrics.platforms,
           profiles: normalizedPlatformMetrics.profiles,
         });
@@ -4425,8 +4226,6 @@ export default function ExecutiveSummaryPage() {
                     />
                     <PostHighlightCarousel
                       posts={platform.topPosts ?? []}
-                      loading={platformsLoading}
-                      error={!hasMonthlyPlatforms ? platformError : ""}
                       formatNumber={formatNumber}
                     />
                   </div>
