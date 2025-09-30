@@ -1929,7 +1929,7 @@ export default function ExecutiveSummaryPage() {
         }
 
         if (clientId) {
-          params.set("clientId", String(clientId));
+          params.set("client_id", String(clientId));
         }
 
         const baseUrl = (API_BASE_URL || "").replace(/\/+$/, "");
