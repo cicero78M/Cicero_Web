@@ -1564,6 +1564,29 @@ const extractYearFromMonthKey = (monthKey) => {
   return Number.isFinite(parsedYear) ? parsedYear : null;
 };
 
+const createMonthOptionFromKey = (monthKey, locale = "id-ID") => {
+  if (typeof monthKey !== "string") {
+    return null;
+  }
+
+  const [yearPart, monthPart] = monthKey.split("-");
+  const year = Number.parseInt(yearPart, 10);
+  const month = Number.parseInt(monthPart, 10);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    return null;
+  }
+
+  const monthIndexZeroBased = Math.min(Math.max(month, 1), 12) - 1;
+  const displayDate = new Date(year, monthIndexZeroBased, 1);
+  const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
+
+  return {
+    key: buildMonthKey(year, monthIndexZeroBased),
+    label: `${monthFormatter.format(displayDate)} ${year}`,
+  };
+};
+
 const generateMonthOptions = ({ year, locale } = {}) => {
   const now = new Date();
   const targetYear = Number.isFinite(year) ? year : now.getFullYear();
@@ -1606,10 +1629,24 @@ export default function ExecutiveSummaryPage() {
     }
     return new Date().getFullYear();
   }, [availableYears]);
-  const monthOptions = useMemo(
-    () => generateMonthOptions({ year: resolvedYear }),
-    [resolvedYear],
-  );
+  const monthOptions = useMemo(() => {
+    const locale = "id-ID";
+    const options = generateMonthOptions({ year: resolvedYear, locale });
+    const now = new Date();
+    const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
+
+    if (options.some((option) => option.key === currentMonthKey)) {
+      return options;
+    }
+
+    const currentMonthOption = createMonthOptionFromKey(currentMonthKey, locale);
+
+    if (!currentMonthOption) {
+      return options;
+    }
+
+    return [currentMonthOption, ...options];
+  }, [resolvedYear]);
   const defaultSelectedMonth = useMemo(() => {
     const now = new Date();
     const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
