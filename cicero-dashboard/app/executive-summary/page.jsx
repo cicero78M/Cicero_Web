@@ -2185,10 +2185,10 @@ export default function ExecutiveSummaryPage() {
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              Insight Pengguna Aktual
+              Insight User / Personil Ditbinmas dan Binmas Polres Jajaran Polda Jatim.
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              Data ini ditarik langsung dari Database User.
+              Data ini diambil langsung dari Database User / Personil.
             </p>
           </div>
         </div>
@@ -2320,10 +2320,10 @@ export default function ExecutiveSummaryPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Komposisi Kelengkapan Data Username
+                        Komposisi Kelengkapan Data Username Sosial Media
                       </h3>
                       <p className="mt-1 text-xs text-slate-400">
-                        Distribusi personil berdasarkan status pengisian akun.
+                        Peta Distribusi personil berdasarkan status pengisian akun.
                       </p>
                     </div>
                   </div>
@@ -2446,7 +2446,7 @@ export default function ExecutiveSummaryPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Komposisi Data Satker
+                        Komposisi Data Personil pada Satker
                       </h3>
                       <p className="mt-1 text-xs text-slate-400">
                         Proporsi personil berdasarkan satker dengan agregasi satker lainnya.
@@ -2510,7 +2510,7 @@ export default function ExecutiveSummaryPage() {
 
             <article className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
               <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Catatan Insight User
+                Catatan Insight Data Personil
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
             </article>
@@ -2649,7 +2649,7 @@ export default function ExecutiveSummaryPage() {
       <section className="grid gap-6 lg:grid-cols-5">
         <div className="rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.4)] lg:col-span-3">
           <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Narasi Utama Bulanan
+            Word Cloud
           </h2>
           <p className="mt-4 text-base leading-relaxed text-slate-200">
             {data.overviewNarrative}
