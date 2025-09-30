@@ -2260,9 +2260,10 @@ export default function ExecutiveSummaryPage() {
               </div>
             )}
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+            <div className="grid gap-6 xl:grid-cols-6 2xl:grid-cols-7">
+              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_35px_-20px_rgba(14,165,233,0.6)] transition-colors hover:border-cyan-400/30 xl:col-span-4 2xl:col-span-4">
+                <div className="pointer-events-none absolute inset-x-10 -top-32 h-64 rounded-full bg-cyan-500/10 blur-3xl" />
+                <div className="relative">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
@@ -2320,53 +2321,11 @@ export default function ExecutiveSummaryPage() {
                     </div>
                   )}
                 </div>
+              </section>
 
-                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
-                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                    10 Polres dengan Rasio Kelengkapan Data Terendah
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Fokuskan pendampingan pada satuan kerja dengan performa terendah.
-                  </p>
-                  {lowestCompletionDivisions.length > 0 ? (
-                    <ul className="mt-5 space-y-4">
-                      {lowestCompletionDivisions.map((item, index) => (
-                        <li key={item.fullDivision} className="rounded-xl border border-slate-800/60 bg-slate-950/60 p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                                {String(index + 1).padStart(2, "0")}
-                              </span>
-                              <p className="text-sm font-semibold text-slate-100">{item.fullDivision}</p>
-                            </div>
-                            <span className="text-sm font-semibold text-cyan-300">
-                              {formatPercent(item.completion)}
-                            </span>
-                          </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
-                            <span>Instagram Lengkap: {formatPercent(item.instagram)}</span>
-                            <span>TikTok Lengkap: {formatPercent(item.tiktok)}</span>
-                            <span>Total Personil: {formatNumber(item.total, { maximumFractionDigits: 0 })}</span>
-                          </div>
-                          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400"
-                              style={{ width: `${Math.max(0, Math.min(100, item.completion))}%` }}
-                            />
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
-                      Belum ada data satker yang bisa dibandingkan.
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_35px_-18px_rgba(56,189,248,0.45)] transition-colors hover:border-cyan-400/30 xl:col-span-2 2xl:col-span-3">
+                <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-fuchsia-500/10 blur-3xl" />
+                <div className="relative">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
@@ -2426,8 +2385,61 @@ export default function ExecutiveSummaryPage() {
                     </div>
                   )}
                 </div>
+              </section>
 
-                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_45px_-22px_rgba(16,185,129,0.45)] transition-colors hover:border-emerald-400/30 xl:col-span-3 2xl:col-span-4">
+                <div className="pointer-events-none absolute inset-x-6 top-10 h-48 rounded-full bg-emerald-500/10 blur-3xl" />
+                <div className="relative">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        10 Polres dengan Rasio Kelengkapan Data Terendah
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Fokuskan pendampingan pada satuan kerja dengan performa terendah.
+                      </p>
+                      {lowestCompletionDivisions.length > 0 ? (
+                        <ul className="mt-5 space-y-4">
+                          {lowestCompletionDivisions.map((item, index) => (
+                            <li key={item.fullDivision} className="rounded-xl border border-slate-800/60 bg-slate-950/70 p-4 shadow-inner">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                    {String(index + 1).padStart(2, "0")}
+                                  </span>
+                                  <p className="text-sm font-semibold text-slate-100">{item.fullDivision}</p>
+                                </div>
+                                <span className="text-sm font-semibold text-cyan-300">
+                                  {formatPercent(item.completion)}
+                                </span>
+                              </div>
+                              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+                                <span>Instagram Lengkap: {formatPercent(item.instagram)}</span>
+                                <span>TikTok Lengkap: {formatPercent(item.tiktok)}</span>
+                                <span>Total Personil: {formatNumber(item.total, { maximumFractionDigits: 0 })}</span>
+                              </div>
+                              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-400"
+                                  style={{ width: `${Math.max(0, Math.min(100, item.completion))}%` }}
+                                />
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
+                          Belum ada data satker yang bisa dibandingkan.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_35px_-18px_rgba(14,165,233,0.4)] transition-colors hover:border-cyan-400/30 xl:col-span-3 2xl:col-span-3">
+                <div className="pointer-events-none absolute -left-16 bottom-10 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
+                <div className="relative">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
@@ -2490,7 +2502,7 @@ export default function ExecutiveSummaryPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </section>
             </div>
 
             <article className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
