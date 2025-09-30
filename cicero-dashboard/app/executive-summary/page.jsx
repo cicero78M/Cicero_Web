@@ -1925,11 +1925,15 @@ export default function ExecutiveSummaryPage() {
 
         const range = getMonthDateRange(selectedMonth);
         if (range?.startDate) {
-          params.set("tanggal", range.startDate);
+          params.set("tanggal_mulai", range.startDate);
+        }
+
+        if (range?.endDate) {
+          params.set("tanggal_selesai", range.endDate);
         }
 
         if (clientId) {
-          params.set("clientId", String(clientId));
+          params.set("client_id", String(clientId));
         }
 
         const baseUrl = (API_BASE_URL || "").replace(/\/+$/, "");
