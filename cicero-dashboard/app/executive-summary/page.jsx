@@ -2003,6 +2003,236 @@ const monthlyData = {
         takeaway: "Format checklist visual memudahkan pemahaman",
       },
     ],
+    platformAnalytics: {
+      platforms: [
+        {
+          key: "instagram",
+          label: "Instagram",
+          followers: 86500,
+          posts: 42,
+          likes: 45230,
+          comments: 5280,
+          engagementRate: 7.4,
+          shares: { followers: 52, likes: 58, comments: 61 },
+          derived: {
+            totalInteractions: 50510,
+            averageInteractions: 1203,
+            averageReach: 43780,
+            averageEngagementRate: 7.4,
+            contentTypeDistribution: [
+              { key: "carousel", label: "Carousel", share: 40, count: 17 },
+              { key: "reels", label: "Reels", share: 36, count: 15 },
+              { key: "single", label: "Single Image", share: 24, count: 10 },
+            ],
+          },
+          profile: {
+            username: "ditbinmasjatim",
+            followers: 86500,
+            posts: 42,
+            externalUrl: "https://www.instagram.com/ditbinmasjatim",
+            bio: "Membangun partisipasi publik melalui edukasi keamanan dan ketertiban masyarakat.",
+          },
+          postsData: [
+            {
+              id: "ig-nov-1",
+              title: "Carousel Edukasi Keselamatan Nataru",
+              type: "Carousel",
+              permalink: "https://instagram.com/p/ig-nov-1",
+              publishedAt: new Date("2024-11-04T08:00:00+07:00"),
+              metrics: {
+                likes: 18230,
+                comments: 1460,
+                shares: 860,
+                saves: 540,
+                reach: 48760,
+                views: 0,
+                engagementRate: 7.4,
+                interactions: 21090,
+              },
+            },
+            {
+              id: "ig-nov-2",
+              title: "Reel Patroli Gabungan",
+              type: "Reel",
+              permalink: "https://instagram.com/p/ig-nov-2",
+              publishedAt: new Date("2024-11-16T09:30:00+07:00"),
+              metrics: {
+                likes: 15010,
+                comments: 960,
+                shares: 540,
+                saves: 620,
+                reach: 39210,
+                views: 86500,
+                engagementRate: 6.8,
+                interactions: 17130,
+              },
+            },
+            {
+              id: "ig-nov-3",
+              title: "Live Update Operasi Nataru",
+              type: "Live",
+              permalink: "https://instagram.com/p/ig-nov-3",
+              publishedAt: new Date("2024-11-21T19:00:00+07:00"),
+              metrics: {
+                likes: 11990,
+                comments: 780,
+                shares: 460,
+                saves: 380,
+                reach: 35400,
+                views: 68400,
+                engagementRate: 6.5,
+                interactions: 13610,
+              },
+            },
+          ],
+        },
+        {
+          key: "tiktok",
+          label: "TikTok",
+          followers: 53800,
+          posts: 34,
+          likes: 38800,
+          comments: 4100,
+          engagementRate: 6.1,
+          shares: { followers: 32, likes: 37, comments: 35 },
+          derived: {
+            totalInteractions: 42900,
+            averageInteractions: 1262,
+            averageReach: 31540,
+            averageEngagementRate: 6.1,
+            contentTypeDistribution: [
+              { key: "video", label: "Video Edukatif", share: 44, count: 15 },
+              { key: "challenge", label: "Challenge", share: 32, count: 11 },
+              { key: "live", label: "Live Update", share: 24, count: 8 },
+            ],
+          },
+          profile: {
+            username: "ditbinmasjatim",
+            followers: 53800,
+            posts: 34,
+            externalUrl: "https://www.tiktok.com/@ditbinmasjatim",
+            bio: "Konten cepat tentang himbauan lalu lintas dan keamanan lingkungan.",
+          },
+          postsData: [
+            {
+              id: "tt-nov-1",
+              title: "Duet Influencer Himbauan Mudik",
+              type: "Video",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-nov-1",
+              publishedAt: new Date("2024-11-07T10:00:00+07:00"),
+              metrics: {
+                likes: 14300,
+                comments: 1280,
+                shares: 690,
+                saves: 410,
+                reach: 28940,
+                views: 96500,
+                engagementRate: 6.1,
+                interactions: 16680,
+              },
+            },
+            {
+              id: "tt-nov-2",
+              title: "Tips Cek Kendaraan Sebelum Perjalanan",
+              type: "Video",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-nov-2",
+              publishedAt: new Date("2024-11-18T14:15:00+07:00"),
+              metrics: {
+                likes: 11840,
+                comments: 940,
+                shares: 520,
+                saves: 360,
+                reach: 25110,
+                views: 81200,
+                engagementRate: 5.6,
+                interactions: 13660,
+              },
+            },
+            {
+              id: "tt-nov-3",
+              title: "Quick Response Info Kemacetan",
+              type: "Live",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-nov-3",
+              publishedAt: new Date("2024-11-23T20:45:00+07:00"),
+              metrics: {
+                likes: 12660,
+                comments: 880,
+                shares: 470,
+                saves: 320,
+                reach: 22540,
+                views: 75400,
+                engagementRate: 5.9,
+                interactions: 14330,
+              },
+            },
+          ],
+        },
+        {
+          key: "facebook",
+          label: "Facebook",
+          followers: 27400,
+          posts: 28,
+          likes: 8420,
+          comments: 920,
+          engagementRate: 3.8,
+          shares: { followers: 16, likes: 10, comments: 4 },
+          derived: {
+            totalInteractions: 9620,
+            averageInteractions: 344,
+            averageReach: 17900,
+            averageEngagementRate: 3.8,
+            contentTypeDistribution: [
+              { key: "infografis", label: "Infografis", share: 46, count: 13 },
+              { key: "status", label: "Status", share: 29, count: 8 },
+              { key: "tautan", label: "Tautan", share: 25, count: 7 },
+            ],
+          },
+          profile: {
+            username: "Ditbinmas Jatim",
+            followers: 27400,
+            posts: 28,
+            externalUrl: "https://www.facebook.com/ditbinmasjatim",
+            bio: "Update rutin kegiatan Binmas dan kolaborasi lintas komunitas.",
+          },
+          postsData: [
+            {
+              id: "fb-nov-1",
+              title: "Infografis Operasi Lilin",
+              type: "Infografis",
+              permalink: "https://facebook.com/posts/fb-nov-1",
+              publishedAt: new Date("2024-11-05T11:10:00+07:00"),
+              metrics: {
+                likes: 2840,
+                comments: 280,
+                shares: 180,
+                saves: 0,
+                reach: 18600,
+                views: 0,
+                engagementRate: 4.0,
+                interactions: 3300,
+              },
+            },
+            {
+              id: "fb-nov-2",
+              title: "Status Update Posko Pengamanan",
+              type: "Status",
+              permalink: "https://facebook.com/posts/fb-nov-2",
+              publishedAt: new Date("2024-11-17T09:20:00+07:00"),
+              metrics: {
+                likes: 1980,
+                comments: 220,
+                shares: 120,
+                saves: 0,
+                reach: 16540,
+                views: 0,
+                engagementRate: 3.5,
+                interactions: 2320,
+              },
+            },
+          ],
+        },
+      ],
+    },
   },
   "2024-10": {
     monthLabel: "Oktober 2024",
@@ -2077,6 +2307,236 @@ const monthlyData = {
         takeaway: "Durasi 45 detik sedikit menurunkan completion",
       },
     ],
+    platformAnalytics: {
+      platforms: [
+        {
+          key: "instagram",
+          label: "Instagram",
+          followers: 84200,
+          posts: 45,
+          likes: 39820,
+          comments: 4620,
+          engagementRate: 6.1,
+          shares: { followers: 51, likes: 55, comments: 58 },
+          derived: {
+            totalInteractions: 44440,
+            averageInteractions: 988,
+            averageReach: 36240,
+            averageEngagementRate: 6.1,
+            contentTypeDistribution: [
+              { key: "reels", label: "Reels", share: 40, count: 18 },
+              { key: "infografik", label: "Infografik", share: 36, count: 16 },
+              { key: "live", label: "Live", share: 24, count: 11 },
+            ],
+          },
+          profile: {
+            username: "ditbinmasjatim",
+            followers: 84200,
+            posts: 45,
+            externalUrl: "https://www.instagram.com/ditbinmasjatim",
+            bio: "Konten edukasi visual dan update lapangan Ditbinmas Polda Jatim.",
+          },
+          postsData: [
+            {
+              id: "ig-oct-1",
+              title: "Infografik Rawan Kecelakaan",
+              type: "Infografik",
+              permalink: "https://instagram.com/p/ig-oct-1",
+              publishedAt: new Date("2024-10-08T09:00:00+07:00"),
+              metrics: {
+                likes: 16320,
+                comments: 1120,
+                shares: 680,
+                saves: 540,
+                reach: 42110,
+                views: 0,
+                engagementRate: 6.3,
+                interactions: 18660,
+              },
+            },
+            {
+              id: "ig-oct-2",
+              title: "Reel Testimoni Pemudik",
+              type: "Reel",
+              permalink: "https://instagram.com/p/ig-oct-2",
+              publishedAt: new Date("2024-10-18T10:30:00+07:00"),
+              metrics: {
+                likes: 13240,
+                comments: 870,
+                shares: 420,
+                saves: 460,
+                reach: 34780,
+                views: 78400,
+                engagementRate: 5.9,
+                interactions: 14990,
+              },
+            },
+            {
+              id: "ig-oct-3",
+              title: "Live Report Pengaturan Lalin",
+              type: "Live",
+              permalink: "https://instagram.com/p/ig-oct-3",
+              publishedAt: new Date("2024-10-25T19:15:00+07:00"),
+              metrics: {
+                likes: 10260,
+                comments: 620,
+                shares: 360,
+                saves: 210,
+                reach: 31220,
+                views: 54600,
+                engagementRate: 5.1,
+                interactions: 11450,
+              },
+            },
+          ],
+        },
+        {
+          key: "tiktok",
+          label: "TikTok",
+          followers: 49800,
+          posts: 31,
+          likes: 30100,
+          comments: 3680,
+          engagementRate: 5.2,
+          shares: { followers: 30, likes: 33, comments: 30 },
+          derived: {
+            totalInteractions: 33780,
+            averageInteractions: 1090,
+            averageReach: 29840,
+            averageEngagementRate: 5.2,
+            contentTypeDistribution: [
+              { key: "video", label: "Video Edukatif", share: 42, count: 13 },
+              { key: "behind the scene", label: "Behind the Scene", share: 35, count: 11 },
+              { key: "challenge", label: "Challenge", share: 23, count: 7 },
+            ],
+          },
+          profile: {
+            username: "ditbinmasjatim",
+            followers: 49800,
+            posts: 31,
+            externalUrl: "https://www.tiktok.com/@ditbinmasjatim",
+            bio: "Sorotan cepat aktivitas lapangan Binmas Polda Jatim.",
+          },
+          postsData: [
+            {
+              id: "tt-oct-1",
+              title: "Behind the Scene Operasi Zebra",
+              type: "Video",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-oct-1",
+              publishedAt: new Date("2024-10-06T11:20:00+07:00"),
+              metrics: {
+                likes: 11200,
+                comments: 890,
+                shares: 520,
+                saves: 340,
+                reach: 26140,
+                views: 73200,
+                engagementRate: 5.1,
+                interactions: 12950,
+              },
+            },
+            {
+              id: "tt-oct-2",
+              title: "Tips Aman Berkendara Malam",
+              type: "Video",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-oct-2",
+              publishedAt: new Date("2024-10-17T21:00:00+07:00"),
+              metrics: {
+                likes: 9860,
+                comments: 740,
+                shares: 410,
+                saves: 290,
+                reach: 23810,
+                views: 64800,
+                engagementRate: 4.8,
+                interactions: 11300,
+              },
+            },
+            {
+              id: "tt-oct-3",
+              title: "Live Report Penjagaan Simpang",
+              type: "Live",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-oct-3",
+              publishedAt: new Date("2024-10-27T18:40:00+07:00"),
+              metrics: {
+                likes: 9050,
+                comments: 1120,
+                shares: 380,
+                saves: 260,
+                reach: 24360,
+                views: 59800,
+                engagementRate: 5.0,
+                interactions: 10810,
+              },
+            },
+          ],
+        },
+        {
+          key: "facebook",
+          label: "Facebook",
+          followers: 26100,
+          posts: 25,
+          likes: 7360,
+          comments: 780,
+          engagementRate: 3.5,
+          shares: { followers: 19, likes: 11, comments: 6 },
+          derived: {
+            totalInteractions: 8140,
+            averageInteractions: 326,
+            averageReach: 20820,
+            averageEngagementRate: 3.5,
+            contentTypeDistribution: [
+              { key: "infografis", label: "Infografis", share: 40, count: 10 },
+              { key: "status", label: "Status", share: 32, count: 8 },
+              { key: "tautan", label: "Tautan", share: 28, count: 7 },
+            ],
+          },
+          profile: {
+            username: "Ditbinmas Jatim",
+            followers: 26100,
+            posts: 25,
+            externalUrl: "https://www.facebook.com/ditbinmasjatim",
+            bio: "Update lintas kanal mengenai giat Binmas dan kolaborasi Dishub.",
+          },
+          postsData: [
+            {
+              id: "fb-oct-1",
+              title: "Live Report Pengaturan Lalu Lintas",
+              type: "Live",
+              permalink: "https://facebook.com/posts/fb-oct-1",
+              publishedAt: new Date("2024-10-09T07:45:00+07:00"),
+              metrics: {
+                likes: 2560,
+                comments: 320,
+                shares: 210,
+                saves: 0,
+                reach: 21400,
+                views: 0,
+                engagementRate: 3.9,
+                interactions: 3090,
+              },
+            },
+            {
+              id: "fb-oct-2",
+              title: "Kolaborasi Dishub Tingkatkan Patroli",
+              type: "Status",
+              permalink: "https://facebook.com/posts/fb-oct-2",
+              publishedAt: new Date("2024-10-20T08:30:00+07:00"),
+              metrics: {
+                likes: 1980,
+                comments: 210,
+                shares: 140,
+                saves: 0,
+                reach: 19820,
+                views: 0,
+                engagementRate: 3.4,
+                interactions: 2330,
+              },
+            },
+          ],
+        },
+      ],
+    },
   },
   "2024-09": {
     monthLabel: "September 2024",
@@ -2151,6 +2611,236 @@ const monthlyData = {
         takeaway: "Format 30 detik ideal untuk edukasi singkat",
       },
     ],
+    platformAnalytics: {
+      platforms: [
+        {
+          key: "instagram",
+          label: "Instagram",
+          followers: 82300,
+          posts: 38,
+          likes: 35240,
+          comments: 4180,
+          engagementRate: 5.9,
+          shares: { followers: 49, likes: 53, comments: 57 },
+          derived: {
+            totalInteractions: 39420,
+            averageInteractions: 1038,
+            averageReach: 33680,
+            averageEngagementRate: 5.9,
+            contentTypeDistribution: [
+              { key: "carousel", label: "Carousel", share: 37, count: 14 },
+              { key: "foto", label: "Foto", share: 37, count: 14 },
+              { key: "live", label: "Live", share: 26, count: 10 },
+            ],
+          },
+          profile: {
+            username: "ditbinmasjatim",
+            followers: 82300,
+            posts: 38,
+            externalUrl: "https://www.instagram.com/ditbinmasjatim",
+            bio: "Cerita komunitas dan edukasi keselamatan berlalu lintas.",
+          },
+          postsData: [
+            {
+              id: "ig-sep-1",
+              title: "Live Relawan Lalu Lintas",
+              type: "Live",
+              permalink: "https://instagram.com/p/ig-sep-1",
+              publishedAt: new Date("2024-09-05T19:30:00+07:00"),
+              metrics: {
+                likes: 14200,
+                comments: 980,
+                shares: 520,
+                saves: 310,
+                reach: 38240,
+                views: 61200,
+                engagementRate: 6.1,
+                interactions: 16010,
+              },
+            },
+            {
+              id: "ig-sep-2",
+              title: "Carousel Tips Aman Konvoi",
+              type: "Carousel",
+              permalink: "https://instagram.com/p/ig-sep-2",
+              publishedAt: new Date("2024-09-14T09:10:00+07:00"),
+              metrics: {
+                likes: 12980,
+                comments: 760,
+                shares: 430,
+                saves: 280,
+                reach: 33110,
+                views: 0,
+                engagementRate: 5.7,
+                interactions: 14450,
+              },
+            },
+            {
+              id: "ig-sep-3",
+              title: "Foto Edukasi Sekolah",
+              type: "Foto",
+              permalink: "https://instagram.com/p/ig-sep-3",
+              publishedAt: new Date("2024-09-24T08:45:00+07:00"),
+              metrics: {
+                likes: 8040,
+                comments: 460,
+                shares: 290,
+                saves: 200,
+                reach: 28620,
+                views: 0,
+                engagementRate: 5.3,
+                interactions: 8990,
+              },
+            },
+          ],
+        },
+        {
+          key: "tiktok",
+          label: "TikTok",
+          followers: 46200,
+          posts: 29,
+          likes: 28940,
+          comments: 3520,
+          engagementRate: 5.4,
+          shares: { followers: 28, likes: 34, comments: 33 },
+          derived: {
+            totalInteractions: 32460,
+            averageInteractions: 1120,
+            averageReach: 28650,
+            averageEngagementRate: 5.4,
+            contentTypeDistribution: [
+              { key: "challenge", label: "Challenge", share: 38, count: 11 },
+              { key: "video", label: "Video Edukatif", share: 34, count: 10 },
+              { key: "live", label: "Live", share: 28, count: 8 },
+            ],
+          },
+          profile: {
+            username: "ditbinmasjatim",
+            followers: 46200,
+            posts: 29,
+            externalUrl: "https://www.tiktok.com/@ditbinmasjatim",
+            bio: "Tantangan dan edukasi singkat seputar keamanan berkendara.",
+          },
+          postsData: [
+            {
+              id: "tt-sep-1",
+              title: "Challenge #AmanBerkendara",
+              type: "Video",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-sep-1",
+              publishedAt: new Date("2024-09-07T10:20:00+07:00"),
+              metrics: {
+                likes: 11980,
+                comments: 950,
+                shares: 680,
+                saves: 420,
+                reach: 28490,
+                views: 84500,
+                engagementRate: 5.4,
+                interactions: 14030,
+              },
+            },
+            {
+              id: "tt-sep-2",
+              title: "Quick Tips Lampu Hazard",
+              type: "Video",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-sep-2",
+              publishedAt: new Date("2024-09-16T16:50:00+07:00"),
+              metrics: {
+                likes: 10120,
+                comments: 720,
+                shares: 410,
+                saves: 260,
+                reach: 23980,
+                views: 69200,
+                engagementRate: 4.9,
+                interactions: 11510,
+              },
+            },
+            {
+              id: "tt-sep-3",
+              title: "UGC Komunitas Sekolah",
+              type: "Live",
+              permalink: "https://www.tiktok.com/@ditbinmasjatim/video/tt-sep-3",
+              publishedAt: new Date("2024-09-25T19:30:00+07:00"),
+              metrics: {
+                likes: 8850,
+                comments: 640,
+                shares: 360,
+                saves: 240,
+                reach: 22350,
+                views: 57400,
+                engagementRate: 5.2,
+                interactions: 10090,
+              },
+            },
+          ],
+        },
+        {
+          key: "facebook",
+          label: "Facebook",
+          followers: 24800,
+          posts: 23,
+          likes: 6840,
+          comments: 720,
+          engagementRate: 3.1,
+          shares: { followers: 17, likes: 9, comments: 6 },
+          derived: {
+            totalInteractions: 7560,
+            averageInteractions: 329,
+            averageReach: 26900,
+            averageEngagementRate: 3.1,
+            contentTypeDistribution: [
+              { key: "infografis", label: "Infografis", share: 39, count: 9 },
+              { key: "status", label: "Status", share: 35, count: 8 },
+              { key: "tautan", label: "Tautan", share: 26, count: 6 },
+            ],
+          },
+          profile: {
+            username: "Ditbinmas Jatim",
+            followers: 24800,
+            posts: 23,
+            externalUrl: "https://www.facebook.com/ditbinmasjatim",
+            bio: "Highlight kegiatan komunitas dan literasi lalu lintas di Jawa Timur.",
+          },
+          postsData: [
+            {
+              id: "fb-sep-1",
+              title: "Live Edukasi Sekolah",
+              type: "Live",
+              permalink: "https://facebook.com/posts/fb-sep-1",
+              publishedAt: new Date("2024-09-12T09:35:00+07:00"),
+              metrics: {
+                likes: 2340,
+                comments: 280,
+                shares: 180,
+                saves: 0,
+                reach: 24860,
+                views: 0,
+                engagementRate: 3.2,
+                interactions: 2800,
+              },
+            },
+            {
+              id: "fb-sep-2",
+              title: "Infografis Aman Konvoi",
+              type: "Infografis",
+              permalink: "https://facebook.com/posts/fb-sep-2",
+              publishedAt: new Date("2024-09-22T08:10:00+07:00"),
+              metrics: {
+                likes: 1980,
+                comments: 220,
+                shares: 140,
+                saves: 0,
+                reach: 23640,
+                views: 0,
+                engagementRate: 3.0,
+                interactions: 2340,
+              },
+            },
+          ],
+        },
+      ],
+    },
   },
 };
 
@@ -2403,7 +3093,10 @@ export default function ExecutiveSummaryPage() {
     contentTable: Array.isArray(rawMonthlyData?.contentTable)
       ? rawMonthlyData.contentTable
       : defaultMonthlyEntry.contentTable,
-    platformAnalytics: { platforms: [] },
+    platformAnalytics:
+      Array.isArray(rawMonthlyData?.platformAnalytics?.platforms)
+        ? rawMonthlyData.platformAnalytics
+        : defaultMonthlyEntry.platformAnalytics,
   };
 
   useEffect(() => {
@@ -2800,24 +3493,60 @@ export default function ExecutiveSummaryPage() {
     profiles: platformProfiles,
   } = platformState;
 
+  const monthlyPlatformAnalytics = useMemo(() => {
+    const monthlyPlatforms = data?.platformAnalytics?.platforms;
+    if (Array.isArray(monthlyPlatforms) && monthlyPlatforms.length > 0) {
+      return normalizePlatformMetrics({ platforms: monthlyPlatforms });
+    }
+    return null;
+  }, [data?.platformAnalytics]);
+
+  const hasMonthlyPlatforms = Boolean(
+    monthlyPlatformAnalytics?.platforms?.length,
+  );
+
+  const effectivePlatformMetrics = hasMonthlyPlatforms
+    ? monthlyPlatformAnalytics?.platforms ?? []
+    : platformMetrics;
+
+  const effectivePlatformProfiles = useMemo(() => {
+    if (hasMonthlyPlatforms) {
+      const baseProfiles = platformProfiles ?? { byKey: {} };
+      const monthlyProfiles = monthlyPlatformAnalytics?.profiles ?? { byKey: {} };
+      return {
+        byKey: {
+          ...(baseProfiles.byKey ?? {}),
+          ...(monthlyProfiles.byKey ?? {}),
+        },
+        instagram:
+          monthlyProfiles.instagram ?? baseProfiles.instagram ?? null,
+        tiktok: monthlyProfiles.tiktok ?? baseProfiles.tiktok ?? null,
+      };
+    }
+
+    return platformProfiles ?? { byKey: {} };
+  }, [hasMonthlyPlatforms, monthlyPlatformAnalytics, platformProfiles]);
+
   const platformViewModels = useMemo(() => {
-    if (!Array.isArray(platformMetrics)) {
+    if (!Array.isArray(effectivePlatformMetrics)) {
       return [];
     }
 
-    return platformMetrics.map((platform) => ({
+    return effectivePlatformMetrics.map((platform) => ({
       ...platform,
       insight: buildPlatformInsight(platform),
       topPosts: selectTopPosts(platform, 5),
     }));
-  }, [platformMetrics]);
+  }, [effectivePlatformMetrics]);
 
   const profileByKey = useMemo(() => {
-    return platformProfiles?.byKey ?? {};
-  }, [platformProfiles]);
+    return effectivePlatformProfiles?.byKey ?? {};
+  }, [effectivePlatformProfiles]);
 
-  const instagramProfile = platformProfiles?.instagram ?? profileByKey.instagram ?? null;
-  const tiktokProfile = platformProfiles?.tiktok ?? profileByKey.tiktok ?? null;
+  const instagramProfile =
+    effectivePlatformProfiles?.instagram ?? profileByKey.instagram ?? null;
+  const tiktokProfile =
+    effectivePlatformProfiles?.tiktok ?? profileByKey.tiktok ?? null;
 
   return (
     <div className="space-y-8">
@@ -3214,11 +3943,11 @@ export default function ExecutiveSummaryPage() {
           </p>
         </div>
         <div className="space-y-6">
-          {platformsLoading ? (
+          {platformsLoading && !hasMonthlyPlatforms ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Memuat data performa kanal…
             </div>
-          ) : platformError ? (
+          ) : platformError && !hasMonthlyPlatforms ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
               {platformError}
             </div>
