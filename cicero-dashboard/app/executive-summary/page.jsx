@@ -2945,15 +2945,30 @@ export default function ExecutiveSummaryPage() {
   const defaultSelectedMonth = useMemo(() => {
     const now = new Date();
     const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
-    if (monthOptions.some((option) => option.key === currentMonthKey)) {
+    const hasCuratedData = (data) =>
+      Array.isArray(data?.platformAnalytics?.platforms) &&
+      data.platformAnalytics.platforms.length > 0;
+
+    const monthOptionKeys = new Set(monthOptions.map((option) => option.key));
+    const currentMonthHasOption = monthOptionKeys.has(currentMonthKey);
+
+    if (currentMonthHasOption && hasCuratedData(monthlyData[currentMonthKey])) {
       return currentMonthKey;
     }
 
-    const availableDataKeys = Object.keys(monthlyData).sort().reverse();
+    const availableDataKeys = Object.keys(monthlyData)
+      .filter((key) => monthOptionKeys.has(key))
+      .sort()
+      .reverse();
+
     for (const key of availableDataKeys) {
-      if (monthOptions.some((option) => option.key === key)) {
+      if (hasCuratedData(monthlyData[key])) {
         return key;
       }
+    }
+
+    if (currentMonthHasOption) {
+      return currentMonthKey;
     }
 
     return monthOptions[0]?.key ?? currentMonthKey;
