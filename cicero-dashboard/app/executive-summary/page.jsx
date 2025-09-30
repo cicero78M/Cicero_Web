@@ -401,6 +401,29 @@ const computeUserInsight = (users = []) => {
 
   const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
+  const sortedByDivisionSize = [...divisionArray].sort((a, b) => b.total - a.total);
+  const topDivisionCount = 6;
+  const topDivisions = sortedByDivisionSize.slice(0, topDivisionCount);
+  const remainingDivisions = sortedByDivisionSize.slice(topDivisionCount);
+
+  const divisionComposition = topDivisions.map((item) => ({
+    name: beautifyDivisionName(item.displayName ?? item.division),
+    value: item.total,
+  }));
+
+  const remainingTotal = remainingDivisions.reduce((acc, item) => acc + item.total, 0);
+  if (remainingTotal > 0) {
+    divisionComposition.push({
+      name: "Satker Lainnya",
+      value: remainingTotal,
+    });
+  }
+
+  const divisionCompositionTotal = divisionComposition.reduce(
+    (acc, item) => acc + item.value,
+    0,
+  );
+
   const narrative = buildUserNarrative({
     totalUsers,
     bothCount,
@@ -428,6 +451,8 @@ const computeUserInsight = (users = []) => {
     lowestCompletionDivisions,
     pieData,
     pieTotal,
+    divisionComposition,
+    divisionCompositionTotal,
     narrative,
   };
 };
@@ -1556,6 +1581,15 @@ const generateMonthOptions = ({ year, locale } = {}) => {
 };
 
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
+const SATKER_PIE_COLORS = [
+  "#38bdf8",
+  "#22d3ee",
+  "#818cf8",
+  "#f472b6",
+  "#f97316",
+  "#22c55e",
+  "#a855f7",
+];
 const PPTX_SCRIPT_URL =
   "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
 export default function ExecutiveSummaryPage() {
@@ -1622,6 +1656,8 @@ export default function ExecutiveSummaryPage() {
     lowestCompletionDivisions: [],
     pieData: [],
     pieTotal: 0,
+    divisionComposition: [],
+    divisionCompositionTotal: 0,
     narrative: "",
     activityBuckets: null,
   });
@@ -2088,6 +2124,8 @@ export default function ExecutiveSummaryPage() {
     lowestCompletionDivisions,
     pieData,
     pieTotal,
+    divisionComposition,
+    divisionCompositionTotal,
     narrative,
     activityBuckets,
   } = userInsightState;
@@ -2327,65 +2365,131 @@ export default function ExecutiveSummaryPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                      Komposisi Kelengkapan Data Username
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Distribusi personil berdasarkan status pengisian akun.
-                    </p>
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        Komposisi Kelengkapan Data Username
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Distribusi personil berdasarkan status pengisian akun.
+                      </p>
+                    </div>
                   </div>
-                </div>
-                {pieData.length > 0 && pieTotal > 0 ? (
-                  <div className="mt-6 h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius={55}
-                          outerRadius={100}
-                          paddingAngle={4}
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                          ))}
-                          <LabelList
+                  {pieData.length > 0 && pieTotal > 0 ? (
+                    <div className="mt-6 h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
                             dataKey="value"
-                            position="outside"
-                            formatter={(value) =>
-                              pieTotal
-                                ? `${formatPercent((value / pieTotal) * 100)}`
-                                : "0%"
-                            }
-                            fill="#e2e8f0"
-                            fontSize={11}
+                            nameKey="name"
+                            innerRadius={55}
+                            outerRadius={100}
+                            paddingAngle={4}
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                            <LabelList
+                              dataKey="value"
+                              position="outside"
+                              formatter={(value) =>
+                                pieTotal
+                                  ? `${formatPercent((value / pieTotal) * 100)}`
+                                  : "0%"
+                              }
+                              fill="#e2e8f0"
+                              fontSize={11}
+                            />
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(15,23,42,0.92)",
+                              borderRadius: 16,
+                              borderColor: "rgba(148,163,184,0.4)",
+                              color: "#e2e8f0",
+                            }}
+                            formatter={(value) => [
+                              `${formatNumber(value, { maximumFractionDigits: 0 })} admin`,
+                              "Jumlah",
+                            ]}
                           />
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(15,23,42,0.92)",
-                            borderRadius: 16,
-                            borderColor: "rgba(148,163,184,0.4)",
-                            color: "#e2e8f0",
-                          }}
-                          formatter={(value) => [
-                            `${formatNumber(value, { maximumFractionDigits: 0 })} admin`,
-                            "Jumlah",
-                          ]}
-                        />
-                        <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
-                      </PieChart>
-                    </ResponsiveContainer>
+                          <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                      Belum ada distribusi data yang bisa divisualisasikan.
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        Komposisi Data Satker
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Proporsi personil berdasarkan satker dengan agregasi satker lainnya.
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
-                    Belum ada distribusi data yang bisa divisualisasikan.
-                  </div>
-                )}
+                  {divisionComposition.length > 0 && divisionCompositionTotal > 0 ? (
+                    <div className="mt-6 h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={divisionComposition}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={55}
+                            outerRadius={100}
+                            paddingAngle={3}
+                          >
+                            {divisionComposition.map((entry, index) => (
+                              <Cell
+                                key={entry.name}
+                                fill={SATKER_PIE_COLORS[index % SATKER_PIE_COLORS.length]}
+                              />
+                            ))}
+                            <LabelList
+                              dataKey="value"
+                              position="outside"
+                              formatter={(value) =>
+                                divisionCompositionTotal
+                                  ? `${formatPercent((value / divisionCompositionTotal) * 100)}`
+                                  : "0%"
+                              }
+                              fill="#e2e8f0"
+                              fontSize={11}
+                            />
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(15,23,42,0.92)",
+                              borderRadius: 16,
+                              borderColor: "rgba(148,163,184,0.4)",
+                              color: "#e2e8f0",
+                            }}
+                            formatter={(value, _name, item) => [
+                              `${formatNumber(value, { maximumFractionDigits: 0 })} personil`,
+                              item?.payload?.name ?? "Satker",
+                            ]}
+                          />
+                          <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                      Belum ada komposisi satker yang bisa divisualisasikan.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
