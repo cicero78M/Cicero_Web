@@ -2228,7 +2228,7 @@ export default function ExecutiveSummaryPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Rasio Kelengkapan per Satker / Polres
+                        Rasio Kelengkapan Data Tertinggi per Satker / Polres
                       </h3>
                       <p className="mt-1 text-xs text-slate-400">
                         Menampilkan lima Polres dengan jumlah Personil terbesar.
@@ -2285,7 +2285,7 @@ export default function ExecutiveSummaryPage() {
 
                 <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-5">
                   <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                    10 Polres dengan Rasio Kelengkapan Terendah
+                    10 Polres dengan Rasio Kelengkapan Data Terendah
                   </h3>
                   <p className="mt-1 text-xs text-slate-400">
                     Fokuskan pendampingan pada satuan kerja dengan performa terendah.
