@@ -2703,6 +2703,58 @@ const generateMonthOptions = ({ year, locale } = {}) => {
   });
 };
 
+export const mergeAvailableMonthOptions = ({
+  availableYears,
+  locale = "id-ID",
+  now = new Date(),
+} = {}) => {
+  const optionsByKey = new Map();
+  const normalizedYears = Array.isArray(availableYears)
+    ? Array.from(
+        new Set(
+          availableYears
+            .map((year) => {
+              const parsed = Number.parseInt(year, 10);
+              return Number.isFinite(parsed) ? parsed : null;
+            })
+            .filter((year) => Number.isFinite(year)),
+        ),
+      )
+    : [];
+
+  const addOptions = (options) => {
+    for (const option of options) {
+      if (option && !optionsByKey.has(option.key)) {
+        optionsByKey.set(option.key, option);
+      }
+    }
+  };
+
+  for (const year of normalizedYears) {
+    addOptions(generateMonthOptions({ year, locale }));
+  }
+
+  if (now instanceof Date && !Number.isNaN(now.getTime())) {
+    const currentYear = now.getFullYear();
+    const currentMonthIndex = now.getMonth();
+
+    for (let monthIndex = 0; monthIndex <= currentMonthIndex; monthIndex += 1) {
+      const option = createMonthOptionFromKey(
+        buildMonthKey(currentYear, monthIndex),
+        locale,
+      );
+      if (option) {
+        addOptions([option]);
+      }
+    }
+  }
+
+  return Array.from(optionsByKey.keys())
+    .sort()
+    .reverse()
+    .map((key) => optionsByKey.get(key));
+};
+
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
 const SATKER_PIE_COLORS = [
   "#38bdf8",
@@ -2730,23 +2782,8 @@ export default function ExecutiveSummaryPage() {
     return new Date().getFullYear();
   }, [availableYears]);
   const monthOptions = useMemo(() => {
-    const locale = "id-ID";
-    const options = generateMonthOptions({ year: resolvedYear, locale });
-    const now = new Date();
-    const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
-
-    if (options.some((option) => option.key === currentMonthKey)) {
-      return options;
-    }
-
-    const currentMonthOption = createMonthOptionFromKey(currentMonthKey, locale);
-
-    if (!currentMonthOption) {
-      return options;
-    }
-
-    return [currentMonthOption, ...options];
-  }, [resolvedYear]);
+    return mergeAvailableMonthOptions({ availableYears, locale: "id-ID" });
+  }, [availableYears]);
   const defaultSelectedMonth = useMemo(() => {
     const now = new Date();
     const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
