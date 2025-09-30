@@ -1,4 +1,4 @@
-import { normalizeNumericInput } from "@/app/executive-summary/page";
+import { normalizeNumericInput } from "@/lib/normalizeNumericInput";
 
 describe("normalizeNumericInput", () => {
   it("parses dot thousand separators", () => {
