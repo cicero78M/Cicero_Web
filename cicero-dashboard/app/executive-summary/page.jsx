@@ -3243,7 +3243,7 @@ export default function ExecutiveSummaryPage() {
               return (
                 <div
                   key={platform.key}
-                  className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)]"
+                  className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)] lg:items-start"
                 >
                   <div className="space-y-6">
                     <PlatformOverviewCard
