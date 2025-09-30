@@ -29,7 +29,12 @@ import { cn } from "@/lib/utils";
 import {
   normalizeFormattedNumber,
   normalizeNumericInput,
+  calculateRatePerDay,
 } from "@/lib/normalizeNumericInput";
+import PlatformOverviewCard from "@/components/executive-summary/PlatformOverviewCard";
+import PlatformKPIChart from "@/components/executive-summary/PlatformKPIChart";
+import PlatformDetailTabs from "@/components/executive-summary/PlatformDetailTabs";
+import PostHighlightCarousel from "@/components/executive-summary/PostHighlightCarousel";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -554,6 +559,92 @@ const pickNestedNumeric = (source, paths = []) => {
   return 0;
 };
 
+const pickNestedValue = (source, paths = []) => {
+  if (!source) {
+    return undefined;
+  }
+
+  for (const path of paths) {
+    if (!path) {
+      continue;
+    }
+
+    const segments = Array.isArray(path) ? path : String(path).split(".");
+    let current = source;
+    let valid = true;
+
+    for (const segment of segments) {
+      if (current == null) {
+        valid = false;
+        break;
+      }
+      current = current[segment];
+    }
+
+    if (!valid || current == null) {
+      continue;
+    }
+
+    return current;
+  }
+
+  return undefined;
+};
+
+const pickNestedString = (source, paths = []) => {
+  const value = pickNestedValue(source, paths);
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  return undefined;
+};
+
+const parseDateValue = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.valueOf())) {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const dateFromNumber = new Date(value * (value > 1e12 ? 1 : 1000));
+    if (!Number.isNaN(dateFromNumber.valueOf())) {
+      return dateFromNumber;
+    }
+  }
+
+  if (typeof value === "string") {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      const timestamp = numeric * (numeric > 1e12 ? 1 : 1000);
+      const dateFromNumeric = new Date(timestamp);
+      if (!Number.isNaN(dateFromNumeric.valueOf())) {
+        return dateFromNumeric;
+      }
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.valueOf())) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const pickNestedDate = (source, paths = []) => {
+  const value = pickNestedValue(source, paths);
+  return parseDateValue(value);
+};
+
 const ensureArray = (...candidates) => {
   for (const candidate of candidates) {
     if (!candidate) {
@@ -582,6 +673,333 @@ const ensureArray = (...candidates) => {
   }
 
   return [];
+};
+
+const normalizeContentType = (value, fallback = "Lainnya") => {
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = String(value)
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  if (!normalized) {
+    return fallback;
+  }
+
+  return normalized
+    .split(/\s+/)
+    .map((segment) => {
+      if (!segment) {
+        return segment;
+      }
+      if (segment.length <= 3) {
+        return segment.toUpperCase();
+      }
+      return segment.charAt(0).toUpperCase() + segment.slice(1);
+    })
+    .join(" ");
+};
+
+const normalizePlatformPost = (post, { platformKey = "", fallbackIndex = 0, platformLabel = "" } = {}) => {
+  if (!post || typeof post !== "object") {
+    return null;
+  }
+
+  const idSource =
+    pickNestedValue(post, [
+      "id",
+      "pk",
+      "code",
+      "post_id",
+      "postId",
+      "media_id",
+      "mediaId",
+      "video_id",
+      "shortcode",
+    ]) ?? `${platformKey || "post"}-${fallbackIndex + 1}`;
+  const title =
+    pickNestedString(post, [
+      "title",
+      "caption",
+      "headline",
+      "message",
+      "text",
+      "description",
+    ]) ?? `${platformLabel || "Konten"} #${fallbackIndex + 1}`;
+  const caption = pickNestedString(post, [
+    "caption",
+    "message",
+    "description",
+    "summary",
+  ]);
+  const permalink = pickNestedString(post, [
+    "permalink",
+    "url",
+    "link",
+    "permalink_url",
+    "shortcode_url",
+  ]);
+  const thumbnail = pickNestedString(post, [
+    "thumbnail_url",
+    "thumbnail",
+    "image",
+    "media_url",
+    "cover",
+    "cover_url",
+  ]);
+  const type = normalizeContentType(
+    pickNestedString(post, [
+      "media_type",
+      "type",
+      "content_type",
+      "format",
+      "__typename",
+    ]),
+  );
+  const publishedAt =
+    pickNestedDate(post, [
+      "timestamp",
+      "taken_at",
+      "created_time",
+      "created_at",
+      "publish_time",
+      "published_at",
+    ]) ?? null;
+
+  const likes = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "like_count",
+      "likes",
+      "statistics.like_count",
+      "metrics.like_count",
+      "metrics.likes",
+      "insights.likes",
+    ]),
+  );
+  const comments = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "comment_count",
+      "comments",
+      "statistics.comment_count",
+      "metrics.comment_count",
+      "metrics.comments",
+      "insights.comments",
+    ]),
+  );
+  const shares = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "share_count",
+      "shares",
+      "statistics.share_count",
+      "metrics.share_count",
+      "metrics.shares",
+    ]),
+  );
+  const saves = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "save_count",
+      "saves",
+      "metrics.save_count",
+      "metrics.saves",
+    ]),
+  );
+  const reach = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "reach",
+      "statistics.reach",
+      "insights.reach",
+      "metrics.reach",
+      "metrics.played",
+      "metrics.views",
+    ]),
+  );
+  const views = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "view_count",
+      "views",
+      "play_count",
+      "plays",
+      "statistics.view_count",
+      "statistics.play_count",
+    ]),
+  );
+  const engagementRate = Math.max(
+    0,
+    pickNestedNumeric(post, [
+      "engagement_rate",
+      "engagementRate",
+      "metrics.engagement_rate",
+      "metrics.engagementRate",
+      "statistics.engagement_rate",
+    ]),
+  );
+
+  const interactions = likes + comments + shares + saves;
+
+  return {
+    id: String(idSource),
+    title,
+    caption,
+    type,
+    permalink,
+    thumbnail,
+    publishedAt,
+    metrics: {
+      likes,
+      comments,
+      shares,
+      saves,
+      reach,
+      views,
+      engagementRate,
+      interactions,
+    },
+    raw: post,
+  };
+};
+
+const buildContentDistribution = (posts = []) => {
+  if (!Array.isArray(posts) || posts.length === 0) {
+    return [];
+  }
+
+  const counts = posts.reduce((acc, post) => {
+    const key = (post?.type || "Lainnya").trim() || "Lainnya";
+    const normalizedKey = key.toLowerCase();
+    const nextCount = (acc.get(normalizedKey) ?? 0) + 1;
+    acc.set(normalizedKey, nextCount);
+    return acc;
+  }, new Map());
+
+  const total = posts.length;
+
+  return Array.from(counts.entries()).map(([key, count]) => {
+    const label = normalizeContentType(key);
+    return {
+      key,
+      label,
+      count,
+      share: total > 0 ? (count / total) * 100 : 0,
+    };
+  });
+};
+
+const computeDerivedPostStats = ({
+  posts = [],
+  fallbackLikes = 0,
+  fallbackComments = 0,
+  fallbackPostCount = 0,
+} = {}) => {
+  const safePosts = Array.isArray(posts) ? posts.filter(Boolean) : [];
+  const postCount = safePosts.length;
+  const totalInteractionsFromPosts = safePosts.reduce((acc, post) => {
+    return acc + Math.max(0, post?.metrics?.interactions ?? 0);
+  }, 0);
+  const totalReachFromPosts = safePosts.reduce((acc, post) => {
+    return acc + Math.max(0, post?.metrics?.reach ?? 0);
+  }, 0);
+  const totalEngagementRate = safePosts.reduce((acc, post) => {
+    return acc + Math.max(0, post?.metrics?.engagementRate ?? 0);
+  }, 0);
+
+  const derivedInteractions =
+    totalInteractionsFromPosts > 0
+      ? totalInteractionsFromPosts
+      : Math.max(0, fallbackLikes) + Math.max(0, fallbackComments);
+  const denominator = postCount || fallbackPostCount || 0;
+  const averageInteractions = denominator > 0 ? derivedInteractions / denominator : 0;
+  const averageReach = postCount > 0 ? totalReachFromPosts / postCount : 0;
+  const averageEngagementRate = postCount > 0 ? totalEngagementRate / postCount : 0;
+  const distribution = buildContentDistribution(safePosts).sort(
+    (a, b) => b.share - a.share,
+  );
+
+  return {
+    postCount,
+    totalInteractions: derivedInteractions,
+    averageInteractions,
+    averageReach,
+    averageEngagementRate,
+    contentTypeDistribution: distribution,
+  };
+};
+
+const normalizePlatformProfile = (profile, { label = "", followers = 0, posts = 0 } = {}) => {
+  if (!profile || typeof profile !== "object") {
+    return null;
+  }
+
+  const username =
+    pickNestedString(profile, ["username", "user_name", "handle", "name", "profile_name"]) ?? undefined;
+  const displayName =
+    pickNestedString(profile, ["full_name", "name", "display_name", "title"]) ?? undefined;
+  const avatarUrl = pickNestedString(profile, [
+    "profile_pic_url",
+    "profile_picture_url",
+    "avatar",
+    "avatar_url",
+    "picture",
+    "image",
+  ]);
+  const profileFollowers = pickNestedNumeric(profile, [
+    "followers",
+    "follower_count",
+    "followers_count",
+    "edge_followed_by.count",
+    "fan_count",
+  ]);
+  const following = pickNestedNumeric(profile, [
+    "follows",
+    "following",
+    "following_count",
+    "edge_follow.count",
+  ]);
+  const bio = pickNestedString(profile, [
+    "bio",
+    "biography",
+    "description",
+    "about",
+  ]);
+  const externalUrl = pickNestedString(profile, [
+    "website",
+    "external_url",
+    "url",
+    "link",
+  ]);
+
+  return {
+    id:
+      pickNestedString(profile, [
+        "id",
+        "pk",
+        "profile_id",
+        "user_id",
+        "account_id",
+      ]) ?? null,
+    label: displayName || label || username || "Profil",
+    username: username ?? null,
+    avatarUrl: avatarUrl ?? null,
+    followers: profileFollowers || followers || 0,
+    following,
+    posts: pickNestedNumeric(profile, [
+      "media_count",
+      "posts",
+      "post_count",
+      "counts.media",
+    ]) || posts || 0,
+    bio: bio ?? null,
+    externalUrl: externalUrl ?? null,
+    raw: profile,
+  };
 };
 
 const normalizePlatformRecord = (record, fallbackKey = "", fallbackLabel = "") => {
@@ -681,8 +1099,35 @@ const normalizePlatformRecord = (record, fallbackKey = "", fallbackLabel = "") =
     ]),
   };
 
+  const rawPosts = ensureArray(
+    record.posts,
+    record.content?.posts,
+    record.data?.posts,
+    record.metrics?.posts,
+    record.items,
+  );
+  const normalizedPosts = rawPosts.map((post, index) =>
+    normalizePlatformPost(post, {
+      platformKey: key,
+      fallbackIndex: index,
+      platformLabel: label,
+    }),
+  ).filter(Boolean);
+  const derived = computeDerivedPostStats({
+    posts: normalizedPosts,
+    fallbackLikes: likes,
+    fallbackComments: comments,
+    fallbackPostCount: posts,
+  });
+  const profile = normalizePlatformProfile(record.profile, {
+    label,
+    followers,
+    posts,
+  });
+
   return {
     key,
+    sourceKey: keySource ?? key,
     label,
     followers,
     posts,
@@ -690,6 +1135,10 @@ const normalizePlatformRecord = (record, fallbackKey = "", fallbackLabel = "") =
     comments,
     engagementRate,
     shares,
+    rawPosts,
+    postsData: normalizedPosts,
+    derived,
+    profile,
   };
 };
 
@@ -785,9 +1234,30 @@ const buildAggregatorPlatform = ({
       : postCount > 0
       ? totalInteractions / postCount
       : 0;
+  const normalizedPosts = postsArray
+    .map((post, index) =>
+      normalizePlatformPost(post, {
+        platformKey: key,
+        fallbackIndex: index,
+        platformLabel: label,
+      }),
+    )
+    .filter(Boolean);
+  const derived = computeDerivedPostStats({
+    posts: normalizedPosts,
+    fallbackLikes: likes,
+    fallbackComments: comments,
+    fallbackPostCount: postCount,
+  });
+  const normalizedProfile = normalizePlatformProfile(profileSource, {
+    label,
+    followers,
+    posts: postCount,
+  });
 
   return {
     key,
+    sourceKey: key,
     label,
     followers,
     posts: postCount,
@@ -795,20 +1265,26 @@ const buildAggregatorPlatform = ({
     comments,
     engagementRate: engagementCandidate || computedEngagement,
     shares: { followers: 0, likes: 0, comments: 0 },
+    rawPosts: postsArray,
+    postsData: normalizedPosts,
+    derived,
+    profile: normalizedProfile,
   };
 };
 
 const normalizePlatformMetrics = (rawData) => {
   if (!rawData || typeof rawData !== "object") {
-    return [];
+    return { platforms: [], profiles: { byKey: {} } };
   }
 
   const usedKeys = new Set();
   const entries = [];
+  const profileByKey = new Map();
+  const aggregatorProfiles = {};
 
   const pushEntry = (entry) => {
     if (!entry) {
-      return;
+      return null;
     }
 
     const sanitizedKeyBase = normalizePlatformKey(entry.key, entry.label);
@@ -833,17 +1309,76 @@ const normalizePlatformMetrics = (rawData) => {
       likes: parsePercent(entry.shares?.likes ?? 0),
       comments: parsePercent(entry.shares?.comments ?? 0),
     };
+    const postsList = Array.isArray(entry.postsData)
+      ? entry.postsData.filter(Boolean)
+      : Array.isArray(entry.posts)
+      ? entry.posts.filter(Boolean)
+      : [];
+    const rawPosts = Array.isArray(entry.rawPosts)
+      ? entry.rawPosts
+      : Array.isArray(entry.postsRaw)
+      ? entry.postsRaw
+      : [];
+    const derived = entry.derived
+      ? {
+          ...entry.derived,
+          totalInteractions: Math.max(0, entry.derived.totalInteractions ?? 0),
+        }
+      : computeDerivedPostStats({
+          posts: postsList,
+          fallbackLikes: likes,
+          fallbackComments: comments,
+          fallbackPostCount: posts,
+        });
 
-    entries.push({
+    let normalizedProfile = null;
+    if (entry.profile && typeof entry.profile === "object") {
+      if (
+        Object.prototype.hasOwnProperty.call(entry.profile, "username") ||
+        Object.prototype.hasOwnProperty.call(entry.profile, "label") ||
+        Object.prototype.hasOwnProperty.call(entry.profile, "raw")
+      ) {
+        normalizedProfile = {
+          ...entry.profile,
+          followers: entry.profile.followers ?? followers,
+          posts: entry.profile.posts ?? posts,
+        };
+        if (normalizedProfile.raw === undefined) {
+          normalizedProfile.raw = entry.profile;
+        }
+      } else {
+        normalizedProfile = normalizePlatformProfile(entry.profile, {
+          label: entry.label || entry.key || candidateKey,
+          followers,
+          posts,
+        });
+      }
+    }
+
+    const normalizedEntry = {
       key: candidateKey,
+      sourceKey: entry.sourceKey || entry.key || candidateKey,
       label: entry.label || "Platform",
       followers,
-      posts,
+      postCount: posts,
       likes,
       comments,
       engagementRate,
       shares,
-    });
+      rawPosts,
+      posts: postsList,
+      derived,
+      profile: normalizedProfile,
+    };
+
+    entries.push(normalizedEntry);
+
+    if (normalizedProfile) {
+      profileByKey.set(normalizedEntry.key, normalizedProfile);
+      profileByKey.set(normalizedEntry.sourceKey, normalizedProfile);
+    }
+
+    return normalizedEntry;
   };
 
   const platformArrays = [
@@ -936,11 +1471,14 @@ const normalizePlatformMetrics = (rawData) => {
       return;
     }
     const entry = buildAggregatorPlatform(config);
-    pushEntry(entry);
+    const normalizedEntry = pushEntry(entry);
+    if (normalizedEntry?.profile) {
+      aggregatorProfiles[config.key] = normalizedEntry.profile;
+    }
   });
 
   if (entries.length === 0) {
-    return [];
+    return { platforms: [], profiles: { byKey: {} } };
   }
 
   const totals = entries.reduce(
@@ -975,7 +1513,120 @@ const normalizePlatformMetrics = (rawData) => {
     };
   });
 
-  return result.sort((a, b) => b.followers - a.followers);
+  const sorted = result.sort((a, b) => b.followers - a.followers);
+  const profilesByKey = Object.fromEntries(profileByKey.entries());
+
+  const profiles = {
+    byKey: profilesByKey,
+    instagram:
+      aggregatorProfiles.instagram ??
+      profilesByKey.instagram ??
+      profilesByKey[normalizePlatformKey("instagram", "instagram")] ??
+      null,
+    tiktok:
+      aggregatorProfiles.tiktok ??
+      profilesByKey.tiktok ??
+      profilesByKey[normalizePlatformKey("tiktok", "tiktok")] ??
+      null,
+  };
+
+  return { platforms: sorted, profiles };
+};
+
+const selectTopPosts = (platform, limit = 3) => {
+  if (!platform || !Array.isArray(platform.posts) || platform.posts.length === 0) {
+    return [];
+  }
+
+  const postsWithScore = platform.posts.map((post) => {
+    const likes = Math.max(0, post?.metrics?.likes ?? 0);
+    const comments = Math.max(0, post?.metrics?.comments ?? 0);
+    const shares = Math.max(0, post?.metrics?.shares ?? 0);
+    const saves = Math.max(0, post?.metrics?.saves ?? 0);
+    const interactions = Math.max(
+      0,
+      post?.metrics?.interactions ?? likes + comments + shares + saves,
+    );
+    const reach = Math.max(0, post?.metrics?.reach ?? 0);
+    const engagement = Math.max(0, post?.metrics?.engagementRate ?? 0);
+
+    return {
+      ...post,
+      metrics: {
+        ...post.metrics,
+        interactions,
+        reach,
+        engagementRate: engagement,
+      },
+      _score: interactions * 2 + reach + engagement,
+    };
+  });
+
+  return postsWithScore
+    .sort((a, b) => (b._score ?? 0) - (a._score ?? 0))
+    .slice(0, limit)
+    .map(({ _score, ...rest }) => rest);
+};
+
+const buildPlatformInsight = (platform) => {
+  if (!platform) {
+    return "Belum ada informasi platform yang dapat diringkas.";
+  }
+
+  const label = platform.label || "Platform";
+  const derived = platform.derived || {};
+  const totalInteractions = Math.max(0, derived.totalInteractions ?? 0);
+  const averageInteractions = Math.max(0, derived.averageInteractions ?? 0);
+  const contentDistribution = Array.isArray(derived.contentTypeDistribution)
+    ? derived.contentTypeDistribution
+    : [];
+  const topContentType = contentDistribution.length > 0 ? contentDistribution[0] : null;
+  const engagementRate = parsePercent(platform.engagementRate ?? derived.averageEngagementRate ?? 0);
+  const topPost = selectTopPosts(platform, 1)[0] ?? null;
+
+  const postsWithDate = Array.isArray(platform.posts)
+    ? platform.posts.filter((post) => post?.publishedAt instanceof Date)
+    : [];
+  let spanDays = 0;
+  if (postsWithDate.length >= 2) {
+    const timestamps = postsWithDate.map((post) => post.publishedAt.getTime());
+    const min = Math.min(...timestamps);
+    const max = Math.max(...timestamps);
+    spanDays = Math.max(1, Math.round((max - min) / (24 * 60 * 60 * 1000)) + 1);
+  } else if (postsWithDate.length === 1) {
+    spanDays = 1;
+  }
+
+  const postingRate = spanDays > 0 ? calculateRatePerDay(platform.posts.length || postsWithDate.length, spanDays, { precision: 2 }) : 0;
+
+  const sentences = [];
+
+  if (totalInteractions > 0) {
+    sentences.push(
+      `${label} menghasilkan ${formatNumber(totalInteractions, { maximumFractionDigits: 0 })} interaksi dengan rata-rata ${formatNumber(averageInteractions, { maximumFractionDigits: 0 })} per konten (${engagementRate} engagement).`,
+    );
+  } else {
+    sentences.push(`${label} belum mencatat interaksi berarti pada periode ini.`);
+  }
+
+  if (topContentType) {
+    sentences.push(
+      `Konten ${topContentType.label} menyumbang ${formatPercent(topContentType.share)} dari total unggahan yang terekam.`,
+    );
+  }
+
+  if (postingRate > 0) {
+    sentences.push(`Rata-rata frekuensi unggah tercatat ${postingRate} konten per hari.`);
+  }
+
+  if (topPost) {
+    const topInteractions = Math.max(0, topPost.metrics?.interactions ?? 0);
+    sentences.push(
+      `Highlight utama: “${topPost.title}” dengan ${formatNumber(topInteractions, { maximumFractionDigits: 0 })} interaksi.`,
+    );
+  }
+
+  return sentences.join(" ");
 };
 
 const normalizeLookupKey = (value) => {
@@ -1656,6 +2307,7 @@ export default function ExecutiveSummaryPage() {
     loading: true,
     error: "",
     platforms: [],
+    profiles: { byKey: {} },
   });
 
   useEffect(() => {
@@ -1908,6 +2560,7 @@ export default function ExecutiveSummaryPage() {
         loading: false,
         error: "",
         platforms: [],
+        profiles: { byKey: {} },
       });
       return () => {
         controller.abort();
@@ -1928,10 +2581,17 @@ export default function ExecutiveSummaryPage() {
         const range = getMonthDateRange(selectedMonth);
         if (range?.startDate) {
           params.set("tanggal_mulai", range.startDate);
+          params.set("start_date", range.startDate);
+          params.set("tanggal", range.startDate);
         }
 
         if (range?.endDate) {
           params.set("tanggal_selesai", range.endDate);
+          params.set("end_date", range.endDate);
+        }
+
+        if (selectedMonth) {
+          params.set("month", selectedMonth);
         }
 
         if (clientId) {
@@ -1966,7 +2626,8 @@ export default function ExecutiveSummaryPage() {
         setPlatformState({
           loading: false,
           error: "",
-          platforms: normalizedPlatforms,
+          platforms: normalizedPlatforms.platforms,
+          profiles: normalizedPlatforms.profiles,
         });
       } catch (error) {
         if (error?.name === "AbortError") {
@@ -1980,6 +2641,7 @@ export default function ExecutiveSummaryPage() {
               ? error.message
               : "Gagal memuat data performa platform.",
           platforms: [],
+          profiles: { byKey: {} },
         });
       }
     };
@@ -2135,7 +2797,27 @@ export default function ExecutiveSummaryPage() {
     platforms: platformMetrics,
     loading: platformsLoading,
     error: platformError,
+    profiles: platformProfiles,
   } = platformState;
+
+  const platformViewModels = useMemo(() => {
+    if (!Array.isArray(platformMetrics)) {
+      return [];
+    }
+
+    return platformMetrics.map((platform) => ({
+      ...platform,
+      insight: buildPlatformInsight(platform),
+      topPosts: selectTopPosts(platform, 5),
+    }));
+  }, [platformMetrics]);
+
+  const profileByKey = useMemo(() => {
+    return platformProfiles?.byKey ?? {};
+  }, [platformProfiles]);
+
+  const instagramProfile = platformProfiles?.instagram ?? profileByKey.instagram ?? null;
+  const tiktokProfile = platformProfiles?.tiktok ?? profileByKey.tiktok ?? null;
 
   return (
     <div className="space-y-8">
@@ -2531,122 +3213,69 @@ export default function ExecutiveSummaryPage() {
             Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
+        <div className="space-y-6">
           {platformsLoading ? (
-            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+            <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Memuat data performa kanal…
             </div>
           ) : platformError ? (
-            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
+            <div className="flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
               {platformError}
             </div>
-          ) : platformMetrics.length > 0 ? (
-            platformMetrics.map((platform) => {
-              const engagementRate = normalizeNumericInput(platform.engagementRate);
+          ) : platformViewModels.length > 0 ? (
+            platformViewModels.map((platform) => {
+              const normalizedEngagement = normalizeNumericInput(platform.engagementRate);
+              const inferredProfile =
+                platform.profile ??
+                profileByKey[platform.sourceKey ?? platform.key] ??
+                profileByKey[platform.key] ??
+                (platform.label?.toLowerCase().includes("instagram")
+                  ? instagramProfile
+                  : platform.label?.toLowerCase().includes("tiktok")
+                  ? tiktokProfile
+                  : null);
 
-              const primaryMetrics = [
-                {
-                  key: "likes",
-                  label: "Likes",
-                  value: formatCompactNumber(platform.likes),
-                  accent: "text-cyan-300",
-                },
-                {
-                  key: "comments",
-                  label: "Komentar",
-                  value: formatCompactNumber(platform.comments),
-                  accent: "text-emerald-300",
-                },
-                {
-                  key: "engagement",
-                  label: "Engagement",
-                  value: formatPercent(engagementRate),
-                  accent: "text-fuchsia-300",
-                },
-              ];
-
-              const shareMetrics = [
-                {
-                  key: "followers",
-                  label: "Followers",
-                  value: platform.shares?.followers ?? 0,
-                  gradient: "from-violet-500 via-fuchsia-400 to-cyan-300",
-                },
-                {
-                  key: "likes",
-                  label: "Likes",
-                  value: platform.shares?.likes ?? 0,
-                  gradient: "from-sky-500 via-cyan-400 to-emerald-300",
-                },
-                {
-                  key: "comments",
-                  label: "Komentar",
-                  value: platform.shares?.comments ?? 0,
-                  gradient: "from-amber-400 via-orange-400 to-rose-400",
-                },
-              ];
+              const platformPayload = {
+                ...platform,
+                engagementRate: normalizedEngagement,
+              };
 
               return (
                 <div
                   key={platform.key}
-                  className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/50 p-6 shadow-[0_0_30px_rgba(79,70,229,0.25)] transition duration-200 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-[0_0_45px_rgba(34,211,238,0.22)]"
+                  className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)]"
                 >
-                  <div className="absolute -top-12 right-4 h-32 w-32 rounded-full bg-gradient-to-br from-cyan-400/40 via-transparent to-transparent blur-2xl transition group-hover:from-cyan-400/60" />
-                  <div className="relative flex h-full flex-col gap-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-[0.25em] text-slate-400">Platform</p>
-                        <h3 className="text-xl font-semibold text-slate-50">{platform.label}</h3>
-                      </div>
-                      <div className="flex flex-col items-end rounded-2xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
-                        <span className="font-medium text-slate-200">Followers</span>
-                        <span>{formatCompactNumber(platform.followers)}</span>
-                        <span className="mt-1 text-slate-400">Posts: {platform.posts}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 text-sm text-slate-200 sm:grid-cols-3">
-                      {primaryMetrics.map((metric) => (
-                        <div
-                          key={metric.key}
-                          className="flex flex-col gap-2 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4"
-                        >
-                          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            {metric.label}
-                          </span>
-                          <span className={cn("text-lg font-semibold", metric.accent)}>{metric.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-auto space-y-3 text-xs text-slate-300">
-                      {shareMetrics.map((share) => {
-                        const percent = clamp(parsePercent(share.value), 0, 100);
-
-                        return (
-                          <div
-                            key={share.key}
-                            className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-3"
-                          >
-                            <div className="mb-2 flex justify-between text-[0.7rem] font-medium uppercase tracking-wider text-slate-400">
-                              <span>{share.label}</span>
-                              <span>{percent.toFixed(1)}%</span>
-                            </div>
-                            <div className="h-2 rounded-full bg-slate-800">
-                              <div
-                                className={cn("h-full rounded-full bg-gradient-to-r", share.gradient)}
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className="space-y-6">
+                    <PlatformOverviewCard
+                      platform={platformPayload}
+                      profile={inferredProfile}
+                      formatNumber={formatNumber}
+                      formatCompactNumber={formatCompactNumber}
+                      formatPercent={formatPercent}
+                    />
+                    <PlatformDetailTabs
+                      platform={platformPayload}
+                      profile={inferredProfile}
+                      formatNumber={formatNumber}
+                      formatPercent={formatPercent}
+                    />
+                  </div>
+                  <div className="space-y-6">
+                    <PlatformKPIChart
+                      platform={platformPayload}
+                      formatNumber={formatNumber}
+                    />
+                    <PostHighlightCarousel
+                      posts={platform.topPosts ?? []}
+                      formatNumber={formatNumber}
+                    />
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="col-span-full flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-              Belum ada data performa kanal untuk periode ini.
+            <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+              Belum ada data performa platform untuk periode ini.
             </div>
           )}
         </div>

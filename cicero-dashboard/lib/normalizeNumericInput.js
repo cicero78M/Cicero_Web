@@ -75,4 +75,27 @@ export const normalizeNumericInput = (value) => {
   return Number.isFinite(coerced) ? coerced : 0;
 };
 
+export const calculateRatePerDay = (total, days, options = {}) => {
+  const numericTotal = normalizeNumericInput(total);
+  const numericDays = normalizeNumericInput(days);
+
+  if (!Number.isFinite(numericTotal) || numericTotal === 0) {
+    return 0;
+  }
+
+  if (!Number.isFinite(numericDays) || numericDays <= 0) {
+    return 0;
+  }
+
+  const rate = numericTotal / numericDays;
+
+  if (typeof options.precision === "number" && Number.isFinite(options.precision)) {
+    const precision = Math.max(0, Math.floor(options.precision));
+    const factor = 10 ** precision;
+    return Math.round(rate * factor) / factor;
+  }
+
+  return rate;
+};
+
 export default normalizeNumericInput;
