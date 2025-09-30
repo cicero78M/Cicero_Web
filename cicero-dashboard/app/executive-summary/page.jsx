@@ -2653,28 +2653,7 @@ export default function ExecutiveSummaryPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-5">
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.4)] lg:col-span-3">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Word Cloud
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-200">
-            {data.overviewNarrative}
-          </p>
-          {data.highlights.length > 0 ? (
-            <ul className="mt-4 space-y-3 text-sm text-slate-300">
-              {data.highlights.map((item) => (
-                <li key={item} className="flex gap-2">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" aria-hidden="true" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm text-slate-400">
-              Belum ada highlight untuk periode ini.
-            </p>
-          )}
-        </div>
+
         <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2">
           <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
             Aktivitas Personil
