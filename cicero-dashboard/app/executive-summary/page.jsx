@@ -35,6 +35,11 @@ import PlatformOverviewCard from "@/components/executive-summary/PlatformOvervie
 import PlatformKPIChart from "@/components/executive-summary/PlatformKPIChart";
 import PlatformDetailTabs from "@/components/executive-summary/PlatformDetailTabs";
 import PostHighlightCarousel from "@/components/executive-summary/PostHighlightCarousel";
+import {
+  buildMonthKey,
+  extractYearFromMonthKey,
+  mergeAvailableMonthOptions,
+} from "./monthOptions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -2647,112 +2652,6 @@ const monthlyData = {
       ],
     },
   },
-};
-
-const buildMonthKey = (year, monthIndexZeroBased) => {
-  const monthNumber = String(monthIndexZeroBased + 1).padStart(2, "0");
-  return `${year}-${monthNumber}`;
-};
-
-const extractYearFromMonthKey = (monthKey) => {
-  if (typeof monthKey !== "string") {
-    return null;
-  }
-
-  const [yearPart] = monthKey.split("-");
-  const parsedYear = Number.parseInt(yearPart, 10);
-  return Number.isFinite(parsedYear) ? parsedYear : null;
-};
-
-const createMonthOptionFromKey = (monthKey, locale = "id-ID") => {
-  if (typeof monthKey !== "string") {
-    return null;
-  }
-
-  const [yearPart, monthPart] = monthKey.split("-");
-  const year = Number.parseInt(yearPart, 10);
-  const month = Number.parseInt(monthPart, 10);
-
-  if (!Number.isFinite(year) || !Number.isFinite(month)) {
-    return null;
-  }
-
-  const monthIndexZeroBased = Math.min(Math.max(month, 1), 12) - 1;
-  const displayDate = new Date(year, monthIndexZeroBased, 1);
-  const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
-
-  return {
-    key: buildMonthKey(year, monthIndexZeroBased),
-    label: `${monthFormatter.format(displayDate)} ${year}`,
-  };
-};
-
-const generateMonthOptions = ({ year, locale } = {}) => {
-  const now = new Date();
-  const targetYear = Number.isFinite(year) ? year : now.getFullYear();
-  const monthFormatter = new Intl.DateTimeFormat(locale ?? "id-ID", {
-    month: "long",
-  });
-
-  return Array.from({ length: 12 }, (_, index) => {
-    const displayDate = new Date(targetYear, index, 1);
-    return {
-      key: buildMonthKey(targetYear, index),
-      label: `${monthFormatter.format(displayDate)} ${targetYear}`,
-    };
-  });
-};
-
-export const mergeAvailableMonthOptions = ({
-  availableYears,
-  locale = "id-ID",
-  now = new Date(),
-} = {}) => {
-  const optionsByKey = new Map();
-  const normalizedYears = Array.isArray(availableYears)
-    ? Array.from(
-        new Set(
-          availableYears
-            .map((year) => {
-              const parsed = Number.parseInt(year, 10);
-              return Number.isFinite(parsed) ? parsed : null;
-            })
-            .filter((year) => Number.isFinite(year)),
-        ),
-      )
-    : [];
-
-  const addOptions = (options) => {
-    for (const option of options) {
-      if (option && !optionsByKey.has(option.key)) {
-        optionsByKey.set(option.key, option);
-      }
-    }
-  };
-
-  for (const year of normalizedYears) {
-    addOptions(generateMonthOptions({ year, locale }));
-  }
-
-  if (now instanceof Date && !Number.isNaN(now.getTime())) {
-    const currentYear = now.getFullYear();
-    const currentMonthIndex = now.getMonth();
-
-    for (let monthIndex = 0; monthIndex <= currentMonthIndex; monthIndex += 1) {
-      const option = createMonthOptionFromKey(
-        buildMonthKey(currentYear, monthIndex),
-        locale,
-      );
-      if (option) {
-        addOptions([option]);
-      }
-    }
-  }
-
-  return Array.from(optionsByKey.keys())
-    .sort()
-    .reverse()
-    .map((key) => optionsByKey.get(key));
 };
 
 const PIE_COLORS = ["#22d3ee", "#6366f1", "#fbbf24", "#f43f5e"];
