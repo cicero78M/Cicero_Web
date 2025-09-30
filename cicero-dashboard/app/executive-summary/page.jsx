@@ -1928,10 +1928,17 @@ export default function ExecutiveSummaryPage() {
         const range = getMonthDateRange(selectedMonth);
         if (range?.startDate) {
           params.set("tanggal_mulai", range.startDate);
+          params.set("start_date", range.startDate);
+          params.set("tanggal", range.startDate);
         }
 
         if (range?.endDate) {
           params.set("tanggal_selesai", range.endDate);
+          params.set("end_date", range.endDate);
+        }
+
+        if (selectedMonth) {
+          params.set("month", selectedMonth);
         }
 
         if (clientId) {
