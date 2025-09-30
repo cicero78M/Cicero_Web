@@ -1593,6 +1593,23 @@ export default function ExecutiveSummaryPage() {
     return monthOptions[0]?.key ?? currentMonthKey;
   }, [monthOptions]);
   const [selectedMonth, setSelectedMonth] = useState(defaultSelectedMonth);
+  useEffect(() => {
+    setSelectedMonth((previous) => {
+      if (!defaultSelectedMonth) {
+        return previous;
+      }
+
+      if (!previous) {
+        return defaultSelectedMonth;
+      }
+
+      const isPreviousValid = monthOptions.some(
+        (option) => option.key === previous,
+      );
+
+      return isPreviousValid ? previous : defaultSelectedMonth;
+    });
+  }, [defaultSelectedMonth, monthOptions]);
   const selectedMonthOption = useMemo(() => {
     return monthOptions.find((option) => option.key === selectedMonth) ?? null;
   }, [monthOptions, selectedMonth]);
@@ -2100,20 +2117,26 @@ export default function ExecutiveSummaryPage() {
           </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-end lg:justify-end">
             <div className="w-full sm:w-64">
-              <label className="flex flex-col text-sm font-medium text-slate-200">
-                Pilih Bulan
-                <select
-                  value={selectedMonth}
-                  onChange={(event) => setSelectedMonth(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
-                >
-                  {monthOptions.map((option) => (
-                    <option key={option.key} value={option.key}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+                  Show Data By
+                </span>
+                <label className="flex flex-col text-sm font-medium text-slate-200">
+                  <span className="text-base font-semibold text-slate-100">Month</span>
+                  <select
+                    value={selectedMonth}
+                    onChange={(event) => setSelectedMonth(event.target.value)}
+                    className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                    aria-label="Filter data by month"
+                  >
+                    {monthOptions.map((option) => (
+                      <option key={option.key} value={option.key}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </div>
             <Button
               onClick={handleDownload}
