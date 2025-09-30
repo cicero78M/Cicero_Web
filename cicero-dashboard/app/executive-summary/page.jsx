@@ -1233,7 +1233,12 @@ const computeActivityBuckets = ({
       numerator += Math.min(commentCount, safeTikTokPosts);
     }
 
-    const ratio = denominator > 0 ? numerator / denominator : 1;
+    if (denominator === 0) {
+      low += 1;
+      return;
+    }
+
+    const ratio = numerator / denominator;
     const clampedRatio = Math.max(0, Math.min(ratio, 1));
 
     if (clampedRatio >= 0.9) {
@@ -2918,3 +2923,5 @@ export default function ExecutiveSummaryPage() {
     </div>
   );
 }
+
+export { computeActivityBuckets };
