@@ -1,4 +1,4 @@
-import { mergeAvailableMonthOptions } from "../app/executive-summary/page";
+import { mergeAvailableMonthOptions } from "../app/executive-summary/monthOptions";
 
 describe("mergeAvailableMonthOptions", () => {
   it("keeps earlier months of the current year selectable when the actual year exceeds the resolved year", () => {
