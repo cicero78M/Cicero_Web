@@ -242,7 +242,7 @@ const buildUserNarrative = ({
 
   if (nonePercent > 0) {
     sentences.push(
-      `${formatPercent(nonePercent)} personil belum mengisi data sama sekali; jadwalkan klinik onboarding agar mereka segera produktif.`,
+      `${formatPercent(nonePercent)} personil belum melakukan update data username sama sekali.`,
     );
   } else if (onlyInstagramPercent > 0 || onlyTikTokPercent > 0) {
     sentences.push(
