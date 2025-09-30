@@ -83,21 +83,65 @@ const PlatformOverviewCard: React.FC<PlatformOverviewCardProps> = ({
     );
   }
 
+  const totalPosts = platform.postCount ?? 0;
+  const totalLikes = platform.likes ?? 0;
+  const totalComments = platform.comments ?? 0;
   const followerLabel = formatCompactNumber(platform.followers ?? 0);
-  const postsLabel = formatNumber(platform.postCount ?? 0, { maximumFractionDigits: 0 });
-  const likesLabel = formatCompactNumber(platform.likes ?? 0);
-  const commentsLabel = formatCompactNumber(platform.comments ?? 0);
+  const postsLabel = formatNumber(totalPosts, { maximumFractionDigits: 0 });
+  const likesLabel = formatCompactNumber(totalLikes);
+  const commentsLabel = formatCompactNumber(totalComments);
   const engagementLabel = formatPercent(platform.engagementRate ?? 0);
   const totalInteractions = platform.derived?.totalInteractions ?? 0;
   const averageInteractions = platform.derived?.averageInteractions ?? 0;
 
-  const metrics = [
-    { key: "followers", label: "Followers", value: followerLabel, accent: "text-cyan-300" },
-    { key: "posts", label: "Total Posts", value: postsLabel, accent: "text-emerald-300" },
-    { key: "likes", label: "Likes", value: likesLabel, accent: "text-sky-300" },
-    { key: "comments", label: "Komentar", value: commentsLabel, accent: "text-fuchsia-300" },
-    { key: "engagement", label: "Engagement", value: engagementLabel, accent: "text-amber-300" },
-  ];
+  const averageLikes = totalPosts > 0 ? totalLikes / totalPosts : 0;
+  const averageComments = totalPosts > 0 ? totalComments / totalPosts : 0;
+  const averageEngagement = totalPosts > 0 ? (totalLikes + totalComments) / totalPosts : 0;
+
+  const isAverageMetricsPlatform = ["instagram", "tiktok"].includes(
+    (platform.key || "").toLowerCase(),
+  );
+
+  const metrics = isAverageMetricsPlatform
+    ? [
+        {
+          key: "average-engagement",
+          label: "Average Engagement",
+          value: formatNumber(averageEngagement, { maximumFractionDigits: 1 }),
+          accent: "text-cyan-300",
+        },
+        { key: "posts", label: "Total Posts", value: postsLabel, accent: "text-emerald-300" },
+        {
+          key: "average-likes",
+          label: "Average Likes",
+          value: formatNumber(averageLikes, { maximumFractionDigits: 1 }),
+          accent: "text-sky-300",
+        },
+        {
+          key: "average-comments",
+          label: "Average Komentar",
+          value: formatNumber(averageComments, { maximumFractionDigits: 1 }),
+          accent: "text-fuchsia-300",
+        },
+        { key: "engagement", label: "Engagement", value: engagementLabel, accent: "text-amber-300" },
+      ]
+    : [
+        {
+          key: "followers",
+          label: "Followers",
+          value: followerLabel,
+          accent: "text-cyan-300",
+        },
+        { key: "posts", label: "Total Posts", value: postsLabel, accent: "text-emerald-300" },
+        { key: "likes", label: "Likes", value: likesLabel, accent: "text-sky-300" },
+        {
+          key: "comments",
+          label: "Komentar",
+          value: commentsLabel,
+          accent: "text-fuchsia-300",
+        },
+        { key: "engagement", label: "Engagement", value: engagementLabel, accent: "text-amber-300" },
+      ];
 
   return (
     <div className="relative h-full overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6">
