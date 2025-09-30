@@ -1778,6 +1778,8 @@ export default function ExecutiveSummaryPage() {
       const periodRange = getMonthDateRange(selectedMonth);
       const periodeParam = periodRange ? "bulanan" : undefined;
       const tanggalParam = periodRange?.startDate;
+      const startDateParam = periodRange?.startDate;
+      const endDateParam = periodRange?.endDate;
 
       try {
         const [directoryResponse, statsResult, likesResult, commentsResult] =
@@ -1787,8 +1789,8 @@ export default function ExecutiveSummaryPage() {
               token,
               periodeParam,
               tanggalParam,
-              undefined,
-              undefined,
+              startDateParam,
+              endDateParam,
               clientId,
               controller.signal,
             ),
@@ -1797,8 +1799,8 @@ export default function ExecutiveSummaryPage() {
               clientId,
               periodeParam ?? "bulanan",
               tanggalParam,
-              undefined,
-              undefined,
+              startDateParam,
+              endDateParam,
               controller.signal,
             ).catch((error) => {
               console.warn("Gagal memuat rekap likes IG", error);
@@ -1809,8 +1811,8 @@ export default function ExecutiveSummaryPage() {
               clientId,
               periodeParam ?? "bulanan",
               tanggalParam,
-              undefined,
-              undefined,
+              startDateParam,
+              endDateParam,
               controller.signal,
             ).catch((error) => {
               console.warn("Gagal memuat rekap komentar TikTok", error);
