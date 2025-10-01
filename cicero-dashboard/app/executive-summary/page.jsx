@@ -105,30 +105,11 @@ const groupRecordsByWeek = (records, { getDate, datePaths } = {}) => {
       ? getDate
       : (record) =>
           {
-            if (Array.isArray(datePaths) && datePaths.length > 0) {
-              const dateFromPaths = pickNestedDate(record, datePaths);
-              if (dateFromPaths) {
-                return dateFromPaths;
-              }
+            const resolved = resolveRecordDate(record, datePaths);
+            if (resolved) {
+              return resolved.parsed;
             }
-
-            return (
-              record?.publishedAt ??
-              record?.date ??
-              record?.tanggal ??
-              record?.createdAt ??
-              record?.created_at ??
-              record?.activityDate ??
-              record?.updatedAt ??
-              record?.updated_at ??
-              record?.time ??
-              record?.waktu ??
-              record?.rekap?.tanggal ??
-              record?.rekap?.date ??
-              record?.rekap?.created_at ??
-              record?.rekap?.createdAt ??
-              null
-            );
+            return null;
           };
 
   const buckets = new Map();
@@ -177,6 +158,23 @@ const groupRecordsByWeek = (records, { getDate, datePaths } = {}) => {
   return Array.from(buckets.values()).sort(
     (a, b) => a.start.getTime() - b.start.getTime(),
   );
+};
+
+const shouldShowWeeklyTrendCard = ({
+  showPlatformLoading,
+  platformError,
+  hasMonthlyPlatforms,
+  cardHasRecords,
+}) => {
+  if (showPlatformLoading) {
+    return true;
+  }
+
+  if (platformError && !hasMonthlyPlatforms) {
+    return true;
+  }
+
+  return Boolean(cardHasRecords);
 };
 
 const formatWeekRangeLabel = (start, end, locale = "id-ID") => {
@@ -860,6 +858,87 @@ const parseDateValue = (value) => {
   }
 
   return null;
+};
+
+const DEFAULT_ACTIVITY_DATE_PATHS = [
+  "activityDate",
+  "tanggal",
+  "date",
+  "created_at",
+  "createdAt",
+  "updated_at",
+  "updatedAt",
+  "time",
+  "waktu",
+  "publishedAt",
+  "published_at",
+  "timestamp",
+  "rekap.tanggal",
+  "rekap.date",
+  "rekap.created_at",
+  "rekap.createdAt",
+];
+
+const resolveRecordDate = (record, extraPaths = []) => {
+  if (!record) {
+    return null;
+  }
+
+  const normalizedPaths = Array.isArray(extraPaths)
+    ? extraPaths
+    : typeof extraPaths === "string"
+    ? [extraPaths]
+    : [];
+  const candidatePaths = [...normalizedPaths, ...DEFAULT_ACTIVITY_DATE_PATHS];
+
+  for (const path of candidatePaths) {
+    const rawValue = pickNestedValue(record, [path]);
+    const parsed = parseDateValue(rawValue);
+    if (parsed) {
+      return { raw: rawValue, parsed };
+    }
+  }
+
+  return null;
+};
+
+const ensureRecordsHaveActivityDate = (records, options = {}) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  return records
+    .map((record) => {
+      if (!record) {
+        return null;
+      }
+
+      const resolved = resolveRecordDate(record, options.extraPaths);
+      if (!resolved) {
+        return null;
+      }
+
+      const isoString = resolved.parsed.toISOString();
+      const dateOnly = isoString.slice(0, 10);
+
+      return {
+        ...record,
+        activityDate:
+          record?.activityDate instanceof Date
+            ? record.activityDate
+            : record?.activityDate ?? isoString,
+        tanggal: record?.tanggal ?? dateOnly,
+      };
+    })
+    .filter(Boolean);
+};
+
+const filterRecordsWithResolvableDate = (records, options = {}) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  return records.filter((record) => resolveRecordDate(record, options.extraPaths));
 };
 
 const pickNestedDate = (source, paths = []) => {
@@ -3803,6 +3882,7 @@ export default function ExecutiveSummaryPage() {
       const tanggalParam = periodRange?.startDate;
       const startDateParam = periodRange?.startDate;
       const endDateParam = periodRange?.endDate;
+      const activityPeriodeParam = "harian";
 
       try {
         const [directoryResponse, statsResult, likesResult, commentsResult] =
@@ -3820,7 +3900,7 @@ export default function ExecutiveSummaryPage() {
             getRekapLikesIG(
               token,
               clientId,
-              periodeParam ?? "bulanan",
+              activityPeriodeParam,
               tanggalParam,
               startDateParam,
               endDateParam,
@@ -3832,7 +3912,7 @@ export default function ExecutiveSummaryPage() {
             getRekapKomentarTiktok(
               token,
               clientId,
-              periodeParam ?? "bulanan",
+              activityPeriodeParam,
               tanggalParam,
               startDateParam,
               endDateParam,
@@ -3870,16 +3950,11 @@ export default function ExecutiveSummaryPage() {
           stats.total_tiktok_post,
         );
 
-        const likesRaw =
-          likesResult?.data || likesResult?.users || likesResult?.rekap || likesResult;
-        const likesRecords = Array.isArray(likesRaw) ? likesRaw : [];
+        const likesRaw = ensureArray(likesResult);
+        const likesRecords = ensureRecordsHaveActivityDate(likesRaw);
 
-        const commentsRaw =
-          commentsResult?.data ||
-          commentsResult?.users ||
-          commentsResult?.rekap ||
-          commentsResult;
-        const commentsRecords = Array.isArray(commentsRaw) ? commentsRaw : [];
+        const commentsRaw = ensureArray(commentsResult);
+        const commentsRecords = ensureRecordsHaveActivityDate(commentsRaw);
 
         let instagramPostsRaw = [];
         let tiktokPostsRaw = [];
@@ -4197,18 +4272,31 @@ export default function ExecutiveSummaryPage() {
         })
       : [];
 
-    const instagramPosts = instagramPlatforms.flatMap((platform) => {
-      if (Array.isArray(platform?.posts)) {
-        return platform.posts;
-      }
-      if (Array.isArray(platform?.postsData)) {
-        return platform.postsData;
-      }
-      if (Array.isArray(platform?.rawPosts)) {
-        return platform.rawPosts;
-      }
-      return [];
-    });
+    const instagramPosts = filterRecordsWithResolvableDate(
+      instagramPlatforms.flatMap((platform) => {
+        if (Array.isArray(platform?.posts)) {
+          return platform.posts;
+        }
+        if (Array.isArray(platform?.postsData)) {
+          return platform.postsData;
+        }
+        if (Array.isArray(platform?.rawPosts)) {
+          return platform.rawPosts;
+        }
+        return [];
+      }),
+      {
+        extraPaths: [
+          "publishedAt",
+          "published_at",
+          "timestamp",
+          "createdAt",
+          "created_at",
+          "date",
+          "tanggal",
+        ],
+      },
+    );
 
     const weeklyPosts = groupRecordsByWeek(instagramPosts, {
       getDate: (post) => {
@@ -4226,7 +4314,7 @@ export default function ExecutiveSummaryPage() {
     });
 
     const likesRecords = Array.isArray(platformActivity?.likes)
-      ? platformActivity.likes
+      ? filterRecordsWithResolvableDate(platformActivity.likes)
       : [];
 
     const weeklyLikes = groupRecordsByWeek(likesRecords, {
@@ -4336,18 +4424,31 @@ export default function ExecutiveSummaryPage() {
         })
       : [];
 
-    const tiktokPosts = tiktokPlatforms.flatMap((platform) => {
-      if (Array.isArray(platform?.posts)) {
-        return platform.posts;
-      }
-      if (Array.isArray(platform?.postsData)) {
-        return platform.postsData;
-      }
-      if (Array.isArray(platform?.rawPosts)) {
-        return platform.rawPosts;
-      }
-      return [];
-    });
+    const tiktokPosts = filterRecordsWithResolvableDate(
+      tiktokPlatforms.flatMap((platform) => {
+        if (Array.isArray(platform?.posts)) {
+          return platform.posts;
+        }
+        if (Array.isArray(platform?.postsData)) {
+          return platform.postsData;
+        }
+        if (Array.isArray(platform?.rawPosts)) {
+          return platform.rawPosts;
+        }
+        return [];
+      }),
+      {
+        extraPaths: [
+          "publishedAt",
+          "published_at",
+          "timestamp",
+          "createdAt",
+          "created_at",
+          "date",
+          "tanggal",
+        ],
+      },
+    );
 
     const weeklyPosts = groupRecordsByWeek(tiktokPosts, {
       getDate: (post) => {
@@ -4365,7 +4466,7 @@ export default function ExecutiveSummaryPage() {
     });
 
     const commentRecords = Array.isArray(platformActivity?.comments)
-      ? platformActivity.comments
+      ? filterRecordsWithResolvableDate(platformActivity.comments)
       : [];
 
     const weeklyComments = groupRecordsByWeek(commentRecords, {
@@ -4662,14 +4763,18 @@ export default function ExecutiveSummaryPage() {
       : ""
     : "";
 
-  const shouldShowInstagramTrendCard =
-    showPlatformLoading ||
-    (platformError && !hasMonthlyPlatforms) ||
-    instagramWeeklyCardData.hasRecords;
-  const shouldShowTiktokTrendCard =
-    showPlatformLoading ||
-    (platformError && !hasMonthlyPlatforms) ||
-    tiktokWeeklyCardData.hasRecords;
+  const shouldShowInstagramTrendCard = shouldShowWeeklyTrendCard({
+    showPlatformLoading,
+    platformError,
+    hasMonthlyPlatforms,
+    cardHasRecords: instagramWeeklyCardData.hasRecords,
+  });
+  const shouldShowTiktokTrendCard = shouldShowWeeklyTrendCard({
+    showPlatformLoading,
+    platformError,
+    hasMonthlyPlatforms,
+    cardHasRecords: tiktokWeeklyCardData.hasRecords,
+  });
 
   const effectivePlatformProfiles = useMemo(() => {
     if (hasMonthlyPlatforms) {
@@ -5457,3 +5562,5 @@ export default function ExecutiveSummaryPage() {
     </div>
   );
 }
+
+export { groupRecordsByWeek, shouldShowWeeklyTrendCard };
