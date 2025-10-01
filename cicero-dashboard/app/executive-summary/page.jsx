@@ -1983,6 +1983,12 @@ const sumActivityRecords = (records, fields) => {
   }, 0);
 };
 
+export {
+  INSTAGRAM_LIKE_FIELD_PATHS,
+  TIKTOK_COMMENT_FIELD_PATHS,
+  sumActivityRecords,
+};
+
 const monthlyData = {
   "2024-11": {
     monthLabel: "November 2024",
@@ -3476,21 +3482,21 @@ export default function ExecutiveSummaryPage() {
       : [];
 
     const weeklyLikes = groupRecordsByWeek(likesRecords, {
-      getDate: (record) =>
-        record?.tanggal ??
-        record?.date ??
-        record?.created_at ??
-        record?.createdAt ??
-        record?.activityDate ??
-        record?.updated_at ??
-        record?.updatedAt ??
-        record?.waktu ??
-        record?.time ??
-        record?.rekap?.tanggal ??
-        record?.rekap?.date ??
-        record?.rekap?.created_at ??
-        record?.rekap?.createdAt ??
-        null,
+      datePaths: [
+        "activityDate",
+        "tanggal",
+        "date",
+        "created_at",
+        "createdAt",
+        "updated_at",
+        "updatedAt",
+        "time",
+        "waktu",
+        "rekap.tanggal",
+        "rekap.date",
+        "rekap.created_at",
+        "rekap.createdAt",
+      ],
     });
 
     const hasRecords = weeklyPosts.length > 0 || weeklyLikes.length > 0;
