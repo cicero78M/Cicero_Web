@@ -268,30 +268,27 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
                 color: "#e2e8f0",
               }}
               formatter={(value: number, name: string, payload) => {
-                const tooltipEntry =
-                  payload && typeof payload === "object"
-                    ? (payload as { dataKey?: string | undefined })
-                    : undefined;
-                const dataKey = tooltipEntry?.dataKey;
+                if (name === "engagementRate") {
+                  return [formatPercent(value ?? 0), "Engagement Rate"];
+                }
 
-                if (
-                  dataKey === "engagementRate" ||
-                  name === "engagementRate" ||
-                  name === "Engagement Rate"
-                ) {
+                if (name === "interactions") {
                   return [
-                    formatPercent(Number.isFinite(value) ? Number(value) : 0),
-                    "Engagement Rate",
+                    formatNumber(value ?? 0, { maximumFractionDigits: 0 }),
+                    "Total Interaksi",
                   ];
                 }
 
-                if (dataKey === "interactions" || name === "interactions") {
-                  return [
-                    formatNumber(Number.isFinite(value) ? Number(value) : 0, {
-                      maximumFractionDigits: 0,
-                    }),
-                    "Total Interaksi",
-                  ];
+                if (payload && typeof payload === "object" && "payload" in payload) {
+                  const dataPoint = (payload as any).payload as { interactions?: number };
+                  if (dataPoint?.interactions !== undefined) {
+                    return [
+                      formatNumber(dataPoint.interactions ?? 0, {
+                        maximumFractionDigits: 0,
+                      }),
+                      "Total Interaksi",
+                    ];
+                  }
                 }
 
                 return [value, name];
