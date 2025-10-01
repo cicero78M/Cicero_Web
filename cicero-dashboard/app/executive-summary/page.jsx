@@ -95,7 +95,7 @@ const formatPercent = (value) => {
   })}%`;
 };
 
-const groupRecordsByWeek = (records, { getDate } = {}) => {
+const groupRecordsByWeek = (records, { getDate, datePaths } = {}) => {
   if (!Array.isArray(records) || records.length === 0) {
     return [];
   }
@@ -104,21 +104,32 @@ const groupRecordsByWeek = (records, { getDate } = {}) => {
     typeof getDate === "function"
       ? getDate
       : (record) =>
-          record?.publishedAt ??
-          record?.date ??
-          record?.tanggal ??
-          record?.createdAt ??
-          record?.created_at ??
-          record?.activityDate ??
-          record?.updatedAt ??
-          record?.updated_at ??
-          record?.time ??
-          record?.waktu ??
-          record?.rekap?.tanggal ??
-          record?.rekap?.date ??
-          record?.rekap?.created_at ??
-          record?.rekap?.createdAt ??
-          null;
+          {
+            if (Array.isArray(datePaths) && datePaths.length > 0) {
+              const dateFromPaths = pickNestedDate(record, datePaths);
+              if (dateFromPaths) {
+                return dateFromPaths;
+              }
+            }
+
+            return (
+              record?.publishedAt ??
+              record?.date ??
+              record?.tanggal ??
+              record?.createdAt ??
+              record?.created_at ??
+              record?.activityDate ??
+              record?.updatedAt ??
+              record?.updated_at ??
+              record?.time ??
+              record?.waktu ??
+              record?.rekap?.tanggal ??
+              record?.rekap?.date ??
+              record?.rekap?.created_at ??
+              record?.rekap?.createdAt ??
+              null
+            );
+          };
 
   const buckets = new Map();
 
@@ -4174,6 +4185,7 @@ export default function ExecutiveSummaryPage() {
         null,
     });
 
+    const hasRecords = weeklyPosts.length > 0 || weeklyLikes.length > 0;
     const buckets = new Map();
 
     weeklyPosts.forEach((group) => {
@@ -4220,6 +4232,7 @@ export default function ExecutiveSummaryPage() {
         latestWeek: null,
         previousWeek: null,
         delta: null,
+        hasRecords,
       };
     }
 
@@ -4248,11 +4261,151 @@ export default function ExecutiveSummaryPage() {
       latestWeek,
       previousWeek,
       delta,
+      hasRecords,
+    };
+  }, [effectivePlatformMetrics, platformActivity]);
+
+  const tiktokWeeklyTrend = useMemo(() => {
+    const tiktokPlatforms = Array.isArray(effectivePlatformMetrics)
+      ? effectivePlatformMetrics.filter((platform) => {
+          const key = (platform?.key || platform?.sourceKey || "").toLowerCase();
+          const label = (platform?.label || "").toLowerCase();
+          return key.includes("tiktok") || label.includes("tiktok");
+        })
+      : [];
+
+    const tiktokPosts = tiktokPlatforms.flatMap((platform) => {
+      if (Array.isArray(platform?.posts)) {
+        return platform.posts;
+      }
+      if (Array.isArray(platform?.postsData)) {
+        return platform.postsData;
+      }
+      if (Array.isArray(platform?.rawPosts)) {
+        return platform.rawPosts;
+      }
+      return [];
+    });
+
+    const weeklyPosts = groupRecordsByWeek(tiktokPosts, {
+      getDate: (post) => {
+        if (post?.publishedAt instanceof Date) {
+          return post.publishedAt;
+        }
+        return (
+          post?.createdAt ??
+          post?.created_at ??
+          post?.timestamp ??
+          post?.published_at ??
+          null
+        );
+      },
+    });
+
+    const commentRecords = Array.isArray(platformActivity?.comments)
+      ? platformActivity.comments
+      : [];
+
+    const weeklyComments = groupRecordsByWeek(commentRecords, {
+      datePaths: [
+        "tanggal",
+        "date",
+        "created_at",
+        "createdAt",
+        "activityDate",
+        "updated_at",
+        "updatedAt",
+        "time",
+        "waktu",
+        "rekap.tanggal",
+        "rekap.date",
+        "rekap.created_at",
+        "rekap.createdAt",
+      ],
+    });
+
+    const hasRecords = weeklyPosts.length > 0 || weeklyComments.length > 0;
+    const buckets = new Map();
+
+    weeklyPosts.forEach((group) => {
+      const key = group.key;
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          key,
+          start: group.start,
+          end: group.end,
+          posts: 0,
+          comments: 0,
+        });
+      }
+      const entry = buckets.get(key);
+      entry.posts += group.records.length;
+    });
+
+    weeklyComments.forEach((group) => {
+      const key = group.key;
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          key,
+          start: group.start,
+          end: group.end,
+          posts: 0,
+          comments: 0,
+        });
+      }
+      const entry = buckets.get(key);
+      const totalComments = sumActivityRecords(
+        group.records,
+        TIKTOK_COMMENT_FIELD_PATHS,
+      );
+      entry.comments += Math.max(0, Math.round(totalComments) || 0);
+    });
+
+    const weeks = Array.from(buckets.values()).sort(
+      (a, b) => a.start.getTime() - b.start.getTime(),
+    );
+
+    if (weeks.length === 0) {
+      return {
+        weeks: [],
+        latestWeek: null,
+        previousWeek: null,
+        delta: null,
+        hasRecords,
+      };
+    }
+
+    const latestWeek = weeks[weeks.length - 1];
+    const previousWeek = weeks.length > 1 ? weeks[weeks.length - 2] : null;
+
+    const computeDelta = (latestValue, previousValue) => {
+      const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
+      const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
+      const absolute = safeLatest - safePrevious;
+      const percent =
+        safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
+
+      return { absolute, percent };
+    };
+
+    const delta = previousWeek
+      ? {
+          posts: computeDelta(latestWeek.posts, previousWeek.posts),
+          comments: computeDelta(latestWeek.comments, previousWeek.comments),
+        }
+      : null;
+
+    return {
+      weeks,
+      latestWeek,
+      previousWeek,
+      delta,
+      hasRecords,
     };
   }, [effectivePlatformMetrics, platformActivity]);
 
   const instagramWeeklyCardData = useMemo(() => {
-    const { latestWeek, previousWeek, delta, weeks } =
+    const { latestWeek, previousWeek, delta, weeks, hasRecords } =
       instagramWeeklyTrend ?? {};
 
     const safeLatestPosts = Math.max(0, Number(latestWeek?.posts) || 0);
@@ -4301,36 +4454,160 @@ export default function ExecutiveSummaryPage() {
         : [];
 
     const series = Array.isArray(weeks)
-      ? weeks.slice(-6).map((week) => ({
-          key: week.key,
-          label: formatWeekRangeLabel(week.start, week.end),
-          posts: Math.max(0, Number(week.posts) || 0),
-          likes: Math.max(0, Number(week.likes) || 0),
-        }))
+      ? weeks.slice(-6).map((week) => {
+          const posts = Math.max(0, Number(week.posts) || 0);
+          const likes = Math.max(0, Number(week.likes) || 0);
+          return {
+            key: week.key,
+            label: formatWeekRangeLabel(week.start, week.end),
+            posts,
+            likes,
+            primary: posts,
+            secondary: likes,
+          };
+        })
       : [];
+
+    const weeksCount = Array.isArray(weeks) ? weeks.length : 0;
 
     return {
       currentMetrics,
       previousMetrics,
       deltaMetrics,
       series,
-      weeksCount: Array.isArray(weeks) ? weeks.length : 0,
+      weeksCount,
       hasComparison: Boolean(previousWeek),
+      hasRecords: Boolean(hasRecords),
     };
   }, [instagramWeeklyTrend]);
 
+  const tiktokWeeklyCardData = useMemo(() => {
+    const { latestWeek, previousWeek, delta, weeks, hasRecords } =
+      tiktokWeeklyTrend ?? {};
+
+    const safeLatestPosts = Math.max(0, Number(latestWeek?.posts) || 0);
+    const safeLatestComments = Math.max(0, Number(latestWeek?.comments) || 0);
+    const safePreviousPosts = Math.max(0, Number(previousWeek?.posts) || 0);
+    const safePreviousComments = Math.max(
+      0,
+      Number(previousWeek?.comments) || 0,
+    );
+
+    const currentMetrics = latestWeek
+      ? [
+          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
+          {
+            key: "comments",
+            label: "Komentar Personil",
+            value: safeLatestComments,
+          },
+        ]
+      : [];
+
+    const previousMetrics = previousWeek
+      ? [
+          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
+          {
+            key: "comments",
+            label: "Komentar Personil",
+            value: safePreviousComments,
+          },
+        ]
+      : [];
+
+    const deltaMetrics =
+      delta && previousWeek
+        ? [
+            {
+              key: "posts",
+              label: "Perubahan Post",
+              absolute: Math.round(delta.posts?.absolute ?? 0),
+              percent:
+                delta.posts?.percent !== null &&
+                delta.posts?.percent !== undefined
+                  ? delta.posts.percent
+                  : null,
+            },
+            {
+              key: "comments",
+              label: "Perubahan Komentar",
+              absolute: Math.round(delta.comments?.absolute ?? 0),
+              percent:
+                delta.comments?.percent !== null &&
+                delta.comments?.percent !== undefined
+                  ? delta.comments.percent
+                  : null,
+            },
+          ]
+        : [];
+
+    const series = Array.isArray(weeks)
+      ? weeks.slice(-6).map((week) => {
+          const posts = Math.max(0, Number(week.posts) || 0);
+          const comments = Math.max(0, Number(week.comments) || 0);
+          return {
+            key: week.key,
+            label: formatWeekRangeLabel(week.start, week.end),
+            posts,
+            likes: comments,
+            primary: posts,
+            secondary: comments,
+          };
+        })
+      : [];
+
+    const weeksCount = Array.isArray(weeks) ? weeks.length : 0;
+
+    return {
+      currentMetrics,
+      previousMetrics,
+      deltaMetrics,
+      series,
+      weeksCount,
+      hasComparison: Boolean(previousWeek),
+      hasRecords: Boolean(hasRecords),
+    };
+  }, [tiktokWeeklyTrend]);
+
   const showPlatformLoading = platformsLoading && !hasMonthlyPlatforms;
-  const weeklyTrendDescription =
+  const instagramWeeklyTrendDescription =
     instagramWeeklyCardData.weeksCount < 2
-      ? "Post baru vs likes personil per minggu. Data perbandingan belum lengkap."
-      : "Post baru vs likes personil per minggu.";
-  const weeklyTrendErrorMessage = !showPlatformLoading
-    ? instagramWeeklyCardData.weeksCount === 0
-      ? "Belum ada data aktivitas mingguan yang terekam."
+      ? "Post Instagram & likes personil per minggu. Data perbandingan belum lengkap."
+      : "Post Instagram & likes personil per minggu.";
+  const instagramWeeklyCardError = !showPlatformLoading
+    ? platformError && !hasMonthlyPlatforms
+      ? platformError
+      : instagramWeeklyCardData.weeksCount === 0 &&
+        instagramWeeklyCardData.hasRecords
+      ? "Belum ada data aktivitas Instagram mingguan yang terekam."
       : instagramWeeklyCardData.weeksCount === 1
-      ? "Belum cukup data mingguan untuk dibandingkan."
+      ? "Belum cukup data mingguan Instagram untuk dibandingkan."
       : ""
     : "";
+
+  const tiktokWeeklyTrendDescription =
+    tiktokWeeklyCardData.weeksCount < 2
+      ? "Post TikTok & komentar personel per minggu. Data perbandingan belum lengkap."
+      : "Post TikTok & komentar personel per minggu.";
+  const tiktokWeeklyCardError = !showPlatformLoading
+    ? platformError && !hasMonthlyPlatforms
+      ? platformError
+      : tiktokWeeklyCardData.weeksCount === 0 &&
+        tiktokWeeklyCardData.hasRecords
+      ? "Belum ada data aktivitas TikTok mingguan yang terekam."
+      : tiktokWeeklyCardData.weeksCount === 1
+      ? "Belum cukup data mingguan TikTok untuk dibandingkan."
+      : ""
+    : "";
+
+  const shouldShowInstagramTrendCard =
+    showPlatformLoading ||
+    (platformError && !hasMonthlyPlatforms) ||
+    instagramWeeklyCardData.hasRecords;
+  const shouldShowTiktokTrendCard =
+    showPlatformLoading ||
+    (platformError && !hasMonthlyPlatforms) ||
+    tiktokWeeklyCardData.hasRecords;
 
   const effectivePlatformProfiles = useMemo(() => {
     if (hasMonthlyPlatforms) {
@@ -4766,18 +5043,45 @@ export default function ExecutiveSummaryPage() {
           </p>
         </div>
         <div className="space-y-6">
-          <WeeklyTrendCard
-            title="Tren Aktivitas Instagram"
-            description={weeklyTrendDescription}
-            loading={showPlatformLoading}
-            error={weeklyTrendErrorMessage}
-            currentMetrics={instagramWeeklyCardData.currentMetrics}
-            previousMetrics={instagramWeeklyCardData.previousMetrics}
-            deltaMetrics={instagramWeeklyCardData.deltaMetrics}
-            series={instagramWeeklyCardData.series}
-            formatNumber={formatNumber}
-            formatPercent={formatPercent}
-          />
+          <div className="grid gap-6 md:grid-cols-2">
+            {shouldShowInstagramTrendCard ? (
+              <WeeklyTrendCard
+                title="Tren Aktivitas Instagram"
+                description={instagramWeeklyTrendDescription}
+                loading={showPlatformLoading}
+                error={instagramWeeklyCardError}
+                currentMetrics={instagramWeeklyCardData.currentMetrics}
+                previousMetrics={instagramWeeklyCardData.previousMetrics}
+                deltaMetrics={instagramWeeklyCardData.deltaMetrics}
+                series={instagramWeeklyCardData.series}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+                primaryMetricLabel="Post Instagram"
+                secondaryMetricLabel="Likes Personil"
+              />
+            ) : null}
+            {shouldShowTiktokTrendCard ? (
+              <WeeklyTrendCard
+                title="Tren Aktivitas TikTok"
+                description={tiktokWeeklyTrendDescription}
+                loading={showPlatformLoading}
+                error={tiktokWeeklyCardError}
+                currentMetrics={tiktokWeeklyCardData.currentMetrics}
+                previousMetrics={tiktokWeeklyCardData.previousMetrics}
+                deltaMetrics={tiktokWeeklyCardData.deltaMetrics}
+                series={tiktokWeeklyCardData.series}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+                primaryMetricLabel="Post TikTok"
+                secondaryMetricLabel="Komentar Personil"
+              />
+            ) : null}
+            {!shouldShowInstagramTrendCard && !shouldShowTiktokTrendCard ? (
+              <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+                Belum ada data tren mingguan yang dapat ditampilkan.
+              </div>
+            ) : null}
+          </div>
           {showPlatformLoading ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Memuat data performa kanal…
