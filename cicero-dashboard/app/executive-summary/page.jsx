@@ -877,7 +877,7 @@ const readNumericField = (record, paths = []) => {
   return Number.isFinite(numeric) ? Math.max(0, Number(numeric) || 0) : 0;
 };
 
-export const sumActivityRecords = (records, fieldPaths) => {
+const sumActivityRecords = (records, fieldPaths) => {
   if (!Array.isArray(records) || !Array.isArray(fieldPaths)) {
     return 0;
   }
