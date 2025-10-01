@@ -928,6 +928,97 @@ const normalizeUserKeyFromRecord = (record = {}) => {
   return null;
 };
 
+export const computeActivityBuckets = ({
+  users,
+  likes,
+  comments,
+  totalIGPosts,
+  totalTikTokPosts,
+} = {}) => {
+  const safeUsers = ensureArray(users).filter(Boolean);
+  const directoryKeys = new Set();
+  safeUsers.forEach((user) => {
+    const key = normalizeUserKeyFromRecord(user);
+    if (key) {
+      directoryKeys.add(key);
+    }
+  });
+
+  const likesRecords = ensureArray(likes).filter(Boolean);
+  const instagramActiveKeys = new Set();
+  likesRecords.forEach((record) => {
+    const key = normalizeUserKeyFromRecord(record);
+    if (key) {
+      instagramActiveKeys.add(key);
+    }
+  });
+
+  const commentsRecords = ensureArray(comments).filter(Boolean);
+  const tiktokActiveKeys = new Set();
+  commentsRecords.forEach((record) => {
+    const key = normalizeUserKeyFromRecord(record);
+    if (key) {
+      tiktokActiveKeys.add(key);
+    }
+  });
+
+  const evaluatedUsers = directoryKeys.size;
+
+  const igPosts = extractNumericValue(totalIGPosts);
+  const ttPosts = extractNumericValue(totalTikTokPosts);
+  const safeNumber = (value) => (Number.isFinite(value) ? value : 0);
+  const totalContent = Math.max(0, safeNumber(igPosts) + safeNumber(ttPosts));
+
+  const instagramActiveCount = Array.from(instagramActiveKeys).filter((key) =>
+    directoryKeys.has(key),
+  ).length;
+  const tiktokActiveCount = Array.from(tiktokActiveKeys).filter((key) =>
+    directoryKeys.has(key),
+  ).length;
+
+  const knownActiveKeys = new Set();
+  instagramActiveKeys.forEach((key) => {
+    if (directoryKeys.has(key)) {
+      knownActiveKeys.add(key);
+    }
+  });
+  tiktokActiveKeys.forEach((key) => {
+    if (directoryKeys.has(key)) {
+      knownActiveKeys.add(key);
+    }
+  });
+
+  const passiveCount = Math.max(evaluatedUsers - knownActiveKeys.size, 0);
+
+  return {
+    evaluatedUsers,
+    totalContent,
+    categories: [
+      {
+        key: "instagram-active",
+        label: "Aktif memberi likes Instagram",
+        description:
+          "Personil yang memberikan likes pada konten Instagram selama periode ini.",
+        count: instagramActiveCount,
+      },
+      {
+        key: "tiktok-active",
+        label: "Aktif berkomentar di TikTok",
+        description:
+          "Personil yang aktif memberikan komentar pada konten TikTok selama periode ini.",
+        count: tiktokActiveCount,
+      },
+      {
+        key: "passive",
+        label: "Belum berinteraksi",
+        description:
+          "Personil dalam direktori yang belum menunjukkan aktivitas pada Instagram atau TikTok.",
+        count: passiveCount,
+      },
+    ],
+  };
+};
+
 const buildLikesSummaryFromRecords = (records = []) => {
   const safeRecords = Array.isArray(records)
     ? records.filter(Boolean)
