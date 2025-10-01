@@ -4736,6 +4736,10 @@ export default function ExecutiveSummaryPage() {
   const tiktokProfile =
     effectivePlatformProfiles?.tiktok ?? profileByKey.tiktok ?? null;
 
+  const shouldRenderWeeklyTrendSection =
+    !showPlatformLoading &&
+    (shouldShowInstagramTrendCard || shouldShowTiktokTrendCard);
+
   return (
     <div className="space-y-8">
       <header className="rounded-3xl border border-slate-800/60 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-8 shadow-[0_0_35px_rgba(15,23,42,0.4)]">
@@ -4836,7 +4840,55 @@ export default function ExecutiveSummaryPage() {
         </div>
       </header>
 
-            <section
+      {shouldRenderWeeklyTrendSection ? (
+        <section
+          aria-label="Tren Aktivitas Mingguan"
+          className="space-y-6"
+        >
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              Tren Aktivitas Mingguan
+            </h2>
+            <p className="max-w-3xl text-sm text-slate-300">
+              Pantau performa mingguan konten personel di Instagram dan TikTok
+              untuk melihat perubahan terbaru dibandingkan minggu sebelumnya.
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {shouldShowInstagramTrendCard ? (
+              <WeeklyTrendCard
+                title="Instagram"
+                description={instagramWeeklyTrendDescription}
+                currentMetrics={instagramWeeklyCardData.currentMetrics}
+                previousMetrics={instagramWeeklyCardData.previousMetrics}
+                deltaMetrics={instagramWeeklyCardData.deltaMetrics}
+                series={instagramWeeklyCardData.series}
+                error={instagramWeeklyCardError}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+              />
+            ) : null}
+
+            {shouldShowTiktokTrendCard ? (
+              <WeeklyTrendCard
+                title="TikTok"
+                description={tiktokWeeklyTrendDescription}
+                currentMetrics={tiktokWeeklyCardData.currentMetrics}
+                previousMetrics={tiktokWeeklyCardData.previousMetrics}
+                deltaMetrics={tiktokWeeklyCardData.deltaMetrics}
+                series={tiktokWeeklyCardData.series}
+                error={tiktokWeeklyCardError}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+                secondaryMetricLabel="Komentar"
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <section
         aria-label="Insight Pengguna Aktual"
         className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
       >
