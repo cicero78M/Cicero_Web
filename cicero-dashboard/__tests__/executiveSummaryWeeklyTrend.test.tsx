@@ -12,6 +12,10 @@ import {
   TIKTOK_COMMENT_FIELD_PATHS,
   sumActivityRecords,
 } from "@/app/executive-summary/activityRecords";
+import {
+  aggregateLikesRecords,
+  prepareTrendActivityRecords,
+} from "@/app/executive-summary/page";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 
 describe("groupRecordsByMonth monthly trend integration", () => {
@@ -156,6 +160,29 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(totalComments).toBe(8);
   });
 
+  it("preserves instagram likes totals for records without timestamps", () => {
+    const rawLikes = [
+      {
+        client_id: "CLI-01",
+        nama_client: "Client A",
+        username: "alpha",
+        jumlah_like: 5,
+      },
+      {
+        client_id: "CLI-01",
+        nama_client: "Client A",
+        username: "bravo",
+        jumlah_like: "7",
+      },
+    ];
+
+    const summary = aggregateLikesRecords(rawLikes);
+
+    expect(summary.totals.totalLikes).toBe(12);
+    expect(summary.totals.totalPersonnel).toBe(2);
+    expect(summary.clients[0].totalLikes).toBe(12);
+  });
+
   it("aggregates totals from records that only expose snake_case activity dates", () => {
     const instagramRecords = [
       { activity_date: "2024-07-01T00:00:00Z", rekap: { total_like: "5" } },
@@ -183,6 +210,25 @@ describe("groupRecordsByMonth monthly trend integration", () => {
 
     expect(instagramTotal).toBe(12);
     expect(tiktokTotal).toBe(7);
+  });
+
+  it("assigns fallback dates so instagram trend buckets remain populated", () => {
+    const rawLikes = [
+      { jumlah_like: 4, username: "alpha" },
+      { jumlah_like: 6, username: "bravo" },
+    ];
+
+    const sanitized = prepareTrendActivityRecords(rawLikes, {
+      fallbackDate: "2024-07-01T00:00:00.000Z",
+    });
+    const buckets = groupRecordsByMonth(sanitized);
+
+    expect(buckets).toHaveLength(1);
+    const totalLikes = sumActivityRecords(
+      buckets[0].records,
+      INSTAGRAM_LIKE_FIELD_PATHS,
+    );
+    expect(totalLikes).toBe(10);
   });
 
   it("groups posts with only date/tanggal fields and shows the trend card", () => {
@@ -220,6 +266,46 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     });
 
     expect(shouldShow).toBe(true);
+  });
+
+  it("renders trend metrics when sanitized activity supplies fallback dates", () => {
+    const rawComments = [
+      { komentar: 3, username: "alpha" },
+      { komentar: 5, username: "bravo" },
+    ];
+
+    const sanitized = prepareTrendActivityRecords(rawComments, {
+      fallbackDate: "2024-07-01T00:00:00.000Z",
+    });
+    const buckets = groupRecordsByMonth(sanitized);
+    const currentTotal = sumActivityRecords(
+      buckets[0].records,
+      TIKTOK_COMMENT_FIELD_PATHS,
+    );
+
+    render(
+      <MonthlyTrendCard
+        title="TikTok Comments"
+        currentMetrics={[
+          { key: "comments", label: "Komentar", value: currentTotal },
+        ]}
+        series={buckets.map((bucket) => ({
+          key: bucket.key,
+          start: bucket.start,
+          end: bucket.end,
+          comments: sumActivityRecords(
+            bucket.records,
+            TIKTOK_COMMENT_FIELD_PATHS,
+          ),
+        }))}
+      />,
+    );
+
+    expect(
+      screen.queryByText("Belum ada data bulanan yang dapat ditampilkan."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Komentar")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
   });
 });
 
