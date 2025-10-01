@@ -1,4 +1,4 @@
-import { computeActivityBuckets } from "@/app/executive-summary/activityMetrics";
+import { computeActivityBuckets } from "@/app/executive-summary/page";
 
 describe("computeActivityBuckets", () => {
   const baseUsers = [
