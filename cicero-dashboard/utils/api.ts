@@ -269,10 +269,29 @@ export async function getRekapAmplify(
   return res.json();
 }
 
-export async function getInstagramPosts(token: string, client_id: string): Promise<any> {
+export async function getInstagramPosts(
+  token: string,
+  client_id: string,
+  options: {
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<any> {
   const params = new URLSearchParams({ client_id });
-  const url = `${API_BASE_URL}/api/insta/posts?${params.toString()}`;
-  const res = await fetchWithAuth(url, token);
+  if (options.startDate) {
+    params.append("start_date", options.startDate);
+  }
+  if (options.endDate) {
+    params.append("end_date", options.endDate);
+  }
+  if (typeof options.limit === "number" && Number.isFinite(options.limit)) {
+    params.append("limit", String(options.limit));
+  }
+  const query = params.toString();
+  const url = `${API_BASE_URL}/api/insta/posts${query ? `?${query}` : ""}`;
+  const res = await fetchWithAuth(url, token, { signal: options.signal });
   if (!res.ok) throw new Error("Failed to fetch instagram posts");
   return res.json();
 }
@@ -507,10 +526,29 @@ export async function getTiktokPostsByUsernameViaBackend(
   return posts;
 }
 
-export async function getTiktokPosts(token: string, client_id: string): Promise<any> {
+export async function getTiktokPosts(
+  token: string,
+  client_id: string,
+  options: {
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<any> {
   const params = new URLSearchParams({ client_id });
-  const url = `${API_BASE_URL}/api/tiktok/posts?${params.toString()}`;
-  const res = await fetchWithAuth(url, token);
+  if (options.startDate) {
+    params.append("start_date", options.startDate);
+  }
+  if (options.endDate) {
+    params.append("end_date", options.endDate);
+  }
+  if (typeof options.limit === "number" && Number.isFinite(options.limit)) {
+    params.append("limit", String(options.limit));
+  }
+  const query = params.toString();
+  const url = `${API_BASE_URL}/api/tiktok/posts${query ? `?${query}` : ""}`;
+  const res = await fetchWithAuth(url, token, { signal: options.signal });
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
 }
