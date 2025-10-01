@@ -3486,25 +3486,14 @@ export default function ExecutiveSummaryPage() {
       data.platformAnalytics.platforms.length > 0;
 
     const monthOptionKeys = new Set(monthOptions.map((option) => option.key));
-    const currentMonthHasOption = monthOptionKeys.has(currentMonthKey);
-
-    if (currentMonthHasOption && hasCuratedData(monthlyData[currentMonthKey])) {
+    if (monthOptionKeys.has(currentMonthKey)) {
       return currentMonthKey;
     }
 
-    const availableDataKeys = Object.keys(monthlyData)
-      .filter((key) => monthOptionKeys.has(key))
-      .sort()
-      .reverse();
-
-    for (const key of availableDataKeys) {
-      if (hasCuratedData(monthlyData[key])) {
-        return key;
+    for (const option of monthOptions) {
+      if (hasCuratedData(monthlyData[option.key])) {
+        return option.key;
       }
-    }
-
-    if (currentMonthHasOption) {
-      return currentMonthKey;
     }
 
     return monthOptions[0]?.key ?? currentMonthKey;
