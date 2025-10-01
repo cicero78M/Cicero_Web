@@ -37,6 +37,7 @@ import PlatformOverviewCard from "@/components/executive-summary/PlatformOvervie
 import PlatformKPIChart from "@/components/executive-summary/PlatformKPIChart";
 import PlatformDetailTabs from "@/components/executive-summary/PlatformDetailTabs";
 import PostHighlightCarousel from "@/components/executive-summary/PostHighlightCarousel";
+import WeeklyTrendCard from "@/components/executive-summary/WeeklyTrendCard";
 import {
   buildMonthKey,
   extractYearFromMonthKey,
@@ -93,6 +94,106 @@ const formatPercent = (value) => {
     minimumFractionDigits: fractionDigits,
   })}%`;
 };
+
+const groupRecordsByWeek = (records, { getDate } = {}) => {
+  if (!Array.isArray(records) || records.length === 0) {
+    return [];
+  }
+
+  const extractor =
+    typeof getDate === "function"
+      ? getDate
+      : (record) =>
+          record?.publishedAt ??
+          record?.date ??
+          record?.tanggal ??
+          record?.createdAt ??
+          record?.created_at ??
+          record?.activityDate ??
+          record?.updatedAt ??
+          record?.updated_at ??
+          record?.time ??
+          record?.waktu ??
+          record?.rekap?.tanggal ??
+          record?.rekap?.date ??
+          record?.rekap?.created_at ??
+          record?.rekap?.createdAt ??
+          null;
+
+  const buckets = new Map();
+
+  records.forEach((record) => {
+    if (!record) {
+      return;
+    }
+
+    const rawDate = extractor(record);
+    const parsedDate = parseDateValue(rawDate);
+
+    if (!parsedDate) {
+      return;
+    }
+
+    const startOfDayUtc = new Date(
+      Date.UTC(
+        parsedDate.getUTCFullYear(),
+        parsedDate.getUTCMonth(),
+        parsedDate.getUTCDate(),
+      ),
+    );
+    const weekday = startOfDayUtc.getUTCDay();
+    const diffToMonday = weekday === 0 ? -6 : 1 - weekday;
+    startOfDayUtc.setUTCDate(startOfDayUtc.getUTCDate() + diffToMonday);
+    startOfDayUtc.setUTCHours(0, 0, 0, 0);
+
+    const key = startOfDayUtc.toISOString().slice(0, 10);
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      const endDate = new Date(startOfDayUtc);
+      endDate.setUTCDate(endDate.getUTCDate() + 6);
+      bucket = {
+        key,
+        start: startOfDayUtc,
+        end: endDate,
+        records: [],
+      };
+      buckets.set(key, bucket);
+    }
+
+    bucket.records.push(record);
+  });
+
+  return Array.from(buckets.values()).sort(
+    (a, b) => a.start.getTime() - b.start.getTime(),
+  );
+};
+
+const formatWeekRangeLabel = (start, end, locale = "id-ID") => {
+  if (!(start instanceof Date) || Number.isNaN(start.valueOf())) {
+    return "";
+  }
+
+  const resolvedEnd =
+    end instanceof Date && !Number.isNaN(end.valueOf())
+      ? end
+      : new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+  const formatter = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+  });
+
+  const startLabel = formatter.format(start);
+  const endLabel = formatter.format(resolvedEnd);
+
+  if (startLabel === endLabel) {
+    return startLabel;
+  }
+
+  return `${startLabel} – ${endLabel}`;
+};
+
+const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
 
 const CompletionTooltip = ({ active, payload }) => {
   if (!active || !payload || payload.length === 0) {
@@ -3488,6 +3589,7 @@ export default function ExecutiveSummaryPage() {
     error: "",
     platforms: [],
     profiles: { byKey: {} },
+    activity: { likes: [], comments: [] },
   });
 
   useEffect(() => {
@@ -3606,6 +3708,7 @@ export default function ExecutiveSummaryPage() {
           error: "",
           platforms: [],
           profiles: { byKey: {} },
+          activity: { likes: [], comments: [] },
         });
         return;
       }
@@ -3798,6 +3901,10 @@ export default function ExecutiveSummaryPage() {
           error: platformErrorMessage,
           platforms: normalizedPlatformMetrics.platforms,
           profiles: normalizedPlatformMetrics.profiles,
+          activity: {
+            likes: likesRecords,
+            comments: commentsRecords,
+          },
         });
 
         setUserInsightState({
@@ -3827,6 +3934,7 @@ export default function ExecutiveSummaryPage() {
               : "Gagal memuat data performa platform.",
           platforms: [],
           profiles: { byKey: {} },
+          activity: { likes: [], comments: [] },
         });
       }
     };
@@ -3984,7 +4092,12 @@ export default function ExecutiveSummaryPage() {
     loading: platformsLoading,
     error: platformError,
     profiles: platformProfiles,
+    activity: platformActivityState,
   } = platformState;
+  const platformActivity =
+    platformActivityState && typeof platformActivityState === "object"
+      ? platformActivityState
+      : EMPTY_ACTIVITY;
 
   const monthlyPlatformAnalytics = useMemo(() => {
     const monthlyPlatforms = data?.platformAnalytics?.platforms;
@@ -4001,6 +4114,223 @@ export default function ExecutiveSummaryPage() {
   const effectivePlatformMetrics = hasMonthlyPlatforms
     ? monthlyPlatformAnalytics?.platforms ?? []
     : platformMetrics;
+
+  const instagramWeeklyTrend = useMemo(() => {
+    const instagramPlatforms = Array.isArray(effectivePlatformMetrics)
+      ? effectivePlatformMetrics.filter((platform) => {
+          const key = (platform?.key || platform?.sourceKey || "").toLowerCase();
+          const label = (platform?.label || "").toLowerCase();
+          return key.includes("instagram") || label.includes("instagram");
+        })
+      : [];
+
+    const instagramPosts = instagramPlatforms.flatMap((platform) => {
+      if (Array.isArray(platform?.posts)) {
+        return platform.posts;
+      }
+      if (Array.isArray(platform?.postsData)) {
+        return platform.postsData;
+      }
+      if (Array.isArray(platform?.rawPosts)) {
+        return platform.rawPosts;
+      }
+      return [];
+    });
+
+    const weeklyPosts = groupRecordsByWeek(instagramPosts, {
+      getDate: (post) => {
+        if (post?.publishedAt instanceof Date) {
+          return post.publishedAt;
+        }
+        return (
+          post?.createdAt ??
+          post?.created_at ??
+          post?.timestamp ??
+          post?.published_at ??
+          null
+        );
+      },
+    });
+
+    const likesRecords = Array.isArray(platformActivity?.likes)
+      ? platformActivity.likes
+      : [];
+
+    const weeklyLikes = groupRecordsByWeek(likesRecords, {
+      getDate: (record) =>
+        record?.tanggal ??
+        record?.date ??
+        record?.created_at ??
+        record?.createdAt ??
+        record?.activityDate ??
+        record?.updated_at ??
+        record?.updatedAt ??
+        record?.waktu ??
+        record?.time ??
+        record?.rekap?.tanggal ??
+        record?.rekap?.date ??
+        record?.rekap?.created_at ??
+        record?.rekap?.createdAt ??
+        null,
+    });
+
+    const buckets = new Map();
+
+    weeklyPosts.forEach((group) => {
+      const key = group.key;
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          key,
+          start: group.start,
+          end: group.end,
+          posts: 0,
+          likes: 0,
+        });
+      }
+      const entry = buckets.get(key);
+      entry.posts += group.records.length;
+    });
+
+    weeklyLikes.forEach((group) => {
+      const key = group.key;
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          key,
+          start: group.start,
+          end: group.end,
+          posts: 0,
+          likes: 0,
+        });
+      }
+      const entry = buckets.get(key);
+      const totalLikes = sumActivityRecords(
+        group.records,
+        INSTAGRAM_LIKE_FIELD_PATHS,
+      );
+      entry.likes += Math.max(0, Math.round(totalLikes) || 0);
+    });
+
+    const weeks = Array.from(buckets.values()).sort(
+      (a, b) => a.start.getTime() - b.start.getTime(),
+    );
+
+    if (weeks.length === 0) {
+      return {
+        weeks: [],
+        latestWeek: null,
+        previousWeek: null,
+        delta: null,
+      };
+    }
+
+    const latestWeek = weeks[weeks.length - 1];
+    const previousWeek = weeks.length > 1 ? weeks[weeks.length - 2] : null;
+
+    const computeDelta = (latestValue, previousValue) => {
+      const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
+      const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
+      const absolute = safeLatest - safePrevious;
+      const percent =
+        safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
+
+      return { absolute, percent };
+    };
+
+    const delta = previousWeek
+      ? {
+          posts: computeDelta(latestWeek.posts, previousWeek.posts),
+          likes: computeDelta(latestWeek.likes, previousWeek.likes),
+        }
+      : null;
+
+    return {
+      weeks,
+      latestWeek,
+      previousWeek,
+      delta,
+    };
+  }, [effectivePlatformMetrics, platformActivity]);
+
+  const instagramWeeklyCardData = useMemo(() => {
+    const { latestWeek, previousWeek, delta, weeks } =
+      instagramWeeklyTrend ?? {};
+
+    const safeLatestPosts = Math.max(0, Number(latestWeek?.posts) || 0);
+    const safeLatestLikes = Math.max(0, Number(latestWeek?.likes) || 0);
+    const safePreviousPosts = Math.max(0, Number(previousWeek?.posts) || 0);
+    const safePreviousLikes = Math.max(0, Number(previousWeek?.likes) || 0);
+
+    const currentMetrics = latestWeek
+      ? [
+          { key: "posts", label: "Post Instagram", value: safeLatestPosts },
+          { key: "likes", label: "Likes Personil", value: safeLatestLikes },
+        ]
+      : [];
+
+    const previousMetrics = previousWeek
+      ? [
+          { key: "posts", label: "Post Instagram", value: safePreviousPosts },
+          { key: "likes", label: "Likes Personil", value: safePreviousLikes },
+        ]
+      : [];
+
+    const deltaMetrics =
+      delta && previousWeek
+        ? [
+            {
+              key: "posts",
+              label: "Perubahan Post",
+              absolute: Math.round(delta.posts?.absolute ?? 0),
+              percent:
+                delta.posts?.percent !== null &&
+                delta.posts?.percent !== undefined
+                  ? delta.posts.percent
+                  : null,
+            },
+            {
+              key: "likes",
+              label: "Perubahan Likes",
+              absolute: Math.round(delta.likes?.absolute ?? 0),
+              percent:
+                delta.likes?.percent !== null &&
+                delta.likes?.percent !== undefined
+                  ? delta.likes.percent
+                  : null,
+            },
+          ]
+        : [];
+
+    const series = Array.isArray(weeks)
+      ? weeks.slice(-6).map((week) => ({
+          key: week.key,
+          label: formatWeekRangeLabel(week.start, week.end),
+          posts: Math.max(0, Number(week.posts) || 0),
+          likes: Math.max(0, Number(week.likes) || 0),
+        }))
+      : [];
+
+    return {
+      currentMetrics,
+      previousMetrics,
+      deltaMetrics,
+      series,
+      weeksCount: Array.isArray(weeks) ? weeks.length : 0,
+      hasComparison: Boolean(previousWeek),
+    };
+  }, [instagramWeeklyTrend]);
+
+  const showPlatformLoading = platformsLoading && !hasMonthlyPlatforms;
+  const weeklyTrendDescription =
+    instagramWeeklyCardData.weeksCount < 2
+      ? "Post baru vs likes personil per minggu. Data perbandingan belum lengkap."
+      : "Post baru vs likes personil per minggu.";
+  const weeklyTrendErrorMessage = !showPlatformLoading
+    ? instagramWeeklyCardData.weeksCount === 0
+      ? "Belum ada data aktivitas mingguan yang terekam."
+      : instagramWeeklyCardData.weeksCount === 1
+      ? "Belum cukup data mingguan untuk dibandingkan."
+      : ""
+    : "";
 
   const effectivePlatformProfiles = useMemo(() => {
     if (hasMonthlyPlatforms) {
@@ -4436,7 +4766,19 @@ export default function ExecutiveSummaryPage() {
           </p>
         </div>
         <div className="space-y-6">
-          {platformsLoading && !hasMonthlyPlatforms ? (
+          <WeeklyTrendCard
+            title="Tren Aktivitas Instagram"
+            description={weeklyTrendDescription}
+            loading={showPlatformLoading}
+            error={weeklyTrendErrorMessage}
+            currentMetrics={instagramWeeklyCardData.currentMetrics}
+            previousMetrics={instagramWeeklyCardData.previousMetrics}
+            deltaMetrics={instagramWeeklyCardData.deltaMetrics}
+            series={instagramWeeklyCardData.series}
+            formatNumber={formatNumber}
+            formatPercent={formatPercent}
+          />
+          {showPlatformLoading ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Memuat data performa kanal…
             </div>
