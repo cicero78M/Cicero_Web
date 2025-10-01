@@ -24,9 +24,7 @@ import {
   getDashboardStats,
   getRekapLikesIG,
   getRekapKomentarTiktok,
-  getInstagramPostsViaBackend,
   getInstagramPosts,
-  getTiktokPostsViaBackend,
   getTiktokPosts,
 } from "@/utils/api";
 import { cn } from "@/lib/utils";
@@ -3707,57 +3705,12 @@ export default function ExecutiveSummaryPage() {
           commentsResult;
         const commentsRecords = Array.isArray(commentsRaw) ? commentsRaw : [];
 
-        const clientNameFallbackFromStats =
-          getStringFromPaths(stats, [
-            "client_name",
-            "clientName",
-            "nama_client",
-            "client",
-            "client_label",
-            "clientLabel",
-          ]) || undefined;
-        const sanitizedClientIdentifier = sanitizeHandle(
-          clientId ? String(clientId) : "",
-        );
-        const instagramUsername =
-          sanitizeHandle(getStringFromPaths(stats, INSTAGRAM_USERNAME_PATHS)) ||
-          sanitizeHandle(
-            getStringFromPaths(stats, [
-              "instagramProfile.username",
-              "igProfile.username",
-            ]),
-          ) ||
-          sanitizeHandle(clientNameFallbackFromStats) ||
-          sanitizedClientIdentifier ||
-          (clientId ? String(clientId) : "");
-
-
-        const highlightPostLimit = 20;
-
         let instagramPostsRaw = [];
         let tiktokPostsRaw = [];
         let instagramDatabasePostsRaw = [];
         let tiktokDatabasePostsRaw = [];
-        let instagramHighlightError = null;
         let instagramDatabaseError = null;
-        let tiktokHighlightError = null;
         let tiktokDatabaseError = null;
-
-        if (instagramUsername) {
-          try {
-            const instagramResponse = await getInstagramPostsViaBackend(
-              token,
-              instagramUsername,
-              highlightPostLimit,
-              startDateParam,
-              endDateParam,
-            );
-            instagramPostsRaw = ensureArray(instagramResponse);
-          } catch (error) {
-            console.warn("Gagal memuat konten Instagram (highlight)", error);
-            instagramHighlightError = error;
-          }
-        }
 
         if (clientId) {
           try {
@@ -3773,25 +3726,7 @@ export default function ExecutiveSummaryPage() {
           }
         }
 
-        if ((instagramPostsRaw?.length ?? 0) === 0 && instagramDatabasePostsRaw.length > 0) {
-          instagramPostsRaw = instagramDatabasePostsRaw;
-        }
-
         if (clientId) {
-          try {
-            const tiktokResponse = await getTiktokPostsViaBackend(
-              token,
-              clientId,
-              highlightPostLimit,
-              startDateParam,
-              endDateParam,
-            );
-            tiktokPostsRaw = ensureArray(tiktokResponse);
-          } catch (error) {
-            console.warn("Gagal memuat konten TikTok (highlight)", error);
-            tiktokHighlightError = error;
-          }
-
           try {
             const tiktokDatabaseResponse = await getTiktokPosts(token, clientId, {
               startDate: startDateParam,
@@ -3805,9 +3740,8 @@ export default function ExecutiveSummaryPage() {
           }
         }
 
-        if ((tiktokPostsRaw?.length ?? 0) === 0 && tiktokDatabasePostsRaw.length > 0) {
-          tiktokPostsRaw = tiktokDatabasePostsRaw;
-        }
+        instagramPostsRaw = instagramDatabasePostsRaw;
+        tiktokPostsRaw = tiktokDatabasePostsRaw;
 
         if (cancelled) {
           return;
@@ -3816,13 +3750,9 @@ export default function ExecutiveSummaryPage() {
         const platformErrorMessage = (() => {
           const targets = [];
           if (instagramDatabaseError) {
-            targets.push("Instagram (database)");
-          } else if (instagramHighlightError && instagramPostsRaw.length === 0) {
             targets.push("Instagram");
           }
           if (tiktokDatabaseError) {
-            targets.push("TikTok (database)");
-          } else if (tiktokHighlightError && tiktokPostsRaw.length === 0) {
             targets.push("TikTok");
           }
           if (targets.length === 0) {
