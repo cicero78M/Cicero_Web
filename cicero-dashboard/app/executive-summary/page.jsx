@@ -675,6 +675,248 @@ const pickNestedNumeric = (source, paths = []) => {
   return 0;
 };
 
+const normalizePlatformMetrics = (input) => {
+  const extractPlatforms = (value) => {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (!value || typeof value !== "object") {
+      return [];
+    }
+
+    if (Array.isArray(value.platforms)) {
+      return value.platforms;
+    }
+
+    if (Array.isArray(value.data)) {
+      return value.data;
+    }
+
+    if (Array.isArray(value.items)) {
+      return value.items;
+    }
+
+    if (Array.isArray(value.results)) {
+      return value.results;
+    }
+
+    if (value.platformAnalytics && Array.isArray(value.platformAnalytics.platforms)) {
+      return value.platformAnalytics.platforms;
+    }
+
+    return [];
+  };
+
+  const formatLabel = (labelCandidate, keyCandidate) => {
+    if (typeof labelCandidate === "string" && labelCandidate.trim() !== "") {
+      return labelCandidate.trim();
+    }
+
+    const normalizedKey = normalizePlatformKey(keyCandidate || "");
+    if (!normalizedKey) {
+      return "Platform";
+    }
+
+    return normalizedKey
+      .split("-")
+      .filter(Boolean)
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(" ");
+  };
+
+  const normalizeProfile = (profile, { label, followers, posts }) => {
+    if (!profile || typeof profile !== "object") {
+      return null;
+    }
+
+    const username =
+      typeof profile.username === "string"
+        ? profile.username.trim() || null
+        : profile.username ?? null;
+
+    const profileFollowers = pickNestedNumeric(profile, ["followers"]);
+    const profilePosts = pickNestedNumeric(profile, ["posts"]);
+
+    return {
+      ...profile,
+      label:
+        typeof profile.label === "string" && profile.label.trim() !== ""
+          ? profile.label.trim()
+          : label,
+      username,
+      followers: profileFollowers > 0 ? profileFollowers : followers,
+      posts: profilePosts > 0 ? profilePosts : posts,
+    };
+  };
+
+  const normalizeShares = (shares) => {
+    if (!shares || typeof shares !== "object") {
+      return { followers: 0, likes: 0, comments: 0 };
+    }
+
+    return {
+      followers: pickNestedNumeric(shares, ["followers"]) || 0,
+      likes: pickNestedNumeric(shares, ["likes"]) || 0,
+      comments: pickNestedNumeric(shares, ["comments"]) || 0,
+    };
+  };
+
+  const baseProfiles =
+    input && typeof input === "object" && input.profiles && typeof input.profiles === "object"
+      ? input.profiles
+      : { byKey: {} };
+
+  const profilesByKey = { ...(baseProfiles.byKey ?? {}) };
+  let instagramProfile = baseProfiles.instagram ?? null;
+  let tiktokProfile = baseProfiles.tiktok ?? null;
+
+  const rawPlatforms = extractPlatforms(input);
+
+  const platforms = rawPlatforms
+    .map((platform, index) => {
+      if (!platform || typeof platform !== "object") {
+        return null;
+      }
+
+      const rawKey =
+        platform.key ??
+        platform.sourceKey ??
+        platform.platformKey ??
+        platform.platform ??
+        platform.channel ??
+        platform.name ??
+        `platform-${index + 1}`;
+
+      const key = normalizePlatformKey(rawKey, rawKey) || `platform-${index + 1}`;
+      const label = formatLabel(platform.label, rawKey);
+
+      const followers = pickNestedNumeric(platform, [
+        "followers",
+        "metrics.followers",
+        "stats.followers",
+        ["profile", "followers"],
+      ]);
+
+      const posts = pickNestedNumeric(platform, [
+        "posts",
+        "postCount",
+        "totalPosts",
+        "metrics.posts",
+        "stats.posts",
+      ]);
+
+      const likes = pickNestedNumeric(platform, [
+        "likes",
+        "metrics.likes",
+        "stats.likes",
+        ["derived", "totalLikes"],
+      ]);
+
+      const comments = pickNestedNumeric(platform, [
+        "comments",
+        "metrics.comments",
+        "stats.comments",
+        ["derived", "totalComments"],
+      ]);
+
+      const derived =
+        platform.derived && typeof platform.derived === "object"
+          ? { ...platform.derived }
+          : {};
+
+      const engagementRateCandidate = pickNestedNumeric(platform, [
+        "engagementRate",
+        "engagement_rate",
+        "metrics.engagementRate",
+        "metrics.engagement_rate",
+        "stats.engagementRate",
+      ]);
+
+      const derivedEngagement = pickNestedNumeric(derived, [
+        "averageEngagementRate",
+        "engagementRate",
+      ]);
+
+      const engagementRate =
+        engagementRateCandidate > 0
+          ? engagementRateCandidate
+          : derivedEngagement > 0
+          ? derivedEngagement
+          : 0;
+
+      const postsSource = ensureArray(
+        platform.postsData,
+        platform.posts,
+        platform.rawPosts,
+        platform.topPosts,
+        platform.content,
+      );
+
+      const normalizedPosts =
+        typeof normalizePlatformPost === "function"
+          ? postsSource
+              .map((post, postIndex) =>
+                normalizePlatformPost(post, {
+                  platformKey: key,
+                  fallbackIndex: postIndex,
+                  platformLabel: label,
+                }),
+              )
+              .filter(Boolean)
+          : postsSource.filter(Boolean);
+
+      const profileSource = platform.profile ?? profilesByKey[key] ?? null;
+      const profile = normalizeProfile(profileSource, {
+        label,
+        followers,
+        posts,
+      });
+
+      if (profile) {
+        profilesByKey[key] = profile;
+
+        const keyLower = key.toLowerCase();
+        const labelLower = label.toLowerCase();
+
+        if (!instagramProfile && (keyLower.includes("instagram") || labelLower.includes("instagram"))) {
+          instagramProfile = profile;
+        }
+
+        if (!tiktokProfile && (keyLower.includes("tiktok") || labelLower.includes("tiktok"))) {
+          tiktokProfile = profile;
+        }
+      }
+
+      return {
+        ...platform,
+        key,
+        sourceKey: platform.sourceKey ?? key,
+        label,
+        followers,
+        posts,
+        likes,
+        comments,
+        engagementRate,
+        derived,
+        postsData: normalizedPosts,
+        rawPosts: Array.isArray(platform.rawPosts) ? platform.rawPosts : postsSource,
+        shares: normalizeShares(platform.shares),
+        profile,
+      };
+    })
+    .filter(Boolean);
+
+  return {
+    platforms,
+    profiles: {
+      byKey: profilesByKey,
+      instagram: instagramProfile ?? profilesByKey.instagram ?? null,
+      tiktok: tiktokProfile ?? profilesByKey.tiktok ?? null,
+    },
+  };
+};
+
 const ensureRecordsHaveActivityDate = (records, options = {}) => {
   if (!Array.isArray(records)) {
     return [];
