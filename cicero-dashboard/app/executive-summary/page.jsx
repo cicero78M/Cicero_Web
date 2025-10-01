@@ -764,6 +764,52 @@ const ensureRecordsHaveActivityDate = (records, options = {}) => {
     .filter(Boolean);
 };
 
+const prepareTrendActivityRecords = (records, options = {}) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  const extraPaths = Array.isArray(options.extraPaths)
+    ? options.extraPaths
+    : typeof options.extraPaths === "string"
+    ? [options.extraPaths]
+    : [];
+
+  const fallbackCandidate = options.fallbackDate;
+  let fallbackDate = null;
+
+  if (fallbackCandidate instanceof Date) {
+    fallbackDate = Number.isNaN(fallbackCandidate.valueOf())
+      ? null
+      : fallbackCandidate;
+  } else if (fallbackCandidate) {
+    fallbackDate = parseDateValue(fallbackCandidate);
+  }
+
+  const fallbackIso = fallbackDate ? fallbackDate.toISOString() : null;
+  const fallbackDateOnly = fallbackIso ? fallbackIso.slice(0, 10) : null;
+
+  const clonedRecords = records.map((record) => {
+    if (!record || typeof record !== "object") {
+      return record;
+    }
+
+    const clone = { ...record };
+    const hasResolvableDate = resolveRecordDate(clone, extraPaths);
+
+    if (!hasResolvableDate && fallbackIso) {
+      clone.activityDate = fallbackIso;
+      if (!clone.tanggal) {
+        clone.tanggal = fallbackDateOnly;
+      }
+    }
+
+    return clone;
+  });
+
+  return ensureRecordsHaveActivityDate(clonedRecords, { extraPaths });
+};
+
 const filterRecordsWithResolvableDate = (records, options = {}) => {
   if (!Array.isArray(records)) {
     return [];
@@ -2536,6 +2582,7 @@ export default function ExecutiveSummaryPage() {
     error: "",
     likesSummary: createEmptyLikesSummary(),
     activity: { likes: [], comments: [] },
+    trendActivity: { likes: [], comments: [] },
     posts: { instagram: [], tiktok: [] },
   });
 
@@ -2656,6 +2703,9 @@ export default function ExecutiveSummaryPage() {
           platforms: [],
           profiles: { byKey: {} },
           activity: { likes: [], comments: [] },
+          trendActivity: { likes: [], comments: [] },
+          likesSummary: createEmptyLikesSummary(),
+          posts: { instagram: [], tiktok: [] },
         });
         return;
       }
@@ -2746,10 +2796,18 @@ export default function ExecutiveSummaryPage() {
         );
 
         const likesRaw = ensureArray(likesResult);
-        const likesRecords = ensureRecordsHaveActivityDate(likesRaw);
-
         const commentsRaw = ensureArray(commentsResult);
-        const commentsRecords = ensureRecordsHaveActivityDate(commentsRaw);
+
+        const fallbackTrendDateIso = periodRange?.startDate
+          ? `${periodRange.startDate}T00:00:00.000Z`
+          : null;
+
+        const likesTrendRecords = prepareTrendActivityRecords(likesRaw, {
+          fallbackDate: fallbackTrendDateIso,
+        });
+        const commentsTrendRecords = prepareTrendActivityRecords(commentsRaw, {
+          fallbackDate: fallbackTrendDateIso,
+        });
 
         let instagramPostsRaw = [];
         let tiktokPostsRaw = [];
@@ -2812,13 +2870,13 @@ export default function ExecutiveSummaryPage() {
 
         const activityBuckets = computeActivityBuckets({
           users,
-          likes: likesRecords,
-          comments: commentsRecords,
+          likes: likesRaw,
+          comments: commentsRaw,
           totalIGPosts,
           totalTikTokPosts,
         });
 
-        const likesSummary = aggregateLikesRecords(likesRecords);
+        const likesSummary = aggregateLikesRecords(likesRaw);
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
           {
@@ -2856,8 +2914,12 @@ export default function ExecutiveSummaryPage() {
           loading: false,
           error: platformErrorMessage,
           activity: {
-            likes: likesRecords,
-            comments: commentsRecords,
+            likes: likesRaw,
+            comments: commentsRaw,
+          },
+          trendActivity: {
+            likes: likesTrendRecords,
+            comments: commentsTrendRecords,
           },
           likesSummary,
           posts: {
@@ -2894,6 +2956,9 @@ export default function ExecutiveSummaryPage() {
           platforms: [],
           profiles: { byKey: {} },
           activity: { likes: [], comments: [] },
+          trendActivity: { likes: [], comments: [] },
+          likesSummary: createEmptyLikesSummary(),
+          posts: { instagram: [], tiktok: [] },
         });
       }
     };
@@ -3051,11 +3116,16 @@ export default function ExecutiveSummaryPage() {
     error: platformError,
     likesSummary,
     activity: platformActivityState,
+    trendActivity: platformTrendActivityState,
     posts: platformPostsState,
   } = platformState;
   const platformActivity =
     platformActivityState && typeof platformActivityState === "object"
       ? platformActivityState
+      : EMPTY_ACTIVITY;
+  const platformTrendActivity =
+    platformTrendActivityState && typeof platformTrendActivityState === "object"
+      ? platformTrendActivityState
       : EMPTY_ACTIVITY;
   const platformPosts =
     platformPostsState && typeof platformPostsState === "object"
@@ -3093,8 +3163,8 @@ export default function ExecutiveSummaryPage() {
       },
     });
 
-    const likesRecords = Array.isArray(platformActivity?.likes)
-      ? filterRecordsWithResolvableDate(platformActivity.likes)
+    const likesRecords = Array.isArray(platformTrendActivity?.likes)
+      ? filterRecordsWithResolvableDate(platformTrendActivity.likes)
       : [];
 
     const monthlyLikes = groupRecordsByMonth(likesRecords, {
@@ -3193,7 +3263,7 @@ export default function ExecutiveSummaryPage() {
       delta,
       hasRecords,
     };
-  }, [platformPosts?.instagram, platformActivity]);
+  }, [platformPosts?.instagram, platformTrendActivity]);
 
   const tiktokMonthlyTrend = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
@@ -3226,8 +3296,8 @@ export default function ExecutiveSummaryPage() {
       },
     });
 
-    const commentRecords = Array.isArray(platformActivity?.comments)
-      ? filterRecordsWithResolvableDate(platformActivity.comments)
+    const commentRecords = Array.isArray(platformTrendActivity?.comments)
+      ? filterRecordsWithResolvableDate(platformTrendActivity.comments)
       : [];
 
     const monthlyComments = groupRecordsByMonth(commentRecords, {
@@ -3326,7 +3396,7 @@ export default function ExecutiveSummaryPage() {
       delta,
       hasRecords,
     };
-  }, [platformPosts?.tiktok, platformActivity]);
+  }, [platformPosts?.tiktok, platformTrendActivity]);
 
   const instagramMonthlyCardData = useMemo(() => {
     const { latestMonth, previousMonth, delta, months, hasRecords } =
@@ -4300,3 +4370,5 @@ export default function ExecutiveSummaryPage() {
     </div>
   );
 }
+
+export { aggregateLikesRecords, prepareTrendActivityRecords };
