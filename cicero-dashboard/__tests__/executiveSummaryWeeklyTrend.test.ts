@@ -7,7 +7,7 @@ import {
   INSTAGRAM_LIKE_FIELD_PATHS,
   TIKTOK_COMMENT_FIELD_PATHS,
   sumActivityRecords,
-} from "@/app/executive-summary/page";
+} from "@/app/executive-summary/activityRecords";
 
 describe("groupRecordsByWeek weekly trend integration", () => {
   it("groups instagram activity into weekly buckets and shows the trend card", () => {

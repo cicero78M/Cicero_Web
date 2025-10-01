@@ -48,6 +48,11 @@ import {
   shouldShowWeeklyTrendCard,
   formatWeekRangeLabel,
 } from "./weeklyTrendUtils";
+import {
+  INSTAGRAM_LIKE_FIELD_PATHS,
+  TIKTOK_COMMENT_FIELD_PATHS,
+  sumActivityRecords,
+} from "./activityRecords";
 
 const clamp = (value, min, max) => {
   if (!Number.isFinite(value)) {
@@ -1790,19 +1795,6 @@ const computeActivityBuckets = ({
   };
 };
 
-const INSTAGRAM_LIKE_FIELD_PATHS = [
-  "jumlah_like",
-  "jumlahLike",
-  "total_like",
-  "totalLike",
-  "totalLikes",
-  "likes",
-  "like_count",
-  "metrics.likes",
-  "rekap.jumlah_like",
-  "rekap.total_like",
-];
-
 const INSTAGRAM_COMMENT_FIELD_PATHS = [
   "jumlah_komentar",
   "jumlahKomentar",
@@ -1825,19 +1817,6 @@ const TIKTOK_LIKE_FIELD_PATHS = [
   "metrics.likes",
   "rekap.jumlah_like",
   "rekap.total_like",
-];
-
-const TIKTOK_COMMENT_FIELD_PATHS = [
-  "jumlah_komentar",
-  "jumlahKomentar",
-  "total_komentar",
-  "totalKomentar",
-  "komentar",
-  "comments",
-  "comment_count",
-  "metrics.comments",
-  "rekap.jumlah_komentar",
-  "rekap.total_komentar",
 ];
 
 const INSTAGRAM_FOLLOWER_PATHS = [
@@ -1956,38 +1935,6 @@ const TIKTOK_BIO_PATHS = [
   "tiktok.bio",
 ];
 
-const sumActivityRecords = (records, fields) => {
-  if (!Array.isArray(records) || records.length === 0) {
-    return 0;
-  }
-
-  return records.reduce((total, record) => {
-    if (!record || typeof record !== "object") {
-      return total;
-    }
-
-    const candidates = fields
-      .map((path) => pickNestedValue(record, [path]))
-      .filter((value) => value !== undefined && value !== null);
-
-    if (candidates.length === 0) {
-      return total;
-    }
-
-    const value = extractNumericValue(...candidates);
-    if (!Number.isFinite(value)) {
-      return total;
-    }
-
-    return total + Math.max(0, Number(value) || 0);
-  }, 0);
-};
-
-export {
-  INSTAGRAM_LIKE_FIELD_PATHS,
-  TIKTOK_COMMENT_FIELD_PATHS,
-  sumActivityRecords,
-};
 
 const monthlyData = {
   "2024-11": {
