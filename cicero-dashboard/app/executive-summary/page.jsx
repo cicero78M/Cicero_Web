@@ -928,7 +928,7 @@ const normalizeUserKeyFromRecord = (record = {}) => {
   return null;
 };
 
-export const computeActivityBuckets = ({
+const computeActivityBuckets = ({
   users,
   likes,
   comments,
