@@ -8,38 +8,40 @@ type FormatNumberFn = (
 ) => string;
 type FormatPercentFn = (value: number) => string;
 
-type WeeklyMetric = {
+type MonthlyMetric = {
   key: string;
   label: string;
   value: number;
   suffix?: string;
 };
 
-type WeeklyDeltaMetric = {
+type MonthlyDeltaMetric = {
   key: string;
   label: string;
   absolute: number | null;
   percent?: number | null;
 };
 
-type WeeklyTrendSeriesPoint = {
+type MonthlyTrendSeriesPoint = {
   key: string;
   label?: string;
+  start?: Date | string | null;
+  end?: Date | string | null;
   posts?: number;
   likes?: number;
   primary?: number;
   secondary?: number;
 };
 
-type WeeklyTrendCardProps = {
+type MonthlyTrendCardProps = {
   title: string;
   description?: string;
   loading?: boolean;
   error?: string;
-  currentMetrics?: WeeklyMetric[];
-  previousMetrics?: WeeklyMetric[];
-  deltaMetrics?: WeeklyDeltaMetric[];
-  series?: WeeklyTrendSeriesPoint[];
+  currentMetrics?: MonthlyMetric[];
+  previousMetrics?: MonthlyMetric[];
+  deltaMetrics?: MonthlyDeltaMetric[];
+  series?: MonthlyTrendSeriesPoint[];
   formatNumber?: FormatNumberFn;
   formatPercent?: FormatPercentFn;
   primaryMetricLabel?: string;
@@ -64,7 +66,33 @@ const defaultPercentFormatter: FormatPercentFn = (value) => {
   }).format(safeValue)}%`;
 };
 
-const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
+const resolveMonthLabel = (item: MonthlyTrendSeriesPoint): string => {
+  if (item.label) {
+    return item.label;
+  }
+
+  const candidate = item.start ?? null;
+  if (candidate instanceof Date && !Number.isNaN(candidate.valueOf())) {
+    return new Intl.DateTimeFormat("id-ID", {
+      month: "long",
+      year: "numeric",
+    }).format(candidate);
+  }
+
+  if (typeof candidate === "string") {
+    const parsed = new Date(candidate);
+    if (!Number.isNaN(parsed.valueOf())) {
+      return new Intl.DateTimeFormat("id-ID", {
+        month: "long",
+        year: "numeric",
+      }).format(parsed);
+    }
+  }
+
+  return item.key;
+};
+
+const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
   title,
   description,
   loading = false,
@@ -81,7 +109,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
   if (loading) {
     return (
       <div className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 text-sm text-slate-400">
-        Memuat tren mingguan…
+        Memuat tren bulanan…
       </div>
     );
   }
@@ -95,7 +123,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
     <div className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_18px_38px_rgba(15,23,42,0.35)]">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-          Weekly Trend
+          Monthly Trend
         </p>
         <h3 className="mt-2 text-2xl font-semibold text-slate-50">{title}</h3>
         {description ? (
@@ -113,7 +141,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Minggu Berjalan
+              Bulan Berjalan
             </p>
             <div className="mt-3 space-y-2">
               {hasCurrentMetrics ? (
@@ -130,13 +158,13 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-500">Belum ada data minggu ini.</p>
+                <p className="text-sm text-slate-500">Belum ada data bulan ini.</p>
               )}
             </div>
           </div>
           <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Minggu Sebelumnya
+              Bulan Sebelumnya
             </p>
             <div className="mt-3 space-y-2">
               {hasPreviousMetrics ? (
@@ -160,7 +188,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
         </div>
       ) : (
         <div className="mt-6 rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
-          Belum ada data mingguan yang dapat ditampilkan.
+          Belum ada data bulanan yang dapat ditampilkan.
         </div>
       )}
 
@@ -215,7 +243,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
       {hasSeries ? (
         <div className="mt-6 space-y-3">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-            Rekap Mingguan
+            Rekap Bulanan
           </p>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {series.map((item) => (
@@ -224,7 +252,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                 className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-300"
               >
                 <p className="font-semibold text-slate-200">
-                  {item.label ?? item.key}
+                  {resolveMonthLabel(item)}
                 </p>
                 <p className="mt-1 text-slate-400">
                   {primaryMetricLabel}: {" "}
@@ -244,4 +272,4 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
   );
 };
 
-export default WeeklyTrendCard;
+export default MonthlyTrendCard;
