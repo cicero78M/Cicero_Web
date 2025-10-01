@@ -604,6 +604,21 @@ const getMonthDateRange = (monthKey) => {
   return { startDate, endDate };
 };
 
+const extractMonthIndexFromMonthKey = (monthKey) => {
+  if (typeof monthKey !== "string") {
+    return null;
+  }
+
+  const [, monthPart] = monthKey.split("-");
+  const parsedMonth = Number.parseInt(monthPart, 10);
+
+  if (!Number.isFinite(parsedMonth)) {
+    return null;
+  }
+
+  return clamp(parsedMonth - 1, 0, 11);
+};
+
 const extractNumericValue = (...candidates) => {
   for (const candidate of candidates) {
     if (candidate === undefined || candidate === null) {
@@ -3494,27 +3509,138 @@ export default function ExecutiveSummaryPage() {
 
     return monthOptions[0]?.key ?? currentMonthKey;
   }, [monthOptions]);
-  const [selectedMonth, setSelectedMonth] = useState(defaultSelectedMonth);
+  const defaultSelectedYear = useMemo(() => {
+    const extractedYear = extractYearFromMonthKey(defaultSelectedMonth);
+    if (typeof extractedYear === "number" && Number.isFinite(extractedYear)) {
+      return extractedYear;
+    }
+    return resolvedYear;
+  }, [defaultSelectedMonth, resolvedYear]);
+  const defaultSelectedMonthIndex = useMemo(() => {
+    const extractedMonth = extractMonthIndexFromMonthKey(defaultSelectedMonth);
+    if (typeof extractedMonth === "number" && Number.isFinite(extractedMonth)) {
+      return extractedMonth;
+    }
+    const now = new Date();
+    return clamp(now.getMonth(), 0, 11);
+  }, [defaultSelectedMonth]);
+  const YEAR_MIN = 2025;
+  const YEAR_MAX = 2035;
+  const [selectedYear, setSelectedYear] = useState(defaultSelectedYear);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(
+    defaultSelectedMonthIndex,
+  );
+  const selectedMonthKey = useMemo(() => {
+    if (!Number.isFinite(selectedYear)) {
+      return typeof defaultSelectedMonth === "string"
+        ? defaultSelectedMonth
+        : "";
+    }
+    return buildMonthKey(selectedYear, clamp(selectedMonthIndex ?? 0, 0, 11));
+  }, [defaultSelectedMonth, selectedMonthIndex, selectedYear]);
+  const monthOptionsForSelectedYear = useMemo(() => {
+    return monthOptions.filter(
+      (option) => extractYearFromMonthKey(option.key) === selectedYear,
+    );
+  }, [monthOptions, selectedYear]);
+  const availableMonthIndicesForSelectedYear = useMemo(() => {
+    return new Set(
+      monthOptionsForSelectedYear
+        .map((option) => extractMonthIndexFromMonthKey(option.key))
+        .filter((index) => typeof index === "number"),
+    );
+  }, [monthOptionsForSelectedYear]);
+  const monthSelectOptions = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat("id-ID", { month: "long" });
+    return Array.from({ length: 12 }, (_, index) => ({
+      value: index,
+      label: formatter.format(new Date(2000, index, 1)),
+    }));
+  }, []);
+  const yearSelectOptions = useMemo(() => {
+    const baseYears = Array.from(
+      { length: YEAR_MAX - YEAR_MIN + 1 },
+      (_, index) => YEAR_MIN + index,
+    );
+    const extras = [];
+    for (const candidate of [defaultSelectedYear, selectedYear]) {
+      if (
+        typeof candidate === "number" &&
+        Number.isFinite(candidate) &&
+        (candidate < YEAR_MIN || candidate > YEAR_MAX)
+      ) {
+        extras.push(candidate);
+      }
+    }
+    return Array.from(new Set([...baseYears, ...extras])).sort((a, b) => a - b);
+  }, [defaultSelectedYear, selectedYear]);
   useEffect(() => {
-    setSelectedMonth((previous) => {
-      if (!defaultSelectedMonth) {
-        return previous;
-      }
+    if (!defaultSelectedMonth) {
+      return;
+    }
 
-      if (!previous) {
-        return defaultSelectedMonth;
-      }
+    const monthOptionKeys = new Set(monthOptions.map((option) => option.key));
+    if (monthOptionKeys.has(selectedMonthKey)) {
+      return;
+    }
 
-      const isPreviousValid = monthOptions.some(
-        (option) => option.key === previous,
-      );
+    let fallbackKey = null;
 
-      return isPreviousValid ? previous : defaultSelectedMonth;
-    });
-  }, [defaultSelectedMonth, monthOptions]);
+    if (monthOptionKeys.has(defaultSelectedMonth)) {
+      fallbackKey = defaultSelectedMonth;
+    } else if (monthOptions.length > 0) {
+      fallbackKey = monthOptions[0].key;
+    }
+
+    if (!fallbackKey) {
+      return;
+    }
+
+    const fallbackYear = extractYearFromMonthKey(fallbackKey);
+    const fallbackMonth = extractMonthIndexFromMonthKey(fallbackKey);
+
+    if (typeof fallbackYear === "number" && Number.isFinite(fallbackYear)) {
+      setSelectedYear(fallbackYear);
+    }
+
+    if (typeof fallbackMonth === "number" && Number.isFinite(fallbackMonth)) {
+      setSelectedMonthIndex(fallbackMonth);
+    }
+  }, [defaultSelectedMonth, monthOptions, selectedMonthKey]);
+  useEffect(() => {
+    if (
+      availableMonthIndicesForSelectedYear.size === 0 ||
+      availableMonthIndicesForSelectedYear.has(selectedMonthIndex)
+    ) {
+      return;
+    }
+
+    const fallbackOption = monthOptionsForSelectedYear[0];
+    if (!fallbackOption) {
+      return;
+    }
+
+    const fallbackMonthIndex = extractMonthIndexFromMonthKey(fallbackOption.key);
+    if (
+      typeof fallbackMonthIndex === "number" &&
+      Number.isFinite(fallbackMonthIndex)
+    ) {
+      setSelectedMonthIndex(fallbackMonthIndex);
+    }
+  }, [
+    availableMonthIndicesForSelectedYear,
+    monthOptionsForSelectedYear,
+    selectedMonthIndex,
+  ]);
   const selectedMonthOption = useMemo(() => {
-    return monthOptions.find((option) => option.key === selectedMonth) ?? null;
-  }, [monthOptions, selectedMonth]);
+    const optionFromYear = monthOptionsForSelectedYear.find(
+      (option) => option.key === selectedMonthKey,
+    );
+    if (optionFromYear) {
+      return optionFromYear;
+    }
+    return monthOptions.find((option) => option.key === selectedMonthKey) ?? null;
+  }, [monthOptions, monthOptionsForSelectedYear, selectedMonthKey]);
   const [pptxFactory, setPptxFactory] = useState(null);
   const [userInsightState, setUserInsightState] = useState({
     loading: true,
@@ -3592,11 +3718,26 @@ export default function ExecutiveSummaryPage() {
     };
   }, []);
 
-  const rawMonthlyData = monthlyData[selectedMonth];
+  const rawMonthlyData = monthlyData[selectedMonthKey];
+  const computedMonthLabel = useMemo(() => {
+    if (!Number.isFinite(selectedYear)) {
+      return selectedMonthKey || "Periode Tidak Tersedia";
+    }
+
+    const displayDate = new Date(
+      selectedYear,
+      clamp(selectedMonthIndex ?? 0, 0, 11),
+      1,
+    );
+    const formatter = new Intl.DateTimeFormat("id-ID", { month: "long" });
+    return `${formatter.format(displayDate)} ${selectedYear}`;
+  }, [selectedMonthIndex, selectedMonthKey, selectedYear]);
   const fallbackMonthLabel =
     rawMonthlyData?.monthLabel ??
     selectedMonthOption?.label ??
-    (selectedMonth ? selectedMonth : "Periode Tidak Tersedia");
+    (computedMonthLabel
+      ? computedMonthLabel
+      : selectedMonthKey || "Periode Tidak Tersedia");
   const defaultMonthlyEntry = {
     monthLabel: fallbackMonthLabel,
     overviewNarrative: "Belum ada ringkasan kinerja untuk periode ini.",
@@ -3670,7 +3811,7 @@ export default function ExecutiveSummaryPage() {
         error: "",
       }));
 
-      const periodRange = getMonthDateRange(selectedMonth);
+      const periodRange = getMonthDateRange(selectedMonthKey);
       const periodeParam = periodRange ? "bulanan" : undefined;
       const tanggalParam = periodRange?.startDate;
       const startDateParam = periodRange?.startDate;
@@ -3886,7 +4027,7 @@ export default function ExecutiveSummaryPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [token, clientId, selectedMonth]);
+  }, [token, clientId, selectedMonthKey]);
 
   const pptSummary = useMemo(() => {
     return [
@@ -4625,21 +4766,74 @@ export default function ExecutiveSummaryPage() {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
                   Show Data By
                 </span>
-                <label className="flex flex-col text-sm font-medium text-slate-200">
-                  <span className="text-base font-semibold text-slate-100">Month</span>
-                  <select
-                    value={selectedMonth}
-                    onChange={(event) => setSelectedMonth(event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
-                    aria-label="Filter data by month"
-                  >
-                    {monthOptions.map((option) => (
-                      <option key={option.key} value={option.key}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col text-sm font-medium text-slate-200">
+                    <span className="text-base font-semibold text-slate-100">Month</span>
+                    <select
+                      value={String(clamp(selectedMonthIndex ?? 0, 0, 11))}
+                      onChange={(event) => {
+                        const parsedMonth = Number.parseInt(event.target.value, 10);
+                        if (!Number.isFinite(parsedMonth)) {
+                          return;
+                        }
+                        setSelectedMonthIndex(clamp(parsedMonth, 0, 11));
+                      }}
+                      className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                      aria-label="Filter data by month"
+                    >
+                      {monthSelectOptions.map((option) => {
+                        const isAvailable = availableMonthIndicesForSelectedYear.has(
+                          option.value,
+                        );
+                        const shouldDisable =
+                          !isAvailable && availableMonthIndicesForSelectedYear.size > 0;
+                        return (
+                          <option
+                            key={option.value}
+                            value={option.value}
+                            disabled={shouldDisable}
+                          >
+                            {option.label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </label>
+                  <label className="flex flex-col text-sm font-medium text-slate-200">
+                    <span className="text-base font-semibold text-slate-100">Year</span>
+                    <select
+                      value={
+                        typeof selectedYear === "number" && Number.isFinite(selectedYear)
+                          ? String(selectedYear)
+                          : ""
+                      }
+                      onChange={(event) => {
+                        const parsedYear = Number.parseInt(event.target.value, 10);
+                        if (!Number.isFinite(parsedYear)) {
+                          return;
+                        }
+                        const clampedYear = clamp(parsedYear, YEAR_MIN, YEAR_MAX);
+                        setSelectedYear(clampedYear);
+                      }}
+                      className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                      aria-label="Filter data by year"
+                    >
+                      {yearSelectOptions.map((yearOption) => {
+                        const isWithinRange =
+                          yearOption >= YEAR_MIN && yearOption <= YEAR_MAX;
+                        return (
+                          <option
+                            key={yearOption}
+                            value={yearOption}
+                            disabled={!isWithinRange}
+                          >
+                            {yearOption}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </label>
+                </div>
               </div>
             </div>
             <Button
