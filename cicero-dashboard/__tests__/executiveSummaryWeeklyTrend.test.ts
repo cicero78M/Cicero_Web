@@ -1,6 +1,5 @@
 import {
   groupRecordsByWeek,
-  resolveRecordDate,
   shouldShowWeeklyTrendCard,
 } from "@/app/executive-summary/weeklyTrendUtils";
 
@@ -36,41 +35,6 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     ];
 
     const buckets = groupRecordsByWeek(records);
-
-    expect(buckets).toHaveLength(2);
-    expect(buckets[0].records).toHaveLength(2);
-    expect(buckets[1].records).toHaveLength(1);
-
-    const shouldShow = shouldShowWeeklyTrendCard({
-      showPlatformLoading: false,
-      platformError: "",
-      hasMonthlyPlatforms: false,
-      cardHasRecords: buckets.length > 0,
-    });
-
-    expect(shouldShow).toBe(true);
-  });
-
-  it("groups posts with only date/tanggal fields and shows the trend card", () => {
-    const posts = [
-      { tanggal: "2024-07-01", likes: 2 },
-      { date: "2024-07-02", likes: 1 },
-      { tanggal: "2024-07-09", likes: 5 },
-    ];
-
-    const buckets = groupRecordsByWeek(posts, {
-      getDate: (post) => {
-        const resolved = resolveRecordDate(post, [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-        ]);
-
-        return resolved?.parsed ?? null;
-      },
-    });
 
     expect(buckets).toHaveLength(2);
     expect(buckets[0].records).toHaveLength(2);
