@@ -33,7 +33,10 @@ import {
   normalizeNumericInput,
   calculateRatePerDay,
 } from "@/lib/normalizeNumericInput";
-import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
+import PlatformOverviewCard from "@/components/executive-summary/PlatformOverviewCard";
+import PlatformKPIChart from "@/components/executive-summary/PlatformKPIChart";
+import PlatformDetailTabs from "@/components/executive-summary/PlatformDetailTabs";
+import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import WeeklyTrendCard from "@/components/executive-summary/WeeklyTrendCard";
 import {
   buildMonthKey,
@@ -89,7 +92,17 @@ const parsePercent = (value) => {
   return Number.isFinite(coerced) ? clamp(coerced, 0, 100) : 0;
 };
 
+const formatCompactNumber = (value) => {
+  const numericValue = typeof value === "number" ? value : Number(value);
+  if (!numericValue || Number.isNaN(numericValue)) return "0";
 
+  const formatter = new Intl.NumberFormat("id-ID", {
+    notation: Math.abs(numericValue) >= 1000 ? "compact" : "standard",
+    maximumFractionDigits: Math.abs(numericValue) >= 1000 ? 1 : 0,
+  });
+
+  return formatter.format(numericValue);
+};
 
 const formatNumber = (value, options = {}) => {
   const formatter = new Intl.NumberFormat("id-ID", {
@@ -108,9 +121,17 @@ const formatPercent = (value) => {
   })}%`;
 };
 
-const computePlatformWeeklyTrend = (platform, posts = []) => {
-  const followerCountRaw = Number(platform?.followers);
-  const followerCount = Number.isFinite(followerCountRaw) ? followerCountRaw : 0;
+const buildPlatformWeeklyEngagement = (platform) => {
+  const postsSource = Array.isArray(platform?.posts)
+    ? platform.posts
+    : Array.isArray(platform?.postsData)
+    ? platform.postsData
+    : [];
+
+  const posts = postsSource.filter(Boolean);
+  if (posts.length === 0) {
+    return { series: [], latest: null, previous: null };
+  }
 
   const weeklyGroups = groupRecordsByWeek(posts, {
     getDate: (post) => {
@@ -185,19 +206,8 @@ const computePlatformWeeklyTrend = (platform, posts = []) => {
       { interactions: 0, engagementSum: 0, engagementCount: 0, postCount: 0 },
     );
 
-    let averageEngagement =
+    const averageEngagement =
       totals.engagementCount > 0 ? totals.engagementSum / totals.engagementCount : 0;
-
-    if (totals.engagementCount === 0) {
-      const fallbackEngagement =
-        followerCount > 0
-          ? (totals.interactions / followerCount) * 100
-          : totals.postCount > 0
-          ? totals.interactions / totals.postCount
-          : 0;
-
-      averageEngagement = Math.max(0, fallbackEngagement);
-    }
 
     return {
       key: group.key,
@@ -726,153 +736,427 @@ const buildLikesSummaryFromRecords = (records = []) => {
       clients: [],
       lastUpdated: null,
     };
+
   }
-
-  const clientsMap = new Map();
-  const overallActiveUsers = new Set();
-  let latestDate = null;
-
-  safeRecords.forEach((record) => {
-    const { key, clientId, clientName } = normalizeClientIdentifiers(record);
-    if (!clientsMap.has(key)) {
-      clientsMap.set(key, {
-        clientId,
-        clientName,
-        totalLikes: 0,
-        totalComments: 0,
-        activeUserKeys: new Set(),
-        activeCountCandidates: [],
-        totalPersonnelCandidates: [],
-        complianceCandidates: [],
-      });
-    }
-
-    const entry = clientsMap.get(key);
-
-    entry.totalLikes += readNumericField(record, LIKE_RECORD_LIKE_FIELDS);
-    entry.totalComments += readNumericField(record, LIKE_RECORD_COMMENT_FIELDS);
-
-    const activeCount = readNumericField(record, LIKE_RECORD_ACTIVE_FIELDS);
-    if (activeCount > 0) {
-      entry.activeCountCandidates.push(activeCount);
-    }
-
-    const totalPersonnel = readNumericField(
-      record,
-      LIKE_RECORD_TOTAL_PERSONNEL_FIELDS,
-    );
-    if (totalPersonnel > 0) {
-      entry.totalPersonnelCandidates.push(totalPersonnel);
-    }
-
-    const complianceCandidate = readNumericField(
-      record,
-      LIKE_RECORD_COMPLIANCE_FIELDS,
-    );
-    if (complianceCandidate > 0) {
-      entry.complianceCandidates.push(complianceCandidate);
-    }
-
-    const userKey = normalizeUserKeyFromRecord(record);
-    if (userKey) {
-      entry.activeUserKeys.add(userKey);
-      overallActiveUsers.add(`${key}:${userKey}`);
-    }
-
-    const resolvedDate = resolveRecordDate(record, LIKE_RECORD_DATE_PATHS);
-    if (resolvedDate?.parsed instanceof Date) {
-      if (!latestDate || resolvedDate.parsed > latestDate) {
-        latestDate = resolvedDate.parsed;
-      }
-    }
-  });
-
-  const clients = Array.from(clientsMap.entries()).map(([clientKey, entry]) => {
-    const uniqueActiveUsers = entry.activeUserKeys.size;
-    const maxActiveCandidate =
-      entry.activeCountCandidates.length > 0
-        ? Math.max(...entry.activeCountCandidates)
-        : 0;
-    const activePersonnel =
-      uniqueActiveUsers > 0 ? uniqueActiveUsers : maxActiveCandidate;
-
-    const maxTotalPersonnel =
-      entry.totalPersonnelCandidates.length > 0
-        ? Math.max(...entry.totalPersonnelCandidates)
-        : 0;
-    const totalPersonnel = Math.max(maxTotalPersonnel, activePersonnel);
-
-    const complianceFromCounts =
-      totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
-    const complianceFromRecords =
-      entry.complianceCandidates.length > 0
-        ?
-            entry.complianceCandidates.reduce((sum, value) => sum + value, 0) /
-            entry.complianceCandidates.length
-        : null;
-    const complianceRate = complianceFromRecords ?? complianceFromCounts;
-
-    const averageLikesPerUser =
-      activePersonnel > 0 ? entry.totalLikes / activePersonnel : 0;
-
-    return {
-      clientKey,
-      clientId: entry.clientId,
-      clientName: entry.clientName,
-      totalLikes: entry.totalLikes,
-      totalComments: entry.totalComments,
-      activePersonnel,
-      totalPersonnel,
-      complianceRate: Number.isFinite(complianceRate)
-        ? clamp(complianceRate, 0, 100)
-        : 0,
-      averageLikesPerUser,
-    };
-  });
-
-  const sortedClients = clients.sort((a, b) => b.totalLikes - a.totalLikes);
-
-  const totals = sortedClients.reduce(
-    (acc, client) => {
-      acc.totalLikes += client.totalLikes;
-      acc.totalComments += client.totalComments;
-      acc.activePersonnel += client.activePersonnel;
-      acc.complianceRateSum += client.complianceRate;
-      return acc;
-    },
-    {
-      totalLikes: 0,
-      totalComments: 0,
-      activePersonnel: 0,
-      complianceRateSum: 0,
-    },
-  );
-
-  const overallActiveCount =
-    overallActiveUsers.size > 0
-      ? overallActiveUsers.size
-      : totals.activePersonnel;
-
-  const averageComplianceRate =
-    sortedClients.length > 0
-      ? totals.complianceRateSum / sortedClients.length
-      : 0;
-
-  return {
-    totals: {
-      totalClients: sortedClients.length,
-      totalLikes: totals.totalLikes,
-      totalComments: totals.totalComments,
-      activePersonnel: overallActiveCount,
-      averageComplianceRate: Number.isFinite(averageComplianceRate)
-        ? clamp(averageComplianceRate, 0, 100)
-        : 0,
-    },
-    clients: sortedClients,
-    lastUpdated: latestDate,
-  };
+  const value = pickNestedString(source, paths);
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
 };
 
+
+const buildPlatformMetricsFromActivity = ({
+  stats = {},
+  likes = [],
+  comments = [],
+  totalIGPosts = 0,
+  totalTikTokPosts = 0,
+  totalUsers = 0,
+  clientId,
+  instagramPostsRaw = [],
+  instagramPostsDatabaseRaw = [],
+  tiktokPostsRaw = [],
+  tiktokPostsDatabaseRaw = [],
+}) => {
+  const safeStats = stats && typeof stats === "object" ? stats : {};
+  const safeTotalUsers = Math.max(
+    0,
+    Number(
+      totalUsers ||
+        getNumericFromPaths(safeStats, [
+          "totalUsers",
+          "total_user",
+          "userCount",
+          "total_personil",
+          "summary.totalUsers",
+          "summary.total_user",
+        ]),
+    ) || 0,
+  );
+
+  const instagramPostCountStat = Math.max(
+    0,
+    Math.round(Number(totalIGPosts) || 0),
+  );
+  const tiktokPostCountStat = Math.max(
+    0,
+    Math.round(Number(totalTikTokPosts) || 0),
+  );
+
+  const instagramLikes = sumActivityRecords(likes, INSTAGRAM_LIKE_FIELD_PATHS);
+  const instagramComments = sumActivityRecords(
+    likes,
+    INSTAGRAM_COMMENT_FIELD_PATHS,
+  );
+  const instagramLikesFallback = getNumericFromPaths(safeStats, [
+    "instagramLikes",
+    "instagram_likes",
+    "likesInstagram",
+    "likes_instagram",
+    "total_like_instagram",
+    "igLikes",
+    "ig_likes",
+    "instagram.metrics.likes",
+    "instagram.stats.likes",
+  ]);
+  const instagramCommentsFallback = getNumericFromPaths(safeStats, [
+    "instagramComments",
+    "instagram_comments",
+    "commentsInstagram",
+    "comments_instagram",
+    "total_comment_instagram",
+    "igComments",
+    "ig_comments",
+    "instagram.metrics.comments",
+    "instagram.stats.comments",
+  ]);
+
+  const combinedInstagramLikes =
+    instagramLikes > 0 ? instagramLikes : instagramLikesFallback;
+  const combinedInstagramComments =
+    instagramComments > 0 ? instagramComments : instagramCommentsFallback;
+
+  const tiktokComments = sumActivityRecords(
+    comments,
+    TIKTOK_COMMENT_FIELD_PATHS,
+  );
+  const tiktokLikes = sumActivityRecords(comments, TIKTOK_LIKE_FIELD_PATHS);
+  const tiktokCommentsFallback = getNumericFromPaths(safeStats, [
+    "tiktokComments",
+    "tiktok_comments",
+    "commentsTiktok",
+    "comments_tiktok",
+    "total_comment_tiktok",
+    "ttComments",
+    "tt_comments",
+    "tiktok.metrics.comments",
+    "tiktok.stats.comments",
+  ]);
+  const tiktokLikesFallback = getNumericFromPaths(safeStats, [
+    "tiktokLikes",
+    "tiktok_likes",
+    "likesTiktok",
+    "likes_tiktok",
+    "total_like_tiktok",
+    "ttLikes",
+    "tt_likes",
+    "tiktok.metrics.likes",
+    "tiktok.stats.likes",
+  ]);
+
+  const combinedTiktokComments =
+    tiktokComments > 0 ? tiktokComments : tiktokCommentsFallback;
+  const combinedTiktokLikes =
+    tiktokLikes > 0 ? tiktokLikes : tiktokLikesFallback;
+
+  const instagramFollowers = getNumericFromPaths(
+    safeStats,
+    INSTAGRAM_FOLLOWER_PATHS,
+  );
+  const tiktokFollowers = getNumericFromPaths(safeStats, TIKTOK_FOLLOWER_PATHS);
+
+  const instagramPostsArray = ensureArray(instagramPostsRaw);
+  const instagramDatabasePostsArray = ensureArray(instagramPostsDatabaseRaw);
+  const tiktokPostsArray = ensureArray(tiktokPostsRaw);
+  const tiktokDatabasePostsArray = ensureArray(tiktokPostsDatabaseRaw);
+
+  const normalizedInstagramPosts = instagramPostsArray
+    .map((post, index) =>
+      normalizePlatformPost(post, {
+        platformKey: "instagram",
+        fallbackIndex: index,
+        platformLabel: "Instagram",
+      }),
+    )
+    .filter(Boolean);
+  const normalizedInstagramDatabasePosts = instagramDatabasePostsArray
+    .map((post, index) =>
+      normalizePlatformPost(post, {
+        platformKey: "instagram",
+        fallbackIndex: index,
+        platformLabel: "Instagram",
+      }),
+    )
+    .filter(Boolean);
+  const normalizedTiktokPosts = tiktokPostsArray
+    .map((post, index) =>
+      normalizePlatformPost(post, {
+        platformKey: "tiktok",
+        fallbackIndex: index,
+        platformLabel: "TikTok",
+      }),
+    )
+    .filter(Boolean);
+  const normalizedTiktokDatabasePosts = tiktokDatabasePostsArray
+    .map((post, index) =>
+      normalizePlatformPost(post, {
+        platformKey: "tiktok",
+        fallbackIndex: index,
+        platformLabel: "TikTok",
+      }),
+    )
+    .filter(Boolean);
+
+  const aggregateInstagramPosts =
+    normalizedInstagramDatabasePosts.length > 0
+      ? normalizedInstagramDatabasePosts
+      : normalizedInstagramPosts;
+  const aggregateTiktokPosts =
+    normalizedTiktokDatabasePosts.length > 0
+      ? normalizedTiktokDatabasePosts
+      : normalizedTiktokPosts;
+
+  const instagramDerivedFromPosts = computeDerivedPostStats({
+    posts: normalizedInstagramPosts,
+    aggregatePosts: aggregateInstagramPosts,
+    fallbackLikes: combinedInstagramLikes,
+    fallbackComments: combinedInstagramComments,
+    fallbackPostCount: instagramPostCountStat,
+  });
+  const tiktokDerivedFromPosts = computeDerivedPostStats({
+    posts: normalizedTiktokPosts,
+    aggregatePosts: aggregateTiktokPosts,
+    fallbackLikes: combinedTiktokLikes,
+    fallbackComments: combinedTiktokComments,
+    fallbackPostCount: tiktokPostCountStat,
+  });
+
+  const instagramLikesEffective =
+    instagramDerivedFromPosts.totalLikes > 0
+      ? instagramDerivedFromPosts.totalLikes
+      : combinedInstagramLikes;
+  const instagramCommentsEffective =
+    instagramDerivedFromPosts.totalComments > 0
+      ? instagramDerivedFromPosts.totalComments
+      : combinedInstagramComments;
+  const tiktokLikesEffective =
+    tiktokDerivedFromPosts.totalLikes > 0
+      ? tiktokDerivedFromPosts.totalLikes
+      : combinedTiktokLikes;
+  const tiktokCommentsEffective =
+    tiktokDerivedFromPosts.totalComments > 0
+      ? tiktokDerivedFromPosts.totalComments
+      : combinedTiktokComments;
+
+  const instagramTotalInteractions =
+    instagramDerivedFromPosts.totalInteractions > 0
+      ? instagramDerivedFromPosts.totalInteractions
+      : instagramLikesEffective + instagramCommentsEffective;
+  const tiktokTotalInteractions =
+    tiktokDerivedFromPosts.totalInteractions > 0
+      ? tiktokDerivedFromPosts.totalInteractions
+      : tiktokLikesEffective + tiktokCommentsEffective;
+
+  const instagramPostCountEffective =
+    instagramDerivedFromPosts.postCount > 0
+      ? instagramDerivedFromPosts.postCount
+      : instagramPostCountStat;
+  const tiktokPostCountEffective =
+    tiktokDerivedFromPosts.postCount > 0
+      ? tiktokDerivedFromPosts.postCount
+      : tiktokPostCountStat;
+
+  const expectedIGInteractions =
+    safeTotalUsers > 0 && instagramPostCountEffective > 0
+      ? safeTotalUsers * instagramPostCountEffective
+      : 0;
+  const expectedTikTokInteractions =
+    safeTotalUsers > 0 && tiktokPostCountEffective > 0
+      ? safeTotalUsers * tiktokPostCountEffective
+      : 0;
+
+  const instagramEngagementCandidate =
+    expectedIGInteractions > 0
+      ? (instagramTotalInteractions / expectedIGInteractions) * 100
+      : 0;
+  const tiktokEngagementCandidate =
+    expectedTikTokInteractions > 0
+      ? (tiktokTotalInteractions / expectedTikTokInteractions) * 100
+      : 0;
+
+  const instagramEngagementFallback = getNumericFromPaths(
+    safeStats,
+    INSTAGRAM_ENGAGEMENT_PATHS,
+  );
+  const tiktokEngagementFallback = getNumericFromPaths(
+    safeStats,
+    TIKTOK_ENGAGEMENT_PATHS,
+  );
+
+  const instagramAverageEngagementRate =
+    instagramDerivedFromPosts.averageEngagementRate > 0
+      ? instagramDerivedFromPosts.averageEngagementRate
+      : instagramEngagementCandidate > 0
+      ? instagramEngagementCandidate
+      : instagramEngagementFallback;
+  const tiktokAverageEngagementRate =
+    tiktokDerivedFromPosts.averageEngagementRate > 0
+      ? tiktokDerivedFromPosts.averageEngagementRate
+      : tiktokEngagementCandidate > 0
+      ? tiktokEngagementCandidate
+      : tiktokEngagementFallback;
+
+  const instagramAverageInteractions =
+    instagramDerivedFromPosts.averageInteractions > 0
+      ? instagramDerivedFromPosts.averageInteractions
+      : instagramPostCountEffective > 0
+      ? instagramTotalInteractions / instagramPostCountEffective
+      : 0;
+  const tiktokAverageInteractions =
+    tiktokDerivedFromPosts.averageInteractions > 0
+      ? tiktokDerivedFromPosts.averageInteractions
+      : tiktokPostCountEffective > 0
+      ? tiktokTotalInteractions / tiktokPostCountEffective
+      : 0;
+
+  const clientNameFallback =
+    getStringFromPaths(safeStats, [
+      "client_name",
+      "clientName",
+      "nama_client",
+      "client",
+      "client_label",
+      "clientLabel",
+    ]) || undefined;
+
+  const instagramHandle =
+    sanitizeHandle(getStringFromPaths(safeStats, INSTAGRAM_USERNAME_PATHS)) ||
+    sanitizeHandle(
+      getStringFromPaths(safeStats, [
+        "instagramProfile.username",
+        "igProfile.username",
+      ]),
+    ) ||
+    sanitizeHandle(clientNameFallback) ||
+    sanitizeHandle(clientId ? String(clientId) : "");
+
+  const tiktokHandle =
+    sanitizeHandle(getStringFromPaths(safeStats, TIKTOK_USERNAME_PATHS)) ||
+    sanitizeHandle(
+      getStringFromPaths(safeStats, [
+        "tiktokProfile.username",
+        "ttProfile.username",
+      ]),
+    ) ||
+    sanitizeHandle(clientNameFallback) ||
+    sanitizeHandle(clientId ? String(clientId) : "");
+
+  const instagramBio =
+    getStringFromPaths(safeStats, INSTAGRAM_BIO_PATHS) || undefined;
+  const tiktokBio = getStringFromPaths(safeStats, TIKTOK_BIO_PATHS) || undefined;
+
+  const instagramProfileUrl =
+    getStringFromPaths(safeStats, INSTAGRAM_URL_PATHS) || undefined;
+  const tiktokProfileUrl =
+    getStringFromPaths(safeStats, TIKTOK_URL_PATHS) || undefined;
+
+  const instagramProfile = instagramHandle
+    ? {
+        username: instagramHandle,
+        label: clientNameFallback || "Instagram",
+        followers: instagramFollowers,
+        posts: instagramPostCountEffective,
+        bio: instagramBio,
+        externalUrl: instagramProfileUrl,
+      }
+    : clientNameFallback
+    ? {
+        label: clientNameFallback,
+        username: sanitizeHandle(clientNameFallback) || null,
+        followers: instagramFollowers,
+        posts: instagramPostCountEffective,
+        bio: instagramBio,
+        externalUrl: instagramProfileUrl,
+      }
+    : null;
+
+  const tiktokProfile = tiktokHandle
+    ? {
+        username: tiktokHandle,
+        label: clientNameFallback || "TikTok",
+        followers: tiktokFollowers,
+        posts: tiktokPostCountEffective,
+        bio: tiktokBio,
+        externalUrl: tiktokProfileUrl,
+      }
+    : clientNameFallback
+    ? {
+        label: clientNameFallback,
+        username: sanitizeHandle(clientNameFallback) || null,
+        followers: tiktokFollowers,
+        posts: tiktokPostCountEffective,
+        bio: tiktokBio,
+        externalUrl: tiktokProfileUrl,
+      }
+    : null;
+
+  const instagramDerived = {
+    ...instagramDerivedFromPosts,
+    postCount: instagramPostCountEffective,
+    totalInteractions: instagramTotalInteractions,
+    averageInteractions: instagramAverageInteractions,
+    averageEngagementRate: instagramAverageEngagementRate,
+  };
+  const tiktokDerived = {
+    ...tiktokDerivedFromPosts,
+    postCount: tiktokPostCountEffective,
+    totalInteractions: tiktokTotalInteractions,
+    averageInteractions: tiktokAverageInteractions,
+    averageEngagementRate: tiktokAverageEngagementRate,
+  };
+
+  const platforms = [];
+
+  if (
+    instagramFollowers > 0 ||
+    instagramLikesEffective > 0 ||
+    instagramCommentsEffective > 0 ||
+    instagramProfile ||
+    aggregateInstagramPosts.length > 0
+  ) {
+    platforms.push({
+      key: "instagram",
+      label: "Instagram",
+      followers: instagramFollowers,
+      posts: instagramPostCountEffective,
+      likes: instagramLikesEffective,
+      comments: instagramCommentsEffective,
+      engagementRate: instagramAverageEngagementRate,
+      shares: { followers: 0, likes: 0, comments: 0 },
+      rawPosts: instagramPostsArray,
+      postsData: normalizedInstagramPosts,
+      derived: instagramDerived,
+      profile: instagramProfile,
+    });
+  }
+
+  if (
+    tiktokFollowers > 0 ||
+    tiktokLikesEffective > 0 ||
+    tiktokCommentsEffective > 0 ||
+    tiktokProfile ||
+    aggregateTiktokPosts.length > 0
+  ) {
+    platforms.push({
+      key: "tiktok",
+      label: "TikTok",
+      followers: tiktokFollowers,
+      posts: tiktokPostCountEffective,
+      likes: tiktokLikesEffective,
+      comments: tiktokCommentsEffective,
+      engagementRate: tiktokAverageEngagementRate,
+      shares: { followers: 0, likes: 0, comments: 0 },
+      rawPosts: tiktokPostsArray,
+      postsData: normalizedTiktokPosts,
+      derived: tiktokDerived,
+      profile: tiktokProfile,
+    });
+  }
+
+  return { platforms };
+};
 
 
 const monthlyData = {
@@ -1632,150 +1916,50 @@ export default function ExecutiveSummaryPage() {
       data.platformAnalytics.platforms.length > 0;
 
     const monthOptionKeys = new Set(monthOptions.map((option) => option.key));
-    if (monthOptionKeys.has(currentMonthKey)) {
+    const currentMonthHasOption = monthOptionKeys.has(currentMonthKey);
+
+    if (currentMonthHasOption && hasCuratedData(monthlyData[currentMonthKey])) {
       return currentMonthKey;
     }
 
-    for (const option of monthOptions) {
-      if (hasCuratedData(monthlyData[option.key])) {
-        return option.key;
+    const availableDataKeys = Object.keys(monthlyData)
+      .filter((key) => monthOptionKeys.has(key))
+      .sort()
+      .reverse();
+
+    for (const key of availableDataKeys) {
+      if (hasCuratedData(monthlyData[key])) {
+        return key;
       }
+    }
+
+    if (currentMonthHasOption) {
+      return currentMonthKey;
     }
 
     return monthOptions[0]?.key ?? currentMonthKey;
   }, [monthOptions]);
-  const defaultSelectedYear = useMemo(() => {
-    const extractedYear = extractYearFromMonthKey(defaultSelectedMonth);
-    if (typeof extractedYear === "number" && Number.isFinite(extractedYear)) {
-      return extractedYear;
-    }
-    return resolvedYear;
-  }, [defaultSelectedMonth, resolvedYear]);
-  const defaultSelectedMonthIndex = useMemo(() => {
-    const extractedMonth = extractMonthIndexFromMonthKey(defaultSelectedMonth);
-    if (typeof extractedMonth === "number" && Number.isFinite(extractedMonth)) {
-      return extractedMonth;
-    }
-    const now = new Date();
-    return clamp(now.getMonth(), 0, 11);
-  }, [defaultSelectedMonth]);
-  const YEAR_MIN = 2025;
-  const YEAR_MAX = 2035;
-  const [selectedYear, setSelectedYear] = useState(defaultSelectedYear);
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState(
-    defaultSelectedMonthIndex,
-  );
-  const selectedMonthKey = useMemo(() => {
-    if (!Number.isFinite(selectedYear)) {
-      return typeof defaultSelectedMonth === "string"
-        ? defaultSelectedMonth
-        : "";
-    }
-    return buildMonthKey(selectedYear, clamp(selectedMonthIndex ?? 0, 0, 11));
-  }, [defaultSelectedMonth, selectedMonthIndex, selectedYear]);
-  const monthOptionsForSelectedYear = useMemo(() => {
-    return monthOptions.filter(
-      (option) => extractYearFromMonthKey(option.key) === selectedYear,
-    );
-  }, [monthOptions, selectedYear]);
-  const availableMonthIndicesForSelectedYear = useMemo(() => {
-    return new Set(
-      monthOptionsForSelectedYear
-        .map((option) => extractMonthIndexFromMonthKey(option.key))
-        .filter((index) => typeof index === "number"),
-    );
-  }, [monthOptionsForSelectedYear]);
-  const monthSelectOptions = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat("id-ID", { month: "long" });
-    return Array.from({ length: 12 }, (_, index) => ({
-      value: index,
-      label: formatter.format(new Date(2000, index, 1)),
-    }));
-  }, []);
-  const yearSelectOptions = useMemo(() => {
-    const baseYears = Array.from(
-      { length: YEAR_MAX - YEAR_MIN + 1 },
-      (_, index) => YEAR_MIN + index,
-    );
-    const extras = [];
-    for (const candidate of [defaultSelectedYear, selectedYear]) {
-      if (
-        typeof candidate === "number" &&
-        Number.isFinite(candidate) &&
-        (candidate < YEAR_MIN || candidate > YEAR_MAX)
-      ) {
-        extras.push(candidate);
+  const [selectedMonth, setSelectedMonth] = useState(defaultSelectedMonth);
+  useEffect(() => {
+    setSelectedMonth((previous) => {
+      if (!defaultSelectedMonth) {
+        return previous;
       }
-    }
-    return Array.from(new Set([...baseYears, ...extras])).sort((a, b) => a - b);
-  }, [defaultSelectedYear, selectedYear]);
-  useEffect(() => {
-    if (!defaultSelectedMonth) {
-      return;
-    }
 
-    const monthOptionKeys = new Set(monthOptions.map((option) => option.key));
-    if (monthOptionKeys.has(selectedMonthKey)) {
-      return;
-    }
+      if (!previous) {
+        return defaultSelectedMonth;
+      }
 
-    let fallbackKey = null;
+      const isPreviousValid = monthOptions.some(
+        (option) => option.key === previous,
+      );
 
-    if (monthOptionKeys.has(defaultSelectedMonth)) {
-      fallbackKey = defaultSelectedMonth;
-    } else if (monthOptions.length > 0) {
-      fallbackKey = monthOptions[0].key;
-    }
-
-    if (!fallbackKey) {
-      return;
-    }
-
-    const fallbackYear = extractYearFromMonthKey(fallbackKey);
-    const fallbackMonth = extractMonthIndexFromMonthKey(fallbackKey);
-
-    if (typeof fallbackYear === "number" && Number.isFinite(fallbackYear)) {
-      setSelectedYear(fallbackYear);
-    }
-
-    if (typeof fallbackMonth === "number" && Number.isFinite(fallbackMonth)) {
-      setSelectedMonthIndex(fallbackMonth);
-    }
-  }, [defaultSelectedMonth, monthOptions, selectedMonthKey]);
-  useEffect(() => {
-    if (
-      availableMonthIndicesForSelectedYear.size === 0 ||
-      availableMonthIndicesForSelectedYear.has(selectedMonthIndex)
-    ) {
-      return;
-    }
-
-    const fallbackOption = monthOptionsForSelectedYear[0];
-    if (!fallbackOption) {
-      return;
-    }
-
-    const fallbackMonthIndex = extractMonthIndexFromMonthKey(fallbackOption.key);
-    if (
-      typeof fallbackMonthIndex === "number" &&
-      Number.isFinite(fallbackMonthIndex)
-    ) {
-      setSelectedMonthIndex(fallbackMonthIndex);
-    }
-  }, [
-    availableMonthIndicesForSelectedYear,
-    monthOptionsForSelectedYear,
-    selectedMonthIndex,
-  ]);
+      return isPreviousValid ? previous : defaultSelectedMonth;
+    });
+  }, [defaultSelectedMonth, monthOptions]);
   const selectedMonthOption = useMemo(() => {
-    const optionFromYear = monthOptionsForSelectedYear.find(
-      (option) => option.key === selectedMonthKey,
-    );
-    if (optionFromYear) {
-      return optionFromYear;
-    }
-    return monthOptions.find((option) => option.key === selectedMonthKey) ?? null;
-  }, [monthOptions, monthOptionsForSelectedYear, selectedMonthKey]);
+    return monthOptions.find((option) => option.key === selectedMonth) ?? null;
+  }, [monthOptions, selectedMonth]);
   const [pptxFactory, setPptxFactory] = useState(null);
   const [userInsightState, setUserInsightState] = useState({
     loading: true,
@@ -1790,12 +1974,12 @@ export default function ExecutiveSummaryPage() {
     narrative: "",
     activityBuckets: null,
   });
-  const [likesSummaryState, setLikesSummaryState] = useState({
+  const [platformState, setPlatformState] = useState({
     loading: true,
     error: "",
-    summary: null,
+    platforms: [],
+    profiles: { byKey: {} },
     activity: { likes: [], comments: [] },
-    posts: { instagram: [], tiktok: [] },
   });
 
   useEffect(() => {
@@ -1853,26 +2037,11 @@ export default function ExecutiveSummaryPage() {
     };
   }, []);
 
-  const rawMonthlyData = monthlyData[selectedMonthKey];
-  const computedMonthLabel = useMemo(() => {
-    if (!Number.isFinite(selectedYear)) {
-      return selectedMonthKey || "Periode Tidak Tersedia";
-    }
-
-    const displayDate = new Date(
-      selectedYear,
-      clamp(selectedMonthIndex ?? 0, 0, 11),
-      1,
-    );
-    const formatter = new Intl.DateTimeFormat("id-ID", { month: "long" });
-    return `${formatter.format(displayDate)} ${selectedYear}`;
-  }, [selectedMonthIndex, selectedMonthKey, selectedYear]);
+  const rawMonthlyData = monthlyData[selectedMonth];
   const fallbackMonthLabel =
     rawMonthlyData?.monthLabel ??
     selectedMonthOption?.label ??
-    (computedMonthLabel
-      ? computedMonthLabel
-      : selectedMonthKey || "Periode Tidak Tersedia");
+    (selectedMonth ? selectedMonth : "Periode Tidak Tersedia");
   const defaultMonthlyEntry = {
     monthLabel: fallbackMonthLabel,
     overviewNarrative: "Belum ada ringkasan kinerja untuk periode ini.",
@@ -1924,12 +2093,12 @@ export default function ExecutiveSummaryPage() {
           error: prev.error || "",
           activityBuckets: null,
         }));
-        setLikesSummaryState({
+        setPlatformState({
           loading: false,
           error: "",
-          summary: null,
+          platforms: [],
+          profiles: { byKey: {} },
           activity: { likes: [], comments: [] },
-          posts: { instagram: [], tiktok: [] },
         });
         return;
       }
@@ -1940,13 +2109,13 @@ export default function ExecutiveSummaryPage() {
         error: "",
         activityBuckets: null,
       }));
-      setLikesSummaryState((prev) => ({
+      setPlatformState((prev) => ({
         ...prev,
         loading: true,
         error: "",
       }));
 
-      const periodRange = getMonthDateRange(selectedMonthKey);
+      const periodRange = getMonthDateRange(selectedMonth);
       const periodeParam = periodRange ? "bulanan" : undefined;
       const tanggalParam = periodRange?.startDate;
       const startDateParam = periodRange?.startDate;
@@ -2092,23 +2261,35 @@ export default function ExecutiveSummaryPage() {
           totalTikTokPosts,
         });
 
-        const likesSummary = buildLikesSummaryFromRecords(likesRecords);
+        const platformMetrics = buildPlatformMetricsFromActivity({
+          stats,
+          likes: likesRecords,
+          comments: commentsRecords,
+          totalIGPosts,
+          totalTikTokPosts,
+          totalUsers: insight?.summary?.totalUsers ?? users.length ?? 0,
+          clientId,
+          instagramPostsRaw,
+          instagramDatabasePostsRaw,
+          tiktokPostsRaw,
+          tiktokDatabasePostsRaw,
+        });
+        const normalizedPlatformMetrics = normalizePlatformMetrics(
+          platformMetrics,
+        );
 
         if (cancelled) {
           return;
         }
 
-        setLikesSummaryState({
+        setPlatformState({
           loading: false,
           error: platformErrorMessage,
-          summary: likesSummary,
+          platforms: normalizedPlatformMetrics.platforms,
+          profiles: normalizedPlatformMetrics.profiles,
           activity: {
             likes: likesRecords,
             comments: commentsRecords,
-          },
-          posts: {
-            instagram: instagramPostsRaw,
-            tiktok: tiktokPostsRaw,
           },
         });
 
@@ -2131,15 +2312,15 @@ export default function ExecutiveSummaryPage() {
               : "Gagal memuat insight pengguna.",
           activityBuckets: null,
         }));
-        setLikesSummaryState({
+        setPlatformState({
           loading: false,
           error:
             error instanceof Error
               ? error.message
               : "Gagal memuat data performa platform.",
-          summary: null,
+          platforms: [],
+          profiles: { byKey: {} },
           activity: { likes: [], comments: [] },
-          posts: { instagram: [], tiktok: [] },
         });
       }
     };
@@ -2150,7 +2331,7 @@ export default function ExecutiveSummaryPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [token, clientId, selectedMonthKey]);
+  }, [token, clientId, selectedMonth]);
 
   const pptSummary = useMemo(() => {
     return [
@@ -2293,20 +2474,55 @@ export default function ExecutiveSummaryPage() {
   const totalEvaluated = Number(activityBuckets?.evaluatedUsers) || 0;
   const totalContentEvaluated = Number(activityBuckets?.totalContent) || 0;
   const {
-    summary: likesSummary,
-    loading: likesLoading,
-    error: likesError,
-    activity: likesActivityState,
-    posts: likesPostsState,
-  } = likesSummaryState;
+    platforms: platformMetrics,
+    loading: platformsLoading,
+    error: platformError,
+    profiles: platformProfiles,
+    activity: platformActivityState,
+  } = platformState;
   const platformActivity =
-    likesActivityState && typeof likesActivityState === "object"
-      ? likesActivityState
+    platformActivityState && typeof platformActivityState === "object"
+      ? platformActivityState
       : EMPTY_ACTIVITY;
 
+  const monthlyPlatformAnalytics = useMemo(() => {
+    const monthlyPlatforms = data?.platformAnalytics?.platforms;
+    if (Array.isArray(monthlyPlatforms) && monthlyPlatforms.length > 0) {
+      return normalizePlatformMetrics({ platforms: monthlyPlatforms });
+    }
+    return null;
+  }, [data?.platformAnalytics]);
+
+  const hasMonthlyPlatforms = Boolean(
+    monthlyPlatformAnalytics?.platforms?.length,
+  );
+
+  const effectivePlatformMetrics = hasMonthlyPlatforms
+    ? monthlyPlatformAnalytics?.platforms ?? []
+    : platformMetrics;
+
   const instagramWeeklyTrend = useMemo(() => {
+    const instagramPlatforms = Array.isArray(effectivePlatformMetrics)
+      ? effectivePlatformMetrics.filter((platform) => {
+          const key = (platform?.key || platform?.sourceKey || "").toLowerCase();
+          const label = (platform?.label || "").toLowerCase();
+          return key.includes("instagram") || label.includes("instagram");
+        })
+      : [];
+
     const instagramPosts = filterRecordsWithResolvableDate(
-      ensureArray(likesPostsState?.instagram),
+      instagramPlatforms.flatMap((platform) => {
+        if (Array.isArray(platform?.posts)) {
+          return platform.posts;
+        }
+        if (Array.isArray(platform?.postsData)) {
+          return platform.postsData;
+        }
+        if (Array.isArray(platform?.rawPosts)) {
+          return platform.rawPosts;
+        }
+        return [];
+      }),
       {
         extraPaths: [
           "publishedAt",
@@ -2322,15 +2538,16 @@ export default function ExecutiveSummaryPage() {
 
     const weeklyPosts = groupRecordsByWeek(instagramPosts, {
       getDate: (post) => {
-        const resolved = resolveRecordDate(post, [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-        ]);
-
-        return resolved?.parsed ?? null;
+        if (post?.publishedAt instanceof Date) {
+          return post.publishedAt;
+        }
+        return (
+          post?.createdAt ??
+          post?.created_at ??
+          post?.timestamp ??
+          post?.published_at ??
+          null
+        );
       },
     });
 
@@ -2434,11 +2651,30 @@ export default function ExecutiveSummaryPage() {
       delta,
       hasRecords,
     };
-  }, [likesPostsState, platformActivity]);
+  }, [effectivePlatformMetrics, platformActivity]);
 
   const tiktokWeeklyTrend = useMemo(() => {
+    const tiktokPlatforms = Array.isArray(effectivePlatformMetrics)
+      ? effectivePlatformMetrics.filter((platform) => {
+          const key = (platform?.key || platform?.sourceKey || "").toLowerCase();
+          const label = (platform?.label || "").toLowerCase();
+          return key.includes("tiktok") || label.includes("tiktok");
+        })
+      : [];
+
     const tiktokPosts = filterRecordsWithResolvableDate(
-      ensureArray(likesPostsState?.tiktok),
+      tiktokPlatforms.flatMap((platform) => {
+        if (Array.isArray(platform?.posts)) {
+          return platform.posts;
+        }
+        if (Array.isArray(platform?.postsData)) {
+          return platform.postsData;
+        }
+        if (Array.isArray(platform?.rawPosts)) {
+          return platform.rawPosts;
+        }
+        return [];
+      }),
       {
         extraPaths: [
           "publishedAt",
@@ -2454,15 +2690,16 @@ export default function ExecutiveSummaryPage() {
 
     const weeklyPosts = groupRecordsByWeek(tiktokPosts, {
       getDate: (post) => {
-        const resolved = resolveRecordDate(post, [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-        ]);
-
-        return resolved?.parsed ?? null;
+        if (post?.publishedAt instanceof Date) {
+          return post.publishedAt;
+        }
+        return (
+          post?.createdAt ??
+          post?.created_at ??
+          post?.timestamp ??
+          post?.published_at ??
+          null
+        );
       },
     });
 
@@ -2566,7 +2803,7 @@ export default function ExecutiveSummaryPage() {
       delta,
       hasRecords,
     };
-  }, [likesPostsState, platformActivity]);
+  }, [effectivePlatformMetrics, platformActivity]);
 
   const instagramWeeklyCardData = useMemo(() => {
     const { latestWeek, previousWeek, delta, weeks, hasRecords } =
@@ -2733,14 +2970,14 @@ export default function ExecutiveSummaryPage() {
     };
   }, [tiktokWeeklyTrend]);
 
-  const showPlatformLoading = likesLoading;
+  const showPlatformLoading = platformsLoading && !hasMonthlyPlatforms;
   const instagramWeeklyTrendDescription =
     instagramWeeklyCardData.weeksCount < 2
       ? "Post Instagram & likes personil per minggu. Data perbandingan belum lengkap."
       : "Post Instagram & likes personil per minggu.";
   const instagramWeeklyCardError = !showPlatformLoading
-    ? likesError
-      ? likesError
+    ? platformError && !hasMonthlyPlatforms
+      ? platformError
       : instagramWeeklyCardData.weeksCount === 0 &&
         instagramWeeklyCardData.hasRecords
       ? "Belum ada data aktivitas Instagram mingguan yang terekam."
@@ -2754,8 +2991,8 @@ export default function ExecutiveSummaryPage() {
       ? "Post TikTok & komentar personel per minggu. Data perbandingan belum lengkap."
       : "Post TikTok & komentar personel per minggu.";
   const tiktokWeeklyCardError = !showPlatformLoading
-    ? likesError
-      ? likesError
+    ? platformError && !hasMonthlyPlatforms
+      ? platformError
       : tiktokWeeklyCardData.weeksCount === 0 &&
         tiktokWeeklyCardData.hasRecords
       ? "Belum ada data aktivitas TikTok mingguan yang terekam."
@@ -2766,20 +3003,55 @@ export default function ExecutiveSummaryPage() {
 
   const shouldShowInstagramTrendCard = shouldShowWeeklyTrendCard({
     showPlatformLoading,
-    platformError: likesError,
-    hasMonthlyPlatforms: false,
+    platformError,
+    hasMonthlyPlatforms,
     cardHasRecords: instagramWeeklyCardData.hasRecords,
   });
   const shouldShowTiktokTrendCard = shouldShowWeeklyTrendCard({
     showPlatformLoading,
-    platformError: likesError,
-    hasMonthlyPlatforms: false,
+    platformError,
+    hasMonthlyPlatforms,
     cardHasRecords: tiktokWeeklyCardData.hasRecords,
   });
 
-  const shouldRenderWeeklyTrendSection =
-    !showPlatformLoading &&
-    (shouldShowInstagramTrendCard || shouldShowTiktokTrendCard);
+  const effectivePlatformProfiles = useMemo(() => {
+    if (hasMonthlyPlatforms) {
+      const baseProfiles = platformProfiles ?? { byKey: {} };
+      const monthlyProfiles = monthlyPlatformAnalytics?.profiles ?? { byKey: {} };
+      return {
+        byKey: {
+          ...(baseProfiles.byKey ?? {}),
+          ...(monthlyProfiles.byKey ?? {}),
+        },
+        instagram:
+          monthlyProfiles.instagram ?? baseProfiles.instagram ?? null,
+        tiktok: monthlyProfiles.tiktok ?? baseProfiles.tiktok ?? null,
+      };
+    }
+
+    return platformProfiles ?? { byKey: {} };
+  }, [hasMonthlyPlatforms, monthlyPlatformAnalytics, platformProfiles]);
+
+  const platformViewModels = useMemo(() => {
+    if (!Array.isArray(effectivePlatformMetrics)) {
+      return [];
+    }
+
+    return effectivePlatformMetrics.map((platform) => ({
+      ...platform,
+      insight: buildPlatformInsight(platform),
+      weeklyEngagement: buildPlatformWeeklyEngagement(platform),
+    }));
+  }, [effectivePlatformMetrics]);
+
+  const profileByKey = useMemo(() => {
+    return effectivePlatformProfiles?.byKey ?? {};
+  }, [effectivePlatformProfiles]);
+
+  const instagramProfile =
+    effectivePlatformProfiles?.instagram ?? profileByKey.instagram ?? null;
+  const tiktokProfile =
+    effectivePlatformProfiles?.tiktok ?? profileByKey.tiktok ?? null;
 
   return (
     <div className="space-y-8">
@@ -2800,74 +3072,21 @@ export default function ExecutiveSummaryPage() {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
                   Show Data By
                 </span>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="flex flex-col text-sm font-medium text-slate-200">
-                    <span className="text-base font-semibold text-slate-100">Month</span>
-                    <select
-                      value={String(clamp(selectedMonthIndex ?? 0, 0, 11))}
-                      onChange={(event) => {
-                        const parsedMonth = Number.parseInt(event.target.value, 10);
-                        if (!Number.isFinite(parsedMonth)) {
-                          return;
-                        }
-                        setSelectedMonthIndex(clamp(parsedMonth, 0, 11));
-                      }}
-                      className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
-                      aria-label="Filter data by month"
-                    >
-                      {monthSelectOptions.map((option) => {
-                        const isAvailable = availableMonthIndicesForSelectedYear.has(
-                          option.value,
-                        );
-                        const shouldDisable =
-                          !isAvailable && availableMonthIndicesForSelectedYear.size > 0;
-                        return (
-                          <option
-                            key={option.value}
-                            value={option.value}
-                            disabled={shouldDisable}
-                          >
-                            {option.label}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </label>
-                  <label className="flex flex-col text-sm font-medium text-slate-200">
-                    <span className="text-base font-semibold text-slate-100">Year</span>
-                    <select
-                      value={
-                        typeof selectedYear === "number" && Number.isFinite(selectedYear)
-                          ? String(selectedYear)
-                          : ""
-                      }
-                      onChange={(event) => {
-                        const parsedYear = Number.parseInt(event.target.value, 10);
-                        if (!Number.isFinite(parsedYear)) {
-                          return;
-                        }
-                        const clampedYear = clamp(parsedYear, YEAR_MIN, YEAR_MAX);
-                        setSelectedYear(clampedYear);
-                      }}
-                      className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
-                      aria-label="Filter data by year"
-                    >
-                      {yearSelectOptions.map((yearOption) => {
-                        const isWithinRange =
-                          yearOption >= YEAR_MIN && yearOption <= YEAR_MAX;
-                        return (
-                          <option
-                            key={yearOption}
-                            value={yearOption}
-                            disabled={!isWithinRange}
-                          >
-                            {yearOption}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </label>
-                </div>
+                <label className="flex flex-col text-sm font-medium text-slate-200">
+                  <span className="text-base font-semibold text-slate-100">Month</span>
+                  <select
+                    value={selectedMonth}
+                    onChange={(event) => setSelectedMonth(event.target.value)}
+                    className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                    aria-label="Filter data by month"
+                  >
+                    {monthOptions.map((option) => (
+                      <option key={option.key} value={option.key}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
             </div>
             <Button
@@ -2881,55 +3100,7 @@ export default function ExecutiveSummaryPage() {
         </div>
       </header>
 
-      {shouldRenderWeeklyTrendSection ? (
-        <section
-          aria-label="Tren Aktivitas Mingguan"
-          className="space-y-6"
-        >
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              Tren Aktivitas Mingguan
-            </h2>
-            <p className="max-w-3xl text-sm text-slate-300">
-              Pantau performa mingguan konten personel di Instagram dan TikTok
-              untuk melihat perubahan terbaru dibandingkan minggu sebelumnya.
-            </p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            {shouldShowInstagramTrendCard ? (
-              <WeeklyTrendCard
-                title="Instagram"
-                description={instagramWeeklyTrendDescription}
-                currentMetrics={instagramWeeklyCardData.currentMetrics}
-                previousMetrics={instagramWeeklyCardData.previousMetrics}
-                deltaMetrics={instagramWeeklyCardData.deltaMetrics}
-                series={instagramWeeklyCardData.series}
-                error={instagramWeeklyCardError}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-              />
-            ) : null}
-
-            {shouldShowTiktokTrendCard ? (
-              <WeeklyTrendCard
-                title="TikTok"
-                description={tiktokWeeklyTrendDescription}
-                currentMetrics={tiktokWeeklyCardData.currentMetrics}
-                previousMetrics={tiktokWeeklyCardData.previousMetrics}
-                deltaMetrics={tiktokWeeklyCardData.deltaMetrics}
-                series={tiktokWeeklyCardData.series}
-                error={tiktokWeeklyCardError}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-                secondaryMetricLabel="Komentar"
-              />
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      <section
+            <section
         aria-label="Insight Pengguna Aktual"
         className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
       >
@@ -3282,16 +3453,69 @@ export default function ExecutiveSummaryPage() {
             <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Memuat data performa kanal…
             </div>
-          ) : likesError ? (
+          ) : platformError && !hasMonthlyPlatforms ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
-              {likesError}
+              {platformError}
             </div>
-          ) : likesSummary && likesSummary.clients.length > 0 ? (
-            <PlatformLikesSummary
-              data={likesSummary}
-              formatNumber={formatNumber}
-              formatPercent={formatPercent}
-            />
+          ) : platformViewModels.length > 0 ? (
+            platformViewModels.map((platform) => {
+              const normalizedEngagement = normalizeNumericInput(platform.engagementRate);
+              const inferredProfile =
+                platform.profile ??
+                profileByKey[platform.sourceKey ?? platform.key] ??
+                profileByKey[platform.key] ??
+                (platform.label?.toLowerCase().includes("instagram")
+                  ? instagramProfile
+                  : platform.label?.toLowerCase().includes("tiktok")
+                  ? tiktokProfile
+                  : null);
+
+              const platformPayload = {
+                ...platform,
+                engagementRate: normalizedEngagement,
+                weeklyEngagement:
+                  platform.weeklyEngagement ?? buildPlatformWeeklyEngagement(platform),
+              };
+
+              return (
+                <div
+                  key={platform.key}
+                  className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)] lg:items-start"
+                >
+                  <div className="space-y-6">
+                    <PlatformOverviewCard
+                      platform={platformPayload}
+                      profile={inferredProfile}
+                      formatNumber={formatNumber}
+                      formatCompactNumber={formatCompactNumber}
+                      formatPercent={formatPercent}
+                    />
+                    <PlatformDetailTabs
+                      platform={platformPayload}
+                      profile={inferredProfile}
+                      formatNumber={formatNumber}
+                      formatPercent={formatPercent}
+                    />
+                  </div>
+                  <div className="space-y-6">
+                    <PlatformKPIChart
+                      platform={platformPayload}
+                      formatNumber={formatNumber}
+                    />
+                    <PlatformEngagementTrendChart
+                      platformLabel={platformPayload.label}
+                      series={platformPayload.weeklyEngagement?.series ?? []}
+                      latest={platformPayload.weeklyEngagement?.latest ?? null}
+                      previous={platformPayload.weeklyEngagement?.previous ?? null}
+                      loading={platformsLoading}
+                      error={!hasMonthlyPlatforms ? platformError : ""}
+                      formatNumber={formatNumber}
+                      formatPercent={formatPercent}
+                    />
+                  </div>
+                </div>
+              );
+            })
           ) : (
             <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Belum ada data performa platform untuk periode ini.
