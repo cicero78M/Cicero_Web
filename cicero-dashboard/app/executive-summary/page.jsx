@@ -27,16 +27,12 @@ import {
   getInstagramPosts,
   getTiktokPosts,
 } from "@/utils/api";
-import { cn } from "@/lib/utils";
 import {
   normalizeFormattedNumber,
   normalizeNumericInput,
   calculateRatePerDay,
 } from "@/lib/normalizeNumericInput";
-import PlatformOverviewCard from "@/components/executive-summary/PlatformOverviewCard";
-import PlatformKPIChart from "@/components/executive-summary/PlatformKPIChart";
-import PlatformDetailTabs from "@/components/executive-summary/PlatformDetailTabs";
-import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
+import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 import WeeklyTrendCard from "@/components/executive-summary/WeeklyTrendCard";
 import {
   buildMonthKey,
@@ -75,18 +71,6 @@ const parsePercent = (value) => {
   return Number.isFinite(coerced) ? clamp(coerced, 0, 100) : 0;
 };
 
-const formatCompactNumber = (value) => {
-  const numericValue = typeof value === "number" ? value : Number(value);
-  if (!numericValue || Number.isNaN(numericValue)) return "0";
-
-  const formatter = new Intl.NumberFormat("id-ID", {
-    notation: Math.abs(numericValue) >= 1000 ? "compact" : "standard",
-    maximumFractionDigits: Math.abs(numericValue) >= 1000 ? 1 : 0,
-  });
-
-  return formatter.format(numericValue);
-};
-
 const formatNumber = (value, options = {}) => {
   const formatter = new Intl.NumberFormat("id-ID", {
     maximumFractionDigits: options.maximumFractionDigits ?? 1,
@@ -104,109 +88,203 @@ const formatPercent = (value) => {
   })}%`;
 };
 
-const buildPlatformWeeklyEngagement = (platform) => {
-  const postsSource = Array.isArray(platform?.posts)
-    ? platform.posts
-    : Array.isArray(platform?.postsData)
-    ? platform.postsData
+const toSafeNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const createEmptyLikesSummary = () => ({
+  totals: {
+    totalClients: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    totalPersonnel: 0,
+    activePersonnel: 0,
+    complianceRate: 0,
+    averageComplianceRate: 0,
+  },
+  clients: [],
+  topPersonnel: [],
+  lastUpdated: null,
+});
+
+const aggregateLikesRecords = (records = []) => {
+  const safeRecords = Array.isArray(records)
+    ? records.filter((item) => item && typeof item === "object")
     : [];
 
-  const posts = postsSource.filter(Boolean);
-  if (posts.length === 0) {
-    return { series: [], latest: null, previous: null };
+  if (safeRecords.length === 0) {
+    return createEmptyLikesSummary();
   }
 
-  const weeklyGroups = groupRecordsByWeek(posts, {
-    getDate: (post) => {
-      if (post?.publishedAt instanceof Date) {
-        return post.publishedAt;
-      }
+  const clientsMap = new Map();
+  const personnelList = [];
+  let latestActivity = null;
 
-      return (
-        parseDateValue(post?.publishedAt) ??
-        parseDateValue(post?.published_at) ??
-        parseDateValue(post?.createdAt) ??
-        parseDateValue(post?.created_at) ??
-        parseDateValue(post?.timestamp) ??
-        parseDateValue(post?.time) ??
-        null
-      );
-    },
+  safeRecords.forEach((record, index) => {
+    const rawClientId =
+      record?.client_id ??
+      record?.clientId ??
+      record?.clientID ??
+      record?.client ??
+      record?.id_client ??
+      record?.clientid ??
+      "LAINNYA";
+    const clientId = String(rawClientId || "LAINNYA").trim();
+    const clientKey = clientId ? clientId.toUpperCase() : "LAINNYA";
+    const clientName =
+      String(
+        record?.nama_client ??
+          record?.client_name ??
+          record?.client ??
+          record?.namaClient ??
+          record?.nama ??
+          clientId || "LAINNYA",
+      ).trim() || "LAINNYA";
+
+    const likes = toSafeNumber(
+      record?.jumlah_like ??
+        record?.jumlahLike ??
+        record?.total_like ??
+        record?.likes ??
+        record?.totalLikes,
+    );
+    const comments = toSafeNumber(
+      record?.jumlah_komentar ??
+        record?.jumlahKomentar ??
+        record?.total_komentar ??
+        record?.comments ??
+        record?.totalComments,
+    );
+    const username = String(record?.username ?? record?.user_name ?? "").trim();
+    const nama = String(record?.nama ?? record?.name ?? record?.full_name ?? "").trim();
+    const isActive = likes > 0 || comments > 0;
+
+    if (!clientsMap.has(clientKey)) {
+      clientsMap.set(clientKey, {
+        key: clientKey,
+        clientId,
+        clientName,
+        totalLikes: 0,
+        totalComments: 0,
+        totalPersonnel: 0,
+        activePersonnel: 0,
+        personnel: [],
+      });
+    }
+
+    const clientEntry = clientsMap.get(clientKey);
+    clientEntry.totalLikes += likes;
+    clientEntry.totalComments += comments;
+    clientEntry.totalPersonnel += 1;
+    if (isActive) {
+      clientEntry.activePersonnel += 1;
+    }
+
+    const personnelKey = `${clientKey}:${username || nama || index}`;
+    const personnelRecord = {
+      key: personnelKey,
+      clientId,
+      clientName,
+      username,
+      nama,
+      likes,
+      comments,
+      active: isActive,
+    };
+
+    clientEntry.personnel.push(personnelRecord);
+    personnelList.push(personnelRecord);
+
+    const activityDate =
+      parseDateValue(record?.tanggal ?? record?.date ?? record?.activityDate) ??
+      parseDateValue(record?.updated_at ?? record?.updatedAt) ??
+      parseDateValue(record?.created_at ?? record?.createdAt) ??
+      null;
+
+    if (activityDate && (!latestActivity || activityDate > latestActivity)) {
+      latestActivity = activityDate;
+    }
   });
 
-  if (weeklyGroups.length === 0) {
-    return { series: [], latest: null, previous: null };
-  }
-
-  const toNumber = (value) => {
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? numeric : 0;
-  };
-
-  const series = weeklyGroups.map((group) => {
-    const totals = group.records.reduce(
-      (acc, post) => {
-        const metrics = post?.metrics ?? {};
-        const likes = Math.max(0, toNumber(metrics.likes ?? post?.likes));
-        const comments = Math.max(0, toNumber(metrics.comments ?? post?.comments));
-        const shares = Math.max(0, toNumber(metrics.shares ?? post?.shares));
-        const saves = Math.max(0, toNumber(metrics.saves ?? post?.saves));
-        const interactionsCandidate =
-          metrics.interactions ?? post?.interactions ?? likes + comments + shares + saves;
-        const interactions = Math.max(0, toNumber(interactionsCandidate));
-
-        const engagementCandidates = [
-          metrics.engagementRate,
-          metrics.engagement_rate,
-          post?.engagementRate,
-          post?.engagement_rate,
-        ];
-
-        let engagementValue = 0;
-        let hasEngagement = false;
-        for (const candidate of engagementCandidates) {
-          if (candidate === undefined || candidate === null) {
-            continue;
-          }
-          const numeric = Number(candidate);
-          if (Number.isFinite(numeric)) {
-            engagementValue = Math.max(0, numeric);
-            hasEngagement = true;
-            break;
-          }
-        }
-
-        acc.interactions += interactions;
-        acc.postCount += 1;
-
-        if (hasEngagement) {
-          acc.engagementSum += engagementValue;
-          acc.engagementCount += 1;
-        }
-
-        return acc;
-      },
-      { interactions: 0, engagementSum: 0, engagementCount: 0, postCount: 0 },
-    );
-
-    const averageEngagement =
-      totals.engagementCount > 0 ? totals.engagementSum / totals.engagementCount : 0;
+  const clients = Array.from(clientsMap.values()).map((client) => {
+    const complianceRate =
+      client.totalPersonnel > 0
+        ? (client.activePersonnel / client.totalPersonnel) * 100
+        : 0;
+    const averageLikesPerUser =
+      client.totalPersonnel > 0 ? client.totalLikes / client.totalPersonnel : 0;
+    const averageCommentsPerUser =
+      client.totalPersonnel > 0 ? client.totalComments / client.totalPersonnel : 0;
 
     return {
-      key: group.key,
-      label: formatWeekRangeLabel(group.start, group.end),
-      start: group.start,
-      end: group.end,
-      posts: totals.postCount,
-      interactions: totals.interactions,
-      engagementRate: averageEngagement,
+      ...client,
+      complianceRate,
+      averageLikesPerUser,
+      averageCommentsPerUser,
     };
   });
 
-  const latest = series[series.length - 1] ?? null;
-  const previous = series.length > 1 ? series[series.length - 2] : null;
+  const totals = clients.reduce(
+    (accumulator, client) => {
+      accumulator.totalLikes += client.totalLikes;
+      accumulator.totalComments += client.totalComments;
+      accumulator.totalPersonnel += client.totalPersonnel;
+      accumulator.activePersonnel += client.activePersonnel;
+      return accumulator;
+    },
+    {
+      totalLikes: 0,
+      totalComments: 0,
+      totalPersonnel: 0,
+      activePersonnel: 0,
+    },
+  );
 
-  return { series, latest, previous };
+  const averageComplianceRate =
+    clients.length > 0
+      ?
+          clients.reduce(
+            (sum, client) => sum + (Number.isFinite(client.complianceRate) ? client.complianceRate : 0),
+            0,
+          ) / clients.length
+      : 0;
+
+  const topPersonnel = personnelList
+    .filter((person) => person.username || person.nama)
+    .sort((a, b) => {
+      if (b.likes !== a.likes) {
+        return b.likes - a.likes;
+      }
+      if (b.comments !== a.comments) {
+        return b.comments - a.comments;
+      }
+      return (b.active ? 1 : 0) - (a.active ? 1 : 0);
+    })
+    .slice(0, 10);
+
+  return {
+    totals: {
+      totalClients: clients.length,
+      totalLikes: totals.totalLikes,
+      totalComments: totals.totalComments,
+      totalPersonnel: totals.totalPersonnel,
+      activePersonnel: totals.activePersonnel,
+      complianceRate:
+        totals.totalPersonnel > 0
+          ? (totals.activePersonnel / totals.totalPersonnel) * 100
+          : 0,
+      averageComplianceRate,
+    },
+    clients: clients.sort((a, b) => {
+      if (b.totalLikes !== a.totalLikes) {
+        return b.totalLikes - a.totalLikes;
+      }
+      return b.activePersonnel - a.activePersonnel;
+    }),
+    topPersonnel,
+    lastUpdated: latestActivity,
+  };
 };
 
 const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
@@ -1412,320 +1490,6 @@ const buildAggregatorPlatform = ({
   };
 };
 
-const normalizePlatformMetrics = (rawData) => {
-  if (!rawData || typeof rawData !== "object") {
-    return { platforms: [], profiles: { byKey: {} } };
-  }
-
-  const usedKeys = new Set();
-  const entries = [];
-  const profileByKey = new Map();
-  const aggregatorProfiles = {};
-
-  const pushEntry = (entry) => {
-    if (!entry) {
-      return null;
-    }
-
-    const sanitizedKeyBase = normalizePlatformKey(entry.key, entry.label);
-    let candidateKey = sanitizedKeyBase || `platform-${entries.length + 1}`;
-    let suffix = 1;
-    while (usedKeys.has(candidateKey)) {
-      candidateKey = `${sanitizedKeyBase || "platform"}-${suffix++}`;
-    }
-    usedKeys.add(candidateKey);
-
-    const followers = Math.max(0, Math.round(normalizeNumericInput(entry.followers)));
-    const posts = Math.max(0, Math.round(normalizeNumericInput(entry.posts)));
-    const likes = Math.max(0, Math.round(normalizeNumericInput(entry.likes)));
-    const comments = Math.max(0, Math.round(normalizeNumericInput(entry.comments)));
-    const engagementRate = parsePercent(
-      Number.isFinite(entry.engagementRate)
-        ? entry.engagementRate
-        : normalizeNumericInput(entry.engagementRate),
-    );
-    const shares = {
-      followers: parsePercent(entry.shares?.followers ?? 0),
-      likes: parsePercent(entry.shares?.likes ?? 0),
-      comments: parsePercent(entry.shares?.comments ?? 0),
-    };
-    const postsList = Array.isArray(entry.postsData)
-      ? entry.postsData.filter(Boolean)
-      : Array.isArray(entry.posts)
-      ? entry.posts.filter(Boolean)
-      : [];
-    const rawPosts = Array.isArray(entry.rawPosts)
-      ? entry.rawPosts
-      : Array.isArray(entry.postsRaw)
-      ? entry.postsRaw
-      : [];
-    const derived = entry.derived
-      ? {
-          ...entry.derived,
-          totalInteractions: Math.max(0, entry.derived.totalInteractions ?? 0),
-        }
-      : computeDerivedPostStats({
-          posts: postsList,
-          fallbackLikes: likes,
-          fallbackComments: comments,
-          fallbackPostCount: posts,
-        });
-
-    let normalizedProfile = null;
-    if (entry.profile && typeof entry.profile === "object") {
-      if (
-        Object.prototype.hasOwnProperty.call(entry.profile, "username") ||
-        Object.prototype.hasOwnProperty.call(entry.profile, "label") ||
-        Object.prototype.hasOwnProperty.call(entry.profile, "raw")
-      ) {
-        normalizedProfile = {
-          ...entry.profile,
-          followers: entry.profile.followers ?? followers,
-          posts: entry.profile.posts ?? posts,
-        };
-        if (normalizedProfile.raw === undefined) {
-          normalizedProfile.raw = entry.profile;
-        }
-      } else {
-        normalizedProfile = normalizePlatformProfile(entry.profile, {
-          label: entry.label || entry.key || candidateKey,
-          followers,
-          posts,
-        });
-      }
-    }
-
-    const normalizedEntry = {
-      key: candidateKey,
-      sourceKey: entry.sourceKey || entry.key || candidateKey,
-      label: entry.label || "Platform",
-      followers,
-      postCount: posts,
-      likes,
-      comments,
-      engagementRate,
-      shares,
-      rawPosts,
-      posts: postsList,
-      derived,
-      profile: normalizedProfile,
-    };
-
-    entries.push(normalizedEntry);
-
-    if (normalizedProfile) {
-      profileByKey.set(normalizedEntry.key, normalizedProfile);
-      profileByKey.set(normalizedEntry.sourceKey, normalizedProfile);
-    }
-
-    return normalizedEntry;
-  };
-
-  const platformArrays = [
-    rawData.platforms,
-    rawData.data?.platforms,
-    rawData.metrics,
-    rawData.data?.metrics,
-  ];
-
-  for (const candidate of platformArrays) {
-    if (!candidate) {
-      continue;
-    }
-
-    const records = Array.isArray(candidate)
-      ? candidate
-      : Array.isArray(candidate?.platforms)
-      ? candidate.platforms
-      : [];
-
-    records.forEach((record) => {
-      const normalized = normalizePlatformRecord(record);
-      pushEntry(normalized);
-    });
-  }
-
-  const aggregatorConfigs = [
-    {
-      key: "instagram",
-      label: "Instagram",
-      profiles: [
-        rawData.igProfile,
-        rawData.instagramProfile,
-        rawData.instagram?.profile,
-        rawData.profiles?.instagram,
-        rawData.ig?.profile,
-      ],
-      stats: [
-        rawData.igStats,
-        rawData.instagramStats,
-        rawData.instagram?.stats,
-        rawData.stats?.instagram,
-        rawData.ig?.stats,
-      ],
-      posts: [
-        rawData.igPosts,
-        rawData.instagramPosts,
-        rawData.instagram?.posts,
-        rawData.posts?.instagram,
-        rawData.ig?.posts,
-      ],
-    },
-    {
-      key: "tiktok",
-      label: "TikTok",
-      profiles: [
-        rawData.tiktokProfile,
-        rawData.ttProfile,
-        rawData.tiktok?.profile,
-        rawData.profiles?.tiktok,
-        rawData.tt?.profile,
-      ],
-      stats: [
-        rawData.tiktokStats,
-        rawData.ttStats,
-        rawData.tiktok?.stats,
-        rawData.stats?.tiktok,
-        rawData.tt?.stats,
-      ],
-      posts: [
-        rawData.tiktokPosts,
-        rawData.ttPosts,
-        rawData.tiktok?.posts,
-        rawData.posts?.tiktok,
-        rawData.tt?.posts,
-      ],
-    },
-  ];
-
-  aggregatorConfigs.forEach((config) => {
-    const normalizedKey = normalizePlatformKey(config.key, config.label);
-    const hasExistingLabel = entries.some((entry) => {
-      if (!entry?.label || !config.label) {
-        return false;
-      }
-      return entry.label.toLowerCase() === config.label.toLowerCase();
-    });
-
-    if ((normalizedKey && usedKeys.has(normalizedKey)) || hasExistingLabel) {
-      return;
-    }
-    const entry = buildAggregatorPlatform(config);
-    const normalizedEntry = pushEntry(entry);
-    if (normalizedEntry?.profile) {
-      aggregatorProfiles[config.key] = normalizedEntry.profile;
-    }
-  });
-
-  if (entries.length === 0) {
-    return { platforms: [], profiles: { byKey: {} } };
-  }
-
-  const totals = entries.reduce(
-    (acc, entry) => {
-      acc.followers += entry.followers;
-      acc.likes += entry.likes;
-      acc.comments += entry.comments;
-      return acc;
-    },
-    { followers: 0, likes: 0, comments: 0 },
-  );
-
-  const result = entries.map((entry) => {
-    const followerShare =
-      totals.followers > 0
-        ? (entry.followers / totals.followers) * 100
-        : entry.shares.followers;
-    const likeShare =
-      totals.likes > 0 ? (entry.likes / totals.likes) * 100 : entry.shares.likes;
-    const commentShare =
-      totals.comments > 0
-        ? (entry.comments / totals.comments) * 100
-        : entry.shares.comments;
-
-    return {
-      ...entry,
-      shares: {
-        followers: parsePercent(followerShare),
-        likes: parsePercent(likeShare),
-        comments: parsePercent(commentShare),
-      },
-    };
-  });
-
-  const sorted = result.sort((a, b) => b.followers - a.followers);
-  const profilesByKey = Object.fromEntries(profileByKey.entries());
-
-  const profiles = {
-    byKey: profilesByKey,
-    instagram:
-      aggregatorProfiles.instagram ??
-      profilesByKey.instagram ??
-      profilesByKey[normalizePlatformKey("instagram", "instagram")] ??
-      null,
-    tiktok:
-      aggregatorProfiles.tiktok ??
-      profilesByKey.tiktok ??
-      profilesByKey[normalizePlatformKey("tiktok", "tiktok")] ??
-      null,
-  };
-
-  return { platforms: sorted, profiles };
-};
-
-const buildPlatformInsight = (platform) => {
-  if (!platform) {
-    return "Belum ada informasi platform yang dapat diringkas.";
-  }
-
-  const label = platform.label || "Platform";
-  const derived = platform.derived || {};
-  const totalInteractions = Math.max(0, derived.totalInteractions ?? 0);
-  const averageInteractions = Math.max(0, derived.averageInteractions ?? 0);
-  const contentDistribution = Array.isArray(derived.contentTypeDistribution)
-    ? derived.contentTypeDistribution
-    : [];
-  const topContentType = contentDistribution.length > 0 ? contentDistribution[0] : null;
-  const engagementRate = parsePercent(platform.engagementRate ?? derived.averageEngagementRate ?? 0);
-
-  const postsWithDate = Array.isArray(platform.posts)
-    ? platform.posts.filter((post) => post?.publishedAt instanceof Date)
-    : [];
-  let spanDays = 0;
-  if (postsWithDate.length >= 2) {
-    const timestamps = postsWithDate.map((post) => post.publishedAt.getTime());
-    const min = Math.min(...timestamps);
-    const max = Math.max(...timestamps);
-    spanDays = Math.max(1, Math.round((max - min) / (24 * 60 * 60 * 1000)) + 1);
-  } else if (postsWithDate.length === 1) {
-    spanDays = 1;
-  }
-
-  const postingRate = spanDays > 0 ? calculateRatePerDay(platform.posts.length || postsWithDate.length, spanDays, { precision: 2 }) : 0;
-
-  const sentences = [];
-
-  if (totalInteractions > 0) {
-    sentences.push(
-      `${label} menghasilkan ${formatNumber(totalInteractions, { maximumFractionDigits: 0 })} interaksi dengan rata-rata ${formatNumber(averageInteractions, { maximumFractionDigits: 0 })} per konten (${engagementRate} engagement).`,
-    );
-  } else {
-    sentences.push(`${label} belum mencatat interaksi berarti pada periode ini.`);
-  }
-
-  if (topContentType) {
-    sentences.push(
-      `Konten ${topContentType.label} menyumbang ${formatPercent(topContentType.share)} dari total unggahan yang terekam.`,
-    );
-  }
-
-  if (postingRate > 0) {
-    sentences.push(`Rata-rata frekuensi unggah tercatat ${postingRate} konten per hari.`);
-  }
-
-  return sentences.join(" ");
-};
-
 const normalizeLookupKey = (value) => {
   if (value === undefined || value === null) {
     return "";
@@ -2192,45 +1956,6 @@ const TIKTOK_BIO_PATHS = [
   "tiktok.bio",
 ];
 
-const INSTAGRAM_ENGAGEMENT_PATHS = [
-  "instagramEngagementRate",
-  "instagram_engagement_rate",
-  "engagementInstagram",
-  "engagement_instagram",
-  "instagram.engagementRate",
-  "instagram.engagement_rate",
-  "profiles.instagram.engagementRate",
-  "profiles.instagram.engagement_rate",
-  "instagramProfile.engagementRate",
-  "igProfile.engagementRate",
-];
-
-const TIKTOK_ENGAGEMENT_PATHS = [
-  "tiktokEngagementRate",
-  "tiktok_engagement_rate",
-  "engagementTiktok",
-  "engagement_tiktok",
-  "tiktok.engagementRate",
-  "tiktok.engagement_rate",
-  "profiles.tiktok.engagementRate",
-  "profiles.tiktok.engagement_rate",
-  "tiktokProfile.engagementRate",
-  "ttProfile.engagementRate",
-];
-
-const sanitizeHandle = (value) => {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-  const withoutAt = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
-  const normalized = withoutAt.replace(/\s+/g, "_");
-  return normalized ? normalized : undefined;
-};
-
 const sumActivityRecords = (records, fields) => {
   if (!Array.isArray(records) || records.length === 0) {
     return 0;
@@ -2257,448 +1982,6 @@ const sumActivityRecords = (records, fields) => {
     return total + Math.max(0, Number(value) || 0);
   }, 0);
 };
-
-const getNumericFromPaths = (source, paths) => {
-  if (!source || typeof source !== "object" || !Array.isArray(paths)) {
-    return 0;
-  }
-
-  const candidates = paths
-    .map((path) => pickNestedValue(source, [path]))
-    .filter((value) => value !== undefined && value !== null);
-
-  if (candidates.length === 0) {
-    return 0;
-  }
-
-  const value = extractNumericValue(...candidates);
-  return Number.isFinite(value) ? Math.max(0, Number(value) || 0) : 0;
-};
-
-const getStringFromPaths = (source, paths) => {
-  if (!source || typeof source !== "object" || !Array.isArray(paths)) {
-    return undefined;
-  }
-  const value = pickNestedString(source, paths);
-  if (typeof value !== "string") {
-    return undefined;
-  }
-  const trimmed = value.trim();
-  return trimmed ? trimmed : undefined;
-};
-
-
-const buildPlatformMetricsFromActivity = ({
-  stats = {},
-  likes = [],
-  comments = [],
-  totalIGPosts = 0,
-  totalTikTokPosts = 0,
-  totalUsers = 0,
-  clientId,
-  instagramPostsRaw = [],
-  instagramPostsDatabaseRaw = [],
-  tiktokPostsRaw = [],
-  tiktokPostsDatabaseRaw = [],
-}) => {
-  const safeStats = stats && typeof stats === "object" ? stats : {};
-  const safeTotalUsers = Math.max(
-    0,
-    Number(
-      totalUsers ||
-        getNumericFromPaths(safeStats, [
-          "totalUsers",
-          "total_user",
-          "userCount",
-          "total_personil",
-          "summary.totalUsers",
-          "summary.total_user",
-        ]),
-    ) || 0,
-  );
-
-  const instagramPostCountStat = Math.max(
-    0,
-    Math.round(Number(totalIGPosts) || 0),
-  );
-  const tiktokPostCountStat = Math.max(
-    0,
-    Math.round(Number(totalTikTokPosts) || 0),
-  );
-
-  const instagramLikes = sumActivityRecords(likes, INSTAGRAM_LIKE_FIELD_PATHS);
-  const instagramComments = sumActivityRecords(
-    likes,
-    INSTAGRAM_COMMENT_FIELD_PATHS,
-  );
-  const instagramLikesFallback = getNumericFromPaths(safeStats, [
-    "instagramLikes",
-    "instagram_likes",
-    "likesInstagram",
-    "likes_instagram",
-    "total_like_instagram",
-    "igLikes",
-    "ig_likes",
-    "instagram.metrics.likes",
-    "instagram.stats.likes",
-  ]);
-  const instagramCommentsFallback = getNumericFromPaths(safeStats, [
-    "instagramComments",
-    "instagram_comments",
-    "commentsInstagram",
-    "comments_instagram",
-    "total_comment_instagram",
-    "igComments",
-    "ig_comments",
-    "instagram.metrics.comments",
-    "instagram.stats.comments",
-  ]);
-
-  const combinedInstagramLikes =
-    instagramLikes > 0 ? instagramLikes : instagramLikesFallback;
-  const combinedInstagramComments =
-    instagramComments > 0 ? instagramComments : instagramCommentsFallback;
-
-  const tiktokComments = sumActivityRecords(
-    comments,
-    TIKTOK_COMMENT_FIELD_PATHS,
-  );
-  const tiktokLikes = sumActivityRecords(comments, TIKTOK_LIKE_FIELD_PATHS);
-  const tiktokCommentsFallback = getNumericFromPaths(safeStats, [
-    "tiktokComments",
-    "tiktok_comments",
-    "commentsTiktok",
-    "comments_tiktok",
-    "total_comment_tiktok",
-    "ttComments",
-    "tt_comments",
-    "tiktok.metrics.comments",
-    "tiktok.stats.comments",
-  ]);
-  const tiktokLikesFallback = getNumericFromPaths(safeStats, [
-    "tiktokLikes",
-    "tiktok_likes",
-    "likesTiktok",
-    "likes_tiktok",
-    "total_like_tiktok",
-    "ttLikes",
-    "tt_likes",
-    "tiktok.metrics.likes",
-    "tiktok.stats.likes",
-  ]);
-
-  const combinedTiktokComments =
-    tiktokComments > 0 ? tiktokComments : tiktokCommentsFallback;
-  const combinedTiktokLikes =
-    tiktokLikes > 0 ? tiktokLikes : tiktokLikesFallback;
-
-  const instagramFollowers = getNumericFromPaths(
-    safeStats,
-    INSTAGRAM_FOLLOWER_PATHS,
-  );
-  const tiktokFollowers = getNumericFromPaths(safeStats, TIKTOK_FOLLOWER_PATHS);
-
-  const instagramPostsArray = ensureArray(instagramPostsRaw);
-  const instagramDatabasePostsArray = ensureArray(instagramPostsDatabaseRaw);
-  const tiktokPostsArray = ensureArray(tiktokPostsRaw);
-  const tiktokDatabasePostsArray = ensureArray(tiktokPostsDatabaseRaw);
-
-  const normalizedInstagramPosts = instagramPostsArray
-    .map((post, index) =>
-      normalizePlatformPost(post, {
-        platformKey: "instagram",
-        fallbackIndex: index,
-        platformLabel: "Instagram",
-      }),
-    )
-    .filter(Boolean);
-  const normalizedInstagramDatabasePosts = instagramDatabasePostsArray
-    .map((post, index) =>
-      normalizePlatformPost(post, {
-        platformKey: "instagram",
-        fallbackIndex: index,
-        platformLabel: "Instagram",
-      }),
-    )
-    .filter(Boolean);
-  const normalizedTiktokPosts = tiktokPostsArray
-    .map((post, index) =>
-      normalizePlatformPost(post, {
-        platformKey: "tiktok",
-        fallbackIndex: index,
-        platformLabel: "TikTok",
-      }),
-    )
-    .filter(Boolean);
-  const normalizedTiktokDatabasePosts = tiktokDatabasePostsArray
-    .map((post, index) =>
-      normalizePlatformPost(post, {
-        platformKey: "tiktok",
-        fallbackIndex: index,
-        platformLabel: "TikTok",
-      }),
-    )
-    .filter(Boolean);
-
-  const aggregateInstagramPosts =
-    normalizedInstagramDatabasePosts.length > 0
-      ? normalizedInstagramDatabasePosts
-      : normalizedInstagramPosts;
-  const aggregateTiktokPosts =
-    normalizedTiktokDatabasePosts.length > 0
-      ? normalizedTiktokDatabasePosts
-      : normalizedTiktokPosts;
-
-  const instagramDerivedFromPosts = computeDerivedPostStats({
-    posts: normalizedInstagramPosts,
-    aggregatePosts: aggregateInstagramPosts,
-    fallbackLikes: combinedInstagramLikes,
-    fallbackComments: combinedInstagramComments,
-    fallbackPostCount: instagramPostCountStat,
-  });
-  const tiktokDerivedFromPosts = computeDerivedPostStats({
-    posts: normalizedTiktokPosts,
-    aggregatePosts: aggregateTiktokPosts,
-    fallbackLikes: combinedTiktokLikes,
-    fallbackComments: combinedTiktokComments,
-    fallbackPostCount: tiktokPostCountStat,
-  });
-
-  const instagramLikesEffective =
-    instagramDerivedFromPosts.totalLikes > 0
-      ? instagramDerivedFromPosts.totalLikes
-      : combinedInstagramLikes;
-  const instagramCommentsEffective =
-    instagramDerivedFromPosts.totalComments > 0
-      ? instagramDerivedFromPosts.totalComments
-      : combinedInstagramComments;
-  const tiktokLikesEffective =
-    tiktokDerivedFromPosts.totalLikes > 0
-      ? tiktokDerivedFromPosts.totalLikes
-      : combinedTiktokLikes;
-  const tiktokCommentsEffective =
-    tiktokDerivedFromPosts.totalComments > 0
-      ? tiktokDerivedFromPosts.totalComments
-      : combinedTiktokComments;
-
-  const instagramTotalInteractions =
-    instagramDerivedFromPosts.totalInteractions > 0
-      ? instagramDerivedFromPosts.totalInteractions
-      : instagramLikesEffective + instagramCommentsEffective;
-  const tiktokTotalInteractions =
-    tiktokDerivedFromPosts.totalInteractions > 0
-      ? tiktokDerivedFromPosts.totalInteractions
-      : tiktokLikesEffective + tiktokCommentsEffective;
-
-  const instagramPostCountEffective =
-    instagramDerivedFromPosts.postCount > 0
-      ? instagramDerivedFromPosts.postCount
-      : instagramPostCountStat;
-  const tiktokPostCountEffective =
-    tiktokDerivedFromPosts.postCount > 0
-      ? tiktokDerivedFromPosts.postCount
-      : tiktokPostCountStat;
-
-  const expectedIGInteractions =
-    safeTotalUsers > 0 && instagramPostCountEffective > 0
-      ? safeTotalUsers * instagramPostCountEffective
-      : 0;
-  const expectedTikTokInteractions =
-    safeTotalUsers > 0 && tiktokPostCountEffective > 0
-      ? safeTotalUsers * tiktokPostCountEffective
-      : 0;
-
-  const instagramEngagementCandidate =
-    expectedIGInteractions > 0
-      ? (instagramTotalInteractions / expectedIGInteractions) * 100
-      : 0;
-  const tiktokEngagementCandidate =
-    expectedTikTokInteractions > 0
-      ? (tiktokTotalInteractions / expectedTikTokInteractions) * 100
-      : 0;
-
-  const instagramEngagementFallback = getNumericFromPaths(
-    safeStats,
-    INSTAGRAM_ENGAGEMENT_PATHS,
-  );
-  const tiktokEngagementFallback = getNumericFromPaths(
-    safeStats,
-    TIKTOK_ENGAGEMENT_PATHS,
-  );
-
-  const instagramAverageEngagementRate =
-    instagramDerivedFromPosts.averageEngagementRate > 0
-      ? instagramDerivedFromPosts.averageEngagementRate
-      : instagramEngagementCandidate > 0
-      ? instagramEngagementCandidate
-      : instagramEngagementFallback;
-  const tiktokAverageEngagementRate =
-    tiktokDerivedFromPosts.averageEngagementRate > 0
-      ? tiktokDerivedFromPosts.averageEngagementRate
-      : tiktokEngagementCandidate > 0
-      ? tiktokEngagementCandidate
-      : tiktokEngagementFallback;
-
-  const instagramAverageInteractions =
-    instagramDerivedFromPosts.averageInteractions > 0
-      ? instagramDerivedFromPosts.averageInteractions
-      : instagramPostCountEffective > 0
-      ? instagramTotalInteractions / instagramPostCountEffective
-      : 0;
-  const tiktokAverageInteractions =
-    tiktokDerivedFromPosts.averageInteractions > 0
-      ? tiktokDerivedFromPosts.averageInteractions
-      : tiktokPostCountEffective > 0
-      ? tiktokTotalInteractions / tiktokPostCountEffective
-      : 0;
-
-  const clientNameFallback =
-    getStringFromPaths(safeStats, [
-      "client_name",
-      "clientName",
-      "nama_client",
-      "client",
-      "client_label",
-      "clientLabel",
-    ]) || undefined;
-
-  const instagramHandle =
-    sanitizeHandle(getStringFromPaths(safeStats, INSTAGRAM_USERNAME_PATHS)) ||
-    sanitizeHandle(
-      getStringFromPaths(safeStats, [
-        "instagramProfile.username",
-        "igProfile.username",
-      ]),
-    ) ||
-    sanitizeHandle(clientNameFallback) ||
-    sanitizeHandle(clientId ? String(clientId) : "");
-
-  const tiktokHandle =
-    sanitizeHandle(getStringFromPaths(safeStats, TIKTOK_USERNAME_PATHS)) ||
-    sanitizeHandle(
-      getStringFromPaths(safeStats, [
-        "tiktokProfile.username",
-        "ttProfile.username",
-      ]),
-    ) ||
-    sanitizeHandle(clientNameFallback) ||
-    sanitizeHandle(clientId ? String(clientId) : "");
-
-  const instagramBio =
-    getStringFromPaths(safeStats, INSTAGRAM_BIO_PATHS) || undefined;
-  const tiktokBio = getStringFromPaths(safeStats, TIKTOK_BIO_PATHS) || undefined;
-
-  const instagramProfileUrl =
-    getStringFromPaths(safeStats, INSTAGRAM_URL_PATHS) || undefined;
-  const tiktokProfileUrl =
-    getStringFromPaths(safeStats, TIKTOK_URL_PATHS) || undefined;
-
-  const instagramProfile = instagramHandle
-    ? {
-        username: instagramHandle,
-        label: clientNameFallback || "Instagram",
-        followers: instagramFollowers,
-        posts: instagramPostCountEffective,
-        bio: instagramBio,
-        externalUrl: instagramProfileUrl,
-      }
-    : clientNameFallback
-    ? {
-        label: clientNameFallback,
-        username: sanitizeHandle(clientNameFallback) || null,
-        followers: instagramFollowers,
-        posts: instagramPostCountEffective,
-        bio: instagramBio,
-        externalUrl: instagramProfileUrl,
-      }
-    : null;
-
-  const tiktokProfile = tiktokHandle
-    ? {
-        username: tiktokHandle,
-        label: clientNameFallback || "TikTok",
-        followers: tiktokFollowers,
-        posts: tiktokPostCountEffective,
-        bio: tiktokBio,
-        externalUrl: tiktokProfileUrl,
-      }
-    : clientNameFallback
-    ? {
-        label: clientNameFallback,
-        username: sanitizeHandle(clientNameFallback) || null,
-        followers: tiktokFollowers,
-        posts: tiktokPostCountEffective,
-        bio: tiktokBio,
-        externalUrl: tiktokProfileUrl,
-      }
-    : null;
-
-  const instagramDerived = {
-    ...instagramDerivedFromPosts,
-    postCount: instagramPostCountEffective,
-    totalInteractions: instagramTotalInteractions,
-    averageInteractions: instagramAverageInteractions,
-    averageEngagementRate: instagramAverageEngagementRate,
-  };
-  const tiktokDerived = {
-    ...tiktokDerivedFromPosts,
-    postCount: tiktokPostCountEffective,
-    totalInteractions: tiktokTotalInteractions,
-    averageInteractions: tiktokAverageInteractions,
-    averageEngagementRate: tiktokAverageEngagementRate,
-  };
-
-  const platforms = [];
-
-  if (
-    instagramFollowers > 0 ||
-    instagramLikesEffective > 0 ||
-    instagramCommentsEffective > 0 ||
-    instagramProfile ||
-    aggregateInstagramPosts.length > 0
-  ) {
-    platforms.push({
-      key: "instagram",
-      label: "Instagram",
-      followers: instagramFollowers,
-      posts: instagramPostCountEffective,
-      likes: instagramLikesEffective,
-      comments: instagramCommentsEffective,
-      engagementRate: instagramAverageEngagementRate,
-      shares: { followers: 0, likes: 0, comments: 0 },
-      rawPosts: instagramPostsArray,
-      postsData: normalizedInstagramPosts,
-      derived: instagramDerived,
-      profile: instagramProfile,
-    });
-  }
-
-  if (
-    tiktokFollowers > 0 ||
-    tiktokLikesEffective > 0 ||
-    tiktokCommentsEffective > 0 ||
-    tiktokProfile ||
-    aggregateTiktokPosts.length > 0
-  ) {
-    platforms.push({
-      key: "tiktok",
-      label: "TikTok",
-      followers: tiktokFollowers,
-      posts: tiktokPostCountEffective,
-      likes: tiktokLikesEffective,
-      comments: tiktokCommentsEffective,
-      engagementRate: tiktokAverageEngagementRate,
-      shares: { followers: 0, likes: 0, comments: 0 },
-      rawPosts: tiktokPostsArray,
-      postsData: normalizedTiktokPosts,
-      derived: tiktokDerived,
-      profile: tiktokProfile,
-    });
-  }
-
-  return { platforms };
-};
-
 
 const monthlyData = {
   "2024-11": {
@@ -3518,9 +2801,9 @@ export default function ExecutiveSummaryPage() {
   const [platformState, setPlatformState] = useState({
     loading: true,
     error: "",
-    platforms: [],
-    profiles: { byKey: {} },
+    likesSummary: createEmptyLikesSummary(),
     activity: { likes: [], comments: [] },
+    posts: { instagram: [], tiktok: [] },
   });
 
   useEffect(() => {
@@ -3802,21 +3085,34 @@ export default function ExecutiveSummaryPage() {
           totalTikTokPosts,
         });
 
-        const platformMetrics = buildPlatformMetricsFromActivity({
-          stats,
-          likes: likesRecords,
-          comments: commentsRecords,
-          totalIGPosts,
-          totalTikTokPosts,
-          totalUsers: insight?.summary?.totalUsers ?? users.length ?? 0,
-          clientId,
+        const likesSummary = aggregateLikesRecords(likesRecords);
+        const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
-          instagramDatabasePostsRaw,
+          {
+            extraPaths: [
+              "publishedAt",
+              "published_at",
+              "timestamp",
+              "createdAt",
+              "created_at",
+              "date",
+              "tanggal",
+            ],
+          },
+        );
+        const tiktokPostsSanitized = ensureRecordsHaveActivityDate(
           tiktokPostsRaw,
-          tiktokDatabasePostsRaw,
-        });
-        const normalizedPlatformMetrics = normalizePlatformMetrics(
-          platformMetrics,
+          {
+            extraPaths: [
+              "publishedAt",
+              "published_at",
+              "timestamp",
+              "createdAt",
+              "created_at",
+              "date",
+              "tanggal",
+            ],
+          },
         );
 
         if (cancelled) {
@@ -3826,11 +3122,14 @@ export default function ExecutiveSummaryPage() {
         setPlatformState({
           loading: false,
           error: platformErrorMessage,
-          platforms: normalizedPlatformMetrics.platforms,
-          profiles: normalizedPlatformMetrics.profiles,
           activity: {
             likes: likesRecords,
             comments: commentsRecords,
+          },
+          likesSummary,
+          posts: {
+            instagram: instagramPostsSanitized,
+            tiktok: tiktokPostsSanitized,
           },
         });
 
@@ -4015,55 +3314,24 @@ export default function ExecutiveSummaryPage() {
   const totalEvaluated = Number(activityBuckets?.evaluatedUsers) || 0;
   const totalContentEvaluated = Number(activityBuckets?.totalContent) || 0;
   const {
-    platforms: platformMetrics,
     loading: platformsLoading,
     error: platformError,
-    profiles: platformProfiles,
+    likesSummary,
     activity: platformActivityState,
+    posts: platformPostsState,
   } = platformState;
   const platformActivity =
     platformActivityState && typeof platformActivityState === "object"
       ? platformActivityState
       : EMPTY_ACTIVITY;
-
-  const monthlyPlatformAnalytics = useMemo(() => {
-    const monthlyPlatforms = data?.platformAnalytics?.platforms;
-    if (Array.isArray(monthlyPlatforms) && monthlyPlatforms.length > 0) {
-      return normalizePlatformMetrics({ platforms: monthlyPlatforms });
-    }
-    return null;
-  }, [data?.platformAnalytics]);
-
-  const hasMonthlyPlatforms = Boolean(
-    monthlyPlatformAnalytics?.platforms?.length,
-  );
-
-  const effectivePlatformMetrics = hasMonthlyPlatforms
-    ? monthlyPlatformAnalytics?.platforms ?? []
-    : platformMetrics;
+  const platformPosts =
+    platformPostsState && typeof platformPostsState === "object"
+      ? platformPostsState
+      : { instagram: [], tiktok: [] };
 
   const instagramWeeklyTrend = useMemo(() => {
-    const instagramPlatforms = Array.isArray(effectivePlatformMetrics)
-      ? effectivePlatformMetrics.filter((platform) => {
-          const key = (platform?.key || platform?.sourceKey || "").toLowerCase();
-          const label = (platform?.label || "").toLowerCase();
-          return key.includes("instagram") || label.includes("instagram");
-        })
-      : [];
-
     const instagramPosts = filterRecordsWithResolvableDate(
-      instagramPlatforms.flatMap((platform) => {
-        if (Array.isArray(platform?.posts)) {
-          return platform.posts;
-        }
-        if (Array.isArray(platform?.postsData)) {
-          return platform.postsData;
-        }
-        if (Array.isArray(platform?.rawPosts)) {
-          return platform.rawPosts;
-        }
-        return [];
-      }),
+      Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
       {
         extraPaths: [
           "publishedAt",
@@ -4192,30 +3460,11 @@ export default function ExecutiveSummaryPage() {
       delta,
       hasRecords,
     };
-  }, [effectivePlatformMetrics, platformActivity]);
+  }, [platformPosts?.instagram, platformActivity]);
 
   const tiktokWeeklyTrend = useMemo(() => {
-    const tiktokPlatforms = Array.isArray(effectivePlatformMetrics)
-      ? effectivePlatformMetrics.filter((platform) => {
-          const key = (platform?.key || platform?.sourceKey || "").toLowerCase();
-          const label = (platform?.label || "").toLowerCase();
-          return key.includes("tiktok") || label.includes("tiktok");
-        })
-      : [];
-
     const tiktokPosts = filterRecordsWithResolvableDate(
-      tiktokPlatforms.flatMap((platform) => {
-        if (Array.isArray(platform?.posts)) {
-          return platform.posts;
-        }
-        if (Array.isArray(platform?.postsData)) {
-          return platform.postsData;
-        }
-        if (Array.isArray(platform?.rawPosts)) {
-          return platform.rawPosts;
-        }
-        return [];
-      }),
+      Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
       {
         extraPaths: [
           "publishedAt",
@@ -4344,7 +3593,7 @@ export default function ExecutiveSummaryPage() {
       delta,
       hasRecords,
     };
-  }, [effectivePlatformMetrics, platformActivity]);
+  }, [platformPosts?.tiktok, platformActivity]);
 
   const instagramWeeklyCardData = useMemo(() => {
     const { latestWeek, previousWeek, delta, weeks, hasRecords } =
@@ -4511,13 +3760,13 @@ export default function ExecutiveSummaryPage() {
     };
   }, [tiktokWeeklyTrend]);
 
-  const showPlatformLoading = platformsLoading && !hasMonthlyPlatforms;
+  const showPlatformLoading = platformsLoading;
   const instagramWeeklyTrendDescription =
     instagramWeeklyCardData.weeksCount < 2
       ? "Post Instagram & likes personil per minggu. Data perbandingan belum lengkap."
       : "Post Instagram & likes personil per minggu.";
   const instagramWeeklyCardError = !showPlatformLoading
-    ? platformError && !hasMonthlyPlatforms
+    ? platformError
       ? platformError
       : instagramWeeklyCardData.weeksCount === 0 &&
         instagramWeeklyCardData.hasRecords
@@ -4532,7 +3781,7 @@ export default function ExecutiveSummaryPage() {
       ? "Post TikTok & komentar personel per minggu. Data perbandingan belum lengkap."
       : "Post TikTok & komentar personel per minggu.";
   const tiktokWeeklyCardError = !showPlatformLoading
-    ? platformError && !hasMonthlyPlatforms
+    ? platformError
       ? platformError
       : tiktokWeeklyCardData.weeksCount === 0 &&
         tiktokWeeklyCardData.hasRecords
@@ -4545,54 +3794,15 @@ export default function ExecutiveSummaryPage() {
   const shouldShowInstagramTrendCard = shouldShowWeeklyTrendCard({
     showPlatformLoading,
     platformError,
-    hasMonthlyPlatforms,
+    hasMonthlyPlatforms: false,
     cardHasRecords: instagramWeeklyCardData.hasRecords,
   });
   const shouldShowTiktokTrendCard = shouldShowWeeklyTrendCard({
     showPlatformLoading,
     platformError,
-    hasMonthlyPlatforms,
+    hasMonthlyPlatforms: false,
     cardHasRecords: tiktokWeeklyCardData.hasRecords,
   });
-
-  const effectivePlatformProfiles = useMemo(() => {
-    if (hasMonthlyPlatforms) {
-      const baseProfiles = platformProfiles ?? { byKey: {} };
-      const monthlyProfiles = monthlyPlatformAnalytics?.profiles ?? { byKey: {} };
-      return {
-        byKey: {
-          ...(baseProfiles.byKey ?? {}),
-          ...(monthlyProfiles.byKey ?? {}),
-        },
-        instagram:
-          monthlyProfiles.instagram ?? baseProfiles.instagram ?? null,
-        tiktok: monthlyProfiles.tiktok ?? baseProfiles.tiktok ?? null,
-      };
-    }
-
-    return platformProfiles ?? { byKey: {} };
-  }, [hasMonthlyPlatforms, monthlyPlatformAnalytics, platformProfiles]);
-
-  const platformViewModels = useMemo(() => {
-    if (!Array.isArray(effectivePlatformMetrics)) {
-      return [];
-    }
-
-    return effectivePlatformMetrics.map((platform) => ({
-      ...platform,
-      insight: buildPlatformInsight(platform),
-      weeklyEngagement: buildPlatformWeeklyEngagement(platform),
-    }));
-  }, [effectivePlatformMetrics]);
-
-  const profileByKey = useMemo(() => {
-    return effectivePlatformProfiles?.byKey ?? {};
-  }, [effectivePlatformProfiles]);
-
-  const instagramProfile =
-    effectivePlatformProfiles?.instagram ?? profileByKey.instagram ?? null;
-  const tiktokProfile =
-    effectivePlatformProfiles?.tiktok ?? profileByKey.tiktok ?? null;
 
   return (
     <div className="space-y-8">
@@ -4989,77 +4199,23 @@ export default function ExecutiveSummaryPage() {
           </p>
         </div>
         <div className="space-y-6">
-
           {showPlatformLoading ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-              Memuat data performa kanal…
+              Memuat data rekap likes…
             </div>
-          ) : platformError && !hasMonthlyPlatforms ? (
+          ) : platformError ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
               {platformError}
             </div>
-          ) : platformViewModels.length > 0 ? (
-            platformViewModels.map((platform) => {
-              const normalizedEngagement = normalizeNumericInput(platform.engagementRate);
-              const inferredProfile =
-                platform.profile ??
-                profileByKey[platform.sourceKey ?? platform.key] ??
-                profileByKey[platform.key] ??
-                (platform.label?.toLowerCase().includes("instagram")
-                  ? instagramProfile
-                  : platform.label?.toLowerCase().includes("tiktok")
-                  ? tiktokProfile
-                  : null);
-
-              const platformPayload = {
-                ...platform,
-                engagementRate: normalizedEngagement,
-                weeklyEngagement:
-                  platform.weeklyEngagement ?? buildPlatformWeeklyEngagement(platform),
-              };
-
-              return (
-                <div
-                  key={platform.key}
-                  className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)] lg:items-start"
-                >
-                  <div className="space-y-6">
-                    <PlatformOverviewCard
-                      platform={platformPayload}
-                      profile={inferredProfile}
-                      formatNumber={formatNumber}
-                      formatCompactNumber={formatCompactNumber}
-                      formatPercent={formatPercent}
-                    />
-                    <PlatformDetailTabs
-                      platform={platformPayload}
-                      profile={inferredProfile}
-                      formatNumber={formatNumber}
-                      formatPercent={formatPercent}
-                    />
-                  </div>
-                  <div className="space-y-6">
-                    <PlatformKPIChart
-                      platform={platformPayload}
-                      formatNumber={formatNumber}
-                    />
-                    <PlatformEngagementTrendChart
-                      platformLabel={platformPayload.label}
-                      series={platformPayload.weeklyEngagement?.series ?? []}
-                      latest={platformPayload.weeklyEngagement?.latest ?? null}
-                      previous={platformPayload.weeklyEngagement?.previous ?? null}
-                      loading={platformsLoading}
-                      error={!hasMonthlyPlatforms ? platformError : ""}
-                      formatNumber={formatNumber}
-                      formatPercent={formatPercent}
-                    />
-                  </div>
-                </div>
-              );
-            })
+          ) : likesSummary?.clients?.length ? (
+            <PlatformLikesSummary
+              data={likesSummary}
+              formatNumber={formatNumber}
+              formatPercent={formatPercent}
+            />
           ) : (
             <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-              Belum ada data performa platform untuk periode ini.
+              Belum ada data rekap likes untuk periode ini.
             </div>
           )}
         </div>

@@ -8,13 +8,12 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   Bar,
 } from "recharts";
 
 interface LikesSummaryClient {
-  clientKey: string;
-  clientId: string | null;
+  key: string;
+  clientId?: string | null;
   clientName: string;
   totalLikes: number;
   totalComments: number;
@@ -22,6 +21,18 @@ interface LikesSummaryClient {
   totalPersonnel: number;
   complianceRate: number;
   averageLikesPerUser: number;
+  averageCommentsPerUser?: number;
+}
+
+interface LikesSummaryPersonnel {
+  key: string;
+  clientId?: string | null;
+  clientName: string;
+  username: string;
+  nama: string;
+  likes: number;
+  comments: number;
+  active: boolean;
 }
 
 interface LikesSummaryData {
@@ -29,10 +40,13 @@ interface LikesSummaryData {
     totalClients: number;
     totalLikes: number;
     totalComments: number;
+    totalPersonnel: number;
     activePersonnel: number;
+    complianceRate: number;
     averageComplianceRate: number;
   };
   clients: LikesSummaryClient[];
+  topPersonnel: LikesSummaryPersonnel[];
   lastUpdated: Date | string | null;
 }
 
@@ -66,6 +80,7 @@ const PlatformLikesSummary = ({
   formatPercent,
 }: PlatformLikesSummaryProps) => {
   const clients = Array.isArray(data?.clients) ? data.clients : [];
+  const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
 
   const summaryCards = useMemo(() => {
     const totals = data?.totals;
@@ -75,38 +90,41 @@ const PlatformLikesSummary = ({
 
     return [
       {
+        key: "total-clients",
+        label: "Satker Terdata",
+        value: formatNumber(totals.totalClients ?? 0, { maximumFractionDigits: 0 }),
+        description: "Jumlah satker/polres yang tercakup dalam rekap.",
+      },
+      {
         key: "total-likes",
         label: "Total Likes",
         value: formatNumber(totals.totalLikes ?? 0, { maximumFractionDigits: 0 }),
-        description: "Akumulasi likes personil selama periode",
+        description: "Seluruh likes personil pada periode terpilih.",
       },
       {
         key: "total-comments",
         label: "Total Komentar",
         value: formatNumber(totals.totalComments ?? 0, { maximumFractionDigits: 0 }),
-        description: "Komentar yang terekam pada konten",
+        description: "Kumulatif komentar personil yang terekam.",
       },
       {
-        key: "active-personnel",
-        label: "Personil Aktif",
-        value: formatNumber(totals.activePersonnel ?? 0, { maximumFractionDigits: 0 }),
-        description: "Personil unik yang tercatat berinteraksi",
-      },
-      {
-        key: "avg-compliance",
-        label: "Rata-rata Kepatuhan",
-        value: formatPercent(totals.averageComplianceRate ?? 0),
-        description: "Rasio kepatuhan rata-rata lintas satker",
+        key: "overall-compliance",
+        label: "Kepatuhan Personil",
+        value: formatPercent(totals.complianceRate ?? 0),
+        description: `${formatNumber(totals.activePersonnel ?? 0, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(totals.totalPersonnel ?? 0, { maximumFractionDigits: 0 })} personil terdata.`,
       },
     ];
   }, [data?.totals, formatNumber, formatPercent]);
 
   const distributionData = useMemo(() => {
-    return clients.slice(0, 8).map((client) => ({
-      name: client.clientName,
-      likes: client.totalLikes,
-      compliance: client.complianceRate,
-    }));
+    return [...clients]
+      .sort((a, b) => b.totalLikes - a.totalLikes)
+      .slice(0, 8)
+      .map((client) => ({
+        name: client.clientName,
+        likes: client.totalLikes,
+        compliance: client.complianceRate,
+      }));
   }, [clients]);
 
   const topCompliance = useMemo(() => {
@@ -115,9 +133,13 @@ const PlatformLikesSummary = ({
       .slice(0, 3);
   }, [clients]);
 
+  const standoutPersonnel = useMemo(() => {
+    return topPersonnel.slice(0, 5);
+  }, [topPersonnel]);
+
   const lastUpdatedLabel = formatDateTime(data?.lastUpdated);
 
-  if (clients.length === 0) {
+  if (clients.length === 0 && standoutPersonnel.length === 0) {
     return (
       <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
         Belum ada data rekap likes yang dapat ditampilkan.
@@ -158,12 +180,12 @@ const PlatformLikesSummary = ({
               <thead>
                 <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
                   <th className="py-3 pr-4">Satker</th>
-                  <th className="px-4 py-3">Likes</th>
-                  <th className="px-4 py-3">Komentar</th>
-                  <th className="px-4 py-3">Personil Aktif</th>
-                  <th className="px-4 py-3">Personil Total</th>
-                  <th className="px-4 py-3">Kepatuhan</th>
-                  <th className="px-4 py-3">Likes/Personil</th>
+                  <th className="px-4 py-3 text-right">Likes</th>
+                  <th className="px-4 py-3 text-right">Komentar</th>
+                  <th className="px-4 py-3 text-right">Personil Aktif</th>
+                  <th className="px-4 py-3 text-right">Total Personil</th>
+                  <th className="px-4 py-3 text-right">Kepatuhan</th>
+                  <th className="px-4 py-3 text-right">Likes/Personil</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
@@ -174,7 +196,7 @@ const PlatformLikesSummary = ({
                   });
 
                   return (
-                    <tr key={client.clientKey} className="text-slate-200">
+                    <tr key={client.key} className="text-slate-200">
                       <td className="py-3 pr-4 font-semibold text-slate-100">
                         {client.clientName}
                       </td>
@@ -232,7 +254,6 @@ const PlatformLikesSummary = ({
                       return label as string;
                     }}
                   />
-                  <Legend wrapperStyle={{ color: "#e2e8f0" }} />
                   <Bar dataKey="likes" fill="#22d3ee" />
                 </BarChart>
               </ResponsiveContainer>
@@ -245,7 +266,7 @@ const PlatformLikesSummary = ({
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-slate-200">
               {topCompliance.map((client) => (
-                <li key={`compliance-${client.clientKey}`} className="flex items-start justify-between">
+                <li key={`compliance-${client.key}`} className="flex items-start justify-between">
                   <div>
                     <p className="font-semibold text-slate-100">{client.clientName}</p>
                     <p className="text-xs text-slate-400">
@@ -259,6 +280,42 @@ const PlatformLikesSummary = ({
               ))}
             </ul>
           </div>
+
+          {standoutPersonnel.length > 0 ? (
+            <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                Personil dengan Likes Tertinggi
+              </h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-200">
+                {standoutPersonnel.map((person) => {
+                  const identity = person.username || person.nama || "Tanpa Nama";
+                  const additional = [person.nama, person.clientName]
+                    .filter((value) => value && value !== identity)
+                    .join(" · ");
+                  return (
+                    <li key={`personnel-${person.key}`} className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-slate-100">{identity}</p>
+                        {additional ? (
+                          <p className="text-xs text-slate-400">{additional}</p>
+                        ) : null}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-cyan-200">
+                          {formatNumber(person.likes, { maximumFractionDigits: 0 })} like
+                        </p>
+                        {person.comments > 0 ? (
+                          <p className="text-xs text-slate-400">
+                            {formatNumber(person.comments, { maximumFractionDigits: 0 })} komentar
+                          </p>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
