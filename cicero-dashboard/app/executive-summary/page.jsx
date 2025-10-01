@@ -91,9 +91,7 @@ const formatPercent = (value) => {
   })}%`;
 };
 
-
-  }
-
+const computePlatformWeeklyTrend = (platform, posts = []) => {
   const followerCountRaw = Number(platform?.followers);
   const followerCount = Number.isFinite(followerCountRaw) ? followerCountRaw : 0;
 
@@ -1094,10 +1092,6 @@ const buildLikesSummaryFromRecords = (records = []) => {
   };
 };
 
-
-
-
-};
 
 
 const monthlyData = {
