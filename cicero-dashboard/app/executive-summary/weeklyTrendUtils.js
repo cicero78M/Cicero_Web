@@ -81,6 +81,7 @@ const parseDateValue = (value) => {
 
 const DEFAULT_ACTIVITY_DATE_PATHS = [
   "activityDate",
+  "activity_date",
   "tanggal",
   "date",
   "created_at",
@@ -92,10 +93,18 @@ const DEFAULT_ACTIVITY_DATE_PATHS = [
   "publishedAt",
   "published_at",
   "timestamp",
+  "rekap.activity_date",
+  "rekap.activityDate",
   "rekap.tanggal",
   "rekap.date",
   "rekap.created_at",
   "rekap.createdAt",
+  "tiktok.activity_date",
+  "tiktok.activityDate",
+  "tiktok_activity_date",
+  "tiktokActivityDate",
+  "rekap.tiktok_activity_date",
+  "rekap.tiktokActivityDate",
 ];
 
 const resolveRecordDate = (record, extraPaths = []) => {

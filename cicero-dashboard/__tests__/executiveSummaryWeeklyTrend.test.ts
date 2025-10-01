@@ -122,6 +122,35 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     expect(totalComments).toBe(7);
   });
 
+  it("aggregates totals from records that only expose snake_case activity dates", () => {
+    const instagramRecords = [
+      { activity_date: "2024-07-01T00:00:00Z", rekap: { total_like: "5" } },
+      { rekap: { activity_date: "2024-07-03T00:00:00Z", total_like: "7" } },
+    ];
+    const tiktokRecords = [
+      { activity_date: "2024-07-02T07:00:00Z", rekap: { total_komentar: "2" } },
+      { rekap: { activity_date: "2024-07-04T07:00:00Z", total_komentar: "5" } },
+    ];
+
+    const instagramBuckets = groupRecordsByWeek(instagramRecords);
+    const tiktokBuckets = groupRecordsByWeek(tiktokRecords);
+
+    expect(instagramBuckets).toHaveLength(1);
+    expect(tiktokBuckets).toHaveLength(1);
+
+    const instagramTotal = sumActivityRecords(
+      instagramBuckets[0].records,
+      INSTAGRAM_LIKE_FIELD_PATHS,
+    );
+    const tiktokTotal = sumActivityRecords(
+      tiktokBuckets[0].records,
+      TIKTOK_COMMENT_FIELD_PATHS,
+    );
+
+    expect(instagramTotal).toBe(12);
+    expect(tiktokTotal).toBe(7);
+  });
+
   it("groups posts with only date/tanggal fields and shows the trend card", () => {
     const posts = [
       { tanggal: "2024-07-01", likes: 2 },

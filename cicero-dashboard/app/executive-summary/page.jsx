@@ -782,13 +782,19 @@ const ensureRecordsHaveActivityDate = (records, options = {}) => {
 
       const isoString = resolved.parsed.toISOString();
       const dateOnly = isoString.slice(0, 10);
+      const parsedExistingActivityDate = parseDateValue(record?.activityDate);
+      const shouldOverwriteActivityDate =
+        !(record?.activityDate instanceof Date) &&
+        (!record?.activityDate || !parsedExistingActivityDate);
 
       return {
         ...record,
         activityDate:
           record?.activityDate instanceof Date
             ? record.activityDate
-            : record?.activityDate ?? isoString,
+            : shouldOverwriteActivityDate
+            ? isoString
+            : record.activityDate,
         tanggal: record?.tanggal ?? dateOnly,
       };
     })
