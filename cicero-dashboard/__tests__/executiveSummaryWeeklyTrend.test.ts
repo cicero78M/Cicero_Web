@@ -1,4 +1,7 @@
-import { groupRecordsByWeek, shouldShowWeeklyTrendCard } from "@/app/executive-summary/page";
+import {
+  groupRecordsByWeek,
+  shouldShowWeeklyTrendCard,
+} from "@/app/executive-summary/weeklyTrendUtils";
 
 describe("groupRecordsByWeek weekly trend integration", () => {
   it("groups instagram activity into weekly buckets and shows the trend card", () => {
