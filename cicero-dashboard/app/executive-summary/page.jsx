@@ -116,6 +116,9 @@ const buildPlatformWeeklyEngagement = (platform) => {
     return { series: [], latest: null, previous: null };
   }
 
+  const followerCountRaw = Number(platform?.followers);
+  const followerCount = Number.isFinite(followerCountRaw) ? followerCountRaw : 0;
+
   const weeklyGroups = groupRecordsByWeek(posts, {
     getDate: (post) => {
       if (post?.publishedAt instanceof Date) {
@@ -189,8 +192,19 @@ const buildPlatformWeeklyEngagement = (platform) => {
       { interactions: 0, engagementSum: 0, engagementCount: 0, postCount: 0 },
     );
 
-    const averageEngagement =
+    let averageEngagement =
       totals.engagementCount > 0 ? totals.engagementSum / totals.engagementCount : 0;
+
+    if (totals.engagementCount === 0) {
+      const fallbackEngagement =
+        followerCount > 0
+          ? (totals.interactions / followerCount) * 100
+          : totals.postCount > 0
+          ? totals.interactions / totals.postCount
+          : 0;
+
+      averageEngagement = Math.max(0, fallbackEngagement);
+    }
 
     return {
       key: group.key,
