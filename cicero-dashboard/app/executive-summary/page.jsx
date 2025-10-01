@@ -33,7 +33,7 @@ import {
   calculateRatePerDay,
 } from "@/lib/normalizeNumericInput";
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
-import WeeklyTrendCard from "@/components/executive-summary/WeeklyTrendCard";
+import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 import {
   buildMonthKey,
   extractYearFromMonthKey,
@@ -44,9 +44,9 @@ import {
   pickNestedString,
   parseDateValue,
   resolveRecordDate,
-  groupRecordsByWeek,
+  groupRecordsByMonth,
   shouldShowWeeklyTrendCard,
-  formatWeekRangeLabel,
+  formatMonthRangeLabel,
 } from "./weeklyTrendUtils";
 import {
   INSTAGRAM_LIKE_FIELD_PATHS,
@@ -3399,7 +3399,7 @@ export default function ExecutiveSummaryPage() {
       ? platformPostsState
       : { instagram: [], tiktok: [] };
 
-  const instagramWeeklyTrend = useMemo(() => {
+  const instagramMonthlyTrend = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
       {
@@ -3415,7 +3415,7 @@ export default function ExecutiveSummaryPage() {
       },
     );
 
-    const weeklyPosts = groupRecordsByWeek(instagramPosts, {
+    const monthlyPosts = groupRecordsByMonth(instagramPosts, {
       getDate: (post) => {
         if (post?.publishedAt instanceof Date) {
           return post.publishedAt;
@@ -3434,7 +3434,7 @@ export default function ExecutiveSummaryPage() {
       ? filterRecordsWithResolvableDate(platformActivity.likes)
       : [];
 
-    const weeklyLikes = groupRecordsByWeek(likesRecords, {
+    const monthlyLikes = groupRecordsByMonth(likesRecords, {
       datePaths: [
         "activityDate",
         "tanggal",
@@ -3452,10 +3452,10 @@ export default function ExecutiveSummaryPage() {
       ],
     });
 
-    const hasRecords = weeklyPosts.length > 0 || weeklyLikes.length > 0;
+    const hasRecords = monthlyPosts.length > 0 || monthlyLikes.length > 0;
     const buckets = new Map();
 
-    weeklyPosts.forEach((group) => {
+    monthlyPosts.forEach((group) => {
       const key = group.key;
       if (!buckets.has(key)) {
         buckets.set(key, {
@@ -3470,7 +3470,7 @@ export default function ExecutiveSummaryPage() {
       entry.posts += group.records.length;
     });
 
-    weeklyLikes.forEach((group) => {
+    monthlyLikes.forEach((group) => {
       const key = group.key;
       if (!buckets.has(key)) {
         buckets.set(key, {
@@ -3489,22 +3489,22 @@ export default function ExecutiveSummaryPage() {
       entry.likes += Math.max(0, Math.round(totalLikes) || 0);
     });
 
-    const weeks = Array.from(buckets.values()).sort(
+    const months = Array.from(buckets.values()).sort(
       (a, b) => a.start.getTime() - b.start.getTime(),
     );
 
-    if (weeks.length === 0) {
+    if (months.length === 0) {
       return {
-        weeks: [],
-        latestWeek: null,
-        previousWeek: null,
+        months: [],
+        latestMonth: null,
+        previousMonth: null,
         delta: null,
         hasRecords,
       };
     }
 
-    const latestWeek = weeks[weeks.length - 1];
-    const previousWeek = weeks.length > 1 ? weeks[weeks.length - 2] : null;
+    const latestMonth = months[months.length - 1];
+    const previousMonth = months.length > 1 ? months[months.length - 2] : null;
 
     const computeDelta = (latestValue, previousValue) => {
       const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
@@ -3516,23 +3516,23 @@ export default function ExecutiveSummaryPage() {
       return { absolute, percent };
     };
 
-    const delta = previousWeek
+    const delta = previousMonth
       ? {
-          posts: computeDelta(latestWeek.posts, previousWeek.posts),
-          likes: computeDelta(latestWeek.likes, previousWeek.likes),
+          posts: computeDelta(latestMonth.posts, previousMonth.posts),
+          likes: computeDelta(latestMonth.likes, previousMonth.likes),
         }
       : null;
 
     return {
-      weeks,
-      latestWeek,
-      previousWeek,
+      months,
+      latestMonth,
+      previousMonth,
       delta,
       hasRecords,
     };
   }, [platformPosts?.instagram, platformActivity]);
 
-  const tiktokWeeklyTrend = useMemo(() => {
+  const tiktokMonthlyTrend = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
       {
@@ -3548,7 +3548,7 @@ export default function ExecutiveSummaryPage() {
       },
     );
 
-    const weeklyPosts = groupRecordsByWeek(tiktokPosts, {
+    const monthlyPosts = groupRecordsByMonth(tiktokPosts, {
       getDate: (post) => {
         if (post?.publishedAt instanceof Date) {
           return post.publishedAt;
@@ -3567,7 +3567,7 @@ export default function ExecutiveSummaryPage() {
       ? filterRecordsWithResolvableDate(platformActivity.comments)
       : [];
 
-    const weeklyComments = groupRecordsByWeek(commentRecords, {
+    const monthlyComments = groupRecordsByMonth(commentRecords, {
       datePaths: [
         "tanggal",
         "date",
@@ -3585,10 +3585,10 @@ export default function ExecutiveSummaryPage() {
       ],
     });
 
-    const hasRecords = weeklyPosts.length > 0 || weeklyComments.length > 0;
+    const hasRecords = monthlyPosts.length > 0 || monthlyComments.length > 0;
     const buckets = new Map();
 
-    weeklyPosts.forEach((group) => {
+    monthlyPosts.forEach((group) => {
       const key = group.key;
       if (!buckets.has(key)) {
         buckets.set(key, {
@@ -3603,7 +3603,7 @@ export default function ExecutiveSummaryPage() {
       entry.posts += group.records.length;
     });
 
-    weeklyComments.forEach((group) => {
+    monthlyComments.forEach((group) => {
       const key = group.key;
       if (!buckets.has(key)) {
         buckets.set(key, {
@@ -3622,22 +3622,22 @@ export default function ExecutiveSummaryPage() {
       entry.comments += Math.max(0, Math.round(totalComments) || 0);
     });
 
-    const weeks = Array.from(buckets.values()).sort(
+    const months = Array.from(buckets.values()).sort(
       (a, b) => a.start.getTime() - b.start.getTime(),
     );
 
-    if (weeks.length === 0) {
+    if (months.length === 0) {
       return {
-        weeks: [],
-        latestWeek: null,
-        previousWeek: null,
+        months: [],
+        latestMonth: null,
+        previousMonth: null,
         delta: null,
         hasRecords,
       };
     }
 
-    const latestWeek = weeks[weeks.length - 1];
-    const previousWeek = weeks.length > 1 ? weeks[weeks.length - 2] : null;
+    const latestMonth = months[months.length - 1];
+    const previousMonth = months.length > 1 ? months[months.length - 2] : null;
 
     const computeDelta = (latestValue, previousValue) => {
       const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
@@ -3649,39 +3649,39 @@ export default function ExecutiveSummaryPage() {
       return { absolute, percent };
     };
 
-    const delta = previousWeek
+    const delta = previousMonth
       ? {
-          posts: computeDelta(latestWeek.posts, previousWeek.posts),
-          comments: computeDelta(latestWeek.comments, previousWeek.comments),
+          posts: computeDelta(latestMonth.posts, previousMonth.posts),
+          comments: computeDelta(latestMonth.comments, previousMonth.comments),
         }
       : null;
 
     return {
-      weeks,
-      latestWeek,
-      previousWeek,
+      months,
+      latestMonth,
+      previousMonth,
       delta,
       hasRecords,
     };
   }, [platformPosts?.tiktok, platformActivity]);
 
-  const instagramWeeklyCardData = useMemo(() => {
-    const { latestWeek, previousWeek, delta, weeks, hasRecords } =
-      instagramWeeklyTrend ?? {};
+  const instagramMonthlyCardData = useMemo(() => {
+    const { latestMonth, previousMonth, delta, months, hasRecords } =
+      instagramMonthlyTrend ?? {};
 
-    const safeLatestPosts = Math.max(0, Number(latestWeek?.posts) || 0);
-    const safeLatestLikes = Math.max(0, Number(latestWeek?.likes) || 0);
-    const safePreviousPosts = Math.max(0, Number(previousWeek?.posts) || 0);
-    const safePreviousLikes = Math.max(0, Number(previousWeek?.likes) || 0);
+    const safeLatestPosts = Math.max(0, Number(latestMonth?.posts) || 0);
+    const safeLatestLikes = Math.max(0, Number(latestMonth?.likes) || 0);
+    const safePreviousPosts = Math.max(0, Number(previousMonth?.posts) || 0);
+    const safePreviousLikes = Math.max(0, Number(previousMonth?.likes) || 0);
 
-    const currentMetrics = latestWeek
+    const currentMetrics = latestMonth
       ? [
           { key: "posts", label: "Post Instagram", value: safeLatestPosts },
           { key: "likes", label: "Likes Personil", value: safeLatestLikes },
         ]
       : [];
 
-    const previousMetrics = previousWeek
+    const previousMetrics = previousMonth
       ? [
           { key: "posts", label: "Post Instagram", value: safePreviousPosts },
           { key: "likes", label: "Likes Personil", value: safePreviousLikes },
@@ -3689,7 +3689,7 @@ export default function ExecutiveSummaryPage() {
       : [];
 
     const deltaMetrics =
-      delta && previousWeek
+      delta && previousMonth
         ? [
             {
               key: "posts",
@@ -3714,47 +3714,49 @@ export default function ExecutiveSummaryPage() {
           ]
         : [];
 
-    const series = Array.isArray(weeks)
-      ? weeks.slice(-6).map((week) => {
-          const posts = Math.max(0, Number(week.posts) || 0);
-          const likes = Math.max(0, Number(week.likes) || 0);
+    const series = Array.isArray(months)
+      ? months.slice(-6).map((month) => {
+          const posts = Math.max(0, Number(month.posts) || 0);
+          const likes = Math.max(0, Number(month.likes) || 0);
           return {
-            key: week.key,
-            label: formatWeekRangeLabel(week.start, week.end),
+            key: month.key,
+            label: formatMonthRangeLabel(month.start, month.end),
             posts,
             likes,
             primary: posts,
             secondary: likes,
+            start: month.start,
+            end: month.end,
           };
         })
       : [];
 
-    const weeksCount = Array.isArray(weeks) ? weeks.length : 0;
+    const monthsCount = Array.isArray(months) ? months.length : 0;
 
     return {
       currentMetrics,
       previousMetrics,
       deltaMetrics,
       series,
-      weeksCount,
-      hasComparison: Boolean(previousWeek),
+      monthsCount,
+      hasComparison: Boolean(previousMonth),
       hasRecords: Boolean(hasRecords),
     };
-  }, [instagramWeeklyTrend]);
+  }, [instagramMonthlyTrend]);
 
-  const tiktokWeeklyCardData = useMemo(() => {
-    const { latestWeek, previousWeek, delta, weeks, hasRecords } =
-      tiktokWeeklyTrend ?? {};
+  const tiktokMonthlyCardData = useMemo(() => {
+    const { latestMonth, previousMonth, delta, months, hasRecords } =
+      tiktokMonthlyTrend ?? {};
 
-    const safeLatestPosts = Math.max(0, Number(latestWeek?.posts) || 0);
-    const safeLatestComments = Math.max(0, Number(latestWeek?.comments) || 0);
-    const safePreviousPosts = Math.max(0, Number(previousWeek?.posts) || 0);
+    const safeLatestPosts = Math.max(0, Number(latestMonth?.posts) || 0);
+    const safeLatestComments = Math.max(0, Number(latestMonth?.comments) || 0);
+    const safePreviousPosts = Math.max(0, Number(previousMonth?.posts) || 0);
     const safePreviousComments = Math.max(
       0,
-      Number(previousWeek?.comments) || 0,
+      Number(previousMonth?.comments) || 0,
     );
 
-    const currentMetrics = latestWeek
+    const currentMetrics = latestMonth
       ? [
           { key: "posts", label: "Post TikTok", value: safeLatestPosts },
           {
@@ -3765,7 +3767,7 @@ export default function ExecutiveSummaryPage() {
         ]
       : [];
 
-    const previousMetrics = previousWeek
+    const previousMetrics = previousMonth
       ? [
           { key: "posts", label: "Post TikTok", value: safePreviousPosts },
           {
@@ -3777,7 +3779,7 @@ export default function ExecutiveSummaryPage() {
       : [];
 
     const deltaMetrics =
-      delta && previousWeek
+      delta && previousMonth
         ? [
             {
               key: "posts",
@@ -3802,76 +3804,78 @@ export default function ExecutiveSummaryPage() {
           ]
         : [];
 
-    const series = Array.isArray(weeks)
-      ? weeks.slice(-6).map((week) => {
-          const posts = Math.max(0, Number(week.posts) || 0);
-          const comments = Math.max(0, Number(week.comments) || 0);
+    const series = Array.isArray(months)
+      ? months.slice(-6).map((month) => {
+          const posts = Math.max(0, Number(month.posts) || 0);
+          const comments = Math.max(0, Number(month.comments) || 0);
           return {
-            key: week.key,
-            label: formatWeekRangeLabel(week.start, week.end),
+            key: month.key,
+            label: formatMonthRangeLabel(month.start, month.end),
             posts,
             likes: comments,
             primary: posts,
             secondary: comments,
+            start: month.start,
+            end: month.end,
           };
         })
       : [];
 
-    const weeksCount = Array.isArray(weeks) ? weeks.length : 0;
+    const monthsCount = Array.isArray(months) ? months.length : 0;
 
     return {
       currentMetrics,
       previousMetrics,
       deltaMetrics,
       series,
-      weeksCount,
-      hasComparison: Boolean(previousWeek),
+      monthsCount,
+      hasComparison: Boolean(previousMonth),
       hasRecords: Boolean(hasRecords),
     };
-  }, [tiktokWeeklyTrend]);
+  }, [tiktokMonthlyTrend]);
 
   const showPlatformLoading = platformsLoading;
-  const instagramWeeklyTrendDescription =
-    instagramWeeklyCardData.weeksCount < 2
-      ? "Post Instagram & likes personil per minggu. Data perbandingan belum lengkap."
-      : "Post Instagram & likes personil per minggu.";
-  const instagramWeeklyCardError = !showPlatformLoading
+  const instagramMonthlyTrendDescription =
+    instagramMonthlyCardData.monthsCount < 2
+      ? "Post Instagram & likes personil per bulan. Data perbandingan belum lengkap."
+      : "Post Instagram & likes personil per bulan.";
+  const instagramMonthlyCardError = !showPlatformLoading
     ? platformError
       ? platformError
-      : instagramWeeklyCardData.weeksCount === 0 &&
-        instagramWeeklyCardData.hasRecords
-      ? "Belum ada data aktivitas Instagram mingguan yang terekam."
-      : instagramWeeklyCardData.weeksCount === 1
-      ? "Belum cukup data mingguan Instagram untuk dibandingkan."
+      : instagramMonthlyCardData.monthsCount === 0 &&
+        instagramMonthlyCardData.hasRecords
+      ? "Belum ada data aktivitas Instagram bulanan yang terekam."
+      : instagramMonthlyCardData.monthsCount === 1
+      ? "Belum cukup data bulanan Instagram untuk dibandingkan."
       : ""
     : "";
 
-  const tiktokWeeklyTrendDescription =
-    tiktokWeeklyCardData.weeksCount < 2
-      ? "Post TikTok & komentar personel per minggu. Data perbandingan belum lengkap."
-      : "Post TikTok & komentar personel per minggu.";
-  const tiktokWeeklyCardError = !showPlatformLoading
+  const tiktokMonthlyTrendDescription =
+    tiktokMonthlyCardData.monthsCount < 2
+      ? "Post TikTok & komentar personel per bulan. Data perbandingan belum lengkap."
+      : "Post TikTok & komentar personel per bulan.";
+  const tiktokMonthlyCardError = !showPlatformLoading
     ? platformError
       ? platformError
-      : tiktokWeeklyCardData.weeksCount === 0 &&
-        tiktokWeeklyCardData.hasRecords
-      ? "Belum ada data aktivitas TikTok mingguan yang terekam."
-      : tiktokWeeklyCardData.weeksCount === 1
-      ? "Belum cukup data mingguan TikTok untuk dibandingkan."
+      : tiktokMonthlyCardData.monthsCount === 0 &&
+        tiktokMonthlyCardData.hasRecords
+      ? "Belum ada data aktivitas TikTok bulanan yang terekam."
+      : tiktokMonthlyCardData.monthsCount === 1
+      ? "Belum cukup data bulanan TikTok untuk dibandingkan."
       : ""
     : "";
 
   const shouldShowInstagramTrendCard = shouldShowWeeklyTrendCard({
     showPlatformLoading,
     platformError,
-    hasMonthlyPlatforms: false,
-    cardHasRecords: instagramWeeklyCardData.hasRecords,
+    hasMonthlyPlatforms: true,
+    cardHasRecords: instagramMonthlyCardData.hasRecords,
   });
   const shouldShowTiktokTrendCard = shouldShowWeeklyTrendCard({
     showPlatformLoading,
     platformError,
-    hasMonthlyPlatforms: false,
-    cardHasRecords: tiktokWeeklyCardData.hasRecords,
+    hasMonthlyPlatforms: true,
+    cardHasRecords: tiktokMonthlyCardData.hasRecords,
   });
 
   return (
@@ -3967,43 +3971,43 @@ export default function ExecutiveSummaryPage() {
       {!showPlatformLoading &&
       (shouldShowInstagramTrendCard || shouldShowTiktokTrendCard) ? (
         <section
-          aria-label="Tren Aktivitas Mingguan"
+          aria-label="Tren Aktivitas Bulanan"
           className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
         >
           <div className="space-y-2">
             <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              Tren Aktivitas Mingguan
+              Tren Aktivitas Bulanan
             </h2>
             <p className="text-sm text-slate-300">
-              Ringkasan performa konten dan interaksi personel berdasarkan data mingguan
+              Ringkasan performa konten dan interaksi personel berdasarkan data bulanan
               terbaru.
             </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
             {shouldShowInstagramTrendCard ? (
-              <WeeklyTrendCard
+              <MonthlyTrendCard
                 title="Instagram"
-                description={instagramWeeklyTrendDescription}
-                error={instagramWeeklyCardError}
-                currentMetrics={instagramWeeklyCardData.currentMetrics}
-                previousMetrics={instagramWeeklyCardData.previousMetrics}
-                deltaMetrics={instagramWeeklyCardData.deltaMetrics}
-                series={instagramWeeklyCardData.series}
+                description={instagramMonthlyTrendDescription}
+                error={instagramMonthlyCardError}
+                currentMetrics={instagramMonthlyCardData.currentMetrics}
+                previousMetrics={instagramMonthlyCardData.previousMetrics}
+                deltaMetrics={instagramMonthlyCardData.deltaMetrics}
+                series={instagramMonthlyCardData.series}
                 formatNumber={formatNumber}
                 formatPercent={formatPercent}
               />
             ) : null}
 
             {shouldShowTiktokTrendCard ? (
-              <WeeklyTrendCard
+              <MonthlyTrendCard
                 title="TikTok"
-                description={tiktokWeeklyTrendDescription}
-                error={tiktokWeeklyCardError}
-                currentMetrics={tiktokWeeklyCardData.currentMetrics}
-                previousMetrics={tiktokWeeklyCardData.previousMetrics}
-                deltaMetrics={tiktokWeeklyCardData.deltaMetrics}
-                series={tiktokWeeklyCardData.series}
+                description={tiktokMonthlyTrendDescription}
+                error={tiktokMonthlyCardError}
+                currentMetrics={tiktokMonthlyCardData.currentMetrics}
+                previousMetrics={tiktokMonthlyCardData.previousMetrics}
+                deltaMetrics={tiktokMonthlyCardData.deltaMetrics}
+                series={tiktokMonthlyCardData.series}
                 formatNumber={formatNumber}
                 formatPercent={formatPercent}
                 secondaryMetricLabel="Komentar"

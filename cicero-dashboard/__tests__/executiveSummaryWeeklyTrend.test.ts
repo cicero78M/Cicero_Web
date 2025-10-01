@@ -1,5 +1,5 @@
 import {
-  groupRecordsByWeek,
+  groupRecordsByMonth,
   resolveRecordDate,
   shouldShowWeeklyTrendCard,
 } from "@/app/executive-summary/weeklyTrendUtils";
@@ -9,47 +9,51 @@ import {
   sumActivityRecords,
 } from "@/app/executive-summary/activityRecords";
 
-describe("groupRecordsByWeek weekly trend integration", () => {
-  it("groups instagram activity into weekly buckets and shows the trend card", () => {
+describe("groupRecordsByMonth monthly trend integration", () => {
+  it("groups instagram activity into monthly buckets and shows the trend card", () => {
     const records = [
       { tanggal: "2024-05-01", jumlah_like: 5 },
-      { tanggal: "2024-05-03", jumlah_like: 3 },
-      { tanggal: "2024-05-08", jumlah_like: 2 },
+      { tanggal: "2024-05-21", jumlah_like: 3 },
+      { tanggal: "2024-06-08", jumlah_like: 2 },
     ];
 
-    const buckets = groupRecordsByWeek(records);
+    const buckets = groupRecordsByMonth(records);
 
     expect(buckets).toHaveLength(2);
+    expect(buckets[0].key).toBe("2024-05");
     expect(buckets[0].records).toHaveLength(2);
+    expect(buckets[1].key).toBe("2024-06");
     expect(buckets[1].records).toHaveLength(1);
 
     const shouldShow = shouldShowWeeklyTrendCard({
       showPlatformLoading: false,
       platformError: "",
-      hasMonthlyPlatforms: false,
+      hasMonthlyPlatforms: true,
       cardHasRecords: buckets.length > 0,
     });
 
     expect(shouldShow).toBe(true);
   });
 
-  it("groups tiktok activity into weekly buckets and shows the trend card", () => {
+  it("groups tiktok activity into monthly buckets and shows the trend card", () => {
     const records = [
       { created_at: "2024-06-10T07:00:00Z", komentar: 4 },
       { created_at: "2024-06-12T07:00:00Z", komentar: 6 },
-      { created_at: "2024-06-19T07:00:00Z", komentar: 1 },
+      { created_at: "2024-07-19T07:00:00Z", komentar: 1 },
     ];
 
-    const buckets = groupRecordsByWeek(records);
+    const buckets = groupRecordsByMonth(records);
 
     expect(buckets).toHaveLength(2);
+    expect(buckets[0].key).toBe("2024-06");
     expect(buckets[0].records).toHaveLength(2);
+    expect(buckets[1].key).toBe("2024-07");
     expect(buckets[1].records).toHaveLength(1);
 
     const shouldShow = shouldShowWeeklyTrendCard({
       showPlatformLoading: false,
       platformError: "",
-      hasMonthlyPlatforms: false,
+      hasMonthlyPlatforms: true,
       cardHasRecords: buckets.length > 0,
     });
 
@@ -79,7 +83,7 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     expect(totalLikes).toBe(9);
   });
 
-  it("uses activityDate ISO values when grouping instagram likes by week", () => {
+  it("uses activityDate ISO values when grouping instagram likes by month", () => {
     const records = [
       {
         tanggal: "31/05/2024",
@@ -93,7 +97,7 @@ describe("groupRecordsByWeek weekly trend integration", () => {
       },
     ];
 
-    const weeklyLikes = groupRecordsByWeek(records, {
+    const monthlyLikes = groupRecordsByMonth(records, {
       datePaths: [
         "activityDate",
         "tanggal",
@@ -111,11 +115,14 @@ describe("groupRecordsByWeek weekly trend integration", () => {
       ],
     });
 
-    expect(weeklyLikes).toHaveLength(1);
+    expect(monthlyLikes).toHaveLength(2);
+    expect(monthlyLikes[0].key).toBe("2024-05");
+    expect(monthlyLikes[1].key).toBe("2024-06");
 
-    const totalLikes = sumActivityRecords(
-      weeklyLikes[0].records,
-      INSTAGRAM_LIKE_FIELD_PATHS,
+    const totalLikes = monthlyLikes.reduce(
+      (sum, bucket) =>
+        sum + sumActivityRecords(bucket.records, INSTAGRAM_LIKE_FIELD_PATHS),
+      0,
     );
 
     expect(totalLikes).toBe(12);
@@ -154,8 +161,8 @@ describe("groupRecordsByWeek weekly trend integration", () => {
       { rekap: { activity_date: "2024-07-04T07:00:00Z", total_komentar: "5" } },
     ];
 
-    const instagramBuckets = groupRecordsByWeek(instagramRecords);
-    const tiktokBuckets = groupRecordsByWeek(tiktokRecords);
+    const instagramBuckets = groupRecordsByMonth(instagramRecords);
+    const tiktokBuckets = groupRecordsByMonth(tiktokRecords);
 
     expect(instagramBuckets).toHaveLength(1);
     expect(tiktokBuckets).toHaveLength(1);
@@ -176,11 +183,11 @@ describe("groupRecordsByWeek weekly trend integration", () => {
   it("groups posts with only date/tanggal fields and shows the trend card", () => {
     const posts = [
       { tanggal: "2024-07-01", likes: 2 },
-      { date: "2024-07-02", likes: 1 },
-      { tanggal: "2024-07-09", likes: 5 },
+      { date: "2024-07-22", likes: 1 },
+      { tanggal: "2024-08-09", likes: 5 },
     ];
 
-    const buckets = groupRecordsByWeek(posts, {
+    const buckets = groupRecordsByMonth(posts, {
       getDate: (post) => {
         const resolved = resolveRecordDate(post, [
           "publishedAt",
@@ -195,13 +202,15 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     });
 
     expect(buckets).toHaveLength(2);
+    expect(buckets[0].key).toBe("2024-07");
     expect(buckets[0].records).toHaveLength(2);
+    expect(buckets[1].key).toBe("2024-08");
     expect(buckets[1].records).toHaveLength(1);
 
     const shouldShow = shouldShowWeeklyTrendCard({
       showPlatformLoading: false,
       platformError: "",
-      hasMonthlyPlatforms: false,
+      hasMonthlyPlatforms: true,
       cardHasRecords: buckets.length > 0,
     });
 

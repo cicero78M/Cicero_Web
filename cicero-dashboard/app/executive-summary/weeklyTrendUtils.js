@@ -194,6 +194,62 @@ const groupRecordsByWeek = (records, { getDate, datePaths } = {}) => {
   );
 };
 
+const groupRecordsByMonth = (records, { getDate, datePaths } = {}) => {
+  if (!Array.isArray(records) || records.length === 0) {
+    return [];
+  }
+
+  const extractor =
+    typeof getDate === "function"
+      ? getDate
+      : (record) => {
+          const resolved = resolveRecordDate(record, datePaths);
+          if (resolved) {
+            return resolved.parsed;
+          }
+          return null;
+        };
+
+  const buckets = new Map();
+
+  records.forEach((record) => {
+    if (!record) {
+      return;
+    }
+
+    const rawDate = extractor(record);
+    const parsedDate = parseDateValue(rawDate);
+
+    if (!parsedDate) {
+      return;
+    }
+
+    const year = parsedDate.getUTCFullYear();
+    const monthIndex = parsedDate.getUTCMonth();
+    const startOfMonth = new Date(Date.UTC(year, monthIndex, 1));
+    const endOfMonth = new Date(Date.UTC(year, monthIndex + 1, 0));
+    endOfMonth.setUTCHours(23, 59, 59, 999);
+    const key = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = {
+        key,
+        start: startOfMonth,
+        end: endOfMonth,
+        records: [],
+      };
+      buckets.set(key, bucket);
+    }
+
+    bucket.records.push(record);
+  });
+
+  return Array.from(buckets.values()).sort(
+    (a, b) => a.start.getTime() - b.start.getTime(),
+  );
+};
+
 const shouldShowWeeklyTrendCard = ({
   showPlatformLoading,
   platformError,
@@ -236,12 +292,27 @@ const formatWeekRangeLabel = (start, end, locale = "id-ID") => {
   return `${startLabel} – ${endLabel}`;
 };
 
+const formatMonthRangeLabel = (start, end, locale = "id-ID") => {
+  if (!(start instanceof Date) || Number.isNaN(start.valueOf())) {
+    return "";
+  }
+
+  const formatter = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+  });
+
+  return formatter.format(start);
+};
+
 export {
   pickNestedValue,
   pickNestedString,
   parseDateValue,
   resolveRecordDate,
   groupRecordsByWeek,
+  groupRecordsByMonth,
   shouldShowWeeklyTrendCard,
   formatWeekRangeLabel,
+  formatMonthRangeLabel,
 };
