@@ -27,6 +27,8 @@ type WeeklyTrendSeriesPoint = {
   label?: string;
   posts?: number;
   likes?: number;
+  primary?: number;
+  secondary?: number;
 };
 
 type WeeklyTrendCardProps = {
@@ -40,6 +42,8 @@ type WeeklyTrendCardProps = {
   series?: WeeklyTrendSeriesPoint[];
   formatNumber?: FormatNumberFn;
   formatPercent?: FormatPercentFn;
+  primaryMetricLabel?: string;
+  secondaryMetricLabel?: string;
 };
 
 const defaultNumberFormatter: FormatNumberFn = (value, options) => {
@@ -71,6 +75,8 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
   series = [],
   formatNumber = defaultNumberFormatter,
   formatPercent = defaultPercentFormatter,
+  primaryMetricLabel = "Post",
+  secondaryMetricLabel = "Likes",
 }) => {
   if (loading) {
     return (
@@ -221,8 +227,13 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                   {item.label ?? item.key}
                 </p>
                 <p className="mt-1 text-slate-400">
-                  Post: {formatNumber(item.posts ?? 0, { maximumFractionDigits: 0 })} • Likes: {" "}
-                  {formatNumber(item.likes ?? 0, { maximumFractionDigits: 0 })}
+                  {primaryMetricLabel}: {" "}
+                  {formatNumber(item.primary ?? item.posts ?? 0, {
+                    maximumFractionDigits: 0,
+                  })} {" "}• {secondaryMetricLabel}: {" "}
+                  {formatNumber(item.secondary ?? item.likes ?? 0, {
+                    maximumFractionDigits: 0,
+                  })}
                 </p>
               </div>
             ))}
