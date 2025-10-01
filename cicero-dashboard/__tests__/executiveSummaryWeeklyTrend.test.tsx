@@ -15,7 +15,7 @@ import {
 import {
   aggregateLikesRecords,
   prepareTrendActivityRecords,
-} from "@/app/executive-summary/page";
+} from "@/app/executive-summary/dataTransforms";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 
 describe("groupRecordsByMonth monthly trend integration", () => {
