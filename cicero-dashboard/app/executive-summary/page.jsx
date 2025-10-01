@@ -36,7 +36,7 @@ import {
 import PlatformOverviewCard from "@/components/executive-summary/PlatformOverviewCard";
 import PlatformKPIChart from "@/components/executive-summary/PlatformKPIChart";
 import PlatformDetailTabs from "@/components/executive-summary/PlatformDetailTabs";
-import PostHighlightCarousel from "@/components/executive-summary/PostHighlightCarousel";
+import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import WeeklyTrendCard from "@/components/executive-summary/WeeklyTrendCard";
 import {
   buildMonthKey,
@@ -202,6 +202,111 @@ const formatWeekRangeLabel = (start, end, locale = "id-ID") => {
   }
 
   return `${startLabel} – ${endLabel}`;
+};
+
+const buildPlatformWeeklyEngagement = (platform) => {
+  const postsSource = Array.isArray(platform?.posts)
+    ? platform.posts
+    : Array.isArray(platform?.postsData)
+    ? platform.postsData
+    : [];
+
+  const posts = postsSource.filter(Boolean);
+  if (posts.length === 0) {
+    return { series: [], latest: null, previous: null };
+  }
+
+  const weeklyGroups = groupRecordsByWeek(posts, {
+    getDate: (post) => {
+      if (post?.publishedAt instanceof Date) {
+        return post.publishedAt;
+      }
+
+      return (
+        parseDateValue(post?.publishedAt) ??
+        parseDateValue(post?.published_at) ??
+        parseDateValue(post?.createdAt) ??
+        parseDateValue(post?.created_at) ??
+        parseDateValue(post?.timestamp) ??
+        parseDateValue(post?.time) ??
+        null
+      );
+    },
+  });
+
+  if (weeklyGroups.length === 0) {
+    return { series: [], latest: null, previous: null };
+  }
+
+  const toNumber = (value) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
+
+  const series = weeklyGroups.map((group) => {
+    const totals = group.records.reduce(
+      (acc, post) => {
+        const metrics = post?.metrics ?? {};
+        const likes = Math.max(0, toNumber(metrics.likes ?? post?.likes));
+        const comments = Math.max(0, toNumber(metrics.comments ?? post?.comments));
+        const shares = Math.max(0, toNumber(metrics.shares ?? post?.shares));
+        const saves = Math.max(0, toNumber(metrics.saves ?? post?.saves));
+        const interactionsCandidate =
+          metrics.interactions ?? post?.interactions ?? likes + comments + shares + saves;
+        const interactions = Math.max(0, toNumber(interactionsCandidate));
+
+        const engagementCandidates = [
+          metrics.engagementRate,
+          metrics.engagement_rate,
+          post?.engagementRate,
+          post?.engagement_rate,
+        ];
+
+        let engagementValue = 0;
+        let hasEngagement = false;
+        for (const candidate of engagementCandidates) {
+          if (candidate === undefined || candidate === null) {
+            continue;
+          }
+          const numeric = Number(candidate);
+          if (Number.isFinite(numeric)) {
+            engagementValue = Math.max(0, numeric);
+            hasEngagement = true;
+            break;
+          }
+        }
+
+        acc.interactions += interactions;
+        acc.postCount += 1;
+
+        if (hasEngagement) {
+          acc.engagementSum += engagementValue;
+          acc.engagementCount += 1;
+        }
+
+        return acc;
+      },
+      { interactions: 0, engagementSum: 0, engagementCount: 0, postCount: 0 },
+    );
+
+    const averageEngagement =
+      totals.engagementCount > 0 ? totals.engagementSum / totals.engagementCount : 0;
+
+    return {
+      key: group.key,
+      label: formatWeekRangeLabel(group.start, group.end),
+      start: group.start,
+      end: group.end,
+      posts: totals.postCount,
+      interactions: totals.interactions,
+      engagementRate: averageEngagement,
+    };
+  });
+
+  const latest = series[series.length - 1] ?? null;
+  const previous = series.length > 1 ? series[series.length - 2] : null;
+
+  return { series, latest, previous };
 };
 
 const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
@@ -1710,41 +1815,6 @@ const normalizePlatformMetrics = (rawData) => {
   return { platforms: sorted, profiles };
 };
 
-const selectTopPosts = (platform, limit = 3) => {
-  if (!platform || !Array.isArray(platform.posts) || platform.posts.length === 0) {
-    return [];
-  }
-
-  const postsWithScore = platform.posts.map((post) => {
-    const likes = Math.max(0, post?.metrics?.likes ?? 0);
-    const comments = Math.max(0, post?.metrics?.comments ?? 0);
-    const shares = Math.max(0, post?.metrics?.shares ?? 0);
-    const saves = Math.max(0, post?.metrics?.saves ?? 0);
-    const interactions = Math.max(
-      0,
-      post?.metrics?.interactions ?? likes + comments + shares + saves,
-    );
-    const reach = Math.max(0, post?.metrics?.reach ?? 0);
-    const engagement = Math.max(0, post?.metrics?.engagementRate ?? 0);
-
-    return {
-      ...post,
-      metrics: {
-        ...post.metrics,
-        interactions,
-        reach,
-        engagementRate: engagement,
-      },
-      _score: interactions * 2 + reach + engagement,
-    };
-  });
-
-  return postsWithScore
-    .sort((a, b) => (b._score ?? 0) - (a._score ?? 0))
-    .slice(0, limit)
-    .map(({ _score, ...rest }) => rest);
-};
-
 const buildPlatformInsight = (platform) => {
   if (!platform) {
     return "Belum ada informasi platform yang dapat diringkas.";
@@ -1759,7 +1829,6 @@ const buildPlatformInsight = (platform) => {
     : [];
   const topContentType = contentDistribution.length > 0 ? contentDistribution[0] : null;
   const engagementRate = parsePercent(platform.engagementRate ?? derived.averageEngagementRate ?? 0);
-  const topPost = selectTopPosts(platform, 1)[0] ?? null;
 
   const postsWithDate = Array.isArray(platform.posts)
     ? platform.posts.filter((post) => post?.publishedAt instanceof Date)
@@ -1794,13 +1863,6 @@ const buildPlatformInsight = (platform) => {
 
   if (postingRate > 0) {
     sentences.push(`Rata-rata frekuensi unggah tercatat ${postingRate} konten per hari.`);
-  }
-
-  if (topPost) {
-    const topInteractions = Math.max(0, topPost.metrics?.interactions ?? 0);
-    sentences.push(
-      `Highlight utama: “${topPost.title}” dengan ${formatNumber(topInteractions, { maximumFractionDigits: 0 })} interaksi.`,
-    );
   }
 
   return sentences.join(" ");
@@ -4635,7 +4697,7 @@ export default function ExecutiveSummaryPage() {
     return effectivePlatformMetrics.map((platform) => ({
       ...platform,
       insight: buildPlatformInsight(platform),
-      topPosts: selectTopPosts(platform, 5),
+      weeklyEngagement: buildPlatformWeeklyEngagement(platform),
     }));
   }, [effectivePlatformMetrics]);
 
@@ -5106,6 +5168,8 @@ export default function ExecutiveSummaryPage() {
               const platformPayload = {
                 ...platform,
                 engagementRate: normalizedEngagement,
+                weeklyEngagement:
+                  platform.weeklyEngagement ?? buildPlatformWeeklyEngagement(platform),
               };
 
               return (
@@ -5133,11 +5197,15 @@ export default function ExecutiveSummaryPage() {
                       platform={platformPayload}
                       formatNumber={formatNumber}
                     />
-                    <PostHighlightCarousel
-                      posts={platform.topPosts ?? []}
+                    <PlatformEngagementTrendChart
+                      platformLabel={platformPayload.label}
+                      series={platformPayload.weeklyEngagement?.series ?? []}
+                      latest={platformPayload.weeklyEngagement?.latest ?? null}
+                      previous={platformPayload.weeklyEngagement?.previous ?? null}
                       loading={platformsLoading}
                       error={!hasMonthlyPlatforms ? platformError : ""}
                       formatNumber={formatNumber}
+                      formatPercent={formatPercent}
                     />
                   </div>
                 </div>
