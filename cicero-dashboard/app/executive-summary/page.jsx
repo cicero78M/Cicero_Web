@@ -4005,7 +4005,56 @@ export default function ExecutiveSummaryPage() {
         </div>
       </header>
 
-            <section
+      {!showPlatformLoading &&
+      (shouldShowInstagramTrendCard || shouldShowTiktokTrendCard) ? (
+        <section
+          aria-label="Tren Aktivitas Mingguan"
+          className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+        >
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              Tren Aktivitas Mingguan
+            </h2>
+            <p className="text-sm text-slate-300">
+              Ringkasan performa konten dan interaksi personel berdasarkan data mingguan
+              terbaru.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {shouldShowInstagramTrendCard ? (
+              <WeeklyTrendCard
+                title="Instagram"
+                description={instagramWeeklyTrendDescription}
+                error={instagramWeeklyCardError}
+                currentMetrics={instagramWeeklyCardData.currentMetrics}
+                previousMetrics={instagramWeeklyCardData.previousMetrics}
+                deltaMetrics={instagramWeeklyCardData.deltaMetrics}
+                series={instagramWeeklyCardData.series}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+              />
+            ) : null}
+
+            {shouldShowTiktokTrendCard ? (
+              <WeeklyTrendCard
+                title="TikTok"
+                description={tiktokWeeklyTrendDescription}
+                error={tiktokWeeklyCardError}
+                currentMetrics={tiktokWeeklyCardData.currentMetrics}
+                previousMetrics={tiktokWeeklyCardData.previousMetrics}
+                deltaMetrics={tiktokWeeklyCardData.deltaMetrics}
+                series={tiktokWeeklyCardData.series}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+                secondaryMetricLabel="Komentar"
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <section
         aria-label="Insight Pengguna Aktual"
         className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
       >
