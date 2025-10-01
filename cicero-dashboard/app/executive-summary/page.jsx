@@ -121,6 +121,104 @@ const formatPercent = (value) => {
   })}%`;
 };
 
+const buildPlatformInsight = (platform) => {
+  if (!platform || typeof platform !== "object") {
+    return "";
+  }
+
+  const label =
+    typeof platform.label === "string" && platform.label.trim() !== ""
+      ? platform.label.trim()
+      : "Platform";
+
+  const toSafeNumber = (value) => {
+    const normalized = normalizeNumericInput(value);
+    return Number.isFinite(normalized) ? Math.max(0, normalized) : 0;
+  };
+
+  const followers = toSafeNumber(platform.followers ?? platform.profile?.followers);
+  const postCount = toSafeNumber(
+    platform.postCount ?? platform.posts ?? platform.derived?.postCount,
+  );
+  const likes = toSafeNumber(
+    platform.likes ?? platform.derived?.totalLikes ?? platform.metrics?.likes,
+  );
+  const comments = toSafeNumber(
+    platform.comments ?? platform.derived?.totalComments ?? platform.metrics?.comments,
+  );
+  const totalInteractionsCandidate = toSafeNumber(
+    platform?.derived?.totalInteractions,
+  );
+  const totalInteractions =
+    totalInteractionsCandidate > 0
+      ? totalInteractionsCandidate
+      : Math.max(0, likes + comments);
+  const averageInteractionsCandidate = toSafeNumber(
+    platform?.derived?.averageInteractions,
+  );
+  const averageInteractions =
+    averageInteractionsCandidate > 0
+      ? averageInteractionsCandidate
+      : postCount > 0
+      ? totalInteractions / postCount
+      : 0;
+  const engagementRateRaw = toSafeNumber(
+    platform?.derived?.averageEngagementRate ?? platform.engagementRate,
+  );
+  const engagementRate = clamp(engagementRateRaw, 0, 100);
+
+  const likesShare = totalInteractions > 0 ? (likes / totalInteractions) * 100 : 0;
+  const commentsShare =
+    totalInteractions > 0 ? (comments / totalInteractions) * 100 : 0;
+
+  const parts = [];
+
+  if (followers > 0) {
+    parts.push(
+      `${label} memiliki ${formatNumber(followers, { maximumFractionDigits: 0 })} pengikut yang terpantau dalam periode ini.`,
+    );
+  }
+
+  if (postCount > 0) {
+    parts.push(
+      `${formatNumber(postCount, { maximumFractionDigits: 0 })} konten tercatat dan dianalisis selama rentang waktu yang sama.`,
+    );
+  }
+
+  if (totalInteractions > 0) {
+    parts.push(
+      `Interaksi yang terakumulasi mencapai ${formatNumber(totalInteractions, { maximumFractionDigits: 0 })} dengan rata-rata ${formatNumber(averageInteractions, { maximumFractionDigits: 0 })} per konten.`,
+    );
+  }
+
+  if (likes > 0 || comments > 0) {
+    parts.push(
+      `Kontribusi interaksi didominasi oleh ${formatNumber(likes, { maximumFractionDigits: 0 })} likes (${formatPercent(likesShare)}) dan ${formatNumber(comments, { maximumFractionDigits: 0 })} komentar (${formatPercent(commentsShare)}).`,
+    );
+  }
+
+  if (engagementRate > 0) {
+    const qualitativeEngagement =
+      engagementRate >= 15
+        ? "sangat solid"
+        : engagementRate >= 8
+        ? "stabil"
+        : engagementRate >= 4
+        ? "perlu peningkatan lebih lanjut"
+        : "masih rendah";
+
+    parts.push(
+      `Engagement rate berada di kisaran ${formatPercent(engagementRate)}, mencerminkan performa audiens yang ${qualitativeEngagement}.`,
+    );
+  }
+
+  if (parts.length === 0) {
+    return `Belum ada data performa ${label} yang dapat dirangkum untuk periode ini.`;
+  }
+
+  return parts.join(" ");
+};
+
 const buildPlatformWeeklyEngagement = (platform) => {
   const postsSource = Array.isArray(platform?.posts)
     ? platform.posts
