@@ -8,6 +8,7 @@ interface SocialProfileCardProps {
   profile: any;
   postCount?: number;
   className?: string;
+  username?: string;
 }
 
 const formatNumber = (value?: number) => {
@@ -24,6 +25,7 @@ export default function SocialProfileCard({
   profile,
   postCount = 0,
   className,
+  username,
 }: SocialProfileCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -32,12 +34,43 @@ export default function SocialProfileCard({
     return url.replace(/\.heic(\?|$)/, ".jpg$1");
   };
 
+  const sanitizeUsername = (value: unknown) =>
+    typeof value === "string" ? value.replace(/^@+/, "").trim() : "";
+
+  const pickUsername = (candidates: unknown[]) => {
+    for (const candidate of candidates) {
+      const sanitized = sanitizeUsername(candidate);
+      if (sanitized) return sanitized;
+    }
+    return "";
+  };
+
   const platformLabel =
     platform === "instagram" ? "Instagram" : platform === "tiktok" ? "TikTok" : platform;
   const platformGradient =
     platform === "instagram"
       ? "from-pink-500/40 via-purple-500/40 to-sky-500/40"
       : "from-emerald-500/40 via-cyan-500/40 to-blue-500/40";
+
+  const aggregatorUsername = pickUsername([
+    profile?.username,
+    profile?.user_name,
+    profile?.uniqueId,
+    profile?.unique_id,
+    profile?.handle,
+  ]);
+  const overrideUsername = sanitizeUsername(username);
+  const effectiveUsername = overrideUsername || aggregatorUsername;
+  const profileLink = effectiveUsername
+    ? platform === "instagram"
+      ? `https://instagram.com/${effectiveUsername}`
+      : `https://www.tiktok.com/@${effectiveUsername}`
+    : aggregatorUsername
+      ? platform === "instagram"
+        ? `https://instagram.com/${aggregatorUsername}`
+        : `https://www.tiktok.com/@${aggregatorUsername}`
+      : undefined;
+  const displayUsername = effectiveUsername || aggregatorUsername;
 
   if (!profile) {
     const emptyStateClassName =
@@ -65,10 +98,6 @@ export default function SocialProfileCard({
     profile.hd_profile_pic_versions?.[0]?.url ||
     "";
 
-  const link =
-    platform === "instagram"
-      ? `https://instagram.com/${profile.username}`
-      : `https://www.tiktok.com/@${profile.username}`;
   const avatarSrc = getThumb(avatar);
 
   const followers = profile.followers ?? profile.follower_count ?? 0;
@@ -114,12 +143,12 @@ export default function SocialProfileCard({
           <div className="flex flex-col">
             {name && <span className="text-lg font-semibold text-slate-50">{name}</span>}
             <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={profileLink ?? undefined}
+              target={profileLink ? "_blank" : undefined}
+              rel={profileLink ? "noopener noreferrer" : undefined}
               className="text-sm text-cyan-300 hover:text-cyan-200"
             >
-              @{profile.username}
+              @{displayUsername || profile.username}
             </a>
             <div className="flex items-center gap-2 text-xs text-slate-300">
               <span

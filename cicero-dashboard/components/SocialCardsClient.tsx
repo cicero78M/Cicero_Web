@@ -28,6 +28,7 @@ interface Props {
   tiktokProfile: any;
   tiktokPosts: any[];
   platformMetrics?: Record<string, PlatformMetric>;
+  clientUsernames?: Partial<Record<PlatformKey, string>>;
 }
 
 const formatNumber = (value?: number) => {
@@ -45,6 +46,7 @@ export default function SocialCardsClient({
   tiktokProfile,
   tiktokPosts,
   platformMetrics,
+  clientUsernames,
 }: Props) {
   const [platform, setPlatform] = useState<"all" | PlatformKey>("all");
   const instagramProfileRef = useRef<HTMLDivElement>(null);
@@ -111,6 +113,7 @@ export default function SocialCardsClient({
             platform={key}
             profile={key === "instagram" ? igProfile : tiktokProfile}
             postCount={key === "instagram" ? igPosts.length : tiktokPosts.length}
+            username={clientUsernames?.[key]}
           />
         </div>
         <SocialPostsCard
