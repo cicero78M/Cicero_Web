@@ -4093,15 +4093,16 @@ export default function ExecutiveSummaryPage() {
 
     const weeklyPosts = groupRecordsByWeek(instagramPosts, {
       getDate: (post) => {
-        const resolved = resolveRecordDate(post, [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-        ]);
-
-        return resolved?.parsed ?? null;
+        if (post?.publishedAt instanceof Date) {
+          return post.publishedAt;
+        }
+        return (
+          post?.createdAt ??
+          post?.created_at ??
+          post?.timestamp ??
+          post?.published_at ??
+          null
+        );
       },
     });
 
@@ -4244,15 +4245,16 @@ export default function ExecutiveSummaryPage() {
 
     const weeklyPosts = groupRecordsByWeek(tiktokPosts, {
       getDate: (post) => {
-        const resolved = resolveRecordDate(post, [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-        ]);
-
-        return resolved?.parsed ?? null;
+        if (post?.publishedAt instanceof Date) {
+          return post.publishedAt;
+        }
+        return (
+          post?.createdAt ??
+          post?.created_at ??
+          post?.timestamp ??
+          post?.published_at ??
+          null
+        );
       },
     });
 
