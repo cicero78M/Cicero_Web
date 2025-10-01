@@ -139,7 +139,7 @@ const aggregateLikesRecords = (records = []) => {
           record?.client ??
           record?.namaClient ??
           record?.nama ??
-          clientId || "LAINNYA",
+          (clientId || "LAINNYA"),
       ).trim() || "LAINNYA";
 
     const likes = toSafeNumber(
