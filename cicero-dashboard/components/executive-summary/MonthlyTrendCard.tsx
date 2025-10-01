@@ -29,9 +29,17 @@ type MonthlyTrendSeriesPoint = {
   end?: Date | string | null;
   posts?: number;
   likes?: number;
+  comments?: number;
   primary?: number;
   secondary?: number;
 };
+
+type SeriesValueKey =
+  | "primary"
+  | "secondary"
+  | "likes"
+  | "comments"
+  | "posts";
 
 type MonthlyTrendCardProps = {
   title: string;
@@ -103,8 +111,8 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
   series = [],
   formatNumber = defaultNumberFormatter,
   formatPercent = defaultPercentFormatter,
-  primaryMetricLabel = "Post",
-  secondaryMetricLabel = "Likes",
+  primaryMetricLabel = "Likes",
+  secondaryMetricLabel = "Komentar",
 }) => {
   if (loading) {
     return (
@@ -246,25 +254,106 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
             Rekap Bulanan
           </p>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {series.map((item) => (
-              <div
-                key={item.key}
-                className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-300"
-              >
-                <p className="font-semibold text-slate-200">
-                  {resolveMonthLabel(item)}
-                </p>
-                <p className="mt-1 text-slate-400">
-                  {primaryMetricLabel}: {" "}
-                  {formatNumber(item.primary ?? item.posts ?? 0, {
+            {series.map((item) => {
+              const toNullableNumber = (value?: number | null): number | null => {
+                if (value === null || value === undefined) {
+                  return null;
+                }
+                const numericValue = Number(value);
+                return Number.isFinite(numericValue) ? numericValue : null;
+              };
+
+              const getNumericField = (field: SeriesValueKey): number | null => {
+                switch (field) {
+                  case "primary":
+                    return toNullableNumber(item.primary);
+                  case "secondary":
+                    return toNullableNumber(item.secondary);
+                  case "likes":
+                    return toNullableNumber(item.likes);
+                  case "comments":
+                    return toNullableNumber(item.comments);
+                  case "posts":
+                    return toNullableNumber(item.posts);
+                  default:
+                    return null;
+                }
+              };
+
+              const primaryCandidates: SeriesValueKey[] = [
+                "primary",
+                "likes",
+                "comments",
+                "posts",
+              ];
+
+              let primaryValue: number | null = null;
+              let primaryKey: SeriesValueKey | null = null;
+
+              for (const candidate of primaryCandidates) {
+                const candidateValue = getNumericField(candidate);
+                if (candidateValue !== null) {
+                  primaryValue = candidateValue;
+                  primaryKey = candidate;
+                  break;
+                }
+              }
+
+              const secondaryCandidates: SeriesValueKey[] = [
+                "secondary",
+                "posts",
+                "likes",
+                "comments",
+              ];
+
+              let secondaryValue: number | null = null;
+
+              for (const candidate of secondaryCandidates) {
+                if (primaryKey && candidate === primaryKey) {
+                  continue;
+                }
+                const candidateValue = getNumericField(candidate);
+                if (candidateValue !== null) {
+                  secondaryValue = candidateValue;
+                  break;
+                }
+              }
+
+              const segments: string[] = [];
+
+              if (primaryValue !== null) {
+                segments.push(
+                  `${primaryMetricLabel}: ${formatNumber(primaryValue, {
                     maximumFractionDigits: 0,
-                  })} {" "}• {secondaryMetricLabel}: {" "}
-                  {formatNumber(item.secondary ?? item.likes ?? 0, {
+                  })}`,
+                );
+              }
+
+              if (secondaryValue !== null) {
+                segments.push(
+                  `${secondaryMetricLabel}: ${formatNumber(secondaryValue, {
                     maximumFractionDigits: 0,
-                  })}
-                </p>
-              </div>
-            ))}
+                  })}`,
+                );
+              }
+
+              const detailLabel =
+                segments.length > 0
+                  ? segments.join(" • ")
+                  : "Tidak ada data tersedia.";
+
+              return (
+                <div
+                  key={item.key}
+                  className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-300"
+                >
+                  <p className="font-semibold text-slate-200">
+                    {resolveMonthLabel(item)}
+                  </p>
+                  <p className="mt-1 text-slate-400">{detailLabel}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}
