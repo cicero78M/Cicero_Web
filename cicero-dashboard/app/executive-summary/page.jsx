@@ -2715,6 +2715,8 @@ const SATKER_PIE_COLORS = [
 ];
 const PPTX_SCRIPT_URL =
   "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js";
+const MIN_SELECTABLE_YEAR = 2025;
+const MAX_SELECTABLE_YEAR = 2035;
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const { token, clientId } = useAuth();
@@ -2763,27 +2765,136 @@ export default function ExecutiveSummaryPage() {
 
     return monthOptions[0]?.key ?? currentMonthKey;
   }, [monthOptions]);
-  const [selectedMonth, setSelectedMonth] = useState(defaultSelectedMonth);
+  const yearOptions = useMemo(() => {
+    return Array.from(
+      { length: MAX_SELECTABLE_YEAR - MIN_SELECTABLE_YEAR + 1 },
+      (_, index) => MIN_SELECTABLE_YEAR + index,
+    );
+  }, []);
+  const defaultSelection = useMemo(() => {
+    const now = new Date();
+    const fallbackYear = clamp(
+      now.getFullYear(),
+      MIN_SELECTABLE_YEAR,
+      MAX_SELECTABLE_YEAR,
+    );
+    const fallbackMonthIndex = clamp(now.getMonth(), 0, 11);
+
+    if (typeof defaultSelectedMonth !== "string") {
+      return {
+        year: fallbackYear,
+        monthIndex: fallbackMonthIndex,
+      };
+    }
+
+    const [yearPart, monthPart] = defaultSelectedMonth.split("-");
+    const parsedYear = Number.parseInt(yearPart, 10);
+    const parsedMonth = Number.parseInt(monthPart, 10) - 1;
+
+    const normalizedYear = clamp(
+      Number.isFinite(parsedYear) ? parsedYear : fallbackYear,
+      MIN_SELECTABLE_YEAR,
+      MAX_SELECTABLE_YEAR,
+    );
+    const normalizedMonthIndex = clamp(
+      Number.isFinite(parsedMonth) ? parsedMonth : fallbackMonthIndex,
+      0,
+      11,
+    );
+
+    return {
+      year: normalizedYear,
+      monthIndex: normalizedMonthIndex,
+    };
+  }, [defaultSelectedMonth]);
+  const [selectedYear, setSelectedYear] = useState(defaultSelection.year);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(
+    defaultSelection.monthIndex,
+  );
   useEffect(() => {
-    setSelectedMonth((previous) => {
-      if (!defaultSelectedMonth) {
+    setSelectedYear((previous) => {
+      if (previous === defaultSelection.year) {
         return previous;
       }
-
-      if (!previous) {
-        return defaultSelectedMonth;
-      }
-
-      const isPreviousValid = monthOptions.some(
-        (option) => option.key === previous,
+      return clamp(
+        defaultSelection.year,
+        MIN_SELECTABLE_YEAR,
+        MAX_SELECTABLE_YEAR,
       );
-
-      return isPreviousValid ? previous : defaultSelectedMonth;
     });
-  }, [defaultSelectedMonth, monthOptions]);
+    setSelectedMonthIndex((previous) => {
+      if (previous === defaultSelection.monthIndex) {
+        return previous;
+      }
+      return clamp(defaultSelection.monthIndex, 0, 11);
+    });
+  }, [defaultSelection.monthIndex, defaultSelection.year]);
+  const selectedMonthKey = useMemo(() => {
+    return buildMonthKey(selectedYear, selectedMonthIndex);
+  }, [selectedMonthIndex, selectedYear]);
   const selectedMonthOption = useMemo(() => {
-    return monthOptions.find((option) => option.key === selectedMonth) ?? null;
-  }, [monthOptions, selectedMonth]);
+    return (
+      monthOptions.find((option) => option.key === selectedMonthKey) ?? null
+    );
+  }, [monthOptions, selectedMonthKey]);
+  const filteredMonthOptions = useMemo(() => {
+    return monthOptions.filter(
+      (option) => extractYearFromMonthKey(option.key) === selectedYear,
+    );
+  }, [monthOptions, selectedYear]);
+  const monthDropdownOptions = useMemo(() => {
+    const monthFormatter = new Intl.DateTimeFormat("id-ID", { month: "long" });
+    const availableKeys = new Set(filteredMonthOptions.map((option) => option.key));
+
+    return Array.from({ length: 12 }, (_, index) => {
+      const key = buildMonthKey(selectedYear, index);
+      return {
+        key,
+        label: monthFormatter.format(new Date(selectedYear, index, 1)),
+        monthIndex: index,
+        isAvailable: availableKeys.has(key),
+      };
+    });
+  }, [filteredMonthOptions, selectedYear]);
+  useEffect(() => {
+    if (filteredMonthOptions.length === 0) {
+      return;
+    }
+
+    const availableIndexes = filteredMonthOptions
+      .map((option) => {
+        const [, monthPart] = option.key.split("-");
+        const parsedMonth = Number.parseInt(monthPart, 10);
+        if (!Number.isFinite(parsedMonth)) {
+          return null;
+        }
+        return clamp(parsedMonth - 1, 0, 11);
+      })
+      .filter((indexValue) => typeof indexValue === "number")
+      .sort((a, b) => a - b);
+
+    if (availableIndexes.length === 0) {
+      return;
+    }
+
+    if (availableIndexes.includes(selectedMonthIndex)) {
+      return;
+    }
+
+    const fallbackIndex = availableIndexes[availableIndexes.length - 1];
+    setSelectedMonthIndex(fallbackIndex);
+  }, [filteredMonthOptions, selectedMonthIndex]);
+  const selectedMonthLabel = useMemo(() => {
+    if (selectedMonthOption?.label) {
+      return selectedMonthOption.label;
+    }
+
+    const formatter = new Intl.DateTimeFormat("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+    return formatter.format(new Date(selectedYear, selectedMonthIndex, 1));
+  }, [selectedMonthIndex, selectedMonthOption, selectedYear]);
   const [pptxFactory, setPptxFactory] = useState(null);
   const [userInsightState, setUserInsightState] = useState({
     loading: true,
@@ -2861,11 +2972,11 @@ export default function ExecutiveSummaryPage() {
     };
   }, []);
 
-  const rawMonthlyData = monthlyData[selectedMonth];
+  const rawMonthlyData = monthlyData[selectedMonthKey];
   const fallbackMonthLabel =
     rawMonthlyData?.monthLabel ??
-    selectedMonthOption?.label ??
-    (selectedMonth ? selectedMonth : "Periode Tidak Tersedia");
+    selectedMonthLabel ??
+    (selectedMonthKey ? selectedMonthKey : "Periode Tidak Tersedia");
   const defaultMonthlyEntry = {
     monthLabel: fallbackMonthLabel,
     overviewNarrative: "Belum ada ringkasan kinerja untuk periode ini.",
@@ -2939,7 +3050,7 @@ export default function ExecutiveSummaryPage() {
         error: "",
       }));
 
-      const periodRange = getMonthDateRange(selectedMonth);
+      const periodRange = getMonthDateRange(selectedMonthKey);
       const periodeParam = periodRange ? "bulanan" : undefined;
       const tanggalParam = periodRange?.startDate;
       const startDateParam = periodRange?.startDate;
@@ -3171,7 +3282,7 @@ export default function ExecutiveSummaryPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [token, clientId, selectedMonth]);
+  }, [token, clientId, selectedMonthKey]);
 
   const pptSummary = useMemo(() => {
     return [
@@ -3823,21 +3934,64 @@ export default function ExecutiveSummaryPage() {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
                   Show Data By
                 </span>
-                <label className="flex flex-col text-sm font-medium text-slate-200">
-                  <span className="text-base font-semibold text-slate-100">Month</span>
-                  <select
-                    value={selectedMonth}
-                    onChange={(event) => setSelectedMonth(event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
-                    aria-label="Filter data by month"
-                  >
-                    {monthOptions.map((option) => (
-                      <option key={option.key} value={option.key}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="grid gap-3">
+                  <label className="flex flex-col text-sm font-medium text-slate-200">
+                    <span className="text-base font-semibold text-slate-100">Month</span>
+                    <select
+                      value={selectedMonthIndex}
+                      onChange={(event) => {
+                        const nextIndex = Number.parseInt(event.target.value, 10);
+                        setSelectedMonthIndex((previous) => {
+                          if (!Number.isFinite(nextIndex)) {
+                            return previous;
+                          }
+                          return clamp(nextIndex, 0, 11);
+                        });
+                      }}
+                      className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                      aria-label="Filter data by month"
+                    >
+                      {monthDropdownOptions.map((option) => (
+                        <option
+                          key={option.key}
+                          value={option.monthIndex}
+                          disabled={
+                            !option.isAvailable && filteredMonthOptions.length > 0
+                          }
+                        >
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col text-sm font-medium text-slate-200">
+                    <span className="text-base font-semibold text-slate-100">Year</span>
+                    <select
+                      value={selectedYear}
+                      onChange={(event) => {
+                        const nextYear = Number.parseInt(event.target.value, 10);
+                        setSelectedYear((previous) => {
+                          if (!Number.isFinite(nextYear)) {
+                            return previous;
+                          }
+                          return clamp(
+                            nextYear,
+                            MIN_SELECTABLE_YEAR,
+                            MAX_SELECTABLE_YEAR,
+                          );
+                        });
+                      }}
+                      className="mt-2 w-full rounded-xl border border-cyan-500/40 bg-slate-900/80 px-4 py-2 text-slate-100 shadow-[0_0_20px_rgba(56,189,248,0.2)] focus:border-cyan-400 focus:outline-none"
+                      aria-label="Filter data by year"
+                    >
+                      {yearOptions.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
               </div>
             </div>
             <Button
