@@ -784,6 +784,9 @@ const LIKE_RECORD_COMMENT_FIELDS = [
   "rekap.total_komentar",
 ];
 
+export const INSTAGRAM_LIKE_FIELD_PATHS = [...LIKE_RECORD_LIKE_FIELDS];
+export const TIKTOK_COMMENT_FIELD_PATHS = [...LIKE_RECORD_COMMENT_FIELDS];
+
 const LIKE_RECORD_ACTIVE_FIELDS = [
   "jumlah_personil_aktif",
   "jumlahPersonilAktif",
@@ -874,6 +877,17 @@ const readNumericField = (record, paths = []) => {
   return Number.isFinite(numeric) ? Math.max(0, Number(numeric) || 0) : 0;
 };
 
+export const sumActivityRecords = (records, fieldPaths) => {
+  if (!Array.isArray(records) || !Array.isArray(fieldPaths)) {
+    return 0;
+  }
+
+  return records.reduce(
+    (total, record) => total + readNumericField(record, fieldPaths),
+    0,
+  );
+};
+
 const normalizeClientIdentifiers = (record = {}) => {
   let clientIdValue = null;
   for (const field of LIKE_RECORD_CLIENT_ID_FIELDS) {
@@ -928,7 +942,7 @@ const normalizeUserKeyFromRecord = (record = {}) => {
   return null;
 };
 
-const computeActivityBuckets = ({
+export const computeActivityBuckets = ({
   users,
   likes,
   comments,

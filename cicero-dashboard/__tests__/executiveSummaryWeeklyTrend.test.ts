@@ -3,6 +3,11 @@ import {
   resolveRecordDate,
   shouldShowWeeklyTrendCard,
 } from "@/app/executive-summary/weeklyTrendUtils";
+import {
+  INSTAGRAM_LIKE_FIELD_PATHS,
+  TIKTOK_COMMENT_FIELD_PATHS,
+  sumActivityRecords,
+} from "@/app/executive-summary/page";
 
 describe("groupRecordsByWeek weekly trend integration", () => {
   it("groups instagram activity into weekly buckets and shows the trend card", () => {
@@ -49,6 +54,30 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     });
 
     expect(shouldShow).toBe(true);
+  });
+
+  it("aggregates instagram likes from daily activity records", () => {
+    const records = [
+      { tanggal: "2024-05-01", jumlah_like: 5 },
+      { tanggal: "2024-05-02", rekap: { total_like: "7" } },
+      { tanggal: "2024-05-03", total_like: "invalid" },
+    ];
+
+    const totalLikes = sumActivityRecords(records, INSTAGRAM_LIKE_FIELD_PATHS);
+
+    expect(totalLikes).toBe(12);
+  });
+
+  it("aggregates tiktok comments from daily activity records", () => {
+    const records = [
+      { created_at: "2024-06-10T07:00:00Z", komentar: 4 },
+      { created_at: "2024-06-11T07:00:00Z", rekap: { total_komentar: "3" } },
+      { created_at: "2024-06-12T07:00:00Z", komentar: null },
+    ];
+
+    const totalComments = sumActivityRecords(records, TIKTOK_COMMENT_FIELD_PATHS);
+
+    expect(totalComments).toBe(7);
   });
 
   it("groups posts with only date/tanggal fields and shows the trend card", () => {
