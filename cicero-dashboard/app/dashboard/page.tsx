@@ -111,11 +111,47 @@ const pickNumericValue = (source: any, paths: string[]): number => {
 };
 
 export default function DashboardPage() {
-  const { token } = useAuth();
+  const { token, profile } = useAuth();
   const [igProfile, setIgProfile] = useState<any>(null);
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [tiktokProfile, setTiktokProfile] = useState<any>(null);
   const [tiktokPosts, setTiktokPosts] = useState<any[]>([]);
+
+  const clientUsernames = useMemo(() => {
+    const sanitizeUsername = (value: unknown) =>
+      typeof value === "string" ? value.replace(/^@+/, "").trim() : "";
+
+    const pickUsername = (candidates: unknown[]) => {
+      for (const candidate of candidates) {
+        const sanitized = sanitizeUsername(candidate);
+        if (sanitized) return sanitized;
+      }
+      return "";
+    };
+
+    const instagram = pickUsername([
+      profile?.client?.client_insta,
+      profile?.client_insta,
+      profile?.client?.instagram,
+      profile?.instagram,
+      profile?.client?.instagram_username,
+      profile?.instagram_username,
+    ]);
+
+    const tiktok = pickUsername([
+      profile?.client?.client_tiktok,
+      profile?.client_tiktok,
+      profile?.client?.tiktok,
+      profile?.tiktok,
+      profile?.client?.tiktok_username,
+      profile?.tiktok_username,
+    ]);
+
+    return {
+      instagram: instagram || undefined,
+      tiktok: tiktok || undefined,
+    } as const;
+  }, [profile]);
 
   useEffect(() => {
     if (!token) return;
@@ -725,6 +761,7 @@ export default function DashboardPage() {
               },
               {} as Record<string, (typeof analytics.platforms)[number]>
             )}
+            clientUsernames={clientUsernames}
           />
         </section>
 
