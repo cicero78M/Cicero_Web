@@ -14,9 +14,9 @@ describe("computeActivityBuckets", () => {
     const result = computeActivityBuckets({
       users: baseUsers,
       likes: [
-        { username: "Alpha" },
-        { username: "alpha" },
-        { username: "BRAVO" },
+        { username: "Alpha", jumlah_like: 12 },
+        { username: "alpha", jumlah_like: 8 },
+        { username: "BRAVO", jumlah_like: 5 },
       ],
       comments: [],
       totalIGPosts: "10",
@@ -26,13 +26,15 @@ describe("computeActivityBuckets", () => {
     expect(result.evaluatedUsers).toBe(3);
     expect(result.totalContent).toBe(15);
 
-    const instagram = findCategory(result.categories, "instagram-active");
-    const tiktok = findCategory(result.categories, "tiktok-active");
-    const passive = findCategory(result.categories, "passive");
+    const mostActive = findCategory(result.categories, "most-active");
+    const moderate = findCategory(result.categories, "moderate");
+    const low = findCategory(result.categories, "low");
+    const inactive = findCategory(result.categories, "inactive");
 
-    expect(instagram?.count).toBe(2);
-    expect(tiktok?.count).toBe(0);
-    expect(passive?.count).toBe(1);
+    expect(mostActive?.count).toBe(0);
+    expect(moderate?.count).toBe(1);
+    expect(low?.count).toBe(1);
+    expect(inactive?.count).toBe(1);
   });
 
   it("mengelompokkan personil aktif TikTok saja", () => {
@@ -40,8 +42,8 @@ describe("computeActivityBuckets", () => {
       users: baseUsers,
       likes: [],
       comments: [
-        { username: "Charlie" },
-        { username: "CHARLIE" },
+        { username: "Charlie", jumlah_komentar: 12 },
+        { username: "CHARLIE", jumlahKomentar: 6 },
       ],
       totalIGPosts: 0,
       totalTikTokPosts: "8",
@@ -50,22 +52,24 @@ describe("computeActivityBuckets", () => {
     expect(result.evaluatedUsers).toBe(3);
     expect(result.totalContent).toBe(8);
 
-    const instagram = findCategory(result.categories, "instagram-active");
-    const tiktok = findCategory(result.categories, "tiktok-active");
-    const passive = findCategory(result.categories, "passive");
+    const mostActive = findCategory(result.categories, "most-active");
+    const moderate = findCategory(result.categories, "moderate");
+    const low = findCategory(result.categories, "low");
+    const inactive = findCategory(result.categories, "inactive");
 
-    expect(instagram?.count).toBe(0);
-    expect(tiktok?.count).toBe(1);
-    expect(passive?.count).toBe(2);
+    expect(mostActive?.count).toBe(1);
+    expect(moderate?.count).toBe(0);
+    expect(low?.count).toBe(0);
+    expect(inactive?.count).toBe(2);
   });
 
   it("menggabungkan aktivitas Instagram dan TikTok", () => {
     const result = computeActivityBuckets({
       users: baseUsers,
-      likes: [{ username: "Alpha" }],
+      likes: [{ username: "Alpha", jumlah_like: 2 }],
       comments: [
-        { username: "Bravo" },
-        { username: "Alpha" },
+        { username: "Bravo", jumlah_komentar: 4 },
+        { username: "Alpha", jumlah_komentar: 1 },
       ],
       totalIGPosts: 2,
       totalTikTokPosts: 3,
@@ -74,13 +78,15 @@ describe("computeActivityBuckets", () => {
     expect(result.evaluatedUsers).toBe(3);
     expect(result.totalContent).toBe(5);
 
-    const instagram = findCategory(result.categories, "instagram-active");
-    const tiktok = findCategory(result.categories, "tiktok-active");
-    const passive = findCategory(result.categories, "passive");
+    const mostActive = findCategory(result.categories, "most-active");
+    const moderate = findCategory(result.categories, "moderate");
+    const low = findCategory(result.categories, "low");
+    const inactive = findCategory(result.categories, "inactive");
 
-    expect(instagram?.count).toBe(1);
-    expect(tiktok?.count).toBe(2);
-    expect(passive?.count).toBe(1);
+    expect(mostActive?.count).toBe(0);
+    expect(moderate?.count).toBe(2);
+    expect(low?.count).toBe(0);
+    expect(inactive?.count).toBe(1);
   });
 
   it("menghitung personil pasif ketika tidak ada aktivitas yang cocok", () => {
@@ -90,21 +96,23 @@ describe("computeActivityBuckets", () => {
         { username: "ALPHA" },
         { username: "Bravo" },
       ],
-      likes: [{ username: "Delta" }],
+      likes: [{ username: "Delta", jumlah_like: 3 }],
       comments: [],
       totalIGPosts: 1,
       totalTikTokPosts: undefined,
     });
 
-    expect(result.evaluatedUsers).toBe(2);
+    expect(result.evaluatedUsers).toBe(3);
     expect(result.totalContent).toBe(1);
 
-    const instagram = findCategory(result.categories, "instagram-active");
-    const tiktok = findCategory(result.categories, "tiktok-active");
-    const passive = findCategory(result.categories, "passive");
+    const mostActive = findCategory(result.categories, "most-active");
+    const moderate = findCategory(result.categories, "moderate");
+    const low = findCategory(result.categories, "low");
+    const inactive = findCategory(result.categories, "inactive");
 
-    expect(instagram?.count).toBe(0);
-    expect(tiktok?.count).toBe(0);
-    expect(passive?.count).toBe(2);
+    expect(mostActive?.count).toBe(1);
+    expect(moderate?.count).toBe(0);
+    expect(low?.count).toBe(0);
+    expect(inactive?.count).toBe(2);
   });
 });

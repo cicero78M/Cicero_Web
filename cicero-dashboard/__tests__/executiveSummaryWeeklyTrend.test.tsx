@@ -1,3 +1,7 @@
+import "@testing-library/jest-dom";
+
+import { render, screen } from "@testing-library/react";
+
 import {
   groupRecordsByMonth,
   resolveRecordDate,
@@ -8,6 +12,7 @@ import {
   TIKTOK_COMMENT_FIELD_PATHS,
   sumActivityRecords,
 } from "@/app/executive-summary/activityRecords";
+import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 
 describe("groupRecordsByMonth monthly trend integration", () => {
   it("groups instagram activity into monthly buckets and shows the trend card", () => {
@@ -215,5 +220,60 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     });
 
     expect(shouldShow).toBe(true);
+  });
+});
+
+describe("Monthly trend card metric emphasis", () => {
+  it("prioritizes personnel interactions as the primary monthly metric", () => {
+    render(
+      <MonthlyTrendCard
+        title="Instagram"
+        currentMetrics={[
+          { key: "likes", label: "Likes Personil", value: 24 },
+        ]}
+        previousMetrics={[
+          { key: "likes", label: "Likes Personil", value: 18 },
+        ]}
+        series={[
+          {
+            key: "2024-07",
+            label: "Juli 2024",
+            primary: 24,
+          },
+        ]}
+      />,
+    );
+
+    const detail = screen.getByText("Likes: 24");
+    expect(detail).toBeInTheDocument();
+    expect(detail.textContent).toBe("Likes: 24");
+  });
+
+  it("supports custom interaction labels with optional secondary metrics", () => {
+    render(
+      <MonthlyTrendCard
+        title="TikTok"
+        currentMetrics={[
+          { key: "comments", label: "Komentar Personil", value: 18 },
+        ]}
+        previousMetrics={[
+          { key: "comments", label: "Komentar Personil", value: 12 },
+        ]}
+        primaryMetricLabel="Komentar Personil"
+        secondaryMetricLabel="Post"
+        series={[
+          {
+            key: "2024-07",
+            label: "Juli 2024",
+            primary: 18,
+            secondary: 4,
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByText("Komentar Personil: 18 • Post: 4"),
+    ).toBeInTheDocument();
   });
 });
