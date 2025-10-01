@@ -68,6 +68,17 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     expect(totalLikes).toBe(12);
   });
 
+  it("aggregates instagram likes from nested personnel fields", () => {
+    const records = [
+      { tanggal: "2024-07-01", likes_personil: "4" },
+      { tanggal: "2024-07-02", rekap: { totalLikesPersonnel: "5" } },
+    ];
+
+    const totalLikes = sumActivityRecords(records, INSTAGRAM_LIKE_FIELD_PATHS);
+
+    expect(totalLikes).toBe(9);
+  });
+
   it("uses activityDate ISO values when grouping instagram likes by week", () => {
     const records = [
       {
@@ -120,6 +131,17 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     const totalComments = sumActivityRecords(records, TIKTOK_COMMENT_FIELD_PATHS);
 
     expect(totalComments).toBe(7);
+  });
+
+  it("aggregates tiktok comments from nested personnel fields", () => {
+    const records = [
+      { created_at: "2024-07-01T07:00:00Z", komentar_personil: 2 },
+      { created_at: "2024-07-03T07:00:00Z", rekap: { totalCommentsPersonnel: "6" } },
+    ];
+
+    const totalComments = sumActivityRecords(records, TIKTOK_COMMENT_FIELD_PATHS);
+
+    expect(totalComments).toBe(8);
   });
 
   it("aggregates totals from records that only expose snake_case activity dates", () => {
