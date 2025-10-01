@@ -68,6 +68,48 @@ describe("groupRecordsByWeek weekly trend integration", () => {
     expect(totalLikes).toBe(12);
   });
 
+  it("uses activityDate ISO values when grouping instagram likes by week", () => {
+    const records = [
+      {
+        tanggal: "31/05/2024",
+        activityDate: "2024-05-31T00:00:00.000Z",
+        jumlah_like: 5,
+      },
+      {
+        tanggal: "01/06/2024",
+        activityDate: "2024-06-01T00:00:00.000Z",
+        rekap: { total_like: "7" },
+      },
+    ];
+
+    const weeklyLikes = groupRecordsByWeek(records, {
+      datePaths: [
+        "activityDate",
+        "tanggal",
+        "date",
+        "created_at",
+        "createdAt",
+        "updated_at",
+        "updatedAt",
+        "time",
+        "waktu",
+        "rekap.tanggal",
+        "rekap.date",
+        "rekap.created_at",
+        "rekap.createdAt",
+      ],
+    });
+
+    expect(weeklyLikes).toHaveLength(1);
+
+    const totalLikes = sumActivityRecords(
+      weeklyLikes[0].records,
+      INSTAGRAM_LIKE_FIELD_PATHS,
+    );
+
+    expect(totalLikes).toBe(12);
+  });
+
   it("aggregates tiktok comments from daily activity records", () => {
     const records = [
       { created_at: "2024-06-10T07:00:00Z", komentar: 4 },
