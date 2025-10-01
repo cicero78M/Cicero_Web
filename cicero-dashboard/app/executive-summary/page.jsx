@@ -5210,45 +5210,7 @@ export default function ExecutiveSummaryPage() {
           </p>
         </div>
         <div className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {shouldShowInstagramTrendCard ? (
-              <WeeklyTrendCard
-                title="Tren Aktivitas Instagram"
-                description={instagramWeeklyTrendDescription}
-                loading={showPlatformLoading}
-                error={instagramWeeklyCardError}
-                currentMetrics={instagramWeeklyCardData.currentMetrics}
-                previousMetrics={instagramWeeklyCardData.previousMetrics}
-                deltaMetrics={instagramWeeklyCardData.deltaMetrics}
-                series={instagramWeeklyCardData.series}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-                primaryMetricLabel="Post Instagram"
-                secondaryMetricLabel="Likes Personil"
-              />
-            ) : null}
-            {shouldShowTiktokTrendCard ? (
-              <WeeklyTrendCard
-                title="Tren Aktivitas TikTok"
-                description={tiktokWeeklyTrendDescription}
-                loading={showPlatformLoading}
-                error={tiktokWeeklyCardError}
-                currentMetrics={tiktokWeeklyCardData.currentMetrics}
-                previousMetrics={tiktokWeeklyCardData.previousMetrics}
-                deltaMetrics={tiktokWeeklyCardData.deltaMetrics}
-                series={tiktokWeeklyCardData.series}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-                primaryMetricLabel="Post TikTok"
-                secondaryMetricLabel="Komentar Personil"
-              />
-            ) : null}
-            {!shouldShowInstagramTrendCard && !shouldShowTiktokTrendCard ? (
-              <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-                Belum ada data tren mingguan yang dapat ditampilkan.
-              </div>
-            ) : null}
-          </div>
+
           {showPlatformLoading ? (
             <div className="flex h-40 items-center justify-center rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
               Memuat data performa kanal…
