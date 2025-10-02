@@ -3736,7 +3736,7 @@ export default function ExecutiveSummaryPage() {
                   </div>
                   <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/60">
                     {divisionDistribution.length > 0 ? (
-                      <div className="relative max-h-[520px] overflow-y-auto">
+                      <div className="relative">
                         <table className="min-w-full divide-y divide-slate-800 text-left">
                           <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-950/90 via-slate-900/80 to-slate-950/90 text-[11px] uppercase tracking-[0.28em] text-slate-300 backdrop-blur supports-[backdrop-filter]:bg-slate-900/70">
                             <tr className="text-xs text-slate-300">
