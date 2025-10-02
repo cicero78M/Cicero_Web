@@ -2475,9 +2475,9 @@ export default function ExecutiveSummaryPage() {
               token,
               clientId,
               activityPeriodeParam,
-              undefined,
-              undefined,
-              undefined,
+              tanggalParam,
+              startDateParam,
+              endDateParam,
               controller.signal,
             ).catch((error) => {
               console.warn("Gagal memuat rekap likes IG", error);
@@ -2487,9 +2487,9 @@ export default function ExecutiveSummaryPage() {
               token,
               clientId,
               activityPeriodeParam,
-              undefined,
-              undefined,
-              undefined,
+              tanggalParam,
+              startDateParam,
+              endDateParam,
               controller.signal,
             ).catch((error) => {
               console.warn("Gagal memuat rekap komentar TikTok", error);
