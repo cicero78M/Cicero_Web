@@ -65,8 +65,23 @@ const aggregateLikesRecords = (records = []) => {
       record?.jumlah_komentar ??
         record?.jumlahKomentar ??
         record?.total_komentar ??
+        record?.totalKomentar ??
+        record?.total_comments ??
+        record?.totalComments ??
+        record?.total_comments_personil ??
+        record?.total_comments_personel ??
+        record?.total_comments_personnel ??
+        record?.totalCommentsPersonil ??
+        record?.totalCommentsPersonel ??
+        record?.totalCommentsPersonnel ??
+        record?.comment_count ??
+        record?.commentCount ??
         record?.comments ??
-        record?.totalComments,
+        record?.metrics?.comments ??
+        record?.metrics?.comment_count ??
+        record?.metrics?.commentCount ??
+        record?.metrics?.totalComments ??
+        record?.metrics?.total_comments,
     );
     const username = String(record?.username ?? record?.user_name ?? "").trim();
     const nama = String(record?.nama ?? record?.name ?? record?.full_name ?? "").trim();
