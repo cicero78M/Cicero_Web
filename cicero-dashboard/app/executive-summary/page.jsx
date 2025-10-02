@@ -437,7 +437,7 @@ const computeUserInsight = (users = []) => {
   const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
   const sortedByDivisionSize = [...divisionArray].sort((a, b) => b.total - a.total);
-  const divisionDistribution = sortedByDivisionSize.slice(0, 12).map((item, index) => ({
+  const divisionDistribution = sortedByDivisionSize.map((item, index) => ({
     id: item.division ?? `division-${index}`,
     rank: index + 1,
     division: beautifyDivisionName(item.displayName ?? item.division),
@@ -3651,10 +3651,11 @@ export default function ExecutiveSummaryPage() {
             {userSummary ? (
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/40">
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-slate-900/40 opacity-80" />
-                    <div className="relative space-y-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80">
+                  <div className="group relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5 shadow-[0_22px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-slate-900/50 opacity-90" />
+                    <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+                    <div className="relative space-y-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200/80">
                         Total Personil
                       </p>
                       <p className="text-3xl font-semibold text-slate-50">
@@ -3663,10 +3664,11 @@ export default function ExecutiveSummaryPage() {
                       <p className="text-xs text-slate-400">Tercatat dalam direktori aktif.</p>
                     </div>
                   </div>
-                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-fuchsia-400/40">
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-fuchsia-500/20 via-transparent to-slate-900/40 opacity-80" />
-                    <div className="relative space-y-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-fuchsia-200/80">
+                  <div className="group relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5 shadow-[0_22px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-fuchsia-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-fuchsia-500/20 via-transparent to-slate-900/50 opacity-90" />
+                    <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400/60 to-transparent" />
+                    <div className="relative space-y-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-fuchsia-200/80">
                         Instagram Lengkap
                       </p>
                       <p className="text-2xl font-semibold text-slate-50">
@@ -3677,10 +3679,11 @@ export default function ExecutiveSummaryPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-sky-400/40">
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-500/20 via-transparent to-slate-900/40 opacity-80" />
-                    <div className="relative space-y-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+                  <div className="group relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5 shadow-[0_22px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-sky-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-500/20 via-transparent to-slate-900/50 opacity-90" />
+                    <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
+                    <div className="relative space-y-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-sky-200/80">
                         TikTok Lengkap
                       </p>
                       <p className="text-2xl font-semibold text-slate-50">
@@ -3691,11 +3694,12 @@ export default function ExecutiveSummaryPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-emerald-400/40">
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-slate-900/40 opacity-80" />
+                  <div className="group relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/70 p-5 shadow-[0_22px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-emerald-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-slate-900/50 opacity-90" />
+                    <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
                     <div className="relative flex h-full flex-col justify-between gap-4">
                       <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200/80">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">
                           IG & TikTok Lengkap
                         </p>
                         <p className="text-2xl font-semibold text-slate-50">
@@ -3711,30 +3715,30 @@ export default function ExecutiveSummaryPage() {
               </div>
             ) : null}
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] 2xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-              <div className="space-y-6">
-                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
-                  <div className="pointer-events-none absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-                  <div className="relative space-y-6">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                          Distribusi User per Satker
-                        </h3>
-                        <p className="mt-1 text-xs text-slate-400">
-                          Urutan berdasarkan jumlah personil terbanyak dengan rasio kelengkapan akun.
-                        </p>
-                      </div>
-                      {userSummary?.totalUsers ? (
-                        <span className="inline-flex items-center rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-700">
-                          Total {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil
-                        </span>
-                      ) : null}
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.9fr)_minmax(0,1.1fr)] 2xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1.2fr)]">
+              <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_32px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                <div className="pointer-events-none absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
+                <div className="relative space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        Distribusi User per Satker
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Urutan lengkap setiap satker berdasarkan jumlah personil dan rasio kelengkapan akun.
+                      </p>
                     </div>
-                    <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/60">
-                      {divisionDistribution.length > 0 ? (
+                    {userSummary?.totalUsers ? (
+                      <span className="inline-flex items-center rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-700">
+                        Total {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/60">
+                    {divisionDistribution.length > 0 ? (
+                      <div className="relative max-h-[520px] overflow-y-auto">
                         <table className="min-w-full divide-y divide-slate-800 text-left">
-                          <thead className="bg-slate-900/70 text-xs uppercase tracking-[0.2em] text-slate-300">
+                          <thead className="sticky top-0 z-10 bg-slate-900/80 text-[11px] uppercase tracking-[0.28em] text-slate-300 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60">
                             <tr>
                               <th scope="col" className="px-4 py-3">Satker / Polres</th>
                               <th scope="col" className="w-40 px-4 py-3">Porsi Personil</th>
@@ -3752,13 +3756,13 @@ export default function ExecutiveSummaryPage() {
                                   )
                                 : 0;
                               return (
-                                <tr key={row.id || row.division} className="transition-colors hover:bg-slate-900/50">
-                                  <td className="px-4 py-4">
+                                <tr key={row.id || row.division} className="transition-colors hover:bg-slate-900/40">
+                                  <td className="px-4 py-2.5">
                                     <div className="flex items-center gap-3">
-                                      <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-500">
+                                      <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-500">
                                         {String(row.rank).padStart(2, "0")}
                                       </span>
-                                      <div>
+                                      <div className="space-y-1">
                                         <p className="font-semibold text-slate-100">{row.division}</p>
                                         <p className="text-xs text-slate-400">
                                           {formatNumber(row.total, { maximumFractionDigits: 0 })} personil (
@@ -3767,12 +3771,12 @@ export default function ExecutiveSummaryPage() {
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-4">
+                                  <td className="px-4 py-2.5">
                                     <div className="flex items-center gap-3">
                                       <span className="tabular-nums text-sm font-semibold text-slate-100">
                                         {formatNumber(row.total, { maximumFractionDigits: 0 })}
                                       </span>
-                                      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-800/80">
+                                      <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800/80">
                                         <span
                                           className="absolute inset-y-0 left-0 rounded-full bg-cyan-400/70"
                                           style={{ width: `${totalShare}%` }}
@@ -3780,7 +3784,7 @@ export default function ExecutiveSummaryPage() {
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-4">
+                                  <td className="px-4 py-2.5">
                                     <div className="flex flex-col gap-1">
                                       <span className="tabular-nums text-sm font-semibold text-slate-100">
                                         {formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })}
@@ -3790,7 +3794,7 @@ export default function ExecutiveSummaryPage() {
                                       </span>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-4">
+                                  <td className="px-4 py-2.5">
                                     <div className="flex flex-col gap-1">
                                       <span className="tabular-nums text-sm font-semibold text-slate-100">
                                         {formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })}
@@ -3800,15 +3804,15 @@ export default function ExecutiveSummaryPage() {
                                       </span>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-4">
+                                  <td className="px-4 py-2.5">
                                     <div className="flex flex-col gap-2">
-                                      <div className="flex items-baseline justify-between text-xs text-slate-400">
+                                      <div className="flex items-baseline justify-between text-[11px] text-slate-400">
                                         <span className="text-sm font-semibold text-cyan-200">
                                           {formatPercent(row.completionPercent)}
                                         </span>
                                         <span>Kelengkapan</span>
                                       </div>
-                                      <div className="h-2 overflow-hidden rounded-full bg-slate-800/80">
+                                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-800/80">
                                         <span
                                           className="block h-full rounded-full bg-cyan-400/80"
                                           style={{
@@ -3823,80 +3827,18 @@ export default function ExecutiveSummaryPage() {
                             })}
                           </tbody>
                         </table>
-                      ) : (
-                        <div className="flex h-48 items-center justify-center text-sm text-slate-400">
-                          Belum ada distribusi satker yang bisa ditampilkan.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-emerald-400/40">
-                  <div className="pointer-events-none absolute inset-x-8 top-10 h-56 rounded-full bg-emerald-500/10 blur-3xl" />
-                  <div className="relative">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">
-                          10 Polres dengan Rasio Kelengkapan Data Terendah
-                        </h3>
-                        <p className="mt-1 text-xs text-slate-400">
-                          Fokuskan pendampingan pada satuan kerja dengan performa terendah.
-                        </p>
-                      </div>
-                    </div>
-                    {lowestCompletionDivisions.length > 0 ? (
-                      <div className="mt-6 h-[360px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={lowestCompletionDivisions}
-                            layout="vertical"
-                            margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="rgba(148, 163, 184, 0.2)"
-                              horizontal={false}
-                            />
-                            <XAxis
-                              type="number"
-                              domain={[0, 100]}
-                              ticks={[0, 25, 50, 75, 100]}
-                              tickFormatter={(value) => `${value}%`}
-                              tick={{ fill: "#94a3b8", fontSize: 11 }}
-                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                            />
-                            <YAxis
-                              dataKey="division"
-                              type="category"
-                              width={120}
-                              tick={{ fill: "#e2e8f0", fontSize: 12 }}
-                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                            />
-                            <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
-                            <Bar dataKey="completion" fill="#f97316" radius={[0, 6, 6, 0]} maxBarSize={26}>
-                              <LabelList
-                                dataKey="completion"
-                                position="right"
-                                formatter={(value) => `${value}%`}
-                                fill="#e2e8f0"
-                                fontSize={11}
-                              />
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
                       </div>
                     ) : (
-                      <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
-                        Belum ada data satker yang bisa dibandingkan.
+                      <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+                        Belum ada distribusi satker yang bisa ditampilkan.
                       </div>
                     )}
                   </div>
-                </section>
-              </div>
+                </div>
+              </section>
 
               <div className="space-y-6">
-                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
                   <div className="pointer-events-none absolute inset-x-10 -top-32 h-64 rounded-full bg-cyan-500/10 blur-3xl" />
                   <div className="relative">
                     <div className="flex items-start justify-between gap-2">
@@ -3910,7 +3852,7 @@ export default function ExecutiveSummaryPage() {
                       </div>
                     </div>
                     {completionBarData.length > 0 ? (
-                      <div className="mt-6 h-[360px]">
+                      <div className="mt-6 h-[340px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             data={completionBarData}
@@ -3938,7 +3880,7 @@ export default function ExecutiveSummaryPage() {
                               axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
                             />
                             <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
-                            <Bar dataKey="completion" fill="#38bdf8" radius={[0, 6, 6, 0]} maxBarSize={26}>
+                            <Bar dataKey="completion" fill="#38bdf8" radius={[0, 6, 6, 0]} maxBarSize={24}>
                               <LabelList
                                 dataKey="completion"
                                 position="right"
@@ -3951,14 +3893,76 @@ export default function ExecutiveSummaryPage() {
                         </ResponsiveContainer>
                       </div>
                     ) : (
-                      <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                      <div className="mt-6 flex h-48 items-center justify-center text-sm text-slate-400">
                         Belum ada data divisi yang bisa ditampilkan.
                       </div>
                     )}
                   </div>
                 </section>
 
-                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-fuchsia-400/40">
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-emerald-400/40">
+                  <div className="pointer-events-none absolute inset-x-8 top-10 h-56 rounded-full bg-emerald-500/10 blur-3xl" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">
+                          10 Polres dengan Rasio Kelengkapan Data Terendah
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Fokuskan pendampingan pada satuan kerja dengan performa terendah.
+                        </p>
+                      </div>
+                    </div>
+                    {lowestCompletionDivisions.length > 0 ? (
+                      <div className="mt-6 h-[340px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={lowestCompletionDivisions}
+                            layout="vertical"
+                            margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="rgba(148, 163, 184, 0.2)"
+                              horizontal={false}
+                            />
+                            <XAxis
+                              type="number"
+                              domain={[0, 100]}
+                              ticks={[0, 25, 50, 75, 100]}
+                              tickFormatter={(value) => `${value}%`}
+                              tick={{ fill: "#94a3b8", fontSize: 11 }}
+                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                            />
+                            <YAxis
+                              dataKey="division"
+                              type="category"
+                              width={120}
+                              tick={{ fill: "#e2e8f0", fontSize: 12 }}
+                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                            />
+                            <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
+                            <Bar dataKey="completion" fill="#f97316" radius={[0, 6, 6, 0]} maxBarSize={24}>
+                              <LabelList
+                                dataKey="completion"
+                                position="right"
+                                formatter={(value) => `${value}%`}
+                                fill="#e2e8f0"
+                                fontSize={11}
+                              />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="mt-6 flex h-48 items-center justify-center text-sm text-slate-400">
+                        Belum ada data satker yang bisa dibandingkan.
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-fuchsia-400/40">
                   <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-fuchsia-500/10 blur-3xl" />
                   <div className="relative">
                     <div className="flex items-start justify-between gap-2">
@@ -4022,7 +4026,7 @@ export default function ExecutiveSummaryPage() {
                   </div>
                 </section>
 
-                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
                   <div className="pointer-events-none absolute -left-16 bottom-10 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
                   <div className="relative">
                     <div className="flex items-start justify-between gap-2">
