@@ -14,6 +14,7 @@ import {
 } from "@/app/executive-summary/activityRecords";
 import {
   aggregateLikesRecords,
+  mergeActivityRecords,
   prepareTrendActivityRecords,
 } from "@/app/executive-summary/dataTransforms";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
@@ -102,6 +103,16 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(totalLikes).toBe(9);
   });
 
+  it("prioritizes instagram personnel likes when general totals also exist", () => {
+    const records = [
+      { tanggal: "2024-07-04", likes_personil: 5, total_like: 20 },
+    ];
+
+    const totalLikes = sumActivityRecords(records, INSTAGRAM_LIKE_FIELD_PATHS);
+
+    expect(totalLikes).toBe(5);
+  });
+
   it("uses activityDate ISO values when grouping instagram likes by month", () => {
     const records = [
       {
@@ -170,6 +181,20 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(totalComments).toBe(8);
   });
 
+  it("prioritizes tiktok personnel comments when general totals also exist", () => {
+    const records = [
+      {
+        created_at: "2024-07-05T07:00:00Z",
+        komentar_personil: 3,
+        total_comments: 12,
+      },
+    ];
+
+    const totalComments = sumActivityRecords(records, TIKTOK_COMMENT_FIELD_PATHS);
+
+    expect(totalComments).toBe(3);
+  });
+
   it("preserves instagram likes totals for records without timestamps", () => {
     const rawLikes = [
       {
@@ -191,6 +216,24 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(summary.totals.totalLikes).toBe(12);
     expect(summary.totals.totalPersonnel).toBe(2);
     expect(summary.clients[0].totalLikes).toBe(12);
+  });
+
+  it("prefers personnel likes when merging records with general totals", () => {
+    const merged = mergeActivityRecords(
+      [
+        {
+          client_id: "CLI-02",
+          nama_client: "Client B",
+          likes_personil: 4,
+          total_like: 10,
+        },
+      ],
+      [],
+    );
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].total_like).toBe(4);
+    expect(merged[0].likes).toBe(4);
   });
 
   it("aggregates totals from records that only expose snake_case activity dates", () => {
@@ -316,6 +359,24 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText("Komentar")).toBeInTheDocument();
     expect(screen.getByText("8")).toBeInTheDocument();
+  });
+
+  it("prefers personnel comments when merging records with general totals", () => {
+    const merged = mergeActivityRecords(
+      [],
+      [
+        {
+          client_id: "CLI-03",
+          nama_client: "Client C",
+          komentar_personil: 6,
+          total_comments: 18,
+        },
+      ],
+    );
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].total_comments).toBe(6);
+    expect(merged[0].comments).toBe(6);
   });
 });
 
