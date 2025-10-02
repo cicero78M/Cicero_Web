@@ -437,6 +437,20 @@ const computeUserInsight = (users = []) => {
   const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
   const sortedByDivisionSize = [...divisionArray].sort((a, b) => b.total - a.total);
+  const divisionDistribution = sortedByDivisionSize.slice(0, 12).map((item, index) => ({
+    id: item.division ?? `division-${index}`,
+    rank: index + 1,
+    division: beautifyDivisionName(item.displayName ?? item.division),
+    total: item.total,
+    instagramFilled: item.igFilled,
+    instagramPercent: Number(item.igPercent.toFixed(1)),
+    tiktokFilled: item.ttFilled,
+    tiktokPercent: Number(item.tiktokPercent.toFixed(1)),
+    completionPercent: Number(item.completionPercent.toFixed(1)),
+    sharePercent: totalUsers
+      ? Number(((item.total / totalUsers) * 100).toFixed(1))
+      : 0,
+  }));
   const topDivisionCount = 6;
   const topDivisions = sortedByDivisionSize.slice(0, topDivisionCount);
   const remainingDivisions = sortedByDivisionSize.slice(topDivisionCount);
@@ -488,6 +502,7 @@ const computeUserInsight = (users = []) => {
     pieTotal,
     divisionComposition,
     divisionCompositionTotal,
+    divisionDistribution,
     narrative,
   };
 };
@@ -2327,6 +2342,7 @@ export default function ExecutiveSummaryPage() {
     pieTotal: 0,
     divisionComposition: [],
     divisionCompositionTotal: 0,
+    divisionDistribution: [],
     narrative: "",
     activityBuckets: null,
   });
@@ -2861,9 +2877,13 @@ export default function ExecutiveSummaryPage() {
     pieTotal,
     divisionComposition,
     divisionCompositionTotal,
+    divisionDistribution: divisionDistributionRaw,
     narrative,
     activityBuckets,
   } = userInsightState;
+  const divisionDistribution = Array.isArray(divisionDistributionRaw)
+    ? divisionDistributionRaw
+    : [];
   const activityCategories = Array.isArray(activityBuckets?.categories)
     ? activityBuckets.categories
     : [];
@@ -2889,6 +2909,15 @@ export default function ExecutiveSummaryPage() {
     platformPostsState && typeof platformPostsState === "object"
       ? platformPostsState
       : { instagram: [], tiktok: [] };
+  const maxDistributionTotal = useMemo(() => {
+    if (!divisionDistribution.length) {
+      return 0;
+    }
+    return divisionDistribution.reduce((maxValue, item) => {
+      const total = Number(item?.total) || 0;
+      return total > maxValue ? total : maxValue;
+    }, 0);
+  }, [divisionDistribution]);
 
   const topContentRows = useMemo(() => {
     const instagramPosts = Array.isArray(platformPosts?.instagram)
@@ -3625,313 +3654,451 @@ export default function ExecutiveSummaryPage() {
             {userInsightState.error}
           </div>
         ) : (
-          <div className="space-y-6">
-            {userSummary && (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    Total Personil
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold text-slate-100">
-                    {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                    Instagram Lengkap
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-100">
-                    {formatNumber(userSummary.instagramFilled, { maximumFractionDigits: 0 })}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {formatPercent(userSummary.instagramPercent)} dari total Personil
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-200/80">
-                    TikTok Lengkap
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-100">
-                    {formatNumber(userSummary.tiktokFilled, { maximumFractionDigits: 0 })}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {formatPercent(userSummary.tiktokPercent)} dari total Personil
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5 sm:col-span-2 xl:col-span-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">
-                    Personil dengan data Username Sosial Media lengkap
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
-                    <p className="text-2xl font-semibold text-slate-100">
-                      {formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })} Personil
-                    </p>
-                    <p className="text-sm text-emerald-300">
-                      {formatPercent(userSummary.bothPercent)} dari keseluruhan data Personil
-                    </p>
+          <div className="space-y-8">
+            {userSummary ? (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-slate-900/40 opacity-80" />
+                    <div className="relative space-y-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80">
+                        Total Personil
+                      </p>
+                      <p className="text-3xl font-semibold text-slate-50">
+                        {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })}
+                      </p>
+                      <p className="text-xs text-slate-400">Tercatat dalam direktori aktif.</p>
+                    </div>
+                  </div>
+                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-fuchsia-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-fuchsia-500/20 via-transparent to-slate-900/40 opacity-80" />
+                    <div className="relative space-y-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-fuchsia-200/80">
+                        Instagram Lengkap
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-50">
+                        {formatNumber(userSummary.instagramFilled, { maximumFractionDigits: 0 })}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {formatPercent(userSummary.instagramPercent)} dari total personil.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-sky-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-500/20 via-transparent to-slate-900/40 opacity-80" />
+                    <div className="relative space-y-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+                        TikTok Lengkap
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-50">
+                        {formatNumber(userSummary.tiktokFilled, { maximumFractionDigits: 0 })}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {formatPercent(userSummary.tiktokPercent)} dari total personil.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1 hover:border-emerald-400/40">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-slate-900/40 opacity-80" />
+                    <div className="relative flex h-full flex-col justify-between gap-4">
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200/80">
+                          IG & TikTok Lengkap
+                        </p>
+                        <p className="text-2xl font-semibold text-slate-50">
+                          {formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center justify-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+                        {formatPercent(userSummary.bothPercent)} dari keseluruhan data
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            <div className="grid gap-6 xl:grid-cols-6 2xl:grid-cols-7">
-              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_35px_-20px_rgba(14,165,233,0.6)] transition-colors hover:border-cyan-400/30 xl:col-span-4 2xl:col-span-4">
-                <div className="pointer-events-none absolute inset-x-10 -top-32 h-64 rounded-full bg-cyan-500/10 blur-3xl" />
-                <div className="relative">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Rasio Kelengkapan Data Tertinggi per Satker / Polres
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Menampilkan lima Polres dengan jumlah Personil terbesar.
-                      </p>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] 2xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+              <div className="space-y-6">
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                  <div className="pointer-events-none absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
+                  <div className="relative space-y-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                          Distribusi User per Satker
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Urutan berdasarkan jumlah personil terbanyak dengan rasio kelengkapan akun.
+                        </p>
+                      </div>
+                      {userSummary?.totalUsers ? (
+                        <span className="inline-flex items-center rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-700">
+                          Total {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil
+                        </span>
+                      ) : null}
                     </div>
-                  </div>
-                  {completionBarData.length > 0 ? (
-                    <div className="mt-6 h-[360px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={completionBarData}
-                          layout="vertical"
-                          margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="rgba(148, 163, 184, 0.2)"
-                            horizontal={false}
-                          />
-                          <XAxis
-                            type="number"
-                            domain={[0, 100]}
-                            ticks={[0, 25, 50, 75, 100]}
-                            tickFormatter={(value) => `${value}%`}
-                            tick={{ fill: "#94a3b8", fontSize: 11 }}
-                            axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                          />
-                          <YAxis
-                            dataKey="division"
-                            type="category"
-                            width={120}
-                            tick={{ fill: "#e2e8f0", fontSize: 12 }}
-                            axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                          />
-                          <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
-                          <Bar dataKey="completion" fill="#38bdf8" radius={[0, 6, 6, 0]} maxBarSize={26}>
-                            <LabelList
-                              dataKey="completion"
-                              position="right"
-                              formatter={(value) => `${value}%`}
-                              fill="#e2e8f0"
-                              fontSize={11}
-                            />
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  ) : (
-                    <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
-                      Belum ada data divisi yang bisa ditampilkan.
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_35px_-18px_rgba(56,189,248,0.45)] transition-colors hover:border-cyan-400/30 xl:col-span-2 2xl:col-span-3">
-                <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-fuchsia-500/10 blur-3xl" />
-                <div className="relative">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Komposisi Kelengkapan Data Username Sosial Media
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Peta Distribusi personil berdasarkan status pengisian akun.
-                      </p>
-                    </div>
-                  </div>
-                  {pieData.length > 0 && pieTotal > 0 ? (
-                    <div className="mt-6 h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={pieData}
-                            dataKey="value"
-                            nameKey="name"
-                            innerRadius={55}
-                            outerRadius={100}
-                            paddingAngle={4}
-                          >
-                            {pieData.map((entry, index) => (
-                              <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                            ))}
-                            <LabelList
-                              dataKey="value"
-                              position="outside"
-                              formatter={(value) =>
-                                pieTotal
-                                  ? `${formatPercent((value / pieTotal) * 100)}`
-                                  : "0%"
-                              }
-                              fill="#e2e8f0"
-                              fontSize={11}
-                            />
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(15,23,42,0.92)",
-                              borderRadius: 16,
-                              borderColor: "rgba(148,163,184,0.4)",
-                              color: "#e2e8f0",
-                            }}
-                            formatter={(value) => [
-                              `${formatNumber(value, { maximumFractionDigits: 0 })} admin`,
-                              "Jumlah",
-                            ]}
-                          />
-                          <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  ) : (
-                    <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
-                      Belum ada distribusi data yang bisa divisualisasikan.
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_45px_-22px_rgba(16,185,129,0.45)] transition-colors hover:border-emerald-400/30 xl:col-span-3 2xl:col-span-4">
-                <div className="pointer-events-none absolute inset-x-6 top-10 h-48 rounded-full bg-emerald-500/10 blur-3xl" />
-                <div className="relative">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        10 Polres dengan Rasio Kelengkapan Data Terendah
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Fokuskan pendampingan pada satuan kerja dengan performa terendah.
-                      </p>
-                      {lowestCompletionDivisions.length > 0 ? (
-                        <div className="mt-6 h-[360px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={lowestCompletionDivisions}
-                              layout="vertical"
-                              margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
-                            >
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                stroke="rgba(148, 163, 184, 0.2)"
-                                horizontal={false}
-                              />
-                              <XAxis
-                                type="number"
-                                domain={[0, 100]}
-                                ticks={[0, 25, 50, 75, 100]}
-                                tickFormatter={(value) => `${value}%`}
-                                tick={{ fill: "#94a3b8", fontSize: 11 }}
-                                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                              />
-                              <YAxis
-                                dataKey="division"
-                                type="category"
-                                width={120}
-                                tick={{ fill: "#e2e8f0", fontSize: 12 }}
-                                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
-                              />
-                              <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
-                              <Bar dataKey="completion" fill="#f97316" radius={[0, 6, 6, 0]} maxBarSize={26}>
-                                <LabelList
-                                  dataKey="completion"
-                                  position="right"
-                                  formatter={(value) => `${value}%`}
-                                  fill="#e2e8f0"
-                                  fontSize={11}
-                                />
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
+                    <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/60">
+                      {divisionDistribution.length > 0 ? (
+                        <table className="min-w-full divide-y divide-slate-800 text-left">
+                          <thead className="bg-slate-900/70 text-xs uppercase tracking-[0.2em] text-slate-300">
+                            <tr>
+                              <th scope="col" className="px-4 py-3">Satker / Polres</th>
+                              <th scope="col" className="w-40 px-4 py-3">Porsi Personil</th>
+                              <th scope="col" className="w-32 px-4 py-3">Instagram</th>
+                              <th scope="col" className="w-32 px-4 py-3">TikTok</th>
+                              <th scope="col" className="w-40 px-4 py-3">Rasio Kelengkapan</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+                            {divisionDistribution.map((row) => {
+                              const totalShare = maxDistributionTotal
+                                ? Math.min(
+                                    Math.max((row.total / maxDistributionTotal) * 100, row.total > 0 ? 6 : 0),
+                                    100,
+                                  )
+                                : 0;
+                              return (
+                                <tr key={row.id || row.division} className="transition-colors hover:bg-slate-900/50">
+                                  <td className="px-4 py-4">
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-500">
+                                        {String(row.rank).padStart(2, "0")}
+                                      </span>
+                                      <div>
+                                        <p className="font-semibold text-slate-100">{row.division}</p>
+                                        <p className="text-xs text-slate-400">
+                                          {formatNumber(row.total, { maximumFractionDigits: 0 })} personil (
+                                          {formatPercent(row.sharePercent)})
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <div className="flex items-center gap-3">
+                                      <span className="tabular-nums text-sm font-semibold text-slate-100">
+                                        {formatNumber(row.total, { maximumFractionDigits: 0 })}
+                                      </span>
+                                      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-800/80">
+                                        <span
+                                          className="absolute inset-y-0 left-0 rounded-full bg-cyan-400/70"
+                                          style={{ width: `${totalShare}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <div className="flex flex-col gap-1">
+                                      <span className="tabular-nums text-sm font-semibold text-slate-100">
+                                        {formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })}
+                                      </span>
+                                      <span className="text-xs text-slate-400">
+                                        {formatPercent(row.instagramPercent)}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <div className="flex flex-col gap-1">
+                                      <span className="tabular-nums text-sm font-semibold text-slate-100">
+                                        {formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })}
+                                      </span>
+                                      <span className="text-xs text-slate-400">
+                                        {formatPercent(row.tiktokPercent)}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <div className="flex flex-col gap-2">
+                                      <div className="flex items-baseline justify-between text-xs text-slate-400">
+                                        <span className="text-sm font-semibold text-cyan-200">
+                                          {formatPercent(row.completionPercent)}
+                                        </span>
+                                        <span>Kelengkapan</span>
+                                      </div>
+                                      <div className="h-2 overflow-hidden rounded-full bg-slate-800/80">
+                                        <span
+                                          className="block h-full rounded-full bg-cyan-400/80"
+                                          style={{
+                                            width: `${Math.min(Math.max(row.completionPercent, 0), 100)}%`,
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       ) : (
-                        <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
-                          Belum ada data satker yang bisa dibandingkan.
+                        <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+                          Belum ada distribusi satker yang bisa ditampilkan.
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
 
-              <section className="group relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/70 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_35px_-18px_rgba(14,165,233,0.4)] transition-colors hover:border-cyan-400/30 xl:col-span-3 2xl:col-span-3">
-                <div className="pointer-events-none absolute -left-16 bottom-10 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
-                <div className="relative">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Komposisi Data Personil pada Satker
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Proporsi personil berdasarkan satker dengan agregasi satker lainnya.
-                      </p>
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-emerald-400/40">
+                  <div className="pointer-events-none absolute inset-x-8 top-10 h-56 rounded-full bg-emerald-500/10 blur-3xl" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200/80">
+                          10 Polres dengan Rasio Kelengkapan Data Terendah
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Fokuskan pendampingan pada satuan kerja dengan performa terendah.
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  {divisionComposition.length > 0 && divisionCompositionTotal > 0 ? (
-                    <div className="mt-6 h-72">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={divisionComposition}
-                            dataKey="value"
-                            nameKey="name"
-                            innerRadius={55}
-                            outerRadius={100}
-                            paddingAngle={3}
+                    {lowestCompletionDivisions.length > 0 ? (
+                      <div className="mt-6 h-[360px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={lowestCompletionDivisions}
+                            layout="vertical"
+                            margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
                           >
-                            {divisionComposition.map((entry, index) => (
-                              <Cell
-                                key={entry.name}
-                                fill={SATKER_PIE_COLORS[index % SATKER_PIE_COLORS.length]}
-                              />
-                            ))}
-                            <LabelList
-                              dataKey="value"
-                              position="outside"
-                              formatter={(value) =>
-                                divisionCompositionTotal
-                                  ? `${formatPercent((value / divisionCompositionTotal) * 100)}`
-                                  : "0%"
-                              }
-                              fill="#e2e8f0"
-                              fontSize={11}
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="rgba(148, 163, 184, 0.2)"
+                              horizontal={false}
                             />
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(15,23,42,0.92)",
-                              borderRadius: 16,
-                              borderColor: "rgba(148,163,184,0.4)",
-                              color: "#e2e8f0",
-                            }}
-                            formatter={(value, _name, item) => [
-                              `${formatNumber(value, { maximumFractionDigits: 0 })} personil`,
-                              item?.payload?.name ?? "Satker",
-                            ]}
-                          />
-                          <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
-                        </PieChart>
-                      </ResponsiveContainer>
+                            <XAxis
+                              type="number"
+                              domain={[0, 100]}
+                              ticks={[0, 25, 50, 75, 100]}
+                              tickFormatter={(value) => `${value}%`}
+                              tick={{ fill: "#94a3b8", fontSize: 11 }}
+                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                            />
+                            <YAxis
+                              dataKey="division"
+                              type="category"
+                              width={120}
+                              tick={{ fill: "#e2e8f0", fontSize: 12 }}
+                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                            />
+                            <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
+                            <Bar dataKey="completion" fill="#f97316" radius={[0, 6, 6, 0]} maxBarSize={26}>
+                              <LabelList
+                                dataKey="completion"
+                                position="right"
+                                formatter={(value) => `${value}%`}
+                                fill="#e2e8f0"
+                                fontSize={11}
+                              />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="mt-6 flex h-40 items-center justify-center text-sm text-slate-400">
+                        Belum ada data satker yang bisa dibandingkan.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
+
+              <div className="space-y-6">
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                  <div className="pointer-events-none absolute inset-x-10 -top-32 h-64 rounded-full bg-cyan-500/10 blur-3xl" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                          Rasio Kelengkapan Data Tertinggi per Satker / Polres
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Menampilkan lima Polres dengan jumlah personil terbesar.
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
-                      Belum ada komposisi satker yang bisa divisualisasikan.
+                    {completionBarData.length > 0 ? (
+                      <div className="mt-6 h-[360px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={completionBarData}
+                            layout="vertical"
+                            margin={{ top: 10, right: 24, bottom: 10, left: 0 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="rgba(148, 163, 184, 0.2)"
+                              horizontal={false}
+                            />
+                            <XAxis
+                              type="number"
+                              domain={[0, 100]}
+                              ticks={[0, 25, 50, 75, 100]}
+                              tickFormatter={(value) => `${value}%`}
+                              tick={{ fill: "#94a3b8", fontSize: 11 }}
+                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                            />
+                            <YAxis
+                              dataKey="division"
+                              type="category"
+                              width={120}
+                              tick={{ fill: "#e2e8f0", fontSize: 12 }}
+                              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                            />
+                            <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.08)" }} content={<CompletionTooltip />} />
+                            <Bar dataKey="completion" fill="#38bdf8" radius={[0, 6, 6, 0]} maxBarSize={26}>
+                              <LabelList
+                                dataKey="completion"
+                                position="right"
+                                formatter={(value) => `${value}%`}
+                                fill="#e2e8f0"
+                                fontSize={11}
+                              />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                        Belum ada data divisi yang bisa ditampilkan.
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-fuchsia-400/40">
+                  <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-fuchsia-500/10 blur-3xl" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                          Komposisi Kelengkapan Data Username Sosial Media
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Peta distribusi personil berdasarkan status pengisian akun.
+                        </p>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </section>
+                    {pieData.length > 0 && pieTotal > 0 ? (
+                      <div className="mt-6 h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={55}
+                              outerRadius={100}
+                              paddingAngle={4}
+                            >
+                              {pieData.map((entry, index) => (
+                                <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                              ))}
+                              <LabelList
+                                dataKey="value"
+                                position="outside"
+                                formatter={(value) =>
+                                  pieTotal
+                                    ? `${formatPercent((value / pieTotal) * 100)}`
+                                    : "0%"
+                                }
+                                fill="#e2e8f0"
+                                fontSize={11}
+                              />
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "rgba(15,23,42,0.92)",
+                                borderRadius: 16,
+                                borderColor: "rgba(148,163,184,0.4)",
+                                color: "#e2e8f0",
+                              }}
+                              formatter={(value) => [
+                                `${formatNumber(value, { maximumFractionDigits: 0 })} admin`,
+                                "Jumlah",
+                              ]}
+                            />
+                            <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                        Belum ada distribusi data yang bisa divisualisasikan.
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="group relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_30px_50px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                  <div className="pointer-events-none absolute -left-16 bottom-10 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                          Komposisi Data Personil pada Satker
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Proporsi personil berdasarkan satker dengan agregasi satker lainnya.
+                        </p>
+                      </div>
+                    </div>
+                    {divisionComposition.length > 0 && divisionCompositionTotal > 0 ? (
+                      <div className="mt-6 h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={divisionComposition}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={55}
+                              outerRadius={100}
+                              paddingAngle={3}
+                            >
+                              {divisionComposition.map((entry, index) => (
+                                <Cell
+                                  key={entry.name}
+                                  fill={SATKER_PIE_COLORS[index % SATKER_PIE_COLORS.length]}
+                                />
+                              ))}
+                              <LabelList
+                                dataKey="value"
+                                position="outside"
+                                formatter={(value) =>
+                                  divisionCompositionTotal
+                                    ? `${formatPercent((value / divisionCompositionTotal) * 100)}`
+                                    : "0%"
+                                }
+                                fill="#e2e8f0"
+                                fontSize={11}
+                              />
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "rgba(15,23,42,0.92)",
+                                borderRadius: 16,
+                                borderColor: "rgba(148,163,184,0.4)",
+                                color: "#e2e8f0",
+                              }}
+                              formatter={(value, _name, item) => [
+                                `${formatNumber(value, { maximumFractionDigits: 0 })} personil`,
+                                item?.payload?.name ?? "Satker",
+                              ]}
+                            />
+                            <Legend verticalAlign="bottom" wrapperStyle={{ color: "#e2e8f0" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="mt-6 flex h-60 items-center justify-center text-sm text-slate-400">
+                        Belum ada komposisi satker yang bisa divisualisasikan.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
             </div>
 
-            <article className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-5">
+            <article className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)]">
               <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
                 Catatan Insight Data Personil
               </h3>
