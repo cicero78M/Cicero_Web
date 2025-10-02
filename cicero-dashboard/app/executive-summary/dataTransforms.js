@@ -284,6 +284,7 @@ const prepareTrendActivityRecords = (records, options = {}) => {
 };
 
 export {
+  createEmptyLikesSummary,
   aggregateLikesRecords,
   ensureRecordsHaveActivityDate,
   prepareTrendActivityRecords,

@@ -41,6 +41,7 @@ import {
   mergeAvailableMonthOptions,
 } from "./monthOptions";
 import {
+  createEmptyLikesSummary,
   aggregateLikesRecords,
   ensureRecordsHaveActivityDate,
   prepareTrendActivityRecords,
