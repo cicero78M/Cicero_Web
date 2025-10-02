@@ -362,4 +362,27 @@ describe("Monthly trend card metric emphasis", () => {
       screen.getByText("Komentar Personil: 18 • Post: 4"),
     ).toBeInTheDocument();
   });
+
+  it("groups activity records that only provide Indonesian month labels", () => {
+    const records = [
+      { periode: "Mei 2024", jumlah_like: "5" },
+      { periode: "Juni 2024", jumlah_like: 7 },
+      { periode: "15 Juli 2024", jumlah_like: 3 },
+    ];
+
+    const buckets = groupRecordsByMonth(records);
+
+    expect(buckets).toHaveLength(3);
+    expect(buckets.map((bucket) => bucket.key)).toEqual([
+      "2024-05",
+      "2024-06",
+      "2024-07",
+    ]);
+
+    const totals = buckets.map((bucket) =>
+      sumActivityRecords(bucket.records, INSTAGRAM_LIKE_FIELD_PATHS),
+    );
+
+    expect(totals).toEqual([5, 7, 3]);
+  });
 });

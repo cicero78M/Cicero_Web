@@ -44,6 +44,21 @@ const pickNestedString = (source, paths = []) => {
   return undefined;
 };
 
+const INDONESIAN_MONTHS = new Map([
+  ["januari", 0],
+  ["februari", 1],
+  ["maret", 2],
+  ["april", 3],
+  ["mei", 4],
+  ["juni", 5],
+  ["juli", 6],
+  ["agustus", 7],
+  ["september", 8],
+  ["oktober", 9],
+  ["november", 10],
+  ["desember", 11],
+]);
+
 const parseDateValue = (value) => {
   if (!value) {
     return null;
@@ -70,7 +85,49 @@ const parseDateValue = (value) => {
       }
     }
 
-    const parsed = new Date(value);
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const slashMatch = trimmed
+      .replace(/[^0-9/\-\s]+/g, " ")
+      .match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (slashMatch) {
+      const [, dayStr, monthStr, yearStr] = slashMatch;
+      const day = Number.parseInt(dayStr, 10);
+      const monthIndex = Number.parseInt(monthStr, 10) - 1;
+      let year = Number.parseInt(yearStr, 10);
+      if (year < 100) {
+        year += year >= 70 ? 1900 : 2000;
+      }
+      const candidate = new Date(Date.UTC(year, monthIndex, day));
+      if (!Number.isNaN(candidate.valueOf())) {
+        return candidate;
+      }
+    }
+
+    const monthNameMatch = trimmed
+      .toLowerCase()
+      .match(/^(\d{1,2})?\s*([a-zA-Z]+)\s*(\d{4})$/);
+    if (monthNameMatch) {
+      const [, dayStr = "1", monthName, yearStr] = monthNameMatch;
+      const normalizedMonth = monthName
+        .normalize("NFD")
+        .replace(/[^a-z]/g, "")
+        .toLowerCase();
+      const monthIndex = INDONESIAN_MONTHS.get(normalizedMonth);
+      const year = Number.parseInt(yearStr, 10);
+      const day = Number.parseInt(dayStr, 10) || 1;
+      if (Number.isFinite(year) && monthIndex != null) {
+        const candidate = new Date(Date.UTC(year, monthIndex, day));
+        if (!Number.isNaN(candidate.valueOf())) {
+          return candidate;
+        }
+      }
+    }
+
+    const parsed = new Date(trimmed);
     if (!Number.isNaN(parsed.valueOf())) {
       return parsed;
     }
@@ -84,6 +141,12 @@ const DEFAULT_ACTIVITY_DATE_PATHS = [
   "activity_date",
   "tanggal",
   "date",
+  "periode",
+  "period",
+  "bulan",
+  "month",
+  "month_label",
+  "monthLabel",
   "created_at",
   "createdAt",
   "updated_at",
@@ -97,8 +160,18 @@ const DEFAULT_ACTIVITY_DATE_PATHS = [
   "rekap.activityDate",
   "rekap.tanggal",
   "rekap.date",
+  "rekap.periode",
+  "rekap.period",
+  "rekap.bulan",
+  "rekap.month",
+  "rekap.month_label",
+  "rekap.monthLabel",
   "rekap.created_at",
   "rekap.createdAt",
+  "rekap.start_date",
+  "rekap.startDate",
+  "rekap.end_date",
+  "rekap.endDate",
   "tiktok.activity_date",
   "tiktok.activityDate",
   "tiktok_activity_date",
