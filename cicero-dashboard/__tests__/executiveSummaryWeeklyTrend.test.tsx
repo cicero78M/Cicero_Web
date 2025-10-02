@@ -7,6 +7,7 @@ import {
   resolveRecordDate,
   shouldShowWeeklyTrendCard,
 } from "@/app/executive-summary/weeklyTrendUtils";
+import { POST_DATE_PATHS } from "@/app/executive-summary/page";
 import {
   INSTAGRAM_LIKE_FIELD_PATHS,
   TIKTOK_COMMENT_FIELD_PATHS,
@@ -30,6 +31,29 @@ beforeAll(() => {
 });
 
 describe("groupRecordsByMonth monthly trend integration", () => {
+  it("retains instagram posts when only tanggal is provided", () => {
+    const records = [
+      { id: 1, tanggal: "2024-05-03" },
+      { id: 2, tanggal: "2024-05-22" },
+      { id: 3, tanggal: "2024-06-01" },
+    ];
+
+    const filtered = records.filter((record) =>
+      Boolean(resolveRecordDate(record, POST_DATE_PATHS)),
+    );
+
+    const buckets = groupRecordsByMonth(filtered, {
+      datePaths: POST_DATE_PATHS,
+    });
+
+    expect(filtered).toHaveLength(3);
+    expect(buckets).toHaveLength(2);
+    expect(buckets[0].key).toBe("2024-05");
+    expect(buckets[0].records).toHaveLength(2);
+    expect(buckets[1].key).toBe("2024-06");
+    expect(buckets[1].records).toHaveLength(1);
+  });
+
   it("groups instagram activity into monthly buckets and shows the trend card", () => {
     const records = [
       { tanggal: "2024-05-01", jumlah_like: 5 },
