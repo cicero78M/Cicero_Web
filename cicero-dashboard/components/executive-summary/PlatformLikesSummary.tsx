@@ -137,6 +137,21 @@ const PlatformLikesSummary = ({
     return topPersonnel.slice(0, 5);
   }, [topPersonnel]);
 
+  const standoutCommenters = useMemo(() => {
+    return [...topPersonnel]
+      .filter((person) => (person.username || person.nama) && (person.comments ?? 0) > 0)
+      .sort((a, b) => {
+        if ((b.comments ?? 0) !== (a.comments ?? 0)) {
+          return (b.comments ?? 0) - (a.comments ?? 0);
+        }
+        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
+          return (b.likes ?? 0) - (a.likes ?? 0);
+        }
+        return (b.active ? 1 : 0) - (a.active ? 1 : 0);
+      })
+      .slice(0, 5);
+  }, [topPersonnel]);
+
   const lastUpdatedLabel = formatDateTime(data?.lastUpdated);
 
   if (clients.length === 0 && standoutPersonnel.length === 0) {
@@ -280,6 +295,42 @@ const PlatformLikesSummary = ({
               ))}
             </ul>
           </div>
+
+          {standoutCommenters.length > 0 ? (
+            <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                Kontributor Komentar Teratas
+              </h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-200">
+                {standoutCommenters.map((person) => {
+                  const identity = person.username || person.nama || "Tanpa Nama";
+                  const additional = [person.nama, person.clientName]
+                    .filter((value) => value && value !== identity)
+                    .join(" · ");
+                  return (
+                    <li key={`commenter-${person.key}`} className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-slate-100">{identity}</p>
+                        {additional ? (
+                          <p className="text-xs text-slate-400">{additional}</p>
+                        ) : null}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-emerald-200">
+                          {formatNumber(person.comments ?? 0, { maximumFractionDigits: 0 })} komentar
+                        </p>
+                        {person.likes > 0 ? (
+                          <p className="text-xs text-slate-400">
+                            {formatNumber(person.likes, { maximumFractionDigits: 0 })} like
+                          </p>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
 
           {standoutPersonnel.length > 0 ? (
             <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
