@@ -10,7 +10,7 @@ import {
 import {
   POST_DATE_PATHS,
   buildMonthlyEngagementTrend,
-} from "@/app/executive-summary/page";
+} from "@/app/executive-summary/sharedUtils";
 import {
   INSTAGRAM_LIKE_FIELD_PATHS,
   TIKTOK_COMMENT_FIELD_PATHS,
