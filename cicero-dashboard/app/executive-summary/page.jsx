@@ -3521,13 +3521,6 @@ export default function ExecutiveSummaryPage() {
                 </div>
               </div>
             </div>
-            <Button
-              onClick={handleDownload}
-              disabled={!pptxFactory}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-2 text-white shadow-[0_10px_30px_rgba(6,182,212,0.25)] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-500/60 disabled:shadow-none sm:w-auto"
-            >
-              <Download className="h-4 w-4" /> Unduh PPT
-            </Button>
           </div>
         </div>
       </header>
@@ -4204,6 +4197,16 @@ export default function ExecutiveSummaryPage() {
           </table>
         </div>
       </section>
+
+      <div className="pt-4">
+        <Button
+          onClick={handleDownload}
+          disabled={!pptxFactory}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-white shadow-[0_10px_30px_rgba(6,182,212,0.25)] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-cyan-500/60 disabled:shadow-none"
+        >
+          <Download className="h-4 w-4" /> Unduh PPT
+        </Button>
+      </div>
     </div>
   );
 }
