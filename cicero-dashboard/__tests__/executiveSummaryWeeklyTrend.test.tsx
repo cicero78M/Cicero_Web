@@ -361,6 +361,56 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(screen.getByText("8")).toBeInTheDocument();
   });
 
+  it("mengurai field rekap string saat menyiapkan tren likes", () => {
+    const rawLikes = [
+      {
+        rekap: JSON.stringify({
+          tanggal: "2024-07-01",
+          total_like_personil: "5",
+        }),
+      },
+      {
+        metrics: JSON.stringify({
+          tanggal: "2024-07-15",
+          total_like_personil: 3,
+        }),
+      },
+    ];
+
+    const sanitized = prepareTrendActivityRecords(rawLikes);
+    const buckets = groupRecordsByMonth(sanitized);
+
+    expect(buckets).toHaveLength(1);
+    expect(
+      sumActivityRecords(buckets[0].records, INSTAGRAM_LIKE_FIELD_PATHS),
+    ).toBe(8);
+  });
+
+  it("mengurai field rekap string saat menyiapkan tren komentar", () => {
+    const rawComments = [
+      {
+        rekap: JSON.stringify({
+          tanggal: "2024-07-02",
+          total_comments_personil: "4",
+        }),
+      },
+      {
+        metrics: JSON.stringify({
+          tanggal: "2024-07-20",
+          total_comments_personil: 6,
+        }),
+      },
+    ];
+
+    const sanitized = prepareTrendActivityRecords(rawComments);
+    const buckets = groupRecordsByMonth(sanitized);
+
+    expect(buckets).toHaveLength(1);
+    expect(
+      sumActivityRecords(buckets[0].records, TIKTOK_COMMENT_FIELD_PATHS),
+    ).toBe(10);
+  });
+
   it("prefers personnel comments when merging records with general totals", () => {
     const merged = mergeActivityRecords(
       [],
