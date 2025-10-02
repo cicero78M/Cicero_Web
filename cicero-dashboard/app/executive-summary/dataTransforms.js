@@ -20,6 +20,331 @@ const createEmptyLikesSummary = () => ({
   lastUpdated: null,
 });
 
+const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
+  const records = new Map();
+  const aliasToCanonical = new Map();
+  let fallbackCounter = 0;
+
+  const LIKE_FIELDS = [
+    "jumlah_like",
+    "jumlahLike",
+    "total_like",
+    "totalLikes",
+    "likes",
+    "like_count",
+    "likeCount",
+    "total_likes",
+  ];
+
+  const COMMENT_FIELDS = [
+    "jumlah_komentar",
+    "jumlahKomentar",
+    "total_komentar",
+    "totalKomentar",
+    "total_comments",
+    "totalComments",
+    "total_comments_personil",
+    "total_comments_personel",
+    "total_comments_personnel",
+    "totalCommentsPersonil",
+    "totalCommentsPersonel",
+    "totalCommentsPersonnel",
+    "comment_count",
+    "commentCount",
+    "comments",
+  ];
+
+  const ensureExistingRecord = (keys, source) => {
+    let canonicalKey = null;
+    let isNew = false;
+
+    for (const key of keys) {
+      const mapped = aliasToCanonical.get(key);
+      if (mapped && records.has(mapped)) {
+        canonicalKey = mapped;
+        break;
+      }
+      if (records.has(key)) {
+        canonicalKey = key;
+        break;
+      }
+    }
+
+    if (!canonicalKey) {
+      canonicalKey = keys[0];
+      records.set(canonicalKey, {});
+      isNew = true;
+    }
+
+    const existing = records.get(canonicalKey);
+    if (isNew && source && typeof source === "object") {
+      Object.assign(existing, source);
+    }
+
+    keys.forEach((key) => aliasToCanonical.set(key, canonicalKey));
+
+    return { existing, isNew };
+  };
+
+  const assignClientDetails = (target, clientIdValue, clientNameValue) => {
+    const updateStringField = (field, value) => {
+      if (value == null) {
+        return;
+      }
+
+      const normalized = typeof value === "string" ? value.trim() : value;
+      if (normalized === "" || normalized == null) {
+        return;
+      }
+
+      const current = target[field];
+      if (
+        current == null ||
+        (typeof current === "string" &&
+          (current.trim() === "" ||
+            current.trim().toUpperCase() === "LAINNYA") &&
+          normalized.toUpperCase() !== "LAINNYA")
+      ) {
+        target[field] = value;
+      }
+    };
+
+    if (clientIdValue != null && clientIdValue !== "") {
+      updateStringField("client_id", clientIdValue);
+      updateStringField("clientId", clientIdValue);
+      updateStringField("clientID", clientIdValue);
+      updateStringField("id_client", clientIdValue);
+      updateStringField("clientid", clientIdValue);
+    }
+
+    if (clientNameValue != null && clientNameValue !== "") {
+      updateStringField("nama_client", clientNameValue);
+      updateStringField("client_name", clientNameValue);
+      updateStringField("client", clientNameValue);
+      updateStringField("namaClient", clientNameValue);
+    }
+  };
+
+  const assignIfEmpty = (target, field, value) => {
+    if (value == null) {
+      return;
+    }
+
+    if (
+      target[field] == null ||
+      (typeof target[field] === "string" && target[field].trim() === "")
+    ) {
+      target[field] = value;
+    }
+  };
+
+  const setMetricValue = (target, fields, value) => {
+    const numeric = toSafeNumber(value);
+    fields.forEach((field) => {
+      target[field] = numeric;
+    });
+  };
+
+  const addMetricValue = (target, fields, value) => {
+    const numeric = toSafeNumber(value);
+    if (!numeric) {
+      return;
+    }
+
+    fields.forEach((field) => {
+      target[field] = toSafeNumber(target[field]) + numeric;
+    });
+  };
+
+  const extractMetricValue = (record, type) => {
+    if (type === "likes") {
+      return (
+        record?.jumlah_like ??
+        record?.jumlahLike ??
+        record?.total_like ??
+        record?.likes ??
+        record?.totalLikes ??
+        record?.like_count ??
+        record?.likeCount ??
+        record?.total_likes ??
+        record?.metrics?.likes ??
+        record?.metrics?.totalLikes ??
+        record?.metrics?.like_count ??
+        record?.metrics?.likeCount ??
+        record?.metrics?.total_likes ??
+        0
+      );
+    }
+
+    return (
+      record?.jumlah_komentar ??
+      record?.jumlahKomentar ??
+      record?.total_komentar ??
+      record?.totalKomentar ??
+      record?.total_comments ??
+      record?.totalComments ??
+      record?.total_comments_personil ??
+      record?.total_comments_personel ??
+      record?.total_comments_personnel ??
+      record?.totalCommentsPersonil ??
+      record?.totalCommentsPersonel ??
+      record?.totalCommentsPersonnel ??
+      record?.comment_count ??
+      record?.commentCount ??
+      record?.comments ??
+      record?.metrics?.comments ??
+      record?.metrics?.comment_count ??
+      record?.metrics?.commentCount ??
+      record?.metrics?.totalComments ??
+      record?.metrics?.total_comments ??
+      0
+    );
+  };
+
+  const ingest = (recordsInput, type) => {
+    if (!Array.isArray(recordsInput)) {
+      return;
+    }
+
+    recordsInput.forEach((item) => {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+
+      const record = { ...item };
+      const rawClientId =
+        record?.client_id ??
+        record?.clientId ??
+        record?.clientID ??
+        record?.id_client ??
+        record?.clientid ??
+        record?.client ??
+        "";
+      const rawClientName =
+        record?.nama_client ??
+        record?.client_name ??
+        record?.client ??
+        record?.namaClient ??
+        record?.nama ??
+        "";
+      const normalizedClientId = String(rawClientId ?? "").trim();
+      const normalizedClientName =
+        String(rawClientName || normalizedClientId || "LAINNYA").trim() ||
+        "LAINNYA";
+
+      const clientKeyCandidates = [];
+      if (normalizedClientId) {
+        clientKeyCandidates.push(normalizedClientId.toUpperCase());
+      }
+      if (normalizedClientName) {
+        clientKeyCandidates.push(normalizedClientName.toUpperCase());
+      }
+      if (clientKeyCandidates.length === 0) {
+        clientKeyCandidates.push("LAINNYA");
+      }
+
+      const identityCandidates = [
+        record?.username,
+        record?.user_name,
+        record?.userId,
+        record?.user_id,
+        record?.personnel_id,
+        record?.personnelId,
+        record?.nrp,
+        record?.nip,
+        record?.nama,
+        record?.name,
+        record?.full_name,
+        record?.id,
+        record?.record_id,
+      ];
+
+      let identity = identityCandidates.find((candidate) => {
+        if (typeof candidate === "string") {
+          return candidate.trim() !== "";
+        }
+        if (typeof candidate === "number") {
+          return Number.isFinite(candidate);
+        }
+        return false;
+      });
+
+      if (identity == null) {
+        identity = `IDX-${fallbackCounter++}`;
+      }
+
+      const identityKey = String(identity).trim().toUpperCase();
+      const compositeKeys = clientKeyCandidates.map(
+        (clientKey) => `${clientKey}::${identityKey}`,
+      );
+
+      const { existing, isNew } = ensureExistingRecord(compositeKeys, record);
+
+      assignClientDetails(
+        existing,
+        normalizedClientId || normalizedClientName,
+        normalizedClientName,
+      );
+
+      assignIfEmpty(
+        existing,
+        "username",
+        record?.username ?? record?.user_name,
+      );
+      assignIfEmpty(
+        existing,
+        "user_name",
+        record?.user_name ?? record?.username,
+      );
+      assignIfEmpty(
+        existing,
+        "nama",
+        record?.nama ?? record?.name ?? record?.full_name,
+      );
+      assignIfEmpty(existing, "name", record?.name ?? record?.nama);
+      assignIfEmpty(
+        existing,
+        "full_name",
+        record?.full_name ?? record?.nama,
+      );
+      assignIfEmpty(existing, "userId", record?.userId ?? record?.user_id);
+      assignIfEmpty(existing, "user_id", record?.user_id ?? record?.userId);
+      assignIfEmpty(existing, "nrp", record?.nrp);
+      assignIfEmpty(existing, "nip", record?.nip);
+      assignIfEmpty(existing, "divisi", record?.divisi);
+      assignIfEmpty(existing, "satker", record?.satker);
+
+      assignIfEmpty(existing, "activityDate", record?.activityDate);
+      assignIfEmpty(existing, "tanggal", record?.tanggal);
+      assignIfEmpty(existing, "date", record?.date);
+      assignIfEmpty(existing, "created_at", record?.created_at);
+      assignIfEmpty(existing, "createdAt", record?.createdAt);
+      assignIfEmpty(existing, "updated_at", record?.updated_at);
+      assignIfEmpty(existing, "updatedAt", record?.updatedAt);
+
+      const metricValue = extractMetricValue(record, type);
+      if (isNew) {
+        setMetricValue(
+          existing,
+          type === "likes" ? LIKE_FIELDS : COMMENT_FIELDS,
+          metricValue,
+        );
+      } else {
+        addMetricValue(
+          existing,
+          type === "likes" ? LIKE_FIELDS : COMMENT_FIELDS,
+          metricValue,
+        );
+      }
+    });
+  };
+
+  ingest(likesRecords, "likes");
+  ingest(commentRecords, "comments");
+
+  return Array.from(records.values());
+};
+
 const aggregateLikesRecords = (records = []) => {
   const safeRecords = Array.isArray(records)
     ? records.filter((item) => item && typeof item === "object")
@@ -300,6 +625,7 @@ const prepareTrendActivityRecords = (records, options = {}) => {
 
 export {
   createEmptyLikesSummary,
+  mergeActivityRecords,
   aggregateLikesRecords,
   ensureRecordsHaveActivityDate,
   prepareTrendActivityRecords,

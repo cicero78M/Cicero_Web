@@ -43,6 +43,7 @@ import {
 } from "./monthOptions";
 import {
   createEmptyLikesSummary,
+  mergeActivityRecords,
   aggregateLikesRecords,
   ensureRecordsHaveActivityDate,
   prepareTrendActivityRecords,
@@ -2752,7 +2753,11 @@ export default function ExecutiveSummaryPage() {
           totalTikTokPosts,
         });
 
-        const likesSummary = aggregateLikesRecords(likesRaw);
+        const mergedActivityRecords = mergeActivityRecords(
+          likesRaw,
+          commentsRaw,
+        );
+        const likesSummary = aggregateLikesRecords(mergedActivityRecords);
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
           {
