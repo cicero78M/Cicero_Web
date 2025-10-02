@@ -106,6 +106,18 @@ const formatPercent = (value) => {
 
 const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
 
+export const POST_DATE_PATHS = Object.freeze([
+  "publishedAt",
+  "published_at",
+  "timestamp",
+  "createdAt",
+  "created_at",
+  "activityDate",
+  "activity_date",
+  "date",
+  "tanggal",
+]);
+
 const CompletionTooltip = ({ active, payload }) => {
   if (!active || !payload || payload.length === 0) {
     return null;
@@ -2868,29 +2880,13 @@ export default function ExecutiveSummaryPage() {
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
           {
-            extraPaths: [
-              "publishedAt",
-              "published_at",
-              "timestamp",
-              "createdAt",
-              "created_at",
-              "date",
-              "tanggal",
-            ],
+            extraPaths: POST_DATE_PATHS,
           },
         );
         const tiktokPostsSanitized = ensureRecordsHaveActivityDate(
           tiktokPostsRaw,
           {
-            extraPaths: [
-              "publishedAt",
-              "published_at",
-              "timestamp",
-              "createdAt",
-              "created_at",
-              "date",
-              "tanggal",
-            ],
+            extraPaths: POST_DATE_PATHS,
           },
         );
 
@@ -3124,31 +3120,12 @@ export default function ExecutiveSummaryPage() {
     const instagramPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
       {
-        extraPaths: [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-          "date",
-          "tanggal",
-        ],
+        extraPaths: POST_DATE_PATHS,
       },
     );
 
     const monthlyPosts = groupRecordsByMonth(instagramPosts, {
-      getDate: (post) => {
-        if (post?.publishedAt instanceof Date) {
-          return post.publishedAt;
-        }
-        return (
-          post?.createdAt ??
-          post?.created_at ??
-          post?.timestamp ??
-          post?.published_at ??
-          null
-        );
-      },
+      datePaths: POST_DATE_PATHS,
     });
 
     const likesRecords = Array.isArray(platformTrendActivity?.likes)
@@ -3257,15 +3234,7 @@ export default function ExecutiveSummaryPage() {
     const instagramPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
       {
-        extraPaths: [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-          "date",
-          "tanggal",
-        ],
+        extraPaths: POST_DATE_PATHS,
       },
     );
 
@@ -3279,31 +3248,12 @@ export default function ExecutiveSummaryPage() {
     const tiktokPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
       {
-        extraPaths: [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-          "date",
-          "tanggal",
-        ],
+        extraPaths: POST_DATE_PATHS,
       },
     );
 
     const monthlyPosts = groupRecordsByMonth(tiktokPosts, {
-      getDate: (post) => {
-        if (post?.publishedAt instanceof Date) {
-          return post.publishedAt;
-        }
-        return (
-          post?.createdAt ??
-          post?.created_at ??
-          post?.timestamp ??
-          post?.published_at ??
-          null
-        );
-      },
+      datePaths: POST_DATE_PATHS,
     });
 
     const commentRecords = Array.isArray(platformTrendActivity?.comments)
@@ -3412,15 +3362,7 @@ export default function ExecutiveSummaryPage() {
     const tiktokPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
       {
-        extraPaths: [
-          "publishedAt",
-          "published_at",
-          "timestamp",
-          "createdAt",
-          "created_at",
-          "date",
-          "tanggal",
-        ],
+        extraPaths: POST_DATE_PATHS,
       },
     );
 
