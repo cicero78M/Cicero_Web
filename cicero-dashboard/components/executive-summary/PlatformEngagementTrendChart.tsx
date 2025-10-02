@@ -15,12 +15,10 @@ type FormatNumberFn = (
   value: number,
   options?: Intl.NumberFormatOptions,
 ) => string;
-type FormatPercentFn = (value: number) => string;
 
 type WeeklyEngagementPoint = {
   key: string;
   label?: string;
-  engagementRate?: number | null;
   interactions?: number | null;
   posts?: number | null;
 };
@@ -33,7 +31,6 @@ type PlatformEngagementTrendChartProps = {
   loading?: boolean;
   error?: string;
   formatNumber?: FormatNumberFn;
-  formatPercent?: FormatPercentFn;
 };
 
 const defaultNumberFormatter: FormatNumberFn = (value, options) => {
@@ -45,32 +42,20 @@ const defaultNumberFormatter: FormatNumberFn = (value, options) => {
   }).format(Math.max(0, numericValue));
 };
 
-const defaultPercentFormatter: FormatPercentFn = (value) => {
-  const safeValue = Number.isFinite(value) ? Math.max(0, value) : 0;
-  const fractionDigits = safeValue > 0 && safeValue < 10 ? 1 : 0;
-  return `${new Intl.NumberFormat("id-ID", {
-    maximumFractionDigits: fractionDigits,
-    minimumFractionDigits: fractionDigits,
-  }).format(safeValue)}%`;
-};
-
 const resolvePoint = (point?: WeeklyEngagementPoint | null) => {
   if (!point) {
     return {
       label: "",
-      engagementRate: 0,
       interactions: 0,
       posts: 0,
     };
   }
 
-  const engagementRate = Number(point.engagementRate);
   const interactions = Number(point.interactions);
   const posts = Number(point.posts);
 
   return {
     label: point.label ?? point.key ?? "",
-    engagementRate: Number.isFinite(engagementRate) ? Math.max(0, engagementRate) : 0,
     interactions: Number.isFinite(interactions) ? Math.max(0, interactions) : 0,
     posts: Number.isFinite(posts) ? Math.max(0, posts) : 0,
   };
@@ -84,12 +69,11 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   loading = false,
   error = "",
   formatNumber = defaultNumberFormatter,
-  formatPercent = defaultPercentFormatter,
 }) => {
   if (loading) {
     return (
       <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-        Menyiapkan tren engagement…
+        Menyiapkan tren interaksi…
       </div>
     );
   }
@@ -112,7 +96,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       return {
         key: point.key,
         label: resolved.label,
-        engagementRate: resolved.engagementRate,
         interactions: resolved.interactions,
       };
     });
@@ -121,7 +104,7 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   if (chartData.length === 0) {
     return (
       <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-        Belum ada tren engagement mingguan yang tersedia.
+        Belum ada tren interaksi mingguan yang tersedia.
       </div>
     );
   }
@@ -129,16 +112,12 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   const latestPoint = resolvePoint(latest);
   const previousPoint = previous ? resolvePoint(previous) : null;
 
-  const engagementDelta =
-    previousPoint !== null
-      ? latestPoint.engagementRate - (previousPoint?.engagementRate ?? 0)
-      : null;
   const interactionDelta =
     previousPoint !== null
       ? latestPoint.interactions - (previousPoint?.interactions ?? 0)
       : null;
 
-  const renderDelta = (value: number | null, formatter: (val: number) => string) => {
+  const renderDelta = (value: number | null) => {
     if (value === null || !Number.isFinite(value)) {
       return null;
     }
@@ -148,7 +127,7 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
     const isPositive = value > 0;
     const accent = isPositive ? "text-emerald-300" : "text-rose-300";
     const prefix = isPositive ? "+" : "−";
-    const formatted = formatter(Math.abs(value));
+    const formatted = formatNumber(Math.abs(value), { maximumFractionDigits: 0 });
     return <span className={`text-xs ${accent}`}>{`${prefix}${formatted}`}</span>;
   };
 
@@ -156,10 +135,10 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
     <div className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-          Weekly Engagement
+          Weekly Interactions
         </p>
         <h3 className="mt-2 text-2xl font-semibold text-slate-50">
-          Tren Engagement {platformLabel ? platformLabel : "Platform"}
+          Tren Interaksi {platformLabel ? platformLabel : "Platform"}
         </h3>
       </div>
 
@@ -168,12 +147,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Minggu Terakhir</p>
           <p className="mt-1 text-sm text-slate-400">{latestPoint.label}</p>
           <div className="mt-3 space-y-2 text-sm">
-            <div className="flex items-baseline justify-between">
-              <span className="text-slate-400">Engagement Rate</span>
-              <span className="text-lg font-semibold text-slate-100">
-                {formatPercent(latestPoint.engagementRate)}
-              </span>
-            </div>
             <div className="flex items-baseline justify-between">
               <span className="text-slate-400">Total Interaksi</span>
               <span className="text-lg font-semibold text-slate-100">
@@ -197,12 +170,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
               <p className="mt-1 text-sm text-slate-400">{previousPoint.label}</p>
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-slate-400">Engagement Rate</span>
-                  <span className="text-lg font-semibold text-slate-100">
-                    {formatPercent(previousPoint.engagementRate)}
-                  </span>
-                </div>
-                <div className="flex items-baseline justify-between">
                   <span className="text-slate-400">Total Interaksi</span>
                   <span className="text-lg font-semibold text-slate-100">
                     {formatNumber(previousPoint.interactions, { maximumFractionDigits: 0 })}
@@ -225,26 +192,13 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       </div>
 
       {previousPoint ? (
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Perubahan Engagement
-            </p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-sm text-slate-400">vs minggu lalu</span>
-              {renderDelta(engagementDelta, formatPercent)}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Perubahan Interaksi
-            </p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-sm text-slate-400">vs minggu lalu</span>
-              {renderDelta(interactionDelta, (value) =>
-                formatNumber(value, { maximumFractionDigits: 0 }),
-              )}
-            </div>
+        <div className="mt-4 rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            Perubahan Interaksi
+          </p>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-sm text-slate-400">vs minggu lalu</span>
+            {renderDelta(interactionDelta)}
           </div>
         </div>
       ) : null}
@@ -257,7 +211,11 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
             <YAxis
               stroke="#94a3b8"
               tick={{ fill: "#cbd5f5", fontSize: 12 }}
-              tickFormatter={(value) => formatPercent(Number(value) || 0)}
+              tickFormatter={(value) =>
+                formatNumber(Number.isFinite(value) ? Number(value) : 0, {
+                  maximumFractionDigits: 0,
+                })
+              }
             />
             <Tooltip
               cursor={{ stroke: "rgba(56,189,248,0.45)", strokeWidth: 2 }}
@@ -274,17 +232,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
                     : undefined;
                 const dataKey = tooltipEntry?.dataKey;
 
-                if (
-                  dataKey === "engagementRate" ||
-                  name === "engagementRate" ||
-                  name === "Engagement Rate"
-                ) {
-                  return [
-                    formatPercent(Number.isFinite(value) ? Number(value) : 0),
-                    "Engagement Rate",
-                  ];
-                }
-
                 if (dataKey === "interactions" || name === "interactions") {
                   return [
                     formatNumber(Number.isFinite(value) ? Number(value) : 0, {
@@ -298,17 +245,17 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
               }}
             />
             <defs>
-              <linearGradient id="engagementGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="interactionGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.7} />
                 <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.1} />
               </linearGradient>
             </defs>
             <Area
               type="monotone"
-              dataKey="engagementRate"
-              name="Engagement Rate"
+              dataKey="interactions"
+              name="Total Interaksi"
               stroke="#38bdf8"
-              fill="url(#engagementGradient)"
+              fill="url(#interactionGradient)"
               strokeWidth={3}
               dot={{ stroke: "#38bdf8", strokeWidth: 2, fill: "#0f172a" }}
               activeDot={{ r: 6 }}
