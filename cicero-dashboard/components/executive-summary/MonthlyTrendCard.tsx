@@ -55,6 +55,8 @@ type MonthlyTrendCardProps = {
   formatPercent?: FormatPercentFn;
   primaryMetricLabel?: string;
   secondaryMetricLabel?: string;
+  currentPeriodLabel?: string | null;
+  previousPeriodLabel?: string | null;
 };
 
 const defaultNumberFormatter: FormatNumberFn = (value, options) => {
@@ -114,6 +116,8 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
   formatPercent = defaultPercentFormatter,
   primaryMetricLabel = "Likes",
   secondaryMetricLabel = "Komentar",
+  currentPeriodLabel = null,
+  previousPeriodLabel = null,
 }) => {
   if (loading) {
     return (
@@ -152,6 +156,11 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
               Bulan Berjalan
             </p>
+            {currentPeriodLabel ? (
+              <p className="mt-1 text-sm font-semibold text-slate-300">
+                {currentPeriodLabel}
+              </p>
+            ) : null}
             <div className="mt-3 space-y-2">
               {hasCurrentMetrics ? (
                 currentMetrics.map((metric) => (
@@ -178,6 +187,11 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
               Bulan Sebelumnya
             </p>
+            {previousPeriodLabel ? (
+              <p className="mt-1 text-sm font-semibold text-slate-300">
+                {previousPeriodLabel}
+              </p>
+            ) : null}
             <div className="mt-3 space-y-2">
               {hasPreviousMetrics ? (
                 previousMetrics.map((metric) => (

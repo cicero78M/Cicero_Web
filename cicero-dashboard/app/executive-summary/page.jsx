@@ -3456,6 +3456,12 @@ export default function ExecutiveSummaryPage() {
       : [];
 
     const monthsCount = Array.isArray(months) ? months.length : 0;
+    const currentPeriodLabel = latestMonth
+      ? formatMonthRangeLabel(latestMonth.start, latestMonth.end)
+      : null;
+    const previousPeriodLabel = previousMonth
+      ? formatMonthRangeLabel(previousMonth.start, previousMonth.end)
+      : null;
 
     return {
       currentMetrics,
@@ -3463,6 +3469,8 @@ export default function ExecutiveSummaryPage() {
       deltaMetrics,
       series,
       monthsCount,
+      currentPeriodLabel,
+      previousPeriodLabel,
       hasComparison: Boolean(previousMonth),
       hasRecords: Boolean(hasRecords),
     };
@@ -3565,6 +3573,12 @@ export default function ExecutiveSummaryPage() {
       : [];
 
     const monthsCount = Array.isArray(months) ? months.length : 0;
+    const currentPeriodLabel = latestMonth
+      ? formatMonthRangeLabel(latestMonth.start, latestMonth.end)
+      : null;
+    const previousPeriodLabel = previousMonth
+      ? formatMonthRangeLabel(previousMonth.start, previousMonth.end)
+      : null;
 
     return {
       currentMetrics,
@@ -3572,6 +3586,8 @@ export default function ExecutiveSummaryPage() {
       deltaMetrics,
       series,
       monthsCount,
+      currentPeriodLabel,
+      previousPeriodLabel,
       hasComparison: Boolean(previousMonth),
       hasRecords: Boolean(hasRecords),
     };
@@ -3767,6 +3783,8 @@ export default function ExecutiveSummaryPage() {
                 previousMetrics={instagramMonthlyCardData.previousMetrics}
                 deltaMetrics={instagramMonthlyCardData.deltaMetrics}
                 series={instagramMonthlyCardData.series}
+                currentPeriodLabel={instagramMonthlyCardData.currentPeriodLabel}
+                previousPeriodLabel={instagramMonthlyCardData.previousPeriodLabel}
                 formatNumber={formatNumber}
                 formatPercent={formatPercent}
                 primaryMetricLabel="Likes Personil"
@@ -3783,6 +3801,8 @@ export default function ExecutiveSummaryPage() {
                 previousMetrics={tiktokMonthlyCardData.previousMetrics}
                 deltaMetrics={tiktokMonthlyCardData.deltaMetrics}
                 series={tiktokMonthlyCardData.series}
+                currentPeriodLabel={tiktokMonthlyCardData.currentPeriodLabel}
+                previousPeriodLabel={tiktokMonthlyCardData.previousPeriodLabel}
                 formatNumber={formatNumber}
                 formatPercent={formatPercent}
                 primaryMetricLabel="Komentar Personil"
