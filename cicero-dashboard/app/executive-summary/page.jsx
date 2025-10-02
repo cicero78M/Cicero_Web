@@ -104,6 +104,30 @@ const formatPercent = (value) => {
   })}%`;
 };
 
+const publishedDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+
+const ensureValidDate = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.valueOf())) {
+    return value;
+  }
+
+  const parsed = parseDateValue(value);
+  if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) {
+    return parsed;
+  }
+
+  return null;
+};
+
+const formatPublishedDate = (value) => {
+  const date = ensureValidDate(value);
+  return date ? publishedDateFormatter.format(date) : "—";
+};
+
 const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
 
 const CompletionTooltip = ({ active, payload }) => {
@@ -2866,6 +2890,155 @@ export default function ExecutiveSummaryPage() {
       ? platformPostsState
       : { instagram: [], tiktok: [] };
 
+  const topContentRows = useMemo(() => {
+    const instagramPosts = Array.isArray(platformPosts?.instagram)
+      ? platformPosts.instagram
+      : [];
+    const tiktokPosts = Array.isArray(platformPosts?.tiktok)
+      ? platformPosts.tiktok
+      : [];
+
+    const buildRow = (normalized, platformLabel) => {
+      if (!normalized) {
+        return null;
+      }
+
+      const likes = Math.max(0, Number(normalized?.metrics?.likes) || 0);
+      const comments = Math.max(
+        0,
+        Number(normalized?.metrics?.comments) || 0,
+      );
+      const publishedAt = ensureValidDate(normalized?.publishedAt);
+
+      return {
+        id: normalized.id,
+        platform: platformLabel,
+        title: normalized.title,
+        format: normalized.type,
+        publishedAt,
+        likes,
+        comments,
+        totalInteractions: likes + comments,
+      };
+    };
+
+    const normalizedInstagram = instagramPosts
+      .map((post, index) =>
+        buildRow(
+          normalizePlatformPost(post, {
+            platformKey: "instagram",
+            platformLabel: "Instagram",
+            fallbackIndex: index,
+          }),
+          "Instagram",
+        ),
+      )
+      .filter(Boolean);
+
+    const normalizedTiktok = tiktokPosts
+      .map((post, index) =>
+        buildRow(
+          normalizePlatformPost(post, {
+            platformKey: "tiktok",
+            platformLabel: "TikTok",
+            fallbackIndex: index,
+          }),
+          "TikTok",
+        ),
+      )
+      .filter(Boolean);
+
+    const combined = [...normalizedInstagram, ...normalizedTiktok]
+      .filter((entry) => entry && entry.id);
+
+    combined.sort((a, b) => {
+      if (b.totalInteractions !== a.totalInteractions) {
+        return b.totalInteractions - a.totalInteractions;
+      }
+      if (b.likes !== a.likes) {
+        return b.likes - a.likes;
+      }
+      if (b.comments !== a.comments) {
+        return b.comments - a.comments;
+      }
+      return a.title.localeCompare(b.title);
+    });
+
+    const limited = combined.slice(0, 10);
+
+    if (limited.length > 0) {
+      return limited;
+    }
+
+    if (!Array.isArray(data.contentTable)) {
+      return [];
+    }
+
+    return data.contentTable
+      .map((row, index) => {
+        if (!row || typeof row !== "object") {
+          return null;
+        }
+
+        const likes = Math.max(
+          0,
+          Number(
+            row.likes ??
+              row.likeCount ??
+              row.metrics?.likes ??
+              row.interactions?.likes ??
+              0,
+          ) || 0,
+        );
+        const comments = Math.max(
+          0,
+          Number(
+            row.comments ??
+              row.commentCount ??
+              row.metrics?.comments ??
+              row.interactions?.comments ??
+              0,
+          ) || 0,
+        );
+        const totalInteractions = Math.max(
+          0,
+          Number(
+            row.totalInteractions ??
+              row.interactions ??
+              likes + comments,
+          ) ||
+            likes + comments,
+        );
+
+        const publishedAt = ensureValidDate(
+          row.publishedAt ??
+            row.tanggal ??
+            row.date ??
+            row.published_at ??
+            row.created_at ??
+            null,
+        );
+
+        return {
+          id: String(
+            row.id ??
+              row.contentId ??
+              row.slug ??
+              `${row.platform ?? "content"}-${index + 1}`,
+          ),
+          platform: row.platform ?? row.channel ?? "",
+          title: row.title ?? row.name ?? row.caption ?? "Konten",
+          format: normalizeContentType(row.format ?? row.type ?? ""),
+          publishedAt,
+          likes,
+          comments,
+          totalInteractions,
+        };
+      })
+      .filter((entry) => entry && entry.id)
+      .slice(0, 10);
+  }, [platformPosts?.instagram, platformPosts?.tiktok, data.contentTable]);
+
   const instagramMonthlyTrend = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
@@ -3817,29 +3990,45 @@ export default function ExecutiveSummaryPage() {
           <table className="min-w-full divide-y divide-slate-800 text-left">
             <thead className="bg-slate-900/70 text-xs uppercase tracking-wider text-slate-300">
               <tr>
-                <th scope="col" className="px-4 py-3">Platform</th>
+                <th scope="col" className="w-32 px-4 py-3">Platform</th>
                 <th scope="col" className="px-4 py-3">Judul Konten</th>
-                <th scope="col" className="px-4 py-3">Format</th>
-                <th scope="col" className="px-4 py-3 text-right">Reach</th>
-                <th scope="col" className="px-4 py-3 text-right">Engagement</th>
-                <th scope="col" className="px-4 py-3">Insight</th>
+                <th scope="col" className="w-32 px-4 py-3">Format</th>
+                <th scope="col" className="w-36 px-4 py-3">Tanggal</th>
+                <th scope="col" className="w-32 px-4 py-3 text-right">Likes</th>
+                <th scope="col" className="w-32 px-4 py-3 text-right">Komentar</th>
+                <th scope="col" className="w-40 px-4 py-3 text-right">Total Interaksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
-              {data.contentTable.length > 0 ? (
-                data.contentTable.map((row) => (
-                  <tr key={`${row.platform}-${row.title}`} className="hover:bg-slate-900/40">
-                    <td className="px-4 py-3 font-medium text-cyan-200">{row.platform}</td>
-                    <td className="px-4 py-3">{row.title}</td>
-                    <td className="px-4 py-3">{row.format}</td>
-                    <td className="px-4 py-3 text-right">{formatNumber(row.reach, { maximumFractionDigits: 0 })}</td>
-                    <td className="px-4 py-3 text-right">{row.engagement}%</td>
-                    <td className="px-4 py-3 text-slate-300">{row.takeaway}</td>
+              {topContentRows.length > 0 ? (
+                topContentRows.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-900/40">
+                    <td className="px-4 py-3 font-medium text-cyan-200">
+                      {row.platform || "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-100">{row.title}</p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">
+                      {row.format || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">
+                      {formatPublishedDate(row.publishedAt)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatNumber(row.likes, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatNumber(row.comments, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-cyan-200">
+                      {formatNumber(row.totalInteractions, { maximumFractionDigits: 0 })}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td className="px-4 py-6 text-center text-slate-400" colSpan={6}>
+                  <td className="px-4 py-6 text-center text-slate-400" colSpan={7}>
                     Belum ada data konten untuk periode ini.
                   </td>
                 </tr>
