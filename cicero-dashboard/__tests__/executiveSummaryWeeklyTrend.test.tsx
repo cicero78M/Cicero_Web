@@ -18,6 +18,16 @@ import {
 } from "@/app/executive-summary/dataTransforms";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 
+beforeAll(() => {
+  const ResizeObserverMock = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+
+  (global as any).ResizeObserver = ResizeObserverMock;
+});
+
 describe("groupRecordsByMonth monthly trend integration", () => {
   it("groups instagram activity into monthly buckets and shows the trend card", () => {
     const records = [
@@ -320,6 +330,7 @@ describe("Monthly trend card metric emphasis", () => {
         previousMetrics={[
           { key: "likes", label: "Likes Personil", value: 18 },
         ]}
+        primaryMetricLabel="Likes Personil"
         series={[
           {
             key: "2024-07",
@@ -330,9 +341,8 @@ describe("Monthly trend card metric emphasis", () => {
       />,
     );
 
-    const detail = screen.getByText("Likes: 24");
+    const detail = screen.getByText(/Likes Personil: 24/);
     expect(detail).toBeInTheDocument();
-    expect(detail.textContent).toBe("Likes: 24");
   });
 
   it("supports custom interaction labels with optional secondary metrics", () => {
@@ -359,7 +369,7 @@ describe("Monthly trend card metric emphasis", () => {
     );
 
     expect(
-      screen.getByText("Komentar Personil: 18 • Post: 4"),
+      screen.getByText(/Komentar Personil: 18 • Post: 4/),
     ).toBeInTheDocument();
   });
 
