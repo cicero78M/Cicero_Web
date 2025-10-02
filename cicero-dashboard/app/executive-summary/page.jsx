@@ -35,6 +35,7 @@ import {
 import { computeActivityBuckets, extractNumericValue } from "./activityBuckets";
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
+import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import {
   buildMonthKey,
   extractYearFromMonthKey,
@@ -51,8 +52,10 @@ import {
   pickNestedString,
   parseDateValue,
   resolveRecordDate,
+  groupRecordsByWeek,
   groupRecordsByMonth,
   shouldShowWeeklyTrendCard,
+  formatWeekRangeLabel,
   formatMonthRangeLabel,
 } from "./weeklyTrendUtils";
 import {
@@ -893,6 +896,168 @@ const computeDerivedPostStats = ({
     totalLikes: derivedLikes,
     totalComments: derivedComments,
     contentTypeDistribution: distribution,
+  };
+};
+
+const buildWeeklyEngagementTrend = (
+  records = [],
+  { platformKey = "", platformLabel = "" } = {},
+) => {
+  const safeRecords = Array.isArray(records)
+    ? records.filter((record) => record && typeof record === "object")
+    : [];
+
+  const normalizedPosts = safeRecords
+    .map((record, index) => {
+      const normalized = normalizePlatformPost(record, {
+        platformKey,
+        platformLabel,
+        fallbackIndex: index,
+      });
+
+      if (!normalized) {
+        return null;
+      }
+
+      const resolvedDate = (() => {
+        if (record?.activityDate instanceof Date) {
+          return record.activityDate;
+        }
+
+        const parsedActivityDate = parseDateValue(record?.activityDate);
+        if (parsedActivityDate) {
+          return parsedActivityDate;
+        }
+
+        const parsedTanggal = parseDateValue(record?.tanggal ?? record?.date);
+        if (parsedTanggal) {
+          return parsedTanggal;
+        }
+
+        const parsedTimestamp = parseDateValue(
+          record?.createdAt ??
+            record?.created_at ??
+            record?.timestamp ??
+            record?.published_at ??
+            null,
+        );
+        if (parsedTimestamp) {
+          return parsedTimestamp;
+        }
+
+        if (
+          normalized.publishedAt instanceof Date &&
+          !Number.isNaN(normalized.publishedAt.valueOf())
+        ) {
+          return normalized.publishedAt;
+        }
+
+        return null;
+      })();
+
+      if (!(resolvedDate instanceof Date) || Number.isNaN(resolvedDate.valueOf())) {
+        return null;
+      }
+
+      return {
+        ...normalized,
+        activityDate: resolvedDate,
+      };
+    })
+    .filter(Boolean);
+
+  if (normalizedPosts.length === 0) {
+    return {
+      series: [],
+      latestWeek: null,
+      previousWeek: null,
+      hasRecords: false,
+      weeksCount: 0,
+      hasAnyPosts: safeRecords.length > 0,
+      hasTrendSamples: false,
+    };
+  }
+
+  const weeklyBuckets = groupRecordsByWeek(normalizedPosts, {
+    getDate: (post) => post.activityDate ?? post.publishedAt ?? null,
+  });
+
+  if (!Array.isArray(weeklyBuckets) || weeklyBuckets.length === 0) {
+    return {
+      series: [],
+      latestWeek: null,
+      previousWeek: null,
+      hasRecords: false,
+      weeksCount: 0,
+      hasAnyPosts: safeRecords.length > 0,
+      hasTrendSamples: normalizedPosts.length > 0,
+    };
+  }
+
+  const weeklySeries = weeklyBuckets.map((bucket) => {
+    const totals = bucket.records.reduce(
+      (acc, post) => {
+        const metrics = post?.metrics ?? {};
+
+        const likes = Number(metrics.likes);
+        const comments = Number(metrics.comments);
+        const shares = Number(metrics.shares);
+        const saves = Number(metrics.saves);
+
+        const interactionsCandidate =
+          metrics.interactions !== undefined
+            ? Number(metrics.interactions)
+            : (Number.isFinite(likes) ? Math.max(0, likes) : 0) +
+              (Number.isFinite(comments) ? Math.max(0, comments) : 0) +
+              (Number.isFinite(shares) ? Math.max(0, shares) : 0) +
+              (Number.isFinite(saves) ? Math.max(0, saves) : 0);
+
+        const engagementCandidate = Number(metrics.engagementRate);
+
+        acc.interactions += Number.isFinite(interactionsCandidate)
+          ? Math.max(0, interactionsCandidate)
+          : 0;
+        acc.posts += 1;
+        if (Number.isFinite(engagementCandidate) && engagementCandidate >= 0) {
+          acc.engagementRateTotal += engagementCandidate;
+          acc.engagementSamples += 1;
+        }
+
+        return acc;
+      },
+      {
+        interactions: 0,
+        posts: 0,
+        engagementRateTotal: 0,
+        engagementSamples: 0,
+      },
+    );
+
+    const averageEngagement =
+      totals.engagementSamples > 0
+        ? totals.engagementRateTotal / totals.engagementSamples
+        : 0;
+
+    return {
+      key: bucket.key,
+      label: formatWeekRangeLabel(bucket.start, bucket.end),
+      engagementRate: averageEngagement,
+      interactions: totals.interactions,
+      posts: totals.posts,
+    };
+  });
+
+  const trimmedSeries = weeklySeries.slice(-8);
+  const weeksCount = trimmedSeries.length;
+
+  return {
+    series: trimmedSeries,
+    latestWeek: weeksCount > 0 ? trimmedSeries[weeksCount - 1] : null,
+    previousWeek: weeksCount > 1 ? trimmedSeries[weeksCount - 2] : null,
+    hasRecords: weeksCount > 0,
+    weeksCount,
+    hasAnyPosts: safeRecords.length > 0,
+    hasTrendSamples: normalizedPosts.length > 0,
   };
 };
 
@@ -2990,6 +3155,28 @@ export default function ExecutiveSummaryPage() {
     };
   }, [platformPosts?.instagram, platformTrendActivity]);
 
+  const instagramWeeklyTrendCardData = useMemo(() => {
+    const instagramPosts = filterRecordsWithResolvableDate(
+      Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
+      {
+        extraPaths: [
+          "publishedAt",
+          "published_at",
+          "timestamp",
+          "createdAt",
+          "created_at",
+          "date",
+          "tanggal",
+        ],
+      },
+    );
+
+    return buildWeeklyEngagementTrend(instagramPosts, {
+      platformKey: "instagram",
+      platformLabel: "Instagram",
+    });
+  }, [platformPosts?.instagram]);
+
   const tiktokMonthlyTrend = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
@@ -3122,6 +3309,28 @@ export default function ExecutiveSummaryPage() {
       hasRecords,
     };
   }, [platformPosts?.tiktok, platformTrendActivity]);
+
+  const tiktokWeeklyTrendCardData = useMemo(() => {
+    const tiktokPosts = filterRecordsWithResolvableDate(
+      Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
+      {
+        extraPaths: [
+          "publishedAt",
+          "published_at",
+          "timestamp",
+          "createdAt",
+          "created_at",
+          "date",
+          "tanggal",
+        ],
+      },
+    );
+
+    return buildWeeklyEngagementTrend(tiktokPosts, {
+      platformKey: "tiktok",
+      platformLabel: "TikTok",
+    });
+  }, [platformPosts?.tiktok]);
 
   const instagramMonthlyCardData = useMemo(() => {
     const { latestMonth, previousMonth, delta, months, hasRecords } =
@@ -3345,6 +3554,36 @@ export default function ExecutiveSummaryPage() {
     cardHasRecords: tiktokMonthlyCardData.hasRecords,
   });
 
+  const shouldShowInstagramWeeklyTrendCard = shouldShowWeeklyTrendCard({
+    showPlatformLoading,
+    platformError,
+    hasMonthlyPlatforms: Boolean(instagramMonthlyTrend?.months?.length > 0),
+    cardHasRecords: instagramWeeklyTrendCardData.hasRecords,
+  });
+  const shouldShowTiktokWeeklyTrendCard = shouldShowWeeklyTrendCard({
+    showPlatformLoading,
+    platformError,
+    hasMonthlyPlatforms: Boolean(tiktokMonthlyTrend?.months?.length > 0),
+    cardHasRecords: tiktokWeeklyTrendCardData.hasRecords,
+  });
+
+  const instagramWeeklyTrendError = !showPlatformLoading
+    ? platformError
+      ? platformError
+      : instagramWeeklyTrendCardData.hasAnyPosts &&
+        !instagramWeeklyTrendCardData.hasRecords
+      ? "Belum ada data engagement mingguan Instagram yang siap ditampilkan."
+      : ""
+    : "";
+  const tiktokWeeklyTrendError = !showPlatformLoading
+    ? platformError
+      ? platformError
+      : tiktokWeeklyTrendCardData.hasAnyPosts &&
+        !tiktokWeeklyTrendCardData.hasRecords
+      ? "Belum ada data engagement mingguan TikTok yang siap ditampilkan."
+      : ""
+    : "";
+
   return (
     <div className="space-y-8">
       <header className="rounded-3xl border border-slate-800/60 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-8 shadow-[0_0_35px_rgba(15,23,42,0.4)]">
@@ -3481,6 +3720,50 @@ export default function ExecutiveSummaryPage() {
                 formatPercent={formatPercent}
                 primaryMetricLabel="Komentar Personil"
                 secondaryMetricLabel="Post"
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {(shouldShowInstagramWeeklyTrendCard || shouldShowTiktokWeeklyTrendCard) ? (
+        <section
+          aria-label="Tren Engagement Mingguan"
+          className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+        >
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              Tren Engagement Mingguan
+            </h2>
+            <p className="text-sm text-slate-300">
+              Perbandingan performa konten mingguan berdasarkan engagement rate dan total interaksi.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {shouldShowInstagramWeeklyTrendCard ? (
+              <PlatformEngagementTrendChart
+                platformLabel="Instagram"
+                series={instagramWeeklyTrendCardData.series}
+                latest={instagramWeeklyTrendCardData.latestWeek}
+                previous={instagramWeeklyTrendCardData.previousWeek}
+                loading={showPlatformLoading}
+                error={instagramWeeklyTrendError}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+              />
+            ) : null}
+
+            {shouldShowTiktokWeeklyTrendCard ? (
+              <PlatformEngagementTrendChart
+                platformLabel="TikTok"
+                series={tiktokWeeklyTrendCardData.series}
+                latest={tiktokWeeklyTrendCardData.latestWeek}
+                previous={tiktokWeeklyTrendCardData.previousWeek}
+                loading={showPlatformLoading}
+                error={tiktokWeeklyTrendError}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
               />
             ) : null}
           </div>
