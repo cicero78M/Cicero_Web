@@ -59,12 +59,6 @@ import {
   formatWeekRangeLabel,
   formatMonthRangeLabel,
 } from "./weeklyTrendUtils";
-import {
-  INSTAGRAM_LIKE_FIELD_PATHS,
-  TIKTOK_COMMENT_FIELD_PATHS,
-  sumActivityRecords,
-} from "./activityRecords";
-
 const clamp = (value, min, max) => {
   if (!Number.isFinite(value)) {
     return min;
@@ -106,7 +100,7 @@ const formatPercent = (value) => {
 
 const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
 
-const POST_DATE_PATHS = Object.freeze([
+export const POST_DATE_PATHS = Object.freeze([
   "publishedAt",
   "published_at",
   "timestamp",
@@ -962,6 +956,200 @@ const computeDerivedPostStats = ({
     totalLikes: derivedLikes,
     totalComments: derivedComments,
     contentTypeDistribution: distribution,
+  };
+};
+
+export const buildMonthlyEngagementTrend = (
+  records = [],
+  { platformKey = "", platformLabel = "" } = {},
+) => {
+  const safeRecords = Array.isArray(records)
+    ? records.filter((record) => record && typeof record === "object")
+    : [];
+
+  const normalizedPosts = safeRecords
+    .map((record, index) => {
+      const normalized = normalizePlatformPost(record, {
+        platformKey,
+        platformLabel,
+        fallbackIndex: index,
+      });
+
+      if (!normalized) {
+        return null;
+      }
+
+      const resolvedDate = (() => {
+        if (record?.activityDate instanceof Date) {
+          return record.activityDate;
+        }
+
+        const parsedActivityDate = parseDateValue(record?.activityDate);
+        if (parsedActivityDate) {
+          return parsedActivityDate;
+        }
+
+        const parsedTanggal = parseDateValue(record?.tanggal ?? record?.date);
+        if (parsedTanggal) {
+          return parsedTanggal;
+        }
+
+        const parsedTimestamp = parseDateValue(
+          record?.createdAt ??
+            record?.created_at ??
+            record?.timestamp ??
+            record?.published_at ??
+            null,
+        );
+        if (parsedTimestamp) {
+          return parsedTimestamp;
+        }
+
+        if (
+          normalized.publishedAt instanceof Date &&
+          !Number.isNaN(normalized.publishedAt.valueOf())
+        ) {
+          return normalized.publishedAt;
+        }
+
+        return null;
+      })();
+
+      if (!(resolvedDate instanceof Date) || Number.isNaN(resolvedDate.valueOf())) {
+        return null;
+      }
+
+      return {
+        ...normalized,
+        activityDate: resolvedDate,
+      };
+    })
+    .filter(Boolean);
+
+  if (normalizedPosts.length === 0) {
+    return {
+      months: [],
+      latestMonth: null,
+      previousMonth: null,
+      delta: null,
+      hasRecords: false,
+      hasAnyPosts: safeRecords.length > 0,
+      hasTrendSamples: false,
+    };
+  }
+
+  const monthlyBuckets = groupRecordsByMonth(normalizedPosts, {
+    getDate: (post) => post.activityDate ?? post.publishedAt ?? null,
+  });
+
+  if (!Array.isArray(monthlyBuckets) || monthlyBuckets.length === 0) {
+    return {
+      months: [],
+      latestMonth: null,
+      previousMonth: null,
+      delta: null,
+      hasRecords: false,
+      hasAnyPosts: safeRecords.length > 0,
+      hasTrendSamples: normalizedPosts.length > 0,
+    };
+  }
+
+  const months = monthlyBuckets
+    .map((bucket) => {
+      const totals = bucket.records.reduce(
+        (acc, post) => {
+          const metrics = post?.metrics ?? {};
+
+          const likes = Number(metrics.likes);
+          const comments = Number(metrics.comments);
+          const shares = Number(metrics.shares);
+          const saves = Number(metrics.saves);
+
+          const interactionsCandidate =
+            metrics.interactions !== undefined
+              ? Number(metrics.interactions)
+              : (Number.isFinite(likes) ? Math.max(0, likes) : 0) +
+                (Number.isFinite(comments) ? Math.max(0, comments) : 0) +
+                (Number.isFinite(shares) ? Math.max(0, shares) : 0) +
+                (Number.isFinite(saves) ? Math.max(0, saves) : 0);
+
+          acc.interactions += Number.isFinite(interactionsCandidate)
+            ? Math.max(0, interactionsCandidate)
+            : 0;
+          acc.likes += Number.isFinite(likes) ? Math.max(0, likes) : 0;
+          acc.comments += Number.isFinite(comments) ? Math.max(0, comments) : 0;
+          acc.posts += 1;
+
+          return acc;
+        },
+        {
+          interactions: 0,
+          likes: 0,
+          comments: 0,
+          posts: 0,
+        },
+      );
+
+      return {
+        key: bucket.key,
+        start: bucket.start,
+        end: bucket.end,
+        posts: totals.posts,
+        likes: totals.likes,
+        comments: totals.comments,
+        interactions: totals.interactions,
+      };
+    })
+    .sort((a, b) => {
+      const aTime = a.start instanceof Date ? a.start.getTime() : 0;
+      const bTime = b.start instanceof Date ? b.start.getTime() : 0;
+      return aTime - bTime;
+    });
+
+  if (months.length === 0) {
+    return {
+      months: [],
+      latestMonth: null,
+      previousMonth: null,
+      delta: null,
+      hasRecords: false,
+      hasAnyPosts: safeRecords.length > 0,
+      hasTrendSamples: normalizedPosts.length > 0,
+    };
+  }
+
+  const latestMonth = months[months.length - 1];
+  const previousMonth = months.length > 1 ? months[months.length - 2] : null;
+
+  const computeDelta = (latestValue, previousValue) => {
+    const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
+    const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
+    const absolute = safeLatest - safePrevious;
+    const percent = safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
+
+    return { absolute, percent };
+  };
+
+  const delta = previousMonth
+    ? {
+        posts: computeDelta(latestMonth.posts, previousMonth.posts),
+        interactions: computeDelta(
+          latestMonth.interactions,
+          previousMonth.interactions,
+        ),
+        likes: computeDelta(latestMonth.likes, previousMonth.likes),
+        comments: computeDelta(latestMonth.comments, previousMonth.comments),
+      }
+    : null;
+
+  return {
+    months,
+    latestMonth,
+    previousMonth,
+    delta,
+    hasRecords: months.length > 0,
+    hasAnyPosts: safeRecords.length > 0,
+    hasTrendSamples: normalizedPosts.length > 0,
   };
 };
 
@@ -3124,111 +3312,11 @@ export default function ExecutiveSummaryPage() {
       },
     );
 
-    const monthlyPosts = groupRecordsByMonth(instagramPosts, {
-      datePaths: POST_DATE_PATHS,
+    return buildMonthlyEngagementTrend(instagramPosts, {
+      platformKey: "instagram",
+      platformLabel: "Instagram",
     });
-
-    const likesRecords = Array.isArray(platformTrendActivity?.likes)
-      ? filterRecordsWithResolvableDate(platformTrendActivity.likes)
-      : [];
-
-    const monthlyLikes = groupRecordsByMonth(likesRecords, {
-      datePaths: [
-        "activityDate",
-        "tanggal",
-        "date",
-        "created_at",
-        "createdAt",
-        "updated_at",
-        "updatedAt",
-        "time",
-        "waktu",
-        "rekap.tanggal",
-        "rekap.date",
-        "rekap.created_at",
-        "rekap.createdAt",
-      ],
-    });
-
-    const hasRecords = monthlyPosts.length > 0 || monthlyLikes.length > 0;
-    const buckets = new Map();
-
-    monthlyPosts.forEach((group) => {
-      const key = group.key;
-      if (!buckets.has(key)) {
-        buckets.set(key, {
-          key,
-          start: group.start,
-          end: group.end,
-          posts: 0,
-          likes: 0,
-        });
-      }
-      const entry = buckets.get(key);
-      entry.posts += group.records.length;
-    });
-
-    monthlyLikes.forEach((group) => {
-      const key = group.key;
-      if (!buckets.has(key)) {
-        buckets.set(key, {
-          key,
-          start: group.start,
-          end: group.end,
-          posts: 0,
-          likes: 0,
-        });
-      }
-      const entry = buckets.get(key);
-      const totalLikes = sumActivityRecords(
-        group.records,
-        INSTAGRAM_LIKE_FIELD_PATHS,
-      );
-      entry.likes += Math.max(0, Math.round(totalLikes) || 0);
-    });
-
-    const months = Array.from(buckets.values()).sort(
-      (a, b) => a.start.getTime() - b.start.getTime(),
-    );
-
-    if (months.length === 0) {
-      return {
-        months: [],
-        latestMonth: null,
-        previousMonth: null,
-        delta: null,
-        hasRecords,
-      };
-    }
-
-    const latestMonth = months[months.length - 1];
-    const previousMonth = months.length > 1 ? months[months.length - 2] : null;
-
-    const computeDelta = (latestValue, previousValue) => {
-      const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
-      const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
-      const absolute = safeLatest - safePrevious;
-      const percent =
-        safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
-
-      return { absolute, percent };
-    };
-
-    const delta = previousMonth
-      ? {
-          posts: computeDelta(latestMonth.posts, previousMonth.posts),
-          likes: computeDelta(latestMonth.likes, previousMonth.likes),
-        }
-      : null;
-
-    return {
-      months,
-      latestMonth,
-      previousMonth,
-      delta,
-      hasRecords,
-    };
-  }, [platformPosts?.instagram, platformTrendActivity]);
+  }, [platformPosts?.instagram]);
 
   const instagramWeeklyTrendCardData = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
@@ -3252,111 +3340,11 @@ export default function ExecutiveSummaryPage() {
       },
     );
 
-    const monthlyPosts = groupRecordsByMonth(tiktokPosts, {
-      datePaths: POST_DATE_PATHS,
+    return buildMonthlyEngagementTrend(tiktokPosts, {
+      platformKey: "tiktok",
+      platformLabel: "TikTok",
     });
-
-    const commentRecords = Array.isArray(platformTrendActivity?.comments)
-      ? filterRecordsWithResolvableDate(platformTrendActivity.comments)
-      : [];
-
-    const monthlyComments = groupRecordsByMonth(commentRecords, {
-      datePaths: [
-        "tanggal",
-        "date",
-        "created_at",
-        "createdAt",
-        "activityDate",
-        "updated_at",
-        "updatedAt",
-        "time",
-        "waktu",
-        "rekap.tanggal",
-        "rekap.date",
-        "rekap.created_at",
-        "rekap.createdAt",
-      ],
-    });
-
-    const hasRecords = monthlyPosts.length > 0 || monthlyComments.length > 0;
-    const buckets = new Map();
-
-    monthlyPosts.forEach((group) => {
-      const key = group.key;
-      if (!buckets.has(key)) {
-        buckets.set(key, {
-          key,
-          start: group.start,
-          end: group.end,
-          posts: 0,
-          comments: 0,
-        });
-      }
-      const entry = buckets.get(key);
-      entry.posts += group.records.length;
-    });
-
-    monthlyComments.forEach((group) => {
-      const key = group.key;
-      if (!buckets.has(key)) {
-        buckets.set(key, {
-          key,
-          start: group.start,
-          end: group.end,
-          posts: 0,
-          comments: 0,
-        });
-      }
-      const entry = buckets.get(key);
-      const totalComments = sumActivityRecords(
-        group.records,
-        TIKTOK_COMMENT_FIELD_PATHS,
-      );
-      entry.comments += Math.max(0, Math.round(totalComments) || 0);
-    });
-
-    const months = Array.from(buckets.values()).sort(
-      (a, b) => a.start.getTime() - b.start.getTime(),
-    );
-
-    if (months.length === 0) {
-      return {
-        months: [],
-        latestMonth: null,
-        previousMonth: null,
-        delta: null,
-        hasRecords,
-      };
-    }
-
-    const latestMonth = months[months.length - 1];
-    const previousMonth = months.length > 1 ? months[months.length - 2] : null;
-
-    const computeDelta = (latestValue, previousValue) => {
-      const safeLatest = Number.isFinite(latestValue) ? latestValue : 0;
-      const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
-      const absolute = safeLatest - safePrevious;
-      const percent =
-        safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
-
-      return { absolute, percent };
-    };
-
-    const delta = previousMonth
-      ? {
-          posts: computeDelta(latestMonth.posts, previousMonth.posts),
-          comments: computeDelta(latestMonth.comments, previousMonth.comments),
-        }
-      : null;
-
-    return {
-      months,
-      latestMonth,
-      previousMonth,
-      delta,
-      hasRecords,
-    };
-  }, [platformPosts?.tiktok, platformTrendActivity]);
+  }, [platformPosts?.tiktok]);
 
   const tiktokWeeklyTrendCardData = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
@@ -3376,33 +3364,29 @@ export default function ExecutiveSummaryPage() {
     const { latestMonth, previousMonth, delta, months, hasRecords } =
       instagramMonthlyTrend ?? {};
 
+    const safeLatestInteractions = sanitizeMonthlyValue(
+      latestMonth?.interactions,
+    );
     const safeLatestLikes = sanitizeMonthlyValue(latestMonth?.likes);
     const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
+    const safePreviousInteractions = sanitizeMonthlyValue(
+      previousMonth?.interactions,
+    );
     const safePreviousLikes = sanitizeMonthlyValue(previousMonth?.likes);
     const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
-
-    const latestAverageLikes = calculateAveragePerContent(
-      safeLatestLikes,
-      safeLatestPosts,
-    );
-    const previousAverageLikes = calculateAveragePerContent(
-      safePreviousLikes,
-      safePreviousPosts,
-    );
 
     const currentMetrics = latestMonth
       ? [
           {
-            key: "posts",
-            label: "Post Instagram",
-            value: safeLatestPosts,
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safeLatestInteractions,
           },
           { key: "likes", label: "Likes Personil", value: safeLatestLikes },
           {
-            key: "averageLikes",
-            label: "Rata-rata Likes / Konten",
-            value: latestAverageLikes,
-            formatOptions: resolveAverageFormatOptions(latestAverageLikes),
+            key: "posts",
+            label: "Post Instagram",
+            value: safeLatestPosts,
           },
         ]
       : [];
@@ -3410,16 +3394,15 @@ export default function ExecutiveSummaryPage() {
     const previousMetrics = previousMonth
       ? [
           {
-            key: "posts",
-            label: "Post Instagram",
-            value: safePreviousPosts,
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safePreviousInteractions,
           },
           { key: "likes", label: "Likes Personil", value: safePreviousLikes },
           {
-            key: "averageLikes",
-            label: "Rata-rata Likes / Konten",
-            value: previousAverageLikes,
-            formatOptions: resolveAverageFormatOptions(previousAverageLikes),
+            key: "posts",
+            label: "Post Instagram",
+            value: safePreviousPosts,
           },
         ]
       : [];
@@ -3427,6 +3410,16 @@ export default function ExecutiveSummaryPage() {
     const deltaMetrics =
       delta && previousMonth
         ? [
+            {
+              key: "interactions",
+              label: "Perubahan Interaksi Personil",
+              absolute: Math.round(delta.interactions?.absolute ?? 0),
+              percent:
+                delta.interactions?.percent !== null &&
+                delta.interactions?.percent !== undefined
+                  ? delta.interactions.percent
+                  : null,
+            },
             {
               key: "likes",
               label: "Perubahan Likes Personil",
@@ -3452,15 +3445,16 @@ export default function ExecutiveSummaryPage() {
 
     const series = Array.isArray(months)
       ? months.slice(-6).map((month) => {
+          const interactions = sanitizeMonthlyValue(month.interactions);
           const posts = sanitizeMonthlyValue(month.posts);
           const likes = sanitizeMonthlyValue(month.likes);
           return {
             key: month.key,
             label: formatMonthRangeLabel(month.start, month.end),
+            primary: interactions,
+            secondary: posts,
             posts,
             likes,
-            primary: likes,
-            secondary: posts,
             start: month.start,
             end: month.end,
           };
@@ -3492,57 +3486,62 @@ export default function ExecutiveSummaryPage() {
     const { latestMonth, previousMonth, delta, months, hasRecords } =
       tiktokMonthlyTrend ?? {};
 
+    const safeLatestInteractions = sanitizeMonthlyValue(
+      latestMonth?.interactions,
+    );
     const safeLatestComments = sanitizeMonthlyValue(latestMonth?.comments);
     const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
+    const safePreviousInteractions = sanitizeMonthlyValue(
+      previousMonth?.interactions,
+    );
     const safePreviousComments = sanitizeMonthlyValue(previousMonth?.comments);
     const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
-    const latestAverageComments = calculateAveragePerContent(
-      safeLatestComments,
-      safeLatestPosts,
-    );
-    const previousAverageComments = calculateAveragePerContent(
-      safePreviousComments,
-      safePreviousPosts,
-    );
-
     const currentMetrics = latestMonth
       ? [
-          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
+          {
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safeLatestInteractions,
+          },
           {
             key: "comments",
             label: "Komentar Personil",
             value: safeLatestComments,
           },
-          {
-            key: "averageComments",
-            label: "Rata-rata Komentar / Konten",
-            value: latestAverageComments,
-            formatOptions: resolveAverageFormatOptions(latestAverageComments),
-          },
+          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
         ]
       : [];
 
     const previousMetrics = previousMonth
       ? [
-          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
+          {
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safePreviousInteractions,
+          },
           {
             key: "comments",
             label: "Komentar Personil",
             value: safePreviousComments,
           },
-          {
-            key: "averageComments",
-            label: "Rata-rata Komentar / Konten",
-            value: previousAverageComments,
-            formatOptions: resolveAverageFormatOptions(previousAverageComments),
-          },
+          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
         ]
       : [];
 
     const deltaMetrics =
       delta && previousMonth
         ? [
+            {
+              key: "interactions",
+              label: "Perubahan Interaksi Personil",
+              absolute: Math.round(delta.interactions?.absolute ?? 0),
+              percent:
+                delta.interactions?.percent !== null &&
+                delta.interactions?.percent !== undefined
+                  ? delta.interactions.percent
+                  : null,
+            },
             {
               key: "comments",
               label: "Perubahan Komentar Personil",
@@ -3568,16 +3567,16 @@ export default function ExecutiveSummaryPage() {
 
     const series = Array.isArray(months)
       ? months.slice(-6).map((month) => {
+          const interactions = sanitizeMonthlyValue(month.interactions);
           const posts = sanitizeMonthlyValue(month.posts);
           const comments = sanitizeMonthlyValue(month.comments);
           return {
             key: month.key,
             label: formatMonthRangeLabel(month.start, month.end),
-            posts,
-            likes: comments,
-            comments,
-            primary: comments,
+            primary: interactions,
             secondary: posts,
+            posts,
+            comments,
             start: month.start,
             end: month.end,
           };
@@ -3608,8 +3607,8 @@ export default function ExecutiveSummaryPage() {
   const showPlatformLoading = platformsLoading;
   const instagramMonthlyTrendDescription =
     instagramMonthlyCardData.monthsCount < 2
-      ? "Likes personil & post Instagram per bulan. Data perbandingan belum lengkap."
-      : "Likes personil & post Instagram per bulan.";
+      ? "Interaksi & likes personil serta jumlah post Instagram per bulan. Data perbandingan belum lengkap."
+      : "Interaksi & likes personil serta jumlah post Instagram per bulan.";
   const instagramMonthlyCardError = !showPlatformLoading
     ? platformError
       ? platformError
@@ -3623,8 +3622,8 @@ export default function ExecutiveSummaryPage() {
 
   const tiktokMonthlyTrendDescription =
     tiktokMonthlyCardData.monthsCount < 2
-      ? "Komentar personel & post TikTok per bulan. Data perbandingan belum lengkap."
-      : "Komentar personel & post TikTok per bulan.";
+      ? "Interaksi & komentar personel serta jumlah post TikTok per bulan. Data perbandingan belum lengkap."
+      : "Interaksi & komentar personel serta jumlah post TikTok per bulan.";
   const tiktokMonthlyCardError = !showPlatformLoading
     ? platformError
       ? platformError
@@ -3799,8 +3798,8 @@ export default function ExecutiveSummaryPage() {
                 previousPeriodLabel={instagramMonthlyCardData.previousPeriodLabel}
                 formatNumber={formatNumber}
                 formatPercent={formatPercent}
-                primaryMetricLabel="Likes Personil"
-                secondaryMetricLabel="Post"
+                primaryMetricLabel="Interaksi Personil"
+                secondaryMetricLabel="Jumlah Post"
               />
             ) : null}
 
@@ -3817,8 +3816,8 @@ export default function ExecutiveSummaryPage() {
                 previousPeriodLabel={tiktokMonthlyCardData.previousPeriodLabel}
                 formatNumber={formatNumber}
                 formatPercent={formatPercent}
-                primaryMetricLabel="Komentar Personil"
-                secondaryMetricLabel="Post"
+                primaryMetricLabel="Interaksi Personil"
+                secondaryMetricLabel="Jumlah Post"
               />
             ) : null}
           </div>
