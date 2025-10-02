@@ -106,7 +106,7 @@ const formatPercent = (value) => {
 
 const EMPTY_ACTIVITY = Object.freeze({ likes: [], comments: [] });
 
-export const POST_DATE_PATHS = Object.freeze([
+const POST_DATE_PATHS = Object.freeze([
   "publishedAt",
   "published_at",
   "timestamp",
