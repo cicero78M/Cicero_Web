@@ -1012,36 +1012,22 @@ const buildWeeklyEngagementTrend = (
               (Number.isFinite(shares) ? Math.max(0, shares) : 0) +
               (Number.isFinite(saves) ? Math.max(0, saves) : 0);
 
-        const engagementCandidate = Number(metrics.engagementRate);
-
         acc.interactions += Number.isFinite(interactionsCandidate)
           ? Math.max(0, interactionsCandidate)
           : 0;
         acc.posts += 1;
-        if (Number.isFinite(engagementCandidate) && engagementCandidate >= 0) {
-          acc.engagementRateTotal += engagementCandidate;
-          acc.engagementSamples += 1;
-        }
 
         return acc;
       },
       {
         interactions: 0,
         posts: 0,
-        engagementRateTotal: 0,
-        engagementSamples: 0,
       },
     );
-
-    const averageEngagement =
-      totals.engagementSamples > 0
-        ? totals.engagementRateTotal / totals.engagementSamples
-        : 0;
 
     return {
       key: bucket.key,
       label: formatWeekRangeLabel(bucket.start, bucket.end),
-      engagementRate: averageEngagement,
       interactions: totals.interactions,
       posts: totals.posts,
     };
@@ -3728,15 +3714,15 @@ export default function ExecutiveSummaryPage() {
 
       {(shouldShowInstagramWeeklyTrendCard || shouldShowTiktokWeeklyTrendCard) ? (
         <section
-          aria-label="Tren Engagement Mingguan"
+          aria-label="Tren Interaksi Mingguan"
           className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
         >
           <div className="space-y-2">
             <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              Tren Engagement Mingguan
+              Tren Interaksi Mingguan
             </h2>
             <p className="text-sm text-slate-300">
-              Perbandingan performa konten mingguan berdasarkan engagement rate dan total interaksi.
+              Perbandingan performa konten mingguan berdasarkan total interaksi.
             </p>
           </div>
 
@@ -3750,7 +3736,6 @@ export default function ExecutiveSummaryPage() {
                 loading={showPlatformLoading}
                 error={instagramWeeklyTrendError}
                 formatNumber={formatNumber}
-                formatPercent={formatPercent}
               />
             ) : null}
 
@@ -3763,7 +3748,6 @@ export default function ExecutiveSummaryPage() {
                 loading={showPlatformLoading}
                 error={tiktokWeeklyTrendError}
                 formatNumber={formatNumber}
-                formatPercent={formatPercent}
               />
             ) : null}
           </div>
