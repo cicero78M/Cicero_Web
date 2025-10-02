@@ -127,6 +127,17 @@ const PlatformLikesSummary = ({
       }));
   }, [clients]);
 
+  const commentDistributionData = useMemo(() => {
+    return [...clients]
+      .sort((a, b) => b.totalComments - a.totalComments)
+      .slice(0, 8)
+      .map((client) => ({
+        name: client.clientName,
+        comments: client.totalComments,
+        compliance: client.complianceRate,
+      }));
+  }, [clients]);
+
   const topCompliance = useMemo(() => {
     return [...clients]
       .sort((a, b) => b.complianceRate - a.complianceRate)
@@ -137,7 +148,7 @@ const PlatformLikesSummary = ({
     return topPersonnel.slice(0, 5);
   }, [topPersonnel]);
 
-  const standoutCommenters = useMemo(() => {
+  const topCommentPersonnel = useMemo(() => {
     return [...topPersonnel]
       .filter((person) => (person.username || person.nama) && (person.comments ?? 0) > 0)
       .sort((a, b) => {
@@ -277,6 +288,49 @@ const PlatformLikesSummary = ({
 
           <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+              Kontributor Komentar Teratas
+            </h3>
+            <div className="mt-4 h-64">
+              {commentDistributionData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={commentDistributionData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+                    <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                    <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(15,23,42,0.3)" }}
+                      contentStyle={{
+                        backgroundColor: "rgba(15,23,42,0.95)",
+                        borderRadius: 16,
+                        borderColor: "rgba(148,163,184,0.4)",
+                        boxShadow: "0 20px 45px rgba(245,158,11,0.25)",
+                        color: "#e2e8f0",
+                      }}
+                      formatter={(value: number) => [
+                        formatNumber(value, { maximumFractionDigits: 0 }),
+                        "Komentar",
+                      ]}
+                      labelFormatter={(label: string | number, payload: any[]) => {
+                        const entry = payload && payload.length > 0 ? payload[0].payload : null;
+                        if (entry && typeof entry.compliance === "number") {
+                          return `${label} · Kepatuhan ${formatPercent(entry.compliance)}`;
+                        }
+                        return label as string;
+                      }}
+                    />
+                    <Bar dataKey="comments" fill="#f97316" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                  Belum ada data komentar teratas.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               Kepatuhan Tertinggi
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-slate-200">
@@ -296,13 +350,13 @@ const PlatformLikesSummary = ({
             </ul>
           </div>
 
-          {standoutCommenters.length > 0 ? (
+          {topCommentPersonnel.length > 0 ? (
             <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
               <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Kontributor Komentar Teratas
+                Personil dengan Komentar Tertinggi
               </h3>
               <ul className="mt-4 space-y-3 text-sm text-slate-200">
-                {standoutCommenters.map((person) => {
+                {topCommentPersonnel.map((person) => {
                   const identity = person.username || person.nama || "Tanpa Nama";
                   const additional = [person.nama, person.clientName]
                     .filter((value) => value && value !== identity)
