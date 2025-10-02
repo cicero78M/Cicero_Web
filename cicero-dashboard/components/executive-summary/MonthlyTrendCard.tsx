@@ -13,6 +13,7 @@ type MonthlyMetric = {
   label: string;
   value: number;
   suffix?: string;
+  formatOptions?: Intl.NumberFormatOptions;
 };
 
 type MonthlyDeltaMetric = {
@@ -160,7 +161,10 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
                   >
                     <span className="text-sm text-slate-400">{metric.label}</span>
                     <span className="text-lg font-semibold text-slate-100">
-                      {formatNumber(metric.value, { maximumFractionDigits: 0 })}
+                      {formatNumber(metric.value, {
+                        maximumFractionDigits: 0,
+                        ...(metric.formatOptions ?? {}),
+                      })}
                       {metric.suffix ?? ""}
                     </span>
                   </div>
@@ -183,7 +187,10 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
                   >
                     <span className="text-sm text-slate-400">{metric.label}</span>
                     <span className="text-lg font-semibold text-slate-100">
-                      {formatNumber(metric.value, { maximumFractionDigits: 0 })}
+                      {formatNumber(metric.value, {
+                        maximumFractionDigits: 0,
+                        ...(metric.formatOptions ?? {}),
+                      })}
                       {metric.suffix ?? ""}
                     </span>
                   </div>

@@ -1016,6 +1016,7 @@ const buildWeeklyEngagementTrend = (
         acc.interactions += Number.isFinite(interactionsCandidate)
           ? Math.max(0, interactionsCandidate)
           : 0;
+        acc.likes += Number.isFinite(likes) ? Math.max(0, likes) : 0;
         acc.posts += 1;
 
         return acc;
@@ -1023,6 +1024,7 @@ const buildWeeklyEngagementTrend = (
       {
         interactions: 0,
         posts: 0,
+        likes: 0,
       },
     );
 
@@ -1031,6 +1033,7 @@ const buildWeeklyEngagementTrend = (
       label: formatWeekRangeLabel(bucket.start, bucket.end),
       interactions: totals.interactions,
       posts: totals.posts,
+      likes: totals.likes,
     };
   });
 
@@ -1046,6 +1049,31 @@ const buildWeeklyEngagementTrend = (
     hasAnyPosts: safeRecords.length > 0,
     hasTrendSamples: normalizedPosts.length > 0,
   };
+};
+
+const calculateAveragePerContent = (totalLikes = 0, totalPosts = 0) => {
+  const safeLikes = Number.isFinite(totalLikes) ? Number(totalLikes) : 0;
+  const safePosts = Number.isFinite(totalPosts) ? Number(totalPosts) : 0;
+
+  if (safePosts <= 0) {
+    return 0;
+  }
+
+  return safeLikes / safePosts;
+};
+
+const resolveAverageFormatOptions = (averageValue = 0) => {
+  const safeAverage = Number.isFinite(averageValue) ? Number(averageValue) : 0;
+
+  if (safeAverage <= 0) {
+    return { maximumFractionDigits: 0 };
+  }
+
+  if (safeAverage < 10) {
+    return { maximumFractionDigits: 1, minimumFractionDigits: 1 };
+  }
+
+  return { maximumFractionDigits: 0 };
 };
 
 const normalizePlatformProfile = (profile, { label = "", followers = 0, posts = 0 } = {}) => {
@@ -3332,24 +3360,45 @@ export default function ExecutiveSummaryPage() {
     const safePreviousLikes = Math.max(0, Number(previousMonth?.likes) || 0);
     const safePreviousPosts = Math.max(0, Number(previousMonth?.posts) || 0);
 
+    const latestAverageLikes = calculateAveragePerContent(
+      safeLatestLikes,
+      safeLatestPosts,
+    );
+    const previousAverageLikes = calculateAveragePerContent(
+      safePreviousLikes,
+      safePreviousPosts,
+    );
+
     const currentMetrics = latestMonth
       ? [
-          { key: "likes", label: "Likes Personil", value: safeLatestLikes },
           {
             key: "posts",
             label: "Post Instagram",
             value: safeLatestPosts,
+          },
+          { key: "likes", label: "Likes Personil", value: safeLatestLikes },
+          {
+            key: "averageLikes",
+            label: "Rata-rata Likes / Konten",
+            value: latestAverageLikes,
+            formatOptions: resolveAverageFormatOptions(latestAverageLikes),
           },
         ]
       : [];
 
     const previousMetrics = previousMonth
       ? [
-          { key: "likes", label: "Likes Personil", value: safePreviousLikes },
           {
             key: "posts",
             label: "Post Instagram",
             value: safePreviousPosts,
+          },
+          { key: "likes", label: "Likes Personil", value: safePreviousLikes },
+          {
+            key: "averageLikes",
+            label: "Rata-rata Likes / Konten",
+            value: previousAverageLikes,
+            formatOptions: resolveAverageFormatOptions(previousAverageLikes),
           },
         ]
       : [];
@@ -3422,25 +3471,46 @@ export default function ExecutiveSummaryPage() {
     );
     const safePreviousPosts = Math.max(0, Number(previousMonth?.posts) || 0);
 
+    const latestAverageComments = calculateAveragePerContent(
+      safeLatestComments,
+      safeLatestPosts,
+    );
+    const previousAverageComments = calculateAveragePerContent(
+      safePreviousComments,
+      safePreviousPosts,
+    );
+
     const currentMetrics = latestMonth
       ? [
+          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
           {
             key: "comments",
             label: "Komentar Personil",
             value: safeLatestComments,
           },
-          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
+          {
+            key: "averageComments",
+            label: "Rata-rata Komentar / Konten",
+            value: latestAverageComments,
+            formatOptions: resolveAverageFormatOptions(latestAverageComments),
+          },
         ]
       : [];
 
     const previousMetrics = previousMonth
       ? [
+          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
           {
             key: "comments",
             label: "Komentar Personil",
             value: safePreviousComments,
           },
-          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
+          {
+            key: "averageComments",
+            label: "Rata-rata Komentar / Konten",
+            value: previousAverageComments,
+            formatOptions: resolveAverageFormatOptions(previousAverageComments),
+          },
         ]
       : [];
 

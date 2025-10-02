@@ -21,6 +21,7 @@ type WeeklyEngagementPoint = {
   label?: string;
   interactions?: number | null;
   posts?: number | null;
+  likes?: number | null;
 };
 
 type PlatformEngagementTrendChartProps = {
@@ -48,16 +49,19 @@ const resolvePoint = (point?: WeeklyEngagementPoint | null) => {
       label: "",
       interactions: 0,
       posts: 0,
+      likes: 0,
     };
   }
 
   const interactions = Number(point.interactions);
   const posts = Number(point.posts);
+  const likes = Number(point.likes);
 
   return {
     label: point.label ?? point.key ?? "",
     interactions: Number.isFinite(interactions) ? Math.max(0, interactions) : 0,
     posts: Number.isFinite(posts) ? Math.max(0, posts) : 0,
+    likes: Number.isFinite(likes) ? Math.max(0, likes) : 0,
   };
 };
 
@@ -117,6 +121,26 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       ? latestPoint.interactions - (previousPoint?.interactions ?? 0)
       : null;
 
+  const formatAverageLikes = (value: number) => {
+    if (!Number.isFinite(value) || value <= 0) {
+      return formatNumber(0, { maximumFractionDigits: 0 });
+    }
+
+    const fractionDigits = value > 0 && value < 10 ? 1 : 0;
+
+    return formatNumber(value, {
+      maximumFractionDigits: fractionDigits,
+      minimumFractionDigits: fractionDigits,
+    });
+  };
+
+  const latestAverageLikes =
+    latestPoint.posts > 0 ? latestPoint.likes / latestPoint.posts : 0;
+  const previousAverageLikes =
+    previousPoint && previousPoint.posts > 0
+      ? previousPoint.likes / previousPoint.posts
+      : 0;
+
   const renderDelta = (value: number | null) => {
     if (value === null || !Number.isFinite(value)) {
       return null;
@@ -148,19 +172,29 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
           <p className="mt-1 text-sm text-slate-400">{latestPoint.label}</p>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-baseline justify-between">
+              <span className="text-slate-400">Jumlah Konten</span>
+              <span className="text-lg font-semibold text-slate-100">
+                {formatNumber(latestPoint.posts, { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-slate-400">Likes Personil</span>
+              <span className="text-lg font-semibold text-slate-100">
+                {formatNumber(latestPoint.likes, { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-slate-400">Rata-rata Likes / Konten</span>
+              <span className="text-lg font-semibold text-slate-100">
+                {formatAverageLikes(latestAverageLikes)}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between">
               <span className="text-slate-400">Total Interaksi</span>
               <span className="text-lg font-semibold text-slate-100">
                 {formatNumber(latestPoint.interactions, { maximumFractionDigits: 0 })}
               </span>
             </div>
-            {typeof latestPoint.posts === "number" && latestPoint.posts > 0 ? (
-              <div className="flex items-baseline justify-between">
-                <span className="text-slate-400">Jumlah Konten</span>
-                <span className="text-lg font-semibold text-slate-100">
-                  {formatNumber(latestPoint.posts, { maximumFractionDigits: 0 })}
-                </span>
-              </div>
-            ) : null}
           </div>
         </div>
         <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
@@ -170,19 +204,29 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
               <p className="mt-1 text-sm text-slate-400">{previousPoint.label}</p>
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-baseline justify-between">
+                  <span className="text-slate-400">Jumlah Konten</span>
+                  <span className="text-lg font-semibold text-slate-100">
+                    {formatNumber(previousPoint.posts, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-slate-400">Likes Personil</span>
+                  <span className="text-lg font-semibold text-slate-100">
+                    {formatNumber(previousPoint.likes, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-slate-400">Rata-rata Likes / Konten</span>
+                  <span className="text-lg font-semibold text-slate-100">
+                    {formatAverageLikes(previousAverageLikes)}
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between">
                   <span className="text-slate-400">Total Interaksi</span>
                   <span className="text-lg font-semibold text-slate-100">
                     {formatNumber(previousPoint.interactions, { maximumFractionDigits: 0 })}
                   </span>
                 </div>
-                {typeof previousPoint.posts === "number" && previousPoint.posts > 0 ? (
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-slate-400">Jumlah Konten</span>
-                    <span className="text-lg font-semibold text-slate-100">
-                      {formatNumber(previousPoint.posts, { maximumFractionDigits: 0 })}
-                    </span>
-                  </div>
-                ) : null}
               </div>
             </>
           ) : (
