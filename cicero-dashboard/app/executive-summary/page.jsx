@@ -547,6 +547,59 @@ const filterRecordsWithResolvableDate = (records, options = {}) => {
   return records.filter((record) => resolveRecordDate(record, options.extraPaths));
 };
 
+const filterRecordsByDateRange = (records, range, options = {}) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  const startDate = range?.startDate ? parseDateValue(range.startDate) : null;
+  const endDate = range?.endDate ? parseDateValue(range.endDate) : null;
+
+  const startTime = startDate
+    ? Date.UTC(
+        startDate.getUTCFullYear(),
+        startDate.getUTCMonth(),
+        startDate.getUTCDate(),
+        0,
+        0,
+        0,
+        0,
+      )
+    : null;
+  const endTime = endDate
+    ? Date.UTC(
+        endDate.getUTCFullYear(),
+        endDate.getUTCMonth(),
+        endDate.getUTCDate(),
+        23,
+        59,
+        59,
+        999,
+      )
+    : null;
+
+  const extraPaths = options.extraPaths;
+
+  return records.filter((record) => {
+    const resolved = resolveRecordDate(record, extraPaths);
+    if (!resolved) {
+      return false;
+    }
+
+    const timestamp = resolved.parsed.getTime();
+
+    if (startTime !== null && timestamp < startTime) {
+      return false;
+    }
+
+    if (endTime !== null && timestamp > endTime) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
 const pickNestedDate = (source, paths = []) => {
   const value = pickNestedValue(source, paths);
   return parseDateValue(value);
@@ -2660,9 +2713,9 @@ export default function ExecutiveSummaryPage() {
               token,
               clientId,
               activityPeriodeParam,
-              tanggalParam,
-              startDateParam,
-              endDateParam,
+              undefined,
+              undefined,
+              undefined,
               controller.signal,
             ).catch((error) => {
               console.warn("Gagal memuat rekap likes IG", error);
@@ -2672,9 +2725,9 @@ export default function ExecutiveSummaryPage() {
               token,
               clientId,
               activityPeriodeParam,
-              tanggalParam,
-              startDateParam,
-              endDateParam,
+              undefined,
+              undefined,
+              undefined,
               controller.signal,
             ).catch((error) => {
               console.warn("Gagal memuat rekap komentar TikTok", error);
@@ -2709,19 +2762,36 @@ export default function ExecutiveSummaryPage() {
           stats.total_tiktok_post,
         );
 
-        const likesRaw = ensureArray(likesResult);
-        const commentsRaw = ensureArray(commentsResult);
+        const likesRawAll = ensureArray(likesResult);
+        const commentsRawAll = ensureArray(commentsResult);
 
         const fallbackTrendDateIso = periodRange?.startDate
           ? `${periodRange.startDate}T00:00:00.000Z`
           : null;
 
-        const likesTrendRecords = prepareTrendActivityRecords(likesRaw, {
-          fallbackDate: fallbackTrendDateIso,
-        });
-        const commentsTrendRecords = prepareTrendActivityRecords(commentsRaw, {
-          fallbackDate: fallbackTrendDateIso,
-        });
+        const likesTrendRecordsAll = prepareTrendActivityRecords(likesRawAll);
+        const commentsTrendRecordsAll =
+          prepareTrendActivityRecords(commentsRawAll);
+
+        const likesTrendRecordsWithFallback = fallbackTrendDateIso
+          ? prepareTrendActivityRecords(likesRawAll, {
+              fallbackDate: fallbackTrendDateIso,
+            })
+          : likesTrendRecordsAll;
+        const commentsTrendRecordsWithFallback = fallbackTrendDateIso
+          ? prepareTrendActivityRecords(commentsRawAll, {
+              fallbackDate: fallbackTrendDateIso,
+            })
+          : commentsTrendRecordsAll;
+
+        const likesRecordsInSelectedRange = filterRecordsByDateRange(
+          likesTrendRecordsWithFallback,
+          periodRange,
+        );
+        const commentsRecordsInSelectedRange = filterRecordsByDateRange(
+          commentsTrendRecordsWithFallback,
+          periodRange,
+        );
 
         let instagramPostsRaw = [];
         let tiktokPostsRaw = [];
@@ -2784,15 +2854,15 @@ export default function ExecutiveSummaryPage() {
 
         const activityBuckets = computeActivityBuckets({
           users,
-          likes: likesRaw,
-          comments: commentsRaw,
+          likes: likesRecordsInSelectedRange,
+          comments: commentsRecordsInSelectedRange,
           totalIGPosts,
           totalTikTokPosts,
         });
 
         const mergedActivityRecords = mergeActivityRecords(
-          likesRaw,
-          commentsRaw,
+          likesRecordsInSelectedRange,
+          commentsRecordsInSelectedRange,
         );
         const likesSummary = aggregateLikesRecords(mergedActivityRecords);
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
@@ -2832,12 +2902,12 @@ export default function ExecutiveSummaryPage() {
           loading: false,
           error: platformErrorMessage,
           activity: {
-            likes: likesRaw,
-            comments: commentsRaw,
+            likes: likesRecordsInSelectedRange,
+            comments: commentsRecordsInSelectedRange,
           },
           trendActivity: {
-            likes: likesTrendRecords,
-            comments: commentsTrendRecords,
+            likes: likesTrendRecordsAll,
+            comments: commentsTrendRecordsAll,
           },
           likesSummary,
           posts: {
