@@ -7,7 +7,10 @@ import {
   resolveRecordDate,
   shouldShowWeeklyTrendCard,
 } from "@/app/executive-summary/weeklyTrendUtils";
-import { POST_DATE_PATHS } from "@/app/executive-summary/page";
+import {
+  POST_DATE_PATHS,
+  buildMonthlyEngagementTrend,
+} from "@/app/executive-summary/page";
 import {
   INSTAGRAM_LIKE_FIELD_PATHS,
   TIKTOK_COMMENT_FIELD_PATHS,
@@ -451,6 +454,98 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(merged).toHaveLength(1);
     expect(merged[0].total_comments).toBe(6);
     expect(merged[0].comments).toBe(6);
+  });
+});
+
+describe("buildMonthlyEngagementTrend", () => {
+  it("aggregates instagram monthly metrics directly from post content", () => {
+    const instagramPosts = [
+      {
+        id: "ig-1",
+        timestamp: "2024-05-02T10:00:00Z",
+        like_count: 5,
+        comment_count: 2,
+        share_count: 1,
+      },
+      {
+        id: "ig-2",
+        created_at: "2024-05-20T12:00:00Z",
+        metrics: { likes: 3, comments: 4 },
+      },
+      {
+        id: "ig-3",
+        created_at: "2024-06-01T08:00:00Z",
+        like_count: 6,
+        comment_count: 1,
+      },
+    ];
+
+    const trend = buildMonthlyEngagementTrend(instagramPosts, {
+      platformKey: "instagram",
+      platformLabel: "Instagram",
+    });
+
+    expect(trend.months).toHaveLength(2);
+    expect(trend.hasAnyPosts).toBe(true);
+
+    const may = trend.months.find((month) => month.key === "2024-05");
+    expect(may).toBeDefined();
+    expect(may).toMatchObject({
+      posts: 2,
+      likes: 8,
+      comments: 6,
+      interactions: 15,
+    });
+
+    const june = trend.months.find((month) => month.key === "2024-06");
+    expect(june).toBeDefined();
+    expect(june).toMatchObject({
+      posts: 1,
+      likes: 6,
+      comments: 1,
+      interactions: 7,
+    });
+  });
+
+  it("derives tiktok monthly totals from the same content posts used for the weekly trend", () => {
+    const tiktokPosts = [
+      {
+        id: "tt-1",
+        created_at: "2024-06-10T07:00:00Z",
+        like_count: 1,
+        comment_count: 5,
+      },
+      {
+        id: "tt-2",
+        timestamp: "2024-06-18T07:00:00Z",
+        metrics: { likes: 2, comments: 3, shares: 1 },
+      },
+      {
+        id: "tt-3",
+        created_at: "2024-07-05T07:00:00Z",
+        like_count: 0,
+        comment_count: 4,
+      },
+    ];
+
+    const trend = buildMonthlyEngagementTrend(tiktokPosts, {
+      platformKey: "tiktok",
+      platformLabel: "TikTok",
+    });
+
+    expect(trend.months).toHaveLength(2);
+    expect(trend.hasAnyPosts).toBe(true);
+
+    const june = trend.months.find((month) => month.key === "2024-06");
+    expect(june).toBeDefined();
+    expect(june).toMatchObject({
+      posts: 2,
+      comments: 8,
+      interactions: 12,
+    });
+
+    const totalPosts = trend.months.reduce((sum, month) => sum + month.posts, 0);
+    expect(totalPosts).toBe(3);
   });
 });
 
