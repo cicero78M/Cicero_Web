@@ -3738,13 +3738,26 @@ export default function ExecutiveSummaryPage() {
                     {divisionDistribution.length > 0 ? (
                       <div className="relative max-h-[520px] overflow-y-auto">
                         <table className="min-w-full divide-y divide-slate-800 text-left">
-                          <thead className="sticky top-0 z-10 bg-slate-900/80 text-[11px] uppercase tracking-[0.28em] text-slate-300 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60">
-                            <tr>
-                              <th scope="col" className="px-4 py-3">Satker / Polres</th>
-                              <th scope="col" className="w-40 px-4 py-3">Porsi Personil</th>
-                              <th scope="col" className="w-32 px-4 py-3">Instagram</th>
-                              <th scope="col" className="w-32 px-4 py-3">TikTok</th>
-                              <th scope="col" className="w-40 px-4 py-3">Rasio Kelengkapan</th>
+                          <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-950/90 via-slate-900/80 to-slate-950/90 text-[11px] uppercase tracking-[0.28em] text-slate-300 backdrop-blur supports-[backdrop-filter]:bg-slate-900/70">
+                            <tr className="text-xs text-slate-300">
+                              <th scope="col" className="w-20 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                                Peringkat
+                              </th>
+                              <th scope="col" className="min-w-[200px] px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                                Satker / Polres
+                              </th>
+                              <th scope="col" className="w-40 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                                Porsi Personil
+                              </th>
+                              <th scope="col" className="w-36 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                                Instagram
+                              </th>
+                              <th scope="col" className="w-36 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                                TikTok
+                              </th>
+                              <th scope="col" className="w-40 px-4 py-4 text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                                Rasio Kelengkapan
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
@@ -3755,70 +3768,125 @@ export default function ExecutiveSummaryPage() {
                                     100,
                                   )
                                 : 0;
+
+                              const rankColors = [
+                                "from-amber-400/30 to-amber-500/20 text-amber-200 border-amber-400/40",
+                                "from-slate-200/20 to-slate-400/10 text-slate-100 border-slate-300/40",
+                                "from-orange-300/20 to-orange-500/10 text-orange-200 border-orange-400/40",
+                              ];
+                              const rankIndex = Math.max(Math.min(row.rank - 1, rankColors.length - 1), 0);
+                              const rankStyle = row.rank <= 3 ? rankColors[rankIndex] : "from-slate-800/40 to-slate-900/40 text-slate-300 border-slate-700";
+
+                              const completionPercent = Math.min(Math.max(row.completionPercent, 0), 100);
+                              const completionLevel = completionPercent >= 80 ? "text-emerald-300" : completionPercent >= 60 ? "text-cyan-200" : "text-amber-300";
+
                               return (
-                                <tr key={row.id || row.division} className="transition-colors hover:bg-slate-900/40">
-                                  <td className="px-4 py-2.5">
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-500">
-                                        {String(row.rank).padStart(2, "0")}
-                                      </span>
-                                      <div className="space-y-1">
+                                <tr key={row.id || row.division} className="transition-colors hover:bg-slate-900/50">
+                                  <td className="px-4 py-4 align-top">
+                                    <div
+                                      className={`inline-flex min-w-[3.5rem] items-center justify-center rounded-full border bg-gradient-to-br px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] shadow-[0_8px_20px_rgba(15,23,42,0.35)] ${rankStyle}`}
+                                    >
+                                      {String(row.rank).padStart(2, "0")}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
                                         <p className="font-semibold text-slate-100">{row.division}</p>
-                                        <p className="text-xs text-slate-400">
-                                          {formatNumber(row.total, { maximumFractionDigits: 0 })} personil (
-                                          {formatPercent(row.sharePercent)})
-                                        </p>
+                                        {row.rank <= 5 ? (
+                                          <span className="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.35em] text-cyan-200">
+                                            TOP {row.rank}
+                                          </span>
+                                        ) : null}
+                                      </div>
+                                      <div className="flex items-center gap-3 text-xs text-slate-400">
+                                        <span className="rounded-full bg-slate-900/80 px-2 py-0.5 font-semibold text-slate-200">
+                                          {formatNumber(row.total, { maximumFractionDigits: 0 })} personil
+                                        </span>
+                                        <span>•</span>
+                                        <span>{formatPercent(row.sharePercent)} dari total</span>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-2.5">
-                                    <div className="flex items-center gap-3">
-                                      <span className="tabular-nums text-sm font-semibold text-slate-100">
-                                        {formatNumber(row.total, { maximumFractionDigits: 0 })}
-                                      </span>
-                                      <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800/80">
+                                  <td className="px-4 py-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between text-xs text-slate-400">
+                                        <span className="tabular-nums text-base font-semibold text-slate-100">
+                                          {formatNumber(row.total, { maximumFractionDigits: 0 })}
+                                        </span>
+                                        <span>Porsi</span>
+                                      </div>
+                                      <div className="relative h-2 overflow-hidden rounded-full bg-slate-900/80">
                                         <span
-                                          className="absolute inset-y-0 left-0 rounded-full bg-cyan-400/70"
+                                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-cyan-400/80 via-sky-400/80 to-fuchsia-400/70"
                                           style={{ width: `${totalShare}%` }}
                                         />
                                       </div>
+                                      <p className="text-[11px] text-slate-400">{formatPercent(row.sharePercent)} proporsi nasional</p>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-2.5">
-                                    <div className="flex flex-col gap-1">
-                                      <span className="tabular-nums text-sm font-semibold text-slate-100">
-                                        {formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })}
-                                      </span>
-                                      <span className="text-xs text-slate-400">
-                                        {formatPercent(row.instagramPercent)}
-                                      </span>
+                                  <td className="px-4 py-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-baseline justify-between text-xs text-slate-400">
+                                        <span className="tabular-nums text-base font-semibold text-slate-100">
+                                          {formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })}
+                                        </span>
+                                        <span>Profil</span>
+                                      </div>
+                                      <div className="relative h-2 overflow-hidden rounded-full bg-slate-900/80">
+                                        <span
+                                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-fuchsia-400/70 to-fuchsia-500/60"
+                                          style={{ width: `${Math.min(Math.max(row.instagramPercent, 0), 100)}%` }}
+                                        />
+                                      </div>
+                                      <p className="text-[11px] text-slate-400">{formatPercent(row.instagramPercent)} akun terisi</p>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-2.5">
-                                    <div className="flex flex-col gap-1">
-                                      <span className="tabular-nums text-sm font-semibold text-slate-100">
-                                        {formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })}
-                                      </span>
-                                      <span className="text-xs text-slate-400">
-                                        {formatPercent(row.tiktokPercent)}
-                                      </span>
+                                  <td className="px-4 py-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-baseline justify-between text-xs text-slate-400">
+                                        <span className="tabular-nums text-base font-semibold text-slate-100">
+                                          {formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })}
+                                        </span>
+                                        <span>Profil</span>
+                                      </div>
+                                      <div className="relative h-2 overflow-hidden rounded-full bg-slate-900/80">
+                                        <span
+                                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-400/70 to-cyan-400/70"
+                                          style={{ width: `${Math.min(Math.max(row.tiktokPercent, 0), 100)}%` }}
+                                        />
+                                      </div>
+                                      <p className="text-[11px] text-slate-400">{formatPercent(row.tiktokPercent)} akun terisi</p>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-2.5">
-                                    <div className="flex flex-col gap-2">
-                                      <div className="flex items-baseline justify-between text-[11px] text-slate-400">
-                                        <span className="text-sm font-semibold text-cyan-200">
+                                  <td className="px-4 py-4">
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-between text-xs text-slate-400">
+                                        <span className={`text-base font-semibold ${completionLevel}`}>
                                           {formatPercent(row.completionPercent)}
                                         </span>
                                         <span>Kelengkapan</span>
                                       </div>
-                                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-800/80">
+                                      <div className="h-2 overflow-hidden rounded-full bg-slate-900/80">
                                         <span
-                                          className="block h-full rounded-full bg-cyan-400/80"
-                                          style={{
-                                            width: `${Math.min(Math.max(row.completionPercent, 0), 100)}%`,
-                                          }}
+                                          className="block h-full rounded-full bg-gradient-to-r from-emerald-400/80 via-cyan-400/80 to-sky-400/80"
+                                          style={{ width: `${completionPercent}%` }}
                                         />
+                                      </div>
+                                      <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.35em] text-slate-400">
+                                        {completionPercent >= 80 ? (
+                                          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-300">
+                                            Sangat Baik
+                                          </span>
+                                        ) : completionPercent >= 60 ? (
+                                          <span className="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-cyan-200">
+                                            Perlu Optimasi
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-300">
+                                            Prioritas
+                                          </span>
+                                        )}
                                       </div>
                                     </div>
                                   </td>
