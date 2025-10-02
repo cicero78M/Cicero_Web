@@ -652,6 +652,29 @@ const ensureRecordsHaveActivityDate = (records, options = {}) => {
     .filter(Boolean);
 };
 
+const parseJsonMaybe = (value) => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return value;
+  }
+
+  const firstChar = trimmed[0];
+  if (firstChar !== "{" && firstChar !== "[") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch (error) {
+    console.warn("Gagal mengurai JSON pada field aktivitas", error);
+    return value;
+  }
+};
+
 const prepareTrendActivityRecords = (records, options = {}) => {
   if (!Array.isArray(records)) {
     return [];
@@ -683,6 +706,20 @@ const prepareTrendActivityRecords = (records, options = {}) => {
     }
 
     const clone = { ...record };
+    if (typeof clone.rekap === "string") {
+      const parsedRekap = parseJsonMaybe(clone.rekap);
+      if (parsedRekap && typeof parsedRekap === "object") {
+        clone.rekap = parsedRekap;
+      }
+    }
+
+    if (typeof clone.metrics === "string") {
+      const parsedMetrics = parseJsonMaybe(clone.metrics);
+      if (parsedMetrics && typeof parsedMetrics === "object") {
+        clone.metrics = parsedMetrics;
+      }
+    }
+
     const hasResolvableDate = resolveRecordDate(clone, extraPaths);
 
     if (!hasResolvableDate && fallbackIso) {
