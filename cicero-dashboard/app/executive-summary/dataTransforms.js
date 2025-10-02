@@ -159,6 +159,33 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
   const extractMetricValue = (record, type) => {
     if (type === "likes") {
       return (
+        record?.likes_personil ??
+        record?.likes_personel ??
+        record?.likes_personnel ??
+        record?.total_like_personil ??
+        record?.total_like_personel ??
+        record?.total_like_personnel ??
+        record?.totalLikesPersonil ??
+        record?.totalLikesPersonel ??
+        record?.totalLikesPersonnel ??
+        record?.rekap?.likes_personil ??
+        record?.rekap?.likes_personel ??
+        record?.rekap?.likes_personnel ??
+        record?.rekap?.total_like_personil ??
+        record?.rekap?.total_like_personel ??
+        record?.rekap?.total_like_personnel ??
+        record?.rekap?.totalLikesPersonil ??
+        record?.rekap?.totalLikesPersonel ??
+        record?.rekap?.totalLikesPersonnel ??
+        record?.metrics?.likes_personil ??
+        record?.metrics?.likes_personel ??
+        record?.metrics?.likes_personnel ??
+        record?.metrics?.total_like_personil ??
+        record?.metrics?.total_like_personel ??
+        record?.metrics?.total_like_personnel ??
+        record?.metrics?.totalLikesPersonil ??
+        record?.metrics?.totalLikesPersonel ??
+        record?.metrics?.totalLikesPersonnel ??
         record?.jumlah_like ??
         record?.jumlahLike ??
         record?.total_like ??
@@ -167,6 +194,14 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
         record?.like_count ??
         record?.likeCount ??
         record?.total_likes ??
+        record?.rekap?.jumlah_like ??
+        record?.rekap?.jumlahLike ??
+        record?.rekap?.total_like ??
+        record?.rekap?.likes ??
+        record?.rekap?.totalLikes ??
+        record?.rekap?.like_count ??
+        record?.rekap?.likeCount ??
+        record?.rekap?.total_likes ??
         record?.metrics?.likes ??
         record?.metrics?.totalLikes ??
         record?.metrics?.like_count ??
@@ -177,21 +212,61 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
     }
 
     return (
-      record?.jumlah_komentar ??
-      record?.jumlahKomentar ??
-      record?.total_komentar ??
-      record?.totalKomentar ??
-      record?.total_comments ??
-      record?.totalComments ??
+      record?.komentar_personil ??
+      record?.komentar_personel ??
+      record?.komentar_personnel ??
+      record?.comments_personil ??
+      record?.comments_personel ??
+      record?.comments_personnel ??
       record?.total_comments_personil ??
       record?.total_comments_personel ??
       record?.total_comments_personnel ??
       record?.totalCommentsPersonil ??
       record?.totalCommentsPersonel ??
       record?.totalCommentsPersonnel ??
+      record?.rekap?.komentar_personil ??
+      record?.rekap?.komentar_personel ??
+      record?.rekap?.komentar_personnel ??
+      record?.rekap?.comments_personil ??
+      record?.rekap?.comments_personel ??
+      record?.rekap?.comments_personnel ??
+      record?.rekap?.total_comments_personil ??
+      record?.rekap?.total_comments_personel ??
+      record?.rekap?.total_comments_personnel ??
+      record?.rekap?.totalCommentsPersonil ??
+      record?.rekap?.totalCommentsPersonel ??
+      record?.rekap?.totalCommentsPersonnel ??
+      record?.metrics?.komentar_personil ??
+      record?.metrics?.komentar_personel ??
+      record?.metrics?.komentar_personnel ??
+      record?.metrics?.comments_personil ??
+      record?.metrics?.comments_personel ??
+      record?.metrics?.comments_personnel ??
+      record?.metrics?.total_comments_personil ??
+      record?.metrics?.total_comments_personel ??
+      record?.metrics?.total_comments_personnel ??
+      record?.metrics?.totalCommentsPersonil ??
+      record?.metrics?.totalCommentsPersonel ??
+      record?.metrics?.totalCommentsPersonnel ??
+      record?.jumlah_komentar ??
+      record?.jumlahKomentar ??
+      record?.total_komentar ??
+      record?.totalKomentar ??
+      record?.total_comments ??
+      record?.totalComments ??
       record?.comment_count ??
       record?.commentCount ??
       record?.comments ??
+      record?.rekap?.jumlah_komentar ??
+      record?.rekap?.jumlahKomentar ??
+      record?.rekap?.total_komentar ??
+      record?.rekap?.totalKomentar ??
+      record?.rekap?.total_comments ??
+      record?.rekap?.totalComments ??
+      record?.rekap?.comment_count ??
+      record?.rekap?.commentCount ??
+      record?.rekap?.comments ??
+      record?.rekap?.komentar ??
       record?.metrics?.comments ??
       record?.metrics?.comment_count ??
       record?.metrics?.commentCount ??
