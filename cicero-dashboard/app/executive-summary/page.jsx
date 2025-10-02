@@ -4126,62 +4126,59 @@ export default function ExecutiveSummaryPage() {
               Belum ada data rekap likes untuk periode ini.
             </div>
           )}
-        </div>
-      </section>
 
-      <section className="grid gap-6 lg:grid-cols-5">
-
-        <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-            Aktivitas Personil
-          </h2>
-          {!userInsightState.loading && !userInsightState.error && activityBuckets ? (
-            <p className="mt-2 text-xs text-slate-400">
-              {formatNumber(totalEvaluated, { maximumFractionDigits: 0 })} personil dievaluasi
-              {totalContentEvaluated > 0
-                ? ` dari ${formatNumber(totalContentEvaluated, { maximumFractionDigits: 0 })} konten`
-                : " (tidak ada konten yang terbit)"}
-              .
-            </p>
-          ) : null}
-          <div className="mt-5 space-y-5">
-            {userInsightState.loading ? (
-              <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
-                Memuat aktivitas personil…
-              </div>
-            ) : userInsightState.error ? (
-              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                {userInsightState.error}
-              </div>
-            ) : activityCategories.length > 0 ? (
-              activityCategories.map((category) => {
-                const percent =
-                  totalEvaluated > 0 ? (category.count / totalEvaluated) * 100 : 0;
-                return (
-                  <div
-                    key={category.key}
-                    className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-200">{category.label}</p>
-                      <p className="text-xs text-slate-400">{category.description}</p>
+          <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              Aktivitas Personil
+            </h2>
+            {!userInsightState.loading && !userInsightState.error && activityBuckets ? (
+              <p className="mt-2 text-xs text-slate-400">
+                {formatNumber(totalEvaluated, { maximumFractionDigits: 0 })} personil dievaluasi
+                {totalContentEvaluated > 0
+                  ? ` dari ${formatNumber(totalContentEvaluated, { maximumFractionDigits: 0 })} konten`
+                  : " (tidak ada konten yang terbit)"}
+                .
+              </p>
+            ) : null}
+            <div className="mt-5 space-y-5">
+              {userInsightState.loading ? (
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                  Memuat aktivitas personil…
+                </div>
+              ) : userInsightState.error ? (
+                <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  {userInsightState.error}
+                </div>
+              ) : activityCategories.length > 0 ? (
+                activityCategories.map((category) => {
+                  const percent =
+                    totalEvaluated > 0 ? (category.count / totalEvaluated) * 100 : 0;
+                  return (
+                    <div
+                      key={category.key}
+                      className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-200">{category.label}</p>
+                        <p className="text-xs text-slate-400">{category.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-semibold text-white">
+                          {formatNumber(category.count, { maximumFractionDigits: 0 })}
+                        </p>
+                        {totalEvaluated > 0 ? (
+                          <p className="text-xs text-cyan-300">{formatPercent(percent)}</p>
+                        ) : null}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xl font-semibold text-white">
-                        {formatNumber(category.count, { maximumFractionDigits: 0 })}
-                      </p>
-                      {totalEvaluated > 0 ? (
-                        <p className="text-xs text-cyan-300">{formatPercent(percent)}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
-                Aktivitas personil belum tersedia untuk periode ini.
-              </div>
-            )}
+                  );
+                })
+              ) : (
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                  Aktivitas personil belum tersedia untuk periode ini.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
