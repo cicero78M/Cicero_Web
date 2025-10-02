@@ -1062,6 +1062,15 @@ const calculateAveragePerContent = (totalLikes = 0, totalPosts = 0) => {
   return safeLikes / safePosts;
 };
 
+const sanitizeMonthlyValue = (value) => {
+  const numeric = normalizeNumericInput(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+
+  return Math.max(0, numeric);
+};
+
 const resolveAverageFormatOptions = (averageValue = 0) => {
   const safeAverage = Number.isFinite(averageValue) ? Number(averageValue) : 0;
 
@@ -3355,10 +3364,10 @@ export default function ExecutiveSummaryPage() {
     const { latestMonth, previousMonth, delta, months, hasRecords } =
       instagramMonthlyTrend ?? {};
 
-    const safeLatestLikes = Math.max(0, Number(latestMonth?.likes) || 0);
-    const safeLatestPosts = Math.max(0, Number(latestMonth?.posts) || 0);
-    const safePreviousLikes = Math.max(0, Number(previousMonth?.likes) || 0);
-    const safePreviousPosts = Math.max(0, Number(previousMonth?.posts) || 0);
+    const safeLatestLikes = sanitizeMonthlyValue(latestMonth?.likes);
+    const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
+    const safePreviousLikes = sanitizeMonthlyValue(previousMonth?.likes);
+    const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
     const latestAverageLikes = calculateAveragePerContent(
       safeLatestLikes,
@@ -3431,8 +3440,8 @@ export default function ExecutiveSummaryPage() {
 
     const series = Array.isArray(months)
       ? months.slice(-6).map((month) => {
-          const posts = Math.max(0, Number(month.posts) || 0);
-          const likes = Math.max(0, Number(month.likes) || 0);
+          const posts = sanitizeMonthlyValue(month.posts);
+          const likes = sanitizeMonthlyValue(month.likes);
           return {
             key: month.key,
             label: formatMonthRangeLabel(month.start, month.end),
@@ -3463,13 +3472,10 @@ export default function ExecutiveSummaryPage() {
     const { latestMonth, previousMonth, delta, months, hasRecords } =
       tiktokMonthlyTrend ?? {};
 
-    const safeLatestComments = Math.max(0, Number(latestMonth?.comments) || 0);
-    const safeLatestPosts = Math.max(0, Number(latestMonth?.posts) || 0);
-    const safePreviousComments = Math.max(
-      0,
-      Number(previousMonth?.comments) || 0,
-    );
-    const safePreviousPosts = Math.max(0, Number(previousMonth?.posts) || 0);
+    const safeLatestComments = sanitizeMonthlyValue(latestMonth?.comments);
+    const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
+    const safePreviousComments = sanitizeMonthlyValue(previousMonth?.comments);
+    const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
     const latestAverageComments = calculateAveragePerContent(
       safeLatestComments,
@@ -3542,8 +3548,8 @@ export default function ExecutiveSummaryPage() {
 
     const series = Array.isArray(months)
       ? months.slice(-6).map((month) => {
-          const posts = Math.max(0, Number(month.posts) || 0);
-          const comments = Math.max(0, Number(month.comments) || 0);
+          const posts = sanitizeMonthlyValue(month.posts);
+          const comments = sanitizeMonthlyValue(month.comments);
           return {
             key: month.key,
             label: formatMonthRangeLabel(month.start, month.end),
