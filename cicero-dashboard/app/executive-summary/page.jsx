@@ -3140,11 +3140,13 @@ export default function ExecutiveSummaryPage() {
       latestMonth?.interactions,
     );
     const safeLatestLikes = sanitizeMonthlyValue(latestMonth?.likes);
+    const safeLatestComments = sanitizeMonthlyValue(latestMonth?.comments);
     const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
     const safePreviousInteractions = sanitizeMonthlyValue(
       previousMonth?.interactions,
     );
     const safePreviousLikes = sanitizeMonthlyValue(previousMonth?.likes);
+    const safePreviousComments = sanitizeMonthlyValue(previousMonth?.comments);
     const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
     const currentMetrics = latestMonth
@@ -3155,6 +3157,11 @@ export default function ExecutiveSummaryPage() {
             value: safeLatestInteractions,
           },
           { key: "likes", label: "Likes Personil", value: safeLatestLikes },
+          {
+            key: "comments",
+            label: "Komentar Personil",
+            value: safeLatestComments,
+          },
           {
             key: "posts",
             label: "Post Instagram",
@@ -3171,6 +3178,11 @@ export default function ExecutiveSummaryPage() {
             value: safePreviousInteractions,
           },
           { key: "likes", label: "Likes Personil", value: safePreviousLikes },
+          {
+            key: "comments",
+            label: "Komentar Personil",
+            value: safePreviousComments,
+          },
           {
             key: "posts",
             label: "Post Instagram",
@@ -3203,6 +3215,16 @@ export default function ExecutiveSummaryPage() {
                   : null,
             },
             {
+              key: "comments",
+              label: "Perubahan Komentar Personil",
+              absolute: Math.round(delta.comments?.absolute ?? 0),
+              percent:
+                delta.comments?.percent !== null &&
+                delta.comments?.percent !== undefined
+                  ? delta.comments.percent
+                  : null,
+            },
+            {
               key: "posts",
               label: "Perubahan Post",
               absolute: Math.round(delta.posts?.absolute ?? 0),
@@ -3220,6 +3242,7 @@ export default function ExecutiveSummaryPage() {
           const interactions = sanitizeMonthlyValue(month.interactions);
           const posts = sanitizeMonthlyValue(month.posts);
           const likes = sanitizeMonthlyValue(month.likes);
+          const comments = sanitizeMonthlyValue(month.comments);
           return {
             key: month.key,
             label: formatMonthRangeLabel(month.start, month.end),
@@ -3227,6 +3250,7 @@ export default function ExecutiveSummaryPage() {
             secondary: posts,
             posts,
             likes,
+            comments,
             start: month.start,
             end: month.end,
           };
@@ -3262,11 +3286,13 @@ export default function ExecutiveSummaryPage() {
       latestMonth?.interactions,
     );
     const safeLatestComments = sanitizeMonthlyValue(latestMonth?.comments);
+    const safeLatestLikes = sanitizeMonthlyValue(latestMonth?.likes);
     const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
     const safePreviousInteractions = sanitizeMonthlyValue(
       previousMonth?.interactions,
     );
     const safePreviousComments = sanitizeMonthlyValue(previousMonth?.comments);
+    const safePreviousLikes = sanitizeMonthlyValue(previousMonth?.likes);
     const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
     const currentMetrics = latestMonth
@@ -3281,6 +3307,7 @@ export default function ExecutiveSummaryPage() {
             label: "Komentar Personil",
             value: safeLatestComments,
           },
+          { key: "likes", label: "Likes Personil", value: safeLatestLikes },
           { key: "posts", label: "Post TikTok", value: safeLatestPosts },
         ]
       : [];
@@ -3297,6 +3324,7 @@ export default function ExecutiveSummaryPage() {
             label: "Komentar Personil",
             value: safePreviousComments,
           },
+          { key: "likes", label: "Likes Personil", value: safePreviousLikes },
           { key: "posts", label: "Post TikTok", value: safePreviousPosts },
         ]
       : [];
@@ -3325,6 +3353,16 @@ export default function ExecutiveSummaryPage() {
                   : null,
             },
             {
+              key: "likes",
+              label: "Perubahan Likes Personil",
+              absolute: Math.round(delta.likes?.absolute ?? 0),
+              percent:
+                delta.likes?.percent !== null &&
+                delta.likes?.percent !== undefined
+                  ? delta.likes.percent
+                  : null,
+            },
+            {
               key: "posts",
               label: "Perubahan Post",
               absolute: Math.round(delta.posts?.absolute ?? 0),
@@ -3342,6 +3380,7 @@ export default function ExecutiveSummaryPage() {
           const interactions = sanitizeMonthlyValue(month.interactions);
           const posts = sanitizeMonthlyValue(month.posts);
           const comments = sanitizeMonthlyValue(month.comments);
+          const likes = sanitizeMonthlyValue(month.likes);
           return {
             key: month.key,
             label: formatMonthRangeLabel(month.start, month.end),
@@ -3349,6 +3388,7 @@ export default function ExecutiveSummaryPage() {
             secondary: posts,
             posts,
             comments,
+            likes,
             start: month.start,
             end: month.end,
           };
@@ -3379,8 +3419,8 @@ export default function ExecutiveSummaryPage() {
   const showPlatformLoading = platformsLoading;
   const instagramMonthlyTrendDescription =
     instagramMonthlyCardData.monthsCount < 2
-      ? "Interaksi & likes personil serta jumlah post Instagram per bulan. Data perbandingan belum lengkap."
-      : "Interaksi & likes personil serta jumlah post Instagram per bulan.";
+      ? "Interaksi, likes & komentar personil serta jumlah post Instagram per bulan. Data perbandingan belum lengkap."
+      : "Interaksi, likes & komentar personil serta jumlah post Instagram per bulan.";
   const instagramMonthlyCardError = !showPlatformLoading
     ? platformError
       ? platformError
@@ -3394,8 +3434,8 @@ export default function ExecutiveSummaryPage() {
 
   const tiktokMonthlyTrendDescription =
     tiktokMonthlyCardData.monthsCount < 2
-      ? "Interaksi & komentar personel serta jumlah post TikTok per bulan. Data perbandingan belum lengkap."
-      : "Interaksi & komentar personel serta jumlah post TikTok per bulan.";
+      ? "Interaksi, komentar & likes personel serta jumlah post TikTok per bulan. Data perbandingan belum lengkap."
+      : "Interaksi, komentar & likes personel serta jumlah post TikTok per bulan.";
   const tiktokMonthlyCardError = !showPlatformLoading
     ? platformError
       ? platformError
