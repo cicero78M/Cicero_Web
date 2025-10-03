@@ -420,40 +420,195 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
   return Array.from(records.values());
 };
 
-const aggregateLikesRecords = (records = []) => {
+const aggregateLikesRecords = (records = [], options = {}) => {
   const safeRecords = Array.isArray(records)
     ? records.filter((item) => item && typeof item === "object")
     : [];
+  const directoryUsersRaw = Array.isArray(options?.directoryUsers)
+    ? options.directoryUsers.filter((item) => item && typeof item === "object")
+    : [];
 
-  if (safeRecords.length === 0) {
+  if (safeRecords.length === 0 && directoryUsersRaw.length === 0) {
     return createEmptyLikesSummary();
   }
 
+  const toNormalizedString = (value) => {
+    if (value == null) {
+      return "";
+    }
+    const strValue = String(value).trim();
+    return strValue;
+  };
+
+  const normalizeKeyComponent = (value) => {
+    const normalized = toNormalizedString(value);
+    return normalized ? normalized.toUpperCase() : "";
+  };
+
+  const resolveClientIdentifiers = (source = {}) => {
+    const rawClientId =
+      source?.client_id ??
+      source?.clientId ??
+      source?.clientID ??
+      source?.client ??
+      source?.id_client ??
+      source?.clientid ??
+      source?.idClient ??
+      "";
+
+    const clientId = toNormalizedString(rawClientId) || "LAINNYA";
+    const clientKey = normalizeKeyComponent(clientId) || "LAINNYA";
+    const clientName =
+      toNormalizedString(
+        source?.nama_client ??
+          source?.client_name ??
+          source?.client ??
+          source?.namaClient ??
+          source?.clientName ??
+          source?.satker ??
+          source?.satuan_kerja ??
+          source?.nama_satuan_kerja ??
+          source?.nama ??
+          clientId,
+      ) || "LAINNYA";
+
+    return { clientId, clientKey, clientName };
+  };
+
+  const resolvePersonnelNames = (source = {}) => {
+    const username =
+      toNormalizedString(
+        source?.username ??
+          source?.user_name ??
+          source?.userName ??
+          source?.user ??
+          source?.email ??
+          source?.akun ??
+          source?.akun_media_sosial ??
+          source?.akunMediaSosial,
+      ) || "";
+    const nama =
+      toNormalizedString(
+        source?.nama ??
+          source?.name ??
+          source?.full_name ??
+          source?.fullName ??
+          source?.display_name ??
+          source?.displayName,
+      ) || "";
+    return { username, nama };
+  };
+
+  const buildPersonnelKey = (source = {}, clientKey, fallbackIndex) => {
+    const candidates = [
+      source?.person_id,
+      source?.personId,
+      source?.personID,
+      source?.user_id,
+      source?.userId,
+      source?.userID,
+      source?.id,
+      source?.nrp,
+      source?.nip,
+      source?.nik,
+      source?.username,
+      source?.user_name,
+      source?.email,
+      source?.akun,
+      source?.akun_media_sosial,
+      source?.akunMediaSosial,
+      source?.nama,
+      source?.name,
+      source?.full_name,
+    ];
+
+    for (const candidate of candidates) {
+      const normalized = normalizeKeyComponent(candidate);
+      if (normalized) {
+        return `${clientKey}:${normalized}`;
+      }
+    }
+
+    return `${clientKey}:AUTO:${fallbackIndex}`;
+  };
+
+  const updateIfEmpty = (target, field, value) => {
+    const normalized = toNormalizedString(value);
+    if (!normalized) {
+      return;
+    }
+
+    if (!toNormalizedString(target[field]) || target[field] === "LAINNYA") {
+      target[field] = normalized;
+    }
+  };
+
   const clientsMap = new Map();
   const personnelList = [];
+  const personnelMap = new Map();
   let latestActivity = null;
 
-  safeRecords.forEach((record, index) => {
-    const rawClientId =
-      record?.client_id ??
-      record?.clientId ??
-      record?.clientID ??
-      record?.client ??
-      record?.id_client ??
-      record?.clientid ??
-      "LAINNYA";
-    const clientId = String(rawClientId || "LAINNYA").trim();
-    const clientKey = clientId ? clientId.toUpperCase() : "LAINNYA";
-    const clientName =
-      String(
-        record?.nama_client ??
-          record?.client_name ??
-          record?.client ??
-          record?.namaClient ??
-          record?.nama ??
-          (clientId || "LAINNYA"),
-      ).trim() || "LAINNYA";
+  const ensureClientEntry = ({ clientId, clientKey, clientName }) => {
+    if (!clientsMap.has(clientKey)) {
+      clientsMap.set(clientKey, {
+        key: clientKey,
+        clientId: clientId || "LAINNYA",
+        clientName: clientName || "LAINNYA",
+        totalLikes: 0,
+        totalComments: 0,
+        personnel: [],
+      });
+    }
 
+    const clientEntry = clientsMap.get(clientKey);
+    updateIfEmpty(clientEntry, "clientId", clientId);
+    updateIfEmpty(clientEntry, "clientName", clientName);
+    return clientEntry;
+  };
+
+  const registerPersonnel = (clientEntry, key, defaults) => {
+    if (!personnelMap.has(key)) {
+      const record = {
+        key,
+        clientId: clientEntry.clientId,
+        clientName: clientEntry.clientName,
+        username: "",
+        nama: "",
+        likes: 0,
+        comments: 0,
+        active: false,
+        ...defaults,
+      };
+
+      clientEntry.personnel.push(record);
+      personnelList.push(record);
+      personnelMap.set(key, record);
+    }
+
+    return personnelMap.get(key);
+  };
+
+  directoryUsersRaw.forEach((user, index) => {
+    const identifiers = resolveClientIdentifiers(user);
+    const clientEntry = ensureClientEntry(identifiers);
+    const { username, nama } = resolvePersonnelNames(user);
+    const personnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
+    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
+      clientId: identifiers.clientId,
+      clientName: identifiers.clientName,
+      username,
+      nama,
+    });
+
+    updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
+    updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "username", username);
+    updateIfEmpty(personnelRecord, "nama", nama);
+  });
+
+  safeRecords.forEach((record, index) => {
+    const identifiers = resolveClientIdentifiers(record);
+    const clientEntry = ensureClientEntry(identifiers);
     const likes = toSafeNumber(
       record?.jumlah_like ??
         record?.jumlahLike ??
@@ -483,45 +638,32 @@ const aggregateLikesRecords = (records = []) => {
         record?.metrics?.totalComments ??
         record?.metrics?.total_comments,
     );
-    const username = String(record?.username ?? record?.user_name ?? "").trim();
-    const nama = String(record?.nama ?? record?.name ?? record?.full_name ?? "").trim();
-    const isActive = likes > 0 || comments > 0;
-
-    if (!clientsMap.has(clientKey)) {
-      clientsMap.set(clientKey, {
-        key: clientKey,
-        clientId,
-        clientName,
-        totalLikes: 0,
-        totalComments: 0,
-        totalPersonnel: 0,
-        activePersonnel: 0,
-        personnel: [],
-      });
-    }
-
-    const clientEntry = clientsMap.get(clientKey);
-    clientEntry.totalLikes += likes;
-    clientEntry.totalComments += comments;
-    clientEntry.totalPersonnel += 1;
-    if (isActive) {
-      clientEntry.activePersonnel += 1;
-    }
-
-    const personnelKey = `${clientKey}:${username || nama || index}`;
-    const personnelRecord = {
-      key: personnelKey,
-      clientId,
-      clientName,
+    const { username, nama } = resolvePersonnelNames(record);
+    const personnelKey = buildPersonnelKey(
+      record,
+      identifiers.clientKey,
+      `record-${index}`,
+    );
+    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
+      clientId: identifiers.clientId,
+      clientName: identifiers.clientName,
       username,
       nama,
-      likes,
-      comments,
-      active: isActive,
-    };
+    });
 
-    clientEntry.personnel.push(personnelRecord);
-    personnelList.push(personnelRecord);
+    personnelRecord.likes += likes;
+    personnelRecord.comments += comments;
+    if (likes > 0 || comments > 0) {
+      personnelRecord.active = true;
+    }
+
+    updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
+    updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "username", username);
+    updateIfEmpty(personnelRecord, "nama", nama);
+
+    clientEntry.totalLikes += likes;
+    clientEntry.totalComments += comments;
 
     const activityDate =
       parseDateValue(record?.tanggal ?? record?.date ?? record?.activityDate) ??
@@ -535,17 +677,20 @@ const aggregateLikesRecords = (records = []) => {
   });
 
   const clients = Array.from(clientsMap.values()).map((client) => {
+    const totalPersonnel = client.personnel.length;
+    const activePersonnel = client.personnel.filter((person) => person.active).length;
+
     const complianceRate =
-      client.totalPersonnel > 0
-        ? (client.activePersonnel / client.totalPersonnel) * 100
-        : 0;
+      totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
     const averageLikesPerUser =
-      client.totalPersonnel > 0 ? client.totalLikes / client.totalPersonnel : 0;
+      totalPersonnel > 0 ? client.totalLikes / totalPersonnel : 0;
     const averageCommentsPerUser =
-      client.totalPersonnel > 0 ? client.totalComments / client.totalPersonnel : 0;
+      totalPersonnel > 0 ? client.totalComments / totalPersonnel : 0;
 
     return {
       ...client,
+      totalPersonnel,
+      activePersonnel,
       complianceRate,
       averageLikesPerUser,
       averageCommentsPerUser,

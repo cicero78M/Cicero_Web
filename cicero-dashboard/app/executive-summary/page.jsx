@@ -2672,7 +2672,9 @@ export default function ExecutiveSummaryPage() {
           likesRecordsInSelectedRange,
           commentsRecordsInSelectedRange,
         );
-        const likesSummary = aggregateLikesRecords(mergedActivityRecords);
+        const likesSummary = aggregateLikesRecords(mergedActivityRecords, {
+          directoryUsers: users,
+        });
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
           {

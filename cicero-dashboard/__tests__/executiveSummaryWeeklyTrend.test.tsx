@@ -245,6 +245,38 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(summary.clients[0].totalLikes).toBe(12);
   });
 
+  it("menggunakan direktori pengguna sebagai baseline ketika tidak ada aktivitas", () => {
+    const directoryUsers = [
+      { client_id: "CLI-01", nama_client: "Client A", username: "alpha" },
+      { client_id: "CLI-01", nama_client: "Client A", username: "bravo" },
+      { client_id: "CLI-02", nama_client: "Client B", username: "charlie" },
+    ];
+
+    const summary = aggregateLikesRecords([], { directoryUsers });
+
+    expect(summary.totals.totalLikes).toBe(0);
+    expect(summary.totals.totalComments).toBe(0);
+    expect(summary.totals.totalPersonnel).toBe(3);
+    expect(summary.totals.activePersonnel).toBe(0);
+    expect(summary.totals.complianceRate).toBe(0);
+    expect(summary.clients).toHaveLength(2);
+
+    const clientA = summary.clients.find((client) => client.clientId === "CLI-01");
+    const clientB = summary.clients.find((client) => client.clientId === "CLI-02");
+
+    expect(clientA?.totalPersonnel).toBe(2);
+    expect(clientA?.activePersonnel).toBe(0);
+    expect(clientA?.totalLikes).toBe(0);
+    expect(clientA?.totalComments).toBe(0);
+    expect(clientA?.complianceRate).toBe(0);
+
+    expect(clientB?.totalPersonnel).toBe(1);
+    expect(clientB?.activePersonnel).toBe(0);
+    expect(clientB?.totalLikes).toBe(0);
+    expect(clientB?.totalComments).toBe(0);
+    expect(clientB?.complianceRate).toBe(0);
+  });
+
   it("prefers personnel likes when merging records with general totals", () => {
     const merged = mergeActivityRecords(
       [
