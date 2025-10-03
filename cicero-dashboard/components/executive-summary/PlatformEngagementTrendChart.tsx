@@ -130,7 +130,8 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   const resolvedPlatformKey = platformKey?.toLowerCase?.() ?? "";
   const shouldShowLikes =
     resolvedPlatformKey === "instagram" || resolvedPlatformKey === "tiktok";
-  const shouldShowComments = resolvedPlatformKey === "instagram";
+  const shouldShowComments =
+    resolvedPlatformKey === "instagram" || resolvedPlatformKey === "tiktok";
 
   const buildMetricRows = (point: ReturnType<typeof resolvePoint>) => {
     const rows: { label: string; value: string }[] = [
