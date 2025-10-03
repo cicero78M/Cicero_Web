@@ -34,6 +34,7 @@ import { computeActivityBuckets, extractNumericValue } from "./activityBuckets";
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
+import DailyTrendChart from "@/components/executive-summary/DailyTrendChart";
 import {
   buildMonthKey,
   extractYearFromMonthKey,
@@ -327,6 +328,274 @@ const buildWeeklyTrendDataset = (instagramSeries = [], tiktokSeries = []) => {
   });
 
   return { labels, instagramValues, tiktokValues };
+};
+
+const dailyLabelFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "short",
+});
+
+const DAILY_LIKE_FIELD_PATHS = Object.freeze([
+  "total_like_personil",
+  "total_like_personel",
+  "total_like_personnel",
+  "totalLikesPersonil",
+  "totalLikesPersonel",
+  "totalLikesPersonnel",
+  "rekap.total_like_personil",
+  "rekap.total_like_personel",
+  "rekap.total_like_personnel",
+  "rekap.totalLikesPersonil",
+  "rekap.totalLikesPersonel",
+  "rekap.totalLikesPersonnel",
+  "rekap.total_like",
+  "rekap.totalLikes",
+  "rekap.jumlah_like",
+  "jumlah_like",
+  "jumlahLike",
+  "total_like",
+  "totalLikes",
+  "likes",
+  "metrics.likes",
+  "metrics.totalLikes",
+]);
+
+const DAILY_COMMENT_FIELD_PATHS = Object.freeze([
+  "total_komentar_personil",
+  "total_komentar_personel",
+  "total_komentar_personnel",
+  "totalCommentsPersonil",
+  "totalCommentsPersonel",
+  "totalCommentsPersonnel",
+  "rekap.total_komentar_personil",
+  "rekap.total_komentar_personel",
+  "rekap.total_komentar_personnel",
+  "rekap.totalCommentsPersonil",
+  "rekap.totalCommentsPersonel",
+  "rekap.totalCommentsPersonnel",
+  "rekap.total_komentar",
+  "rekap.totalComments",
+  "rekap.jumlah_komentar",
+  "jumlah_komentar",
+  "jumlahKomentar",
+  "total_komentar",
+  "totalKomentar",
+  "total_comments",
+  "totalComments",
+  "comments",
+  "metrics.comments",
+  "metrics.totalComments",
+]);
+
+const DAILY_POST_FIELD_PATHS = Object.freeze([
+  "total_post",
+  "totalPost",
+  "total_posts",
+  "totalPosts",
+  "jumlah_post",
+  "jumlahPost",
+  "rekap.total_post",
+  "rekap.totalPost",
+  "rekap.jumlah_post",
+  "rekap.jumlahPost",
+  "metrics.total_post",
+  "metrics.totalPost",
+]);
+
+const getMetricValueFromRecord = (record, fieldPaths = []) => {
+  if (!record || !Array.isArray(fieldPaths) || fieldPaths.length === 0) {
+    return 0;
+  }
+
+  const candidates = fieldPaths.map((path) => pickNestedValue(record, [path]));
+  const numeric = extractNumericValue(...candidates);
+  return Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
+};
+
+const buildDailyInteractionTrend = ({
+  likesRecords = [],
+  commentRecords = [],
+  instagramPosts = [],
+  tiktokPosts = [],
+} = {}) => {
+  const aggregated = new Map();
+
+  const ensureEntry = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.valueOf())) {
+      return null;
+    }
+
+    const baseDate = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+    );
+    const key = baseDate.toISOString().slice(0, 10);
+
+    let entry = aggregated.get(key);
+    if (!entry) {
+      entry = {
+        key,
+        date: baseDate,
+        label: dailyLabelFormatter.format(baseDate),
+        likes: 0,
+        comments: 0,
+        interactions: 0,
+        postsFromRekap: 0,
+        postsFromContent: 0,
+        fallbackLikes: 0,
+        fallbackComments: 0,
+        fallbackInteractions: 0,
+      };
+      aggregated.set(key, entry);
+    }
+
+    return entry;
+  };
+
+  likesRecords.forEach((record) => {
+    const resolved = resolveRecordDate(record);
+    if (!resolved?.parsed) {
+      return;
+    }
+
+    const entry = ensureEntry(resolved.parsed);
+    if (!entry) {
+      return;
+    }
+
+    const likesValue = getMetricValueFromRecord(record, DAILY_LIKE_FIELD_PATHS);
+    if (likesValue > 0) {
+      entry.likes += likesValue;
+      entry.interactions += likesValue;
+    }
+
+    const postsValue = getMetricValueFromRecord(record, DAILY_POST_FIELD_PATHS);
+    if (postsValue > 0) {
+      entry.postsFromRekap = Math.max(entry.postsFromRekap, postsValue);
+    }
+  });
+
+  commentRecords.forEach((record) => {
+    const resolved = resolveRecordDate(record);
+    if (!resolved?.parsed) {
+      return;
+    }
+
+    const entry = ensureEntry(resolved.parsed);
+    if (!entry) {
+      return;
+    }
+
+    const commentsValue = getMetricValueFromRecord(
+      record,
+      DAILY_COMMENT_FIELD_PATHS,
+    );
+    if (commentsValue > 0) {
+      entry.comments += commentsValue;
+      entry.interactions += commentsValue;
+    }
+
+    const postsValue = getMetricValueFromRecord(record, DAILY_POST_FIELD_PATHS);
+    if (postsValue > 0) {
+      entry.postsFromRekap = Math.max(entry.postsFromRekap, postsValue);
+    }
+  });
+
+  const accumulatePosts = (records = []) => {
+    records.forEach((post) => {
+      if (!post) {
+        return;
+      }
+
+      const resolved = resolveRecordDate(post, POST_DATE_PATHS);
+      if (!resolved?.parsed) {
+        return;
+      }
+
+      const entry = ensureEntry(resolved.parsed);
+      if (!entry) {
+        return;
+      }
+
+      entry.postsFromContent += 1;
+
+      const metrics = post?.metrics ?? {};
+      const likesMetric = Number(metrics.likes);
+      const commentsMetric = Number(metrics.comments);
+      const sharesMetric = Number(metrics.shares);
+      const savesMetric = Number(metrics.saves);
+      const interactionsMetric = Number(metrics.interactions);
+
+      const safeLikes = Number.isFinite(likesMetric) ? Math.max(0, likesMetric) : 0;
+      const safeComments = Number.isFinite(commentsMetric)
+        ? Math.max(0, commentsMetric)
+        : 0;
+      const safeShares = Number.isFinite(sharesMetric) ? Math.max(0, sharesMetric) : 0;
+      const safeSaves = Number.isFinite(savesMetric) ? Math.max(0, savesMetric) : 0;
+
+      let safeInteractions = Number.isFinite(interactionsMetric)
+        ? Math.max(0, interactionsMetric)
+        : 0;
+      if (safeInteractions === 0) {
+        safeInteractions = safeLikes + safeComments + safeShares + safeSaves;
+      }
+
+      entry.fallbackLikes += safeLikes;
+      entry.fallbackComments += safeComments;
+      entry.fallbackInteractions += safeInteractions;
+    });
+  };
+
+  accumulatePosts(instagramPosts);
+  accumulatePosts(tiktokPosts);
+
+  const entries = Array.from(aggregated.values())
+    .map((entry) => {
+      const likes = entry.likes > 0 ? entry.likes : entry.fallbackLikes;
+      const comments = entry.comments > 0 ? entry.comments : entry.fallbackComments;
+      const interactions =
+        entry.interactions > 0
+          ? entry.interactions
+          : entry.fallbackInteractions > 0
+          ? entry.fallbackInteractions
+          : likes + comments;
+
+      const posts = Math.max(entry.postsFromRekap, entry.postsFromContent);
+
+      if (posts <= 0 && likes <= 0 && comments <= 0 && interactions <= 0) {
+        return null;
+      }
+
+      return {
+        key: entry.key,
+        label: entry.label,
+        posts,
+        likes,
+        comments,
+        interactions,
+        date: entry.date,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const series = entries.map(({ date: _date, ...rest }) => rest);
+
+  const totals = series.reduce(
+    (acc, point) => {
+      acc.posts += Math.max(0, Number(point.posts) || 0);
+      acc.likes += Math.max(0, Number(point.likes) || 0);
+      acc.comments += Math.max(0, Number(point.comments) || 0);
+      acc.interactions += Math.max(0, Number(point.interactions) || 0);
+      return acc;
+    },
+    { posts: 0, likes: 0, comments: 0, interactions: 0 },
+  );
+
+  return {
+    series,
+    totals,
+    dayCount: series.length,
+  };
 };
 
 const publishedDateFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -3203,6 +3472,62 @@ export default function ExecutiveSummaryPage() {
     });
   }, [platformPosts?.tiktok, selectedMonthKey]);
 
+  const dailyInteractionTrend = useMemo(() => {
+    const periodRange = getMonthDateRange(selectedMonthKey);
+
+    const likesRecordsRaw = Array.isArray(platformTrendActivity?.likes)
+      ? platformTrendActivity.likes
+      : [];
+    const commentRecordsRaw = Array.isArray(platformTrendActivity?.comments)
+      ? platformTrendActivity.comments
+      : [];
+
+    const likesRecords = periodRange
+      ? filterRecordsByDateRange(likesRecordsRaw, periodRange)
+      : likesRecordsRaw;
+    const commentRecords = periodRange
+      ? filterRecordsByDateRange(commentRecordsRaw, periodRange)
+      : commentRecordsRaw;
+
+    const instagramPostsRaw = Array.isArray(platformPosts?.instagram)
+      ? platformPosts.instagram
+      : [];
+    const tiktokPostsRaw = Array.isArray(platformPosts?.tiktok)
+      ? platformPosts.tiktok
+      : [];
+
+    const instagramPosts = filterRecordsWithResolvableDate(instagramPostsRaw, {
+      extraPaths: POST_DATE_PATHS,
+    });
+    const tiktokPosts = filterRecordsWithResolvableDate(tiktokPostsRaw, {
+      extraPaths: POST_DATE_PATHS,
+    });
+
+    const filteredInstagramPosts = periodRange
+      ? filterRecordsByDateRange(instagramPosts, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : instagramPosts;
+    const filteredTiktokPosts = periodRange
+      ? filterRecordsByDateRange(tiktokPosts, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : tiktokPosts;
+
+    return buildDailyInteractionTrend({
+      likesRecords,
+      commentRecords,
+      instagramPosts: filteredInstagramPosts,
+      tiktokPosts: filteredTiktokPosts,
+    });
+  }, [
+    platformTrendActivity?.likes,
+    platformTrendActivity?.comments,
+    platformPosts?.instagram,
+    platformPosts?.tiktok,
+    selectedMonthKey,
+  ]);
+
   const instagramMonthlyCardData = useMemo(() => {
     const trend = instagramMonthlyTrend ?? {};
     const months = Array.isArray(trend.months) ? trend.months : [];
@@ -3611,6 +3936,7 @@ export default function ExecutiveSummaryPage() {
     hasMonthlyPlatforms: Boolean(tiktokMonthlyTrend?.months?.length > 0),
     cardHasRecords: tiktokWeeklyTrendCardData.hasRecords,
   });
+  const shouldShowDailyTrend = dailyInteractionTrend.series.length > 0;
 
   const instagramWeeklyTrendError = !showPlatformLoading
     ? platformError
@@ -3767,6 +4093,37 @@ export default function ExecutiveSummaryPage() {
           </div>
         </section>
       ) : null}
+
+      <section
+        aria-label="Tren Aktivitas Harian"
+        className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+      >
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+            Tren Aktivitas Harian
+          </h2>
+          <p className="text-sm text-slate-300">
+            Pergerakan harian jumlah konten, likes, komentar, dan total interaksi personil pada periode terpilih.
+          </p>
+        </div>
+
+        {showPlatformLoading ? (
+          <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+            Menyiapkan tren harian…
+          </div>
+        ) : shouldShowDailyTrend ? (
+          <DailyTrendChart
+            series={dailyInteractionTrend.series}
+            totals={dailyInteractionTrend.totals}
+            dayCount={dailyInteractionTrend.dayCount}
+            formatNumber={formatNumber}
+          />
+        ) : (
+          <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+            Belum ada data tren harian untuk periode ini.
+          </div>
+        )}
+      </section>
 
       {(shouldShowInstagramWeeklyTrendCard || shouldShowTiktokWeeklyTrendCard) ? (
         <section
