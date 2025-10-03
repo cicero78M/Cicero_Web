@@ -247,16 +247,11 @@ const PlatformLikesSummary = ({
                   <th className="px-4 py-3 text-right">Personil Aktif</th>
                   <th className="px-4 py-3 text-right">Total Personil</th>
                   <th className="px-4 py-3 text-right">Kepatuhan</th>
-                  <th className="px-4 py-3 text-right">Likes/Personil</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {clientsByCompliance.map((client) => {
                   const compliance = formatPercent(client.complianceRate ?? 0);
-                  const avgLikes = formatNumber(client.averageLikesPerUser ?? 0, {
-                    maximumFractionDigits: 1,
-                  });
-
                   return (
                     <tr key={client.key} className="text-slate-200">
                       <td className="py-3 pr-4 font-semibold text-slate-100">
@@ -275,7 +270,6 @@ const PlatformLikesSummary = ({
                         {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
                       </td>
                       <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
-                      <td className="px-4 py-3 text-right">{avgLikes}</td>
                     </tr>
                   );
                 })}
