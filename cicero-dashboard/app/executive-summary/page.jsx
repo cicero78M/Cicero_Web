@@ -437,7 +437,13 @@ const computeUserInsight = (users = []) => {
   const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
   const sortedByDivisionSize = [...divisionArray].sort((a, b) => b.total - a.total);
-  const divisionDistribution = sortedByDivisionSize.map((item, index) => ({
+  const sortedByCompletionRate = [...divisionArray].sort((a, b) => {
+    if (b.completionPercent !== a.completionPercent) {
+      return b.completionPercent - a.completionPercent;
+    }
+    return b.total - a.total;
+  });
+  const divisionDistribution = sortedByCompletionRate.map((item, index) => ({
     id: item.division ?? `division-${index}`,
     rank: index + 1,
     division: beautifyDivisionName(item.displayName ?? item.division),
