@@ -3034,11 +3034,104 @@ export default function ExecutiveSummaryPage() {
         lineSpacing: 20,
       });
 
+      const resolvedMonthValue =
+        selectedMonthLabel ?? data.monthLabel ?? "Periode Tidak Tersedia";
+      const resolvedYearValue = Number.isFinite(Number(selectedYear))
+        ? `${selectedYear}`
+        : (() => {
+            const match = /\d{4}/.exec(resolvedMonthValue ?? "");
+            return match ? match[0] : "-";
+          })();
+
+      const dataCardY = marginY + 1.55;
+      const dataCardHeight = 1.05;
+      const dataCardPaddingX = 0.3;
+      const dataCardPaddingY = 0.2;
+      const dataCardGap = 0.45;
+      const dataCardColumnWidth =
+        (contentWidth - dataCardPaddingX * 2 - dataCardGap) / 2;
+
+      slide1.addShape(ShapeType.roundRect, {
+        x: marginX,
+        y: dataCardY,
+        w: contentWidth,
+        h: dataCardHeight,
+        fill: { type: "linear", color: "0E7490", color2: "0F172A", rot: 270 },
+        line: { color: "0891B2", width: 1 },
+        rectRadius: 16,
+      });
+
+      slide1.addText("SHOW DATA BY", {
+        x: marginX + dataCardPaddingX,
+        y: dataCardY + dataCardPaddingY,
+        w: contentWidth - dataCardPaddingX * 2,
+        fontSize: 10,
+        color: "ECFEFF",
+        bold: true,
+        charSpacing: 0.5,
+      });
+
+      slide1.addText(
+        [
+          {
+            text: "MONTH\n",
+            options: {
+              fontSize: 10,
+              color: "CFFAFE",
+              bold: true,
+              breakLine: true,
+            },
+          },
+          {
+            text: resolvedMonthValue,
+            options: {
+              fontSize: 12,
+              color: "F8FAFC",
+              bold: true,
+            },
+          },
+        ],
+        {
+          x: marginX + dataCardPaddingX,
+          y: dataCardY + dataCardPaddingY + 0.32,
+          w: dataCardColumnWidth,
+          h: dataCardHeight - dataCardPaddingY * 2,
+        },
+      );
+
+      slide1.addText(
+        [
+          {
+            text: "YEAR\n",
+            options: {
+              fontSize: 10,
+              color: "CFFAFE",
+              bold: true,
+              breakLine: true,
+            },
+          },
+          {
+            text: resolvedYearValue,
+            options: {
+              fontSize: 12,
+              color: "F8FAFC",
+              bold: true,
+            },
+          },
+        ],
+        {
+          x: marginX + dataCardPaddingX + dataCardColumnWidth + dataCardGap,
+          y: dataCardY + dataCardPaddingY + 0.32,
+          w: dataCardColumnWidth,
+          h: dataCardHeight - dataCardPaddingY * 2,
+        },
+      );
+
       const metricGap = 0.25;
       const metricColumns = 2;
       const metricCardWidth = (contentWidth - metricGap * (metricColumns - 1)) / metricColumns;
       const metricCardHeight = 1.55;
-      const metricStartY = marginY + 2.1;
+      const metricStartY = dataCardY + dataCardHeight + 0.35;
 
       if (summaryMetrics.length > 0) {
         summaryMetrics.forEach((metric, index) => {
