@@ -189,22 +189,28 @@ const PlatformLikesSummary = ({
 
   const clientsByCompliance = useMemo(() => {
     return [...clients].sort((a, b) => {
-      const complianceA = a.complianceRate ?? 0;
-      const complianceB = b.complianceRate ?? 0;
-      const complianceDelta = complianceB - complianceA;
-      if (Math.abs(complianceDelta) > 0.0001) {
-        return complianceDelta;
-      }
       const activePersonnelA = a.activePersonnel ?? 0;
       const activePersonnelB = b.activePersonnel ?? 0;
+
       if (activePersonnelB !== activePersonnelA) {
         return activePersonnelB - activePersonnelA;
       }
+
+      const complianceA = a.complianceRate ?? 0;
+      const complianceB = b.complianceRate ?? 0;
+      const complianceDelta = complianceB - complianceA;
+
+      if (Math.abs(complianceDelta) > 0.0001) {
+        return complianceDelta;
+      }
+
       const totalPersonnelA = a.totalPersonnel ?? 0;
       const totalPersonnelB = b.totalPersonnel ?? 0;
+
       if (totalPersonnelB !== totalPersonnelA) {
         return totalPersonnelB - totalPersonnelA;
       }
+
       return (a.clientName || "").localeCompare(b.clientName || "");
     });
   }, [clients]);
