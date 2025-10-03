@@ -3887,93 +3887,8 @@ export default function ExecutiveSummaryPage() {
               </div>
             ) : null}
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.9fr)_minmax(0,1.1fr)] 2xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1.2fr)]">
-              <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_32px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
-                <div className="pointer-events-none absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-                <div className="relative space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                        Distribusi User per Satker
-                      </h3>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Urutan lengkap setiap satker berdasarkan jumlah personil dan rasio kelengkapan akun.
-                      </p>
-                    </div>
-                    {userSummary?.totalUsers ? (
-                      <span className="inline-flex items-center rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-700">
-                        Total {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/60">
-                    {divisionDistribution.length > 0 ? (
-                      <div className="divide-y divide-slate-800 text-sm text-slate-200">
-                        <div className="grid grid-cols-[minmax(3rem,4rem)_minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_minmax(0,1fr)] gap-4 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">
-                          <span>Peringkat</span>
-                          <span>Satker / Polres</span>
-                          <span className="text-right">Total Personil</span>
-                          <span className="text-right">Instagram</span>
-                          <span className="text-right">TikTok</span>
-                          <span className="text-right">Rasio Kelengkapan</span>
-                        </div>
-                        {divisionDistribution.map((row) => {
-                          const instagramPercent = Math.min(Math.max(row.instagramPercent, 0), 100);
-                          const tiktokPercent = Math.min(Math.max(row.tiktokPercent, 0), 100);
-                          const completionPercent = Math.min(Math.max(row.completionPercent, 0), 100);
-
-                          return (
-                            <div
-                              key={row.id || row.division}
-                              className="grid grid-cols-[minmax(3rem,4rem)_minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_minmax(0,1fr)] items-start gap-4 px-4 py-4 transition-colors hover:bg-slate-900/50"
-                            >
-                              <div className="tabular-nums text-sm font-semibold text-slate-300">
-                                {String(row.rank).padStart(2, "0")}
-                              </div>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-slate-100">{row.division}</p>
-                                <p className="text-xs text-slate-400">
-                                  {formatPercent(row.sharePercent)} dari total personil
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="tabular-nums text-base font-semibold text-slate-100">
-                                  {formatNumber(row.total, { maximumFractionDigits: 0 })}
-                                </p>
-                                <p className="text-xs text-slate-400">Personil</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="tabular-nums text-base font-semibold text-slate-100">
-                                  {formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })}
-                                </p>
-                                <p className="text-xs text-slate-400">{formatPercent(instagramPercent)}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="tabular-nums text-base font-semibold text-slate-100">
-                                  {formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })}
-                                </p>
-                                <p className="text-xs text-slate-400">{formatPercent(tiktokPercent)}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="tabular-nums text-base font-semibold text-slate-100">
-                                  {formatPercent(completionPercent)}
-                                </p>
-                                <p className="text-xs text-slate-400">Kelengkapan</p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="flex h-48 items-center justify-center text-sm text-slate-400">
-                        Belum ada distribusi satker yang bisa ditampilkan.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-
-              <div className="space-y-6">
+            <div className="space-y-6">
+              <div className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-2">
                 <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_30px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
                   <div className="pointer-events-none absolute inset-x-10 -top-32 h-64 rounded-full bg-cyan-500/10 blur-3xl" />
                   <div className="relative">
@@ -4228,14 +4143,100 @@ export default function ExecutiveSummaryPage() {
                     )}
                   </div>
                 </section>
-
-                <article className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)]">
-                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                    Catatan Insight Data Personil
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
-                </article>
               </div>
+
+              <section className="group relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/70 p-6 shadow-[0_32px_60px_rgba(15,23,42,0.45)] transition-colors hover:border-cyan-400/40">
+                <div className="pointer-events-none absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
+                <div className="relative space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                        Distribusi User per Satker
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Urutan lengkap setiap satker berdasarkan jumlah personil dan rasio kelengkapan akun.
+                      </p>
+                    </div>
+                    {userSummary?.totalUsers ? (
+                      <span className="inline-flex items-center rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-700">
+                        Total {formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/60">
+                    {divisionDistribution.length > 0 ? (
+                      <div className="divide-y divide-slate-800 text-sm text-slate-200">
+                        <div className="grid grid-cols-[minmax(3rem,4rem)_minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_minmax(0,1fr)] gap-4 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+                          <span>Peringkat</span>
+                          <span>Satker / Polres</span>
+                          <span className="text-right">Total Personil</span>
+                          <span className="text-right">Instagram</span>
+                          <span className="text-right">TikTok</span>
+                          <span className="text-right">Rasio Kelengkapan</span>
+                        </div>
+                        {divisionDistribution.map((row) => {
+                          const instagramPercent = Math.min(Math.max(row.instagramPercent, 0), 100);
+                          const tiktokPercent = Math.min(Math.max(row.tiktokPercent, 0), 100);
+                          const completionPercent = Math.min(Math.max(row.completionPercent, 0), 100);
+
+                          return (
+                            <div
+                              key={row.id || row.division}
+                              className="grid grid-cols-[minmax(3rem,4rem)_minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_minmax(0,1fr)] items-start gap-4 px-4 py-4 transition-colors hover:bg-slate-900/50"
+                            >
+                              <div className="tabular-nums text-sm font-semibold text-slate-300">
+                                {String(row.rank).padStart(2, "0")}
+                              </div>
+                              <div className="space-y-1">
+                                <p className="font-semibold text-slate-100">{row.division}</p>
+                                <p className="text-xs text-slate-400">
+                                  {formatPercent(row.sharePercent)} dari total personil
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="tabular-nums text-base font-semibold text-slate-100">
+                                  {formatNumber(row.total, { maximumFractionDigits: 0 })}
+                                </p>
+                                <p className="text-xs text-slate-400">Personil</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="tabular-nums text-base font-semibold text-slate-100">
+                                  {formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })}
+                                </p>
+                                <p className="text-xs text-slate-400">{formatPercent(instagramPercent)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="tabular-nums text-base font-semibold text-slate-100">
+                                  {formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })}
+                                </p>
+                                <p className="text-xs text-slate-400">{formatPercent(tiktokPercent)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="tabular-nums text-base font-semibold text-slate-100">
+                                  {formatPercent(completionPercent)}
+                                </p>
+                                <p className="text-xs text-slate-400">Kelengkapan</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+                        Belum ada distribusi satker yang bisa ditampilkan.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              <article className="w-full rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)]">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                  Catatan Insight Data Personil
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
+              </article>
             </div>
           </div>
         )}
