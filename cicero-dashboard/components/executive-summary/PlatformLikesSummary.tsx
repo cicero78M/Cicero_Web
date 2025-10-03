@@ -121,12 +121,6 @@ const PlatformLikesSummary = ({
         description: "Jumlah satker/polres yang tercakup dalam rekap.",
       },
       {
-        key: "total-likes",
-        label: "Total Likes",
-        value: formatNumber(totals.totalLikes ?? 0, { maximumFractionDigits: 0 }),
-        description: "Seluruh likes personil pada periode terpilih.",
-      },
-      {
         key: "total-posts",
         label: "Total Post",
         value: formatNumber(instagramPostCount + tiktokPostCount, {
@@ -137,6 +131,12 @@ const PlatformLikesSummary = ({
         })} · Post TikTok: ${formatNumber(tiktokPostCount, {
           maximumFractionDigits: 0,
         })}`,
+      },
+      {
+        key: "total-likes",
+        label: "Total Likes",
+        value: formatNumber(totals.totalLikes ?? 0, { maximumFractionDigits: 0 }),
+        description: "Seluruh likes personil pada periode terpilih.",
       },
       {
         key: "total-comments",
@@ -236,11 +236,11 @@ const PlatformLikesSummary = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {summaryCards.map((card) => (
           <div
             key={card.key}
-            className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
+            className="min-w-[220px] rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               {card.label}
