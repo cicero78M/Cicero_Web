@@ -2891,9 +2891,41 @@ export default function ExecutiveSummaryPage() {
     narrative,
     activityBuckets,
   } = userInsightState;
-  const divisionDistribution = Array.isArray(divisionDistributionRaw)
-    ? divisionDistributionRaw
-    : [];
+  const divisionDistribution = useMemo(() => {
+    if (!Array.isArray(divisionDistributionRaw)) {
+      return [];
+    }
+
+    const sorted = [...divisionDistributionRaw].sort((a, b) => {
+      const completionA = Number.isFinite(a?.completionPercent)
+        ? a.completionPercent
+        : Number.parseFloat(a?.completionPercent) || 0;
+      const completionB = Number.isFinite(b?.completionPercent)
+        ? b.completionPercent
+        : Number.parseFloat(b?.completionPercent) || 0;
+
+      if (completionB !== completionA) {
+        return completionB - completionA;
+      }
+
+      const totalA = Number.isFinite(a?.total) ? a.total : Number.parseFloat(a?.total) || 0;
+      const totalB = Number.isFinite(b?.total) ? b.total : Number.parseFloat(b?.total) || 0;
+
+      if (totalB !== totalA) {
+        return totalB - totalA;
+      }
+
+      const divisionA = typeof a?.division === "string" ? a.division : "";
+      const divisionB = typeof b?.division === "string" ? b.division : "";
+
+      return divisionA.localeCompare(divisionB, "id-ID", { sensitivity: "base" });
+    });
+
+    return sorted.map((item, index) => ({
+      ...item,
+      rank: index + 1,
+    }));
+  }, [divisionDistributionRaw]);
   const activityCategories = Array.isArray(activityBuckets?.categories)
     ? activityBuckets.categories
     : [];
