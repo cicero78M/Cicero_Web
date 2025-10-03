@@ -3155,9 +3155,9 @@ export default function ExecutiveSummaryPage() {
     const currentMetrics = latestMonth
       ? [
           {
-            key: "interactions",
-            label: "Interaksi Personil",
-            value: safeLatestInteractions,
+            key: "posts",
+            label: "Post Instagram",
+            value: safeLatestPosts,
           },
           { key: "likes", label: "Likes Personil", value: safeLatestLikes },
           {
@@ -3166,9 +3166,9 @@ export default function ExecutiveSummaryPage() {
             value: safeLatestComments,
           },
           {
-            key: "posts",
-            label: "Post Instagram",
-            value: safeLatestPosts,
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safeLatestInteractions,
           },
         ]
       : [];
@@ -3176,9 +3176,9 @@ export default function ExecutiveSummaryPage() {
     const previousMetrics = previousMonth
       ? [
           {
-            key: "interactions",
-            label: "Interaksi Personil",
-            value: safePreviousInteractions,
+            key: "posts",
+            label: "Post Instagram",
+            value: safePreviousPosts,
           },
           { key: "likes", label: "Likes Personil", value: safePreviousLikes },
           {
@@ -3187,9 +3187,9 @@ export default function ExecutiveSummaryPage() {
             value: safePreviousComments,
           },
           {
-            key: "posts",
-            label: "Post Instagram",
-            value: safePreviousPosts,
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safePreviousInteractions,
           },
         ]
       : [];
@@ -3198,13 +3198,13 @@ export default function ExecutiveSummaryPage() {
       delta && previousMonth
         ? [
             {
-              key: "interactions",
-              label: "Perubahan Interaksi Personil",
-              absolute: Math.round(delta.interactions?.absolute ?? 0),
+              key: "posts",
+              label: "Perubahan Post",
+              absolute: Math.round(delta.posts?.absolute ?? 0),
               percent:
-                delta.interactions?.percent !== null &&
-                delta.interactions?.percent !== undefined
-                  ? delta.interactions.percent
+                delta.posts?.percent !== null &&
+                delta.posts?.percent !== undefined
+                  ? delta.posts.percent
                   : null,
             },
             {
@@ -3228,13 +3228,13 @@ export default function ExecutiveSummaryPage() {
                   : null,
             },
             {
-              key: "posts",
-              label: "Perubahan Post",
-              absolute: Math.round(delta.posts?.absolute ?? 0),
+              key: "interactions",
+              label: "Perubahan Interaksi Personil",
+              absolute: Math.round(delta.interactions?.absolute ?? 0),
               percent:
-                delta.posts?.percent !== null &&
-                delta.posts?.percent !== undefined
-                  ? delta.posts.percent
+                delta.interactions?.percent !== null &&
+                delta.interactions?.percent !== undefined
+                  ? delta.interactions.percent
                   : null,
             },
           ]
@@ -3300,35 +3300,35 @@ export default function ExecutiveSummaryPage() {
 
     const currentMetrics = latestMonth
       ? [
-          {
-            key: "interactions",
-            label: "Interaksi Personil",
-            value: safeLatestInteractions,
-          },
+          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
+          { key: "likes", label: "Likes Personil", value: safeLatestLikes },
           {
             key: "comments",
             label: "Komentar Personil",
             value: safeLatestComments,
           },
-          { key: "likes", label: "Likes Personil", value: safeLatestLikes },
-          { key: "posts", label: "Post TikTok", value: safeLatestPosts },
+          {
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safeLatestInteractions,
+          },
         ]
       : [];
 
     const previousMetrics = previousMonth
       ? [
-          {
-            key: "interactions",
-            label: "Interaksi Personil",
-            value: safePreviousInteractions,
-          },
+          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
+          { key: "likes", label: "Likes Personil", value: safePreviousLikes },
           {
             key: "comments",
             label: "Komentar Personil",
             value: safePreviousComments,
           },
-          { key: "likes", label: "Likes Personil", value: safePreviousLikes },
-          { key: "posts", label: "Post TikTok", value: safePreviousPosts },
+          {
+            key: "interactions",
+            label: "Interaksi Personil",
+            value: safePreviousInteractions,
+          },
         ]
       : [];
 
@@ -3336,23 +3336,13 @@ export default function ExecutiveSummaryPage() {
       delta && previousMonth
         ? [
             {
-              key: "interactions",
-              label: "Perubahan Interaksi Personil",
-              absolute: Math.round(delta.interactions?.absolute ?? 0),
+              key: "posts",
+              label: "Perubahan Post",
+              absolute: Math.round(delta.posts?.absolute ?? 0),
               percent:
-                delta.interactions?.percent !== null &&
-                delta.interactions?.percent !== undefined
-                  ? delta.interactions.percent
-                  : null,
-            },
-            {
-              key: "comments",
-              label: "Perubahan Komentar Personil",
-              absolute: Math.round(delta.comments?.absolute ?? 0),
-              percent:
-                delta.comments?.percent !== null &&
-                delta.comments?.percent !== undefined
-                  ? delta.comments.percent
+                delta.posts?.percent !== null &&
+                delta.posts?.percent !== undefined
+                  ? delta.posts.percent
                   : null,
             },
             {
@@ -3366,13 +3356,23 @@ export default function ExecutiveSummaryPage() {
                   : null,
             },
             {
-              key: "posts",
-              label: "Perubahan Post",
-              absolute: Math.round(delta.posts?.absolute ?? 0),
+              key: "comments",
+              label: "Perubahan Komentar Personil",
+              absolute: Math.round(delta.comments?.absolute ?? 0),
               percent:
-                delta.posts?.percent !== null &&
-                delta.posts?.percent !== undefined
-                  ? delta.posts.percent
+                delta.comments?.percent !== null &&
+                delta.comments?.percent !== undefined
+                  ? delta.comments.percent
+                  : null,
+            },
+            {
+              key: "interactions",
+              label: "Perubahan Interaksi Personil",
+              absolute: Math.round(delta.interactions?.absolute ?? 0),
+              percent:
+                delta.interactions?.percent !== null &&
+                delta.interactions?.percent !== undefined
+                  ? delta.interactions.percent
                   : null,
             },
           ]
