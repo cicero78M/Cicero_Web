@@ -3106,11 +3106,18 @@ export default function ExecutiveSummaryPage() {
       },
     );
 
-    return buildWeeklyEngagementTrend(instagramPosts, {
+    const periodRange = getMonthDateRange(selectedMonthKey);
+    const filteredPosts = periodRange
+      ? filterRecordsByDateRange(instagramPosts, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : instagramPosts;
+
+    return buildWeeklyEngagementTrend(filteredPosts, {
       platformKey: "instagram",
       platformLabel: "Instagram",
     });
-  }, [platformPosts?.instagram]);
+  }, [platformPosts?.instagram, selectedMonthKey]);
 
   const tiktokMonthlyTrend = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
@@ -3134,22 +3141,57 @@ export default function ExecutiveSummaryPage() {
       },
     );
 
-    return buildWeeklyEngagementTrend(tiktokPosts, {
+    const periodRange = getMonthDateRange(selectedMonthKey);
+    const filteredPosts = periodRange
+      ? filterRecordsByDateRange(tiktokPosts, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : tiktokPosts;
+
+    return buildWeeklyEngagementTrend(filteredPosts, {
       platformKey: "tiktok",
       platformLabel: "TikTok",
     });
-  }, [platformPosts?.tiktok]);
+  }, [platformPosts?.tiktok, selectedMonthKey]);
 
   const instagramMonthlyCardData = useMemo(() => {
-    const { latestMonth, previousMonth, delta, months, hasRecords } =
-      instagramMonthlyTrend ?? {};
+    const trend = instagramMonthlyTrend ?? {};
+    const months = Array.isArray(trend.months) ? trend.months : [];
+
+    const selectedIndex = selectedMonthKey
+      ? months.findIndex((month) => month.key === selectedMonthKey)
+      : -1;
+    const currentIndex = selectedIndex >= 0 ? selectedIndex : months.length - 1;
+    const currentMonth = currentIndex >= 0 ? months[currentIndex] : null;
+    const previousMonth = currentIndex > 0 ? months[currentIndex - 1] : null;
+
+    const computeDelta = (currentValue, previousValue) => {
+      const safeCurrent = Number.isFinite(currentValue) ? currentValue : 0;
+      const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
+      const absolute = safeCurrent - safePrevious;
+      const percent = safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
+      return { absolute, percent };
+    };
+
+    const delta =
+      currentMonth && previousMonth
+        ? {
+            posts: computeDelta(currentMonth.posts, previousMonth.posts),
+            interactions: computeDelta(
+              currentMonth.interactions,
+              previousMonth.interactions,
+            ),
+            likes: computeDelta(currentMonth.likes, previousMonth.likes),
+            comments: computeDelta(currentMonth.comments, previousMonth.comments),
+          }
+        : null;
 
     const safeLatestInteractions = sanitizeMonthlyValue(
-      latestMonth?.interactions,
+      currentMonth?.interactions,
     );
-    const safeLatestLikes = sanitizeMonthlyValue(latestMonth?.likes);
-    const safeLatestComments = sanitizeMonthlyValue(latestMonth?.comments);
-    const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
+    const safeLatestLikes = sanitizeMonthlyValue(currentMonth?.likes);
+    const safeLatestComments = sanitizeMonthlyValue(currentMonth?.comments);
+    const safeLatestPosts = sanitizeMonthlyValue(currentMonth?.posts);
     const safePreviousInteractions = sanitizeMonthlyValue(
       previousMonth?.interactions,
     );
@@ -3157,7 +3199,7 @@ export default function ExecutiveSummaryPage() {
     const safePreviousComments = sanitizeMonthlyValue(previousMonth?.comments);
     const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
-    const currentMetrics = latestMonth
+    const currentMetrics = currentMonth
       ? [
           {
             key: "posts",
@@ -3246,28 +3288,34 @@ export default function ExecutiveSummaryPage() {
         : [];
 
     const series = Array.isArray(months)
-      ? months.slice(-6).map((month) => {
-          const interactions = sanitizeMonthlyValue(month.interactions);
-          const posts = sanitizeMonthlyValue(month.posts);
-          const likes = sanitizeMonthlyValue(month.likes);
-          const comments = sanitizeMonthlyValue(month.comments);
-          return {
-            key: month.key,
-            label: formatMonthRangeLabel(month.start, month.end),
-            primary: interactions,
-            secondary: posts,
-            posts,
-            likes,
-            comments,
-            start: month.start,
-            end: month.end,
-          };
-        })
+      ? (() => {
+          if (currentIndex < 0) {
+            return [];
+          }
+          const startIndex = Math.max(0, currentIndex - 5);
+          return months.slice(startIndex, currentIndex + 1).map((month) => {
+            const interactions = sanitizeMonthlyValue(month.interactions);
+            const posts = sanitizeMonthlyValue(month.posts);
+            const likes = sanitizeMonthlyValue(month.likes);
+            const comments = sanitizeMonthlyValue(month.comments);
+            return {
+              key: month.key,
+              label: formatMonthRangeLabel(month.start, month.end),
+              primary: interactions,
+              secondary: posts,
+              posts,
+              likes,
+              comments,
+              start: month.start,
+              end: month.end,
+            };
+          });
+        })()
       : [];
 
-    const monthsCount = Array.isArray(months) ? months.length : 0;
-    const currentPeriodLabel = latestMonth
-      ? formatMonthRangeLabel(latestMonth.start, latestMonth.end)
+    const monthsCount = months.length;
+    const currentPeriodLabel = currentMonth
+      ? formatMonthRangeLabel(currentMonth.start, currentMonth.end)
       : null;
     const previousPeriodLabel = previousMonth
       ? formatMonthRangeLabel(previousMonth.start, previousMonth.end)
@@ -3282,20 +3330,48 @@ export default function ExecutiveSummaryPage() {
       currentPeriodLabel,
       previousPeriodLabel,
       hasComparison: Boolean(previousMonth),
-      hasRecords: Boolean(hasRecords),
+      hasRecords: Boolean(trend.hasRecords && currentMonth),
     };
-  }, [instagramMonthlyTrend]);
+  }, [instagramMonthlyTrend, selectedMonthKey]);
 
   const tiktokMonthlyCardData = useMemo(() => {
-    const { latestMonth, previousMonth, delta, months, hasRecords } =
-      tiktokMonthlyTrend ?? {};
+    const trend = tiktokMonthlyTrend ?? {};
+    const months = Array.isArray(trend.months) ? trend.months : [];
+
+    const selectedIndex = selectedMonthKey
+      ? months.findIndex((month) => month.key === selectedMonthKey)
+      : -1;
+    const currentIndex = selectedIndex >= 0 ? selectedIndex : months.length - 1;
+    const currentMonth = currentIndex >= 0 ? months[currentIndex] : null;
+    const previousMonth = currentIndex > 0 ? months[currentIndex - 1] : null;
+
+    const computeDelta = (currentValue, previousValue) => {
+      const safeCurrent = Number.isFinite(currentValue) ? currentValue : 0;
+      const safePrevious = Number.isFinite(previousValue) ? previousValue : 0;
+      const absolute = safeCurrent - safePrevious;
+      const percent = safePrevious !== 0 ? (absolute / safePrevious) * 100 : null;
+      return { absolute, percent };
+    };
+
+    const delta =
+      currentMonth && previousMonth
+        ? {
+            posts: computeDelta(currentMonth.posts, previousMonth.posts),
+            interactions: computeDelta(
+              currentMonth.interactions,
+              previousMonth.interactions,
+            ),
+            likes: computeDelta(currentMonth.likes, previousMonth.likes),
+            comments: computeDelta(currentMonth.comments, previousMonth.comments),
+          }
+        : null;
 
     const safeLatestInteractions = sanitizeMonthlyValue(
-      latestMonth?.interactions,
+      currentMonth?.interactions,
     );
-    const safeLatestComments = sanitizeMonthlyValue(latestMonth?.comments);
-    const safeLatestLikes = sanitizeMonthlyValue(latestMonth?.likes);
-    const safeLatestPosts = sanitizeMonthlyValue(latestMonth?.posts);
+    const safeLatestComments = sanitizeMonthlyValue(currentMonth?.comments);
+    const safeLatestLikes = sanitizeMonthlyValue(currentMonth?.likes);
+    const safeLatestPosts = sanitizeMonthlyValue(currentMonth?.posts);
     const safePreviousInteractions = sanitizeMonthlyValue(
       previousMonth?.interactions,
     );
@@ -3303,7 +3379,7 @@ export default function ExecutiveSummaryPage() {
     const safePreviousLikes = sanitizeMonthlyValue(previousMonth?.likes);
     const safePreviousPosts = sanitizeMonthlyValue(previousMonth?.posts);
 
-    const currentMetrics = latestMonth
+    const currentMetrics = currentMonth
       ? [
           { key: "posts", label: "Post TikTok", value: safeLatestPosts },
           { key: "likes", label: "Likes Personil", value: safeLatestLikes },
@@ -3384,28 +3460,34 @@ export default function ExecutiveSummaryPage() {
         : [];
 
     const series = Array.isArray(months)
-      ? months.slice(-6).map((month) => {
-          const interactions = sanitizeMonthlyValue(month.interactions);
-          const posts = sanitizeMonthlyValue(month.posts);
-          const comments = sanitizeMonthlyValue(month.comments);
-          const likes = sanitizeMonthlyValue(month.likes);
-          return {
-            key: month.key,
-            label: formatMonthRangeLabel(month.start, month.end),
-            primary: interactions,
-            secondary: posts,
-            posts,
-            comments,
-            likes,
-            start: month.start,
-            end: month.end,
-          };
-        })
+      ? (() => {
+          if (currentIndex < 0) {
+            return [];
+          }
+          const startIndex = Math.max(0, currentIndex - 5);
+          return months.slice(startIndex, currentIndex + 1).map((month) => {
+            const interactions = sanitizeMonthlyValue(month.interactions);
+            const posts = sanitizeMonthlyValue(month.posts);
+            const comments = sanitizeMonthlyValue(month.comments);
+            const likes = sanitizeMonthlyValue(month.likes);
+            return {
+              key: month.key,
+              label: formatMonthRangeLabel(month.start, month.end),
+              primary: interactions,
+              secondary: posts,
+              posts,
+              comments,
+              likes,
+              start: month.start,
+              end: month.end,
+            };
+          });
+        })()
       : [];
 
-    const monthsCount = Array.isArray(months) ? months.length : 0;
-    const currentPeriodLabel = latestMonth
-      ? formatMonthRangeLabel(latestMonth.start, latestMonth.end)
+    const monthsCount = months.length;
+    const currentPeriodLabel = currentMonth
+      ? formatMonthRangeLabel(currentMonth.start, currentMonth.end)
       : null;
     const previousPeriodLabel = previousMonth
       ? formatMonthRangeLabel(previousMonth.start, previousMonth.end)
@@ -3420,9 +3502,9 @@ export default function ExecutiveSummaryPage() {
       currentPeriodLabel,
       previousPeriodLabel,
       hasComparison: Boolean(previousMonth),
-      hasRecords: Boolean(hasRecords),
+      hasRecords: Boolean(trend.hasRecords && currentMonth),
     };
-  }, [tiktokMonthlyTrend]);
+  }, [tiktokMonthlyTrend, selectedMonthKey]);
 
   const showPlatformLoading = platformsLoading;
   const instagramMonthlyTrendDescription =
