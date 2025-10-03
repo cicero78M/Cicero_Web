@@ -4137,14 +4137,21 @@ export default function ExecutiveSummaryPage() {
             </thead>
             <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
               {topContentRows.length > 0 ? (
-                topContentRows.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-900/40">
-                    <td className="px-4 py-3 font-medium text-cyan-200">
-                      {row.platform || "-"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-slate-100">{row.title}</p>
-                    </td>
+                topContentRows.map((row) => {
+                  const title = row.title || "-";
+                  const truncatedTitle =
+                    title.length > 120 ? `${title.slice(0, 120)}...` : title;
+
+                  return (
+                    <tr key={row.id} className="hover:bg-slate-900/40">
+                      <td className="px-4 py-3 font-medium text-cyan-200">
+                        {row.platform || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-slate-100" title={title}>
+                          {truncatedTitle}
+                        </p>
+                      </td>
                     <td className="px-4 py-3 text-slate-300">
                       {row.format || "-"}
                     </td>
@@ -4160,8 +4167,9 @@ export default function ExecutiveSummaryPage() {
                     <td className="px-4 py-3 text-right font-semibold tabular-nums text-cyan-200">
                       {formatNumber(row.totalInteractions, { maximumFractionDigits: 0 })}
                     </td>
-                  </tr>
-                ))
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td className="px-4 py-6 text-center text-slate-400" colSpan={7}>
