@@ -104,6 +104,189 @@ const formatPercent = (value) => {
   })}%`;
 };
 
+const metricValueToString = (metric, { fallback = "-" } = {}) => {
+  if (!metric) {
+    return fallback;
+  }
+
+  const { value, suffix } = metric;
+
+  if (typeof value === "number") {
+    const options = {};
+
+    if (Math.abs(value) >= 1000) {
+      options.maximumFractionDigits = 0;
+    } else if (Math.abs(value) >= 100) {
+      options.maximumFractionDigits = 1;
+    } else if (Math.abs(value) >= 10) {
+      options.maximumFractionDigits = 1;
+    } else {
+      options.maximumFractionDigits = 2;
+      options.minimumFractionDigits = 1;
+    }
+
+    return `${formatNumber(value, options)}${suffix ?? ""}`;
+  }
+
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+
+  return `${value}${suffix ?? ""}`;
+};
+
+const monthLabelFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "short",
+  year: "numeric",
+});
+
+const aggregateMonthlyActivity = (likesRecords = [], commentRecords = []) => {
+  const monthMap = new Map();
+
+  const addValue = (monthKey, updater) => {
+    const existing = monthMap.get(monthKey) ?? {
+      label: monthKey,
+      likes: 0,
+      comments: 0,
+    };
+    const updated = updater(existing);
+    monthMap.set(monthKey, updated);
+  };
+
+  const extractMonthKey = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.valueOf())) {
+      return null;
+    }
+
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    return { key, label: monthLabelFormatter.format(date) };
+  };
+
+  likesRecords.forEach((record) => {
+    if (!record) {
+      return;
+    }
+
+    const resolvedDate = ensureValidDate(
+      record?.activityDate ?? record?.tanggal ?? record?.date ?? record?.created_at,
+    );
+
+    const monthInfo = extractMonthKey(resolvedDate);
+    if (!monthInfo) {
+      return;
+    }
+
+    const likeTotal = extractNumericValue(
+      record?.likes,
+      record?.jumlah_like,
+      record?.jumlahLike,
+      record?.total_like,
+      record?.totalLikes,
+      record?.like_count,
+      record?.metrics?.likes,
+      record?.metrics?.totalLikes,
+      record?.rekap?.likes,
+      record?.rekap?.likes_personil,
+      record?.rekap?.total_like,
+    );
+
+    addValue(monthInfo.key, (existing) => ({
+      ...existing,
+      label: monthInfo.label,
+      likes: (existing.likes ?? 0) + (Number.isFinite(likeTotal) ? likeTotal : 0),
+    }));
+  });
+
+  commentRecords.forEach((record) => {
+    if (!record) {
+      return;
+    }
+
+    const resolvedDate = ensureValidDate(
+      record?.activityDate ?? record?.tanggal ?? record?.date ?? record?.created_at,
+    );
+
+    const monthInfo = extractMonthKey(resolvedDate);
+    if (!monthInfo) {
+      return;
+    }
+
+    const commentTotal = extractNumericValue(
+      record?.comments,
+      record?.jumlah_komentar,
+      record?.jumlahKomentar,
+      record?.total_komentar,
+      record?.totalComments,
+      record?.comment_count,
+      record?.metrics?.comments,
+      record?.metrics?.totalComments,
+      record?.rekap?.comments,
+      record?.rekap?.komentar_personil,
+      record?.rekap?.total_komentar,
+    );
+
+    addValue(monthInfo.key, (existing) => ({
+      ...existing,
+      label: monthInfo.label,
+      comments: (existing.comments ?? 0) + (Number.isFinite(commentTotal) ? commentTotal : 0),
+    }));
+  });
+
+  const sortedKeys = Array.from(monthMap.keys()).sort((a, b) => a.localeCompare(b));
+  const limitedKeys = sortedKeys.slice(-6);
+  return limitedKeys.map((key) => {
+    const entry = monthMap.get(key);
+    return {
+      ...entry,
+      label: entry?.label ?? key,
+      likes: Math.max(0, Number(entry?.likes) || 0),
+      comments: Math.max(0, Number(entry?.comments) || 0),
+    };
+  });
+};
+
+const buildWeeklyTrendDataset = (instagramSeries = [], tiktokSeries = []) => {
+  const instagramMap = new Map();
+  const tiktokMap = new Map();
+
+  instagramSeries.forEach((item) => {
+    if (!item?.key) {
+      return;
+    }
+    instagramMap.set(item.key, item);
+  });
+
+  tiktokSeries.forEach((item) => {
+    if (!item?.key) {
+      return;
+    }
+    tiktokMap.set(item.key, item);
+  });
+
+  const mergedKeys = new Set([
+    ...Array.from(instagramMap.keys()),
+    ...Array.from(tiktokMap.keys()),
+  ]);
+
+  const sortedKeys = Array.from(mergedKeys).sort((a, b) => a.localeCompare(b));
+  const labels = sortedKeys.map((key) => {
+    const candidate = instagramMap.get(key) ?? tiktokMap.get(key);
+    return candidate?.label ?? key;
+  });
+
+  const instagramValues = sortedKeys.map((key) => {
+    const candidate = instagramMap.get(key);
+    return candidate?.interactions ? Math.max(0, Number(candidate.interactions) || 0) : 0;
+  });
+
+  const tiktokValues = sortedKeys.map((key) => {
+    const candidate = tiktokMap.get(key);
+    return candidate?.interactions ? Math.max(0, Number(candidate.interactions) || 0) : 0;
+  });
+
+  return { labels, instagramValues, tiktokValues };
+};
+
 const publishedDateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
@@ -2756,15 +2939,6 @@ export default function ExecutiveSummaryPage() {
     };
   }, [token, clientId, selectedMonthKey]);
 
-  const pptSummary = useMemo(() => {
-    return [
-      data.dashboardNarrative,
-      data.userInsightNarrative,
-      data.instagramNarrative,
-      data.tiktokNarrative,
-    ];
-  }, [data]);
-
   const handleDownload = () => {
     if (!pptxFactory) {
       console.error("PptxGenJS belum siap digunakan.");
@@ -2772,113 +2946,894 @@ export default function ExecutiveSummaryPage() {
     }
 
     const pptx = new pptxFactory();
-    pptx.layout = "LAYOUT_16x9";
 
-    const titleSlide = pptx.addSlide();
-    titleSlide.addText(`Executive Summary ${data.monthLabel}`, {
-      x: 0.5,
-      y: 1,
-      w: 9,
-      fontSize: 34,
-      bold: true,
-      color: "1F2937",
-    });
-    titleSlide.addText(data.overviewNarrative, {
-      x: 0.5,
-      y: 2.1,
-      w: 9,
-      fontSize: 18,
-      color: "334155",
-    });
+    try {
+      if (typeof pptx.defineLayout === "function") {
+        pptx.defineLayout({ name: "LEGAL_PORTRAIT", width: 8.5, height: 14 });
+        pptx.layout = "LEGAL_PORTRAIT";
+      } else {
+        pptx.layout = "LAYOUT_4x3";
+      }
 
-    const metricSlide = pptx.addSlide();
-    metricSlide.addText("Sorotan Kinerja", {
-      x: 0.5,
-      y: 0.4,
-      fontSize: 26,
-      bold: true,
-      color: "0f172a",
-    });
-    data.summaryMetrics.forEach((metric, index) => {
-      metricSlide.addText(metric.label, {
-        x: 0.5,
-        y: 1.2 + index * 1.1,
-        fontSize: 18,
-        color: "0369a1",
+      const { ShapeType, ChartType } = pptx;
+      const marginX = 0.4;
+      const marginY = 0.5;
+      const contentWidth = 8.5 - marginX * 2;
+
+      const summaryMetrics = Array.isArray(data.summaryMetrics)
+        ? data.summaryMetrics
+        : [];
+      const highlightNotes = Array.isArray(data.highlights) ? data.highlights : [];
+
+      const monthlyTrendSeries = aggregateMonthlyActivity(
+        platformTrendActivity?.likes,
+        platformTrendActivity?.comments,
+      );
+
+      const weeklyDataset = buildWeeklyTrendDataset(
+        instagramWeeklyTrendCardData?.series,
+        tiktokWeeklyTrendCardData?.series,
+      );
+
+      const divisionCards = Array.isArray(divisionComposition)
+        ? divisionComposition
+        : [];
+      const personnelPie = Array.isArray(pieData) ? pieData : [];
+
+      const distributionRows = Array.isArray(divisionDistribution)
+        ? divisionDistribution
+        : [];
+
+      const likesClients = Array.isArray(likesSummary?.clients)
+        ? likesSummary.clients
+        : [];
+      const likesTotals = likesSummary?.totals ?? null;
+      const topPersonnel = Array.isArray(likesSummary?.topPersonnel)
+        ? likesSummary.topPersonnel
+        : [];
+
+      const safeActivityCategories = Array.isArray(activityCategories)
+        ? activityCategories
+        : [];
+
+      const bestCompletion = distributionRows.slice(0, 3);
+      const lowestCompletion = Array.isArray(lowestCompletionDivisions)
+        ? lowestCompletionDivisions
+        : [];
+
+      const pieTotalValue = Number.isFinite(pieTotal) ? pieTotal : 0;
+      const divisionTotalValue = Number.isFinite(divisionCompositionTotal)
+        ? divisionCompositionTotal
+        : divisionCards.reduce((sum, item) => sum + (Number(item?.value) || 0), 0);
+
+      const contentCards = topContentRows.slice(0, 6);
+
+      const slide1 = pptx.addSlide();
+      slide1.background = { color: "F8FAFC" };
+      slide1.addText("Executive Summary", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 26,
+        bold: true,
+        color: "0F172A",
       });
-      metricSlide.addText(
-        `${formatNumber(metric.value, { maximumFractionDigits: 1 })}${
-          metric.suffix ? metric.suffix : ""
-        }`,
-        {
-          x: 4.4,
-          y: 1.2 + index * 1.1,
-          fontSize: 20,
+      slide1.addText(data.monthLabel ?? "Periode Tidak Tersedia", {
+        x: marginX,
+        y: marginY + 0.6,
+        w: contentWidth,
+        fontSize: 16,
+        color: "1E293B",
+      });
+      slide1.addText(data.overviewNarrative ?? "Belum ada ringkasan periode ini.", {
+        x: marginX,
+        y: marginY + 1.1,
+        w: contentWidth,
+        fontSize: 13,
+        color: "334155",
+        lineSpacing: 20,
+      });
+
+      const metricGap = 0.25;
+      const metricColumns = 2;
+      const metricCardWidth = (contentWidth - metricGap * (metricColumns - 1)) / metricColumns;
+      const metricCardHeight = 1.55;
+      const metricStartY = marginY + 2.1;
+
+      if (summaryMetrics.length > 0) {
+        summaryMetrics.forEach((metric, index) => {
+          const col = index % metricColumns;
+          const row = Math.floor(index / metricColumns);
+          const x = marginX + col * (metricCardWidth + metricGap);
+          const y = metricStartY + row * (metricCardHeight + 0.25);
+
+          const metricTexts = [
+            {
+              text: metric.label ?? "Indikator",
+              options: {
+                fontSize: 12,
+                color: "0284C7",
+                breakLine: true,
+              },
+            },
+            {
+              text: metricValueToString(metric),
+              options: {
+                fontSize: 20,
+                bold: true,
+                color: "0F172A",
+                breakLine: true,
+              },
+            },
+          ];
+
+          if (metric.change) {
+            metricTexts.push({
+              text: `Δ ${metric.change}`,
+              options: {
+                fontSize: 11,
+                color: metric.change.startsWith("-") ? "DC2626" : "15803D",
+              },
+            });
+          }
+
+          slide1.addText(metricTexts, {
+            shape: ShapeType.roundRect,
+            x,
+            y,
+            w: metricCardWidth,
+            h: metricCardHeight,
+            margin: 0.12,
+            fill: { color: "E0F2FE" },
+            line: { color: "BAE6FD" },
+            color: "0F172A",
+          });
+        });
+      }
+
+      const metricsRows = Math.ceil(summaryMetrics.length / metricColumns) || 1;
+      const highlightsStartY =
+        metricStartY + metricsRows * (metricCardHeight + 0.25) + (summaryMetrics.length ? 0.2 : 0);
+
+      if (highlightNotes.length > 0) {
+        slide1.addText(
+          [{
+            text: "Highlight Utama",
+            options: { fontSize: 12, color: "0F172A", bold: true, breakLine: true },
+          }],
+          {
+            x: marginX,
+            y: highlightsStartY,
+            w: contentWidth,
+            fontSize: 11,
+            color: "1E293B",
+          },
+        );
+
+        const highlightList = highlightNotes.map((note) => ({
+          text: note,
+          options: {
+            fontSize: 11,
+            color: "1E293B",
+            bullet: true,
+            lineSpacing: 18,
+          },
+        }));
+
+        slide1.addText(highlightList, {
+          shape: ShapeType.roundRect,
+          x: marginX,
+          y: highlightsStartY + 0.3,
+          w: contentWidth,
+          h: Math.min(3.4, 0.4 + highlightNotes.length * 0.45),
+          fill: { color: "F1F5F9" },
+          line: { color: "CBD5F5" },
+          margin: 0.15,
+        });
+      }
+
+      const slide2 = pptx.addSlide();
+      slide2.background = { color: "F8FAFC" };
+      slide2.addText("Trend Aktivitas Bulanan (Likes & Komentar)", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
+      });
+
+      if (monthlyTrendSeries.length > 0) {
+        const labels = monthlyTrendSeries.map((item) => item.label);
+        const likeValues = monthlyTrendSeries.map((item) => item.likes);
+        const commentValues = monthlyTrendSeries.map((item) => item.comments);
+
+        slide2.addChart(
+          ChartType.line,
+          [
+            { name: "Likes", labels, values: likeValues },
+            { name: "Komentar", labels, values: commentValues },
+          ],
+          {
+            x: marginX,
+            y: marginY + 0.8,
+            w: contentWidth,
+            h: 4.8,
+            showLegend: true,
+            lineSize: 2,
+            chartColors: ["0EA5E9", "F97316"],
+            catAxisLabelFontSize: 11,
+            valAxisLabelFontSize: 11,
+            dataLabelPosition: "outEnd",
+          },
+        );
+
+        slide2.addText(
+          `Total Likes: ${formatNumber(likeValues.reduce((a, b) => a + b, 0), {
+            maximumFractionDigits: 0,
+          })} | Total Komentar: ${formatNumber(commentValues.reduce((a, b) => a + b, 0), {
+            maximumFractionDigits: 0,
+          })}`,
+          {
+            x: marginX,
+            y: marginY + 5.75,
+            w: contentWidth,
+            fontSize: 11,
+            color: "475569",
+          },
+        );
+      } else {
+        slide2.addText("Data trend bulanan belum tersedia untuk periode ini.", {
+          shape: ShapeType.roundRect,
+          x: marginX,
+          y: marginY + 1,
+          w: contentWidth,
+          h: 1.2,
+          fill: { color: "F1F5F9" },
+          line: { color: "CBD5F5" },
+          fontSize: 12,
+          color: "475569",
+          align: "center",
+          valign: "middle",
+        });
+      }
+
+      const slide3 = pptx.addSlide();
+      slide3.background = { color: "F8FAFC" };
+      slide3.addText("Trend Aktivitas Mingguan & Komposisi Data Personil", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
+      });
+
+      if (weeklyDataset.labels.length > 0) {
+        slide3.addChart(
+          ChartType.line,
+          [
+            {
+              name: "Instagram",
+              labels: weeklyDataset.labels,
+              values: weeklyDataset.instagramValues,
+            },
+            {
+              name: "TikTok",
+              labels: weeklyDataset.labels,
+              values: weeklyDataset.tiktokValues,
+            },
+          ],
+          {
+            x: marginX,
+            y: marginY + 0.8,
+            w: contentWidth,
+            h: 3.6,
+            showLegend: true,
+            chartColors: ["22D3EE", "F97316"],
+            lineSize: 2,
+            catAxisLabelFontSize: 10,
+            valAxisLabelFontSize: 10,
+          },
+        );
+      } else {
+        slide3.addText("Belum ada data trend mingguan yang dapat ditampilkan.", {
+          shape: ShapeType.roundRect,
+          x: marginX,
+          y: marginY + 1,
+          w: contentWidth,
+          h: 1.2,
+          fill: { color: "F1F5F9" },
+          line: { color: "CBD5F5" },
+          fontSize: 12,
+          color: "475569",
+          align: "center",
+          valign: "middle",
+        });
+      }
+
+      slide3.addText("Komposisi Data Personil per Satker", {
+        x: marginX,
+        y: marginY + 4.7,
+        w: contentWidth,
+        fontSize: 14,
+        bold: true,
+        color: "0F172A",
+      });
+
+      if (divisionCards.length > 0 && divisionTotalValue > 0) {
+        slide3.addChart(
+          ChartType.doughnut,
+          [
+            {
+              name: "Satker",
+              labels: divisionCards.map((item) => item.name ?? "Satker"),
+              values: divisionCards.map((item) => Math.max(0, Number(item?.value) || 0)),
+            },
+          ],
+          {
+            x: marginX,
+            y: marginY + 5.3,
+            w: contentWidth,
+            h: 3.5,
+            showLegend: true,
+            holeSize: 60,
+            dataLabelColor: "0F172A",
+            dataLabelFontSize: 10,
+          },
+        );
+
+        slide3.addText(
+          `Total Personil Terdata: ${formatNumber(divisionTotalValue, { maximumFractionDigits: 0 })}`,
+          {
+            x: marginX,
+            y: marginY + 9,
+            w: contentWidth,
+            fontSize: 11,
+            color: "475569",
+          },
+        );
+      } else {
+        slide3.addText("Komposisi satker belum tersedia.", {
+          shape: ShapeType.roundRect,
+          x: marginX,
+          y: marginY + 5.2,
+          w: contentWidth,
+          h: 1.2,
+          fill: { color: "F1F5F9" },
+          line: { color: "CBD5F5" },
+          fontSize: 12,
+          color: "475569",
+          align: "center",
+          valign: "middle",
+        });
+      }
+
+      const slide4 = pptx.addSlide();
+      slide4.background = { color: "F8FAFC" };
+      slide4.addText("Insight User", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
+      });
+
+      const insightCards = [];
+      const insightSummaryItems = [];
+      if (userSummary) {
+        insightSummaryItems.push(
+          `Total Personil: ${formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })}`,
+        );
+        insightSummaryItems.push(
+          `IG Lengkap: ${formatNumber(userSummary.instagramFilled, {
+            maximumFractionDigits: 0,
+          })} (${formatPercent(userSummary.instagramPercent)})`,
+        );
+        insightSummaryItems.push(
+          `TikTok Lengkap: ${formatNumber(userSummary.tiktokFilled, {
+            maximumFractionDigits: 0,
+          })} (${formatPercent(userSummary.tiktokPercent)})`,
+        );
+        insightSummaryItems.push(
+          `IG & TikTok Lengkap: ${formatNumber(userSummary.bothCount, {
+            maximumFractionDigits: 0,
+          })} (${formatPercent(userSummary.bothPercent)})`,
+        );
+      }
+
+      if (insightSummaryItems.length > 0) {
+        insightCards.push({ title: "Ringkasan Insight", items: insightSummaryItems });
+      }
+
+      if (bestCompletion.length > 0) {
+        insightCards.push({
+          title: "Rasio Kelengkapan Data Tertinggi",
+          items: bestCompletion.map(
+            (item, idx) => `${idx + 1}. ${item.division} – ${formatPercent(item.completionPercent)}`,
+          ),
+        });
+      }
+
+      if (lowestCompletion.length > 0) {
+        insightCards.push({
+          title: "10 Polres dengan Rasio Terendah",
+          items: lowestCompletion.map(
+            (item, idx) =>
+              `${idx + 1}. ${item.fullDivision ?? item.division} – ${formatPercent(item.completion)}`,
+          ),
+        });
+      }
+
+      if (personnelPie.length > 0 && pieTotalValue > 0) {
+        insightCards.push({
+          title: "Komposisi Kelengkapan Username",
+          items: personnelPie.map((entry) => {
+            const percent = pieTotalValue
+              ? (Math.max(0, Number(entry.value) || 0) / pieTotalValue) * 100
+              : 0;
+            return `${entry.name}: ${formatPercent(percent)}`;
+          }),
+        });
+      }
+
+      if (divisionCards.length > 0 && divisionTotalValue > 0) {
+        insightCards.push({
+          title: "Komposisi Data Personil Satker",
+          items: divisionCards.map((entry) => {
+            const percent = divisionTotalValue
+              ? (Math.max(0, Number(entry.value) || 0) / divisionTotalValue) * 100
+              : 0;
+            return `${entry.name}: ${formatPercent(percent)}`;
+          }),
+        });
+      }
+
+      if (narrative) {
+        insightCards.push({ title: "Catatan Insight Data Personil", narrative });
+      }
+
+      const insightColumns = 2;
+      const insightGap = 0.3;
+      const insightCardWidth = (contentWidth - insightGap * (insightColumns - 1)) / insightColumns;
+      const insightCardHeight = 3.2;
+      const insightStartY = marginY + 0.8;
+
+      insightCards.forEach((card, index) => {
+        const col = index % insightColumns;
+        const row = Math.floor(index / insightColumns);
+        const x = marginX + col * (insightCardWidth + insightGap);
+        const y = insightStartY + row * (insightCardHeight + insightGap);
+
+        slide4.addText(card.title, {
+          x,
+          y,
+          w: insightCardWidth,
+          fontSize: 13,
           bold: true,
-          color: "0f172a",
+          color: "0F172A",
+        });
+
+        if (card.narrative) {
+          slide4.addText(card.narrative, {
+            shape: ShapeType.roundRect,
+            x,
+            y: y + 0.35,
+            w: insightCardWidth,
+            h: insightCardHeight - 0.35,
+            fill: { color: "F1F5F9" },
+            line: { color: "CBD5F5" },
+            color: "1E293B",
+            fontSize: 11,
+            margin: 0.15,
+            lineSpacing: 18,
+          });
+        } else {
+          const items = Array.isArray(card.items) ? card.items : [];
+          const texts = items.length
+            ? items.map((item) => ({
+                text: item,
+                options: {
+                  bullet: true,
+                  fontSize: 11,
+                  color: "1E293B",
+                  lineSpacing: 18,
+                },
+              }))
+            : [{ text: "Belum ada data.", options: { fontSize: 11, color: "64748B" } }];
+
+          slide4.addText(texts, {
+            shape: ShapeType.roundRect,
+            x,
+            y: y + 0.35,
+            w: insightCardWidth,
+            h: insightCardHeight - 0.35,
+            fill: { color: "F1F5F9" },
+            line: { color: "CBD5F5" },
+            margin: 0.15,
+          });
+        }
+      });
+
+      const slide5 = pptx.addSlide();
+      slide5.background = { color: "FFFFFF" };
+      slide5.addText("Tabel Distribusi User per Satker", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
+      });
+
+      const userTableRows = distributionRows.slice(0, 28).map((row, index) => [
+        `${index + 1}`,
+        row.division ?? "Satker",
+        formatNumber(row.total, { maximumFractionDigits: 0 }),
+        `${formatNumber(row.instagramFilled, { maximumFractionDigits: 0 })} (${formatPercent(
+          row.instagramPercent,
+        )})`,
+        `${formatNumber(row.tiktokFilled, { maximumFractionDigits: 0 })} (${formatPercent(
+          row.tiktokPercent,
+        )})`,
+        formatPercent(row.completionPercent),
+        formatPercent(row.sharePercent),
+      ]);
+
+      slide5.addTable(
+        [
+          [
+            { text: "No", options: { bold: true, color: "FFFFFF" } },
+            { text: "Satker", options: { bold: true, color: "FFFFFF" } },
+            { text: "Total Personil", options: { bold: true, color: "FFFFFF" } },
+            { text: "IG Lengkap", options: { bold: true, color: "FFFFFF" } },
+            { text: "TikTok Lengkap", options: { bold: true, color: "FFFFFF" } },
+            { text: "Rasio Kelengkapan", options: { bold: true, color: "FFFFFF" } },
+            { text: "Kontribusi", options: { bold: true, color: "FFFFFF" } },
+          ],
+          ...userTableRows,
+        ],
+        {
+          x: marginX,
+          y: marginY + 0.9,
+          w: contentWidth,
+          colW: [0.4, 2.4, 1, 1, 1, 1, 0.9],
+          fontSize: 11,
+          fill: { color: "F8FAFC" },
+          border: { color: "CBD5F5" },
+          color: "1E293B",
+          rowH: 0.35,
+          align: "left",
+          valign: "middle",
+          header: true,
+          headerFill: "0F172A",
+          autoPage: true,
+          autoPageRepeatHeader: true,
+          autoPageLineWeight: 0,
+          autoPageCharWeight: 0,
+          autoPageRowWeight: 0,
         },
       );
-      metricSlide.addText(metric.change, {
-        x: 6.6,
-        y: 1.2 + index * 1.1,
-        fontSize: 16,
-        color: "059669",
+
+      const slide6 = pptx.addSlide();
+      slide6.background = { color: "F8FAFC" };
+      slide6.addText("Rincian Kinerja Platform", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
       });
-    });
 
-    const narrativeSlide = pptx.addSlide();
-    narrativeSlide.addText("Insight Naratif", {
-      x: 0.5,
-      y: 0.4,
-      fontSize: 26,
-      bold: true,
-      color: "0f172a",
-    });
-    pptSummary.forEach((item, idx) => {
-      narrativeSlide.addText(`• ${item}`, {
-        x: 0.5,
-        y: 1.1 + idx * 0.8,
-        w: 9,
-        fontSize: 18,
-        color: "1e293b",
+      if (likesTotals) {
+        slide6.addText(
+          `Satker: ${formatNumber(likesTotals.totalClients ?? 0, {
+            maximumFractionDigits: 0,
+          })} · Total Likes: ${formatNumber(likesTotals.totalLikes ?? 0, {
+            maximumFractionDigits: 0,
+          })} · Total Komentar: ${formatNumber(likesTotals.totalComments ?? 0, {
+            maximumFractionDigits: 0,
+          })} · Kepatuhan: ${formatPercent(likesTotals.complianceRate ?? 0)}`,
+          {
+            x: marginX,
+            y: marginY + 0.6,
+            w: contentWidth,
+            fontSize: 11,
+            color: "475569",
+          },
+        );
+      }
+
+      const topLikesClients = [...likesClients]
+        .sort((a, b) => (b.totalLikes ?? 0) - (a.totalLikes ?? 0))
+        .slice(0, 3);
+      const topCommentClients = [...likesClients]
+        .sort((a, b) => (b.totalComments ?? 0) - (a.totalComments ?? 0))
+        .slice(0, 3);
+      const topComplianceClients = [...likesClients]
+        .sort((a, b) => (b.complianceRate ?? 0) - (a.complianceRate ?? 0))
+        .slice(0, 3);
+      const topLikesPersonnel = [...topPersonnel]
+        .sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
+        .slice(0, 3);
+      const topCommentPersonnel = [...topPersonnel]
+        .sort((a, b) => (b.comments ?? 0) - (a.comments ?? 0))
+        .slice(0, 3);
+
+      const performanceCards = [
+        {
+          title: "Kontributor Likes Teratas",
+          items: topLikesClients.map(
+            (item, idx) =>
+              `${idx + 1}. ${item.clientName ?? "Satker"} – ${formatNumber(item.totalLikes ?? 0, {
+                maximumFractionDigits: 0,
+              })} likes`,
+          ),
+        },
+        {
+          title: "Kontributor Komentar Teratas",
+          items: topCommentClients.map(
+            (item, idx) =>
+              `${idx + 1}. ${item.clientName ?? "Satker"} – ${formatNumber(item.totalComments ?? 0, {
+                maximumFractionDigits: 0,
+              })} komentar`,
+          ),
+        },
+        {
+          title: "Kepatuhan Tertinggi",
+          items: topComplianceClients.map(
+            (item, idx) => `${idx + 1}. ${item.clientName ?? "Satker"} – ${formatPercent(item.complianceRate ?? 0)}`,
+          ),
+        },
+        {
+          title: "Personil dengan Komentar Terbanyak",
+          items: topCommentPersonnel.map(
+            (item, idx) =>
+              `${idx + 1}. ${item.nama ?? item.username ?? "Personil"} – ${formatNumber(item.comments ?? 0, {
+                maximumFractionDigits: 0,
+              })} komentar`,
+          ),
+        },
+        {
+          title: "Personil dengan Likes Terbanyak",
+          items: topLikesPersonnel.map(
+            (item, idx) =>
+              `${idx + 1}. ${item.nama ?? item.username ?? "Personil"} – ${formatNumber(item.likes ?? 0, {
+                maximumFractionDigits: 0,
+              })} likes`,
+          ),
+        },
+        {
+          title: "Aktivitas Personil",
+          items: [
+            ...safeActivityCategories.map(
+              (category) =>
+                `${category.label ?? category.key}: ${formatNumber(category.count ?? 0, {
+                  maximumFractionDigits: 0,
+                })}`,
+            ),
+            totalEvaluated
+              ? `Personil Dinilai: ${formatNumber(totalEvaluated, { maximumFractionDigits: 0 })}`
+              : null,
+            totalContentEvaluated
+              ? `Konten Dinilai: ${formatNumber(totalContentEvaluated, { maximumFractionDigits: 0 })}`
+              : null,
+          ].filter(Boolean),
+        },
+      ];
+
+      const perfColumns = 2;
+      const perfGap = 0.3;
+      const perfCardWidth = (contentWidth - perfGap * (perfColumns - 1)) / perfColumns;
+      const perfCardHeight = 2.6;
+      const perfStartY = marginY + 1.1;
+
+      performanceCards.forEach((card, index) => {
+        const col = index % perfColumns;
+        const row = Math.floor(index / perfColumns);
+        const x = marginX + col * (perfCardWidth + perfGap);
+        const y = perfStartY + row * (perfCardHeight + perfGap);
+
+        slide6.addText(card.title, {
+          x,
+          y,
+          w: perfCardWidth,
+          fontSize: 13,
+          bold: true,
+          color: "0F172A",
+        });
+
+        const cardItems = Array.isArray(card.items) && card.items.length > 0
+          ? card.items.map((item) => ({
+              text: item,
+              options: {
+                bullet: true,
+                fontSize: 11,
+                color: "1E293B",
+                lineSpacing: 18,
+              },
+            }))
+          : [{ text: "Belum ada data.", options: { fontSize: 11, color: "64748B" } }];
+
+        slide6.addText(cardItems, {
+          shape: ShapeType.roundRect,
+          x,
+          y: y + 0.35,
+          w: perfCardWidth,
+          h: perfCardHeight - 0.35,
+          fill: { color: "F1F5F9" },
+          line: { color: "CBD5F5" },
+          margin: 0.15,
+        });
       });
-    });
 
-    const tableSlide = pptx.addSlide();
-    tableSlide.addText("Konten Terbaik", {
-      x: 0.5,
-      y: 0.4,
-      fontSize: 26,
-      bold: true,
-      color: "0f172a",
-    });
-    const tableData = [
-      ["Platform", "Judul", "Format", "Reach", "Engagement", "Takeaway"],
-      ...data.contentTable.map((row) => [
-        row.platform,
-        row.title,
-        row.format,
-        formatNumber(row.reach, { maximumFractionDigits: 0 }),
-        `${row.engagement}%`,
-        row.takeaway,
-      ]),
-    ];
-    tableSlide.addTable(tableData, {
-      x: 0.3,
-      y: 1.0,
-      w: 9.4,
-      fontSize: 14,
-      colW: [1.1, 2.6, 1.0, 1.1, 1.3, 2.3],
-      border: { pt: 1, color: "cbd5f5" },
-      fill: "f8fafc",
-      color: "0f172a",
-      valign: "middle",
-    });
+      const slide7 = pptx.addSlide();
+      slide7.background = { color: "FFFFFF" };
+      slide7.addText("Tabel Distribusi Likes per Satker", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
+      });
 
-    pptx.writeFile({
-      fileName: `Executive-Summary-${data.monthLabel.replace(/\s+/g, "-")}.pptx`,
-    });
+      const likeDistributionRows = likesClients.slice(0, 28).map((client, index) => [
+        `${index + 1}`,
+        client.clientName ?? "Satker",
+        formatNumber(client.totalLikes ?? 0, { maximumFractionDigits: 0 }),
+        formatNumber(client.totalComments ?? 0, { maximumFractionDigits: 0 }),
+        formatNumber(client.activePersonnel ?? 0, { maximumFractionDigits: 0 }),
+        formatNumber(client.totalPersonnel ?? 0, { maximumFractionDigits: 0 }),
+        formatPercent(client.complianceRate ?? 0),
+      ]);
+
+      slide7.addTable(
+        [
+          [
+            { text: "No", options: { bold: true, color: "FFFFFF" } },
+            { text: "Satker", options: { bold: true, color: "FFFFFF" } },
+            { text: "Total Likes", options: { bold: true, color: "FFFFFF" } },
+            { text: "Total Komentar", options: { bold: true, color: "FFFFFF" } },
+            { text: "Personil Aktif", options: { bold: true, color: "FFFFFF" } },
+            { text: "Personil Terdata", options: { bold: true, color: "FFFFFF" } },
+            { text: "Kepatuhan", options: { bold: true, color: "FFFFFF" } },
+          ],
+          ...likeDistributionRows,
+        ],
+        {
+          x: marginX,
+          y: marginY + 0.9,
+          w: contentWidth,
+          colW: [0.4, 2.6, 1.1, 1.1, 1, 1, 1.1],
+          fontSize: 11,
+          fill: { color: "F8FAFC" },
+          border: { color: "CBD5F5" },
+          color: "1E293B",
+          rowH: 0.35,
+          align: "left",
+          valign: "middle",
+          header: true,
+          headerFill: "0F172A",
+          autoPage: true,
+          autoPageRepeatHeader: true,
+          autoPageCharWeight: 0,
+          autoPageRowWeight: 0,
+          autoPageLineWeight: 0,
+        },
+      );
+
+      const slide8 = pptx.addSlide();
+      slide8.background = { color: "F8FAFC" };
+      slide8.addText("Konten dengan Performa Tertinggi", {
+        x: marginX,
+        y: marginY,
+        w: contentWidth,
+        fontSize: 20,
+        bold: true,
+        color: "0F172A",
+      });
+
+      const contentColumns = 2;
+      const contentGap = 0.35;
+      const contentCardWidth = (contentWidth - contentGap * (contentColumns - 1)) / contentColumns;
+      const contentCardHeight = 3.1;
+      const contentStartY = marginY + 0.9;
+
+      if (contentCards.length === 0) {
+        slide8.addText("Belum ada konten unggulan untuk periode ini.", {
+          shape: ShapeType.roundRect,
+          x: marginX,
+          y: contentStartY,
+          w: contentWidth,
+          h: 1.2,
+          fill: { color: "F1F5F9" },
+          line: { color: "CBD5F5" },
+          fontSize: 12,
+          color: "475569",
+          align: "center",
+          valign: "middle",
+        });
+      } else {
+        contentCards.forEach((item, index) => {
+          const col = index % contentColumns;
+          const row = Math.floor(index / contentColumns);
+          const x = marginX + col * (contentCardWidth + contentGap);
+          const y = contentStartY + row * (contentCardHeight + contentGap);
+
+          slide8.addShape(ShapeType.roundRect, {
+            x,
+            y,
+            w: contentCardWidth,
+            h: contentCardHeight,
+            fill: { color: "0F172A" },
+            line: { color: "1E293B" },
+            rectRadius: 12,
+          });
+
+          slide8.addShape(ShapeType.rect, {
+            x: x + 0.2,
+            y: y + 0.2,
+            w: contentCardWidth - 0.4,
+            h: 1.4,
+            fill: { color: "1E293B" },
+            line: { color: "38BDF8" },
+          });
+
+          slide8.addText(
+            [
+              {
+                text: `${item.platform ?? "Platform"} · ${item.format ?? "Format"}`,
+                options: { fontSize: 10, color: "BAE6FD" },
+              },
+              {
+                text: item.title ?? "Judul Konten",
+                options: { fontSize: 12, bold: true, color: "E2E8F0", breakLine: true },
+              },
+              {
+                text: formatPublishedDate(item.publishedAt),
+                options: { fontSize: 10, color: "94A3B8", breakLine: true },
+              },
+              {
+                text: `Likes ${formatNumber(item.likes, {
+                  maximumFractionDigits: 0,
+                })} · Komentar ${formatNumber(item.comments, {
+                  maximumFractionDigits: 0,
+                })} · Interaksi ${formatNumber(item.totalInteractions, {
+                  maximumFractionDigits: 0,
+                })}`,
+                options: { fontSize: 10, color: "F8FAFC", breakLine: true },
+              },
+            ],
+            {
+              x: x + 0.3,
+              y: y + 1.7,
+              w: contentCardWidth - 0.6,
+              h: contentCardHeight - 1.9,
+              color: "FFFFFF",
+              fontSize: 11,
+            },
+          );
+        });
+      }
+
+      pptx
+        .writeFile({
+          fileName: `Executive-Summary-Legal-${
+            data.monthLabel?.replace(/\s+/g, "-")?.replace(/[^A-Za-z0-9-_]/g, "") ||
+            "Periode"
+          }.pptx`,
+        })
+        .catch((error) => {
+          console.error("Gagal membuat berkas PPT:", error);
+        });
+    } catch (error) {
+      console.error("Terjadi kesalahan saat menyusun PPT", error);
+    }
   };
+
 
   const {
     summary: userSummary,
