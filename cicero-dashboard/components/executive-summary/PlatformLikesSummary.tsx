@@ -266,8 +266,8 @@ const PlatformLikesSummary = ({
         </p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 lg:col-span-2 xl:col-span-2">
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
             Kontributor Likes Teratas
           </h3>
@@ -304,7 +304,7 @@ const PlatformLikesSummary = ({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 lg:col-span-2 xl:col-span-2">
+        <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
             Kontributor Komentar Teratas
           </h3>
@@ -347,11 +347,11 @@ const PlatformLikesSummary = ({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+        <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
             Kepatuhan Tertinggi
           </h3>
-          <ul className="mt-4 space-y-3 text-sm text-slate-200">
+          <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
             {topCompliance.map((client) => (
               <li key={`compliance-${client.key}`} className="flex items-start justify-between">
                 <div>
@@ -369,11 +369,11 @@ const PlatformLikesSummary = ({
         </div>
 
         {topCommentPersonnel.length > 0 ? (
-          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+          <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               Personil dengan Komentar Tertinggi
             </h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-200">
+            <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {topCommentPersonnel.map((person) => {
                 const identity = person.username || person.nama || "Tanpa Nama";
                 const additional = [person.nama, person.clientName]
@@ -405,11 +405,11 @@ const PlatformLikesSummary = ({
         ) : null}
 
         {standoutPersonnel.length > 0 ? (
-          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+          <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               Personil dengan Likes Tertinggi
             </h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-200">
+            <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {standoutPersonnel.map((person) => {
                 const identity = person.username || person.nama || "Tanpa Nama";
                 const additional = [person.nama, person.clientName]
@@ -441,7 +441,7 @@ const PlatformLikesSummary = ({
         ) : null}
 
         {activitySummary ? (
-          <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2 xl:col-span-3">
+          <div className="flex h-full flex-col rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               Aktivitas Personil
             </h3>
@@ -454,7 +454,7 @@ const PlatformLikesSummary = ({
                 .
               </p>
             ) : null}
-            <div className="mt-5 space-y-5">
+            <div className="mt-5 flex-1 space-y-5">
               {activitySummary.loading ? (
                 <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
                   Memuat aktivitas personil…
