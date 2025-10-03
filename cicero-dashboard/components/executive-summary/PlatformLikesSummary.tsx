@@ -194,9 +194,9 @@ const PlatformLikesSummary = ({
       if (complianceB !== complianceA) {
         return complianceB - complianceA;
       }
-      const likesA = a.totalLikes ?? 0;
-      const likesB = b.totalLikes ?? 0;
-      return likesB - likesA;
+      const activePersonnelA = a.activePersonnel ?? 0;
+      const activePersonnelB = b.activePersonnel ?? 0;
+      return activePersonnelB - activePersonnelA;
     });
   }, [clients]);
 
@@ -260,7 +260,7 @@ const PlatformLikesSummary = ({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-            Distribusi Likes per Satker
+            Distribusi Engagement per Satker
           </h3>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-800 text-sm">
@@ -271,7 +271,7 @@ const PlatformLikesSummary = ({
                   <th className="px-4 py-3 text-right">Komentar</th>
                   <th className="px-4 py-3 text-right">Personil Aktif</th>
                   <th className="px-4 py-3 text-right">Total Personil</th>
-                  <th className="px-4 py-3 text-right">Kepatuhan</th>
+                  <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
