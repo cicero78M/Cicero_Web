@@ -468,7 +468,6 @@ const aggregateLikesRecords = (records = [], options = {}) => {
           source?.satker ??
           source?.satuan_kerja ??
           source?.nama_satuan_kerja ??
-          source?.nama ??
           clientId,
       ) || "LAINNYA";
 
