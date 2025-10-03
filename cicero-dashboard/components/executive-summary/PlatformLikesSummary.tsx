@@ -162,6 +162,19 @@ const PlatformLikesSummary = ({
       .slice(0, 3);
   }, [clients]);
 
+  const clientsByCompliance = useMemo(() => {
+    return [...clients].sort((a, b) => {
+      const complianceA = a.complianceRate ?? 0;
+      const complianceB = b.complianceRate ?? 0;
+      if (complianceB !== complianceA) {
+        return complianceB - complianceA;
+      }
+      const likesA = a.totalLikes ?? 0;
+      const likesB = b.totalLikes ?? 0;
+      return likesB - likesA;
+    });
+  }, [clients]);
+
   const standoutPersonnel = useMemo(() => {
     return topPersonnel.slice(0, 5);
   }, [topPersonnel]);
@@ -238,7 +251,7 @@ const PlatformLikesSummary = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {clients.map((client) => {
+                {clientsByCompliance.map((client) => {
                   const compliance = formatPercent(client.complianceRate ?? 0);
                   const avgLikes = formatNumber(client.averageLikesPerUser ?? 0, {
                     maximumFractionDigits: 1,
