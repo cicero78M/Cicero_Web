@@ -245,11 +245,11 @@ const PlatformLikesSummary = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {summaryCards.map((card) => (
           <div
             key={card.key}
-            className="min-w-[220px] rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
+            className="h-full rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               {card.label}
@@ -266,68 +266,52 @@ const PlatformLikesSummary = ({
         </p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 lg:col-span-2 xl:col-span-2">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-            Distribusi Engagement per Satker
+            Kontributor Likes Teratas
           </h3>
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-800 text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
-                  <th className="py-3 pr-4">Satker</th>
-                  <th className="px-4 py-3 text-right">Likes</th>
-                  <th className="px-4 py-3 text-right">Avg. Likes</th>
-                  <th className="px-4 py-3 text-right">Komentar</th>
-                  <th className="px-4 py-3 text-right">Avg. Komentar</th>
-                  <th className="px-4 py-3 text-right">Personil Aktif</th>
-                  <th className="px-4 py-3 text-right">Total Personil</th>
-                  <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {clientsByCompliance.map((client) => {
-                  const compliance = formatPercent(client.complianceRate ?? 0);
-                  return (
-                    <tr key={client.key} className="text-slate-200">
-                      <td className="py-3 pr-4 font-semibold text-slate-100">
-                        {client.clientName}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(client.totalLikes, { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(client.averageLikesPerUser ?? 0)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(client.totalComments, { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(client.averageCommentsPerUser ?? 0)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="mt-4 h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={distributionData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                <Tooltip
+                  cursor={{ fill: "rgba(15,23,42,0.3)" }}
+                  contentStyle={{
+                    backgroundColor: "rgba(15,23,42,0.95)",
+                    borderRadius: 16,
+                    borderColor: "rgba(148,163,184,0.4)",
+                    boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
+                    color: "#e2e8f0",
+                  }}
+                  formatter={(value: number) => [
+                    formatNumber(value, { maximumFractionDigits: 0 }),
+                    "Likes",
+                  ]}
+                  labelFormatter={(label: string | number, payload: any[]) => {
+                    const entry = payload && payload.length > 0 ? payload[0].payload : null;
+                    if (entry && typeof entry.compliance === "number") {
+                      return `${label} · Kepatuhan ${formatPercent(entry.compliance)}`;
+                    }
+                    return label as string;
+                  }}
+                />
+                <Bar dataKey="likes" fill="#22d3ee" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              Kontributor Likes Teratas
-            </h3>
-            <div className="mt-4 h-64">
+        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 lg:col-span-2 xl:col-span-2">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+            Kontributor Komentar Teratas
+          </h3>
+          <div className="mt-4 h-64">
+            {commentDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={distributionData}>
+                <BarChart data={commentDistributionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
                   <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
                   <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
@@ -337,12 +321,12 @@ const PlatformLikesSummary = ({
                       backgroundColor: "rgba(15,23,42,0.95)",
                       borderRadius: 16,
                       borderColor: "rgba(148,163,184,0.4)",
-                      boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
+                      boxShadow: "0 20px 45px rgba(245,158,11,0.25)",
                       color: "#e2e8f0",
                     }}
                     formatter={(value: number) => [
                       formatNumber(value, { maximumFractionDigits: 0 }),
-                      "Likes",
+                      "Komentar",
                     ]}
                     labelFormatter={(label: string | number, payload: any[]) => {
                       const entry = payload && payload.length > 0 ? payload[0].payload : null;
@@ -352,202 +336,216 @@ const PlatformLikesSummary = ({
                       return label as string;
                     }}
                   />
-                  <Bar dataKey="likes" fill="#22d3ee" />
+                  <Bar dataKey="comments" fill="#f97316" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                Belum ada data komentar teratas.
+              </div>
+            )}
           </div>
+        </div>
 
+        <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+            Kepatuhan Tertinggi
+          </h3>
+          <ul className="mt-4 space-y-3 text-sm text-slate-200">
+            {topCompliance.map((client) => (
+              <li key={`compliance-${client.key}`} className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold text-slate-100">{client.clientName}</p>
+                  <p className="text-xs text-slate-400">
+                    {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })} personil aktif
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-cyan-300">
+                  {formatPercent(client.complianceRate ?? 0)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {topCommentPersonnel.length > 0 ? (
           <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              Kontributor Komentar Teratas
+              Personil dengan Komentar Tertinggi
             </h3>
-            <div className="mt-4 h-64">
-              {commentDistributionData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={commentDistributionData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
-                    <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
-                    <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
-                    <Tooltip
-                      cursor={{ fill: "rgba(15,23,42,0.3)" }}
-                      contentStyle={{
-                        backgroundColor: "rgba(15,23,42,0.95)",
-                        borderRadius: 16,
-                        borderColor: "rgba(148,163,184,0.4)",
-                        boxShadow: "0 20px 45px rgba(245,158,11,0.25)",
-                        color: "#e2e8f0",
-                      }}
-                      formatter={(value: number) => [
-                        formatNumber(value, { maximumFractionDigits: 0 }),
-                        "Komentar",
-                      ]}
-                      labelFormatter={(label: string | number, payload: any[]) => {
-                        const entry = payload && payload.length > 0 ? payload[0].payload : null;
-                        if (entry && typeof entry.compliance === "number") {
-                          return `${label} · Kepatuhan ${formatPercent(entry.compliance)}`;
-                        }
-                        return label as string;
-                      }}
-                    />
-                    <Bar dataKey="comments" fill="#f97316" />
-                  </BarChart>
-                </ResponsiveContainer>
+            <ul className="mt-4 space-y-3 text-sm text-slate-200">
+              {topCommentPersonnel.map((person) => {
+                const identity = person.username || person.nama || "Tanpa Nama";
+                const additional = [person.nama, person.clientName]
+                  .filter((value) => value && value !== identity)
+                  .join(" · ");
+                return (
+                  <li key={`commenter-${person.key}`} className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-100">{identity}</p>
+                      {additional ? (
+                        <p className="text-xs text-slate-400">{additional}</p>
+                      ) : null}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-emerald-200">
+                        {formatNumber(person.comments ?? 0, { maximumFractionDigits: 0 })} komentar
+                      </p>
+                      {person.likes > 0 ? (
+                        <p className="text-xs text-slate-400">
+                          {formatNumber(person.likes, { maximumFractionDigits: 0 })} like
+                        </p>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
+
+        {standoutPersonnel.length > 0 ? (
+          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+              Personil dengan Likes Tertinggi
+            </h3>
+            <ul className="mt-4 space-y-3 text-sm text-slate-200">
+              {standoutPersonnel.map((person) => {
+                const identity = person.username || person.nama || "Tanpa Nama";
+                const additional = [person.nama, person.clientName]
+                  .filter((value) => value && value !== identity)
+                  .join(" · ");
+                return (
+                  <li key={`personnel-${person.key}`} className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-100">{identity}</p>
+                      {additional ? (
+                        <p className="text-xs text-slate-400">{additional}</p>
+                      ) : null}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-cyan-200">
+                        {formatNumber(person.likes, { maximumFractionDigits: 0 })} like
+                      </p>
+                      {person.comments > 0 ? (
+                        <p className="text-xs text-slate-400">
+                          {formatNumber(person.comments, { maximumFractionDigits: 0 })} komentar
+                        </p>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
+
+        {activitySummary ? (
+          <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)] lg:col-span-2 xl:col-span-3">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+              Aktivitas Personil
+            </h3>
+            {!activitySummary.loading && !activitySummary.error && activitySummary.hasSummary ? (
+              <p className="mt-2 text-xs text-slate-400">
+                {formatNumber(totalEvaluated, { maximumFractionDigits: 0 })} personil dievaluasi
+                {totalContentEvaluated > 0
+                  ? ` dari ${formatNumber(totalContentEvaluated, { maximumFractionDigits: 0 })} konten`
+                  : " (tidak ada konten yang terbit)"}
+                .
+              </p>
+            ) : null}
+            <div className="mt-5 space-y-5">
+              {activitySummary.loading ? (
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                  Memuat aktivitas personil…
+                </div>
+              ) : activitySummary.error ? (
+                <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  {activitySummary.error}
+                </div>
+              ) : activityCategories.length > 0 ? (
+                activityCategories.map((category) => {
+                  const percent = totalEvaluated > 0 ? (category.count / totalEvaluated) * 100 : 0;
+                  return (
+                    <div
+                      key={category.key}
+                      className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-200">{category.label}</p>
+                        <p className="text-xs text-slate-400">{category.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-semibold text-white">
+                          {formatNumber(category.count, { maximumFractionDigits: 0 })}
+                        </p>
+                        {totalEvaluated > 0 ? (
+                          <p className="text-xs text-cyan-300">{formatPercent(percent)}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                  Belum ada data komentar teratas.
+                <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+                  Aktivitas personil belum tersedia untuk periode ini.
                 </div>
               )}
             </div>
           </div>
+        ) : null}
+      </div>
 
-          <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              Kepatuhan Tertinggi
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-200">
-              {topCompliance.map((client) => (
-                <li key={`compliance-${client.key}`} className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-100">{client.clientName}</p>
-                    <p className="text-xs text-slate-400">
-                      {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })} personil aktif
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-cyan-300">
-                    {formatPercent(client.complianceRate ?? 0)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {topCommentPersonnel.length > 0 ? (
-            <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Personil dengan Komentar Tertinggi
-              </h3>
-              <ul className="mt-4 space-y-3 text-sm text-slate-200">
-                {topCommentPersonnel.map((person) => {
-                  const identity = person.username || person.nama || "Tanpa Nama";
-                  const additional = [person.nama, person.clientName]
-                    .filter((value) => value && value !== identity)
-                    .join(" · ");
-                  return (
-                    <li key={`commenter-${person.key}`} className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-slate-100">{identity}</p>
-                        {additional ? (
-                          <p className="text-xs text-slate-400">{additional}</p>
-                        ) : null}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-emerald-200">
-                          {formatNumber(person.comments ?? 0, { maximumFractionDigits: 0 })} komentar
-                        </p>
-                        {person.likes > 0 ? (
-                          <p className="text-xs text-slate-400">
-                            {formatNumber(person.likes, { maximumFractionDigits: 0 })} like
-                          </p>
-                        ) : null}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ) : null}
-
-          {standoutPersonnel.length > 0 ? (
-            <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Personil dengan Likes Tertinggi
-              </h3>
-              <ul className="mt-4 space-y-3 text-sm text-slate-200">
-                {standoutPersonnel.map((person) => {
-                  const identity = person.username || person.nama || "Tanpa Nama";
-                  const additional = [person.nama, person.clientName]
-                    .filter((value) => value && value !== identity)
-                    .join(" · ");
-                  return (
-                    <li key={`personnel-${person.key}`} className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-slate-100">{identity}</p>
-                        {additional ? (
-                          <p className="text-xs text-slate-400">{additional}</p>
-                        ) : null}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-cyan-200">
-                          {formatNumber(person.likes, { maximumFractionDigits: 0 })} like
-                        </p>
-                        {person.comments > 0 ? (
-                          <p className="text-xs text-slate-400">
-                            {formatNumber(person.comments, { maximumFractionDigits: 0 })} komentar
-                          </p>
-                        ) : null}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ) : null}
-
-          {activitySummary ? (
-            <div className="rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Aktivitas Personil
-              </h3>
-              {!activitySummary.loading && !activitySummary.error && activitySummary.hasSummary ? (
-                <p className="mt-2 text-xs text-slate-400">
-                  {formatNumber(totalEvaluated, { maximumFractionDigits: 0 })} personil dievaluasi
-                  {totalContentEvaluated > 0
-                    ? ` dari ${formatNumber(totalContentEvaluated, { maximumFractionDigits: 0 })} konten`
-                    : " (tidak ada konten yang terbit)"}
-                  .
-                </p>
-              ) : null}
-              <div className="mt-5 space-y-5">
-                {activitySummary.loading ? (
-                  <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
-                    Memuat aktivitas personil…
-                  </div>
-                ) : activitySummary.error ? (
-                  <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-                    {activitySummary.error}
-                  </div>
-                ) : activityCategories.length > 0 ? (
-                  activityCategories.map((category) => {
-                    const percent = totalEvaluated > 0 ? (category.count / totalEvaluated) * 100 : 0;
-                    return (
-                      <div
-                        key={category.key}
-                        className="flex items-center justify-between rounded-2xl bg-slate-900/60 px-4 py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-slate-200">{category.label}</p>
-                          <p className="text-xs text-slate-400">{category.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xl font-semibold text-white">
-                            {formatNumber(category.count, { maximumFractionDigits: 0 })}
-                          </p>
-                          {totalEvaluated > 0 ? (
-                            <p className="text-xs text-cyan-300">{formatPercent(percent)}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
-                    Aktivitas personil belum tersedia untuk periode ini.
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : null}
+      <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+          Distribusi Engagement per Satker
+        </h3>
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-800 text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
+                <th className="py-3 pr-4">Satker</th>
+                <th className="px-4 py-3 text-right">Likes</th>
+                <th className="px-4 py-3 text-right">Avg. Likes</th>
+                <th className="px-4 py-3 text-right">Komentar</th>
+                <th className="px-4 py-3 text-right">Avg. Komentar</th>
+                <th className="px-4 py-3 text-right">Personil Aktif</th>
+                <th className="px-4 py-3 text-right">Total Personil</th>
+                <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {clientsByCompliance.map((client) => {
+                const compliance = formatPercent(client.complianceRate ?? 0);
+                return (
+                  <tr key={client.key} className="text-slate-200">
+                    <td className="py-3 pr-4 font-semibold text-slate-100">
+                      {client.clientName}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatNumber(client.totalLikes, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatNumber(client.averageLikesPerUser ?? 0)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatNumber(client.totalComments, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatNumber(client.averageCommentsPerUser ?? 0)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
