@@ -191,12 +191,21 @@ const PlatformLikesSummary = ({
     return [...clients].sort((a, b) => {
       const complianceA = a.complianceRate ?? 0;
       const complianceB = b.complianceRate ?? 0;
-      if (complianceB !== complianceA) {
-        return complianceB - complianceA;
+      const complianceDelta = complianceB - complianceA;
+      if (Math.abs(complianceDelta) > 0.0001) {
+        return complianceDelta;
       }
       const activePersonnelA = a.activePersonnel ?? 0;
       const activePersonnelB = b.activePersonnel ?? 0;
-      return activePersonnelB - activePersonnelA;
+      if (activePersonnelB !== activePersonnelA) {
+        return activePersonnelB - activePersonnelA;
+      }
+      const totalPersonnelA = a.totalPersonnel ?? 0;
+      const totalPersonnelB = b.totalPersonnel ?? 0;
+      if (totalPersonnelB !== totalPersonnelA) {
+        return totalPersonnelB - totalPersonnelA;
+      }
+      return (a.clientName || "").localeCompare(b.clientName || "");
     });
   }, [clients]);
 
@@ -268,7 +277,9 @@ const PlatformLikesSummary = ({
                 <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
                   <th className="py-3 pr-4">Satker</th>
                   <th className="px-4 py-3 text-right">Likes</th>
+                  <th className="px-4 py-3 text-right">Avg. Likes</th>
                   <th className="px-4 py-3 text-right">Komentar</th>
+                  <th className="px-4 py-3 text-right">Avg. Komentar</th>
                   <th className="px-4 py-3 text-right">Personil Aktif</th>
                   <th className="px-4 py-3 text-right">Total Personil</th>
                   <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
@@ -286,7 +297,13 @@ const PlatformLikesSummary = ({
                         {formatNumber(client.totalLikes, { maximumFractionDigits: 0 })}
                       </td>
                       <td className="px-4 py-3 text-right">
+                        {formatNumber(client.averageLikesPerUser ?? 0)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
                         {formatNumber(client.totalComments, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {formatNumber(client.averageCommentsPerUser ?? 0)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
