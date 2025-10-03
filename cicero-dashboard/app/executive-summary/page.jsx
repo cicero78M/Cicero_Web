@@ -4109,15 +4109,15 @@ export default function ExecutiveSummaryPage() {
                     )}
                   </div>
                 </section>
+
+                <article className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)]">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                    Catatan Insight Data Personil
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
+                </article>
               </div>
             </div>
-
-            <article className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_25px_45px_rgba(15,23,42,0.45)]">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                Catatan Insight Data Personil
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-200">{narrative}</p>
-            </article>
           </div>
         )}
       </section>
