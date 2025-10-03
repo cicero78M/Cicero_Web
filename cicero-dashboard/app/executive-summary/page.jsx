@@ -102,6 +102,32 @@ const formatPercent = (value) => {
   })}%`;
 };
 
+const compareDivisionByCompletion = (a, b) => {
+  const completionA = parsePercent(a?.completionPercent);
+  const completionB = parsePercent(b?.completionPercent);
+
+  const completionDelta = completionB - completionA;
+  if (Math.abs(completionDelta) > 0.0001) {
+    return completionDelta;
+  }
+
+  const totalA = Number.isFinite(a?.total)
+    ? a.total
+    : Number.parseFloat(a?.total) || 0;
+  const totalB = Number.isFinite(b?.total)
+    ? b.total
+    : Number.parseFloat(b?.total) || 0;
+
+  if (totalB !== totalA) {
+    return totalB - totalA;
+  }
+
+  const divisionA = typeof a?.division === "string" ? a.division : "";
+  const divisionB = typeof b?.division === "string" ? b.division : "";
+
+  return divisionA.localeCompare(divisionB, "id-ID", { sensitivity: "base" });
+};
+
 const metricValueToString = (metric, { fallback = "-" } = {}) => {
   if (!metric) {
     return fallback;
@@ -618,12 +644,7 @@ const computeUserInsight = (users = []) => {
   const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
   const sortedByDivisionSize = [...divisionArray].sort((a, b) => b.total - a.total);
-  const sortedByCompletionRate = [...divisionArray].sort((a, b) => {
-    if (b.completionPercent !== a.completionPercent) {
-      return b.completionPercent - a.completionPercent;
-    }
-    return b.total - a.total;
-  });
+  const sortedByCompletionRate = [...divisionArray].sort(compareDivisionByCompletion);
   const divisionDistribution = sortedByCompletionRate.map((item, index) => ({
     id: item.division ?? `division-${index}`,
     rank: index + 1,
@@ -2896,30 +2917,7 @@ export default function ExecutiveSummaryPage() {
       return [];
     }
 
-    const sorted = [...divisionDistributionRaw].sort((a, b) => {
-      const completionA = Number.isFinite(a?.completionPercent)
-        ? a.completionPercent
-        : Number.parseFloat(a?.completionPercent) || 0;
-      const completionB = Number.isFinite(b?.completionPercent)
-        ? b.completionPercent
-        : Number.parseFloat(b?.completionPercent) || 0;
-
-      if (completionB !== completionA) {
-        return completionB - completionA;
-      }
-
-      const totalA = Number.isFinite(a?.total) ? a.total : Number.parseFloat(a?.total) || 0;
-      const totalB = Number.isFinite(b?.total) ? b.total : Number.parseFloat(b?.total) || 0;
-
-      if (totalB !== totalA) {
-        return totalB - totalA;
-      }
-
-      const divisionA = typeof a?.division === "string" ? a.division : "";
-      const divisionB = typeof b?.division === "string" ? b.division : "";
-
-      return divisionA.localeCompare(divisionB, "id-ID", { sensitivity: "base" });
-    });
+    const sorted = [...divisionDistributionRaw].sort(compareDivisionByCompletion);
 
     return sorted.map((item, index) => ({
       ...item,
