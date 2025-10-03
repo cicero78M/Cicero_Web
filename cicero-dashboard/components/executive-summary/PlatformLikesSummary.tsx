@@ -71,6 +71,10 @@ interface PlatformLikesSummaryProps {
   formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
   formatPercent: (value: number) => string;
   personnelActivity?: PersonnelActivitySummary | null;
+  postTotals?: {
+    instagram: number;
+    tiktok: number;
+  } | null;
 }
 
 const formatDateTime = (value: Date | string | null) => {
@@ -96,9 +100,12 @@ const PlatformLikesSummary = ({
   formatNumber,
   formatPercent,
   personnelActivity,
+  postTotals,
 }: PlatformLikesSummaryProps) => {
   const clients = Array.isArray(data?.clients) ? data.clients : [];
   const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
+  const instagramPostCount = Math.max(0, Number(postTotals?.instagram) || 0);
+  const tiktokPostCount = Math.max(0, Number(postTotals?.tiktok) || 0);
 
   const summaryCards = useMemo(() => {
     const totals = data?.totals;
@@ -120,6 +127,18 @@ const PlatformLikesSummary = ({
         description: "Seluruh likes personil pada periode terpilih.",
       },
       {
+        key: "total-posts",
+        label: "Total Post",
+        value: formatNumber(instagramPostCount + tiktokPostCount, {
+          maximumFractionDigits: 0,
+        }),
+        description: `Post Instagram: ${formatNumber(instagramPostCount, {
+          maximumFractionDigits: 0,
+        })} · Post TikTok: ${formatNumber(tiktokPostCount, {
+          maximumFractionDigits: 0,
+        })}`,
+      },
+      {
         key: "total-comments",
         label: "Total Komentar",
         value: formatNumber(totals.totalComments ?? 0, { maximumFractionDigits: 0 }),
@@ -132,7 +151,13 @@ const PlatformLikesSummary = ({
         description: `${formatNumber(totals.activePersonnel ?? 0, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(totals.totalPersonnel ?? 0, { maximumFractionDigits: 0 })} personil terdata.`,
       },
     ];
-  }, [data?.totals, formatNumber, formatPercent]);
+  }, [
+    data?.totals,
+    formatNumber,
+    formatPercent,
+    instagramPostCount,
+    tiktokPostCount,
+  ]);
 
   const distributionData = useMemo(() => {
     return [...clients]

@@ -2920,6 +2920,12 @@ export default function ExecutiveSummaryPage() {
     platformPostsState && typeof platformPostsState === "object"
       ? platformPostsState
       : { instagram: [], tiktok: [] };
+  const instagramPostCount = Array.isArray(platformPosts?.instagram)
+    ? platformPosts.instagram.length
+    : 0;
+  const tiktokPostCount = Array.isArray(platformPosts?.tiktok)
+    ? platformPosts.tiktok.length
+    : 0;
   const maxDistributionTotal = useMemo(() => {
     if (!divisionDistribution.length) {
       return 0;
@@ -4150,6 +4156,10 @@ export default function ExecutiveSummaryPage() {
                 totalEvaluated,
                 totalContentEvaluated,
                 hasSummary: Boolean(activityBuckets),
+              }}
+              postTotals={{
+                instagram: instagramPostCount,
+                tiktok: tiktokPostCount,
               }}
             />
           ) : (
