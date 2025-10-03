@@ -111,12 +111,8 @@ const compareDivisionByCompletion = (a, b) => {
     return completionDelta;
   }
 
-  const totalA = Number.isFinite(a?.total)
-    ? a.total
-    : Number.parseFloat(a?.total) || 0;
-  const totalB = Number.isFinite(b?.total)
-    ? b.total
-    : Number.parseFloat(b?.total) || 0;
+  const totalA = normalizeNumericInput(a?.total ?? 0);
+  const totalB = normalizeNumericInput(b?.total ?? 0);
 
   if (totalB !== totalA) {
     return totalB - totalA;
