@@ -877,6 +877,7 @@ const buildWeeklyEngagementTrend = (
           ? Math.max(0, interactionsCandidate)
           : 0;
         acc.likes += Number.isFinite(likes) ? Math.max(0, likes) : 0;
+        acc.comments += Number.isFinite(comments) ? Math.max(0, comments) : 0;
         acc.posts += 1;
 
         return acc;
@@ -885,6 +886,7 @@ const buildWeeklyEngagementTrend = (
         interactions: 0,
         posts: 0,
         likes: 0,
+        comments: 0,
       },
     );
 
@@ -894,6 +896,7 @@ const buildWeeklyEngagementTrend = (
       interactions: totals.interactions,
       posts: totals.posts,
       likes: totals.likes,
+      comments: totals.comments,
     };
   });
 
@@ -3646,6 +3649,7 @@ export default function ExecutiveSummaryPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             {shouldShowInstagramWeeklyTrendCard ? (
               <PlatformEngagementTrendChart
+                platformKey="instagram"
                 platformLabel="Instagram"
                 series={instagramWeeklyTrendCardData.series}
                 latest={instagramWeeklyTrendCardData.latestWeek}
@@ -3658,6 +3662,7 @@ export default function ExecutiveSummaryPage() {
 
             {shouldShowTiktokWeeklyTrendCard ? (
               <PlatformEngagementTrendChart
+                platformKey="tiktok"
                 platformLabel="TikTok"
                 series={tiktokWeeklyTrendCardData.series}
                 latest={tiktokWeeklyTrendCardData.latestWeek}

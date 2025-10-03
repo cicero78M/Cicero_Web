@@ -22,9 +22,11 @@ type WeeklyEngagementPoint = {
   interactions?: number | null;
   posts?: number | null;
   likes?: number | null;
+  comments?: number | null;
 };
 
 type PlatformEngagementTrendChartProps = {
+  platformKey?: string | null;
   platformLabel?: string | null;
   series?: WeeklyEngagementPoint[];
   latest?: WeeklyEngagementPoint | null;
@@ -50,22 +52,26 @@ const resolvePoint = (point?: WeeklyEngagementPoint | null) => {
       interactions: 0,
       posts: 0,
       likes: 0,
+      comments: 0,
     };
   }
 
   const interactions = Number(point.interactions);
   const posts = Number(point.posts);
   const likes = Number(point.likes);
+  const comments = Number(point.comments);
 
   return {
     label: point.label ?? point.key ?? "",
     interactions: Number.isFinite(interactions) ? Math.max(0, interactions) : 0,
     posts: Number.isFinite(posts) ? Math.max(0, posts) : 0,
     likes: Number.isFinite(likes) ? Math.max(0, likes) : 0,
+    comments: Number.isFinite(comments) ? Math.max(0, comments) : 0,
   };
 };
 
 const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> = ({
+  platformKey,
   platformLabel,
   series = [],
   latest = null,
@@ -121,25 +127,40 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       ? latestPoint.interactions - (previousPoint?.interactions ?? 0)
       : null;
 
-  const formatAverageLikes = (value: number) => {
-    if (!Number.isFinite(value) || value <= 0) {
-      return formatNumber(0, { maximumFractionDigits: 0 });
+  const resolvedPlatformKey = platformKey?.toLowerCase?.() ?? "";
+  const shouldShowLikes =
+    resolvedPlatformKey === "instagram" || resolvedPlatformKey === "tiktok";
+  const shouldShowComments = resolvedPlatformKey === "instagram";
+
+  const buildMetricRows = (point: ReturnType<typeof resolvePoint>) => {
+    const rows: { label: string; value: string }[] = [
+      {
+        label: "Jumlah Konten",
+        value: formatNumber(point.posts, { maximumFractionDigits: 0 }),
+      },
+    ];
+
+    if (shouldShowLikes) {
+      rows.push({
+        label: "Likes Personil",
+        value: formatNumber(point.likes, { maximumFractionDigits: 0 }),
+      });
     }
 
-    const fractionDigits = value > 0 && value < 10 ? 1 : 0;
+    if (shouldShowComments) {
+      rows.push({
+        label: "Komentar Personil",
+        value: formatNumber(point.comments, { maximumFractionDigits: 0 }),
+      });
+    }
 
-    return formatNumber(value, {
-      maximumFractionDigits: fractionDigits,
-      minimumFractionDigits: fractionDigits,
+    rows.push({
+      label: "Total Interaksi",
+      value: formatNumber(point.interactions, { maximumFractionDigits: 0 }),
     });
-  };
 
-  const latestAverageLikes =
-    latestPoint.posts > 0 ? latestPoint.likes / latestPoint.posts : 0;
-  const previousAverageLikes =
-    previousPoint && previousPoint.posts > 0
-      ? previousPoint.likes / previousPoint.posts
-      : 0;
+    return rows;
+  };
 
   const renderDelta = (value: number | null) => {
     if (value === null || !Number.isFinite(value)) {
@@ -171,30 +192,17 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Minggu Terakhir</p>
           <p className="mt-1 text-sm text-slate-400">{latestPoint.label}</p>
           <div className="mt-3 space-y-2 text-sm">
-            <div className="flex items-baseline justify-between">
-              <span className="text-slate-400">Jumlah Konten</span>
-              <span className="text-lg font-semibold text-slate-100">
-                {formatNumber(latestPoint.posts, { maximumFractionDigits: 0 })}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-slate-400">Likes Personil</span>
-              <span className="text-lg font-semibold text-slate-100">
-                {formatNumber(latestPoint.likes, { maximumFractionDigits: 0 })}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-slate-400">Rata-rata Likes / Konten</span>
-              <span className="text-lg font-semibold text-slate-100">
-                {formatAverageLikes(latestAverageLikes)}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-slate-400">Total Interaksi</span>
-              <span className="text-lg font-semibold text-slate-100">
-                {formatNumber(latestPoint.interactions, { maximumFractionDigits: 0 })}
-              </span>
-            </div>
+            {buildMetricRows(latestPoint).map((row) => (
+              <div
+                key={row.label}
+                className="flex items-baseline justify-between"
+              >
+                <span className="text-slate-400">{row.label}</span>
+                <span className="text-lg font-semibold text-slate-100">
+                  {row.value}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
         <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
@@ -203,30 +211,17 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
             <>
               <p className="mt-1 text-sm text-slate-400">{previousPoint.label}</p>
               <div className="mt-3 space-y-2 text-sm">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-slate-400">Jumlah Konten</span>
-                  <span className="text-lg font-semibold text-slate-100">
-                    {formatNumber(previousPoint.posts, { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-slate-400">Likes Personil</span>
-                  <span className="text-lg font-semibold text-slate-100">
-                    {formatNumber(previousPoint.likes, { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-slate-400">Rata-rata Likes / Konten</span>
-                  <span className="text-lg font-semibold text-slate-100">
-                    {formatAverageLikes(previousAverageLikes)}
-                  </span>
-                </div>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-slate-400">Total Interaksi</span>
-                  <span className="text-lg font-semibold text-slate-100">
-                    {formatNumber(previousPoint.interactions, { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
+                {buildMetricRows(previousPoint).map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-baseline justify-between"
+                  >
+                    <span className="text-slate-400">{row.label}</span>
+                    <span className="text-lg font-semibold text-slate-100">
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
               </div>
             </>
           ) : (
