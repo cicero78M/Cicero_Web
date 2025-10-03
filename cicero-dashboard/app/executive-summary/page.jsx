@@ -124,28 +124,6 @@ const compareDivisionByCompletion = (a, b) => {
   return divisionA.localeCompare(divisionB, "id-ID", { sensitivity: "base" });
 };
 
-const compareDivisionByActivePersonnel = (a, b) => {
-  const totalA = normalizeNumericInput(a?.total ?? 0);
-  const totalB = normalizeNumericInput(b?.total ?? 0);
-
-  if (totalB !== totalA) {
-    return totalB - totalA;
-  }
-
-  const completionA = parsePercent(a?.completionPercent);
-  const completionB = parsePercent(b?.completionPercent);
-
-  const completionDelta = completionB - completionA;
-  if (Math.abs(completionDelta) > 0.0001) {
-    return completionDelta;
-  }
-
-  const divisionA = typeof a?.division === "string" ? a.division : "";
-  const divisionB = typeof b?.division === "string" ? b.division : "";
-
-  return divisionA.localeCompare(divisionB, "id-ID", { sensitivity: "base" });
-};
-
 const metricValueToString = (metric, { fallback = "-" } = {}) => {
   if (!metric) {
     return fallback;
@@ -2935,7 +2913,7 @@ export default function ExecutiveSummaryPage() {
     }
 
     const sorted = [...divisionDistributionRaw].sort(
-      compareDivisionByActivePersonnel,
+      compareDivisionByCompletion,
     );
 
     return sorted.map((item, index) => ({
