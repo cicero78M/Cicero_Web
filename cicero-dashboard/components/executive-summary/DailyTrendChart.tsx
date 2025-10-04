@@ -212,33 +212,66 @@ const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
       </div>
 
       {latestPoint ? (
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Aktivitas Terakhir</p>
-          <p className="mt-1 text-sm text-slate-300">{latestPoint.label}</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1">
-              <p className="text-xs text-slate-400">Post</p>
-              <p className="text-lg font-semibold text-amber-300">
-                {formatNumber(latestPoint.posts, { maximumFractionDigits: 0 })}
+        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/70 px-5 py-[21px] shadow-[0_18px_40px_rgba(15,23,42,0.35)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
+                Aktivitas Terakhir
               </p>
+              <p className="mt-1 text-base font-medium text-slate-200">{latestPoint.label}</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-slate-400">Likes Personil</p>
-              <p className="text-lg font-semibold text-cyan-300">
-                {formatNumber(latestPoint.likes, { maximumFractionDigits: 0 })}
-              </p>
+            <div className="hidden flex-1 items-center gap-2 sm:flex">
+              <span className="h-px flex-1 bg-slate-800/80" />
+              <span className="text-[11px] uppercase tracking-[0.28em] text-slate-500">
+                Ringkasan Hari Ini
+              </span>
+              <span className="h-px flex-1 bg-slate-800/80" />
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-slate-400">Komentar Personil</p>
-              <p className="text-lg font-semibold text-fuchsia-300">
-                {formatNumber(latestPoint.comments, { maximumFractionDigits: 0 })}
-              </p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+              <div>
+                <p className="text-xs text-amber-200/70">Post</p>
+                <p className="mt-1 text-lg font-semibold text-amber-300">
+                  {formatNumber(latestPoint.posts, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10 text-sm font-semibold text-amber-300">
+                P
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-slate-400">Total Interaksi</p>
-              <p className="text-lg font-semibold text-sky-300">
-                {formatNumber(latestPoint.interactions, { maximumFractionDigits: 0 })}
-              </p>
+            <div className="flex items-center justify-between rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
+              <div>
+                <p className="text-xs text-cyan-200/70">Likes Personil</p>
+                <p className="mt-1 text-lg font-semibold text-cyan-300">
+                  {formatNumber(latestPoint.likes, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/10 text-sm font-semibold text-cyan-300">
+                L
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/5 px-4 py-3">
+              <div>
+                <p className="text-xs text-fuchsia-200/70">Komentar Personil</p>
+                <p className="mt-1 text-lg font-semibold text-fuchsia-300">
+                  {formatNumber(latestPoint.comments, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-fuchsia-500/10 text-sm font-semibold text-fuchsia-300">
+                K
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-sky-500/20 bg-sky-500/5 px-4 py-3">
+              <div>
+                <p className="text-xs text-sky-200/70">Total Interaksi</p>
+                <p className="mt-1 text-lg font-semibold text-sky-300">
+                  {formatNumber(latestPoint.interactions, { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-500/10 text-sm font-semibold text-sky-300">
+                I
+              </div>
             </div>
           </div>
         </div>
