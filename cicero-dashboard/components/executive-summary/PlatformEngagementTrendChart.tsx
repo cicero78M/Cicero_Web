@@ -283,6 +283,71 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
     shouldShowLikes,
   ]);
 
+  const summaryNarrative = (() => {
+    const formatInteger = (value: number) =>
+      formatNumber(Number.isFinite(value) ? value : 0, {
+        maximumFractionDigits: 0,
+      });
+    const formatAverage = (value: number) =>
+      formatNumber(Number.isFinite(value) ? value : 0, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+      });
+
+    const platformName = platformLabel ?? "Platform";
+    const interactionsNow = latestPoint.interactions ?? 0;
+    const postsNow = latestPoint.posts ?? 0;
+    const likesNow = shouldShowLikes ? latestPoint.likes ?? 0 : null;
+    const commentsNow = shouldShowComments ? latestPoint.comments ?? 0 : null;
+    const averageNow = postsNow > 0 ? interactionsNow / postsNow : null;
+
+    const sentences: string[] = [];
+
+    if (postsNow > 0) {
+      const averageSentence =
+        averageNow !== null
+          ? ` dengan rata-rata ${formatAverage(averageNow)} interaksi per konten`
+          : "";
+      sentences.push(
+        `Minggu ini, ${platformName} meraih ${formatInteger(interactionsNow)} interaksi dari ${formatInteger(postsNow)} konten${averageSentence}.`,
+      );
+    } else {
+      sentences.push(
+        `Minggu ini, ${platformName} mencatat ${formatInteger(interactionsNow)} interaksi meski belum ada konten baru.`,
+      );
+    }
+
+    const engagementDetails: string[] = [];
+    if (shouldShowLikes && likesNow !== null) {
+      engagementDetails.push(`${formatInteger(likesNow)} likes`);
+    }
+    if (shouldShowComments && commentsNow !== null) {
+      engagementDetails.push(`${formatInteger(commentsNow)} komentar`);
+    }
+    if (engagementDetails.length > 0) {
+      sentences.push(`Engagement tersebut datang dari ${engagementDetails.join(" dan ")}.`);
+    }
+
+    if (previousPoint) {
+      const interactionsPrev = previousPoint.interactions ?? 0;
+      if (interactionsPrev === interactionsNow) {
+        sentences.push("Tren interaksinya masih stabil dibanding minggu lalu.");
+      } else {
+        const direction = interactionsNow > interactionsPrev ? "meningkat" : "menurun";
+        const difference = Math.abs(interactionsNow - interactionsPrev);
+        sentences.push(
+          `Interaksi ${direction} dari ${formatInteger(interactionsPrev)} menjadi ${formatInteger(interactionsNow)}, selisih ${formatInteger(difference)}.`,
+        );
+      }
+    } else {
+      sentences.push("Belum ada pembanding minggu lalu, jadikan capaian ini pijakan untuk ide berikutnya.");
+    }
+
+    sentences.push("Terus hadirkan konten yang dekat dengan audiens!");
+
+    return sentences.join(" ");
+  })();
+
   const buildMetricRows = (point: ReturnType<typeof resolvePoint>) => {
     const rows: { label: string; value: string }[] = [
       {
@@ -468,6 +533,10 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
           </AreaChart>
         </ResponsiveContainer>
       </div>
+
+      <p className="mt-6 rounded-2xl border border-cyan-500/10 bg-slate-900/40 p-4 text-sm leading-relaxed text-slate-300">
+        {summaryNarrative}
+      </p>
     </div>
   );
 };
