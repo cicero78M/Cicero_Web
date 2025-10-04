@@ -3894,62 +3894,6 @@ export default function ExecutiveSummaryPage() {
         </div>
       </header>
 
-      {!showPlatformLoading &&
-      (shouldShowInstagramTrendCard || shouldShowTiktokTrendCard) ? (
-        <section
-          aria-label="Tren Aktivitas Bulanan"
-          className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
-        >
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
-              Tren Aktivitas Bulanan
-            </h2>
-            <p className="text-sm text-slate-300">
-              Ringkasan performa konten dan interaksi personel berdasarkan data bulanan
-              terbaru.
-            </p>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            {shouldShowInstagramTrendCard ? (
-              <MonthlyTrendCard
-                title="Instagram"
-                description={instagramMonthlyTrendDescription}
-                error={instagramMonthlyCardError}
-                currentMetrics={instagramMonthlyCardData.currentMetrics}
-                previousMetrics={instagramMonthlyCardData.previousMetrics}
-                deltaMetrics={instagramMonthlyCardData.deltaMetrics}
-                series={instagramMonthlyCardData.series}
-                currentPeriodLabel={instagramMonthlyCardData.currentPeriodLabel}
-                previousPeriodLabel={instagramMonthlyCardData.previousPeriodLabel}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-                primaryMetricLabel="Interaksi Personil"
-                secondaryMetricLabel="Jumlah Post"
-              />
-            ) : null}
-
-            {shouldShowTiktokTrendCard ? (
-              <MonthlyTrendCard
-                title="TikTok"
-                description={tiktokMonthlyTrendDescription}
-                error={tiktokMonthlyCardError}
-                currentMetrics={tiktokMonthlyCardData.currentMetrics}
-                previousMetrics={tiktokMonthlyCardData.previousMetrics}
-                deltaMetrics={tiktokMonthlyCardData.deltaMetrics}
-                series={tiktokMonthlyCardData.series}
-                currentPeriodLabel={tiktokMonthlyCardData.currentPeriodLabel}
-                previousPeriodLabel={tiktokMonthlyCardData.previousPeriodLabel}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-                primaryMetricLabel="Interaksi Personil"
-                secondaryMetricLabel="Jumlah Post"
-              />
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
       <section
         aria-label="Tren Aktivitas Harian"
         className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
@@ -4019,6 +3963,62 @@ export default function ExecutiveSummaryPage() {
                 loading={showPlatformLoading}
                 error={tiktokWeeklyTrendError}
                 formatNumber={formatNumber}
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {!showPlatformLoading &&
+      (shouldShowInstagramTrendCard || shouldShowTiktokTrendCard) ? (
+        <section
+          aria-label="Tren Aktivitas Bulanan"
+          className="space-y-6 rounded-3xl border border-cyan-500/20 bg-slate-950/70 p-6 shadow-[0_20px_45px_rgba(56,189,248,0.18)]"
+        >
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
+              Tren Aktivitas Bulanan
+            </h2>
+            <p className="text-sm text-slate-300">
+              Ringkasan performa konten dan interaksi personel berdasarkan data bulanan
+              terbaru.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {shouldShowInstagramTrendCard ? (
+              <MonthlyTrendCard
+                title="Instagram"
+                description={instagramMonthlyTrendDescription}
+                error={instagramMonthlyCardError}
+                currentMetrics={instagramMonthlyCardData.currentMetrics}
+                previousMetrics={instagramMonthlyCardData.previousMetrics}
+                deltaMetrics={instagramMonthlyCardData.deltaMetrics}
+                series={instagramMonthlyCardData.series}
+                currentPeriodLabel={instagramMonthlyCardData.currentPeriodLabel}
+                previousPeriodLabel={instagramMonthlyCardData.previousPeriodLabel}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+                primaryMetricLabel="Interaksi Personil"
+                secondaryMetricLabel="Jumlah Post"
+              />
+            ) : null}
+
+            {shouldShowTiktokTrendCard ? (
+              <MonthlyTrendCard
+                title="TikTok"
+                description={tiktokMonthlyTrendDescription}
+                error={tiktokMonthlyCardError}
+                currentMetrics={tiktokMonthlyCardData.currentMetrics}
+                previousMetrics={tiktokMonthlyCardData.previousMetrics}
+                deltaMetrics={tiktokMonthlyCardData.deltaMetrics}
+                series={tiktokMonthlyCardData.series}
+                currentPeriodLabel={tiktokMonthlyCardData.currentPeriodLabel}
+                previousPeriodLabel={tiktokMonthlyCardData.previousPeriodLabel}
+                formatNumber={formatNumber}
+                formatPercent={formatPercent}
+                primaryMetricLabel="Interaksi Personil"
+                secondaryMetricLabel="Jumlah Post"
               />
             ) : null}
           </div>
