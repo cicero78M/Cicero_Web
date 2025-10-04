@@ -133,6 +133,156 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   const shouldShowComments =
     resolvedPlatformKey === "instagram" || resolvedPlatformKey === "tiktok";
 
+  const weeklyInsights = useMemo(() => {
+    const insights: string[] = [];
+    const hasPrevious = previousPoint !== null;
+
+    const formatInteger = (value: number) =>
+      formatNumber(Number.isFinite(value) ? value : 0, {
+        maximumFractionDigits: 0,
+      });
+
+    const formatAverage = (value: number) =>
+      formatNumber(Number.isFinite(value) ? value : 0, {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+      });
+
+    const interactionsNow = latestPoint.interactions ?? 0;
+    const interactionsPrev = hasPrevious ? previousPoint?.interactions ?? 0 : null;
+    if (!hasPrevious) {
+      insights.push(
+        `Total interaksi minggu ini tercatat ${formatInteger(interactionsNow)} tanpa pembanding minggu lalu.`,
+      );
+    } else if ((interactionsPrev ?? 0) === interactionsNow) {
+      insights.push(
+        `Total interaksi stabil di ${formatInteger(interactionsNow)} dibanding minggu lalu.`,
+      );
+    } else if ((interactionsPrev ?? 0) === 0) {
+      insights.push(
+        `Total interaksi mencapai ${formatInteger(interactionsNow)} dari 0 pada minggu lalu.`,
+      );
+    } else {
+      const direction = interactionsNow > (interactionsPrev ?? 0) ? "naik" : "turun";
+      const delta = Math.abs(interactionsNow - (interactionsPrev ?? 0));
+      insights.push(
+        `Total interaksi ${direction} ke ${formatInteger(interactionsNow)} dari ${formatInteger(
+          interactionsPrev ?? 0,
+        )} (Δ ${interactionsNow > (interactionsPrev ?? 0) ? "+" : "−"}${formatInteger(delta)}).`,
+      );
+    }
+
+    const postsNow = latestPoint.posts ?? 0;
+    const postsPrev = hasPrevious ? previousPoint?.posts ?? 0 : null;
+    if (postsNow === 0) {
+      if (!hasPrevious) {
+        insights.push("Tidak ada konten baru minggu ini dan belum ada pembanding sebelumnya.");
+      } else if ((postsPrev ?? 0) === 0) {
+        insights.push("Tidak ada konten baru dua minggu terakhir.");
+      } else {
+        insights.push(
+          `Tidak ada konten baru minggu ini (sebelumnya ${formatInteger(postsPrev ?? 0)}).`,
+        );
+      }
+    } else if (!hasPrevious) {
+      insights.push(
+        `Jumlah konten minggu ini sebanyak ${formatInteger(postsNow)} tanpa pembanding minggu lalu.`,
+      );
+    } else if ((postsPrev ?? 0) === postsNow) {
+      insights.push(`Jumlah konten stabil di ${formatInteger(postsNow)}.`);
+    } else {
+      const direction = postsNow > (postsPrev ?? 0) ? "naik" : "turun";
+      const delta = Math.abs(postsNow - (postsPrev ?? 0));
+      insights.push(
+        `Jumlah konten ${direction} ke ${formatInteger(postsNow)} dari ${formatInteger(
+          postsPrev ?? 0,
+        )} (Δ ${postsNow > (postsPrev ?? 0) ? "+" : "−"}${formatInteger(delta)}).`,
+      );
+    }
+
+    const avgNow = postsNow > 0 ? interactionsNow / postsNow : null;
+    const avgPrev = postsPrev && postsPrev > 0 ? (interactionsPrev ?? 0) / postsPrev : null;
+    if (avgNow === null) {
+      if (!hasPrevious) {
+        insights.push("Rata-rata interaksi per konten belum tersedia karena tidak ada konten minggu ini.");
+      } else if (avgPrev === null) {
+        insights.push("Rata-rata interaksi per konten tidak tersedia pada dua minggu terakhir.");
+      } else {
+        insights.push(
+          `Rata-rata interaksi per konten tidak tersedia minggu ini (sebelumnya ${formatAverage(
+            avgPrev,
+          )}).`,
+        );
+      }
+    } else if (!hasPrevious || avgPrev === null) {
+      insights.push(
+        `Rata-rata interaksi per konten berada di ${formatAverage(avgNow)} tanpa pembanding minggu lalu.`,
+      );
+    } else if (Math.abs(avgNow - avgPrev) < 0.0001) {
+      insights.push(`Rata-rata interaksi per konten stabil di ${formatAverage(avgNow)}.`);
+    } else {
+      const direction = avgNow > avgPrev ? "naik" : "turun";
+      const delta = Math.abs(avgNow - avgPrev);
+      insights.push(
+        `Rata-rata interaksi per konten ${direction} ke ${formatAverage(avgNow)} dari ${formatAverage(
+          avgPrev,
+        )} (Δ ${avgNow > avgPrev ? "+" : "−"}${formatAverage(delta)}).`,
+      );
+    }
+
+    if (shouldShowLikes) {
+      const likesNow = latestPoint.likes ?? 0;
+      const likesPrev = hasPrevious ? previousPoint?.likes ?? 0 : null;
+      if (!hasPrevious) {
+        insights.push(
+          `Likes personil minggu ini berjumlah ${formatInteger(likesNow)} tanpa pembanding minggu lalu.`,
+        );
+      } else if ((likesPrev ?? 0) === likesNow) {
+        insights.push(`Likes personil stabil di ${formatInteger(likesNow)}.`);
+      } else {
+        const direction = likesNow > (likesPrev ?? 0) ? "naik" : "turun";
+        const delta = Math.abs(likesNow - (likesPrev ?? 0));
+        insights.push(
+          `Likes personil ${direction} ke ${formatInteger(likesNow)} dari ${formatInteger(
+            likesPrev ?? 0,
+          )} (Δ ${likesNow > (likesPrev ?? 0) ? "+" : "−"}${formatInteger(delta)}).`,
+        );
+      }
+    }
+
+    if (shouldShowComments) {
+      const commentsNow = latestPoint.comments ?? 0;
+      const commentsPrev = hasPrevious ? previousPoint?.comments ?? 0 : null;
+      if (!hasPrevious) {
+        insights.push(
+          `Komentar personil minggu ini berjumlah ${formatInteger(commentsNow)} tanpa pembanding minggu lalu.`,
+        );
+      } else if ((commentsPrev ?? 0) === commentsNow) {
+        insights.push(`Komentar personil stabil di ${formatInteger(commentsNow)}.`);
+      } else {
+        const direction = commentsNow > (commentsPrev ?? 0) ? "naik" : "turun";
+        const delta = Math.abs(commentsNow - (commentsPrev ?? 0));
+        insights.push(
+          `Komentar personil ${direction} ke ${formatInteger(commentsNow)} dari ${formatInteger(
+            commentsPrev ?? 0,
+          )} (Δ ${commentsNow > (commentsPrev ?? 0) ? "+" : "−"}${formatInteger(delta)}).`,
+        );
+      }
+    }
+
+    if (insights.length === 0) {
+      insights.push("Belum ada insight yang dapat dirangkum dari data minggu ini.");
+    }
+
+    return insights;
+  }, [
+    formatNumber,
+    latestPoint,
+    previousPoint,
+    shouldShowComments,
+    shouldShowLikes,
+  ]);
+
   const buildMetricRows = (point: ReturnType<typeof resolvePoint>) => {
     const rows: { label: string; value: string }[] = [
       {
@@ -242,6 +392,21 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
           </div>
         </div>
       ) : null}
+
+      <div className="mt-4 rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Insight Mingguan</p>
+        {weeklyInsights.length > 0 ? (
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
+            {weeklyInsights.map((insight, index) => (
+              <li key={index}>{insight}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-sm text-slate-500">
+            Belum ada insight yang dapat dirangkum dari data minggu ini.
+          </p>
+        )}
+      </div>
 
       <div className="mt-6 h-60">
         <ResponsiveContainer width="100%" height="100%">
