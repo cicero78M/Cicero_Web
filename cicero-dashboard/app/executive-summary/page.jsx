@@ -313,86 +313,7 @@ const dailyLabelFormatter = new Intl.DateTimeFormat("id-ID", {
   month: "short",
 });
 
-const DAILY_LIKE_FIELD_PATHS = Object.freeze([
-  "total_like_personil",
-  "total_like_personel",
-  "total_like_personnel",
-  "totalLikesPersonil",
-  "totalLikesPersonel",
-  "totalLikesPersonnel",
-  "rekap.total_like_personil",
-  "rekap.total_like_personel",
-  "rekap.total_like_personnel",
-  "rekap.totalLikesPersonil",
-  "rekap.totalLikesPersonel",
-  "rekap.totalLikesPersonnel",
-  "rekap.total_like",
-  "rekap.totalLikes",
-  "rekap.jumlah_like",
-  "jumlah_like",
-  "jumlahLike",
-  "total_like",
-  "totalLikes",
-  "likes",
-  "metrics.likes",
-  "metrics.totalLikes",
-]);
-
-const DAILY_COMMENT_FIELD_PATHS = Object.freeze([
-  "total_komentar_personil",
-  "total_komentar_personel",
-  "total_komentar_personnel",
-  "totalCommentsPersonil",
-  "totalCommentsPersonel",
-  "totalCommentsPersonnel",
-  "rekap.total_komentar_personil",
-  "rekap.total_komentar_personel",
-  "rekap.total_komentar_personnel",
-  "rekap.totalCommentsPersonil",
-  "rekap.totalCommentsPersonel",
-  "rekap.totalCommentsPersonnel",
-  "rekap.total_komentar",
-  "rekap.totalComments",
-  "rekap.jumlah_komentar",
-  "jumlah_komentar",
-  "jumlahKomentar",
-  "total_komentar",
-  "totalKomentar",
-  "total_comments",
-  "totalComments",
-  "comments",
-  "metrics.comments",
-  "metrics.totalComments",
-]);
-
-const DAILY_POST_FIELD_PATHS = Object.freeze([
-  "total_post",
-  "totalPost",
-  "total_posts",
-  "totalPosts",
-  "jumlah_post",
-  "jumlahPost",
-  "rekap.total_post",
-  "rekap.totalPost",
-  "rekap.jumlah_post",
-  "rekap.jumlahPost",
-  "metrics.total_post",
-  "metrics.totalPost",
-]);
-
-const getMetricValueFromRecord = (record, fieldPaths = []) => {
-  if (!record || !Array.isArray(fieldPaths) || fieldPaths.length === 0) {
-    return 0;
-  }
-
-  const candidates = fieldPaths.map((path) => pickNestedValue(record, [path]));
-  const numeric = extractNumericValue(...candidates);
-  return Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
-};
-
 const buildDailyInteractionTrend = ({
-  likesRecords = [],
-  commentRecords = [],
   instagramPosts = [],
   tiktokPosts = [],
 } = {}) => {
@@ -414,14 +335,10 @@ const buildDailyInteractionTrend = ({
         key,
         date: baseDate,
         label: dailyLabelFormatter.format(baseDate),
+        posts: 0,
         likes: 0,
         comments: 0,
         interactions: 0,
-        postsFromRekap: 0,
-        postsFromContent: 0,
-        fallbackLikes: 0,
-        fallbackComments: 0,
-        fallbackInteractions: 0,
       };
       aggregated.set(key, entry);
     }
@@ -429,74 +346,75 @@ const buildDailyInteractionTrend = ({
     return entry;
   };
 
-  likesRecords.forEach((record) => {
-    const resolved = resolveRecordDate(record);
-    if (!resolved?.parsed) {
-      return;
+  const resolvePostActivityDate = (record, normalized) => {
+    if (record?.activityDate instanceof Date && !Number.isNaN(record.activityDate.valueOf())) {
+      return record.activityDate;
     }
 
-    const entry = ensureEntry(resolved.parsed);
-    if (!entry) {
-      return;
+    const parsedActivityDate = parseDateValue(record?.activityDate);
+    if (parsedActivityDate instanceof Date && !Number.isNaN(parsedActivityDate.valueOf())) {
+      return parsedActivityDate;
     }
 
-    const likesValue = getMetricValueFromRecord(record, DAILY_LIKE_FIELD_PATHS);
-    if (likesValue > 0) {
-      entry.likes += likesValue;
-      entry.interactions += likesValue;
+    const parsedTanggal = parseDateValue(record?.tanggal ?? record?.date);
+    if (parsedTanggal instanceof Date && !Number.isNaN(parsedTanggal.valueOf())) {
+      return parsedTanggal;
     }
 
-    const postsValue = getMetricValueFromRecord(record, DAILY_POST_FIELD_PATHS);
-    if (postsValue > 0) {
-      entry.postsFromRekap = Math.max(entry.postsFromRekap, postsValue);
-    }
-  });
-
-  commentRecords.forEach((record) => {
-    const resolved = resolveRecordDate(record);
-    if (!resolved?.parsed) {
-      return;
-    }
-
-    const entry = ensureEntry(resolved.parsed);
-    if (!entry) {
-      return;
-    }
-
-    const commentsValue = getMetricValueFromRecord(
-      record,
-      DAILY_COMMENT_FIELD_PATHS,
+    const parsedTimestamp = parseDateValue(
+      record?.createdAt ??
+        record?.created_at ??
+        record?.timestamp ??
+        record?.published_at ??
+        null,
     );
-    if (commentsValue > 0) {
-      entry.comments += commentsValue;
-      entry.interactions += commentsValue;
+    if (parsedTimestamp instanceof Date && !Number.isNaN(parsedTimestamp.valueOf())) {
+      return parsedTimestamp;
     }
 
-    const postsValue = getMetricValueFromRecord(record, DAILY_POST_FIELD_PATHS);
-    if (postsValue > 0) {
-      entry.postsFromRekap = Math.max(entry.postsFromRekap, postsValue);
+    if (
+      normalized?.publishedAt instanceof Date &&
+      !Number.isNaN(normalized.publishedAt.valueOf())
+    ) {
+      return normalized.publishedAt;
     }
-  });
 
-  const accumulatePosts = (records = []) => {
-    records.forEach((post) => {
-      if (!post) {
+    return null;
+  };
+
+  const accumulatePosts = (records = [], { platformKey = "", platformLabel = "" } = {}) => {
+    if (!Array.isArray(records)) {
+      return;
+    }
+
+    records.forEach((post, index) => {
+      if (!post || typeof post !== "object") {
         return;
       }
 
-      const resolved = resolveRecordDate(post, POST_DATE_PATHS);
-      if (!resolved?.parsed) {
+      const normalized = normalizePlatformPost(post, {
+        platformKey,
+        platformLabel,
+        fallbackIndex: index,
+      });
+
+      if (!normalized) {
         return;
       }
 
-      const entry = ensureEntry(resolved.parsed);
+      const resolvedDate = resolvePostActivityDate(post, normalized);
+      if (!(resolvedDate instanceof Date) || Number.isNaN(resolvedDate.valueOf())) {
+        return;
+      }
+
+      const entry = ensureEntry(resolvedDate);
       if (!entry) {
         return;
       }
 
-      entry.postsFromContent += 1;
+      entry.posts += 1;
 
-      const metrics = post?.metrics ?? {};
+      const metrics = normalized.metrics ?? {};
       const likesMetric = Number(metrics.likes);
       const commentsMetric = Number(metrics.comments);
       const sharesMetric = Number(metrics.shares);
@@ -510,53 +428,40 @@ const buildDailyInteractionTrend = ({
       const safeShares = Number.isFinite(sharesMetric) ? Math.max(0, sharesMetric) : 0;
       const safeSaves = Number.isFinite(savesMetric) ? Math.max(0, savesMetric) : 0;
 
-      let safeInteractions = Number.isFinite(interactionsMetric)
+      const derivedInteractions = Number.isFinite(interactionsMetric)
         ? Math.max(0, interactionsMetric)
-        : 0;
-      if (safeInteractions === 0) {
-        safeInteractions = safeLikes + safeComments + safeShares + safeSaves;
-      }
+        : safeLikes + safeComments + safeShares + safeSaves;
 
-      entry.fallbackLikes += safeLikes;
-      entry.fallbackComments += safeComments;
-      entry.fallbackInteractions += safeInteractions;
+      entry.likes += safeLikes;
+      entry.comments += safeComments;
+      entry.interactions += derivedInteractions;
     });
   };
 
-  accumulatePosts(instagramPosts);
-  accumulatePosts(tiktokPosts);
+  accumulatePosts(instagramPosts, { platformKey: "instagram", platformLabel: "Instagram" });
+  accumulatePosts(tiktokPosts, { platformKey: "tiktok", platformLabel: "TikTok" });
 
-  const entries = Array.from(aggregated.values())
+  const series = Array.from(aggregated.values())
     .map((entry) => {
-      const likes = entry.likes > 0 ? entry.likes : entry.fallbackLikes;
-      const comments = entry.comments > 0 ? entry.comments : entry.fallbackComments;
-      const interactions =
-        entry.interactions > 0
-          ? entry.interactions
-          : entry.fallbackInteractions > 0
-          ? entry.fallbackInteractions
-          : likes + comments;
+      const interactions = entry.interactions > 0 ? entry.interactions : entry.likes + entry.comments;
 
-      const posts = Math.max(entry.postsFromRekap, entry.postsFromContent);
-
-      if (posts <= 0 && likes <= 0 && comments <= 0 && interactions <= 0) {
+      if (entry.posts <= 0 && entry.likes <= 0 && entry.comments <= 0 && interactions <= 0) {
         return null;
       }
 
       return {
         key: entry.key,
         label: entry.label,
-        posts,
-        likes,
-        comments,
+        posts: entry.posts,
+        likes: entry.likes,
+        comments: entry.comments,
         interactions,
         date: entry.date,
       };
     })
     .filter(Boolean)
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  const series = entries.map(({ date: _date, ...rest }) => rest);
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map(({ date: _date, ...rest }) => rest);
 
   const totals = series.reduce(
     (acc, point) => {
@@ -3200,16 +3105,11 @@ export default function ExecutiveSummaryPage() {
     error: platformError,
     likesSummary,
     activity: platformActivityState,
-    trendActivity: platformTrendActivityState,
     posts: platformPostsState,
   } = platformState;
   const platformActivity =
     platformActivityState && typeof platformActivityState === "object"
       ? platformActivityState
-      : EMPTY_ACTIVITY;
-  const platformTrendActivity =
-    platformTrendActivityState && typeof platformTrendActivityState === "object"
-      ? platformTrendActivityState
       : EMPTY_ACTIVITY;
   const platformPosts =
     platformPostsState && typeof platformPostsState === "object"
@@ -3453,20 +3353,6 @@ export default function ExecutiveSummaryPage() {
   const dailyInteractionTrend = useMemo(() => {
     const periodRange = getMonthDateRange(selectedMonthKey);
 
-    const likesRecordsRaw = Array.isArray(platformTrendActivity?.likes)
-      ? platformTrendActivity.likes
-      : [];
-    const commentRecordsRaw = Array.isArray(platformTrendActivity?.comments)
-      ? platformTrendActivity.comments
-      : [];
-
-    const likesRecords = periodRange
-      ? filterRecordsByDateRange(likesRecordsRaw, periodRange)
-      : likesRecordsRaw;
-    const commentRecords = periodRange
-      ? filterRecordsByDateRange(commentRecordsRaw, periodRange)
-      : commentRecordsRaw;
-
     const instagramPostsRaw = Array.isArray(platformPosts?.instagram)
       ? platformPosts.instagram
       : [];
@@ -3493,18 +3379,10 @@ export default function ExecutiveSummaryPage() {
       : tiktokPosts;
 
     return buildDailyInteractionTrend({
-      likesRecords,
-      commentRecords,
       instagramPosts: filteredInstagramPosts,
       tiktokPosts: filteredTiktokPosts,
     });
-  }, [
-    platformTrendActivity?.likes,
-    platformTrendActivity?.comments,
-    platformPosts?.instagram,
-    platformPosts?.tiktok,
-    selectedMonthKey,
-  ]);
+  }, [platformPosts?.instagram, platformPosts?.tiktok, selectedMonthKey]);
 
   const instagramMonthlyCardData = useMemo(() => {
     const trend = instagramMonthlyTrend ?? {};
