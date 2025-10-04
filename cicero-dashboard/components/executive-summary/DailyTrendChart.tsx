@@ -212,7 +212,7 @@ const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
       </div>
 
       {latestPoint ? (
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
+        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4 min-h-[calc(100%+2px)]">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Aktivitas Terakhir</p>
           <p className="mt-1 text-sm text-slate-300">{latestPoint.label}</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
