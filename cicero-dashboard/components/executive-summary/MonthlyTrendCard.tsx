@@ -253,7 +253,7 @@ const MonthlyTrendCard: React.FC<MonthlyTrendCardProps> = ({
   return (
     <div
       className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-6 shadow-[0_18px_38px_rgba(15,23,42,0.35)]"
-      style={{ minHeight: "calc(100% + 2px)" }}
+      style={{ minHeight: "calc(100% + 2px)", height: "calc(100% + 2px)" }}
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
