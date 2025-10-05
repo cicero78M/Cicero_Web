@@ -51,7 +51,7 @@ describe("RekapKomentarTiktokPage", () => {
     localStorage.clear();
   });
 
-  it("shows subordinate member rows for a logged-in Ditbinmas directorate user", async () => {
+  it("renders only Ditbinmas personnel and requests Ditbinmas data for central Ditbinmas users", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITBINMAS");
     localStorage.setItem("user_role", "ditbinmas");
@@ -61,51 +61,33 @@ describe("RekapKomentarTiktokPage", () => {
     mockedGetUserDirectory.mockResolvedValue({
       data: [
         { role: "ditbinmas", client_id: "CLIENT_A" },
-        { role: "ditbinmas", client_id: "CLIENT_B" },
+        { role: "lain", client_id: "CLIENT_B" },
+        { role: "ditbinmas", client_id: "DITBINMAS" },
       ],
     } as any);
     mockedGetClientNames.mockResolvedValue({
-      CLIENT_A: "Client A",
-      CLIENT_B: "Client B",
       DITBINMAS: "Ditbinmas",
     } as any);
 
     mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
-      if (clientId === "CLIENT_A") {
-        return {
-          data: [
-            {
-              user_id: "user-a-id",
-              client_id: "CLIENT_A",
-              nama: "Client A Personel",
-              username: "user-a",
-              jumlah_komentar: 5,
-            },
-          ],
-        } as any;
-      }
-      if (clientId === "CLIENT_B") {
-        return {
-          data: [
-            {
-              user_id: "user-b-id",
-              client_id: "CLIENT_B",
-              nama: "Client B Personel",
-              username: "user-b",
-              jumlah_komentar: 3,
-            },
-          ],
-        } as any;
-      }
       if (clientId === "DITBINMAS") {
         return {
           data: [
             {
               user_id: "user-root",
               client_id: "DITBINMAS",
+              role: "ditbinmas",
               nama: "Ditbinmas Admin",
               username: "root-user",
               jumlah_komentar: 2,
+            },
+            {
+              user_id: "user-other",
+              client_id: "DITBINMAS",
+              role: "lain",
+              nama: "Another Role", // should be filtered out
+              username: "other-user",
+              jumlah_komentar: 1,
             },
           ],
         } as any;
@@ -115,27 +97,21 @@ describe("RekapKomentarTiktokPage", () => {
 
     render(React.createElement(RekapKomentarTiktokPage));
 
-    const subordinatePerson = await screen.findByText("Client B Personel");
-    expect(subordinatePerson).toBeInTheDocument();
+    const ditbinmasPerson = await screen.findByText("Ditbinmas Admin");
+    expect(ditbinmasPerson).toBeInTheDocument();
 
-    const subordinateRow = subordinatePerson.closest("tr");
-    expect(subordinateRow).not.toBeNull();
-    expect(subordinateRow).toHaveTextContent("Client B");
-    expect(subordinateRow).toHaveTextContent("user-b");
+    expect(screen.queryByText("Client A Personel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Another Role")).not.toBeInTheDocument();
 
     await waitFor(() => expect(mockedGetRekapKomentarTiktok).toHaveBeenCalled());
     const requestedClientIds = mockedGetRekapKomentarTiktok.mock.calls.map(
       (call) => call[1],
     );
-    expect(new Set(requestedClientIds)).toEqual(
-      new Set(["DITBINMAS", "CLIENT_A", "CLIENT_B"]),
-    );
+    expect(new Set(requestedClientIds)).toEqual(new Set(["DITBINMAS"]));
 
     await waitFor(() => expect(mockedGetClientNames).toHaveBeenCalled());
     const satkerIds = mockedGetClientNames.mock.calls[0][1] as string[];
-    expect(new Set(satkerIds)).toEqual(
-      new Set(["DITBINMAS", "CLIENT_A", "CLIENT_B"]),
-    );
+    expect(new Set(satkerIds)).toEqual(new Set(["DITBINMAS"]));
   });
 });
 

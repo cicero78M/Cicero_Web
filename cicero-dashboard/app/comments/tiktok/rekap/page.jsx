@@ -193,6 +193,7 @@ export default function RekapKomentarTiktokPage() {
     const isDitbinmasRole = roleLower === "ditbinmas";
     const ditbinmasClientId = "DITBINMAS";
     const isDitbinmasClient = clientIdUpper === ditbinmasClientId;
+    const isCentralDitbinmas = isDitbinmasRole && isDitbinmasClient;
     const isScopedDirectorateClient = isDitbinmasRole && !isDitbinmasClient;
     const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
 
@@ -250,9 +251,12 @@ export default function RekapKomentarTiktokPage() {
           const directoryData =
             directoryRes?.data || directoryRes?.users || directoryRes || [];
           const expectedRole = clientIdLower;
-          const clientIds = Array.from(
+          const directorateEntries = Array.isArray(directoryData)
+            ? directoryData
+            : [];
+          let clientIds = Array.from(
             new Set(
-              (Array.isArray(directoryData) ? directoryData : [])
+              directorateEntries
                 .filter((entry) => {
                   const roleValue = String(
                     entry?.role ||
@@ -276,7 +280,9 @@ export default function RekapKomentarTiktokPage() {
             ),
           );
 
-          if (!clientIds.includes(normalizedClientId)) {
+          if (isCentralDitbinmas) {
+            clientIds = [normalizedClientId];
+          } else if (!clientIds.includes(normalizedClientId)) {
             clientIds.push(normalizedClientId);
           }
 
@@ -299,6 +305,28 @@ export default function RekapKomentarTiktokPage() {
             if (Array.isArray(res)) return res;
             return [];
           });
+
+          if (isCentralDitbinmas) {
+            const normalizeValue = (value) =>
+              String(value || "").trim().toLowerCase();
+            users = users.filter((entry) => {
+              const roleValue = normalizeValue(
+                entry?.role ||
+                  entry?.user_role ||
+                  entry?.userRole ||
+                  entry?.roleName,
+              );
+              const clientValue = normalizeValue(
+                entry?.client_id ||
+                  entry?.clientId ||
+                  entry?.clientID ||
+                  entry?.client,
+              );
+              return (
+                roleValue === expectedRole && clientValue === clientIdLower
+              );
+            });
+          }
         } else {
           const rekapRes = await getRekapKomentarTiktok(
             token,
