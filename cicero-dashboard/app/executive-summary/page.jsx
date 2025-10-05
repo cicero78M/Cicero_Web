@@ -617,6 +617,7 @@ const buildUserNarrative = ({
   nonePercent,
   bestDivision,
   lowestDivision,
+  priorityDivisions = [],
 }) => {
   if (!totalUsers) {
     return "Belum ada data pengguna yang dapat dianalisis. Minta pada satker untuk memperbarui direktori terlebih dahulu.";
@@ -693,6 +694,27 @@ const buildUserNarrative = ({
       `Sisanya tersebar pada personil yang baru melengkapi satu username (${formatPercent(
         onlyInstagramPercent + onlyTikTokPercent,
       )}); targetkan follow-up ringan agar profil mereka seratus persen siap.`,
+    );
+  }
+
+  const actionableDivisions = priorityDivisions
+    .filter((item) => Number.isFinite(item?.completion) && item.completion < 80)
+    .slice(0, 3);
+
+  if (actionableDivisions.length > 0) {
+    const listFormatter = new Intl.ListFormat("id-ID", {
+      style: "long",
+      type: "conjunction",
+    });
+    const formattedTargets = listFormatter.format(
+      actionableDivisions.map((item) => {
+        const divisionName = item.fullDivision ?? beautifyDivisionName(item.division);
+        return `${divisionName} (${formatPercent(item.completion)})`;
+      }),
+    );
+
+    sentences.push(
+      `Sebagai tindak lanjut, jadwalkan klinik data dan pengingat mingguan bersama ${formattedTargets} untuk mendorong peningkatan kelengkapan satker yang masih rendah.`,
     );
   }
 
@@ -872,6 +894,10 @@ const computeUserInsight = (users = []) => {
     0,
   );
 
+  const priorityDivisions = lowestCompletionDivisions
+    .filter((item) => Number.isFinite(item?.completion))
+    .slice(0, 5);
+
   const narrative = buildUserNarrative({
     totalUsers,
     bothCount,
@@ -883,6 +909,7 @@ const computeUserInsight = (users = []) => {
     nonePercent,
     bestDivision,
     lowestDivision,
+    priorityDivisions,
   });
 
   return {
