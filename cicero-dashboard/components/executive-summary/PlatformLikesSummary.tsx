@@ -184,7 +184,7 @@ const PlatformLikesSummary = ({
   const topCompliance = useMemo(() => {
     return [...clients]
       .sort((a, b) => b.complianceRate - a.complianceRate)
-      .slice(0, 3);
+      .slice(0, 6);
   }, [clients]);
 
   const clientsByCompliance = useMemo(() => {
@@ -233,6 +233,9 @@ const PlatformLikesSummary = ({
       })
       .slice(0, 5);
   }, [topPersonnel]);
+
+  const totalTopCommentPersonnel = topCommentPersonnel.length;
+  const totalTopLikesPersonnel = standoutPersonnel.length;
 
   const activitySummary = personnelActivity ?? null;
   const activityCategories = activitySummary?.categories ?? [];
@@ -443,6 +446,9 @@ const PlatformLikesSummary = ({
                 );
               })}
             </ul>
+            <p className="mt-4 text-xs text-slate-400">
+              Menampilkan {formatNumber(totalTopCommentPersonnel, { maximumFractionDigits: 0 })} personil dengan komentar tertinggi.
+            </p>
           </div>
         ) : null}
 
@@ -451,6 +457,9 @@ const PlatformLikesSummary = ({
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               Personil dengan Likes Tertinggi
             </h3>
+            <p className="mt-2 text-xs text-slate-400">
+              Individu dengan likes terbanyak beserta asal satker terkait.
+            </p>
             <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {standoutPersonnel.map((person) => {
                 const identity = person.username || person.nama || "Tanpa Nama";
@@ -479,6 +488,9 @@ const PlatformLikesSummary = ({
                 );
               })}
             </ul>
+            <p className="mt-4 text-xs text-slate-400">
+              Menampilkan {formatNumber(totalTopLikesPersonnel, { maximumFractionDigits: 0 })} personil dengan likes tertinggi.
+            </p>
           </div>
         ) : null}
 
