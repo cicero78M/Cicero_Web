@@ -115,13 +115,15 @@ describe("RekapKomentarTiktokPage", () => {
 
     render(React.createElement(RekapKomentarTiktokPage));
 
-    const subordinatePerson = await screen.findByText("Client B Personel");
-    expect(subordinatePerson).toBeInTheDocument();
+    const rootPerson = await screen.findByText("Ditbinmas Admin");
+    expect(rootPerson).toBeInTheDocument();
 
-    const subordinateRow = subordinatePerson.closest("tr");
-    expect(subordinateRow).not.toBeNull();
-    expect(subordinateRow).toHaveTextContent("Client B");
-    expect(subordinateRow).toHaveTextContent("user-b");
+    const rootRow = rootPerson.closest("tr");
+    expect(rootRow).not.toBeNull();
+    expect(rootRow).toHaveTextContent("Ditbinmas");
+    expect(rootRow).toHaveTextContent("root-user");
+
+    expect(screen.queryByText("Client B Personel")).not.toBeInTheDocument();
 
     await waitFor(() => expect(mockedGetRekapKomentarTiktok).toHaveBeenCalled());
     const requestedClientIds = mockedGetRekapKomentarTiktok.mock.calls.map(
@@ -133,9 +135,7 @@ describe("RekapKomentarTiktokPage", () => {
 
     await waitFor(() => expect(mockedGetClientNames).toHaveBeenCalled());
     const satkerIds = mockedGetClientNames.mock.calls[0][1] as string[];
-    expect(new Set(satkerIds)).toEqual(
-      new Set(["DITBINMAS", "CLIENT_A", "CLIENT_B"]),
-    );
+    expect(new Set(satkerIds)).toEqual(new Set(["DITBINMAS"]));
   });
 });
 
