@@ -22,8 +22,8 @@ const actors = [
     focus: "Regulator & pengawas kebijakan",
     responsibilities: [
       "Menetapkan target kepatuhan harian",
-      "Mengirim mandat resmi serta batas waktu",
-      "Memonitor eskalasi dari Polres",
+      "Mengirim tugas resmi",
+      "Memonitor permintaan kolaborasi dari Polres",
     ],
   },
   {
@@ -33,7 +33,8 @@ const actors = [
     responsibilities: [
       "Mendistribusikan link tugas harian",
       "Memvalidasi laporan kehadiran",
-      "Memberi teguran & eskalasi awal",
+      "Melakukan absensi dan teguran",
+      "Mengirim permintaan kolaborasi konten ke Ditbinmas",
     ],
   },
   {
@@ -54,6 +55,10 @@ const actors = [
       "Menarik data engagement real-time",
       "Menghasilkan status absensi",
       "Memberi sinyal anomali untuk tindak lanjut",
+      "Membuat rekap kepatuhan harian",
+      "Menghitung skor kehadiran",
+      "Mengirim notifikasi via Wa Bot",  
+      "Mendistribusikan laporan Executive Summary / Anev Bulanan",
     ],
   },
 ];
@@ -77,7 +82,7 @@ const steps = [
   {
     title: "Eskalasi & Pelaporan",
     detail:
-      "Status harian direkap otomatis. Operator memberi teguran awal, Ditbinmas memutuskan tindak lanjut bagi personil tidak patuh.",
+      "Status harian direkap otomatis. Operator memberi teguran awal, Ditbinmas memberikan teguran tindak lanjut bagi satker dengan tingkat kepatuhan rendah.",
   },
 ];
 
@@ -138,7 +143,7 @@ const integrations = [
   {
     term: "Attendance Score",
     description: "Skor gabungan dari kecepatan, kelengkapan, dan konsistensi interaksi personil.",
-    route: "Analytics Engine → Dashboard KPI → Notifikasi Telegram",
+    route: "Analytics Engine → Dashboard KPI → Notifikasi WA Bot",
   },
 ];
 
