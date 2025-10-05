@@ -4034,9 +4034,6 @@ export default function ExecutiveSummaryPage() {
             <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-200/80">
               Insight User / Personil Ditbinmas dan Binmas Polres Jajaran Polda Jatim.
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              Data ini diambil langsung dari Database User / Personil.
-            </p>
           </div>
         </div>
 
