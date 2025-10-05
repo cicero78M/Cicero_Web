@@ -10,11 +10,14 @@ import {
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 
+type DitbinmasScope = "client" | "all";
+
 interface Options {
   viewBy: string;
   customDate: string;
   fromDate: string;
   toDate: string;
+  ditbinmasScope?: DitbinmasScope;
 }
 
 interface RekapSummary {
@@ -31,6 +34,7 @@ export default function useInstagramLikesData({
   customDate,
   fromDate,
   toDate,
+  ditbinmasScope = "client",
 }: Options) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
@@ -104,6 +108,7 @@ export default function useInstagramLikesData({
               },
               controller.signal,
               userClientId,
+              ditbinmasScope,
             );
           if (controller.signal.aborted) return;
           setChartData(users);
@@ -326,7 +331,7 @@ export default function useInstagramLikesData({
     fetchData();
 
     return () => controller.abort();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [viewBy, customDate, fromDate, toDate, ditbinmasScope]);
 
   return {
     chartData,
