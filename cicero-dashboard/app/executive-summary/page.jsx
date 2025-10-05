@@ -4443,6 +4443,9 @@ export default function ExecutiveSummaryPage() {
                       <p className="mt-1 text-xs text-slate-400">
                         Diurutkan berdasarkan kelengkapan dan total personil.
                       </p>
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        Data diperbarui untuk periode {fallbackMonthLabel}.
+                      </p>
                     </div>
                     {userSummary?.totalUsers ? (
                       <span className="inline-flex items-center rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-700">
