@@ -12,6 +12,7 @@ export async function fetchDitbinmasAbsensiLikes(
   { periode, date, startDate, endDate }: FetchParams,
   signal?: AbortSignal,
   loginClientId?: string,
+  scope: "client" | "all" = "client",
 ) {
   const clientId = "DITBINMAS";
 
@@ -82,7 +83,7 @@ export async function fetchDitbinmasAbsensiLikes(
   const normalizedLoginClientId = String(loginClientId || "")
     .trim()
     .toLowerCase();
-  if (normalizedLoginClientId) {
+  if (scope === "client" && normalizedLoginClientId) {
     const normalizeValue = (value: unknown) =>
       String(value || "")
         .trim()

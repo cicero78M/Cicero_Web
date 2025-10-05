@@ -15,6 +15,7 @@ interface Options {
   customDate: string;
   fromDate: string;
   toDate: string;
+  scope?: "client" | "all";
 }
 
 interface RekapSummary {
@@ -31,6 +32,7 @@ export default function useInstagramLikesData({
   customDate,
   fromDate,
   toDate,
+  scope = "client",
 }: Options) {
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
@@ -104,6 +106,7 @@ export default function useInstagramLikesData({
               },
               controller.signal,
               userClientId,
+              scope,
             );
           if (controller.signal.aborted) return;
           setChartData(users);
@@ -326,7 +329,7 @@ export default function useInstagramLikesData({
     fetchData();
 
     return () => controller.abort();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [viewBy, customDate, fromDate, toDate, scope]);
 
   return {
     chartData,

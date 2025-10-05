@@ -67,6 +67,7 @@ export default function RekapLikesIGPage() {
   const currentMonth = getLocalMonthString();
   const [dailyDate, setDailyDate] = useState(today);
   const [monthlyDate, setMonthlyDate] = useState(currentMonth);
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
   const [dateRange, setDateRange] = useState({
     startDate: today,
     endDate: today,
@@ -165,11 +166,13 @@ export default function RekapLikesIGPage() {
     rekapSummary,
     igPosts,
     clientName,
+    isDitbinmasRole,
   } = useInstagramLikesData({
     viewBy,
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
+    scope: ditbinmasScope,
   });
 
   const rekapRef = useRef(null);
@@ -182,6 +185,17 @@ export default function RekapLikesIGPage() {
         : dailyDate;
 
   const viewOptions = VIEW_OPTIONS;
+  const ditbinmasScopeOptions = [
+    { value: "client", label: "Client Saya" },
+    { value: "all", label: "Seluruh Client Ditbinmas" },
+  ];
+
+  const handleDitbinmasScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDitbinmasScope(value);
+    }
+  };
 
   if (loading) return <Loader />;
   if (error)
@@ -220,13 +234,33 @@ export default function RekapLikesIGPage() {
                 </Link>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur">
-                <ViewDataSelector
-                  value={viewBy}
-                  onChange={handleViewChange}
-                  options={viewOptions}
-                  date={selectorDateValue}
-                  onDateChange={handleDateChange}
-                />
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <ViewDataSelector
+                    value={viewBy}
+                    onChange={handleViewChange}
+                    options={viewOptions}
+                    date={selectorDateValue}
+                    onDateChange={handleDateChange}
+                  />
+                  {isDitbinmasRole && (
+                    <div className="flex w-full flex-col gap-2 md:w-64">
+                      <label className="text-sm font-semibold text-slate-200">
+                        Lingkup Data
+                      </label>
+                      <select
+                        value={ditbinmasScope}
+                        onChange={handleDitbinmasScopeChange}
+                        className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 shadow-inner outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/30"
+                      >
+                        {ditbinmasScopeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
