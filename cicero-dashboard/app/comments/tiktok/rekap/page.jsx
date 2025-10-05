@@ -16,6 +16,7 @@ import ViewDataSelector, {
   VIEW_OPTIONS,
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear();
@@ -371,6 +372,10 @@ export default function RekapKomentarTiktokPage() {
           return { ...u, nama_client: cName, client_name: cName, client: cName };
         });
 
+        const sortedUsers = [...enrichedUsers].sort(
+          compareUsersByPangkatAndNrp,
+        );
+
         // Sumber utama TikTok Post Hari Ini dari statsRes
         const totalTiktokPost =
           statsData?.ttPosts ||
@@ -397,7 +402,7 @@ export default function RekapKomentarTiktokPage() {
           totalBelumKomentar,
           totalTiktokPost,
         });
-        setChartData(enrichedUsers);
+        setChartData(sortedUsers);
       } catch (err) {
         if (err?.name === "AbortError") {
           return;
