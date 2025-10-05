@@ -18,6 +18,7 @@ import {
   Link as LinkIcon,
   FilePieChart,
   Book,
+  Workflow,
 } from "lucide-react";
 import {
   Sheet,
@@ -87,6 +88,11 @@ export default function Sidebar() {
         ]
       : []),
     { label: "Executive Summary", path: "/executive-summary", icon: FilePieChart },
+    {
+      label: "Mekanisme Sistem Absensi",
+      path: "/mekanisme-absensi",
+      icon: Workflow,
+    },
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },
   ];
 
