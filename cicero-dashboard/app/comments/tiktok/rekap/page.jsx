@@ -87,6 +87,8 @@ export default function RekapKomentarTiktokPage() {
     totalBelumKomentar: 0,
     totalTiktokPost: 0,
   });
+  const [isDitbinmasUser, setIsDitbinmasUser] = useState(false);
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
 
   const viewOptions = VIEW_OPTIONS;
 
@@ -195,6 +197,8 @@ export default function RekapKomentarTiktokPage() {
     const isDitbinmasClient = clientIdUpper === ditbinmasClientId;
     const isScopedDirectorateClient = isDitbinmasRole && !isDitbinmasClient;
     const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
+
+    setIsDitbinmasUser(isDitbinmasRole);
 
     if (!token) {
       setError("Token tidak ditemukan. Silakan login ulang.");
@@ -319,7 +323,9 @@ export default function RekapKomentarTiktokPage() {
         let filteredUsers = users;
         const shouldFilterByClient =
           Boolean(clientIdLower) &&
-          (isDitbinmasRole || !isDirectorate || isScopedDirectorateClient);
+          (isDitbinmasRole
+            ? ditbinmasScope !== "all"
+            : !isDirectorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value) =>
             String(value || "").trim().toLowerCase();
@@ -408,7 +414,13 @@ export default function RekapKomentarTiktokPage() {
     return () => {
       controller.abort();
     };
-  }, [viewBy, normalizedCustomDate, normalizedRangeStart, normalizedRangeEnd]);
+  }, [
+    viewBy,
+    normalizedCustomDate,
+    normalizedRangeStart,
+    normalizedRangeEnd,
+    ditbinmasScope,
+  ]);
 
   const selectorDateValue =
     viewBy === "custom_range"
@@ -480,6 +492,30 @@ export default function RekapKomentarTiktokPage() {
             labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
             controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30"
           />
+          {isDitbinmasUser ? (
+            <div className="flex flex-col gap-2 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90">
+                  Scope Data Ditbinmas
+                </p>
+                <p className="text-xs text-slate-400">
+                  Pilih apakah ingin menampilkan data hanya untuk client Anda atau seluruh Ditbinmas.
+                </p>
+              </div>
+              <select
+                value={ditbinmasScope}
+                onChange={(event) =>
+                  setDitbinmasScope(
+                    event.target.value === "all" ? "all" : "client",
+                  )
+                }
+                className="w-full rounded-2xl border border-slate-700/60 bg-slate-900/70 px-3 py-2 text-sm font-medium text-slate-100 transition focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30 sm:w-auto"
+              >
+                <option value="client">Client Saya</option>
+                <option value="all">Seluruh Ditbinmas</option>
+              </select>
+            </div>
+          ) : null}
         </div>
 
         <RekapKomentarTiktok
