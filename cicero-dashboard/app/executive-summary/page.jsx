@@ -4565,6 +4565,9 @@ export default function ExecutiveSummaryPage() {
           <p className="text-sm text-slate-300">
             Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
           </p>
+          <p className="text-xs text-slate-400">
+            Seluruh data pada segmen ini mengikuti pilihan bulan dan tahun pada filter di bagian atas halaman.
+          </p>
         </div>
         <div className="space-y-6">
           {showPlatformLoading ? (

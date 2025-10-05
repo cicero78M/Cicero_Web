@@ -277,11 +277,26 @@ const PlatformLikesSummary = ({
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
             Kontributor Likes Teratas
           </h3>
+          <p className="mt-2 text-xs text-slate-400">
+            Satker dengan kontribusi likes tertinggi pada periode terpilih.
+          </p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distributionData}>
+              <BarChart
+                data={distributionData}
+                margin={{ bottom: 40, left: 12, right: 12 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
-                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                <XAxis
+                  dataKey="name"
+                  stroke="#94a3b8"
+                  tick={{ fill: "#cbd5f5", fontSize: 12 }}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={70}
+                  tickMargin={16}
+                />
                 <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
                 <Tooltip
                   cursor={{ fill: "rgba(15,23,42,0.3)" }}
@@ -314,12 +329,27 @@ const PlatformLikesSummary = ({
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
             Kontributor Komentar Teratas
           </h3>
+          <p className="mt-2 text-xs text-slate-400">
+            Satker dengan jumlah komentar terbanyak beserta rasio kepatuhan.
+          </p>
           <div className="mt-4 h-64">
             {commentDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={commentDistributionData}>
+                <BarChart
+                  data={commentDistributionData}
+                  margin={{ bottom: 40, left: 12, right: 12 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
-                  <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#94a3b8"
+                    tick={{ fill: "#cbd5f5", fontSize: 12 }}
+                    interval={0}
+                    angle={-20}
+                    textAnchor="end"
+                    height={70}
+                    tickMargin={16}
+                  />
                   <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
                   <Tooltip
                     cursor={{ fill: "rgba(15,23,42,0.3)" }}
@@ -357,6 +387,9 @@ const PlatformLikesSummary = ({
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
             Kepatuhan Tertinggi
           </h3>
+          <p className="mt-2 text-xs text-slate-400">
+            Satker dengan rasio kepatuhan tertinggi berdasarkan personil aktif.
+          </p>
           <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
             {topCompliance.map((client) => (
               <li key={`compliance-${client.key}`} className="flex items-start justify-between">
@@ -379,6 +412,9 @@ const PlatformLikesSummary = ({
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               Personil dengan Komentar Tertinggi
             </h3>
+            <p className="mt-2 text-xs text-slate-400">
+              Individu dengan komentar terbanyak beserta asal satker terkait.
+            </p>
             <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {topCommentPersonnel.map((person) => {
                 const identity = person.username || person.nama || "Tanpa Nama";
