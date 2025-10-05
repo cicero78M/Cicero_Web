@@ -23,7 +23,7 @@ const actors = [
     responsibilities: [
       "Menetapkan target kepatuhan harian",
       "Mengirim tugas resmi",
-      "Memonitor permintaan kolaborasi dari Polres",
+      "Memonitor permintaan kolaborasi dari Polres dan mengkurasi konten",
     ],
   },
   {
@@ -32,6 +32,8 @@ const actors = [
     focus: "Koordinator lapangan",
     responsibilities: [
       "Mendistribusikan link tugas harian",
+      "Mengelola data personil - penambahan akun baru, pergantian akun, penghapusan akun",
+      "Mengakomodir kendala personil dan melaporkan pada Cicero",
       "Memvalidasi laporan kehadiran",
       "Melakukan absensi dan teguran",
       "Mengirim permintaan kolaborasi konten ke Ditbinmas",
