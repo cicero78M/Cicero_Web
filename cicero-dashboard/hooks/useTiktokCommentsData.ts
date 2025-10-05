@@ -72,7 +72,7 @@ export default function useTiktokCommentsData({
       return () => controller.abort();
     }
 
-    const roleLower = String(role).toLowerCase();
+    const roleLower = String(role).trim().toLowerCase();
     const isDitbinmasRoleValue = roleLower === "ditbinmas";
     setIsDitbinmasRole(isDitbinmasRoleValue);
     const normalizedClientId = String(userClientId || "").trim();

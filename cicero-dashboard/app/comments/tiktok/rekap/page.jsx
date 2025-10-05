@@ -186,7 +186,7 @@ export default function RekapKomentarTiktokPage() {
       typeof window !== "undefined"
         ? localStorage.getItem("user_role")
         : null;
-    const roleLower = String(role || "").toLowerCase();
+    const roleLower = String(role || "").trim().toLowerCase();
     const normalizedClientId = String(userClientId || "").trim();
     const clientIdUpper = normalizedClientId.toUpperCase();
     const clientIdLower = normalizedClientId.toLowerCase();
