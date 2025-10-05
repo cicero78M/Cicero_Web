@@ -24,6 +24,21 @@ Inside `cicero-dashboard` you will find the typical Next.js project layout:
 - `utils/` – helper functions and API utilities
 - `__tests__/` – Jest unit tests
 
+## Feature Highlights
+
+### Instagram Engagement Insight (Absensi Likes IG)
+
+- `useInstagramLikesData` mengorkestrasi pengambilan data likes Instagram berdasarkan rentang waktu yang dipilih. Hook ini mengeksekusi `getDashboardStats`, `getRekapLikesIG`, `getClientProfile`, `getClientNames`, dan `getUserDirectory` untuk menyusun data chart dan ringkasan absensi.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L1-L204】
+- Jika role pengguna adalah Ditbinmas, hook akan memanggil `fetchDitbinmasAbsensiLikes` untuk menggabungkan rekap lintas Polres sehingga satu tampilan menggambarkan kepatuhan seluruh jaringan.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L42-L113】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L120】
+- Untuk role lain, data dibatasi sesuai `client_id` login, digrup berdasarkan divisi atau kelompok memakai `groupUsersByKelompok`, dan dihitung ulang status Sudah/Kurang/Belum Likes serta Tanpa Username.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L114-L212】【F:cicero-dashboard/app/likes/instagram/page.jsx†L1-L120】
+- Tombol "Copy Rekap" menggunakan `buildInstagramRekap` untuk membangkitkan pesan WA siap kirim yang berisi rekapitulasi per klien.【F:cicero-dashboard/app/likes/instagram/page.jsx†L121-L200】【F:cicero-dashboard/utils/buildInstagramRekap.ts†L1-L56】
+
+### Knowledge Base Pages
+
+- Navigasi sidebar kini menambahkan tautan ke `/mekanisme-absensi` dan `/panduan-sop` sebagai pusat informasi SOP dan alur absensi digital.【F:cicero-dashboard/components/Sidebar.jsx†L1-L120】
+- Halaman `mekanisme-absensi` merangkum aktor utama, alur kerja, matriks RACI, serta istilah integrasi penting yang menopang sistem absensi.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】
+- Halaman `panduan-sop` berisi prosedur registrasi, update data via WA bot, panduan operator, FAQ shadowban, hingga SOP pelaksanaan likes dan komentar.【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
+
 ## Installation
 
 1. Ensure [Node.js](https://nodejs.org/) (version 20 LTS) and `npm` are installed.
@@ -69,6 +84,7 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - Clients may allow an unlimited number of concurrent sessions.
 - Terms of Service and Privacy Policy for Google sign-in are available at `/terms-of-service` and `/privacy-policy`.
 - For Google OAuth verification, `docs/google_auth_policies.md` also includes a short description of the application.
+- Gunakan halaman `/mekanisme-absensi` dan `/panduan-sop` sebagai referensi cepat saat melakukan pelatihan atau audit SOP digital.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
 
 ## Documentation
 
@@ -76,6 +92,7 @@ Additional documents live under the [`docs/`](docs) directory:
 
 - [`DEPLOYMENT.md`](docs/DEPLOYMENT.md) – server setup and deployment workflow
 - [`executive_summary.md`](docs/executive_summary.md) – high-level architecture across repositories
+- [`ATTENDANCE.md`](docs/ATTENDANCE.md) – alur absensi digital, logika rekap likes, dan hubungannya dengan WA Bot
 - [`google_auth_policies.md`](docs/google_auth_policies.md) – Google OAuth terms and privacy policy links
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
