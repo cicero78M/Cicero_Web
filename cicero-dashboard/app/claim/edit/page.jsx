@@ -4,37 +4,69 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClaimUserData, updateUserViaClaim } from "@/utils/api";
 
-function extractInstagramUsername(url) {
+export function extractInstagramUsername(url) {
   if (!url) return "";
-  try {
-    const link = url.trim();
-    if (!/^https?:\/\//i.test(link)) {
-      return link.replace(/^@/, "");
-    }
-    const u = new URL(link);
-    if (!u.hostname.includes("instagram.com")) return "";
-    const segments = u.pathname.split("/").filter(Boolean);
-    return segments[0] ? segments[0].replace(/^@/, "") : "";
-  } catch {
+  const link = url.trim();
+  if (!link) return "";
+
+  const lower = link.toLowerCase();
+  if (/^[a-z]+:\/\//i.test(link) && !lower.includes("instagram.com")) {
     return "";
   }
+  if (lower.includes("instagram.com")) {
+    const withProtocol = /^[a-z]+:\/\//i.test(link) ? link : `https://${link}`;
+    try {
+      const u = new URL(withProtocol);
+      if (!u.hostname.includes("instagram.com")) return "";
+      const segments = u.pathname.split("/").filter(Boolean);
+      const username = segments[0] ? segments[0].replace(/^@/, "") : "";
+      return username.split(/[?#]/)[0];
+    } catch {
+      // Fallback to string manipulation below
+    }
+  }
+
+  let normalized = link
+    .replace(/^[a-z]+:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/^instagram\.com\/?/i, "")
+    .replace(/^@/, "");
+
+  normalized = normalized.split(/[/?#]/)[0];
+  return normalized || "";
 }
 
-function extractTiktokUsername(url) {
+export function extractTiktokUsername(url) {
   if (!url) return "";
-  try {
-    const link = url.trim();
-    if (!/^https?:\/\//i.test(link)) {
-      return link.replace(/^@/, "");
-    }
-    const u = new URL(link);
-    if (!u.hostname.includes("tiktok.com")) return "";
-    const segments = u.pathname.split("/").filter(Boolean);
-    if (!segments[0]) return "";
-    return segments[0].startsWith("@") ? segments[0].slice(1) : segments[0];
-  } catch {
+  const link = url.trim();
+  if (!link) return "";
+
+  const lower = link.toLowerCase();
+  if (/^[a-z]+:\/\//i.test(link) && !lower.includes("tiktok.com")) {
     return "";
   }
+  if (lower.includes("tiktok.com")) {
+    const withProtocol = /^[a-z]+:\/\//i.test(link) ? link : `https://${link}`;
+    try {
+      const u = new URL(withProtocol);
+      if (!u.hostname.includes("tiktok.com")) return "";
+      const segments = u.pathname.split("/").filter(Boolean);
+      const usernameSegment = segments[0] || "";
+      const username = usernameSegment.replace(/^@/, "");
+      return username.split(/[?#]/)[0];
+    } catch {
+      // Fallback to string manipulation below
+    }
+  }
+
+  let normalized = link
+    .replace(/^[a-z]+:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/^tiktok\.com\/?/i, "")
+    .replace(/^@/, "");
+
+  normalized = normalized.split(/[/?#]/)[0];
+  return normalized || "";
 }
 
 function isValidInstagram(url) {
