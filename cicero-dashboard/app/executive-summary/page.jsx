@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -2582,7 +2583,30 @@ const MIN_SELECTABLE_YEAR = 2025;
 const MAX_SELECTABLE_YEAR = 2035;
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
-  const { token, clientId } = useAuth();
+  const router = useRouter();
+  const { token, clientId, role } = useAuth();
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (clientId === null || role === null) {
+      setIsAuthorized(false);
+      setIsCheckingAccess(true);
+      return;
+    }
+
+    const normalizedClientId = clientId?.toLowerCase();
+    const normalizedRole = role?.toLowerCase();
+    const allowed =
+      normalizedClientId === "ditbinmas" && normalizedRole === "ditbinmas";
+
+    if (!allowed) {
+      router.replace("/dashboard");
+    }
+
+    setIsAuthorized(allowed);
+    setIsCheckingAccess(false);
+  }, [clientId, role, router]);
   const availableYears = useMemo(() => {
     return Object.keys(monthlyData)
       .map((key) => extractYearFromMonthKey(key))
@@ -3877,6 +3901,14 @@ export default function ExecutiveSummaryPage() {
       ? "Belum ada data engagement mingguan TikTok yang siap ditampilkan."
       : ""
     : "";
+
+  if (isCheckingAccess) {
+    return null;
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
 
   return (
     <div className="space-y-8">

@@ -32,7 +32,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { role, profile } = useAuth();
+  const { role, profile, clientId } = useAuth();
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
   }
@@ -51,6 +51,8 @@ export default function Sidebar() {
   const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
   const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
   const isOperator = role?.toLowerCase() === "operator";
+  const canSeeExecutiveSummary =
+    clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -87,7 +89,9 @@ export default function Sidebar() {
           },
         ]
       : []),
-    { label: "Executive Summary", path: "/executive-summary", icon: FilePieChart },
+    ...(canSeeExecutiveSummary
+      ? [{ label: "Executive Summary", path: "/executive-summary", icon: FilePieChart }]
+      : []),
     {
       label: "Mekanisme Sistem Absensi",
       path: "/mekanisme-absensi",
