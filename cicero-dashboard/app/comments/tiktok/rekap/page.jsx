@@ -317,12 +317,8 @@ export default function RekapKomentarTiktokPage() {
         }
 
         let filteredUsers = users;
-        const clientFilterValue = isDitbinmasClient
-          ? ditbinmasClientId.toLowerCase()
-          : clientIdLower;
         const shouldFilterByClient =
-          Boolean(clientFilterValue) &&
-          (isDitbinmasClient || !isDirectorate || isScopedDirectorateClient);
+          Boolean(clientIdLower) && (!isDirectorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value) =>
             String(value || "").trim().toLowerCase();
@@ -335,7 +331,7 @@ export default function RekapKomentarTiktokPage() {
               u.clientid,
             ];
             return possibleIds.some(
-              (cid) => normalizeValue(cid) === clientFilterValue,
+              (cid) => normalizeValue(cid) === clientIdLower,
             );
           });
 
