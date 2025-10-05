@@ -12,6 +12,7 @@ export async function fetchDitbinmasAbsensiLikes(
   { periode, date, startDate, endDate }: FetchParams,
   signal?: AbortSignal,
   loginClientId?: string,
+  scope: "client" | "all" = "client",
 ) {
   const clientId = "DITBINMAS";
 
@@ -82,11 +83,21 @@ export async function fetchDitbinmasAbsensiLikes(
   const normalizedLoginClientId = String(loginClientId || "")
     .trim()
     .toLowerCase();
-  if (normalizedLoginClientId) {
-    const normalizeValue = (value: unknown) =>
-      String(value || "")
-        .trim()
-        .toLowerCase();
+  const normalizeValue = (value: unknown) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
+  users = users.filter(
+    (entry) =>
+      normalizeValue(
+        entry.role ||
+          entry.user_role ||
+          entry.userRole ||
+          entry.roleName ||
+          "",
+      ) === expectedRole,
+  );
+  if (scope === "client" && normalizedLoginClientId) {
     users = users.filter((u) => {
       const userClientId = normalizeValue(
         u.client_id || u.clientId || u.clientID || u.client || "",
@@ -95,13 +106,20 @@ export async function fetchDitbinmasAbsensiLikes(
     });
   }
 
-  const nameMap = await getClientNames(
-    token,
-    users.map((u) =>
-      String(u.client_id || u.clientId || u.clientID || u.client || ""),
+  const clientIdsForNames = Array.from(
+    new Set(
+      users
+        .map((u) =>
+          String(u.client_id || u.clientId || u.clientID || u.client || ""),
+        )
+        .filter(Boolean),
     ),
-    signal,
   );
+
+  const nameMap =
+    clientIdsForNames.length > 0
+      ? await getClientNames(token, clientIdsForNames, signal)
+      : {};
 
   users = users.map((u) => {
     const clientName =

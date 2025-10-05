@@ -87,8 +87,14 @@ export default function RekapKomentarTiktokPage() {
     totalBelumKomentar: 0,
     totalTiktokPost: 0,
   });
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const [isCentralDitbinmas, setIsCentralDitbinmas] = useState(false);
 
   const viewOptions = VIEW_OPTIONS;
+  const ditbinmasScopeOptions = [
+    { value: "client", label: "Satker Anda" },
+    { value: "all", label: "Seluruh Satker" },
+  ];
 
   const handleViewChange = (nextView) => {
     setViewBy((prevView) => {
@@ -193,7 +199,13 @@ export default function RekapKomentarTiktokPage() {
     const isDitbinmasRole = roleLower === "ditbinmas";
     const ditbinmasClientId = "DITBINMAS";
     const isDitbinmasClient = clientIdUpper === ditbinmasClientId;
-    const isCentralDitbinmas = isDitbinmasRole && isDitbinmasClient;
+    const computedIsCentralDitbinmas = isDitbinmasRole && isDitbinmasClient;
+    setIsCentralDitbinmas((prev) =>
+      prev === computedIsCentralDitbinmas ? prev : computedIsCentralDitbinmas,
+    );
+    if (!computedIsCentralDitbinmas) {
+      setDitbinmasScope((prev) => (prev === "client" ? prev : "client"));
+    }
     const isScopedDirectorateClient = isDitbinmasRole && !isDitbinmasClient;
     const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
 
@@ -280,7 +292,7 @@ export default function RekapKomentarTiktokPage() {
             ),
           );
 
-          if (isCentralDitbinmas) {
+          if (computedIsCentralDitbinmas && ditbinmasScope === "client") {
             clientIds = [normalizedClientId];
           } else if (!clientIds.includes(normalizedClientId)) {
             clientIds.push(normalizedClientId);
@@ -306,7 +318,7 @@ export default function RekapKomentarTiktokPage() {
             return [];
           });
 
-          if (isCentralDitbinmas) {
+          if (computedIsCentralDitbinmas) {
             const normalizeValue = (value) =>
               String(value || "").trim().toLowerCase();
             users = users.filter((entry) => {
@@ -316,15 +328,18 @@ export default function RekapKomentarTiktokPage() {
                   entry?.userRole ||
                   entry?.roleName,
               );
-              const clientValue = normalizeValue(
-                entry?.client_id ||
-                  entry?.clientId ||
-                  entry?.clientID ||
-                  entry?.client,
-              );
-              return (
-                roleValue === expectedRole && clientValue === clientIdLower
-              );
+              if (ditbinmasScope === "client") {
+                const clientValue = normalizeValue(
+                  entry?.client_id ||
+                    entry?.clientId ||
+                    entry?.clientID ||
+                    entry?.client,
+                );
+                return (
+                  roleValue === expectedRole && clientValue === clientIdLower
+                );
+              }
+              return roleValue === expectedRole;
             });
           }
         } else {
@@ -441,7 +456,13 @@ export default function RekapKomentarTiktokPage() {
     return () => {
       controller.abort();
     };
-  }, [viewBy, normalizedCustomDate, normalizedRangeStart, normalizedRangeEnd]);
+  }, [
+    viewBy,
+    normalizedCustomDate,
+    normalizedRangeStart,
+    normalizedRangeEnd,
+    ditbinmasScope,
+  ]);
 
   const selectorDateValue =
     viewBy === "custom_range"
@@ -503,16 +524,49 @@ export default function RekapKomentarTiktokPage() {
             </div>
           </div>
 
-          <ViewDataSelector
-            value={viewBy}
-            onChange={handleViewChange}
-            options={viewOptions}
-            date={selectorDateValue}
-            onDateChange={handleDateChange}
-            className="justify-start gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur"
-            labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
-            controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30"
-          />
+          <div className="flex flex-col gap-3">
+            <ViewDataSelector
+              value={viewBy}
+              onChange={handleViewChange}
+              options={viewOptions}
+              date={selectorDateValue}
+              onDateChange={handleDateChange}
+              className="justify-start gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur"
+              labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
+              controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30"
+            />
+            {isCentralDitbinmas ? (
+              <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-fuchsia-500/30 bg-fuchsia-500/10 px-4 py-3 backdrop-blur">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-100/80">
+                  Cakupan Ditbinmas
+                </span>
+                <div className="flex overflow-hidden rounded-2xl border border-fuchsia-500/40">
+                  {ditbinmasScopeOptions.map((option) => {
+                    const isActive = ditbinmasScope === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          if (option.value !== ditbinmasScope) {
+                            setDitbinmasScope(option.value);
+                          }
+                        }}
+                        className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.32em] transition ${
+                          isActive
+                            ? "bg-fuchsia-500/90 text-slate-950"
+                            : "bg-transparent text-fuchsia-100/80 hover:bg-fuchsia-500/20"
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <RekapKomentarTiktok

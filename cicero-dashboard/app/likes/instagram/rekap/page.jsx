@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Loader from "@/components/Loader";
 import RekapLikesIG from "@/components/RekapLikesIG";
 import Link from "next/link";
@@ -71,6 +71,27 @@ export default function RekapLikesIGPage() {
     startDate: today,
     endDate: today,
   });
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const [isCentralDitbinmas, setIsCentralDitbinmas] = useState(false);
+  const ditbinmasScopeOptions = [
+    { value: "client", label: "Satker Anda" },
+    { value: "all", label: "Seluruh Satker" },
+  ];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const userClientId = localStorage.getItem("client_id") || "";
+    const role = localStorage.getItem("user_role") || "";
+    const normalizedClientId = String(userClientId).trim().toUpperCase();
+    const isDitbinmasRole = String(role).toLowerCase() === "ditbinmas";
+    const computedIsCentral = isDitbinmasRole && normalizedClientId === "DITBINMAS";
+    setIsCentralDitbinmas((prev) =>
+      prev === computedIsCentral ? prev : computedIsCentral,
+    );
+    if (!computedIsCentral) {
+      setDitbinmasScope((prev) => (prev === "client" ? prev : "client"));
+    }
+  }, []);
 
   const handleViewChange = (nextView) => {
     setViewBy((prevView) => {
@@ -170,6 +191,7 @@ export default function RekapLikesIGPage() {
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
+    ditbinmasScope,
   });
 
   const rekapRef = useRef(null);
@@ -220,13 +242,46 @@ export default function RekapLikesIGPage() {
                 </Link>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur">
-                <ViewDataSelector
-                  value={viewBy}
-                  onChange={handleViewChange}
-                  options={viewOptions}
-                  date={selectorDateValue}
-                  onDateChange={handleDateChange}
-                />
+                <div className="flex flex-col gap-3">
+                  <ViewDataSelector
+                    value={viewBy}
+                    onChange={handleViewChange}
+                    options={viewOptions}
+                    date={selectorDateValue}
+                    onDateChange={handleDateChange}
+                  />
+                  {isCentralDitbinmas ? (
+                    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-3 py-3">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-sky-100/80">
+                        Cakupan Ditbinmas
+                      </span>
+                      <div className="flex overflow-hidden rounded-2xl border border-sky-400/40">
+                        {ditbinmasScopeOptions.map((option) => {
+                          const isActive = ditbinmasScope === option.value;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => {
+                                if (option.value !== ditbinmasScope) {
+                                  setDitbinmasScope(option.value);
+                                }
+                              }}
+                              className={`px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.32em] transition ${
+                                isActive
+                                  ? "bg-sky-400 text-slate-950"
+                                  : "bg-transparent text-sky-100/80 hover:bg-sky-500/20"
+                              }`}
+                              aria-pressed={isActive}
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
