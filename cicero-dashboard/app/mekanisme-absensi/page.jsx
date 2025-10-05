@@ -67,7 +67,7 @@ const steps = [
   {
     title: "Distribusi Tugas Harian",
     detail:
-      "Ditbinmas mengunggah link konten prioritas ke WAG pusat, dilanjut operator Polres menyalurkan ke personil dengan instruksi batas waktu.",
+      "Ditbinmas mengunggah konten harian atau menerima permintaan kolaborasi dari satker, selanjutnya sistem Cicero secara otomatis mengirim rrekap link konten tugas ke WAG pusat, dilanjut operator Polres menyalurkan rekap link tugas ke personil / group satkernya dengan instruksi batas waktu.",
   },
   {
     title: "Pelaksanaan Interaksi",
@@ -77,12 +77,12 @@ const steps = [
   {
     title: "Validasi & Absensi",
     detail:
-      "Operator memantau dashboard engagement serta memicu re-fetch bila data belum tersinkron, memastikan status hadir/tidak hadir akurat.",
+      "Sistem melakukan fetch data pelaksanaan likes dan komentar, memastikan status melaksanakan /tidak melaksanakan akurat.",
   },
   {
     title: "Eskalasi & Pelaporan",
     detail:
-      "Status harian direkap otomatis. Operator memberi teguran awal, Ditbinmas memberikan teguran tindak lanjut bagi satker dengan tingkat kepatuhan rendah.",
+      "Status harian direkap otomatis. Operator mengambil absensi via dashboard, memberi teguran awal kepada personil, selanjutnya Ditbinmas memberikan teguran tindak lanjut bagi satker dengan tingkat kepatuhan rendah.",
   },
 ];
 
