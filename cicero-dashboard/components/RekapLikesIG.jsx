@@ -58,7 +58,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       };
     };
 
-    const compareByClientId = (a, b) => {
+    const compareByClientIdOnly = (a, b) => {
       const clientA = getClientIdentifier(a);
       const clientB = getClientIdentifier(b);
 
@@ -83,10 +83,24 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
         return clientA.hasValue ? -1 : 1;
       }
 
-      return compareUsersByPangkatAndNrp(a, b);
+      return 0;
     };
 
-    return [...users].sort(compareByClientId);
+    const compareUsers = (a, b) => {
+      const rankDiff = compareUsersByPangkatAndNrp(a, b);
+      if (rankDiff !== 0) {
+        return rankDiff;
+      }
+
+      const clientDiff = compareByClientIdOnly(a, b);
+      if (clientDiff !== 0) {
+        return clientDiff;
+      }
+
+      return 0;
+    };
+
+    return [...users].sort(compareUsers);
   }, [users]);
 
   const totalUser = sortedUsers.length;

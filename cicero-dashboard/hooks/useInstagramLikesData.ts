@@ -9,6 +9,7 @@ import {
 } from "@/utils/api";
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
 interface Options {
   viewBy: string;
@@ -109,7 +110,8 @@ export default function useInstagramLikesData({
               scope,
             );
           if (controller.signal.aborted) return;
-          setChartData(users);
+          const sortedUsers = [...users].sort(compareUsersByPangkatAndNrp);
+          setChartData(sortedUsers);
           setRekapSummary(summary);
           setIgPosts(posts || []);
           setClientName(clientName || "");
@@ -280,14 +282,15 @@ export default function useInstagramLikesData({
           }
         }
 
-        const totalUser = filteredUsers.length;
+        const sortedUsers = [...filteredUsers].sort(compareUsersByPangkatAndNrp);
+        const totalUser = sortedUsers.length;
         const totalIGPost = Number((statsData as any).instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
         let totalSudahLike = 0;
         let totalKurangLike = 0;
         let totalBelumLike = 0;
         let totalTanpaUsername = 0;
-        filteredUsers.forEach((u: any) => {
+        sortedUsers.forEach((u: any) => {
           const username = String(u.username || "").trim();
           if (!username) {
             totalTanpaUsername += 1;
@@ -316,7 +319,7 @@ export default function useInstagramLikesData({
           totalTanpaUsername,
           totalIGPost,
         });
-        setChartData(filteredUsers);
+        setChartData(sortedUsers);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err.message || err));

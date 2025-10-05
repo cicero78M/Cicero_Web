@@ -4,6 +4,11 @@ import usePersistentState from "@/hooks/usePersistentState";
 import { AlertTriangle, Music, User, Check, X, Minus, UserX } from "lucide-react";
 import { showToast } from "@/utils/showToast";
 import { cn } from "@/lib/utils";
+import {
+  compareUsersByPangkatAndNrp,
+  getUserJabatanPriority,
+  getUserPangkatRank,
+} from "@/utils/pangkat";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -108,13 +113,25 @@ export default function RekapKomentarTiktok({
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
+      const jabatanDiff =
+        getUserJabatanPriority(a) - getUserJabatanPriority(b);
+      if (jabatanDiff !== 0) {
+        return jabatanDiff;
+      }
+
+      const pangkatDiff = getUserPangkatRank(a) - getUserPangkatRank(b);
+      if (pangkatDiff !== 0) {
+        return pangkatDiff;
+      }
+
       const aCom = Number(a.jumlah_komentar);
       const bCom = Number(b.jumlah_komentar);
 
       if (aCom > 0 && bCom === 0) return -1;
       if (aCom === 0 && bCom > 0) return 1;
       if (aCom !== bCom) return bCom - aCom;
-      return (a.nama || "").localeCompare(b.nama || "");
+
+      return compareUsersByPangkatAndNrp(a, b);
     });
   }, [filtered]);
 
