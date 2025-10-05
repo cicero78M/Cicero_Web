@@ -814,7 +814,8 @@ const computeUserInsight = (users = []) => {
   const pieTotal = pieData.reduce((acc, curr) => acc + curr.value, 0);
 
   const sortedByDivisionSize = [...divisionArray].sort((a, b) => b.total - a.total);
-  const divisionDistribution = sortedByDivisionSize.map((item, index) => ({
+  const sortedByCompletion = [...divisionArray].sort(compareDivisionByCompletion);
+  const divisionDistribution = sortedByCompletion.map((item, index) => ({
     id: item.division ?? `division-${index}`,
     rank: index + 1,
     division: beautifyDivisionName(item.displayName ?? item.division),
@@ -4419,7 +4420,7 @@ export default function ExecutiveSummaryPage() {
                         Distribusi User per Satker
                       </h3>
                       <p className="mt-1 text-xs text-slate-400">
-                        Urutan lengkap setiap satker berdasarkan jumlah personil dan rasio kelengkapan akun.
+                        Diurutkan berdasarkan kelengkapan dan total personil.
                       </p>
                     </div>
                     {userSummary?.totalUsers ? (
