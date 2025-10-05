@@ -318,21 +318,16 @@ export default function RekapKomentarTiktokPage() {
 
         let filteredUsers = users;
         const shouldFilterByClient =
-          Boolean(clientIdLower) && (!isDirectorate || isScopedDirectorateClient);
+          Boolean(clientIdLower) &&
+          (isDitbinmasRole || !isDirectorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value) =>
             String(value || "").trim().toLowerCase();
           filteredUsers = users.filter((u) => {
-            const possibleIds = [
-              u.client_id,
-              u.clientId,
-              u.client,
-              u.clientID,
-              u.clientid,
-            ];
-            return possibleIds.some(
-              (cid) => normalizeValue(cid) === clientIdLower,
+            const userClient = normalizeValue(
+              u.client_id || u.clientId || u.client || u.clientID || "",
             );
+            return userClient === clientIdLower;
           });
 
         }
