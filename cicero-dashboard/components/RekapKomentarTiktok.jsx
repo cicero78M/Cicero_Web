@@ -4,11 +4,7 @@ import usePersistentState from "@/hooks/usePersistentState";
 import { AlertTriangle, Music, User, Check, X, Minus, UserX } from "lucide-react";
 import { showToast } from "@/utils/showToast";
 import { cn } from "@/lib/utils";
-import {
-  compareUsersByPangkatAndNrp,
-  getUserJabatanPriority,
-  getUserPangkatRank,
-} from "@/utils/pangkat";
+import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -111,29 +107,10 @@ export default function RekapKomentarTiktok({
     );
   }, [users, search]);
 
-  const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      const jabatanDiff =
-        getUserJabatanPriority(a) - getUserJabatanPriority(b);
-      if (jabatanDiff !== 0) {
-        return jabatanDiff;
-      }
-
-      const pangkatDiff = getUserPangkatRank(a) - getUserPangkatRank(b);
-      if (pangkatDiff !== 0) {
-        return pangkatDiff;
-      }
-
-      const aCom = Number(a.jumlah_komentar);
-      const bCom = Number(b.jumlah_komentar);
-
-      if (aCom > 0 && bCom === 0) return -1;
-      if (aCom === 0 && bCom > 0) return 1;
-      if (aCom !== bCom) return bCom - aCom;
-
-      return compareUsersByPangkatAndNrp(a, b);
-    });
-  }, [filtered]);
+  const sorted = useMemo(
+    () => [...filtered].sort(compareUsersByPangkatOnly),
+    [filtered],
+  );
 
   const [page, setPage] = usePersistentState("rekapKomentarTiktok_page", 1);
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);

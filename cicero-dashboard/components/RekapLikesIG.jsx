@@ -8,7 +8,7 @@ import {
 } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
-import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
 
 const PAGE_SIZE = 25;
@@ -87,9 +87,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     };
 
     const compareUsers = (a, b) => {
-      const rankDiff = compareUsersByPangkatAndNrp(a, b);
-      if (rankDiff !== 0) {
-        return rankDiff;
+      const pangkatDiff = compareUsersByPangkatOnly(a, b);
+      if (pangkatDiff !== 0) {
+        return pangkatDiff;
       }
 
       const clientDiff = compareByClientIdOnly(a, b);
@@ -303,7 +303,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     });
 
     const sortByRank = (arr) =>
-      [...arr].sort(compareUsersByPangkatAndNrp);
+      [...arr].sort(compareUsersByPangkatOnly);
 
     const sortedClients = Object.keys(clients).sort((a, b) => {
       if (a === "Direktorat Binmas") return -1;
