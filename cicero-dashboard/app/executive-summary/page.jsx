@@ -2709,6 +2709,24 @@ export default function ExecutiveSummaryPage() {
     });
     return formatter.format(new Date(selectedYear, selectedMonthIndex, 1));
   }, [selectedMonthIndex, selectedMonthOption, selectedYear]);
+  const selectedMonthName = useMemo(() => {
+    if (!Number.isFinite(selectedMonthIndex) || !Number.isFinite(selectedYear)) {
+      return "";
+    }
+
+    const formatter = new Intl.DateTimeFormat("id-ID", { month: "long" });
+    const safeIndex = clamp(selectedMonthIndex, 0, 11);
+    const displayDate = new Date(selectedYear, safeIndex, 1);
+
+    if (Number.isNaN(displayDate.getTime())) {
+      return "";
+    }
+
+    return formatter.format(displayDate);
+  }, [selectedMonthIndex, selectedYear]);
+  const selectedYearLabel = useMemo(() => {
+    return Number.isFinite(selectedYear) ? String(selectedYear) : "";
+  }, [selectedYear]);
   const [userInsightState, setUserInsightState] = useState({
     loading: true,
     error: "",
@@ -3983,6 +4001,26 @@ export default function ExecutiveSummaryPage() {
               Ringkasan performa konten dan interaksi personel berdasarkan data bulanan
               terbaru.
             </p>
+            {selectedMonthName || selectedYearLabel ? (
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-400">
+                {selectedMonthName ? (
+                  <span>
+                    Bulan dipilih:{" "}
+                    <span className="font-semibold text-slate-200">
+                      {selectedMonthName}
+                    </span>
+                  </span>
+                ) : null}
+                {selectedYearLabel ? (
+                  <span>
+                    Tahun dipilih:{" "}
+                    <span className="font-semibold text-slate-200">
+                      {selectedYearLabel}
+                    </span>
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
