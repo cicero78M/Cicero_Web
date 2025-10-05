@@ -24,11 +24,9 @@ Dokumen ini merangkum arsitektur tinggi dan alur kerja antar komponen.
 - Komunikasi dengan backend dilakukan lewat helper di `utils/api.ts` dan URL dasar
   diatur lewat variabel `NEXT_PUBLIC_API_URL`.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L39】
 - Menyajikan halaman analitik Instagram dan TikTok, direktori pengguna,
-  serta informasi client melalui folder `app/` di dalam proyek. 【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L38】
-- Otentikasi global dikelola oleh `AuthContext` di folder `context/` dengan hook
-  `useRequireAuth` dan `useAuthRedirect` untuk menjaga akses halaman.
-- Modul utilitas seperti `groupUsersByKelompok` di `utils/` membantu
-  normalisasi data sebelum ditampilkan.
+  serta informasi client melalui folder `app/` di dalam proyek.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L38】
+- Hook `useInstagramLikesData` dan utilitas `fetchDitbinmasAbsensiLikes` membangun rekap absensi likes lintas Polres sekaligus mendukung mode tampilan per satker, lalu menyajikan tombol "Copy Rekap" untuk distribusi cepat via WA.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L42-L204】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L188】【F:cicero-dashboard/utils/buildInstagramRekap.ts†L1-L56】
+- Knowledge base `/mekanisme-absensi` dan `/panduan-sop` menyediakan konteks SOP, matriks RACI, panduan WA bot, dan FAQ shadowban yang mempercepat onboarding pengguna baru.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
 
 ## Aplikasi Android pegiat_medsos_apps
 
