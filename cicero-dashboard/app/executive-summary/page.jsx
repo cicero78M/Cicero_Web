@@ -119,6 +119,27 @@ const compareDivisionByCompletion = (a, b) => {
     return totalB - totalA;
   }
 
+  const shareA = parsePercent(a?.sharePercent);
+  const shareB = parsePercent(b?.sharePercent);
+
+  if (shareB !== shareA) {
+    return shareB - shareA;
+  }
+
+  const instagramFilledA = normalizeNumericInput(a?.instagramFilled ?? a?.igFilled ?? 0);
+  const instagramFilledB = normalizeNumericInput(b?.instagramFilled ?? b?.igFilled ?? 0);
+
+  if (instagramFilledB !== instagramFilledA) {
+    return instagramFilledB - instagramFilledA;
+  }
+
+  const tiktokFilledA = normalizeNumericInput(a?.tiktokFilled ?? a?.ttFilled ?? 0);
+  const tiktokFilledB = normalizeNumericInput(b?.tiktokFilled ?? b?.ttFilled ?? 0);
+
+  if (tiktokFilledB !== tiktokFilledA) {
+    return tiktokFilledB - tiktokFilledA;
+  }
+
   const divisionA = typeof a?.division === "string" ? a.division : "";
   const divisionB = typeof b?.division === "string" ? b.division : "";
 
