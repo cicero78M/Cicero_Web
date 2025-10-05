@@ -61,6 +61,16 @@ const USER_JABATAN_FIELDS = [
   "roleName",
 ];
 
+const USER_IDENTIFIER_FIELDS = [
+  "nrp",
+  "nip",
+  "nrp_nip",
+  "nrpNip",
+  "NRP",
+  "NIP",
+  "NRP_NIP",
+];
+
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toUpperCase();
 }
@@ -121,6 +131,35 @@ function compareByName(a: any, b: any): number {
   return 0;
 }
 
+function getUserDeterministicIdentifier(user: any): string {
+  for (const field of USER_IDENTIFIER_FIELDS) {
+    const rawValue = user?.[field];
+    const value = String(rawValue ?? "").trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+export function compareUsersByPangkatOnly(a: any, b: any): number {
+  const pangkatDiff = getUserPangkatRank(a) - getUserPangkatRank(b);
+  if (pangkatDiff !== 0) return pangkatDiff;
+
+  const idA = getUserDeterministicIdentifier(a);
+  const idB = getUserDeterministicIdentifier(b);
+
+  if (idA && idB) {
+    const idDiff = idA.localeCompare(idB, "id", { sensitivity: "base" });
+    if (idDiff !== 0) return idDiff;
+  } else if (idA || idB) {
+    return idA ? -1 : 1;
+  }
+
+  return compareByName(a, b);
+}
+
 export function compareUsersByPangkatAndNrp(a: any, b: any): number {
   const jabatanDiff = getUserJabatanPriority(a) - getUserJabatanPriority(b);
   if (jabatanDiff !== 0) return jabatanDiff;
@@ -131,11 +170,11 @@ export function compareUsersByPangkatAndNrp(a: any, b: any): number {
   const nameDiff = compareByName(a, b);
   if (nameDiff !== 0) return nameDiff;
 
-  const aId = String(
-    a?.user_id || a?.userId || a?.nrp || a?.nip || a?.nrp_nip || "",
-  );
-  const bId = String(
-    b?.user_id || b?.userId || b?.nrp || b?.nip || b?.nrp_nip || "",
-  );
+  const aId =
+    getUserDeterministicIdentifier(a) ||
+    String(a?.user_id || a?.userId || a?.nrp || a?.nip || a?.nrp_nip || "");
+  const bId =
+    getUserDeterministicIdentifier(b) ||
+    String(b?.user_id || b?.userId || b?.nrp || b?.nip || b?.nrp_nip || "");
   return aId.localeCompare(bId);
 }

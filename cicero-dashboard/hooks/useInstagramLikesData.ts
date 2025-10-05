@@ -9,7 +9,7 @@ import {
 } from "@/utils/api";
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
-import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 
 interface Options {
   viewBy: string;
@@ -110,7 +110,7 @@ export default function useInstagramLikesData({
               scope,
             );
           if (controller.signal.aborted) return;
-          const sortedUsers = [...users].sort(compareUsersByPangkatAndNrp);
+          const sortedUsers = [...users].sort(compareUsersByPangkatOnly);
           setChartData(sortedUsers);
           setRekapSummary(summary);
           setIgPosts(posts || []);
@@ -282,7 +282,7 @@ export default function useInstagramLikesData({
           }
         }
 
-        const sortedUsers = [...filteredUsers].sort(compareUsersByPangkatAndNrp);
+        const sortedUsers = [...filteredUsers].sort(compareUsersByPangkatOnly);
         const totalUser = sortedUsers.length;
         const totalIGPost = Number((statsData as any).instagramPosts) || 0;
         const isZeroPost = (totalIGPost || 0) === 0;
