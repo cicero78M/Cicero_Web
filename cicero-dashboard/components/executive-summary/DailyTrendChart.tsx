@@ -190,7 +190,7 @@ const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <div
@@ -244,7 +244,7 @@ const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
         </div>
       ) : null}
 
-      <div className="h-80">
+      <div className="h-80 w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
