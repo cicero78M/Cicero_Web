@@ -6,78 +6,12 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import * as XLSX from "xlsx";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
 
 const PAGE_SIZE = 25;
-const USER_PANGKAT_FIELDS = [
-  "title",
-  "pangkat",
-  "rank",
-  "pangkat_title",
-  "pangkatTitle",
-  "golongan",
-];
-const USER_NAME_FIELDS = [
-  "nama",
-  "name",
-  "full_name",
-  "fullName",
-];
-const USER_NRP_FIELDS = [
-  "nrp",
-  "NRP",
-  "nip",
-  "NIP",
-  "nrp_nip",
-  "NRP_NIP",
-  "nrpNip",
-  "nip_nrp",
-  "nipNrp",
-];
-const USER_JABATAN_FIELDS = [
-  "jabatan",
-  "jabatan_struktural",
-  "jabatanStruktural",
-  "jabatan_fungsional",
-  "jabatanFungsional",
-  "position",
-  "posisi",
-  "role",
-  "roleName",
-];
-const USER_DIVISI_FIELDS = [
-  "divisi",
-  "satfung",
-  "satker",
-  "unit",
-  "kesatuan",
-  "nama_client",
-  "client_name",
-  "client",
-];
-const USER_SHORTCODE_FIELDS = [
-  "shortcode",
-  "short_code",
-  "shortcode_url",
-  "shortcodeUrl",
-];
-
-function getFirstNonEmptyValue(user, fields) {
-  for (const field of fields) {
-    const value = user?.[field];
-    if (value !== undefined && value !== null) {
-      const strValue = String(value).trim();
-      if (strValue) {
-        return strValue;
-      }
-    }
-  }
-  return "";
-}
 
 /**
  * Komponen RekapLikesIG
@@ -491,78 +425,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
-  function handleDownloadExcel() {
-    try {
-      const rows = sortedUsers.map((user, index) => {
-        const pangkat = getFirstNonEmptyValue(user, USER_PANGKAT_FIELDS);
-        const name = getFirstNonEmptyValue(user, USER_NAME_FIELDS);
-        const pangkatNama = [pangkat, name].filter(Boolean).join(" ").trim();
-        const nrp = getFirstNonEmptyValue(user, USER_NRP_FIELDS);
-        const jabatan = getFirstNonEmptyValue(user, USER_JABATAN_FIELDS);
-        const divisi = getFirstNonEmptyValue(user, USER_DIVISI_FIELDS);
-        const shortcodeValue = getFirstNonEmptyValue(user, USER_SHORTCODE_FIELDS);
-
-        return {
-          "No Urut": index + 1,
-          "Pangkat Nama": pangkatNama || name || pangkat || "-",
-          NRP: nrp || "-",
-          Jabatan: jabatan || "-",
-          Divisi: divisi || "-",
-          Shortcode: shortcodeValue ? 1 : 0,
-        };
-      });
-
-      const headers = [
-        "No Urut",
-        "Pangkat Nama",
-        "NRP",
-        "Jabatan",
-        "Divisi",
-        "Shortcode",
-      ];
-
-      const worksheet = XLSX.utils.json_to_sheet(rows, {
-        header: headers,
-        skipHeader: true,
-      });
-      XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: "A1" });
-      worksheet["!cols"] = [
-        { wch: 8 },
-        { wch: 32 },
-        { wch: 18 },
-        { wch: 32 },
-        { wch: 28 },
-        { wch: 12 },
-      ];
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Pelaksanaan Tugas");
-
-      const periodeLabelForFile = periodeLabel || "";
-      const timestamp = new Date();
-      const defaultLabel = `${timestamp.getFullYear()}-${String(
-        timestamp.getMonth() + 1,
-      ).padStart(2, "0")}-${String(timestamp.getDate()).padStart(2, "0")}`;
-      const sanitizedLabel = String(periodeLabelForFile || defaultLabel)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .replace(/-{2,}/g, "-")
-        .trim();
-      const fileName = `pelaksanaan-tugas-instagram-${sanitizedLabel || defaultLabel}.xlsx`;
-
-      XLSX.writeFile(workbook, fileName);
-      showToast("File Excel berhasil disiapkan", "success");
-    } catch (error) {
-      console.error("Failed to export excel", error);
-      showToast("Gagal menyiapkan file Excel", "error");
-    }
-  }
-
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
     downloadRekap: handleDownloadRekap,
-    downloadExcel: handleDownloadExcel,
   }));
 
   return (
@@ -791,12 +656,6 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       {showRekapButton && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
           <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4 shadow-[0_20px_60px_rgba(15,118,110,0.2)] backdrop-blur md:flex-row md:items-center md:justify-end">
-            <button
-              onClick={handleDownloadExcel}
-              className="w-full rounded-2xl border border-amber-400/40 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100 shadow-[0_0_25px_rgba(251,191,36,0.35)] transition hover:border-amber-300/60 hover:bg-amber-400/30 md:w-auto"
-            >
-              Download Excel
-            </button>
             <button
               onClick={handleDownloadRekap}
               className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.35)] transition hover:border-emerald-300/60 hover:bg-emerald-400/30 md:w-auto"
