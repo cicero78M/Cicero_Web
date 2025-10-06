@@ -64,6 +64,26 @@ const USER_SHORTCODE_FIELDS = [
   "short_code",
   "shortcode_url",
   "shortcodeUrl",
+  "shortcodes",
+  "shortcode_list",
+];
+
+const POST_SHORTCODE_FIELDS = [
+  "shortcode",
+  "short_code",
+  "shortCode",
+  "instagram_shortcode",
+  "ig_shortcode",
+  "code",
+  "permalink",
+  "permalink_url",
+  "permalinkUrl",
+  "link",
+  "url",
+  "media_url",
+  "mediaUrl",
+  "caption",
+  "title",
 ];
 
 function extractShortcodesFromText(value) {
@@ -131,6 +151,25 @@ function getUserShortcodes(user) {
       codes.add(code),
     );
   });
+  return Array.from(codes);
+}
+
+function getPostShortcodes(post) {
+  if (!post || typeof post !== "object") {
+    return [];
+  }
+
+  const codes = new Set();
+  POST_SHORTCODE_FIELDS.forEach((field) => {
+    extractShortcodesFromText(post?.[field]).forEach((code) =>
+      codes.add(code),
+    );
+  });
+
+  if (codes.size === 0 && typeof post?.id === "string") {
+    extractShortcodesFromText(post.id).forEach((code) => codes.add(code));
+  }
+
   return Array.from(codes);
 }
 
@@ -703,11 +742,94 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
+  function handleDownloadAbsensiMatrix() {
+    try {
+      const shortcodeOrder = [];
+      const seenShortcodes = new Map();
+      const pushShortcode = (code) => {
+        if (!code) return;
+        const trimmed = String(code).trim();
+        if (!trimmed) return;
+        const normalized = trimmed.toLowerCase();
+        if (seenShortcodes.has(normalized)) return;
+        seenShortcodes.set(normalized, trimmed);
+        shortcodeOrder.push(trimmed);
+      };
+
+      if (Array.isArray(posts)) {
+        posts.forEach((post) => {
+          getPostShortcodes(post).forEach((code) => pushShortcode(code));
+        });
+      }
+
+      sortedUsers.forEach((user) => {
+        getUserShortcodes(user).forEach((code) => pushShortcode(code));
+      });
+
+      if (shortcodeOrder.length === 0) {
+        showToast("Tidak ada shortcode Instagram untuk diekspor", "info");
+        return;
+      }
+
+      const rows = sortedUsers.map((user, index) => {
+        const pangkat = getFirstNonEmptyValue(user, USER_PANGKAT_FIELDS);
+        const name = getFirstNonEmptyValue(user, USER_NAME_FIELDS);
+        const pangkatNama = [pangkat, name].filter(Boolean).join(" ").trim();
+        const satfung = getFirstNonEmptyValue(user, USER_DIVISI_FIELDS) || "-";
+        const userShortcodes = new Set(
+          getUserShortcodes(user).map((code) => code.toLowerCase()),
+        );
+
+        const baseRow = {
+          "No": index + 1,
+          "Pangkat Nama": pangkatNama || name || pangkat || "-",
+          Satfung: satfung,
+        };
+
+        shortcodeOrder.forEach((code) => {
+          const normalized = code.toLowerCase();
+          baseRow[code] = userShortcodes.has(normalized) ? 1 : 0;
+        });
+
+        return baseRow;
+      });
+
+      const headers = ["No", "Pangkat Nama", "Satfung", ...shortcodeOrder];
+
+      const worksheet = XLSX.utils.json_to_sheet(rows, {
+        header: headers,
+        skipHeader: true,
+      });
+      XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: "A1" });
+      worksheet["!cols"] = [
+        { wch: 6 },
+        { wch: 32 },
+        { wch: 24 },
+        ...shortcodeOrder.map(() => ({ wch: 14 })),
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Absensi");
+
+      const { defaultLabel, sanitizedLabel } = getPeriodeLabelMeta();
+      const fileName = `rekap-absensi-instagram-${
+        sanitizedLabel || defaultLabel
+      }.xlsx`;
+
+      XLSX.writeFile(workbook, fileName);
+      showToast("File rekap absensi siap diunduh", "success");
+    } catch (error) {
+      console.error("Failed to export absensi matrix", error);
+      showToast("Gagal menyiapkan rekap absensi", "error");
+    }
+  }
+
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
     downloadRekap: handleDownloadRekap,
     downloadExcel: handleDownloadExcel,
     downloadExcelPerKonten: handleDownloadExcelPerKonten,
+    downloadAbsensiMatrix: handleDownloadAbsensiMatrix,
   }));
 
   return (
@@ -936,6 +1058,12 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       {showRekapButton && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
           <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4 shadow-[0_20px_60px_rgba(15,118,110,0.2)] backdrop-blur md:flex-row md:items-center md:justify-end">
+            <button
+              onClick={handleDownloadAbsensiMatrix}
+              className="w-full rounded-2xl border border-sky-400/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.35)] transition hover:border-sky-300/60 hover:bg-sky-400/30 md:w-auto"
+            >
+              Download Absensi Instagram
+            </button>
             <button
               onClick={handleDownloadExcelPerKonten}
               className="w-full rounded-2xl border border-violet-400/40 bg-violet-500/20 px-4 py-2 text-sm font-semibold text-violet-100 shadow-[0_0_25px_rgba(139,92,246,0.35)] transition hover:border-violet-300/60 hover:bg-violet-400/30 md:w-auto"
