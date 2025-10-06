@@ -66,74 +66,6 @@ const USER_SHORTCODE_FIELDS = [
   "shortcodeUrl",
 ];
 
-function extractShortcodesFromText(value) {
-  if (value == null) {
-    return [];
-  }
-
-  if (Array.isArray(value)) {
-    const aggregated = new Set();
-    value.forEach((item) => {
-      extractShortcodesFromText(item).forEach((code) => aggregated.add(code));
-    });
-    return Array.from(aggregated);
-  }
-
-  const text = String(value ?? "").trim();
-  if (!text) {
-    return [];
-  }
-
-  const shortcodes = new Set();
-  const urlPattern =
-    /(?:instagram\.com\/(?:p|reel|reels?|tv)\/|shortcode=)([A-Za-z0-9_-]+)/gi;
-  let match = urlPattern.exec(text);
-  while (match) {
-    if (match[1]) {
-      shortcodes.add(match[1]);
-    }
-    match = urlPattern.exec(text);
-  }
-
-  if (shortcodes.size === 0) {
-    text
-      .split(/[\s,;|]+/)
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .forEach((token) => {
-        let candidate = token;
-        if (/^https?:\/\//i.test(candidate)) {
-          const urlMatch = candidate.match(
-            /(?:instagram\.com\/(?:p|reel|reels?|tv)\/)([A-Za-z0-9_-]+)/i,
-          );
-          if (urlMatch && urlMatch[1]) {
-            shortcodes.add(urlMatch[1]);
-            return;
-          }
-        }
-
-        candidate = candidate.replace(/^[#@]+/, "");
-        candidate = candidate.replace(/[\/?#].*$/, "");
-        candidate = candidate.trim();
-        if (candidate) {
-          shortcodes.add(candidate);
-        }
-      });
-  }
-
-  return Array.from(shortcodes);
-}
-
-function getUserShortcodes(user) {
-  const codes = new Set();
-  USER_SHORTCODE_FIELDS.forEach((field) => {
-    extractShortcodesFromText(user?.[field]).forEach((code) =>
-      codes.add(code),
-    );
-  });
-  return Array.from(codes);
-}
-
 function getFirstNonEmptyValue(user, fields) {
   for (const field of fields) {
     const value = user?.[field];
@@ -559,22 +491,6 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
-  function getPeriodeLabelMeta() {
-    const periodeLabelForFile = periodeLabel || "";
-    const timestamp = new Date();
-    const defaultLabel = `${timestamp.getFullYear()}-${String(
-      timestamp.getMonth() + 1,
-    ).padStart(2, "0")}-${String(timestamp.getDate()).padStart(2, "0")}`;
-    const sanitizedLabel = String(periodeLabelForFile || defaultLabel)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .replace(/-{2,}/g, "-")
-      .trim();
-
-    return { defaultLabel, sanitizedLabel };
-  }
-
   function handleDownloadExcel() {
     try {
       const rows = sortedUsers.map((user, index) => {
@@ -622,7 +538,17 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Pelaksanaan Tugas");
 
-      const { defaultLabel, sanitizedLabel } = getPeriodeLabelMeta();
+      const periodeLabelForFile = periodeLabel || "";
+      const timestamp = new Date();
+      const defaultLabel = `${timestamp.getFullYear()}-${String(
+        timestamp.getMonth() + 1,
+      ).padStart(2, "0")}-${String(timestamp.getDate()).padStart(2, "0")}`;
+      const sanitizedLabel = String(periodeLabelForFile || defaultLabel)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-")
+        .trim();
       const fileName = `pelaksanaan-tugas-instagram-${sanitizedLabel || defaultLabel}.xlsx`;
 
       XLSX.writeFile(workbook, fileName);
@@ -633,81 +559,10 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
-  function handleDownloadExcelPerKonten() {
-    try {
-      const perKontenRows = [];
-      sortedUsers.forEach((user) => {
-        const pangkat = getFirstNonEmptyValue(user, USER_PANGKAT_FIELDS);
-        const name = getFirstNonEmptyValue(user, USER_NAME_FIELDS);
-        const divisi = getFirstNonEmptyValue(user, USER_DIVISI_FIELDS);
-        const pangkatNama = [pangkat, name].filter(Boolean).join(" ").trim();
-        const pangkatNamaDivisi = [
-          pangkatNama || name || pangkat || "-",
-          divisi ? `(${divisi})` : "",
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .trim();
-        const userShortcodes = getUserShortcodes(user);
-
-        if (userShortcodes.length === 0) {
-          perKontenRows.push({
-            pangkatNamaDivisi: pangkatNamaDivisi || "-",
-            shortcode: "-",
-          });
-          return;
-        }
-
-        userShortcodes.forEach((shortcode) => {
-          perKontenRows.push({
-            pangkatNamaDivisi: pangkatNamaDivisi || "-",
-            shortcode: shortcode || "-",
-          });
-        });
-      });
-
-      const rows = perKontenRows.map((row, index) => ({
-        "No Urut": index + 1,
-        "Pangkat Nama Divisi": row.pangkatNamaDivisi,
-        "Konten Tugas/Shortcode": row.shortcode,
-      }));
-
-      const headers = [
-        "No Urut",
-        "Pangkat Nama Divisi",
-        "Konten Tugas/Shortcode",
-      ];
-
-      const worksheet = XLSX.utils.json_to_sheet(rows, {
-        header: headers,
-        skipHeader: true,
-      });
-      XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: "A1" });
-      worksheet["!cols"] = [
-        { wch: 8 },
-        { wch: 48 },
-        { wch: 32 },
-      ];
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Per Konten");
-
-      const { defaultLabel, sanitizedLabel } = getPeriodeLabelMeta();
-      const fileName = `pelaksanaan-tugas-instagram-per-konten-${sanitizedLabel || defaultLabel}.xlsx`;
-
-      XLSX.writeFile(workbook, fileName);
-      showToast("File Excel per konten berhasil disiapkan", "success");
-    } catch (error) {
-      console.error("Failed to export per konten excel", error);
-      showToast("Gagal menyiapkan file Excel per konten", "error");
-    }
-  }
-
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
     downloadRekap: handleDownloadRekap,
     downloadExcel: handleDownloadExcel,
-    downloadExcelPerKonten: handleDownloadExcelPerKonten,
   }));
 
   return (
@@ -936,12 +791,6 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       {showRekapButton && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
           <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4 shadow-[0_20px_60px_rgba(15,118,110,0.2)] backdrop-blur md:flex-row md:items-center md:justify-end">
-            <button
-              onClick={handleDownloadExcelPerKonten}
-              className="w-full rounded-2xl border border-violet-400/40 bg-violet-500/20 px-4 py-2 text-sm font-semibold text-violet-100 shadow-[0_0_25px_rgba(139,92,246,0.35)] transition hover:border-violet-300/60 hover:bg-violet-400/30 md:w-auto"
-            >
-              Download Excel Per Konten
-            </button>
             <button
               onClick={handleDownloadExcel}
               className="w-full rounded-2xl border border-amber-400/40 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100 shadow-[0_0_25px_rgba(251,191,36,0.35)] transition hover:border-amber-300/60 hover:bg-amber-400/30 md:w-auto"
