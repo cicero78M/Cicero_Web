@@ -136,25 +136,25 @@ export default function LandingPage() {
   const SelectedIcon = selectedFeature?.icon;
 
   return (
-    <div className="relative flex flex-col min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.3),_transparent_55%)]" />
-      <div className="pointer-events-none absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-blue-500/30 blur-3xl" />
+    <div className="relative flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-blue-950 via-indigo-950 to-purple-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.22),_transparent_60%)]" />
+      <div className="pointer-events-none absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-fuchsia-500/30 blur-3xl" />
 
       {/* Header */}
-      <header className="relative z-10 w-full border-b border-white/10 bg-black/40 backdrop-blur-xl">
+      <header className="relative z-10 w-full border-b border-white/10 bg-slate-950/60 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 shadow-lg shadow-blue-500/40">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-fuchsia-500 shadow-lg shadow-fuchsia-500/30">
               <Sparkles className="h-6 w-6" aria-hidden="true" />
             </span>
             <div className="text-left">
-              <p className="text-xs uppercase tracking-[0.3em] text-blue-300">Cicero</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Cicero</p>
               <p className="text-sm text-slate-300">Next-Gen Command Dashboard</p>
             </div>
           </div>
           <Link
             href="/login"
-            className="rounded-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/40 transition hover:scale-105"
+            className="rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-105 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400"
           >
             Login
           </Link>
@@ -163,14 +163,14 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <main className="relative z-10 flex flex-grow flex-col items-center">
-        <section className="w-full border-b border-white/5 bg-gradient-to-b from-white/10 via-transparent to-transparent pb-20 pt-16">
+        <section className="w-full border-b border-white/5 bg-gradient-to-b from-white/5 via-transparent to-transparent pb-20 pt-16">
           <div className="container mx-auto flex max-w-6xl flex-col gap-12 px-6 text-center md:flex-row md:text-left">
             <div className="flex-1 space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-blue-200">
+              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-200">
                 Futuristic Control
               </span>
               <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
-                Atur Operasi Media Sosial <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500">seperti pusat komando modern</span>
+                Atur Operasi Media Sosial <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-fuchsia-400">seperti pusat komando modern</span>
               </h1>
               <p className="max-w-xl text-base text-slate-300 md:text-lg">
                 Pantau performa, distribusikan tugas, dan aktifkan strategi hanya dalam sekali pandang. Cicero menghadirkan tampilan dashboard futuristik dengan insight real-time.
@@ -178,7 +178,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-blue-500/40 transition hover:scale-[1.03]"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.03] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
                 >
                   Mulai Orkestrasi
                 </Link>
@@ -186,7 +186,7 @@ export default function LandingPage() {
                   href="https://wa.me/+6281235114745"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-base font-semibold text-slate-200 transition hover:border-blue-400 hover:text-white"
+                  className="inline-flex items-center justify-center rounded-full border border-indigo-300/50 px-6 py-3 text-base font-semibold text-slate-200 transition hover:border-fuchsia-400 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
                 >
                   Demo Interaktif
                 </a>
@@ -195,7 +195,7 @@ export default function LandingPage() {
                 {metrics.map((metric) => (
                   <div
                     key={metric.label}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left shadow-lg shadow-blue-500/10"
+                    className="rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-fuchsia-500/10 p-4 text-left shadow-lg shadow-fuchsia-500/10"
                   >
                     <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{metric.label}</p>
                     <p className="mt-2 text-2xl font-bold text-white">{metric.value}</p>
@@ -205,15 +205,15 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex-1">
-              <div className="relative mx-auto max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-blue-500/20">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-cyan-400/20" />
+              <div className="relative mx-auto max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-fuchsia-500/20">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-fuchsia-500/20" />
                 <div className="relative space-y-4">
                   <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/80 px-5 py-4">
                     <div>
                       <p className="text-xs text-slate-400">Live Audience Flow</p>
                       <p className="text-lg font-semibold">+245 joining</p>
                     </div>
-                    <BarChart3 className="h-6 w-6 text-cyan-300" aria-hidden="true" />
+                    <BarChart3 className="h-6 w-6 text-indigo-300" aria-hidden="true" />
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
                     <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export default function LandingPage() {
                       {["IG", "TT", "YT", "FB", "TW"].map((channel) => (
                         <div
                           key={channel}
-                          className="rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 px-3 py-2"
+                          className="rounded-lg bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-fuchsia-500/20 px-3 py-2"
                         >
                           <p className="font-semibold text-white">{channel}</p>
                           <p className="text-[10px] text-slate-300">Active</p>
@@ -235,17 +235,17 @@ export default function LandingPage() {
                   <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/80 p-5">
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-slate-400">Auto Tasks</p>
-                      <span className="text-xs text-blue-200">12 in queue</span>
+                      <span className="text-xs text-indigo-200">12 in queue</span>
                     </div>
                     <div className="space-y-2">
                       {["Respond comment high priority", "Review draft carousel", "Schedule trend remix"].map(
                         (task) => (
                           <div
                             key={task}
-                            className="flex items-center justify-between rounded-xl border border-white/5 bg-gradient-to-r from-blue-500/10 to-transparent px-3 py-2 text-xs"
+                            className="flex items-center justify-between rounded-xl border border-white/5 bg-gradient-to-r from-blue-500/15 via-indigo-500/10 to-transparent px-3 py-2 text-xs"
                           >
                             <span className="text-slate-200">{task}</span>
-                            <Zap className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+                            <Zap className="h-4 w-4 text-fuchsia-300" aria-hidden="true" />
                           </div>
                         )
                       )}
@@ -258,7 +258,7 @@ export default function LandingPage() {
         </section>
 
         {/* Interactive Features */}
-        <section className="w-full border-b border-white/5 bg-black/40 py-16">
+        <section className="w-full border-b border-white/5 bg-slate-950/50 py-16">
           <div className="container mx-auto flex max-w-6xl flex-col gap-12 px-6 lg:flex-row">
             <div className="flex-1 space-y-5">
               <h2 className="text-3xl font-bold md:text-4xl">Kenapa Cicero Dibuat?</h2>
@@ -269,9 +269,9 @@ export default function LandingPage() {
                 {[Activity, MessageCircle, Database, BarChart3].map((Icon, index) => (
                   <div
                     key={index}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-blue-500/10"
+                    className="rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-fuchsia-500/10 p-5 shadow-lg shadow-fuchsia-500/10"
                   >
-                    <Icon className="h-8 w-8 text-blue-300" aria-hidden="true" />
+                    <Icon className="h-8 w-8 text-indigo-200" aria-hidden="true" />
                     <p className="mt-3 text-sm text-slate-300">
                       {[
                         "Monitoring & evaluasi terpusat",
@@ -292,10 +292,10 @@ export default function LandingPage() {
                     type="button"
                     onMouseEnter={() => setActiveFeature(id)}
                     onFocus={() => setActiveFeature(id)}
-                    className={`flex items-center gap-3 rounded-full border px-4 py-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                    className={`flex items-center gap-3 rounded-full border px-4 py-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                       activeFeature === id
-                        ? "border-blue-400 bg-blue-500/20 text-white"
-                        : "border-white/10 bg-white/5 text-slate-300 hover:border-blue-300/60 hover:text-white"
+                        ? "border-indigo-400 bg-gradient-to-r from-blue-500/30 via-indigo-500/30 to-fuchsia-500/30 text-white"
+                        : "border-white/10 bg-white/5 text-slate-300 hover:border-indigo-300/60 hover:text-white"
                     }`}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
@@ -304,9 +304,9 @@ export default function LandingPage() {
                 ))}
               </div>
               {selectedFeature && SelectedIcon && (
-                <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/15 via-slate-900/80 to-cyan-400/10 p-8 shadow-lg shadow-blue-500/20">
+                <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/15 via-slate-900/80 to-fuchsia-400/15 p-8 shadow-lg shadow-fuchsia-500/20">
                   <div className="flex items-center gap-3">
-                    <SelectedIcon className="h-8 w-8 text-cyan-300" aria-hidden="true" />
+                    <SelectedIcon className="h-8 w-8 text-fuchsia-200" aria-hidden="true" />
                     <h3 className="text-2xl font-semibold">{selectedFeature.title}</h3>
                   </div>
                   <p className="mt-4 text-sm text-slate-200 md:text-base">{selectedFeature.description}</p>
@@ -314,7 +314,7 @@ export default function LandingPage() {
                     {selectedFeature.stats.map((item) => (
                       <li
                         key={item}
-                        className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm"
+                        className="flex items-center gap-2 rounded-2xl border border-white/10 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-fuchsia-500/10 px-4 py-2 text-sm"
                       >
                         <CheckCircle className="h-4 w-4 text-emerald-300" aria-hidden="true" />
                         <span>{item}</span>
@@ -328,7 +328,7 @@ export default function LandingPage() {
         </section>
 
         {/* Workflow Timeline */}
-        <section className="w-full bg-gradient-to-b from-black/60 via-slate-950 to-black/80 py-16">
+        <section className="w-full bg-gradient-to-b from-indigo-950/70 via-slate-950 to-purple-950/80 py-16">
           <div className="container mx-auto max-w-5xl px-6 text-center">
             <h2 className="text-3xl font-bold md:text-4xl">Workflow Terpadu dalam 10 Menit</h2>
             <p className="mt-4 text-slate-300">
@@ -338,9 +338,9 @@ export default function LandingPage() {
               {timeline.map((step) => (
                 <div
                   key={step.title}
-                  className="rounded-3xl border border-white/10 bg-white/5 p-6 text-left shadow-lg shadow-blue-500/10"
+                  className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-fuchsia-500/10 p-6 text-left shadow-lg shadow-fuchsia-500/10"
                 >
-                  <p className="text-xs uppercase tracking-[0.25em] text-blue-200">{step.time}</p>
+                  <p className="text-xs uppercase tracking-[0.25em] text-indigo-200">{step.time}</p>
                   <h3 className="mt-4 text-xl font-semibold">{step.title}</h3>
                   <p className="mt-3 text-sm text-slate-300">{step.description}</p>
                 </div>
@@ -350,7 +350,7 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="w-full border-y border-white/5 bg-black/60 py-16">
+        <section className="w-full border-y border-white/5 bg-slate-950/60 py-16">
           <div className="container mx-auto max-w-6xl px-6">
             <h2 className="text-center text-3xl font-bold md:text-4xl">Paket Cicero</h2>
             <p className="mx-auto mt-3 max-w-2xl text-center text-slate-300">
@@ -360,29 +360,29 @@ export default function LandingPage() {
               {packages.map((pkg) => (
                 <div
                   key={pkg.name}
-                  className={`relative flex h-full flex-col rounded-3xl border border-white/10 bg-white text-slate-900 p-6 shadow-xl shadow-blue-500/10 transition hover:-translate-y-1 ${
-                    pkg.popular ? "ring-2 ring-blue-500" : ""
+                  className={`relative flex h-full flex-col rounded-3xl border border-white/10 bg-slate-950/70 p-6 text-slate-100 shadow-xl shadow-fuchsia-500/10 transition hover:-translate-y-1 hover:shadow-fuchsia-500/20 ${
+                    pkg.popular ? "ring-2 ring-indigo-400" : ""
                   }`}
                 >
                   {pkg.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white">
                       Most Popular
                     </span>
                   )}
                   <h3 className="text-lg font-semibold">{pkg.name}</h3>
-                  <p className="text-sm text-slate-500">{pkg.users}</p>
+                  <p className="text-sm text-slate-300">{pkg.users}</p>
                   <div className="mt-6">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Biaya Setup</p>
-                    <p className="text-3xl font-extrabold text-slate-900">{pkg.setup}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-indigo-200">Biaya Setup</p>
+                    <p className="text-3xl font-extrabold text-white">{pkg.setup}</p>
                   </div>
                   <div className="mt-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Biaya Bulanan</p>
-                    <p className="text-2xl font-semibold text-slate-900">{pkg.monthly}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-indigo-200">Biaya Bulanan</p>
+                    <p className="text-2xl font-semibold text-white">{pkg.monthly}</p>
                   </div>
-                  <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-700">
+                  <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-200">
                     {pkg.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2">
-                        <CheckCircle aria-hidden="true" className="mt-0.5 h-4 w-4 text-blue-600" />
+                        <CheckCircle aria-hidden="true" className="mt-0.5 h-4 w-4 text-emerald-300" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -392,7 +392,7 @@ export default function LandingPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Kirim pesan paket ${pkg.name}`}
-                    className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:scale-[1.02]"
+                    className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.02] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
                   >
                     Kirim Pesan
                   </a>
@@ -403,9 +403,9 @@ export default function LandingPage() {
         </section>
 
         {/* Social Proof */}
-        <section className="w-full bg-slate-950/90 py-16">
+        <section className="w-full bg-slate-950/80 py-16">
           <div className="container mx-auto max-w-3xl px-6 text-center">
-            <blockquote className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/20 via-slate-900/80 to-cyan-400/20 p-8 text-lg italic text-slate-100 shadow-lg shadow-blue-500/10">
+            <blockquote className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/20 via-indigo-600/20 to-fuchsia-400/20 p-8 text-lg italic text-slate-100 shadow-lg shadow-fuchsia-500/10">
               "Cicero menyulap proses monitoring kami menjadi pengalaman imersif. Insight proaktifnya membuat engagement melesat dalam hitungan minggu."
             </blockquote>
             <p className="mt-4 text-sm text-slate-400">- Marketing Manager, Cicero Devs</p>
@@ -413,11 +413,11 @@ export default function LandingPage() {
         </section>
 
         {/* Signup Form */}
-        <section className="w-full border-t border-white/5 bg-black/70 py-16">
+        <section className="w-full border-t border-white/5 bg-slate-950/70 py-16">
           <div className="container mx-auto max-w-lg px-6">
             <form
               onSubmit={handleSubmit}
-              className="rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-xl shadow-blue-500/10"
+              className="rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-xl shadow-fuchsia-500/10"
             >
               <h3 className="text-2xl font-semibold">Dapatkan Update Produk</h3>
               <p className="mt-2 text-sm text-slate-300">
@@ -434,12 +434,12 @@ export default function LandingPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@perusahaan.com"
                   required
-                  className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300/40"
+                  className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-300/40"
                 />
               </div>
               <button
                 type="submit"
-                className="mt-6 w-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:scale-[1.02]"
+                className="mt-6 w-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.02] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
               >
                 Kirim Saya Update
               </button>
@@ -450,14 +450,14 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 bg-black/80 py-6 text-center text-xs text-slate-400">
+      <footer className="relative z-10 border-t border-white/10 bg-slate-950/80 py-6 text-center text-xs text-slate-400">
         <div className="container mx-auto flex max-w-5xl flex-col items-center gap-2 px-6 md:flex-row md:justify-between">
           <p>&copy; {new Date().getFullYear()} Cicero. Semua hak cipta dilindungi.</p>
           <div className="flex gap-4">
-            <Link href="/terms-of-service" className="transition hover:text-blue-300">
+            <Link href="/terms-of-service" className="transition hover:text-fuchsia-300">
               Ketentuan Layanan
             </Link>
-            <Link href="/privacy-policy" className="transition hover:text-blue-300">
+            <Link href="/privacy-policy" className="transition hover:text-fuchsia-300">
               Kebijakan Privasi
             </Link>
           </div>
