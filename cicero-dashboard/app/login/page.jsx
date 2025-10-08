@@ -40,15 +40,15 @@ export default function LoginPage() {
     () => [
       {
         icon: <Sparkles className="h-4 w-4 text-sky-500" />,
-        title: "Operasional Terpadu",
+        title: "Kepercayaan Terukur",
         description:
-          "Cicero mengorkestrasi workflow harian, dari laporan lapangan hingga analisis data.",
+          "Panel transparan menampilkan progres lintas channel sehingga setiap keputusan dilandasi data yang akurat dan mudah diaudit.",
       },
       {
         icon: <ShieldCheck className="h-4 w-4 text-teal-500" />,
-        title: "Keamanan Terkendali",
+        title: "Kolaborasi Konsisten",
         description:
-          "Proteksi berlapis memastikan data sensitif hanya diakses oleh akses yang disetujui.",
+          "Pengingat dan log otomatis menjaga ritme tim tetap selaras sekaligus menyalakan semangat kolektif di setiap satker.",
       },
     ],
     []
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                Portal Operasional Cicero
+                Cicero Operations Hub
               </motion.span>
               <motion.h1
                 className="text-4xl font-bold leading-tight text-slate-900 md:text-5xl"
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
               >
-                Sentral komando untuk <span className="bg-gradient-to-r from-sky-500 via-cyan-400 to-indigo-500 bg-clip-text text-transparent">respon cepat</span> dan koordinasi berbasis data.
+                Ruang kendali modern yang menumbuhkan kepercayaan, ketelitian, dan koordinasi lintas satker.
               </motion.h1>
               <motion.p
                 className="max-w-xl text-balance text-sm leading-relaxed text-slate-700 md:text-base"
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
               >
-                Kelola Tugas, pengawasan personel, dan tindak lanjut strategis secara terintegrasi. Dashboard Cicero memastikan tiap satker menerima informasi relevan untuk mengeksekusi mandat keamanan dengan percaya diri.
+                Cicero menyatukan laporan lapangan, analitik presisi, dan komunikasi tim dalam satu alur mulus sehingga setiap personel bergerak percaya diri dan kompak.
               </motion.p>
             </div>
 
@@ -262,7 +262,7 @@ export default function LoginPage() {
               </div>
 
               <p className="mb-7 rounded-2xl border border-sky-200/60 bg-white/50 p-4 text-xs text-slate-600">
-                Autentikasi menggunakan kredensial User Cicero. Pastikan nomor WhatsApp aktif untuk menerima notifikasi verifikasi dan panduan operasional.
+                Masuk dengan akun instansi Anda. Kami menjaga data dengan protokol berlapis dan memastikan tim Anda selalu mendapat panduan terkini.
               </p>
 
               <form className="space-y-5" onSubmit={isRegister ? handleRegister : handleLogin}>
@@ -478,9 +478,9 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-600/90">Onboarding Terarah</p>
-                <h3 className="text-lg font-semibold text-slate-800">Validasi akses dalam 1x24 jam</h3>
+                <h3 className="text-lg font-semibold text-slate-800">Verifikasi akses dalam 1×24 jam</h3>
                 <p className="text-sm leading-relaxed text-slate-600">
-                  Tim keamanan Cicero akan menghubungi Anda melalui WhatsApp untuk memverifikasi mandat dan memastikan akses dashboard hanya diberikan kepada personel yang tepat.
+                  Tim Cicero akan menyapa lewat WhatsApp untuk memvalidasi mandat, memastikan akses diberikan secara tepat dan konsisten bagi seluruh tim.
                 </p>
               </div>
             </motion.div>
