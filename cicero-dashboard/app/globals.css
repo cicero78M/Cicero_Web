@@ -19,13 +19,6 @@ html {
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
@@ -75,13 +68,11 @@ select::placeholder {
   opacity: 0.9;
 }
 
-@media (prefers-color-scheme: dark) {
-  input::placeholder,
-  textarea::placeholder,
-  select::placeholder {
-    color: #cbd5f5; /* Brighter tone for dark surfaces */
-    opacity: 0.95;
-  }
+.dark input::placeholder,
+.dark textarea::placeholder,
+.dark select::placeholder {
+  color: #cbd5f5; /* Brighter tone for dark surfaces */
+  opacity: 0.95;
 }
 
 input,

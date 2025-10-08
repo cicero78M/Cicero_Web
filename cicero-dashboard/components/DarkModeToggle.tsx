@@ -2,23 +2,44 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 
+const STORAGE_KEY = "theme:v2";
+const LEGACY_KEY = "theme";
+
 export default function DarkModeToggle() {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark") setEnabled(true);
+    const root = document.documentElement;
+    root.classList.remove("dark");
+
+    const legacyValue = localStorage.getItem(LEGACY_KEY);
+    if (legacyValue) {
+      localStorage.removeItem(LEGACY_KEY);
+    }
+
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "dark") {
+      setEnabled(true);
+    } else {
+      root.classList.remove("dark");
+      if (stored !== "light") {
+        localStorage.setItem(STORAGE_KEY, "light");
+      }
+    }
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
+
     if (enabled) {
       root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
+      localStorage.setItem(STORAGE_KEY, "dark");
     } else {
       root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+      localStorage.setItem(STORAGE_KEY, "light");
     }
+
+    localStorage.removeItem(LEGACY_KEY);
   }, [enabled]);
 
   return (
