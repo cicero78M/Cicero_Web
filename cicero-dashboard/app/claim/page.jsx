@@ -39,12 +39,12 @@ export default function ClaimPage() {
     <ClaimLayout
       stepLabel="Langkah 1 dari 3"
       title="Klaim & Edit Data User"
-      description="Masukkan NRP dan email institusi untuk menerima kode verifikasi ke akunmu."
+      description="Masukkan NRP dan email aktif untuk menerima kode verifikasi ke akunmu."
       icon={<ShieldCheck className="h-5 w-5" />}
       infoTitle="Mulai proses klaim dengan percaya diri"
       infoDescription="Kami memverifikasi identitasmu menggunakan data resmi agar perubahan profil tetap aman dan terkontrol."
       infoHighlights={[
-        "Gunakan email institusi aktif agar OTP dapat diterima dengan cepat.",
+        "Gunakan email aktif agar OTP dapat diterima dengan cepat.",
         "Kami hanya membutuhkan beberapa detik untuk mengirim kode verifikasi.",
         "Data pribadi terlindungi oleh sistem keamanan internal kami.",
       ]}
@@ -77,7 +77,7 @@ export default function ClaimPage() {
           <input
             id="email"
             type="email"
-            placeholder="nama@institusi.go.id"
+            placeholder="user@gmail.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

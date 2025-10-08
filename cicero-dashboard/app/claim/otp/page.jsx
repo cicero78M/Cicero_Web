@@ -50,7 +50,7 @@ export default function OtpPage() {
     <ClaimLayout
       stepLabel="Langkah 2 dari 3"
       title="Verifikasi Kode OTP"
-      description="Masukkan kode enam digit yang dikirim ke email institusi untuk melanjutkan proses klaim."
+      description="Masukkan kode enam digit yang dikirim ke email untuk melanjutkan proses klaim."
       icon={<KeyRound className="h-5 w-5" />}
       infoTitle="Tetap konsisten dalam keamanan"
       infoDescription="Kode OTP memastikan hanya kamu yang dapat meneruskan pembaruan data. Jangan bagikan kode ini kepada siapa pun."
