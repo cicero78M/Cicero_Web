@@ -20,54 +20,57 @@ const featureHighlights = [
     id: "command",
     title: "Command Center",
     description:
-      "Panel ringkas menampilkan KPI lintas platform, peringatan instan, dan rekomendasi aksi yang dapat dieksekusi satu klik.",
+      "Satu panel komando untuk agregasi lintas kanal, menyatukan inbox, KPI, dan SOP respon cepat sesuai playbook terbaru.",
     icon: Command,
     stats: [
-      "Alert otomatis berbasis AI",
-      "Sinkronisasi multi-channel",
-      "Rangkuman performa harian",
+      "Agregator omnichannel",
+      "Peringatan prioritas WA",
+      "Checklist SOP otomatis",
     ],
   },
   {
     id: "workflow",
-    title: "Alur Kerja Cerdas",
+    title: "Orkestrasi Workflow",
     description:
-      "Tetapkan tugas, auto-tag anggota, dan pantau progres dalam satu alur visual yang responsif layaknya dashboard futuristik.",
+      "Tetapkan owner, jalankan automation bot WhatsApp, dan sinkronkan follow-up lintas tim dalam satu diagram operasional.",
     icon: Workflow,
     stats: [
-      "Penjadwalan dinamis",
-      "Automasi persetujuan konten",
-      "Kolaborasi lintas divisi",
+      "Trigger bot WA adaptif",
+      "Routing tugas berbasis SLA",
+      "Integrasi knowledge base",
     ],
   },
   {
     id: "insight",
     title: "Insight Prediktif",
     description:
-      "Prediksi capaian engagement & reach, lengkap dengan simulasi skenario untuk menyempurnakan strategi berikutnya.",
+      "Prediksi lonjakan percakapan, rekomendasikan aksi preventif, dan validasi outcome dengan simulasi skenario otomatis.",
     icon: Gauge,
     stats: [
-      "Forecast tren mingguan",
-      "Segmentasi audiens pintar",
-      "Heatmap sentimen real-time",
+      "Forecast campaign harian",
+      "Skor risiko sentimen",
+      "Rekomendasi taktis AI",
     ],
   },
 ];
 
 const timeline = [
   {
-    title: "Sinkronisasi Otomatis",
-    description: "Tarik aktivitas Instagram & TikTok tim secara langsung dan rapi.",
+    title: "Agregasi Multi-Kanal",
+    description:
+      "Semua percakapan IG, TikTok, dan WhatsApp tersusun otomatis dalam satu feed prioritas.",
     time: "00:00",
   },
   {
-    title: "Analitik Terpadu",
-    description: "Visualisasi KPI tersaji dalam grafik interaktif siap presentasi.",
+    title: "Insight Prediktif",
+    description:
+      "Mesin analitik memetakan potensi eskalasi dan menyiapkan rencana mitigasi sesuai SOP.",
     time: "00:05",
   },
   {
-    title: "Aksi Cepat",
-    description: "Terapkan rekomendasi AI dan kirim briefing instan ke tim.",
+    title: "Orkestrasi Bot",
+    description:
+      "Bot WhatsApp mengeksekusi follow-up, assign PIC, dan menutup loop laporan otomatis.",
     time: "00:10",
   },
 ];
@@ -91,10 +94,10 @@ export default function LandingPage() {
         setup: "Rp5.000.000",
         monthly: "Rp4.200.000",
         features: [
-          "Analisis real-time",
-          "Kolaborasi tim penuh",
-          "Prioritas dukungan",
-          "Integrasi kustom",
+          "Agregator omnichannel penuh",
+          "Workflow lintas divisi",
+          "Prioritas dukungan 24/7",
+          "Integrasi ERP & CRM",
         ],
       },
       {
@@ -104,10 +107,10 @@ export default function LandingPage() {
         monthly: "Rp3.600.000",
         popular: true,
         features: [
-          "Analisis real-time",
-          "Kolaborasi tim",
-          "Dukungan standar",
-          "Integrasi dasar",
+          "Insight prediktif standar",
+          "Orkestrasi bot WA",
+          "Dukungan jam kerja",
+          "Integrasi knowledge base",
         ],
       },
       {
@@ -116,10 +119,10 @@ export default function LandingPage() {
         setup: "Rp3.000.000",
         monthly: "Rp2.400.000",
         features: [
-          "Analisis dasar",
-          "Kolaborasi tim",
+          "Agregasi kanal dasar",
+          "Template SOP respon",
           "Dukungan email",
-          "1 akun sosial",
+          "2 channel aktif",
         ],
       },
     ],
@@ -167,20 +170,20 @@ export default function LandingPage() {
           <div className="container mx-auto flex max-w-6xl flex-col gap-12 px-6 text-center md:flex-row md:text-left">
             <div className="flex-1 space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-200">
-                Futuristic Control
+                Omnichannel Upgrade
               </span>
               <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
-                Atur Operasi Media Sosial <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-fuchsia-400">seperti pusat komando modern</span>
+                Satukan Operasi Sosial <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-fuchsia-400">dengan agregator lintas kanal</span>
               </h1>
               <p className="max-w-xl text-base text-slate-300 md:text-lg">
-                Pantau performa, distribusikan tugas, dan aktifkan strategi hanya dalam sekali pandang. Cicero menghadirkan tampilan dashboard futuristik dengan insight real-time.
+                Cicero kini menghadirkan insight prediktif, orkestrasi bot WhatsApp, dan kontrol workflow sesuai SOP terbaru agar tim Anda selalu selangkah di depan.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/login"
                   className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.03] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
                 >
-                  Mulai Orkestrasi
+                  Aktifkan Agregator
                 </Link>
                 <a
                   href="https://wa.me/+6281235114745"
@@ -188,7 +191,7 @@ export default function LandingPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-full border border-indigo-300/50 px-6 py-3 text-base font-semibold text-slate-200 transition hover:border-fuchsia-400 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
                 >
-                  Demo Interaktif
+                  Lihat Alur Terbaru
                 </a>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
@@ -263,7 +266,7 @@ export default function LandingPage() {
             <div className="flex-1 space-y-5">
               <h2 className="text-3xl font-bold md:text-4xl">Kenapa Cicero Dibuat?</h2>
               <p className="text-slate-300">
-                Cicero menggabungkan monitoring & evaluasi media sosial dalam satu ekosistem komando. Semua aktivitas anggota otomatis tersinkronisasi dengan database organisasi sehingga pimpinan memperoleh transparansi real-time.
+                Cicero menggabungkan monitoring & evaluasi media sosial dalam satu ekosistem komando. Agregator lintas kanal, insight prediktif, dan orkestrasi bot WA memastikan setiap aktivitas mengikuti knowledge base resmi tanpa jeda.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 {[Activity, MessageCircle, Database, BarChart3].map((Icon, index) => (
@@ -332,7 +335,7 @@ export default function LandingPage() {
           <div className="container mx-auto max-w-5xl px-6 text-center">
             <h2 className="text-3xl font-bold md:text-4xl">Workflow Terpadu dalam 10 Menit</h2>
             <p className="mt-4 text-slate-300">
-              Dari sinkronisasi data hingga aksi taktis, semuanya terjadi secara otomatis dengan visual yang familiar seperti dashboard futuristik.
+              Dari agregasi lintas kanal, insight prediktif, hingga orkestrasi bot WA, setiap langkah mengikuti SOP terbaru tanpa perlu switching platform.
             </p>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
               {timeline.map((step) => (
@@ -354,7 +357,7 @@ export default function LandingPage() {
           <div className="container mx-auto max-w-6xl px-6">
             <h2 className="text-center text-3xl font-bold md:text-4xl">Paket Cicero</h2>
             <p className="mx-auto mt-3 max-w-2xl text-center text-slate-300">
-              Optimalkan pengelolaan media sosial Anda bersama Cicero dengan paket yang sesuai skala tim. Dapatkan potongan 10% untuk komitmen jangka menengah maupun jangka panjang.
+              Pilih paket yang menyelaraskan agregator lintas kanal, insight prediktif, dan orkestrasi bot WA dengan kebutuhan workflow tim Anda. Komitmen jangka menengah maupun panjang mendapat potongan 10%.
             </p>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
               {packages.map((pkg) => (
@@ -406,9 +409,9 @@ export default function LandingPage() {
         <section className="w-full bg-slate-950/80 py-16">
           <div className="container mx-auto max-w-3xl px-6 text-center">
             <blockquote className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/20 via-indigo-600/20 to-fuchsia-400/20 p-8 text-lg italic text-slate-100 shadow-lg shadow-fuchsia-500/10">
-              "Cicero menyulap proses monitoring kami menjadi pengalaman imersif. Insight proaktifnya membuat engagement melesat dalam hitungan minggu."
+              "Agregator lintas kanal Cicero memotong waktu audit kami hingga 60%. Insight prediktifnya memicu orkestrasi bot WA yang menutup semua tiket sebelum melewati SLA."
             </blockquote>
-            <p className="mt-4 text-sm text-slate-400">- Marketing Manager, Cicero Devs</p>
+            <p className="mt-4 text-sm text-slate-400">- Head of Digital Operations, Cicero Devs</p>
           </div>
         </section>
 
@@ -419,9 +422,9 @@ export default function LandingPage() {
               onSubmit={handleSubmit}
               className="rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-xl shadow-fuchsia-500/10"
             >
-              <h3 className="text-2xl font-semibold">Dapatkan Update Produk</h3>
+              <h3 className="text-2xl font-semibold">Berlangganan Knowledge Pulse</h3>
               <p className="mt-2 text-sm text-slate-300">
-                Kami akan mengirimkan rangkuman fitur terbaru, studi kasus, dan undangan sesi demo eksklusif.
+                Terima ringkasan rilis agregator, template SOP operasional, serta insight prediktif mingguan langsung dari tim enablement kami.
               </p>
               <div className="mt-6 space-y-3">
                 <label htmlFor="email" className="text-xs uppercase tracking-[0.2em] text-slate-400">
@@ -441,9 +444,9 @@ export default function LandingPage() {
                 type="submit"
                 className="mt-6 w-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-fuchsia-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.02] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
               >
-                Kirim Saya Update
+                Kirim Ringkasan
               </button>
-              <p className="mt-3 text-xs text-slate-400">Kami tidak akan membagikan email Anda.</p>
+              <p className="mt-3 text-xs text-slate-400">Kami mengacu pada kebijakan privasi & SOP keamanan data terbaru.</p>
             </form>
           </div>
         </section>
