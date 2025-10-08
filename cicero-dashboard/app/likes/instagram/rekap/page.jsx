@@ -200,40 +200,40 @@ export default function RekapLikesIGPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 text-slate-100">
-        <div className="rounded-3xl border border-red-500/40 bg-slate-900/70 px-8 py-6 text-center text-red-200 shadow-[0_0_35px_rgba(248,113,113,0.25)]">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-blue-100 p-6 text-slate-700">
+        <div className="rounded-3xl border border-red-300/60 bg-white/80 px-8 py-6 text-center text-red-600 shadow-[0_15px_35px_rgba(59,130,246,0.12)]">
           {error}
         </div>
       </div>
     );
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.16),_transparent_60%)]" />
-      <div className="pointer-events-none absolute bottom-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,_rgba(129,140,248,0.18)_0%,_transparent_70%)]" />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-100 text-slate-800">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.25),_transparent_70%)]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,_rgba(96,165,250,0.2)_0%,_transparent_80%)]" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-12 md:px-10">
         <div className="flex flex-col gap-10">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/60 p-6 shadow-[0_0_48px_rgba(56,189,248,0.12)] backdrop-blur">
-            <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-sky-500/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 right-8 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-sky-200/80 bg-white/70 p-6 shadow-[0_20px_50px_rgba(56,189,248,0.18)] backdrop-blur">
+            <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 right-8 h-48 w-48 rounded-full bg-teal-200/50 blur-3xl" />
             <div className="relative flex flex-col gap-6">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h1 className="text-3xl font-semibold tracking-tight text-sky-100">
+                  <h1 className="text-3xl font-semibold tracking-tight text-sky-900">
                     Rekapitulasi Engagement Instagram
                   </h1>
-                  <p className="mt-1 max-w-2xl text-sm text-slate-300">
+                  <p className="mt-1 max-w-2xl text-sm text-slate-600">
                     Lihat rekap detail keterlibatan likes dan komentar dari seluruh personel.
                   </p>
                 </div>
                 <Link
                   href="/likes/instagram"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-400/40 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 shadow-[0_0_25px_rgba(56,189,248,0.15)] transition hover:border-sky-400/60 hover:bg-sky-500/20"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-sky-700 shadow-[0_12px_30px_rgba(59,130,246,0.18)] transition hover:border-sky-400 hover:bg-sky-50 hover:text-sky-800"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Kembali
                 </Link>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur">
+              <div className="rounded-2xl border border-sky-100 bg-white/80 p-4 shadow-inner backdrop-blur">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                   <ViewDataSelector
                     value={viewBy}
@@ -244,13 +244,13 @@ export default function RekapLikesIGPage() {
                   />
                   {isDitbinmasRole && (
                     <div className="flex w-full flex-col gap-2 md:w-64">
-                      <label className="text-sm font-semibold text-slate-200">
+                      <label className="text-sm font-semibold text-slate-700">
                         Lingkup Data
                       </label>
                       <select
                         value={ditbinmasScope}
                         onChange={handleDitbinmasScopeChange}
-                        className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 shadow-inner outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/30"
+                        className="w-full rounded-xl border border-sky-200 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200 hover:border-sky-300"
                       >
                         {ditbinmasScopeOptions.map((option) => (
                           <option key={option.value} value={option.value}>
