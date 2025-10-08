@@ -438,7 +438,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalIGPost}
           accent="sky"
           icon={
-            <Camera className="h-6 w-6 text-sky-200 drop-shadow-[0_0_12px_rgba(56,189,248,0.55)]" />
+            <Camera className="h-6 w-6 text-sky-600 drop-shadow-[0_0_12px_rgba(56,189,248,0.25)]" />
           }
         />
         <SummaryCard
@@ -446,7 +446,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalUser}
           accent="slate"
           icon={
-            <Users className="h-6 w-6 text-slate-200 drop-shadow-[0_0_12px_rgba(148,163,184,0.45)]" />
+            <Users className="h-6 w-6 text-blue-600 drop-shadow-[0_0_12px_rgba(59,130,246,0.2)]" />
           }
         />
         <SummaryCard
@@ -454,7 +454,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalSudahLike}
           accent="emerald"
           icon={
-            <Check className="h-6 w-6 text-emerald-200 drop-shadow-[0_0_12px_rgba(16,185,129,0.55)]" />
+            <Check className="h-6 w-6 text-emerald-600 drop-shadow-[0_0_12px_rgba(16,185,129,0.25)]" />
           }
           percentage={getPercentage(totalSudahLike)}
         />
@@ -463,7 +463,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalKurangLike}
           accent="amber"
           icon={
-            <AlertTriangle className="h-6 w-6 text-amber-100 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+            <AlertTriangle className="h-6 w-6 text-amber-600 drop-shadow-[0_0_12px_rgba(251,191,36,0.25)]" />
           }
           percentage={getPercentage(totalKurangLike)}
         />
@@ -472,7 +472,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalBelumLike}
           accent="rose"
           icon={
-            <X className="h-6 w-6 text-rose-200 drop-shadow-[0_0_12px_rgba(244,63,94,0.55)]" />
+            <X className="h-6 w-6 text-rose-600 drop-shadow-[0_0_12px_rgba(244,63,94,0.25)]" />
           }
           percentage={getPercentage(totalBelumLike)}
         />
@@ -481,46 +481,46 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           value={totalTanpaUsername}
           accent="violet"
           icon={
-            <UserX className="h-6 w-6 text-violet-200 drop-shadow-[0_0_12px_rgba(139,92,246,0.55)]" />
+            <UserX className="h-6 w-6 text-violet-600 drop-shadow-[0_0_12px_rgba(139,92,246,0.25)]" />
           }
           percentage={getPercentage(totalTanpaUsername, totalUser)}
         />
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur">
+      <div className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/95 p-6 shadow-[0_12px_40px_rgba(30,64,175,0.08)]">
         <div className="pointer-events-none absolute -left-24 top-0 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl" />
         <div className="relative flex flex-col gap-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-sky-100">
+              <h2 className="text-lg font-semibold text-blue-900">
                 Rekap Personel Instagram
               </h2>
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-blue-700">
                 Filter dan telusuri status likes setiap personel pada periode terpilih.
               </p>
             </div>
             <label
-              className="flex w-full max-w-xs flex-col gap-2 text-slate-200 md:max-w-sm"
+              className="flex w-full max-w-xs flex-col gap-2 text-blue-900 md:max-w-sm"
               htmlFor="rekap-likes-ig-search"
             >
-              <span className="text-[11px] uppercase tracking-[0.35em] text-slate-400">
+              <span className="text-[11px] uppercase tracking-[0.35em] text-blue-500">
                 Cari personel Instagram
               </span>
               <input
                 id="rekap-likes-ig-search"
                 type="text"
                 placeholder="Cari nama, username, divisi, atau client"
-                className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-inner transition focus:border-sky-400/60 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                className="w-full rounded-xl border border-blue-200/70 bg-white px-3 py-2 text-sm text-blue-900 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </label>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-white/10">
-            <table className="w-full border-collapse text-left text-sm text-slate-200">
-              <thead className="sticky top-0 z-10 bg-slate-950/80 text-xs uppercase tracking-[0.3em] text-slate-300">
+          <div className="overflow-hidden rounded-2xl border border-blue-200/70 bg-white">
+            <table className="w-full border-collapse text-left text-sm text-blue-900">
+              <thead className="sticky top-0 z-10 bg-blue-50 text-xs uppercase tracking-[0.3em] text-blue-600">
                 <tr>
                   <th className="px-3 py-3">No</th>
                   {hasClient && <th className="px-3 py-3">Client</th>}
@@ -531,22 +531,22 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                   <th className="px-3 py-3 text-center">Jumlah Like</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10 bg-slate-950/40">
+              <tbody className="divide-y divide-blue-100 bg-white">
                 {currentRows.length === 0 ? (
                   <tr>
                     <td
                       colSpan={hasClient ? 7 : 6}
-                      className="h-48 px-4 text-center text-sm text-slate-300"
+                      className="h-48 px-4 text-center text-sm text-blue-700"
                     >
                       <div className="flex flex-col items-center gap-3">
-                        <p className="font-semibold text-slate-100">
+                        <p className="font-semibold text-blue-900">
                           Data tidak ditemukan untuk filter saat ini.
                         </p>
                         {search && (
                           <button
                             type="button"
                             onClick={() => setSearch("")}
-                            className="rounded-xl border border-sky-400/40 bg-sky-500/20 px-4 py-1.5 text-sm font-semibold text-sky-200 shadow-[0_0_18px_rgba(56,189,248,0.25)] transition hover:border-sky-300/60 hover:bg-sky-400/30"
+                            className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
                           >
                             Reset pencarian
                           </button>
@@ -557,17 +557,17 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                 ) : (
                   currentRows.map((u, i) => {
                     const username = String(u.username || "").trim();
-                    let rowClass = "bg-rose-500/10";
+                    let rowClass = "bg-rose-50";
                     let statusEl = (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/20 px-2 py-0.5 text-xs font-semibold text-rose-200 shadow-[0_0_14px_rgba(244,63,94,0.35)]">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 shadow-sm">
                         <X className="h-3 w-3" /> Belum
                       </span>
                     );
                     let jumlahDisplay = u.jumlah_like;
                     if (!username) {
-                      rowClass = "bg-slate-500/10";
+                      rowClass = "bg-blue-50";
                       statusEl = (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-slate-400/40 bg-slate-500/20 px-2 py-0.5 text-xs font-semibold text-slate-200 shadow-[0_0_12px_rgba(148,163,184,0.35)]">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 shadow-sm">
                           <UserX className="h-3 w-3" /> Tanpa Username
                         </span>
                       );
@@ -575,16 +575,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                     } else if (totalIGPost !== 0) {
                       const likes = Number(u.jumlah_like) || 0;
                       if (likes >= totalIGPost) {
-                        rowClass = "bg-emerald-500/10";
+                        rowClass = "bg-emerald-50";
                         statusEl = (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.35)]">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 shadow-sm">
                             <Check className="h-3 w-3" /> Sudah
                           </span>
                         );
                       } else if (likes > 0) {
-                        rowClass = "bg-amber-500/10";
+                        rowClass = "bg-amber-50";
                         statusEl = (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-100 shadow-[0_0_14px_rgba(251,191,36,0.35)]">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 shadow-sm">
                             <AlertTriangle className="h-3 w-3" /> Kurang
                           </span>
                         );
@@ -594,7 +594,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                     return (
                       <tr
                         key={u.user_id}
-                        className={`${rowClass} text-slate-100 transition-colors`}
+                        className={`${rowClass} text-blue-900 transition-colors`}
                       >
                         <td className="px-3 py-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                         {hasClient && (
@@ -605,16 +605,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                         <td className="px-3 py-2">
                           {u.title ? `${u.title} ${u.nama}` : u.nama}
                         </td>
-                        <td className="px-3 py-2 font-mono text-sky-300">
+                        <td className="px-3 py-2 font-mono text-sky-700">
                           @{u.username}
                         </td>
                         <td className="px-3 py-2">
-                          <span className="inline-block rounded-full border border-sky-400/40 bg-sky-500/20 px-2 py-0.5 text-xs font-semibold text-sky-200">
+                          <span className="inline-block rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700">
                             {u.divisi || "-"}
                           </span>
                         </td>
                         <td className="px-3 py-2 text-center">{statusEl}</td>
-                        <td className="px-3 py-2 text-center font-semibold text-sky-100">
+                        <td className="px-3 py-2 text-center font-semibold text-blue-900">
                           {jumlahDisplay}
                         </td>
                       </tr>
@@ -624,25 +624,25 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
               </tbody>
             </table>
           </div>
-          <p className="text-sm italic text-slate-300">
+          <p className="text-sm italic text-blue-700">
             Tabel ini menampilkan status like Instagram setiap user serta jumlah like yang berhasil dihimpun.
           </p>
 
           {totalPages > 1 && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-slate-200 shadow-inner sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-blue-200/70 bg-white/95 p-4 text-blue-900 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <button
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold text-slate-200 transition hover:border-sky-400/40 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/5"
+                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-blue-50"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 Prev
               </button>
-              <span className="text-sm text-slate-300">
-                Halaman <b className="text-sky-200">{page}</b> dari {" "}
-                <b className="text-sky-200">{totalPages}</b>
+              <span className="text-sm text-blue-700">
+                Halaman <b className="text-blue-900">{page}</b> dari {" "}
+                <b className="text-blue-900">{totalPages}</b>
               </span>
               <button
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold text-slate-200 transition hover:border-sky-400/40 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/10 disabled:hover:bg-white/5"
+                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-blue-50"
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -655,17 +655,17 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
       {showRekapButton && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
-          <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4 shadow-[0_20px_60px_rgba(15,118,110,0.2)] backdrop-blur md:flex-row md:items-center md:justify-end">
+          <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-blue-200 bg-white p-4 text-blue-900 shadow-[0_20px_45px_rgba(37,99,235,0.15)] md:flex-row md:items-center md:justify-end">
             <button
               onClick={handleDownloadRekap}
-              className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.35)] transition hover:border-emerald-300/60 hover:bg-emerald-400/30 md:w-auto"
+              className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 md:w-auto"
             >
               Salin Teks Rekap
             </button>
             {showCopyButton && (
               <button
                 onClick={handleCopyRekap}
-                className="w-full rounded-2xl border border-sky-400/40 bg-sky-500/20 px-4 py-2 text-sm font-semibold text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.35)] transition hover:border-sky-300/60 hover:bg-sky-400/30 md:w-auto"
+                className="w-full rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 md:w-auto"
               >
                 Salin Rekap
               </button>
@@ -692,64 +692,58 @@ function SummaryCard({ title, value, icon, percentage, accent = "sky" }) {
 
   const accentStyles = {
     sky: {
-      border: "border-sky-400/40",
-      glow: "bg-sky-500/30",
-      text: "text-sky-200",
-      progress: "bg-sky-400",
+      border: "border-sky-200",
+      glow: "bg-sky-100",
+      progress: "bg-sky-500",
     },
     slate: {
-      border: "border-slate-400/40",
-      glow: "bg-slate-500/25",
-      text: "text-slate-200",
-      progress: "bg-slate-400",
+      border: "border-blue-200",
+      glow: "bg-blue-100",
+      progress: "bg-blue-400",
     },
     emerald: {
-      border: "border-emerald-400/40",
-      glow: "bg-emerald-500/25",
-      text: "text-emerald-200",
-      progress: "bg-emerald-400",
+      border: "border-emerald-200",
+      glow: "bg-emerald-100",
+      progress: "bg-emerald-500",
     },
     amber: {
-      border: "border-amber-400/50",
-      glow: "bg-amber-500/30",
-      text: "text-amber-100",
-      progress: "bg-amber-400",
+      border: "border-amber-200",
+      glow: "bg-amber-100",
+      progress: "bg-amber-500",
     },
     rose: {
-      border: "border-rose-400/50",
-      glow: "bg-rose-500/30",
-      text: "text-rose-200",
-      progress: "bg-rose-400",
+      border: "border-rose-200",
+      glow: "bg-rose-100",
+      progress: "bg-rose-500",
     },
     violet: {
-      border: "border-violet-400/50",
-      glow: "bg-violet-500/30",
-      text: "text-violet-200",
-      progress: "bg-violet-400",
+      border: "border-violet-200",
+      glow: "bg-violet-100",
+      progress: "bg-violet-500",
     },
   };
 
   const styles = accentStyles[accent] || accentStyles.sky;
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl border ${styles.border} bg-slate-900/60 p-6 text-center shadow-[0_0_25px_rgba(56,189,248,0.08)] backdrop-blur`}>
+    <div className={`relative overflow-hidden rounded-2xl border ${styles.border} bg-white/95 p-6 text-center shadow-[0_15px_35px_rgba(59,130,246,0.08)]`}>
       <div className={`pointer-events-none absolute -right-10 top-0 h-24 w-24 rounded-full blur-3xl ${styles.glow}`} />
       <div className="relative flex flex-col items-center gap-3">
-        <div className={`flex items-center gap-3 text-3xl font-semibold ${styles.text}`}>
-          <span className="rounded-full bg-white/5 p-2 shadow-inner">
+        <div className="flex items-center gap-3 text-3xl font-semibold text-blue-900">
+          <span className="rounded-full bg-blue-50 p-2 shadow-sm">
             {icon}
           </span>
           <span>{value}</span>
         </div>
-        <div className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-300">
+        <div className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-500">
           {title}
         </div>
         {formattedPercentage && (
           <div className="mt-1 flex w-full max-w-[200px] flex-col items-center gap-1">
-            <span className="text-[11px] font-medium text-slate-200">
+            <span className="text-[11px] font-medium text-blue-700">
               {formattedPercentage}
             </span>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800/70">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-100">
               <div
                 className={`h-full rounded-full transition-all duration-300 ease-out ${styles.progress}`}
                 style={{ width: `${clampedPercentage}%` }}
