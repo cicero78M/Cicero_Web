@@ -45,8 +45,8 @@ export default function TiktokEngagementInsightPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 text-slate-100">
-        <div className="rounded-3xl border border-red-500/40 bg-slate-900/70 px-8 py-6 text-center text-red-200 shadow-[0_0_35px_rgba(248,113,113,0.25)]">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-indigo-50 to-white p-6 text-slate-900">
+        <div className="rounded-3xl border border-rose-200/70 bg-white/85 px-8 py-6 text-center text-rose-600 shadow-[0_24px_60px_-28px_rgba(244,63,94,0.35)] backdrop-blur">
           {error}
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function TiktokEngagementInsightPage() {
   };
 
   const summaryItemContainerClassName =
-    "border border-slate-800/70 bg-slate-900/70 shadow-[0_0_24px_rgba(30,64,175,0.25)] hover:-translate-y-1 hover:shadow-[0_0_36px_rgba(34,211,238,0.25)]";
+    "border border-sky-200/70 bg-white/80 shadow-[0_20px_55px_-28px_rgba(79,70,229,0.35)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_26px_65px_-30px_rgba(56,189,248,0.45)]";
 
   const summaryItemCommonProps = {
     useDefaultContainerStyle: false,
@@ -92,13 +92,13 @@ export default function TiktokEngagementInsightPage() {
   };
 
   const chartBoxContainerClassName =
-    "p-5 border border-slate-800/80 bg-slate-900/70 shadow-[0_0_32px_rgba(30,64,175,0.25)]";
+    "p-5 border border-sky-200/70 bg-white/80 shadow-[0_28px_65px_-32px_rgba(79,70,229,0.35)] backdrop-blur";
 
   const chartBoxEmptyStateClassName =
-    "rounded-2xl border border-slate-800/60 bg-slate-950/60 px-4 py-6";
+    "rounded-2xl border border-sky-200/70 bg-white/75 px-4 py-6 text-slate-600";
 
   const chartBoxDecorations = (
-    <div className="absolute inset-x-6 top-0 h-20 rounded-full bg-gradient-to-b from-white/10 to-transparent blur-2xl" />
+    <div className="absolute inset-x-6 top-0 h-20 rounded-full bg-gradient-to-b from-sky-200/50 via-indigo-200/20 to-transparent blur-2xl" />
   );
 
   const chartBoxCommonProps = {
@@ -112,7 +112,7 @@ export default function TiktokEngagementInsightPage() {
     containerClassName: chartBoxContainerClassName,
     emptyStateClassName: chartBoxEmptyStateClassName,
     decorations: chartBoxDecorations,
-    titleClassName: "text-slate-400",
+    titleClassName: "text-slate-700",
   };
 
   async function handleCopyRekap() {
@@ -145,23 +145,23 @@ export default function TiktokEngagementInsightPage() {
 
   return (
     <div
-      className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100"
+      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-slate-900"
       aria-busy={loading}
     >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 top-[-120px] h-[420px] w-[420px] rounded-full bg-fuchsia-500/20 blur-[160px]" />
-        <div className="absolute right-[-120px] top-1/3 h-[380px] w-[380px] rounded-full bg-cyan-400/20 blur-[160px]" />
-        <div className="absolute inset-x-0 bottom-[-180px] h-[320px] bg-gradient-to-t from-slate-900 via-slate-950/60 to-transparent" />
+        <div className="absolute -left-40 top-[-120px] h-[420px] w-[420px] rounded-full bg-sky-200/45 blur-[160px]" />
+        <div className="absolute right-[-120px] top-1/3 h-[380px] w-[380px] rounded-full bg-indigo-200/45 blur-[160px]" />
+        <div className="absolute inset-x-0 bottom-[-180px] h-[320px] bg-gradient-to-t from-indigo-100/70 via-sky-50/60 to-transparent" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-10">
         <div className="flex flex-1 flex-col gap-10">
           <div className="space-y-3">
-            <h1 className="text-3xl font-semibold leading-tight text-slate-50 md:text-4xl">
+            <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               TikTok Engagement Insight
             </h1>
-            <p className="max-w-3xl text-sm text-slate-300 md:text-base">
+            <p className="max-w-3xl text-sm text-slate-600 md:text-base">
               Pantau performa enggagement personel TikTok untuk{" "}
-              <span className="font-semibold text-cyan-200">
+              <span className="font-semibold text-sky-700">
                 {clientName || "satuan Anda"}
               </span>
               . Gunakan panel ini untuk melihat kepatuhan komentar, memantau
@@ -188,9 +188,9 @@ export default function TiktokEngagementInsightPage() {
                   setCustomDate(val);
                 }
               }}
-              className="justify-start gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur"
-              labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
-              controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              className="justify-start gap-3 rounded-3xl border border-sky-200/70 bg-white/80 px-4 py-4 text-slate-800 shadow-[0_22px_50px_-28px_rgba(14,116,144,0.35)] backdrop-blur"
+              labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
+              controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
             />
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -316,14 +316,14 @@ export default function TiktokEngagementInsightPage() {
           <div className="flex flex-wrap justify-end gap-3">
             <button
               onClick={handleCopyRekap}
-              className="group flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.25)] transition hover:border-emerald-300/70 hover:bg-emerald-400/20"
+              className="group flex items-center gap-2 rounded-2xl border border-sky-300/70 bg-sky-500/20 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-sky-700 shadow-[0_18px_45px_-28px_rgba(14,165,233,0.45)] transition hover:border-sky-400/80 hover:bg-sky-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
             >
               <Copy className="h-4 w-4" />
               Rekap Komentar
             </button>
             <Link
               href="/comments/tiktok/rekap"
-              className="group flex items-center gap-2 rounded-2xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-fuchsia-200 shadow-[0_0_25px_rgba(217,70,239,0.25)] transition hover:border-fuchsia-300/70 hover:bg-fuchsia-500/20"
+              className="group flex items-center gap-2 rounded-2xl border border-indigo-300/70 bg-indigo-500/20 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-indigo-700 shadow-[0_18px_45px_-28px_rgba(129,140,248,0.45)] transition hover:border-indigo-400/80 hover:bg-indigo-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
             >
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               Lihat Rekap Detail
