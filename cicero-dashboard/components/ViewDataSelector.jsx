@@ -76,11 +76,11 @@ export default function ViewDataSelector({
     className,
   );
   const baseLabelClass = cn(
-    "text-sm font-semibold w-full sm:w-auto",
+    "text-sm font-semibold text-sky-700 w-full sm:w-auto",
     labelClassName,
   );
   const baseControlClass = cn(
-    "w-full rounded border px-2 py-1 text-sm transition sm:w-auto",
+    "w-full rounded border border-sky-200 bg-white/80 px-2 py-1 text-sm text-slate-700 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 sm:w-auto",
     controlClassName,
   );
 

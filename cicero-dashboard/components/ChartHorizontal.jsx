@@ -127,11 +127,11 @@ export default function ChartHorizontal({
   });
 
   return (
-    <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur">
-      <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-500/15 blur-3xl" />
-      <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/10 to-transparent blur-2xl" />
+    <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-sky-100/60 bg-white/70 p-6 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur">
+      <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/60 to-transparent blur-2xl" />
       <div className="relative flex flex-col gap-6">
-        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.4em] text-cyan-200/80">
+        <h3 className="text-center text-sm font-semibold uppercase tracking-[0.4em] text-sky-600">
           {title}
         </h3>
         <div className="w-full">
@@ -142,12 +142,12 @@ export default function ChartHorizontal({
               margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
               barCategoryGap="16%"
             >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.35)" />
             <XAxis
               type="number"
-              tick={{ fill: "#cbd5f5", fontSize: 12 }}
-              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
-              tickLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tick={{ fill: "#1e293b", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+              tickLine={{ stroke: "rgba(148,163,184,0.4)" }}
             />
             <YAxis
               dataKey="divisi"
@@ -161,7 +161,7 @@ export default function ChartHorizontal({
                     x={x - 160} // mundur sedikit agar makin lepas dari bar
                     y={y + 10}
                     fontSize={12}
-                    fill="#cbd5f5"
+                    fill="#1f2937"
                     style={{ fontWeight: 500 }}
                     textAnchor="start"
                   >
@@ -190,16 +190,16 @@ export default function ChartHorizontal({
               labelFormatter={(label) => `Divisi: ${label}`}
               wrapperStyle={{ outline: "none" }}
               contentStyle={{
-                backgroundColor: "rgba(15,23,42,0.92)",
+                backgroundColor: "rgba(255,255,255,0.95)",
                 borderRadius: 16,
-                borderColor: "rgba(148,163,184,0.4)",
-                boxShadow: "0 20px 45px rgba(15,118,110,0.2)",
-                color: "#e2e8f0",
+                borderColor: "rgba(56,189,248,0.35)",
+                boxShadow: "0 20px 45px rgba(56,189,248,0.25)",
+                color: "#0f172a",
               }}
             />
             <Legend
               wrapperStyle={{
-                color: "#cbd5f5",
+                color: "#1d4ed8",
                 paddingTop: 8,
               }}
             />
@@ -217,21 +217,21 @@ export default function ChartHorizontal({
                 />
               </Bar>
             )}
-            <Bar dataKey="user_sudah" fill="#22c55e" name={labelSudah} barSize={10}>
+            <Bar dataKey="user_sudah" fill="#14b8a6" name={labelSudah} barSize={10}>
               <LabelList dataKey="user_sudah" position="right" fontSize={10} />
             </Bar>
             <Bar
               dataKey="user_kurang"
-              fill="#f97316"
+              fill="#38bdf8"
               name={labelKurang}
               barSize={10}
             >
               <LabelList dataKey="user_kurang" position="right" fontSize={10} />
             </Bar>
-            <Bar dataKey="total_value" fill="#2563eb" name={labelTotal} barSize={10}>
+            <Bar dataKey="total_value" fill="#6366f1" name={labelTotal} barSize={10}>
               <LabelList dataKey="total_value" position="right" fontSize={10} />
             </Bar>
-            <Bar dataKey="user_belum" fill="#ef4444" name={labelBelum} barSize={10}>
+            <Bar dataKey="user_belum" fill="#94a3b8" name={labelBelum} barSize={10}>
               <LabelList dataKey="user_belum" position="right" fontSize={10} />
             </Bar>
           </BarChart>

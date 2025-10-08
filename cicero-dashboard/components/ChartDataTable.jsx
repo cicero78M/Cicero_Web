@@ -36,26 +36,26 @@ export default function ChartDataTable({
 
   return (
     <details
-      className="group mt-4 rounded-2xl border border-white/10 bg-slate-950/30 p-4 text-slate-200 shadow-inner backdrop-blur"
+      className="group mt-4 rounded-2xl border border-sky-100/60 bg-white/70 p-4 text-slate-700 shadow-inner backdrop-blur"
       open={initialOpen}
     >
-      <summary className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/10 focus:outline-none focus-visible:ring focus-visible:ring-sky-500/60 focus-visible:ring-offset-0">
+      <summary className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-sky-100/70 bg-sky-50/70 px-3 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100/80 focus:outline-none focus-visible:ring focus-visible:ring-sky-400/60 focus-visible:ring-offset-0">
         <span
           aria-hidden="true"
-          className="text-xs text-cyan-300 transition-transform duration-200 group-open:rotate-90"
+          className="text-xs text-sky-500 transition-transform duration-200 group-open:rotate-90"
         >
           ▶
         </span>
         {summaryLabel}
       </summary>
       <div className="mt-3 overflow-x-auto">
-        <table className="min-w-full border-collapse text-sm text-slate-100">
+        <table className="min-w-full border-collapse text-sm text-slate-700">
           {title ? (
-            <caption className="mb-2 text-left text-base font-semibold text-sky-200">
+            <caption className="mb-2 text-left text-base font-semibold text-sky-600">
               {title}
             </caption>
           ) : null}
-          <thead className="bg-slate-900/80 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
+          <thead className="bg-sky-100/70 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
             <tr>
               {normalizedColumns.map((column) => (
                 <th
@@ -68,11 +68,11 @@ export default function ChartDataTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10 bg-slate-950/50">
+          <tbody className="divide-y divide-sky-100 bg-white/60">
             {rows.map((row, rowIndex) => (
               <tr
                 key={row.id ?? row.key ?? rowIndex}
-                className={rowIndex % 2 === 0 ? "bg-slate-950/40" : "bg-slate-900/40"}
+                className={rowIndex % 2 === 0 ? "bg-sky-50/70" : "bg-white/80"}
               >
                 {normalizedColumns.map((column, columnIndex) => {
                   const cellValue = row[column.key];
@@ -85,7 +85,7 @@ export default function ChartDataTable({
                       <th
                         key={column.key}
                         scope="row"
-                        className={`${baseClass} font-semibold text-sky-100`}
+                        className={`${baseClass} font-semibold text-sky-700`}
                       >
                         {content}
                       </th>
@@ -93,7 +93,7 @@ export default function ChartDataTable({
                   }
 
                   return (
-                    <td key={column.key} className={`${baseClass} whitespace-nowrap text-slate-200`}>
+                    <td key={column.key} className={`${baseClass} whitespace-nowrap text-slate-600`}>
                       {content}
                     </td>
                   );
