@@ -452,34 +452,34 @@ export default function UserDirectoryPage() {
   if (isLoading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
-        <div className="rounded-3xl border border-red-500/40 bg-red-500/10 px-6 py-5 text-sm font-semibold shadow-lg backdrop-blur-md">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-700">
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-5 text-sm font-semibold text-rose-600 shadow-lg backdrop-blur-md">
           {error.message || String(error)}
         </div>
       </div>
     );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-800">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-cyan-500/20 blur-3xl" />
-        <div className="absolute bottom-0 right-[-10rem] h-[26rem] w-[26rem] rounded-full bg-indigo-500/20 blur-3xl" />
-        <div className="absolute inset-x-0 top-1/3 h-1/3 bg-gradient-to-b from-slate-900/0 via-slate-900/40 to-slate-950" />
+        <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-sky-100 blur-3xl" />
+        <div className="absolute bottom-0 right-[-10rem] h-[26rem] w-[26rem] rounded-full bg-blue-100 blur-3xl" />
+        <div className="absolute inset-x-0 top-1/3 h-1/3 bg-gradient-to-b from-transparent via-purple-100/50 to-indigo-100/70" />
       </div>
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-3">
-          <span className="text-xs uppercase tracking-[0.35em] text-cyan-300/70">User Directory</span>
-          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">User Matrix</h1>
-          <p className="max-w-2xl text-sm text-slate-300">
+          <span className="text-xs uppercase tracking-[0.35em] text-sky-500/80">User Directory</span>
+          <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">User Matrix</h1>
+          <p className="max-w-2xl text-sm text-slate-600">
             Kelola personel dan pantau aktivitas akun Personil.
           </p>
         </div>
 
-        <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-[0_0_40px_rgba(14,165,233,0.25)] backdrop-blur-xl sm:p-8">
-          <div className="absolute inset-x-12 top-0 h-36 bg-gradient-to-b from-slate-200/10 via-transparent to-transparent blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-sky-200 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,118,190,0.12)] backdrop-blur-xl sm:p-8">
+          <div className="absolute inset-x-12 top-0 h-36 bg-gradient-to-b from-sky-100/60 via-transparent to-transparent blur-3xl" />
           <button
             onClick={() => mutate()}
-            className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/40 bg-slate-900/70 text-cyan-200 shadow-lg transition hover:border-cyan-300 hover:text-cyan-100"
+            className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-blue-400 to-indigo-400 text-white shadow-lg transition hover:from-sky-500 hover:via-blue-500 hover:to-indigo-500"
             aria-label="Refresh"
             type="button"
           >
@@ -488,12 +488,12 @@ export default function UserDirectoryPage() {
 
           <div className="relative flex flex-col gap-2 pr-14 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-100">Directory Overview</h2>
-              <p className="text-sm text-slate-400">
+              <h2 className="text-2xl font-semibold text-slate-900">Directory Overview</h2>
+              <p className="text-sm text-slate-600">
                 Client Name: {clientName || "-"} | {day}, {dateStr} {timeStr}
               </p>
             </div>
-            <div className="text-xs uppercase tracking-[0.25em] text-cyan-300/70">
+            <div className="text-xs uppercase tracking-[0.25em] text-sky-500/70">
               Real-time sync
             </div>
           </div>
@@ -507,27 +507,27 @@ export default function UserDirectoryPage() {
           </div>
 
           <div className="relative mt-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4 shadow-inner backdrop-blur">
+            <div className="flex flex-col gap-3 rounded-2xl border border-sky-200 bg-white/95 p-4 text-slate-700 shadow-sm backdrop-blur">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => {
                     setShowForm((s) => !s);
                   }}
-                  className="relative overflow-hidden rounded-xl bg-gradient-to-r from-cyan-500/80 via-sky-500/70 to-blue-600/70 px-4 py-2 text-sm font-medium text-slate-50 shadow-lg ring-1 ring-cyan-400/40 transition hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                  className="relative overflow-hidden rounded-xl bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 px-4 py-2 text-sm font-medium text-white shadow-lg ring-1 ring-sky-300/50 transition hover:from-sky-500 hover:via-blue-500 hover:to-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400"
                   type="button"
                 >
                   {showForm ? "Tutup" : "Tambah User"}
                 </button>
                 <button
                   onClick={handleCopyRekap}
-                  className="rounded-xl bg-gradient-to-r from-emerald-500/70 to-teal-500/70 px-4 py-2 text-sm font-medium text-slate-50 shadow-lg ring-1 ring-emerald-400/40 transition hover:from-emerald-400 hover:to-teal-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+                  className="rounded-xl bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400 px-4 py-2 text-sm font-medium text-white shadow-lg ring-1 ring-teal-300/50 transition hover:from-teal-500 hover:via-emerald-500 hover:to-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400"
                   type="button"
                 >
                   Rekap User
                 </button>
                 <button
                   onClick={handleDownloadData}
-                  className="rounded-xl bg-gradient-to-r from-fuchsia-500/70 to-purple-600/70 px-4 py-2 text-sm font-medium text-slate-50 shadow-lg ring-1 ring-fuchsia-400/40 transition hover:from-fuchsia-400 hover:to-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300"
+                  className="rounded-xl bg-gradient-to-r from-fuchsia-400 via-purple-400 to-indigo-400 px-4 py-2 text-sm font-medium text-white shadow-lg ring-1 ring-fuchsia-300/50 transition hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400"
                   type="button"
                 >
                   Download Data
@@ -535,20 +535,20 @@ export default function UserDirectoryPage() {
                 {isDitbinmasClient && (
                   <button
                     onClick={() => setShowAllDitbinmas((s) => !s)}
-                    className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
                     type="button"
                   >
                     {showAllDitbinmas ? "Hanya DITBINMAS" : "Semua Ditbinmas"}
                   </button>
                 )}
-                <label className="ml-auto flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-2 text-sm text-slate-200 shadow-inner transition focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/40">
+                <label className="ml-auto flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-200">
                   <span className="sr-only">Cari pengguna</span>
                   <input
                     type="search"
                     placeholder="Cari berdasarkan nama, NRP, divisi, atau username"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-300 focus:outline-none"
+                    className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                     aria-label="Pencarian pengguna"
                   />
                 </label>
@@ -556,26 +556,26 @@ export default function UserDirectoryPage() {
             </div>
 
             {showForm && (
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4 shadow-inner backdrop-blur md:grid-cols-2">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-2xl border border-sky-200 bg-white p-4 text-slate-700 shadow-sm backdrop-blur md:grid-cols-2">
                 <input
                   type="text"
                   placeholder="Nama"
                   value={nama}
                   onChange={(e) => setNama(e.target.value)}
                   required
-                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 />
                 <select
                   value={pangkat}
                   onChange={(e) => setPangkat(e.target.value)}
                   required
-                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 >
-                  <option value="" className="bg-slate-900 text-slate-100">
+                  <option value="" className="bg-white text-slate-700">
                     Pilih Pangkat
                   </option>
                   {PANGKAT_OPTIONS.map((p) => (
-                    <option key={p} value={p} className="bg-slate-900 text-slate-100">
+                    <option key={p} value={p} className="bg-white text-slate-700">
                       {p}
                     </option>
                   ))}
@@ -591,7 +591,7 @@ export default function UserDirectoryPage() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   required
-                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 />
                 <select
                   value={satfung}
@@ -600,13 +600,13 @@ export default function UserDirectoryPage() {
                     if (e.target.value !== "POLSEK") setPolsekName("");
                   }}
                   required
-                  className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
                 >
-                  <option value="" className="bg-slate-900 text-slate-100">
+                  <option value="" className="bg-white text-slate-700">
                     Pilih {columnLabel}
                   </option>
                   {SATFUNG_OPTIONS.map((s) => (
-                    <option key={s} value={s} className="bg-slate-900 text-slate-100">
+                    <option key={s} value={s} className="bg-white text-slate-700">
                       {s}
                     </option>
                   ))}
@@ -618,12 +618,12 @@ export default function UserDirectoryPage() {
                     value={polsekName}
                     onChange={(e) => setPolsekName(e.target.value)}
                     required
-                    className="rounded-xl border border-slate-700/60 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 shadow-inner transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 md:col-span-2"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200 md:col-span-2"
                   />
                 )}
                 {submitError && (
                   <div
-                    className="md:col-span-2 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-300"
+                    className="md:col-span-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600"
                     role="alert"
                     aria-live="polite"
                   >
@@ -634,7 +634,7 @@ export default function UserDirectoryPage() {
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-slate-50 shadow-lg ring-1 ring-cyan-400/40 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${submitLoading ? "cursor-not-allowed bg-cyan-500/40" : "bg-gradient-to-r from-cyan-500/80 via-sky-500/70 to-blue-600/70 hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500"}`}
+                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-sky-300/50 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400 ${submitLoading ? "cursor-not-allowed bg-sky-200 text-slate-500" : "bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 hover:from-sky-500 hover:via-blue-500 hover:to-indigo-500"}`}
                   >
                     {submitLoading ? "Menyimpan..." : "Simpan"}
                   </button>
@@ -643,7 +643,7 @@ export default function UserDirectoryPage() {
                     onClick={() => {
                       setShowForm(false);
                     }}
-                    className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
                   >
                     Batal
                   </button>
@@ -652,9 +652,9 @@ export default function UserDirectoryPage() {
             )}
           </div>
 
-          <div className="relative mt-6 overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/70 shadow-2xl backdrop-blur">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-900/80 text-slate-300">
+          <div className="relative mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl backdrop-blur">
+            <table className="min-w-full text-sm text-slate-700">
+              <thead className="bg-sky-50 text-slate-600">
                 <tr className="text-left text-xs uppercase tracking-wider">
                   <th className="px-4 py-3 font-medium">No</th>
                   <th className="px-4 py-3 font-medium">Nama</th>
@@ -670,30 +670,30 @@ export default function UserDirectoryPage() {
                 {currentRows.map((u, idx) => (
                   <tr
                     key={u.user_id || idx}
-                    className={`border-t border-slate-800/60 transition hover:bg-slate-800/50 ${editingRowId === u.user_id ? "bg-cyan-500/10" : "bg-transparent"}`}
+                    className={`border-t border-slate-200 transition hover:bg-sky-50 ${editingRowId === u.user_id ? "bg-sky-100/60" : "bg-transparent"}`}
                   >
-                    <td className="px-4 py-3 text-slate-300">{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                    <td className="px-4 py-3 text-slate-100">
+                    <td className="px-4 py-3 text-slate-600">{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                    <td className="px-4 py-3 text-slate-700">
                       {editingRowId === u.user_id ? (
                         <div className="flex gap-2">
                           <input
                             value={editPangkat}
                             onChange={(e) => setEditPangkat(e.target.value)}
                             placeholder="Pangkat"
-                            className="w-24 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                            className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
                           />
                           <input
                             value={editNama}
                             onChange={(e) => setEditNama(e.target.value)}
                             placeholder="Nama"
-                            className="flex-1 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                            className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
                           />
                         </div>
                       ) : (
                         (u.title ? `${u.title} ` : "") + (u.nama || "-")
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-slate-200">
+                    <td className="px-4 py-3 font-mono text-slate-600">
                       {editingRowId === u.user_id ? (
                         <input
                           value={editNrpNip}
@@ -701,13 +701,13 @@ export default function UserDirectoryPage() {
                             setEditNrpNip(e.target.value.replace(/\D/g, ""))
                           }
                           placeholder="NRP/NIP"
-                          className="w-32 rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs font-mono text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                          className="w-32 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-mono text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
                         />
                       ) : (
                         u.user_id || "-"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-200">
+                    <td className="px-4 py-3 text-slate-600">
                       {showKesatuanColumn ? (
                         u.nama_client || u.client_name || u.client || u.nama || "-"
                       ) : editingRowId === u.user_id ? (
@@ -715,21 +715,21 @@ export default function UserDirectoryPage() {
                           value={editSatfung}
                           onChange={(e) => setEditSatfung(e.target.value)}
                           placeholder={columnLabel}
-                          className="w-full rounded-lg border border-slate-700/60 bg-slate-900/70 px-2 py-1 text-xs text-slate-100 shadow-inner focus:border-cyan-400 focus:outline-none"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
                         />
                       ) : (
                         u.divisi || "-"
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-cyan-300">{u.insta ? `@${u.insta}` : "-"}</td>
-                    <td className="px-4 py-3 font-mono text-fuchsia-300">{u.tiktok || "-"}</td>
+                    <td className="px-4 py-3 font-mono text-sky-500">{u.insta ? `@${u.insta}` : "-"}</td>
+                    <td className="px-4 py-3 font-mono text-purple-500">{u.tiktok || "-"}</td>
                     <td className="px-4 py-3">
                       {u.status === true || u.status === "true" ? (
-                        <span className="inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
+                        <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
                           Aktif
                         </span>
                       ) : (
-                        <span className="inline-flex rounded-full border border-slate-500/40 bg-slate-500/15 px-3 py-1 text-xs font-medium text-slate-300">
+                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                           Nonaktif
                         </span>
                       )}
@@ -740,7 +740,7 @@ export default function UserDirectoryPage() {
                           <button
                             onClick={() => handleUpdateRow(u.user_id)}
                             disabled={updateLoading}
-                            className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 p-2 text-emerald-300 transition hover:border-emerald-300 hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="rounded-lg border border-emerald-200 bg-emerald-100 p-2 text-emerald-600 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                             type="button"
                             aria-label="Simpan perubahan"
                           >
@@ -748,7 +748,7 @@ export default function UserDirectoryPage() {
                           </button>
                           <button
                             onClick={() => setEditingRowId(null)}
-                            className="rounded-lg border border-rose-400/40 bg-rose-500/15 p-2 text-rose-300 transition hover:border-rose-300 hover:text-rose-200"
+                            className="rounded-lg border border-rose-200 bg-rose-100 p-2 text-rose-600 transition hover:bg-rose-200"
                             type="button"
                             aria-label="Batalkan perubahan"
                           >
@@ -758,7 +758,7 @@ export default function UserDirectoryPage() {
                       ) : (
                         <button
                           onClick={() => handleEditClick(u)}
-                          className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:border-cyan-300 hover:text-cyan-100"
+                          className="rounded-lg border border-sky-200 bg-sky-100 p-2 text-sky-600 transition hover:bg-sky-200"
                           type="button"
                           aria-label={`Edit data ${u.nama || "user"}`}
                         >
@@ -772,7 +772,7 @@ export default function UserDirectoryPage() {
                   <tr>
                     <td
                       colSpan="8"
-                      className="px-4 py-3 text-sm text-rose-300"
+                      className="px-4 py-3 text-sm text-rose-500"
                       role="alert"
                     >
                       {updateError}
@@ -781,7 +781,7 @@ export default function UserDirectoryPage() {
                 )}
                 {currentRows.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-slate-400">
+                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
                       Tidak ada pengguna
                     </td>
                   </tr>
@@ -791,9 +791,9 @@ export default function UserDirectoryPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-200">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
               <button
-                className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 font-semibold shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 type="button"
@@ -804,7 +804,7 @@ export default function UserDirectoryPage() {
                 Halaman <b>{page}</b> dari <b>{totalPages}</b>
               </span>
               <button
-                className="rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-2 font-semibold shadow-inner transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 type="button"
@@ -822,15 +822,15 @@ export default function UserDirectoryPage() {
 function SummaryCard({ label, value, tone = "primary" }) {
   const toneStyles = {
     primary:
-      "from-cyan-500/30 via-sky-500/20 to-blue-600/30 text-cyan-100 border-cyan-400/40",
+      "from-sky-100 via-sky-50 to-blue-100 text-slate-800 border-sky-200",
     success:
-      "from-emerald-500/25 via-emerald-500/15 to-teal-500/25 text-emerald-100 border-emerald-400/40",
+      "from-emerald-100 via-teal-50 to-cyan-100 text-emerald-700 border-emerald-200",
     info:
-      "from-sky-500/25 via-cyan-500/15 to-slate-500/20 text-sky-100 border-sky-400/40",
+      "from-cyan-100 via-sky-50 to-indigo-100 text-sky-700 border-sky-200",
     muted:
-      "from-slate-500/20 via-slate-600/10 to-slate-800/20 text-slate-200 border-slate-500/40",
+      "from-slate-100 via-blue-50 to-slate-200 text-slate-600 border-slate-200",
     pink:
-      "from-fuchsia-500/30 via-pink-500/20 to-purple-600/30 text-pink-100 border-fuchsia-400/40",
+      "from-rose-100 via-fuchsia-50 to-purple-100 text-purple-700 border-rose-200",
   };
   const displayValue =
     typeof value === "number" ? value.toLocaleString("id-ID") : value;
@@ -841,13 +841,13 @@ function SummaryCard({ label, value, tone = "primary" }) {
         toneStyles[tone] || toneStyles.primary
       }`}
     >
-      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-2xl" />
-      <div className="absolute inset-x-2 top-6 h-16 bg-white/10 blur-3xl" />
+      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/60 blur-2xl" />
+      <div className="absolute inset-x-2 top-6 h-16 bg-white/40 blur-3xl" />
       <div className="relative flex flex-col gap-2">
-        <span className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-200/70">
+        <span className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-500/80">
           {label}
         </span>
-        <span className="text-3xl font-semibold text-slate-50">{displayValue}</span>
+        <span className="text-3xl font-semibold text-slate-900">{displayValue}</span>
       </div>
     </div>
   );
