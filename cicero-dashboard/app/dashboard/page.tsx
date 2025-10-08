@@ -176,13 +176,6 @@ export default function DashboardPage() {
     fetchData();
   }, [token]);
 
-  useEffect(() => {
-    const comment = document.querySelector<HTMLElement>("#comm1");
-    if (comment) {
-      comment.style.border = "1px solid red";
-    }
-  }, []);
-
   const analytics = useMemo(() => {
     const instagramFollowers = pickNumericValue(igProfile, [
       "followers",
