@@ -558,55 +558,64 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-cyan-50 to-indigo-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-sky-50 via-blue-50 to-indigo-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-100">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -right-32 h-96 w-96 rounded-full bg-sky-200/60 blur-3xl dark:bg-cyan-500/30" />
-        <div className="absolute bottom-0 left-0 h-[28rem] w-[28rem] rounded-full bg-indigo-200/40 blur-[200px] dark:bg-purple-500/20" />
-        <div className="absolute right-1/3 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-cyan-200/50 blur-3xl dark:bg-blue-500/10" />
+        <div className="absolute -left-16 -top-24 h-80 w-80 rounded-full bg-sky-200/70 blur-3xl dark:bg-sky-500/20" />
+        <div className="absolute right-0 top-1/3 h-[26rem] w-[26rem] translate-x-1/4 rounded-full bg-cyan-200/40 blur-[140px] dark:bg-cyan-500/20" />
+        <div className="absolute bottom-[-8rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-indigo-200/40 blur-[160px] dark:bg-indigo-500/20" />
+        <div className="absolute bottom-10 right-[18%] h-40 w-40 rounded-full bg-emerald-200/40 blur-2xl dark:bg-emerald-500/20" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-12">
-        <section className="space-y-8">
-          <div className="space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-4 py-1 text-xs uppercase tracking-[0.3em] text-sky-700 shadow-[0_12px_30px_rgba(14,165,233,0.12)] dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0.6rem_rgba(52,211,153,0.45)] dark:shadow-[0_0_0.6rem_rgba(52,211,153,0.7)]" />
-              Command Center
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 py-14">
+        <section className="space-y-10">
+          <div className="space-y-7">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-4 py-1 text-xs uppercase tracking-[0.35em] text-sky-700 shadow-[0_14px_35px_rgba(56,189,248,0.18)] dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-300">
+              <span className="inline-flex h-2 w-2 items-center justify-center rounded-full bg-emerald-400 shadow-[0_0_0.65rem_rgba(52,211,153,0.5)] dark:shadow-[0_0_0.65rem_rgba(52,211,153,0.7)]" />
+              Social Intelligence
             </span>
-            <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl dark:text-slate-50">
-              Ikhtisar Data Keterlibatan Audiens Instagram & TikTok secara Real-time
+            <h1 className="text-3xl font-semibold leading-snug text-slate-900 md:text-4xl dark:text-slate-50">
+              Dasbor Kolaboratif yang Membangun Kepercayaan & Semangat Kolektif
             </h1>
             <p className="max-w-2xl text-base text-sky-700 md:text-lg dark:text-slate-300">
-              Pantau detik demi detik perkembangan audiens, reaksi komunitas, dan percakapan yang terjadi di Instagram serta TikTok melalui satu kanvas visual yang imersif.
+              Rasakan cara baru menafsirkan performa Instagram dan TikTok dengan visual lembut, terkurasi, dan konsisten yang memadukan data kepercayaan, ketelitian insight, serta energi kolaboratif tim Anda.
             </p>
-            <div className="grid gap-3 text-sm text-sky-700 sm:grid-cols-2 dark:text-slate-300">
-              <div className="flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-3 py-1.5 shadow-[0_10px_25px_rgba(56,189,248,0.12)] dark:border-slate-700/60 dark:bg-slate-900/60">
-                <span className="text-emerald-500 dark:text-emerald-300">◎</span>
-                <span>Data terintegrasi lintas platform</span>
-              </div>
-              <div className="flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-3 py-1.5 shadow-[0_10px_25px_rgba(129,140,248,0.12)] dark:border-slate-700/60 dark:bg-slate-900/60">
+            <div className="grid gap-3 text-sm text-sky-700 sm:grid-cols-3 dark:text-slate-300">
+              <div className="flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-3 py-1.5 shadow-[0_10px_26px_rgba(56,189,248,0.15)] dark:border-slate-700/60 dark:bg-slate-900/60">
                 <span className="text-sky-600 dark:text-cyan-300">◎</span>
-                <span>Visual responsif & mudah dipahami</span>
+                <span>Pengukuran real-time lintas platform</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-cyan-200/70 bg-white/80 px-3 py-1.5 shadow-[0_10px_26px_rgba(34,211,238,0.18)] dark:border-slate-700/60 dark:bg-slate-900/60">
+                <span className="text-cyan-600 dark:text-cyan-200">◎</span>
+                <span>Standar visual konsisten & presisi</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-indigo-200/70 bg-white/80 px-3 py-1.5 shadow-[0_10px_26px_rgba(129,140,248,0.18)] dark:border-slate-700/60 dark:bg-slate-900/60">
+                <span className="text-indigo-500 dark:text-indigo-300">◎</span>
+                <span>Insight yang menguatkan kolaborasi tim</span>
               </div>
             </div>
           </div>
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-sky-200/70 bg-gradient-to-br from-white/80 via-sky-50/80 to-cyan-50/60 p-6 shadow-[0_35px_60px_-15px_rgba(14,165,233,0.2)] dark:border-slate-700/60 dark:from-slate-900/60 dark:via-slate-900/40 dark:to-slate-900/10">
-              <div className="absolute inset-x-10 top-4 h-24 rounded-full bg-gradient-to-b from-sky-300/40 via-transparent to-transparent blur-2xl dark:from-cyan-400/30" />
-              <div className="relative flex flex-1 flex-col gap-6">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Snapshot Hari Ini</h2>
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[2.25rem] border border-sky-200/70 bg-gradient-to-br from-white/90 via-sky-50/80 to-cyan-50/70 p-7 shadow-[0_36px_80px_-24px_rgba(14,165,233,0.45)] backdrop-blur-lg dark:border-slate-700/60 dark:from-slate-900/70 dark:via-slate-900/40 dark:to-slate-900/10">
+              <div className="absolute inset-x-10 top-6 h-28 rounded-full bg-gradient-to-b from-sky-300/40 via-transparent to-transparent blur-2xl dark:from-cyan-400/25" />
+              <div className="absolute -right-12 bottom-16 h-40 w-40 rounded-full bg-gradient-to-br from-cyan-200/40 to-emerald-200/30 blur-3xl dark:from-cyan-500/20 dark:to-emerald-400/20" />
+              <div className="relative flex flex-1 flex-col gap-7">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600 dark:text-slate-400">Snapshot Hari Ini</span>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{clientUsernames.instagram || clientUsernames.tiktok ? "Monitor ringkas performa klien" : "Monitor ringkas performa konten"}</h2>
+                </div>
                 <p className="text-sm text-sky-700 dark:text-slate-300">
                   {analytics.totals.posts > 0
-                    ? `Analisis ${analytics.totals.posts} konten terbaru dengan akumulasi likes dan komentar sebanyak ${formatCompactNumber(
+                    ? `Menganalisis ${analytics.totals.posts} konten terbaru dengan total interaksi ${formatCompactNumber(
                         analytics.totals.engagements
-                      )}`
-                    : "Menunggu konten terbaru untuk dianalisis."}
+                      )} yang didorong oleh komunitas Anda.`
+                    : "Menunggu konten terbaru untuk dianalisis dan dibagikan ke tim."}
                 </p>
-                <div className="grid gap-4 text-sm text-slate-700 sm:grid-cols-2 xl:grid-cols-2 dark:text-slate-200">
+                <div className="grid gap-5 text-sm text-slate-700 sm:grid-cols-2 xl:grid-cols-2 dark:text-slate-200">
                   {snapshotMetrics.map((metric) => (
                     <div
                       key={metric.key}
-                      className="group flex flex-col gap-2 rounded-2xl border border-sky-200/70 bg-white/75 p-4 shadow-[0_18px_40px_rgba(14,165,233,0.14)] transition duration-200 hover:-translate-y-1 hover:border-sky-300/70 hover:shadow-[0_22px_45px_rgba(56,189,248,0.2)] dark:border-slate-800/60 dark:bg-slate-900/60 dark:shadow-[0_0_1.5rem_rgba(56,189,248,0.12)] dark:hover:border-cyan-400/40 dark:hover:shadow-[0_0_2.5rem_rgba(56,189,248,0.25)]"
+                      className="group flex flex-col gap-2 rounded-[1.75rem] border border-sky-200/70 bg-white/80 p-5 shadow-[0_24px_50px_rgba(56,189,248,0.22)] transition duration-200 hover:-translate-y-1 hover:border-sky-300/70 hover:shadow-[0_30px_60px_rgba(56,189,248,0.28)] dark:border-slate-800/60 dark:bg-slate-900/60 dark:shadow-[0_0_1.8rem_rgba(56,189,248,0.16)] dark:hover:border-cyan-400/40 dark:hover:shadow-[0_0_2.5rem_rgba(56,189,248,0.28)]"
                     >
-                      <span className="text-xs font-medium uppercase tracking-[0.2em] text-sky-600 dark:text-slate-400">
+                      <span className="text-xs font-medium uppercase tracking-[0.25em] text-sky-600 dark:text-slate-400">
                         {metric.label}
                       </span>
                       <p className={cn("text-2xl font-semibold", metric.accent)}>{metric.value}</p>
@@ -624,7 +633,7 @@ export default function DashboardPage() {
                 tiktokProfile={tiktokProfile}
                 tiktokPosts={tiktokPosts}
                 className="grid-cols-1 sm:grid-cols-2 h-full"
-                cardClassName="border-sky-200/70 bg-white/75 dark:border-slate-800/70 dark:bg-slate-900/70"
+                cardClassName="border-sky-200/70 bg-white/80 shadow-[0_28px_60px_rgba(99,102,241,0.18)] dark:border-slate-800/70 dark:bg-slate-900/70"
               />
             </div>
           </div>
@@ -684,9 +693,9 @@ export default function DashboardPage() {
               return (
                 <div
                   key={platform.key}
-                  className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-sky-200/70 bg-white/75 p-6 shadow-[0_28px_60px_rgba(99,102,241,0.18)] transition duration-200 hover:-translate-y-1 hover:border-sky-300/70 hover:shadow-[0_32px_70px_rgba(129,140,248,0.25)] dark:border-slate-800/70 dark:bg-slate-900/50 dark:shadow-[0_0_30px_rgba(79,70,229,0.25)] dark:hover:border-cyan-400/40 dark:hover:shadow-[0_0_45px_rgba(34,211,238,0.22)]"
+                  className="group relative flex h-full flex-col overflow-hidden rounded-[2.25rem] border border-sky-200/70 bg-white/80 p-6 shadow-[0_30px_70px_rgba(129,140,248,0.28)] transition duration-200 hover:-translate-y-1 hover:border-sky-300/70 hover:shadow-[0_36px_80px_rgba(14,165,233,0.28)] dark:border-slate-800/70 dark:bg-slate-900/50 dark:shadow-[0_0_32px_rgba(79,70,229,0.22)] dark:hover:border-cyan-400/40 dark:hover:shadow-[0_0_48px_rgba(34,211,238,0.26)]"
                 >
-                  <div className="absolute -top-12 right-4 h-32 w-32 rounded-full bg-gradient-to-br from-sky-300/50 via-transparent to-transparent blur-2xl transition group-hover:from-sky-300/70 dark:from-cyan-400/40 dark:group-hover:from-cyan-400/60" />
+                  <div className="absolute -top-16 right-0 h-36 w-36 rounded-full bg-gradient-to-br from-sky-300/50 via-transparent to-transparent blur-3xl transition group-hover:from-sky-300/70 dark:from-cyan-400/40 dark:group-hover:from-cyan-400/60" />
                   <div className="relative flex h-full flex-col gap-6">
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -705,7 +714,7 @@ export default function DashboardPage() {
                       {primaryMetrics.map((metric) => (
                         <div
                           key={metric.key}
-                          className="flex flex-col gap-2 rounded-2xl border border-sky-200/70 bg-white/80 p-4 shadow-[0_15px_35px_rgba(14,165,233,0.12)] dark:border-slate-800/60 dark:bg-slate-900/60"
+                          className="flex flex-col gap-2 rounded-[1.5rem] border border-sky-200/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(56,189,248,0.18)] dark:border-slate-800/60 dark:bg-slate-900/60"
                         >
                           <span className="text-xs font-medium uppercase tracking-wide text-sky-600 dark:text-slate-400">
                             {metric.label}
@@ -718,7 +727,7 @@ export default function DashboardPage() {
                       {shareMetrics.map((share) => (
                         <div
                           key={share.key}
-                          className="rounded-2xl border border-sky-200/70 bg-white/80 p-3 shadow-[0_12px_28px_rgba(56,189,248,0.16)] dark:border-slate-800/60 dark:bg-slate-900/60"
+                          className="rounded-[1.5rem] border border-sky-200/70 bg-white/80 p-3 shadow-[0_16px_32px_rgba(45,212,191,0.18)] dark:border-slate-800/60 dark:bg-slate-900/60"
                         >
                           <div className="mb-2 flex justify-between text-[0.7rem] font-medium uppercase tracking-wider text-sky-600 dark:text-slate-400">
                             <span>{share.label}</span>
@@ -775,9 +784,9 @@ export default function DashboardPage() {
               yang paling disukai audiens.
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {analytics.topPosts.length === 0 && (
-              <div className="col-span-full rounded-3xl border border-sky-200/70 bg-white/75 p-8 text-center text-sm text-sky-700 shadow-[0_25px_60px_rgba(59,130,246,0.18)] dark:border-slate-800/70 dark:bg-slate-900/50 dark:text-slate-300">
+              <div className="col-span-full rounded-[2.25rem] border border-sky-200/70 bg-white/80 p-10 text-center text-sm text-sky-700 shadow-[0_28px_70px_rgba(14,165,233,0.22)] dark:border-slate-800/70 dark:bg-slate-900/50 dark:text-slate-300">
                 Data konten belum tersedia. Unggah konten baru untuk melihat analitik terbaru.
               </div>
             )}
@@ -787,24 +796,24 @@ export default function DashboardPage() {
                 href={post.url || undefined}
                 target={post.url ? "_blank" : undefined}
                 rel={post.url ? "noopener noreferrer" : undefined}
-                className="group relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/80 p-4 transition hover:-translate-y-1 hover:border-sky-300/70 hover:shadow-[0_28px_60px_rgba(56,189,248,0.22)] dark:border-slate-800/60 dark:bg-slate-900/50 dark:hover:border-cyan-400/60 dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.3)]"
+                className="group relative overflow-hidden rounded-[2.25rem] border border-sky-200/70 bg-white/80 p-4 transition hover:-translate-y-1 hover:border-sky-300/70 hover:shadow-[0_32px_70px_rgba(56,189,248,0.26)] dark:border-slate-800/60 dark:bg-slate-900/50 dark:hover:border-cyan-400/60 dark:hover:shadow-[0_0_36px_rgba(34,211,238,0.3)]"
               >
-                <div className="absolute -top-16 right-0 h-32 w-32 rounded-full bg-sky-300/40 blur-3xl transition group-hover:bg-sky-300/60 dark:bg-cyan-500/20 dark:group-hover:bg-cyan-400/30" />
+                <div className="absolute -top-20 right-0 h-36 w-36 rounded-full bg-sky-300/35 blur-3xl transition group-hover:bg-sky-300/55 dark:bg-cyan-500/20 dark:group-hover:bg-cyan-400/30" />
                 <div className="relative space-y-4">
                   {post.thumbnail ? (
                     <img
                       src={post.thumbnail}
                       alt={`Thumbnail ${post.platform}`}
-                      className="h-40 w-full rounded-2xl object-cover"
+                      className="h-40 w-full rounded-[1.75rem] object-cover"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex h-40 w-full items-center justify-center rounded-2xl border border-sky-200/70 bg-white/70 text-sky-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500">
+                    <div className="flex h-40 w-full items-center justify-center rounded-[1.75rem] border border-sky-200/70 bg-white/70 text-sky-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500">
                       Tidak ada thumbnail
                     </div>
                   )}
                   <div className="space-y-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.2em] text-sky-700 shadow-[0_12px_28px_rgba(79,70,229,0.18)] dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-slate-300">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.2em] text-sky-700 shadow-[0_14px_32px_rgba(79,70,229,0.18)] dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-slate-300">
                       {post.platform}
                     </span>
                     <p
@@ -820,19 +829,19 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-3 text-center text-xs text-slate-700 dark:text-slate-300">
-                    <div className="rounded-2xl border border-sky-200/70 bg-white/80 px-3 py-2 shadow-[0_12px_30px_rgba(56,189,248,0.15)] dark:border-slate-800/70 dark:bg-slate-900/70">
+                    <div className="rounded-[1.5rem] border border-sky-200/70 bg-white/80 px-3 py-2 shadow-[0_16px_36px_rgba(56,189,248,0.22)] dark:border-slate-800/70 dark:bg-slate-900/70">
                       <p className="text-[0.65rem] uppercase tracking-wide text-sky-600 dark:text-slate-400">Likes</p>
                       <p className="text-base font-semibold text-sky-600 dark:text-cyan-300">
                         {formatCompactNumber(post.likes)}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-sky-200/70 bg-white/80 px-3 py-2 shadow-[0_12px_30px_rgba(16,185,129,0.15)] dark:border-slate-800/70 dark:bg-slate-900/70">
+                    <div className="rounded-[1.5rem] border border-sky-200/70 bg-white/80 px-3 py-2 shadow-[0_16px_36px_rgba(52,211,153,0.22)] dark:border-slate-800/70 dark:bg-slate-900/70">
                       <p className="text-[0.65rem] uppercase tracking-wide text-sky-600 dark:text-slate-400">Komentar</p>
                       <p className="text-base font-semibold text-emerald-600 dark:text-emerald-300">
                         {formatCompactNumber(post.comments)}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-sky-200/70 bg-white/80 px-3 py-2 shadow-[0_12px_30px_rgba(217,70,239,0.15)] dark:border-slate-800/70 dark:bg-slate-900/70">
+                    <div className="rounded-[1.5rem] border border-sky-200/70 bg-white/80 px-3 py-2 shadow-[0_16px_36px_rgba(244,114,182,0.22)] dark:border-slate-800/70 dark:bg-slate-900/70">
                       <p className="text-[0.65rem] uppercase tracking-wide text-sky-600 dark:text-slate-400">Views</p>
                       <p className="text-base font-semibold text-fuchsia-600 dark:text-fuchsia-300">
                         {formatCompactNumber(post.views)}
