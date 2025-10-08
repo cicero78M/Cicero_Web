@@ -159,19 +159,19 @@ function RelationshipMap() {
     >
       <defs>
         <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(56,189,248,0.6)" />
-          <stop offset="100%" stopColor="rgba(14,116,144,0.9)" />
+          <stop offset="0%" stopColor="rgba(165,243,252,0.8)" />
+          <stop offset="100%" stopColor="rgba(196,181,253,0.9)" />
         </linearGradient>
         <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(14,165,233,0.6)" />
-          <stop offset="100%" stopColor="rgba(236,72,153,0.5)" />
+          <stop offset="0%" stopColor="rgba(56,189,248,0.6)" />
+          <stop offset="100%" stopColor="rgba(167,139,250,0.5)" />
         </linearGradient>
         <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="rgba(15,23,42,0.45)" />
+          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="rgba(148,163,184,0.35)" />
         </filter>
       </defs>
 
-      <rect x="0" y="0" width="600" height="260" rx="24" fill="rgba(15,23,42,0.65)" />
+      <rect x="0" y="0" width="600" height="260" rx="24" fill="rgba(241,245,249,0.85)" />
 
       <g stroke="url(#edgeGradient)" strokeWidth="3" strokeLinecap="round" fill="none">
         <path d="M180 70 Q300 30 420 70" />
@@ -190,7 +190,7 @@ function RelationshipMap() {
       </g>
 
       <g
-        fill="white"
+        fill="#1f2937"
         fontFamily="'Inter', 'Helvetica Neue', sans-serif"
         fontSize="15"
         fontWeight="600"
@@ -204,7 +204,7 @@ function RelationshipMap() {
       </g>
 
       <g
-        fill="rgba(226,232,240,0.75)"
+        fill="rgba(100,116,139,0.85)"
         fontFamily="'Inter', 'Helvetica Neue', sans-serif"
         fontSize="11"
         fontWeight="500"
@@ -218,7 +218,7 @@ function RelationshipMap() {
       </g>
 
       <g
-        fill="rgba(94,234,212,0.85)"
+        fill="#0284c7"
         fontFamily="'Inter', 'Helvetica Neue', sans-serif"
         fontSize="11"
         fontWeight="500"
@@ -237,22 +237,22 @@ function RelationshipMap() {
 
 export default function MekanismeAbsensiPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-100 text-slate-800">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-pink-500/10 blur-3xl" />
-        <div className="absolute inset-x-20 bottom-10 h-64 rounded-full bg-gradient-to-r from-cyan-400/10 via-transparent to-violet-500/10 blur-2xl" />
+        <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-teal-200/30 blur-3xl" />
+        <div className="absolute inset-x-20 bottom-10 h-64 rounded-full bg-gradient-to-r from-sky-200/40 via-transparent to-pink-200/40 blur-2xl" />
       </div>
 
       <div className="relative mx-auto max-w-6xl px-6 py-16">
         <header className="mb-12 space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200 shadow-lg shadow-cyan-500/20">
-            <Sparkles className="h-4 w-4" /> Blueprint Absensi
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-sky-700 shadow-lg shadow-sky-200/70">
+            <Sparkles className="h-4 w-4 text-sky-500" /> Blueprint Absensi
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
             Mekanisme Sistem Absensi Cicero
           </h1>
-          <p className="mx-auto max-w-3xl text-base text-slate-300">
+          <p className="mx-auto max-w-3xl text-base text-slate-600">
             Peta utuh yang merangkum aktor kunci, alur kerja, tanggung jawab RACI, serta koneksi integrasi yang menopang kepatuhan harian di lingkungan Ditbinmas.
           </p>
         </header>
@@ -263,23 +263,23 @@ export default function MekanismeAbsensiPage() {
             return (
               <article
                 key={actor.name}
-                className="group relative overflow-hidden rounded-3xl border border-cyan-400/10 bg-white/5 p-6 shadow-xl shadow-cyan-500/10 backdrop-blur-xl transition hover:border-cyan-400/30"
+                className="group relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/80 p-6 shadow-xl shadow-sky-100/70 backdrop-blur-md transition hover:border-sky-300"
               >
-                <div className="absolute -top-16 right-0 h-32 w-32 rounded-full bg-cyan-400/20 blur-2xl" />
+                <div className="absolute -top-16 right-0 h-32 w-32 rounded-full bg-sky-200/40 blur-2xl" />
                 <div className="relative flex flex-col gap-4">
-                  <div className="flex items-center gap-3 text-cyan-200">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-400/10 text-white shadow-inner shadow-cyan-500/40">
+                  <div className="flex items-center gap-3 text-sky-700">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-300/60 bg-sky-100 text-sky-600 shadow-inner shadow-sky-200/70">
                       <Icon className="h-6 w-6" />
                     </span>
                     <div>
-                      <h2 className="text-lg font-semibold text-white">{actor.name}</h2>
-                      <p className="text-sm text-slate-300">{actor.focus}</p>
+                      <h2 className="text-lg font-semibold text-slate-900">{actor.name}</h2>
+                      <p className="text-sm text-slate-600">{actor.focus}</p>
                     </div>
                   </div>
-                  <ul className="space-y-2 text-sm text-slate-200">
+                  <ul className="space-y-2 text-sm text-slate-700">
                     {actor.responsibilities.map((item) => (
                       <li key={item} className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-teal-400" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -291,40 +291,40 @@ export default function MekanismeAbsensiPage() {
         </section>
 
         <section className="mt-14 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-cyan-500/10 p-8 shadow-xl shadow-cyan-500/15">
-            <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-violet-500/20 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70">
+            <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-200/40 blur-2xl" />
             <div className="relative flex flex-col gap-5">
-              <div className="inline-flex items-center gap-3 text-cyan-200">
+              <div className="inline-flex items-center gap-3 text-sky-700">
                 <CalendarCheck className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">Alur Mekanisme</span>
               </div>
-              <ol className="space-y-4 text-sm leading-relaxed text-slate-200">
+              <ol className="space-y-4 text-sm leading-relaxed text-slate-700">
                 {steps.map((step, idx) => (
-                  <li key={step.title} className="rounded-2xl border border-white/5 bg-white/5 p-4">
-                    <div className="flex items-center gap-3 text-cyan-200">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-400/10 text-sm font-semibold text-white">
+                  <li key={step.title} className="rounded-2xl border border-sky-200/60 bg-white/70 p-4">
+                    <div className="flex items-center gap-3 text-sky-700">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-sky-300/70 bg-sky-100 text-sm font-semibold text-sky-600">
                         {idx + 1}
                       </span>
-                      <p className="text-base font-semibold text-white">{step.title}</p>
+                      <p className="text-base font-semibold text-slate-900">{step.title}</p>
                     </div>
-                    <p className="mt-2 text-sm text-slate-300">{step.detail}</p>
+                    <p className="mt-2 text-sm text-slate-600">{step.detail}</p>
                   </li>
                 ))}
               </ol>
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-cyan-400/15 bg-white/5 p-8 shadow-xl shadow-cyan-500/20 backdrop-blur-xl">
-            <div className="absolute -right-10 top-1/2 h-36 w-36 -translate-y-1/2 rounded-full bg-cyan-400/20 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/80 p-8 shadow-xl shadow-sky-100/70 backdrop-blur-md">
+            <div className="absolute -right-10 top-1/2 h-36 w-36 -translate-y-1/2 rounded-full bg-teal-200/40 blur-2xl" />
             <div className="relative flex flex-col gap-4">
-              <div className="inline-flex items-center gap-3 text-cyan-200">
+              <div className="inline-flex items-center gap-3 text-sky-700">
                 <Map className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">Peta Hubungan Aktor</span>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+              <div className="rounded-2xl border border-sky-100 bg-white/70 p-4">
                 <RelationshipMap />
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Garis solid menunjukkan aliran koordinasi rutin, garis putus-putus menandakan eskalasi yang dipicu indikator sistem.
               </p>
             </div>
@@ -332,16 +332,16 @@ export default function MekanismeAbsensiPage() {
         </section>
 
         <section className="mt-14 grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-cyan-400/15 bg-white/5 p-8 shadow-xl shadow-cyan-500/15 backdrop-blur-xl">
-            <div className="absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-cyan-400/20 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70 backdrop-blur-md">
+            <div className="absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-teal-200/40 blur-2xl" />
             <div className="relative flex flex-col gap-4">
-              <div className="inline-flex items-center gap-3 text-cyan-200">
+              <div className="inline-flex items-center gap-3 text-sky-700">
                 <FileText className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tabel RACI</span>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-white/10">
-                <table className="min-w-full divide-y divide-white/10 text-left text-sm text-slate-200">
-                  <thead className="bg-slate-950/60 text-xs uppercase tracking-widest text-slate-400">
+              <div className="overflow-hidden rounded-2xl border border-sky-100">
+                <table className="min-w-full divide-y divide-sky-100 text-left text-sm text-slate-700">
+                  <thead className="bg-sky-100 text-xs uppercase tracking-widest text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Aktivitas</th>
                       <th className="px-4 py-3">R</th>
@@ -350,10 +350,10 @@ export default function MekanismeAbsensiPage() {
                       <th className="px-4 py-3">I</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 bg-slate-900/60">
+                  <tbody className="divide-y divide-sky-100 bg-white/80">
                     {raciMatrix.map((row) => (
                       <tr key={row.activity}>
-                        <td className="px-4 py-3 font-medium text-white">{row.activity}</td>
+                        <td className="px-4 py-3 font-medium text-slate-900">{row.activity}</td>
                         <td className="px-4 py-3">{row.r}</td>
                         <td className="px-4 py-3">{row.a}</td>
                         <td className="px-4 py-3">{row.c}</td>
@@ -363,25 +363,25 @@ export default function MekanismeAbsensiPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 R = Responsible, A = Accountable, C = Consulted, I = Informed.
               </p>
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-cyan-400/15 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-cyan-500/10 p-8 shadow-xl shadow-cyan-500/15">
-            <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-violet-500/20 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70">
+            <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-200/40 blur-2xl" />
             <div className="relative flex flex-col gap-4">
-              <div className="inline-flex items-center gap-3 text-cyan-200">
+              <div className="inline-flex items-center gap-3 text-sky-700">
                 <Shield className="h-6 w-6" />
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">Istilah Kunci &amp; Rute Integrasi</span>
               </div>
-              <ul className="space-y-4 text-sm text-slate-200">
+              <ul className="space-y-4 text-sm text-slate-700">
                 {integrations.map((item) => (
-                  <li key={item.term} className="rounded-2xl border border-white/5 bg-white/5 p-4">
-                    <div className="text-base font-semibold text-white">{item.term}</div>
-                    <p className="mt-1 text-sm text-slate-300">{item.description}</p>
-                    <p className="mt-2 text-xs font-medium uppercase tracking-widest text-cyan-200">
+                  <li key={item.term} className="rounded-2xl border border-sky-200/60 bg-white/70 p-4">
+                    <div className="text-base font-semibold text-slate-900">{item.term}</div>
+                    <p className="mt-1 text-sm text-slate-600">{item.description}</p>
+                    <p className="mt-2 text-xs font-medium uppercase tracking-widest text-sky-600">
                       {item.route}
                     </p>
                   </li>
