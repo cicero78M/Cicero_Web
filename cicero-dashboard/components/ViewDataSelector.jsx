@@ -71,37 +71,78 @@ export default function ViewDataSelector({
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
   const baseContainerClass = cn(
-    "flex w-full flex-wrap items-center gap-2 justify-between sm:justify-start",
+    "flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-100/70 bg-white/90 px-4 py-3 shadow-sm sm:justify-start",
     disabled && "opacity-60",
     className,
   );
   const baseLabelClass = cn(
-    "text-sm font-semibold text-sky-700 w-full sm:w-auto",
+    "w-full text-sm font-semibold tracking-tight text-blue-900 sm:w-auto",
     labelClassName,
   );
   const baseControlClass = cn(
-    "w-full rounded border border-sky-200 bg-white/80 px-2 py-1 text-sm text-slate-700 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 sm:w-auto",
+    "w-full rounded-xl border border-blue-200 bg-blue-50/70 px-3 py-2 text-sm text-blue-900 placeholder:text-blue-300 shadow-inner transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 sm:w-auto",
     controlClassName,
   );
+  const segmentedButtonBaseClass =
+    "rounded-full border border-blue-200 bg-white/60 px-4 py-2 text-sm font-medium text-blue-700 shadow-inner transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
 
   return (
     <div className={baseContainerClass} aria-disabled={disabled}>
       <label htmlFor={id} className={baseLabelClass}>
-        View Data By:
+        Tampilan data berdasarkan
       </label>
-      <select
-        id={id}
-        className={baseControlClass}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        <div className="hidden w-full flex-wrap gap-2 sm:flex">
+          {options.map((opt) => {
+            const isActive = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange(opt.value)}
+                disabled={disabled}
+                className={cn(
+                  segmentedButtonBaseClass,
+                  isActive &&
+                    "border-blue-300 bg-blue-100/80 text-blue-900 shadow-sm",
+                  disabled && "cursor-not-allowed opacity-70",
+                )}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="relative w-full sm:hidden">
+          <select
+            id={id}
+            className={cn(baseControlClass, "appearance-none pr-10")}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+          >
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <svg
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-500"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </div>
+      </div>
       {showDateInput && (
         <>
           <label htmlFor={dateInputId} className="sr-only">
