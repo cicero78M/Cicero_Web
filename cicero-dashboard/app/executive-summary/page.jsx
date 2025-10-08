@@ -4570,48 +4570,64 @@ export default function ExecutiveSummaryPage() {
         )}
       </section>
 
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold text-neutral-navy">Rincian Kinerja Platform</h2>
-          <p className="text-sm text-neutral-mist">
-            Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan.
-          </p>
-          <p className="text-xs text-neutral-slate">
-            Seluruh data pada segmen ini mengikuti pilihan bulan dan tahun pada filter di bagian atas halaman.
-          </p>
-        </div>
-        <div className="space-y-6">
-          {showPlatformLoading ? (
-            <div className="flex h-40 items-center justify-center rounded-3xl border border-brand-100/60 bg-white/90 p-6 text-sm text-neutral-slate">
-              Memuat data rekap likes…
-            </div>
-          ) : platformError ? (
-            <div className="flex h-40 items-center justify-center rounded-3xl border border-rose-500/40 bg-rose-950/40 p-6 text-sm text-rose-200">
-              {platformError}
-            </div>
-          ) : likesSummary?.clients?.length ? (
-            <PlatformLikesSummary
-              data={likesSummary}
-              formatNumber={formatNumber}
-              formatPercent={formatPercent}
-              personnelActivity={{
-                loading: userInsightState.loading,
-                error: userInsightState.error,
-                categories: activityCategories,
-                totalEvaluated,
-                totalContentEvaluated,
-                hasSummary: Boolean(activityBuckets),
-              }}
-              postTotals={{
-                instagram: instagramPostCount,
-                tiktok: tiktokPostCount,
-              }}
-            />
-          ) : (
-            <div className="rounded-3xl border border-brand-100/60 bg-white/90 p-6 text-sm text-neutral-slate">
-              Belum ada data rekap likes untuk periode ini.
-            </div>
-          )}
+      <section
+        className="relative overflow-hidden rounded-[36px] border border-sky-200/70 bg-gradient-to-br from-sky-50 via-indigo-50/70 to-emerald-50/70 p-8 shadow-[0_32px_68px_rgba(16,63,95,0.16)]"
+        aria-label="Rincian Kinerja Platform"
+      >
+        <div className="pointer-events-none absolute -top-24 -right-16 h-60 w-60 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 -left-10 h-72 w-72 rounded-full bg-emerald-200/35 blur-3xl" />
+        <div className="relative z-10 space-y-8">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.32em] text-sky-800/80 shadow-sm ring-1 ring-white/70">
+              Rincian Kinerja Platform
+            </span>
+            <h2 className="text-2xl font-semibold text-neutral-navy">
+              Pemetaan Kontribusi Kanal Sosial
+            </h2>
+            <p className="max-w-2xl text-sm leading-relaxed text-neutral-mist">
+              Bandingkan performa inti tiap kanal untuk melihat kontribusi terhadap interaksi keseluruhan dan menjaga
+              konsistensi keterlibatan tim.
+            </p>
+            <p className="text-xs text-neutral-slate/80">
+              Seluruh data pada segmen ini mengikuti pilihan bulan dan tahun pada filter di bagian atas halaman.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {showPlatformLoading ? (
+              <div className="flex h-40 items-center justify-center rounded-3xl border border-sky-200/70 bg-white/75 p-6 text-sm text-neutral-slate shadow-inner">
+                Memuat data rekap likes…
+              </div>
+            ) : platformError ? (
+              <div className="flex h-40 items-center justify-center rounded-3xl border border-rose-400/50 bg-rose-100/60 p-6 text-sm font-semibold text-rose-700 shadow-sm">
+                {platformError}
+              </div>
+            ) : likesSummary?.clients?.length ? (
+              <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_18px_38px_rgba(14,78,102,0.12)] backdrop-blur">
+                <PlatformLikesSummary
+                  data={likesSummary}
+                  formatNumber={formatNumber}
+                  formatPercent={formatPercent}
+                  personnelActivity={{
+                    loading: userInsightState.loading,
+                    error: userInsightState.error,
+                    categories: activityCategories,
+                    totalEvaluated,
+                    totalContentEvaluated,
+                    hasSummary: Boolean(activityBuckets),
+                  }}
+                  postTotals={{
+                    instagram: instagramPostCount,
+                    tiktok: tiktokPostCount,
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-sky-200/70 bg-white/75 p-6 text-sm text-neutral-slate shadow-inner">
+                Belum ada data rekap likes untuk periode ini.
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
