@@ -125,9 +125,9 @@ export default function RekapKomentarTiktok({
         description:
           "Silakan cek kembali periode laporan atau pastikan sumber data sudah terhubung.",
         containerClass:
-          "border border-fuchsia-500/30 bg-slate-950/60 text-slate-200 backdrop-blur",
+          "border border-indigo-100 bg-white text-slate-600 shadow-sm",
         badgeClass:
-          "bg-fuchsia-500/10 border border-fuchsia-400/40 text-fuchsia-200",
+          "bg-indigo-50 border border-indigo-200 text-indigo-600",
       }
     : showSearchEmptyState
     ? {
@@ -138,9 +138,9 @@ export default function RekapKomentarTiktok({
             : "Tidak ada data yang cocok dengan filter saat ini.",
         description: "Coba ubah kata kunci atau atur ulang filter pencarian.",
         containerClass:
-          "border border-cyan-500/30 bg-slate-950/60 text-slate-200 backdrop-blur",
+          "border border-sky-100 bg-white text-slate-600 shadow-sm",
         badgeClass:
-          "bg-cyan-500/10 border border-cyan-400/40 text-cyan-200",
+          "bg-sky-50 border border-sky-200 text-sky-600",
       }
     : null;
   useEffect(() => setPage(1), [search, setPage]);
@@ -436,7 +436,7 @@ export default function RekapKomentarTiktok({
   }
 
   return (
-    <div className="relative mt-10 flex flex-col gap-10 pb-24">
+    <div className="relative mt-10 flex flex-col gap-10 pb-24 text-slate-700">
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         <SummaryCard
           title="TikTok Post Aktif"
@@ -480,7 +480,7 @@ export default function RekapKomentarTiktok({
         />
       </div>
       {tidakAdaPost && (
-        <p className="text-xs text-slate-400 text-center md:text-right">
+        <p className="text-xs text-slate-500 text-center md:text-right">
           Tidak ada posting aktif. Tidak diperlukan aksi komentar.
         </p>
       )}
@@ -502,7 +502,7 @@ export default function RekapKomentarTiktok({
                 : "Cari nama, username, atau divisi"
             }
             aria-describedby={searchHelpId}
-            className="w-full rounded-2xl border border-slate-800/70 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 shadow focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30 sm:w-72"
+            className="w-full rounded-2xl border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60 sm:w-72"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -510,25 +510,25 @@ export default function RekapKomentarTiktok({
       </div>
 
       {tidakAdaPost && (
-        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
+        <div className="rounded-3xl border border-indigo-100 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
           Tidak ada posting TikTok yang perlu dikomentari hari ini. Tim kamu bisa
           beristirahat sejenak.
         </div>
       )}
 
-      <div className="relative overflow-x-auto rounded-3xl border border-slate-800/70 bg-slate-900/60 shadow-[0_0_32px_rgba(15,118,110,0.2)]">
-        <table className="w-full text-left text-sm text-slate-200">
-          <thead className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur">
+      <div className="relative overflow-x-auto rounded-3xl border border-indigo-100 bg-white/90 shadow-xl">
+        <table className="w-full text-left text-sm text-slate-700">
+          <thead className="sticky top-0 z-10 bg-indigo-50/80 backdrop-blur">
             <tr>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">No</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Satker</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Nama</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Username TikTok</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Divisi/Satfung</th>
-              <th className="py-3 px-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-400">
+              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">No</th>
+              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Satker</th>
+              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Nama</th>
+              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Username TikTok</th>
+              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Divisi/Satfung</th>
+              <th className="py-3 px-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
                 Status
               </th>
-              <th className="py-3 px-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-400">
+              <th className="py-3 px-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
                 Jumlah Komentar
               </th>
             </tr>
@@ -556,34 +556,34 @@ export default function RekapKomentarTiktok({
                 const sudahKomentar =
                   tidakAdaPost ? false : Number(u.jumlah_komentar) > 0;
                 const baseRowClass =
-                  "border-b border-slate-800/60 transition duration-150 hover:bg-slate-800/60";
+                  "border-b border-slate-100 transition duration-150 hover:bg-sky-50/60";
                 const rowClass = tidakAdaPost
-                  ? `bg-slate-900/60 ${baseRowClass}`
+                  ? `bg-white ${baseRowClass}`
                   : sudahKomentar
-                  ? `bg-emerald-500/10 ${baseRowClass}`
-                  : `bg-rose-500/10 ${baseRowClass}`;
+                  ? `bg-emerald-50 ${baseRowClass}`
+                  : `bg-rose-50 ${baseRowClass}`;
                 const statusClass = tidakAdaPost
-                  ? "inline-flex items-center gap-1 rounded-full border border-slate-600/70 bg-slate-800/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-300"
+                  ? "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600"
                   : sudahKomentar
-                  ? "inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-200"
-                  : "inline-flex items-center gap-1 rounded-full border border-rose-500/50 bg-rose-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-200";
+                  ? "inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700"
+                  : "inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-600";
                 return (
                   <tr
                     key={u.user_id}
                     className={rowClass}
                   >
-                    <td className="py-3 px-3 text-slate-400">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                    <td className="py-3 px-3 text-slate-500">{(page - 1) * PAGE_SIZE + i + 1}</td>
                     <td className="py-3 px-3">
                       {u.nama_client || u.client_name || u.client || u.client_id || "-"}
                     </td>
                     <td className="py-3 px-3">
                       {u.title ? `${u.title} ${u.nama}` : u.nama}
                     </td>
-                    <td className="py-3 px-3 font-mono text-fuchsia-300">
+                    <td className="py-3 px-3 font-mono text-indigo-600">
                       {u.username}
                     </td>
                     <td className="py-3 px-3">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-200">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-600">
                         {bersihkanSatfung(u.divisi || "-")}
                       </span>
                     </td>
@@ -607,7 +607,7 @@ export default function RekapKomentarTiktok({
                         )}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-center text-lg font-semibold text-slate-50">
+                    <td className="py-3 px-3 text-center text-lg font-semibold text-slate-900">
                       {tidakAdaPost ? "-" : u.jumlah_komentar}
                     </td>
                   </tr>
@@ -616,7 +616,7 @@ export default function RekapKomentarTiktok({
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-sm text-slate-400">
+      <p className="mt-2 text-sm text-slate-500">
         Tabel ini merangkum status komentar TikTok setiap user dan total jumlah
         komentar yang diberikan.
       </p>
@@ -624,17 +624,17 @@ export default function RekapKomentarTiktok({
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
           <button
-            className="rounded-full border border-slate-700/60 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 disabled:opacity-40 disabled:hover:bg-slate-900/70"
+            className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
             disabled={page === 1}
             onClick={() => setPage(p => Math.max(1, p - 1))}
           >
             Prev
           </button>
-          <span className="text-sm text-slate-300">
+          <span className="text-sm text-slate-600">
             Halaman <b>{page}</b> dari <b>{totalPages}</b>
           </span>
           <button
-            className="rounded-full border border-slate-700/60 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 disabled:opacity-40 disabled:hover:bg-slate-900/70"
+            className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
             disabled={page === totalPages}
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
           >
@@ -644,17 +644,17 @@ export default function RekapKomentarTiktok({
       )}
 
       <div className="sticky bottom-6 z-20 flex w-full justify-end px-4">
-        <div className="flex w-full max-w-xl flex-col gap-2 rounded-3xl border border-slate-700/60 bg-slate-900/80 p-4 shadow-[0_0_32px_rgba(217,70,239,0.25)] backdrop-blur-sm sm:flex-row sm:items-center">
+        <div className="flex w-full max-w-xl flex-col gap-2 rounded-3xl border border-sky-100 bg-white/95 p-4 shadow-xl backdrop-blur sm:flex-row sm:items-center">
           <button
             onClick={handleDownloadRekap}
-            className="w-full rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-emerald-200 transition hover:border-emerald-300/60 hover:bg-emerald-400/20 sm:w-auto"
+            className="w-full rounded-2xl bg-gradient-to-r from-sky-400 to-indigo-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-white shadow-sm transition hover:from-sky-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-sky-200/60 sm:w-auto"
           >
             Salin Teks Rekap
           </button>
           {showCopyButton && (
             <button
               onClick={handleCopyRekap}
-              className="w-full rounded-2xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-200 transition hover:border-fuchsia-300/60 hover:bg-fuchsia-500/20 sm:w-auto"
+              className="w-full rounded-2xl bg-gradient-to-r from-violet-400 to-fuchsia-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-white shadow-sm transition hover:from-violet-500 hover:to-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-200/60 sm:w-auto"
             >
               Salin Rekap
             </button>
@@ -668,40 +668,46 @@ export default function RekapKomentarTiktok({
 function SummaryCard({ title, value, icon, percentage, tone = "slate" }) {
   const palettes = {
     fuchsia: {
-      icon: "text-fuchsia-300",
-      border: "border-fuchsia-500/40",
-      glow: "from-fuchsia-500/25 via-fuchsia-500/10 to-transparent",
-      bar: "from-fuchsia-400 to-pink-500",
+      icon: "text-rose-500",
+      iconWrap: "border-rose-200 bg-rose-50",
+      glow: "from-rose-100 via-rose-50 to-transparent",
+      bar: "from-rose-400 to-pink-400",
+      cardBorder: "border-rose-100",
     },
     emerald: {
-      icon: "text-emerald-300",
-      border: "border-emerald-500/40",
-      glow: "from-emerald-500/25 via-emerald-500/10 to-transparent",
+      icon: "text-emerald-500",
+      iconWrap: "border-emerald-200 bg-emerald-50",
+      glow: "from-emerald-100 via-emerald-50 to-transparent",
       bar: "from-emerald-400 to-lime-400",
+      cardBorder: "border-emerald-100",
     },
     amber: {
-      icon: "text-amber-200",
-      border: "border-amber-400/40",
-      glow: "from-amber-400/20 via-amber-500/10 to-transparent",
+      icon: "text-amber-500",
+      iconWrap: "border-amber-200 bg-amber-50",
+      glow: "from-amber-100 via-amber-50 to-transparent",
       bar: "from-amber-300 to-orange-400",
+      cardBorder: "border-amber-100",
     },
     rose: {
-      icon: "text-rose-300",
-      border: "border-rose-500/40",
-      glow: "from-rose-500/20 via-rose-500/10 to-transparent",
+      icon: "text-rose-500",
+      iconWrap: "border-rose-200 bg-rose-50",
+      glow: "from-rose-100 via-rose-50 to-transparent",
       bar: "from-rose-400 to-amber-400",
+      cardBorder: "border-rose-100",
     },
     violet: {
-      icon: "text-violet-300",
-      border: "border-violet-500/40",
-      glow: "from-violet-500/20 via-violet-500/10 to-transparent",
+      icon: "text-violet-500",
+      iconWrap: "border-violet-200 bg-violet-50",
+      glow: "from-violet-100 via-violet-50 to-transparent",
       bar: "from-violet-400 to-purple-500",
+      cardBorder: "border-violet-100",
     },
     slate: {
-      icon: "text-slate-300",
-      border: "border-slate-500/40",
-      glow: "from-slate-500/20 via-slate-500/10 to-transparent",
+      icon: "text-slate-500",
+      iconWrap: "border-slate-200 bg-slate-50",
+      glow: "from-slate-100 via-slate-50 to-transparent",
       bar: "from-slate-300 to-slate-400",
+      cardBorder: "border-slate-200",
     },
   };
   const palette = palettes[tone] || palettes.slate;
@@ -720,32 +726,37 @@ function SummaryCard({ title, value, icon, percentage, tone = "slate" }) {
     : null;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/70 p-5 text-center shadow-[0_0_32px_rgba(30,64,175,0.25)]">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-3xl border bg-white p-5 text-center shadow-sm",
+        palette.cardBorder,
+      )}
+    >
       <div
         className={cn(
-          "pointer-events-none absolute inset-px rounded-[1.35rem] bg-gradient-to-br opacity-70 blur-2xl",
+          "pointer-events-none absolute inset-0 rounded-[1.35rem] bg-gradient-to-br opacity-60 blur-2xl",
           palette.glow,
         )}
       />
       <div className="relative flex flex-col items-center gap-2">
         <div
           className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-2xl border bg-slate-950/70",
-            palette.border,
+            "flex h-12 w-12 items-center justify-center rounded-2xl border",
+            palette.iconWrap,
           )}
         >
           {iconElement}
         </div>
-        <div className="text-3xl font-semibold text-slate-50">{value}</div>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">
+        <div className="text-3xl font-semibold text-slate-900">{value}</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-500">
           {title}
         </div>
         {formattedPercentage && (
           <div className="mt-2 flex w-full max-w-[180px] flex-col items-center gap-2">
-            <span className="text-[11px] font-medium text-slate-300">
+            <span className="text-[11px] font-medium text-slate-500">
               {formattedPercentage}
             </span>
-            <div className="h-1.5 w-full rounded-full bg-slate-800/80">
+            <div className="h-1.5 w-full rounded-full bg-slate-100">
               <div
                 className={cn("h-full rounded-full bg-gradient-to-r", palette.bar)}
                 style={{ width: `${clampedPercentage}%` }}

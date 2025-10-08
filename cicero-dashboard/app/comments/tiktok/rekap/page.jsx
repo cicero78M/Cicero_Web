@@ -437,15 +437,15 @@ export default function RekapKomentarTiktokPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
-        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-rose-500/40 bg-slate-900/80 p-8 text-center shadow-[0_0_40px_rgba(244,63,94,0.25)]">
-          <div className="absolute inset-x-12 -top-8 h-24 rounded-full bg-gradient-to-b from-rose-500/30 to-transparent blur-2xl" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-indigo-50 to-violet-50 p-6 text-slate-800">
+        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-rose-100 bg-rose-50 p-8 text-center text-rose-600 shadow-xl">
+          <div className="pointer-events-none absolute inset-x-10 -top-16 h-32 rounded-full bg-rose-200/40 blur-3xl" />
           <div className="relative space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-rose-200/80">
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-rose-400">
               System Alert
             </p>
-            <p className="text-lg font-semibold text-rose-100">{error}</p>
-            <p className="text-sm text-slate-300">
+            <p className="text-lg font-semibold">{error}</p>
+            <p className="text-sm text-rose-500">
               Coba muat ulang halaman atau periksa kembali koneksi data Anda.
             </p>
           </div>
@@ -454,24 +454,24 @@ export default function RekapKomentarTiktokPage() {
     );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-indigo-50 to-violet-50 text-slate-800">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 top-[-100px] h-[360px] w-[360px] rounded-full bg-fuchsia-500/20 blur-[150px]" />
-        <div className="absolute right-[-120px] top-1/4 h-[400px] w-[400px] rounded-full bg-cyan-500/20 blur-[160px]" />
-        <div className="absolute inset-x-0 bottom-[-200px] h-[320px] bg-gradient-to-t from-slate-900 via-slate-950/60 to-transparent" />
+        <div className="absolute -left-40 top-[-120px] h-[320px] w-[320px] rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="absolute right-[-80px] top-1/4 h-[360px] w-[360px] rounded-full bg-indigo-200/40 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-[-160px] h-[260px] bg-gradient-to-t from-violet-100/60 via-transparent to-transparent" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 pb-16 pt-10 sm:px-6 lg:px-10">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-fuchsia-200">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-indigo-500 shadow-sm">
               Rekap Komentar
             </span>
             <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold leading-tight text-slate-50 md:text-4xl">
+                <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
                   Rekapitulasi Komentar TikTok
                 </h1>
-                <p className="max-w-3xl text-sm text-slate-300 md:text-base">
+                <p className="max-w-3xl text-sm text-slate-600 md:text-base">
                   Pantau laporan engagement Tiktok harian / rentang tanggal tertentu.
                   Panel rekap memberikan ringkasan kepatuhan serta detail pengguna
                   sehingga Anda bisa menindaklanjuti satker dan personil yang belum / kurang aktif.
@@ -479,7 +479,7 @@ export default function RekapKomentarTiktokPage() {
               </div>
               <Link
                 href="/comments/tiktok"
-                className="group inline-flex items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-slate-200 transition hover:border-fuchsia-400/60 hover:bg-fuchsia-500/10"
+                className="group inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-600 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50"
               >
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 Kembali
@@ -493,17 +493,17 @@ export default function RekapKomentarTiktokPage() {
             options={viewOptions}
             date={selectorDateValue}
             onDateChange={handleDateChange}
-            className="justify-start gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur"
-            labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90"
-            controlClassName="border-slate-700/60 bg-slate-900/70 text-slate-100 focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30"
+            className="justify-start gap-3 rounded-3xl border border-indigo-100 bg-white/90 px-4 py-4 shadow-sm"
+            labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600"
+            controlClassName="border-indigo-200 bg-white text-slate-800 focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60"
           />
           {isDitbinmasUser ? (
-            <div className="flex flex-col gap-2 rounded-3xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 rounded-3xl border border-indigo-100 bg-white/90 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400/90">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600">
                   Scope Data Ditbinmas
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Pilih apakah ingin menampilkan data hanya untuk client Anda atau seluruh Ditbinmas.
                 </p>
               </div>
@@ -514,7 +514,7 @@ export default function RekapKomentarTiktokPage() {
                     event.target.value === "all" ? "all" : "client",
                   )
                 }
-                className="w-full rounded-2xl border border-slate-700/60 bg-slate-900/70 px-3 py-2 text-sm font-medium text-slate-100 transition focus:border-fuchsia-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30 sm:w-auto"
+                className="w-full rounded-2xl border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60 sm:w-auto"
               >
                 <option value="client">Client Saya</option>
                 <option value="all">Seluruh Ditbinmas</option>

@@ -71,20 +71,20 @@ export default function ViewDataSelector({
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
   const baseContainerClass = cn(
-    "flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-100/70 bg-white/90 px-4 py-3 shadow-sm sm:justify-start",
+    "flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-white px-4 py-3 shadow-sm sm:justify-start",
     disabled && "opacity-60",
     className,
   );
   const baseLabelClass = cn(
-    "w-full text-sm font-semibold tracking-tight text-blue-900 sm:w-auto",
+    "w-full text-sm font-semibold tracking-tight text-slate-800 sm:w-auto",
     labelClassName,
   );
   const baseControlClass = cn(
-    "w-full rounded-xl border border-blue-200 bg-blue-50/70 px-3 py-2 text-sm text-blue-900 placeholder:text-blue-300 shadow-inner transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 sm:w-auto",
+    "w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 shadow-inner transition focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60 sm:w-auto",
     controlClassName,
   );
   const segmentedButtonBaseClass =
-    "rounded-full border border-blue-200 bg-white/60 px-4 py-2 text-sm font-medium text-blue-700 shadow-inner transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300";
+    "rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-inner transition hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/60";
 
   return (
     <div className={baseContainerClass} aria-disabled={disabled}>
@@ -104,7 +104,7 @@ export default function ViewDataSelector({
                 className={cn(
                   segmentedButtonBaseClass,
                   isActive &&
-                    "border-blue-300 bg-blue-100/80 text-blue-900 shadow-sm",
+                    "border-sky-200 bg-sky-50 text-slate-800 shadow-sm",
                   disabled && "cursor-not-allowed opacity-70",
                 )}
               >
@@ -128,7 +128,7 @@ export default function ViewDataSelector({
             ))}
           </select>
           <svg
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-500"
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             aria-hidden="true"
             fill="none"
             stroke="currentColor"
