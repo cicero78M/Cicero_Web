@@ -5,6 +5,13 @@
 :root {
   --background: #ffffff;
   --foreground: #111827;
+  --cicero-soft-sky: #e0f2fe;
+  --cicero-soft-sky-ink: #0369a1;
+  --cicero-soft-emerald: #dcfce7;
+  --cicero-soft-emerald-ink: #047857;
+  --cicero-soft-coral: #ffe4e6;
+  --cicero-soft-coral-ink: #be123c;
+  --cicero-soft-surface-shadow: rgba(148, 163, 184, 0.18);
 }
 
 html {
@@ -29,6 +36,25 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
   line-height: 1.6;
+}
+
+.badge-soft {
+  background-color: rgba(224, 242, 254, 0.7);
+  border: 1px solid rgba(186, 230, 253, 0.8);
+  color: var(--cicero-soft-sky-ink);
+  box-shadow: 0 12px 30px var(--cicero-soft-surface-shadow);
+}
+
+.icon-soft-sky {
+  color: var(--cicero-soft-sky-ink);
+}
+
+.icon-soft-emerald {
+  color: var(--cicero-soft-emerald-ink);
+}
+
+.icon-soft-coral {
+  color: var(--cicero-soft-coral-ink);
 }
 
 .container {
