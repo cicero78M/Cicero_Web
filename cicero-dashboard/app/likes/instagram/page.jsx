@@ -45,8 +45,8 @@ export default function InstagramEngagementInsightPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 text-slate-100">
-        <div className="rounded-3xl border border-red-500/40 bg-slate-900/70 px-8 py-6 text-center text-red-200 shadow-[0_0_35px_rgba(248,113,113,0.25)]">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6 text-slate-700">
+        <div className="rounded-3xl border border-rose-300/60 bg-white/80 px-8 py-6 text-center text-rose-600 shadow-[0_0_35px_rgba(248,113,113,0.18)] backdrop-blur">
           {error}
         </div>
       </div>
@@ -85,27 +85,27 @@ export default function InstagramEngagementInsightPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,_rgba(14,165,233,0.12),_transparent_70%)]" />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-700">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.3),_transparent_65%)]" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,_rgba(165,243,252,0.35),_transparent_70%)]" />
       <div className="relative flex min-h-screen items-start justify-center">
         <div className="w-full max-w-6xl px-4 py-12 md:px-10">
           <div className="flex flex-col gap-10">
-            <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/60 p-6 shadow-[0_0_48px_rgba(56,189,248,0.12)] backdrop-blur">
-              <div className="pointer-events-none absolute -top-10 left-8 h-32 w-32 rounded-full bg-sky-500/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-14 right-10 h-36 w-36 rounded-full bg-indigo-500/20 blur-3xl" />
+            <div className="relative overflow-hidden rounded-3xl border border-sky-200/60 bg-white/70 p-6 shadow-[0_0_48px_rgba(96,165,250,0.25)] backdrop-blur">
+              <div className="pointer-events-none absolute -top-10 left-8 h-32 w-32 rounded-full bg-sky-200/50 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-14 right-10 h-36 w-36 rounded-full bg-indigo-200/50 blur-3xl" />
               <div className="relative flex flex-col gap-6">
                 <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-sky-100">
+                    <h1 className="text-3xl font-semibold tracking-tight text-sky-700">
                       Instagram Engagement Insight
                     </h1>
-                    <p className="mt-1 max-w-2xl text-sm text-slate-300">
+                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
                       Pantau performa likes dan komentar harian dengan visualisasi chart bar.
                     </p>
                   </div>
                 </header>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner backdrop-blur">
+                <div className="rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
                   <ViewDataSelector
                     value={viewBy}
                     onChange={setViewBy}
@@ -130,7 +130,7 @@ export default function InstagramEngagementInsightPage() {
                     value={rekapSummary.totalIGPost}
                     color="blue"
                     icon={
-                      <Camera className="h-7 w-7 text-sky-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.55)]" />
+                      <Camera className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
                     }
                   />
                   <SummaryItem
@@ -138,7 +138,7 @@ export default function InstagramEngagementInsightPage() {
                     value={rekapSummary.totalUser}
                     color="gray"
                     icon={
-                      <User className="h-7 w-7 text-slate-200 drop-shadow-[0_0_12px_rgba(148,163,184,0.45)]" />
+                      <User className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
                     }
                   />
                   <SummaryItem
@@ -146,7 +146,7 @@ export default function InstagramEngagementInsightPage() {
                     value={rekapSummary.totalSudahLike}
                     color="green"
                     icon={
-                      <ThumbsUp className="h-7 w-7 text-emerald-300 drop-shadow-[0_0_12px_rgba(16,185,129,0.55)]" />
+                      <ThumbsUp className="h-7 w-7 text-teal-500 drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]" />
                     }
                     percentage={getPercentage(rekapSummary.totalSudahLike)}
                   />
@@ -155,7 +155,7 @@ export default function InstagramEngagementInsightPage() {
                     value={rekapSummary.totalKurangLike}
                     color="orange"
                     icon={
-                      <ThumbsDown className="h-7 w-7 text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.55)]" />
+                      <ThumbsDown className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.4)]" />
                     }
                     percentage={getPercentage(rekapSummary.totalKurangLike)}
                   />
@@ -164,7 +164,7 @@ export default function InstagramEngagementInsightPage() {
                     value={rekapSummary.totalBelumLike}
                     color="red"
                     icon={
-                      <ThumbsDown className="h-7 w-7 text-rose-300 drop-shadow-[0_0_12px_rgba(244,63,94,0.55)]" />
+                      <ThumbsDown className="h-7 w-7 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
                     }
                     percentage={getPercentage(rekapSummary.totalBelumLike)}
                   />
@@ -173,7 +173,7 @@ export default function InstagramEngagementInsightPage() {
                     value={rekapSummary.totalTanpaUsername}
                     color="gray"
                     icon={
-                      <UserX className="h-7 w-7 text-slate-200 drop-shadow-[0_0_12px_rgba(148,163,184,0.45)]" />
+                      <UserX className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
                     }
                     percentage={getPercentage(
                       rekapSummary.totalTanpaUsername,
@@ -246,16 +246,16 @@ export default function InstagramEngagementInsightPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={handleCopyRekap}
-                className="group inline-flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-500/20 px-6 py-3 text-lg font-semibold text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.35)] transition-colors hover:border-emerald-300/60 hover:bg-emerald-400/30"
+                className="group inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-6 py-3 text-lg font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
               >
-                <Copy className="h-5 w-5" />
+                <Copy className="h-5 w-5 text-teal-600" />
                 Salin Rekap
               </button>
               <Link
                 href="/likes/instagram/rekap"
-                className="inline-flex items-center gap-2 rounded-2xl border border-sky-400/40 bg-sky-500/20 px-6 py-3 text-lg font-semibold text-sky-200 shadow-[0_0_25px_rgba(56,189,248,0.35)] transition-colors hover:border-sky-300/60 hover:bg-sky-400/30"
+                className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/60 bg-sky-200/50 px-6 py-3 text-lg font-semibold text-sky-700 shadow-[0_0_25px_rgba(96,165,250,0.35)] transition-colors hover:border-sky-400/70 hover:bg-sky-200/70"
               >
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-5 w-5 text-sky-600" />
                 Lihat Rekap Detail
               </Link>
             </div>

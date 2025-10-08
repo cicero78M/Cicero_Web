@@ -289,8 +289,10 @@ export default function ChartDivisiAbsensi({
   });
 
   return (
-    <div className="w-full bg-white rounded-xl shadow p-0 md:p-0 mt-8">
-      <div className="w-full px-2 pb-4">
+    <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-sky-100/60 bg-white/70 p-6 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur">
+      <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/60 to-transparent blur-2xl" />
+      <div className="relative w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
@@ -303,9 +305,15 @@ export default function ChartDivisiAbsensi({
             }}
             barCategoryGap={isHorizontal ? "30%" : "16%"}
           >
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.35)" />
             {isHorizontal ? (
-              <XAxis type="number" fontSize={12} />
+              <XAxis
+                type="number"
+                fontSize={12}
+                tick={{ fill: "#1e293b" }}
+                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                tickLine={{ stroke: "rgba(148,163,184,0.4)" }}
+              />
             ) : (
               <XAxis
                 dataKey={labelKey}
@@ -315,6 +323,8 @@ export default function ChartDivisiAbsensi({
                 interval={0}
                 height={70}
                 tick={{ fontSize: 15, fontWeight: 700, fill: "#1e293b" }}
+                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                tickLine={{ stroke: "rgba(148,163,184,0.4)" }}
               />
             )}
             {isHorizontal ? (
@@ -340,7 +350,13 @@ export default function ChartDivisiAbsensi({
                 )}
               />
             ) : (
-              <YAxis type="number" fontSize={12} />
+              <YAxis
+                type="number"
+                fontSize={12}
+                tick={{ fill: "#1e293b" }}
+                axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
+                tickLine={{ stroke: "rgba(148,163,184,0.4)" }}
+              />
             )}
             <Tooltip
               formatter={(value, name) =>
@@ -362,8 +378,16 @@ export default function ChartDivisiAbsensi({
               labelFormatter={(label) =>
                 `${labelKey === "client_name" ? "Client" : "Divisi"}: ${label}`
               }
+              wrapperStyle={{ outline: "none" }}
+              contentStyle={{
+                backgroundColor: "rgba(255,255,255,0.95)",
+                borderRadius: 16,
+                borderColor: "rgba(56,189,248,0.35)",
+                boxShadow: "0 20px 45px rgba(56,189,248,0.25)",
+                color: "#0f172a",
+              }}
             />
-            <Legend />
+            <Legend wrapperStyle={{ color: "#1d4ed8", paddingTop: 8 }} />
             {showTotalUser && (
               <Bar
                 dataKey="total_user"
@@ -380,7 +404,7 @@ export default function ChartDivisiAbsensi({
             )}
             <Bar
               dataKey="user_sudah"
-              fill="#22c55e"
+              fill="#14b8a6"
               name={labelSudah}
               barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >
@@ -392,7 +416,7 @@ export default function ChartDivisiAbsensi({
             </Bar>
             <Bar
               dataKey="user_kurang"
-              fill="#f97316"
+              fill="#38bdf8"
               name={labelKurang}
               barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >
@@ -404,7 +428,7 @@ export default function ChartDivisiAbsensi({
             </Bar>
             <Bar
               dataKey="user_belum"
-              fill="#ef4444"
+              fill="#94a3b8"
               name={labelBelum}
               barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >
@@ -416,7 +440,7 @@ export default function ChartDivisiAbsensi({
             </Bar>
             <Bar
               dataKey="total_value"
-              fill="#2563eb"
+              fill="#6366f1"
               name={labelTotal}
               barSize={isHorizontal ? 20 * thicknessMultiplier : undefined}
             >

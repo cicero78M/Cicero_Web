@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 const defaultDecorations = (
   <>
-    <div className="pointer-events-none absolute -right-12 top-6 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
-    <div className="pointer-events-none absolute inset-x-10 top-0 h-16 bg-gradient-to-b from-white/10 to-transparent blur-2xl" />
+    <div className="pointer-events-none absolute -right-12 top-6 h-32 w-32 rounded-full bg-cyan-200/50 blur-3xl" />
+    <div className="pointer-events-none absolute inset-x-10 top-0 h-16 bg-gradient-to-b from-white/60 to-transparent blur-2xl" />
   </>
 );
 
@@ -29,14 +29,14 @@ export default function ChartBox({
   emptyStateClassName,
   useDefaultContainerStyle = true,
   decorations = defaultDecorations,
-  titleClassName = "text-cyan-200/80",
+  titleClassName = "text-sky-600",
 }) {
   return (
     <div
       className={cn(
         "relative overflow-hidden rounded-3xl",
         useDefaultContainerStyle &&
-          "p-6 border border-slate-800/60 bg-slate-900/60 shadow-[0_0_32px_rgba(56,189,248,0.08)] backdrop-blur",
+          "p-6 border border-sky-100/60 bg-white/70 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur",
         containerClassName,
       )}
     >
@@ -68,7 +68,7 @@ export default function ChartBox({
       ) : (
         <div
           className={cn(
-            "relative text-center text-sm text-slate-400",
+            "relative text-center text-sm text-slate-500",
             emptyStateClassName,
           )}
         >
