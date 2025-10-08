@@ -92,6 +92,10 @@ export default function RekapKomentarTiktokPage() {
   const [ditbinmasScope, setDitbinmasScope] = useState("client");
 
   const viewOptions = VIEW_OPTIONS;
+  const ditbinmasScopeOptions = [
+    { value: "client", label: "Client Saya" },
+    { value: "all", label: "Seluruh Client Ditbinmas" },
+  ];
 
   const handleViewChange = (nextView) => {
     setViewBy((prevView) => {
@@ -129,6 +133,16 @@ export default function RekapKomentarTiktokPage() {
         }
         if (!nextRange.endDate) {
           nextRange.endDate = nextRange.startDate;
+        }
+        if (nextRange.startDate && nextRange.endDate) {
+          const start = new Date(nextRange.startDate);
+          const end = new Date(nextRange.endDate);
+          if (start > end) {
+            return {
+              startDate: nextRange.endDate,
+              endDate: nextRange.startDate,
+            };
+          }
         }
         return nextRange;
       });
@@ -429,110 +443,105 @@ export default function RekapKomentarTiktokPage() {
 
   const selectorDateValue =
     viewBy === "custom_range"
-      ? normalizedRange
+      ? dateRange
       : viewBy === "month"
-        ? normalizedMonthlyDate
-        : normalizedDailyDate;
+        ? monthlyDate
+        : dailyDate;
+
+  const handleDitbinmasScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDitbinmasScope(value);
+    }
+  };
 
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-indigo-50 to-violet-50 p-6 text-slate-800">
-        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-rose-100 bg-rose-50 p-8 text-center text-rose-600 shadow-xl">
-          <div className="pointer-events-none absolute inset-x-10 -top-16 h-32 rounded-full bg-rose-200/40 blur-3xl" />
-          <div className="relative space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-rose-400">
-              System Alert
-            </p>
-            <p className="text-lg font-semibold">{error}</p>
-            <p className="text-sm text-rose-500">
-              Coba muat ulang halaman atau periksa kembali koneksi data Anda.
-            </p>
-          </div>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-violet-50 p-6 text-slate-700">
+        <div className="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),_transparent_65%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-80 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.2),_transparent_70%)]" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(45,212,191,0.18)_0%,_transparent_75%)]" />
+        <div className="relative rounded-3xl border border-red-300/60 bg-white/95 px-8 py-6 text-center text-red-600 shadow-[0_20px_46px_rgba(129,140,248,0.2)] backdrop-blur">
+          {error}
         </div>
       </div>
     );
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-indigo-50 to-violet-50 text-slate-800">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 top-[-120px] h-[320px] w-[320px] rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="absolute right-[-80px] top-1/4 h-[360px] w-[360px] rounded-full bg-indigo-200/40 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-[-160px] h-[260px] bg-gradient-to-t from-violet-100/60 via-transparent to-transparent" />
-      </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 pb-16 pt-10 sm:px-6 lg:px-10">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-indigo-200 bg-white/80 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-indigo-500 shadow-sm">
-              Rekap Komentar
-            </span>
-            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-                  Rekapitulasi Komentar TikTok
-                </h1>
-                <p className="max-w-3xl text-sm text-slate-600 md:text-base">
-                  Pantau laporan engagement Tiktok harian / rentang tanggal tertentu.
-                  Panel rekap memberikan ringkasan kepatuhan serta detail pengguna
-                  sehingga Anda bisa menindaklanjuti satker dan personil yang belum / kurang aktif.
-                </p>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-violet-50 text-blue-950">
+      <div className="pointer-events-none absolute inset-x-0 -top-10 h-72 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),_transparent_65%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-80 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.2),_transparent_70%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(45,212,191,0.18)_0%,_transparent_75%)]" />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-12 md:px-10">
+        <div className="flex flex-col gap-10">
+          <div className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/90 p-6 shadow-[0_24px_60px_rgba(59,130,246,0.15)] backdrop-blur">
+            <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-blue-200/50 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 right-8 h-48 w-48 rounded-full bg-emerald-200/45 blur-3xl" />
+            <div className="pointer-events-none absolute inset-x-12 top-0 h-1 rounded-full bg-gradient-to-r from-blue-200/70 via-indigo-200/60 to-violet-200/70" />
+            <div className="pointer-events-none absolute inset-y-6 left-0 w-1 rounded-full bg-gradient-to-b from-blue-200/60 via-transparent to-emerald-200/50" />
+            <div className="relative flex flex-col gap-6">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-tight text-blue-900">
+                    Rekapitulasi Komentar TikTok
+                  </h1>
+                  <p className="mt-1 max-w-2xl text-sm text-blue-700/80">
+                    Lihat rekap detail keterlibatan komentar TikTok dari seluruh personel.
+                    Pantau kepatuhan dan tindak lanjuti satker yang belum aktif berinteraksi.
+                  </p>
+                </div>
+                <Link
+                  href="/comments/tiktok"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-blue-200/80 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_12px_32px_rgba(129,140,248,0.18)] transition hover:border-violet-200 hover:bg-blue-50 hover:shadow-[0_18px_46px_rgba(129,140,248,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200/70"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Kembali
+                </Link>
               </div>
-              <Link
-                href="/comments/tiktok"
-                className="group inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-600 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50"
-              >
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                Kembali
-              </Link>
+              <div className="rounded-2xl border border-blue-100/80 bg-white/90 p-4 shadow-inner backdrop-blur">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <ViewDataSelector
+                    value={viewBy}
+                    onChange={handleViewChange}
+                    options={viewOptions}
+                    date={selectorDateValue}
+                    onDateChange={handleDateChange}
+                  />
+                  {isDitbinmasUser && (
+                    <div className="flex w-full flex-col gap-2 md:w-64">
+                      <label className="text-sm font-semibold text-blue-900">
+                        Lingkup Data
+                      </label>
+                      <select
+                        value={ditbinmasScope}
+                        onChange={handleDitbinmasScopeChange}
+                        className="w-full rounded-xl border border-blue-200/70 bg-white/90 px-3 py-2 text-sm text-slate-700 shadow-inner outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200/60 hover:border-violet-200"
+                      >
+                        {ditbinmasScopeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <ViewDataSelector
-            value={viewBy}
-            onChange={handleViewChange}
-            options={viewOptions}
-            date={selectorDateValue}
-            onDateChange={handleDateChange}
-            className="justify-start gap-3 rounded-3xl border border-indigo-100 bg-white/90 px-4 py-4 shadow-sm"
-            labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600"
-            controlClassName="border-indigo-200 bg-white text-slate-800 focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60"
+          <RekapKomentarTiktok
+            users={chartData}
+            totalTiktokPost={rekapSummary.totalTiktokPost}
+            showCopyButton={false}
+            reportContext={{
+              periodeLabel: reportPeriodeLabel,
+              viewLabel:
+                viewOptions.find((option) => option.value === viewBy)?.label,
+            }}
           />
-          {isDitbinmasUser ? (
-            <div className="flex flex-col gap-2 rounded-3xl border border-indigo-100 bg-white/90 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600">
-                  Scope Data Ditbinmas
-                </p>
-                <p className="text-xs text-slate-500">
-                  Pilih apakah ingin menampilkan data hanya untuk client Anda atau seluruh Ditbinmas.
-                </p>
-              </div>
-              <select
-                value={ditbinmasScope}
-                onChange={(event) =>
-                  setDitbinmasScope(
-                    event.target.value === "all" ? "all" : "client",
-                  )
-                }
-                className="w-full rounded-2xl border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60 sm:w-auto"
-              >
-                <option value="client">Client Saya</option>
-                <option value="all">Seluruh Ditbinmas</option>
-              </select>
-            </div>
-          ) : null}
         </div>
-
-        <RekapKomentarTiktok
-          users={chartData}
-          totalTiktokPost={rekapSummary.totalTiktokPost}
-          showCopyButton={false}
-          reportContext={{
-            periodeLabel: reportPeriodeLabel,
-            viewLabel:
-              viewOptions.find((option) => option.value === viewBy)?.label,
-          }}
-        />
       </div>
     </div>
   );
