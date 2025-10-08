@@ -308,19 +308,19 @@ export default function UserInsightPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <div className="rounded-3xl border border-red-500/40 bg-red-500/10 px-6 py-5 text-sm font-semibold text-red-200 shadow-[0_0_45px_rgba(248,113,113,0.25)]">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-purple-50">
+        <div className="rounded-3xl border border-red-200 bg-red-100/80 px-6 py-5 text-sm font-semibold text-red-600 shadow-lg">
           {error}
         </div>
       </div>
     );
 
     return (
-      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-        <div className="pointer-events-none absolute inset-0 opacity-70">
-          <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-cyan-500/25 blur-3xl" />
-          <div className="absolute -right-10 top-72 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
-          <div className="absolute left-1/2 top-0 h-96 w-[34rem] -translate-x-1/2 bg-gradient-to-b from-cyan-400/10 via-transparent to-transparent blur-3xl" />
+      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-purple-50 text-slate-700">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-sky-200/60 blur-3xl" />
+          <div className="absolute -right-10 top-72 h-64 w-64 rounded-full bg-violet-200/60 blur-3xl" />
+          <div className="absolute left-1/2 top-0 h-96 w-[34rem] -translate-x-1/2 bg-pink-200/50 blur-3xl" />
         </div>
         <div className="relative flex min-h-screen flex-col">
           <div className="flex-1">
@@ -328,23 +328,23 @@ export default function UserInsightPage() {
               <div className="flex flex-col gap-10">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h1 className="text-3xl font-semibold tracking-[0.2em] text-cyan-200 md:text-4xl">
+                    <h1 className="text-3xl font-semibold tracking-[0.2em] text-slate-900 md:text-4xl">
                       USER INSIGHT
                     </h1>
-                    <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                    <p className="mt-2 max-w-2xl text-sm text-slate-600">
                       Pantau Update Data User secara real-time.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleCopyRekap}
-                      className="relative overflow-hidden rounded-full border border-cyan-400/40 bg-cyan-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,0.25)] transition duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-500/20"
+                      className="relative overflow-hidden rounded-full border border-sky-300/70 bg-white/80 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-sky-600 shadow-[0_12px_30px_rgba(14,165,233,0.18)] transition duration-300 hover:-translate-y-0.5 hover:border-sky-400 hover:bg-white"
                     >
                       <span className="relative">Salin Rekap</span>
                     </button>
                     <button
                       onClick={fetchData}
-                      className="rounded-full border border-slate-700/70 bg-slate-900/80 p-2 text-slate-300 transition duration-300 hover:border-cyan-400 hover:text-cyan-300"
+                      className="rounded-full border border-slate-200 bg-white/80 p-2 text-slate-500 transition duration-300 hover:border-sky-300 hover:text-sky-500"
                       aria-label="Refresh"
                     >
                       <RefreshCw className="h-5 w-5" />
@@ -354,25 +354,25 @@ export default function UserInsightPage() {
 
                 {!isDirectorate && (
                   <div className="self-start">
-                    <span className="inline-flex max-w-xl items-center rounded-full border border-cyan-500/30 bg-slate-900/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-300">
+                    <span className="inline-flex max-w-xl items-center rounded-full border border-sky-200 bg-white/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-600">
                       Polres Jajaran dapat mengajukan request sistem untuk diterapkan di kesatuan masing-masing, sekaligus melakukan absensi personil guna meningkatkan engagement media sosial resmi kesatuannya.
                     </span>
                   </div>
                 )}
 
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 shadow-[0_0_60px_rgba(14,165,233,0.25)] backdrop-blur-xl md:flex-row md:gap-4 md:p-6">
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-3xl border border-sky-100 bg-white/80 p-4 shadow-lg backdrop-blur-sm md:flex-row md:gap-4 md:p-6">
                   <SummaryItem
                     label="Total User"
                     value={summary.total}
                     color="blue"
-                    icon={<User className="h-7 w-7 text-cyan-300" />}
+                    icon={<User className="h-7 w-7 text-sky-500" />}
                   />
                   <Divider />
                   <SummaryItem
                     label="Instagram Terisi"
                     value={summary.instagramFilled}
                     color="red"
-                    icon={<Instagram className="h-7 w-7 text-rose-300" />}
+                    icon={<Instagram className="h-7 w-7 text-indigo-500" />}
                     percentage={summary.instagramFilledPercent}
                     showProgress
                   />
@@ -381,7 +381,7 @@ export default function UserInsightPage() {
                     label="Instagram Belum Diisi"
                     value={summary.instagramEmpty}
                     color="gray"
-                    icon={<Instagram className="h-7 w-7 text-slate-300" />}
+                    icon={<Instagram className="h-7 w-7 text-sky-400" />}
                     percentage={summary.instagramEmptyPercent}
                   />
                   <Divider />
@@ -389,7 +389,7 @@ export default function UserInsightPage() {
                     label="TikTok Terisi"
                     value={summary.tiktokFilled}
                     color="green"
-                    icon={<Music className="h-7 w-7 text-emerald-300" />}
+                    icon={<Music className="h-7 w-7 text-teal-500" />}
                     percentage={summary.tiktokFilledPercent}
                     showProgress
                   />
@@ -398,7 +398,7 @@ export default function UserInsightPage() {
                     label="TikTok Belum Diisi"
                     value={summary.tiktokEmpty}
                     color="gray"
-                    icon={<Music className="h-7 w-7 text-slate-300" />}
+                    icon={<Music className="h-7 w-7 text-indigo-400" />}
                     percentage={summary.tiktokEmptyPercent}
                   />
                 </div>
@@ -446,17 +446,17 @@ function ChartBox({
     : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 shadow-[0_0_45px_rgba(14,165,233,0.18)] backdrop-blur-lg">
-      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/5" />
+    <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-6 shadow-lg">
+      <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/40" />
       <div className="relative flex flex-col items-center gap-2 pb-2 text-center">
         <h3
           id={titleId}
-          className="text-lg font-semibold uppercase tracking-[0.3em] text-cyan-200"
+          className="text-lg font-semibold uppercase tracking-[0.3em] text-slate-900"
         >
           {title}
         </h3>
         {hasData && (
-          <span className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold tracking-[0.15em] text-cyan-100">
+          <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold tracking-[0.15em] text-slate-600">
             Total {totalUsers.toLocaleString("id-ID")}
           </span>
         )}
@@ -473,10 +473,10 @@ function ChartBox({
             <table
               aria-labelledby={titleId}
               tabIndex={0}
-              className="min-w-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950/40 text-left text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:ring-offset-0"
+              className="min-w-full overflow-hidden rounded-2xl border border-sky-100 bg-white text-left text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:ring-offset-0"
             >
               <caption className="sr-only">{title}</caption>
-              <thead className="bg-slate-900/80 text-[13px] uppercase tracking-[0.2em] text-slate-300">
+              <thead className="bg-sky-50 text-[13px] uppercase tracking-[0.2em] text-slate-500">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-semibold">
                     Divisi
@@ -507,33 +507,33 @@ function ChartBox({
                   return (
                     <tr
                       key={key}
-                      className="border-t border-slate-800/60 bg-slate-900/40 transition hover:bg-slate-800/40"
+                      className="border-t border-sky-100 bg-white transition hover:bg-sky-50"
                     >
                       <th
                         scope="row"
-                        className="px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-100"
+                        className="px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-600"
                       >
                         {divisionName}
                       </th>
-                      <td className="px-4 py-3 text-slate-200">
+                      <td className="px-4 py-3 text-slate-700">
                         {Number(item?.total ?? 0).toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-3 text-cyan-200">
+                      <td className="px-4 py-3 text-sky-600">
                         {Number(item?.instagramFilled ?? 0).toLocaleString(
                           "id-ID",
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-300">
+                      <td className="px-4 py-3 text-teal-600">
                         {Number(item?.instagramEmpty ?? 0).toLocaleString(
                           "id-ID",
                         )}
                       </td>
-                      <td className="px-4 py-3 text-fuchsia-200">
+                      <td className="px-4 py-3 text-indigo-600">
                         {Number(item?.tiktokFilled ?? 0).toLocaleString(
                           "id-ID",
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-300">
+                      <td className="px-4 py-3 text-rose-500">
                         {Number(item?.tiktokEmpty ?? 0).toLocaleString(
                           "id-ID",
                         )}
@@ -586,12 +586,12 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
           margin={chartMargin}
           barCategoryGap="16%"
         >
-          <CartesianGrid stroke="rgba(148, 163, 184, 0.2)" strokeDasharray="3 3" />
+          <CartesianGrid stroke="rgba(148, 163, 184, 0.25)" strokeDasharray="3 3" />
           {isHorizontal ? (
             <XAxis
               type="number"
-              tick={{ fill: "#cbd5f5", fontSize: 12 }}
-              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tick={{ fill: "#475569", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
               tickLine={false}
             />
           ) : (
@@ -601,7 +601,7 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
               height={90}
               tickMargin={12}
               tick={<CustomAxisTick orientation="vertical" />}
-              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
               tickLine={false}
             />
           )}
@@ -617,84 +617,84 @@ function ContactChart({ data, orientation, minHeight = 50, thicknessMultiplier =
                   maxWidth={horizontalLabelWidth - 24}
                 />
               }
-              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
               tickLine={false}
             />
           ) : (
             <YAxis
               allowDecimals={false}
-              tick={{ fill: "#cbd5f5", fontSize: 12 }}
-              axisLine={{ stroke: "rgba(148,163,184,0.3)" }}
+              tick={{ fill: "#475569", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148,163,184,0.4)" }}
               tickLine={false}
             />
           )}
           <Tooltip
             formatter={tooltipFormatter}
             labelFormatter={tooltipLabelFormatter}
-            cursor={{ fill: "rgba(148, 163, 184, 0.12)" }}
+            cursor={{ fill: "rgba(125, 211, 252, 0.15)" }}
             contentStyle={{
-              backgroundColor: "#0f172a",
+              backgroundColor: "#ffffff",
               borderRadius: 16,
               border: "1px solid rgba(148,163,184,0.35)",
-              color: "#e2e8f0",
+              color: "#1f2937",
               padding: 12,
             }}
-            itemStyle={{ color: "#e2e8f0" }}
+            itemStyle={{ color: "#1f2937" }}
           />
           <Legend
             iconType="circle"
-            wrapperStyle={{ color: "#cbd5f5", fontSize: 12, paddingTop: 12 }}
+            wrapperStyle={{ color: "#475569", fontSize: 12, paddingTop: 12 }}
           />
           <Bar
             dataKey="instagramFilled"
             name="Instagram Terisi"
-            fill="#22d3ee"
+            fill="#38bdf8"
             stackId="instagram"
           >
             <LabelList
               dataKey="instagramFilled"
               position={barPosition}
               fontSize={12}
-              fill="#e2e8f0"
+              fill="#0f172a"
             />
           </Bar>
           <Bar
             dataKey="instagramEmpty"
             name="Instagram Belum Diisi"
-            fill="rgba(34,211,238,0.28)"
+            fill="#5eead4"
             stackId="instagram"
           >
             <LabelList
               dataKey="instagramEmpty"
               position={barPosition}
               fontSize={12}
-              fill="#cbd5f5"
+              fill="#0f172a"
             />
           </Bar>
           <Bar
             dataKey="tiktokFilled"
             name="TikTok Terisi"
-            fill="#a855f7"
+            fill="#818cf8"
             stackId="tiktok"
           >
             <LabelList
               dataKey="tiktokFilled"
               position={barPosition}
               fontSize={12}
-              fill="#ede9fe"
+              fill="#0f172a"
             />
           </Bar>
           <Bar
             dataKey="tiktokEmpty"
             name="TikTok Belum Diisi"
-            fill="rgba(168,85,247,0.35)"
+            fill="#f9a8d4"
             stackId="tiktok"
           >
             <LabelList
               dataKey="tiktokEmpty"
               position={barPosition}
               fontSize={12}
-              fill="#d6bcfa"
+              fill="#0f172a"
             />
           </Bar>
         </BarChart>
@@ -720,7 +720,7 @@ function CustomAxisTick({
         <text
           transform="rotate(-40)"
           textAnchor="end"
-          fill="#cbd5f5"
+          fill="#475569"
           fontSize={12}
           fontWeight={600}
         >
@@ -759,7 +759,7 @@ function CustomAxisTick({
   return (
     <g transform={`translate(${textStartX},${y})`}>
       <title>{value}</title>
-      <text textAnchor="start" fill="#cbd5f5" fontSize={12} fontWeight={600}>
+      <text textAnchor="start" fill="#475569" fontSize={12} fontWeight={600}>
         {lines.map((line, index) => (
           <tspan key={`${line}-${index}`} x={0} dy={index === 0 ? 4 : 14}>
             {line}
@@ -780,28 +780,36 @@ function SummaryItem({
 }) {
   const colorMap = {
     blue: {
-      text: "text-cyan-100",
-      bar: "bg-cyan-400",
-      accent: "from-cyan-500/25 via-transparent to-transparent",
-      glow: "shadow-[0_0_35px_rgba(34,211,238,0.35)]",
+      text: "text-sky-600",
+      bar: "bg-sky-300",
+      accent: "from-sky-100 via-white to-white",
+      glow: "shadow-[0_18px_40px_rgba(56,189,248,0.2)]",
+      iconBg: "bg-sky-50",
+      iconBorder: "border-sky-100",
     },
     green: {
-      text: "text-emerald-100",
-      bar: "bg-emerald-400",
-      accent: "from-emerald-500/25 via-transparent to-transparent",
-      glow: "shadow-[0_0_35px_rgba(16,185,129,0.35)]",
+      text: "text-teal-600",
+      bar: "bg-teal-300",
+      accent: "from-teal-100 via-white to-white",
+      glow: "shadow-[0_18px_40px_rgba(45,212,191,0.22)]",
+      iconBg: "bg-teal-50",
+      iconBorder: "border-teal-100",
     },
     red: {
-      text: "text-rose-100",
-      bar: "bg-rose-400",
-      accent: "from-rose-500/25 via-transparent to-transparent",
-      glow: "shadow-[0_0_40px_rgba(244,63,94,0.3)]",
+      text: "text-indigo-600",
+      bar: "bg-indigo-300",
+      accent: "from-indigo-100 via-white to-white",
+      glow: "shadow-[0_18px_40px_rgba(129,140,248,0.22)]",
+      iconBg: "bg-indigo-50",
+      iconBorder: "border-indigo-100",
     },
     gray: {
-      text: "text-slate-200",
-      bar: "bg-slate-500",
-      accent: "from-slate-500/20 via-transparent to-transparent",
-      glow: "shadow-[0_0_30px_rgba(148,163,184,0.25)]",
+      text: "text-slate-600",
+      bar: "bg-slate-300",
+      accent: "from-slate-100 via-white to-white",
+      glow: "shadow-[0_18px_36px_rgba(148,163,184,0.18)]",
+      iconBg: "bg-slate-50",
+      iconBorder: "border-slate-100",
     },
   };
   const displayColor = colorMap[color] || colorMap.gray;
@@ -814,29 +822,33 @@ function SummaryItem({
 
   return (
     <div
-      className={`group relative flex w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-950/40 px-4 py-6 text-center backdrop-blur-sm transition duration-300 hover:border-cyan-400/50 ${displayColor.glow}`}
+      className={`group relative flex w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border border-sky-200 bg-white/80 px-4 py-6 text-center backdrop-blur-sm transition duration-300 hover:border-sky-300 ${displayColor.glow}`}
     >
       <div
         className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br ${displayColor.accent}`}
       />
-      <div className="pointer-events-none absolute inset-x-6 top-2 h-12 rounded-full bg-white/10 blur-2xl" />
+      <div className="pointer-events-none absolute inset-x-6 top-2 h-12 rounded-full bg-white/70 blur-2xl" />
       <div className="relative flex w-full flex-col items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xl">
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-full border ${
+            displayColor.iconBorder
+          } ${displayColor.iconBg} text-xl`}
+        >
           {icon}
         </div>
         <div className={`text-3xl font-semibold md:text-4xl ${displayColor.text}`}>
           {value}
         </div>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-400">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
           {label}
         </div>
         {formattedPercentage && (
           <div className="mt-1 flex w-full flex-col items-center gap-1">
-            <span className="text-[11px] font-medium text-slate-300">
+            <span className="text-[11px] font-medium text-slate-500">
               {formattedPercentage}
             </span>
             {showProgress && (
-              <div className="h-2 w-full max-w-[180px] rounded-full bg-slate-800/80">
+              <div className="h-2 w-full max-w-[180px] rounded-full bg-sky-50">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${displayColor.bar}`}
                   style={{ width: progressWidth }}
@@ -856,6 +868,6 @@ function SummaryItem({
 }
 
 function Divider() {
-  return <div className="hidden h-full w-px self-stretch bg-slate-800/60 md:block" />;
+  return <div className="hidden h-full w-px self-stretch bg-sky-100 md:block" />;
 }
 
