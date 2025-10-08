@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
+
+import ClaimLayout from "@/components/claim/ClaimLayout";
 import { requestClaimOtp } from "@/utils/api";
 
 export default function ClaimPage() {
@@ -33,53 +36,65 @@ export default function ClaimPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-2xl shadow-md w-full max-w-sm"
-      >
-        <h2 className="text-xl font-semibold text-center mb-4">
-          Klaim &amp; Edit Data User
-        </h2>
+    <ClaimLayout
+      stepLabel="Langkah 1 dari 3"
+      title="Klaim & Edit Data User"
+      description="Masukkan NRP dan email institusi untuk menerima kode verifikasi ke akunmu."
+      icon={<ShieldCheck className="h-5 w-5" />}
+      infoTitle="Mulai proses klaim dengan percaya diri"
+      infoDescription="Kami memverifikasi identitasmu menggunakan data resmi agar perubahan profil tetap aman dan terkontrol."
+      infoHighlights={[
+        "Gunakan email institusi aktif agar OTP dapat diterima dengan cepat.",
+        "Kami hanya membutuhkan beberapa detik untuk mengirim kode verifikasi.",
+        "Data pribadi terlindungi oleh sistem keamanan internal kami.",
+      ]}
+      cardAccent="trust"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <p className="mb-2 text-red-500 text-sm text-center">{error}</p>
+          <div className="rounded-xl border border-red-200/80 bg-red-50/70 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
         )}
-        <div className="mb-4">
-          <label htmlFor="nrp" className="sr-only">
+        <div className="space-y-2">
+          <label htmlFor="nrp" className="text-sm font-medium text-neutral-navy">
             NRP
           </label>
           <input
             id="nrp"
             type="text"
-            placeholder="NRP"
+            placeholder="Masukkan NRP kamu"
             value={nrp}
             onChange={(e) => setNrp(e.target.value)}
             required
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+            className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
           />
         </div>
-        <div className="mb-4">
-          <label htmlFor="email" className="sr-only">
-            Email
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium text-neutral-navy">
+            Email Institusi
           </label>
           <input
             id="email"
             type="email"
-            placeholder="Email"
+            placeholder="nama@institusi.go.id"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+            className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded-2xl bg-gradient-to-r from-trust-400 via-consistency-300 to-spirit-400 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-consistency-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Mengirim..." : "Kirim OTP"}
+          {loading ? "Mengirim..." : "Kirim Kode OTP"}
         </button>
+        <p className="text-xs text-neutral-slate">
+          Pastikan kamu memiliki akses ke email tersebut karena OTP hanya berlaku selama 5 menit.
+        </p>
       </form>
-    </main>
+    </ClaimLayout>
   );
 }

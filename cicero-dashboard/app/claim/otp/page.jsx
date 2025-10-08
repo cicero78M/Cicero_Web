@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { KeyRound } from "lucide-react";
+
+import ClaimLayout from "@/components/claim/ClaimLayout";
 import { verifyClaimOtp } from "@/utils/api";
 
 export default function OtpPage() {
@@ -44,37 +47,54 @@ export default function OtpPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-2xl shadow-md w-full max-w-sm"
-      >
-        <h2 className="text-xl font-semibold text-center mb-4">Verifikasi OTP</h2>
+    <ClaimLayout
+      stepLabel="Langkah 2 dari 3"
+      title="Verifikasi Kode OTP"
+      description="Masukkan kode enam digit yang dikirim ke email institusi untuk melanjutkan proses klaim."
+      icon={<KeyRound className="h-5 w-5" />}
+      infoTitle="Tetap konsisten dalam keamanan"
+      infoDescription="Kode OTP memastikan hanya kamu yang dapat meneruskan pembaruan data. Jangan bagikan kode ini kepada siapa pun."
+      infoHighlights={[
+        "Cek folder inbox dan spam bila kode belum terlihat dalam 1 menit.",
+        "OTP terdiri dari enam digit angka dan berlaku sangat terbatas.",
+        "Kamu bisa meminta kode baru dari halaman sebelumnya jika diperlukan.",
+      ]}
+      cardAccent="consistency"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <p className="mb-2 text-red-500 text-sm text-center">{error}</p>
+          <div className="rounded-xl border border-red-200/80 bg-red-50/70 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
         )}
-        <div className="mb-4">
-          <label htmlFor="otp" className="sr-only">
-            OTP
+        <div className="space-y-2">
+          <label htmlFor="otp" className="text-sm font-medium text-neutral-navy">
+            Kode OTP
           </label>
           <input
             id="otp"
             type="text"
-            placeholder="Masukkan OTP"
+            inputMode="numeric"
+            maxLength={6}
+            autoComplete="one-time-code"
+            placeholder="••••••"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             required
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
+            className="w-full rounded-2xl border border-consistency-200/80 bg-white px-4 py-3 text-center text-lg font-semibold tracking-[0.4em] text-neutral-navy shadow-inner focus:border-consistency-400 focus:outline-none focus:ring-2 focus:ring-consistency-200"
           />
+          <p className="text-xs text-neutral-slate">
+            Kode dikirim ke <span className="font-medium text-consistency-600">{email}</span>. Pastikan koneksi email kamu stabil.
+          </p>
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded-2xl bg-gradient-to-r from-consistency-300 via-trust-300 to-spirit-300 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-trust-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Memverifikasi..." : "Verifikasi"}
+          {loading ? "Memverifikasi..." : "Verifikasi & Lanjutkan"}
         </button>
       </form>
-    </main>
+    </ClaimLayout>
   );
 }
