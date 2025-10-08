@@ -200,14 +200,17 @@ export default function RekapLikesIGPage() {
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-violet-50 p-6 text-slate-700">
-        <div className="rounded-3xl border border-red-300/60 bg-white/90 px-8 py-6 text-center text-red-600 shadow-[0_18px_40px_rgba(129,140,248,0.16)]">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-violet-50 p-6 text-slate-700">
+        <div className="pointer-events-none absolute inset-x-0 -top-16 h-72 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),_transparent_65%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-80 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.2),_transparent_70%)]" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(45,212,191,0.18)_0%,_transparent_75%)]" />
+        <div className="relative rounded-3xl border border-red-300/60 bg-white/95 px-8 py-6 text-center text-red-600 shadow-[0_20px_46px_rgba(129,140,248,0.2)] backdrop-blur">
           {error}
         </div>
       </div>
     );
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-violet-50 text-slate-800">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-violet-50 text-blue-950">
       <div className="pointer-events-none absolute inset-x-0 -top-10 h-72 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),_transparent_65%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-80 bg-[radial-gradient(circle_at_bottom,_rgba(129,140,248,0.2),_transparent_70%)]" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(45,212,191,0.18)_0%,_transparent_75%)]" />
@@ -216,20 +219,21 @@ export default function RekapLikesIGPage() {
           <div className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/90 p-6 shadow-[0_24px_60px_rgba(59,130,246,0.15)] backdrop-blur">
             <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-blue-200/50 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 right-8 h-48 w-48 rounded-full bg-emerald-200/45 blur-3xl" />
-            <div className="pointer-events-none absolute inset-x-12 top-0 h-1 rounded-full bg-gradient-to-r from-sky-300/60 via-blue-400/50 to-violet-300/60" />
+            <div className="pointer-events-none absolute inset-x-12 top-0 h-1 rounded-full bg-gradient-to-r from-blue-200/70 via-indigo-200/60 to-violet-200/70" />
+            <div className="pointer-events-none absolute inset-y-6 left-0 w-1 rounded-full bg-gradient-to-b from-blue-200/60 via-transparent to-emerald-200/50" />
             <div className="relative flex flex-col gap-6">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold tracking-tight text-blue-900">
                     Rekapitulasi Engagement Instagram
                   </h1>
-                  <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                  <p className="mt-1 max-w-2xl text-sm text-blue-700/80">
                     Lihat rekap detail keterlibatan likes dan komentar dari seluruh personel.
                   </p>
                 </div>
                 <Link
                   href="/likes/instagram"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-blue-200/80 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_12px_32px_rgba(129,140,248,0.18)] transition hover:border-violet-200 hover:bg-blue-50 hover:shadow-[0_16px_42px_rgba(129,140,248,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-blue-200/80 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_12px_32px_rgba(129,140,248,0.18)] transition hover:border-violet-200 hover:bg-blue-50 hover:shadow-[0_18px_46px_rgba(129,140,248,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200/70"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Kembali
