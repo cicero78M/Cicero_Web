@@ -19,23 +19,18 @@ export default function PanduanSOPPage() {
       content: (
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">
           <p>
-            Panduan ini menjelaskan langkah-langkah registrasi dan pembaruan data personil melalui bot WhatsApp Cicero agar akun terhubung ke dashboard.
+            Panduan ini menjelaskan alur registrasi dan aktivasi akun personil langsung melalui mekanisme Web OTP di dashboard Cicero agar akses login lebih cepat dan aman.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
             <li>
-              Simpan nomor bot terbaru ke kontak Anda dan kirim pesan sapaan (contoh: <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“Selamat Pagi”</span>).
+              Buka halaman login dashboard Cicero dan masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> beserta nomor ponsel yang telah terdaftar.
             </li>
-            <li>Bot memeriksa status nomor WhatsApp Anda.</li>
-            <li>Jika belum terdaftar, bot meminta NRP/NIP. Balas dengan data sesuai database (contoh: 87020990).</li>
-            <li>Bot menampilkan ringkasan data dan meminta konfirmasi.</li>
-            <li>Balas <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> untuk menghubungkan nomor WhatsApp.</li>
-            <li>Bot mengirim kembali data personil dan menawarkan proses pembaruan.</li>
-            <li>Ketik <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> untuk lanjut memperbarui data.</li>
-            <li>Pilih field yang ingin diperbarui dengan membalas angka opsi (1. Nama, 2. Pangkat, 3. Satfung, 4. Jabatan, 5. Instagram, 6. TikTok, 7. Hapus WhatsApp) atau ketik <span className="font-semibold">batal</span> untuk keluar.</li>
-            <li>Pilih opsi <span className="font-semibold text-slate-900">5</span> untuk memasukkan tautan profil Instagram dan kirim link profil (contoh: <span className="font-mono text-xs text-slate-600">https://www.instagram.com/cicero_devs?...</span>).</li>
-            <li>Konfirmasi dengan membalas <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> setelah data ditampilkan.</li>
-            <li>Pilih opsi <span className="font-semibold text-slate-900">6</span> untuk mengisi tautan profil TikTok, kirim link profil yang valid, lalu balas <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> untuk menyimpan.</li>
-            <li>Lanjutkan pembaruan data lain yang diperlukan hingga seluruh informasi akurat.</li>
+            <li>Tekan tombol <span className="font-semibold text-slate-900">Kirim OTP</span> untuk meminta kode verifikasi Web OTP dikirim ke nomor tersebut.</li>
+            <li>Periksa pesan masuk di ponsel, pastikan kode OTP enam digit diterima dari sistem resmi Cicero.</li>
+            <li>Masukkan kode OTP ke kolom verifikasi di halaman login lalu klik <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
+            <li>Setelah kode benar, buat sandi dashboard dan konfirmasi ulang untuk mengamankan akun.</li>
+            <li>Lengkapi profil awal (Nama, Satfung, Jabatan, dan tautan media sosial bila diminta) sebelum menyimpan perubahan.</li>
+            <li>Gunakan menu <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Lanjut ke Dashboard</span> untuk mulai mengakses fitur pemantauan.</li>
           </ol>
         </div>
       ),
