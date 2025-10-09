@@ -28,7 +28,6 @@ export default function PanduanSOPPage() {
             <li>Tinjau ringkasan data saat ini pada panel <span className="font-semibold text-slate-900">Profil Personil</span> dan pilih bidang yang ingin diperbarui (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau nomor kontak).</li>
             <li>Perbarui informasi dengan format terbaru—cantumkan tautan penuh untuk akun media sosial dan pastikan penulisan pangkat sesuai standar.</li>
             <li>Setelah selesai, klik <span className="font-semibold text-slate-900">Simpan Perubahan</span>; sistem akan menampilkan notifikasi hijau ketika pembaruan berhasil.</li>
-            <li>Akhiri dengan menekan <span className="font-semibold text-slate-900">Sinkronkan ke Dashboard</span> untuk memicu re-sync dan memastikan data baru terbaca di modul monitoring.</li>
           </ol>
         </div>
       ),
