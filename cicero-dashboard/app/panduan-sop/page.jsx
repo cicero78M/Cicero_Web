@@ -36,20 +36,20 @@ export default function PanduanSOPPage() {
       ),
     },
     {
-      title: "Panduan Update Data via WA Bot",
+      title: "Panduan Update Data via Web OTP",
       content: (
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">
           <p>
-            Gunakan bot WhatsApp Cicero untuk memastikan data personil selalu mutakhir dan terbaca oleh sistem rekap engagement.
+            Manfaatkan portal Web OTP Cicero untuk memperbarui profil personil secara mandiri dengan validasi berlapis sebelum data disinkronkan ke dashboard.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
-            <li>Sapa bot di nomor terbaru untuk memastikan koneksi.</li>
-            <li>Pilih opsi pembaruan data sesuai kebutuhan (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau hapus nomor WA lama).</li>
-            <li>Masukkan tautan profil Instagram dan TikTok dalam format lengkap agar sistem dapat memantau engagement.</li>
-            <li>Jika akun mengalami shadowban, segera ganti dengan akun cadangan dan perbarui datanya melalui bot.</li>
-            <li>Pastikan setiap perubahan dikonfirmasi dengan jawaban <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> agar tercatat.</li>
-            <li>Apabila bot menampilkan data yang salah, ulangi proses pembaruan hingga status data sesuai.</li>
-            <li>Gunakan menu re-fetch di dashboard setelah pembaruan untuk memastikan sinkronisasi terbaru.</li>
+            <li>Buka <span className="font-semibold text-slate-900">account.cicero.id</span> dan pilih tombol <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Masuk dengan OTP</span>.</li>
+            <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> serta nomor ponsel aktif, lalu ketuk <span className="font-semibold text-slate-900">Kirim Kode</span>.</li>
+            <li>Input kode OTP enam digit yang diterima melalui SMS/WA resmi Cicero, kemudian tekan <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
+            <li>Tinjau ringkasan data saat ini pada panel <span className="font-semibold text-slate-900">Profil Personil</span> dan pilih bidang yang ingin diperbarui (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau nomor kontak).</li>
+            <li>Perbarui informasi dengan format terbaru—cantumkan tautan penuh untuk akun media sosial dan pastikan penulisan pangkat sesuai standar.</li>
+            <li>Setelah selesai, klik <span className="font-semibold text-slate-900">Simpan Perubahan</span>; sistem akan menampilkan notifikasi hijau ketika pembaruan berhasil.</li>
+            <li>Akhiri dengan menekan <span className="font-semibold text-slate-900">Sinkronkan ke Dashboard</span> untuk memicu re-sync dan memastikan data baru terbaca di modul monitoring.</li>
           </ol>
         </div>
       ),
