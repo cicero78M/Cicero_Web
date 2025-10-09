@@ -160,21 +160,33 @@ export default function PanduanSOPPage() {
             <div className="relative flex flex-col gap-4">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
                 <MessageCircle className="icon-soft-emerald h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Informasi Wabot Terbaru</span>
+                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tips Keamanan Web OTP</span>
               </div>
               <p className="text-sm text-slate-600">
-                Sehubungan dengan kendala teknis pada nomor lama, WA Bot Cicero resmi berpindah ke nomor baru berikut. Gunakan nomor ini untuk seluruh akses menu, laporan, dan pelayanan sistem.
+                Lindungi proses autentikasi Web OTP Cicero dengan menerapkan kebiasaan aman berikut agar kredensial dashboard tetap terjaga dari penyalahgunaan pihak lain.
               </p>
-              <ul className="grid gap-2 text-base font-semibold text-slate-800 sm:grid-cols-2">
-                <li className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3">
-                  <span className="text-lg">✅</span> 0857-3559-4977
+              <ul className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+                <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+                  <span className="text-lg">🔒</span>
+                  <span>
+                    Jangan pernah membagikan kode OTP kepada siap pun, termasuk pihak yang mengaku admin. Sistem resmi tidak akan meminta kode OTP secara manual.
+                  </span>
                 </li>
-                <li className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3">
-                  <span className="text-lg">✅</span> 0811-3074-4171
+                <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+                  <span className="text-lg">📱</span>
+                  <span>
+                    Pastikan nomor ponsel terdaftar aktif dan hanya digunakan pada perangkat pribadi untuk meminimalkan risiko duplikasi akses.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 sm:col-span-2">
+                  <span className="text-lg">🛡️</span>
+                  <span>
+                    Segera laporkan ke tim support jika menerima OTP mencurigakan tanpa melakukan permintaan login. Hubungi <span className="font-semibold text-slate-900">support@cicero.id</span> atau WA <span className="font-semibold text-slate-900">0811-3074-4171</span> untuk penanganan.
+                  </span>
                 </li>
               </ul>
               <p className="text-sm text-slate-600">
-                Mohon seluruh rekan/anggota segera menggunakan nomor di atas. Terima kasih atas pengertiannya. <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">— Cicero</span>
+                Terapkan verifikasi OTP hanya melalui laman resmi dashboard dan logout setelah sesi selesai untuk menjaga integritas data organisasi.
               </p>
             </div>
           </div>
