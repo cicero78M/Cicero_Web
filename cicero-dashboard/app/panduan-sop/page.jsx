@@ -19,42 +19,37 @@ export default function PanduanSOPPage() {
       content: (
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">
           <p>
-            Panduan ini menjelaskan langkah-langkah registrasi dan pembaruan data personil melalui bot WhatsApp Cicero agar akun terhubung ke dashboard.
+            Panduan ini menjelaskan alur registrasi dan aktivasi akun personil langsung melalui mekanisme Web OTP di dashboard Cicero agar akses login lebih cepat dan aman.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
             <li>
-              Simpan nomor bot terbaru ke kontak Anda dan kirim pesan sapaan (contoh: <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“Selamat Pagi”</span>).
+              Buka halaman login dashboard Cicero dan masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> beserta nomor ponsel yang telah terdaftar.
             </li>
-            <li>Bot memeriksa status nomor WhatsApp Anda.</li>
-            <li>Jika belum terdaftar, bot meminta NRP/NIP. Balas dengan data sesuai database (contoh: 87020990).</li>
-            <li>Bot menampilkan ringkasan data dan meminta konfirmasi.</li>
-            <li>Balas <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> untuk menghubungkan nomor WhatsApp.</li>
-            <li>Bot mengirim kembali data personil dan menawarkan proses pembaruan.</li>
-            <li>Ketik <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> untuk lanjut memperbarui data.</li>
-            <li>Pilih field yang ingin diperbarui dengan membalas angka opsi (1. Nama, 2. Pangkat, 3. Satfung, 4. Jabatan, 5. Instagram, 6. TikTok, 7. Hapus WhatsApp) atau ketik <span className="font-semibold">batal</span> untuk keluar.</li>
-            <li>Pilih opsi <span className="font-semibold text-slate-900">5</span> untuk memasukkan tautan profil Instagram dan kirim link profil (contoh: <span className="font-mono text-xs text-slate-600">https://www.instagram.com/cicero_devs?...</span>).</li>
-            <li>Konfirmasi dengan membalas <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> setelah data ditampilkan.</li>
-            <li>Pilih opsi <span className="font-semibold text-slate-900">6</span> untuk mengisi tautan profil TikTok, kirim link profil yang valid, lalu balas <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> untuk menyimpan.</li>
-            <li>Lanjutkan pembaruan data lain yang diperlukan hingga seluruh informasi akurat.</li>
+            <li>Tekan tombol <span className="font-semibold text-slate-900">Kirim OTP</span> untuk meminta kode verifikasi Web OTP dikirim ke nomor tersebut.</li>
+            <li>Periksa pesan masuk di ponsel, pastikan kode OTP enam digit diterima dari sistem resmi Cicero.</li>
+            <li>Masukkan kode OTP ke kolom verifikasi di halaman login lalu klik <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
+            <li>Setelah kode benar, buat sandi dashboard dan konfirmasi ulang untuk mengamankan akun.</li>
+            <li>Lengkapi profil awal (Nama, Satfung, Jabatan, dan tautan media sosial bila diminta) sebelum menyimpan perubahan.</li>
+            <li>Gunakan menu <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Lanjut ke Dashboard</span> untuk mulai mengakses fitur pemantauan.</li>
           </ol>
         </div>
       ),
     },
     {
-      title: "Panduan Update Data via WA Bot",
+      title: "Panduan Update Data via Web OTP",
       content: (
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">
           <p>
-            Gunakan bot WhatsApp Cicero untuk memastikan data personil selalu mutakhir dan terbaca oleh sistem rekap engagement.
+            Manfaatkan portal Web OTP Cicero untuk memperbarui profil personil secara mandiri dengan validasi berlapis sebelum data disinkronkan ke dashboard.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
-            <li>Sapa bot di nomor terbaru untuk memastikan koneksi.</li>
-            <li>Pilih opsi pembaruan data sesuai kebutuhan (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau hapus nomor WA lama).</li>
-            <li>Masukkan tautan profil Instagram dan TikTok dalam format lengkap agar sistem dapat memantau engagement.</li>
-            <li>Jika akun mengalami shadowban, segera ganti dengan akun cadangan dan perbarui datanya melalui bot.</li>
-            <li>Pastikan setiap perubahan dikonfirmasi dengan jawaban <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">“ya”</span> agar tercatat.</li>
-            <li>Apabila bot menampilkan data yang salah, ulangi proses pembaruan hingga status data sesuai.</li>
-            <li>Gunakan menu re-fetch di dashboard setelah pembaruan untuk memastikan sinkronisasi terbaru.</li>
+            <li>Buka <span className="font-semibold text-slate-900">account.cicero.id</span> dan pilih tombol <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Masuk dengan OTP</span>.</li>
+            <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> serta nomor ponsel aktif, lalu ketuk <span className="font-semibold text-slate-900">Kirim Kode</span>.</li>
+            <li>Input kode OTP enam digit yang diterima melalui SMS/WA resmi Cicero, kemudian tekan <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
+            <li>Tinjau ringkasan data saat ini pada panel <span className="font-semibold text-slate-900">Profil Personil</span> dan pilih bidang yang ingin diperbarui (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau nomor kontak).</li>
+            <li>Perbarui informasi dengan format terbaru—cantumkan tautan penuh untuk akun media sosial dan pastikan penulisan pangkat sesuai standar.</li>
+            <li>Setelah selesai, klik <span className="font-semibold text-slate-900">Simpan Perubahan</span>; sistem akan menampilkan notifikasi hijau ketika pembaruan berhasil.</li>
+            <li>Akhiri dengan menekan <span className="font-semibold text-slate-900">Sinkronkan ke Dashboard</span> untuk memicu re-sync dan memastikan data baru terbaca di modul monitoring.</li>
           </ol>
         </div>
       ),
@@ -164,31 +159,47 @@ export default function PanduanSOPPage() {
             <div className="absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-emerald-100/60 blur-2xl" />
             <div className="relative flex flex-col gap-4">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <MessageCircle className="icon-soft-emerald h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Informasi Wabot Terbaru</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <MessageCircle className="icon-soft-emerald h-5 w-5" />
+                </span>
+                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tips Keamanan Web OTP</span>
               </div>
               <p className="text-sm text-slate-600">
-                Sehubungan dengan kendala teknis pada nomor lama, WA Bot Cicero resmi berpindah ke nomor baru berikut. Gunakan nomor ini untuk seluruh akses menu, laporan, dan pelayanan sistem.
+                Lindungi proses autentikasi Web OTP Cicero dengan menerapkan kebiasaan aman berikut agar kredensial dashboard tetap terjaga dari penyalahgunaan pihak lain.
               </p>
-              <ul className="grid gap-2 text-base font-semibold text-slate-800 sm:grid-cols-2">
-                <li className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3">
-                  <span className="text-lg">✅</span> 0857-3559-4977
+              <ul className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+                <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+                  <span className="text-lg">🔒</span>
+                  <span>
+                    Jangan pernah membagikan kode OTP kepada siap pun, termasuk pihak yang mengaku admin. Sistem resmi tidak akan meminta kode OTP secara manual.
+                  </span>
                 </li>
-                <li className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3">
-                  <span className="text-lg">✅</span> 0811-3074-4171
+                <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+                  <span className="text-lg">📱</span>
+                  <span>
+                    Pastikan nomor ponsel terdaftar aktif dan hanya digunakan pada perangkat pribadi untuk meminimalkan risiko duplikasi akses.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 sm:col-span-2">
+                  <span className="text-lg">🛡️</span>
+                  <span>
+                    Segera laporkan ke tim support jika menerima OTP mencurigakan tanpa melakukan permintaan login. Hubungi <span className="font-semibold text-slate-900">support@cicero.id</span> atau WA <span className="font-semibold text-slate-900">0811-3074-4171</span> untuk penanganan.
+                  </span>
                 </li>
               </ul>
               <p className="text-sm text-slate-600">
-                Mohon seluruh rekan/anggota segera menggunakan nomor di atas. Terima kasih atas pengertiannya. <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">— Cicero</span>
+                Terapkan verifikasi OTP hanya melalui laman resmi dashboard dan logout setelah sesi selesai untuk menjaga integritas data organisasi.
               </p>
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-sky-50 p-8 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
             <div className="absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-sky-100/70 blur-2xl" />
             <div className="relative flex flex-col gap-5">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-sky-ink)]">
-                <CircleHelp className="icon-soft-sky h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-[color:var(--cicero-soft-sky-ink)]">
+                  <CircleHelp className="icon-soft-sky h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">FAQ: Shadowban Instagram &amp; TikTok</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
@@ -240,11 +251,13 @@ export default function PanduanSOPPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-white p-8 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
             <div className="absolute -right-12 top-8 h-32 w-32 rounded-full bg-emerald-100/60 blur-2xl" />
             <div className="relative flex flex-col gap-5">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <ShieldCheck className="icon-soft-emerald h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <ShieldCheck className="icon-soft-emerald h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">SOP Pelaksanaan Like &amp; Komentar</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
@@ -328,11 +341,13 @@ export default function PanduanSOPPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50 p-8 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
             <div className="absolute -left-12 top-8 h-32 w-32 rounded-full bg-emerald-100/70 blur-2xl" />
             <div className="relative flex flex-col gap-5">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <ClipboardList className="icon-soft-emerald h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <ClipboardList className="icon-soft-emerald h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">SOP Operator Polres – Absensi Likes IG</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
