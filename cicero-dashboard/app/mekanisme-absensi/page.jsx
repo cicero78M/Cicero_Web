@@ -22,8 +22,10 @@ const actors = [
     focus: "Regulator & pengawas kebijakan",
     responsibilities: [
       "Menetapkan target kepatuhan harian",
-      "Mengirim tugas resmi",
-      "Memonitor permintaan kolaborasi dari Polres dan mengkurasi konten",
+      "Upload tugas konten pada akun resmi",
+      "Melakukan briefing harian pada WAG Social Media Ditbinmas",
+      "Mengirim Laporan Kepatuhan kepada satker jajaran",
+      "Memonitor permintaan kolaborasi dan mengkurasi konten dari satker jajaran",
     ],
   },
   {
@@ -31,12 +33,11 @@ const actors = [
     icon: UsersRound,
     focus: "Koordinator lapangan",
     responsibilities: [
-      "Mendistribusikan link tugas harian",
-      "Mengelola data personil - penambahan akun baru, pergantian akun, penghapusan akun",
+      "Mengelola data personil - penambahan akun baru, pergantian akun, permintaan penghapusan akun",
+      "Monitor tugas di WAG Social Media Ditbinmas dan mendistribusikan link tugas harian",
       "Mengakomodir kendala personil dan melaporkan pada Cicero",
-      "Memvalidasi laporan kehadiran",
-      "Melakukan absensi dan teguran",
-      "Mengirim permintaan kolaborasi konten ke Ditbinmas",
+      "Melakukan absensi personil harian",
+      "Mengirim permintaan kolaborasi konten ke akun resmi Ditbinmas",
     ],
   },
   {
@@ -44,9 +45,9 @@ const actors = [
     icon: BadgeCheck,
     focus: "Pelaksana tugas individu",
     responsibilities: [
-      "Melakukan interaksi sesuai target",
+      "Melakukan likes dan komentar sesuai tugas harian",
       "Melaporkan kendala kepada operator",
-      "Memperbarui data akun ketika berubah",
+      "Memperbarui data akun pribadi ketika ada perubahan data",
     ],
   },
   {
@@ -54,13 +55,13 @@ const actors = [
     icon: Network,
     focus: "Otomasi & analytics",
     responsibilities: [
+      "Monitoring akun resmi, mengambil data konten hari ini, membuat dan mengirim pesan tugas ke WAG Ditbinmas",
       "Menarik data engagement real-time",
       "Menghasilkan status absensi",
-      "Memberi sinyal anomali untuk tindak lanjut",
-      "Membuat rekap kepatuhan harian",
-      "Menghitung skor kehadiran",
-      "Mengirim notifikasi via Wa Bot",  
-      "Mendistribusikan laporan Executive Summary / Anev Bulanan",
+      "Menghitung skor pelaksanaan tugas",
+      "Membuat rekap kepatuhan harian, mingguan dan bulanan",
+      "Mengirim informasi, laporan dan notifikasi via Wa Bot",  
+      "Mendistribusikan laporan har8ian, mingguan dan Executive Summary / Anev Bulanan",
     ],
   },
 ];
@@ -74,7 +75,7 @@ const steps = [
   {
     title: "Pelaksanaan Interaksi",
     detail:
-      "Personil menjalankan tugas like/komentar sesuai paket konten. Sistem merekam aktivitas melalui API platform sosial.",
+      "Personil menjalankan tugas like/komentar sesuai tugas konten. Sistem merekam aktivitas pelaksanaan likes dan komentar.",
   },
   {
     title: "Validasi & Absensi",
@@ -224,11 +225,11 @@ function RelationshipMap() {
         fontWeight="500"
       >
         <text x="300" y="95" textAnchor="middle">Rekap Otomatis</text>
-        <text x="300" y="185" textAnchor="middle">Notifikasi &amp; Teguran</text>
-        <text x="104" y="130" textAnchor="start">Mandat Kebijakan</text>
-        <text x="104" y="150" textAnchor="start">Briefing Harian</text>
-        <text x="496" y="130" textAnchor="end">Insight Prioritas</text>
-        <text x="496" y="150" textAnchor="end">Alert Anomali</text>
+        <text x="300" y="185" textAnchor="middle">Data Absensi</text>
+        <text x="104" y="130" textAnchor="start">Kebijakan</text>
+        <text x="104" y="150" textAnchor="start">Laporan harian</text>
+        <text x="496" y="130" textAnchor="end">Insight Data</text>
+        <text x="496" y="150" textAnchor="end">Laporan Kendala</text>
         <text x="300" y="175" textAnchor="middle">Data Engagement</text>
       </g>
     </svg>
