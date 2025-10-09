@@ -138,10 +138,10 @@ export default function PanduanSOPPage() {
                   <p className="font-semibold text-slate-900">2) Alur Harian</p>
                   <ol className="list-decimal space-y-2 pl-5">
                     <li>Cek link konten target di WAG Cicero.</li>
-                    <li>Broadcast link dan batas waktu pengerjaan (maksimal 21:00) kepada seluruh personil.</li>
-                    <li>Monitor progres via menu Instagram Engagement Insight, lakukan pencarian nama Polres dan pantau pembaruan (update tiap 30 menit).</li>
-                    <li>Kirim pengingat akhir dan tegur personil yang belum like.</li>
-                    <li>Laporkan nilai kepatuhan harian dan generate rekap (Sudah, Kurang Lengkap, Belum, Belum Update Username).</li>
+                    <li>Bagikan Pesan Tugsa link dari WAG Social Media Ditbinmas (batas waktu pengerjaan maksimal 20:30) kepada seluruh personil / Group Binmas satker nya.</li>
+                    <li>Monitor progres via menu Instagram / Tiktok Engagement Insight, lakukan pencarian nama Polres dan pantau pembaruan (update tiap 30 menit).</li>
+                    <li>Kirim absesni secara berkala (15.00, 18.00 dan 20.30) untuk mengingatkan personil yang belum like dan komen.</li>
+                    <li>Laporkan absensi kepatuhan harian dan generate rekap (Sudah, Kurang Lengkap, Belum, Belum Update Username) kepada pimpinan Kasatker / Kasat Binmas.</li>
                   </ol>
                 </div>
                 <div className="space-y-2">
@@ -149,7 +149,7 @@ export default function PanduanSOPPage() {
                   <ul className="list-disc space-y-2 pl-5">
                     <li>Gunakan filter status untuk identifikasi cepat.</li>
                     <li>Perbaiki username salah/berubah dengan meminta update via WA bot lalu lakukan re-fetch.</li>
-                    <li>Instruksikan personil mengatur akun menjadi publik bila terdeteksi privat.</li>
+                    <li>Instruksikan personil mengatur akun menjadi publik bila terdeteksi private.</li>
                     <li>Jika link tugas salah atau terhapus, segera perbarui dan umumkan ulang.</li>
                   </ul>
                 </div>
@@ -226,7 +226,7 @@ export default function PanduanSOPPage() {
                   <ol className="list-decimal space-y-2 pl-5">
                     <li>Penerimaan link konten dari grup WA Ditbinmas dan distribusi ke personil.</li>
                     <li>Personil membuka link konten, melakukan like, serta memberikan komentar positif.</li>
-                    <li>Gunakan contoh komentar standar untuk menjaga konsistensi dan sopan santun.</li>
+                    <li>Berikan Komentar Positif, mendukung, ramah dan sopan santun.</li>
                     <li>Pastikan like dan komentar dilakukan keduanya agar tercatat sistem.</li>
                   </ol>
                 </div>
