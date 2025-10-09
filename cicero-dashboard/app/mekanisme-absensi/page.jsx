@@ -290,7 +290,7 @@ export default function MekanismeAbsensiPage() {
           })}
         </section>
 
-        <section className="mt-14 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <section className="mt-14 grid gap-6">
           <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70">
             <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-200/40 blur-2xl" />
             <div className="relative flex flex-col gap-5">
