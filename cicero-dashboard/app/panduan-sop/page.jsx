@@ -15,27 +15,6 @@ export const metadata = {
 export default function PanduanSOPPage() {
   const sections = [
     {
-      title: "Panduan Registrasi User Dashboard",
-      content: (
-        <div className="space-y-3 text-sm leading-relaxed text-slate-700">
-          <p>
-            Panduan ini menjelaskan alur registrasi dan aktivasi akun personil langsung melalui mekanisme Web OTP di dashboard Cicero agar akses login lebih cepat dan aman.
-          </p>
-          <ol className="list-decimal space-y-2 pl-5">
-            <li>
-              Buka halaman login dashboard Cicero dan masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> beserta nomor ponsel yang telah terdaftar.
-            </li>
-            <li>Tekan tombol <span className="font-semibold text-slate-900">Kirim OTP</span> untuk meminta kode verifikasi Web OTP dikirim ke nomor tersebut.</li>
-            <li>Periksa pesan masuk di ponsel, pastikan kode OTP enam digit diterima dari sistem resmi Cicero.</li>
-            <li>Masukkan kode OTP ke kolom verifikasi di halaman login lalu klik <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
-            <li>Setelah kode benar, buat sandi dashboard dan konfirmasi ulang untuk mengamankan akun.</li>
-            <li>Lengkapi profil awal (Nama, Satfung, Jabatan, dan tautan media sosial bila diminta) sebelum menyimpan perubahan.</li>
-            <li>Gunakan menu <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Lanjut ke Dashboard</span> untuk mulai mengakses fitur pemantauan.</li>
-          </ol>
-        </div>
-      ),
-    },
-    {
       title: "Panduan Update Data via Web OTP",
       content: (
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">
@@ -73,10 +52,10 @@ export default function PanduanSOPPage() {
             <div>
               <p className="font-semibold text-[color:var(--cicero-soft-sky-ink)]">Alur Harian</p>
               <ol className="list-decimal space-y-2 pl-5">
-                <li>Cek link konten target yang dibagikan di WAG Cicero untuk hari berjalan.</li>
-                <li>Broadcast link konten kepada personil beserta batas waktu pengerjaan (maksimal pukul 21.00 WIB).</li>
+                <li>Cek link konten target yang dibagikan di WAG Social Media Ditbinmas untuk hari berjalan.</li>
+                <li>Kirim pesan tugas konten kepada group / personil beserta batas waktu pengerjaan (maksimal pukul 20.30 WIB).</li>
                 <li>Monitor progres melalui menu <span className="font-semibold text-slate-900">Instagram Engagement Insight</span> dengan filter nama Polres.</li>
-                <li>Kirim pengingat akhir dan tegur personil yang belum menyelesaikan tugas.</li>
+                <li>Secara berkala kirim laporan absensi personil yang sudah dan belum menyelesaikan tugas (Ambil data via web dashboard).</li>
                 <li>Laporkan nilai kepatuhan harian dan generate rekap dari dashboard (kategori: Sudah, Kurang Lengkap, Belum, Belum Update Username).</li>
               </ol>
             </div>
@@ -84,7 +63,7 @@ export default function PanduanSOPPage() {
               <p className="font-semibold text-[color:var(--cicero-soft-sky-ink)]">Monitoring &amp; Tindak Lanjut</p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>Gunakan filter status untuk mengidentifikasi progres (Sudah, Kurang Lengkap, Belum, Belum Update Username IG).</li>
-                <li>Jika username salah/berubah, instruksikan personil memperbarui via WA bot lalu lakukan re-fetch.</li>
+                <li>Jika username salah/berubah, instruksikan personil memperbarui data via web https://papiqo.com/claim.</li>
                 <li>Jika akun bersifat privat, minta personil mengubah ke publik sebelum batas waktu.</li>
                 <li>Perbarui dan sebarkan ulang link tugas jika tautan sebelumnya tidak valid.</li>
               </ul>
@@ -101,7 +80,7 @@ export default function PanduanSOPPage() {
             Chart pada dashboard dirancang untuk memberikan gambaran cepat terhadap performa engagement setiap satker.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
-            <li>Pilih jenis chart pada menu analitik sesuai kebutuhan pemantauan (likes, komentar, views, atau distribusi personil).</li>
+            <li>Pilih jenis chart pada menu analitik sesuai kebutuhan pemantauan.</li>
             <li>Gunakan filter periode, satker, dan platform untuk menyesuaikan data yang ingin dievaluasi.</li>
             <li>Sorot titik data untuk melihat detail metrik; gunakan mode fullscreen bila tersedia untuk presentasi.</li>
             <li>Unduh chart sebagai gambar atau data mentah untuk keperluan laporan internal.</li>
