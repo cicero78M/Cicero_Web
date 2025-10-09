@@ -23,8 +23,8 @@ export default function PanduanSOPPage() {
           </p>
           <ol className="list-decimal space-y-2 pl-5">
             <li>Buka <span className="font-semibold text-slate-900">account.cicero.id</span> dan pilih tombol <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Masuk dengan OTP</span>.</li>
-            <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> serta nomor ponsel aktif, lalu ketuk <span className="font-semibold text-slate-900">Kirim Kode</span>.</li>
-            <li>Input kode OTP enam digit yang diterima melalui SMS/WA resmi Cicero, kemudian tekan <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
+            <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> serta alamat email aktif, lalu ketuk <span className="font-semibold text-slate-900">Kirim Kode</span>.</li>
+            <li>Input kode OTP enam digit yang diterima melalui email resmi Cicero, kemudian tekan <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
             <li>Tinjau ringkasan data saat ini pada panel <span className="font-semibold text-slate-900">Profil Personil</span> dan pilih bidang yang ingin diperbarui (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau nomor kontak).</li>
             <li>Perbarui informasi dengan format terbaru—cantumkan tautan penuh untuk akun media sosial dan pastikan penulisan pangkat sesuai standar.</li>
             <li>Setelah selesai, klik <span className="font-semibold text-slate-900">Simpan Perubahan</span>; sistem akan menampilkan notifikasi hijau ketika pembaruan berhasil.</li>
@@ -156,13 +156,13 @@ export default function PanduanSOPPage() {
                 <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
                   <span className="text-lg">📱</span>
                   <span>
-                    Pastikan nomor ponsel terdaftar aktif dan hanya digunakan pada perangkat pribadi untuk meminimalkan risiko duplikasi akses.
+                    Pastikan alamat email terdaftar aktif dan hanya digunakan pada perangkat pribadi untuk meminimalkan risiko duplikasi akses.
                   </span>
                 </li>
                 <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 sm:col-span-2">
                   <span className="text-lg">🛡️</span>
                   <span>
-                    Segera laporkan ke tim support jika menerima OTP mencurigakan tanpa melakukan permintaan login. Hubungi <span className="font-semibold text-slate-900">support@cicero.id</span> atau WA <span className="font-semibold text-slate-900">0811-3074-4171</span> untuk penanganan.
+                    Segera laporkan ke tim support jika menerima OTP mencurigakan tanpa melakukan permintaan login. Hubungi <span className="font-semibold text-slate-900">cicero@papiqo.com</span> atau WA <span className="font-semibold text-slate-900">0812-3511-4745</span> untuk penanganan.
                   </span>
                 </li>
               </ul>
@@ -173,57 +173,40 @@ export default function PanduanSOPPage() {
           </div>
 
           <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
-            <div className="absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-sky-100/70 blur-2xl" />
+            <div className="absolute -left-12 top-8 h-32 w-32 rounded-full bg-emerald-100/70 blur-2xl" />
             <div className="relative flex flex-col gap-5">
-              <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-sky-ink)]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-[color:var(--cicero-soft-sky-ink)]">
-                  <CircleHelp className="icon-soft-sky h-5 w-5" />
+              <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <ClipboardList className="icon-soft-emerald h-5 w-5" />
                 </span>
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">FAQ: Shadowban Instagram &amp; TikTok</span>
+                <span className="text-sm font-semibold uppercase tracking-[0.2em]">SOP Operator Polres – Absensi Likes IG</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
                 <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">Apa itu Shadowban?</p>
-                  <p>
-                    Shadowban adalah pembatasan otomatis dari platform Instagram maupun TikTok tanpa notifikasi resmi. Dampaknya konten tidak muncul di halaman rekomendasi, hasil pencarian hashtag, maupun timeline pengguna lain secara normal sehingga jangkauan turun drastis.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">Ciri-Ciri Akun Terkena Shadowban</p>
-                  <ol className="list-decimal space-y-2 pl-5">
-                    <li>Penurunan interaksi tajam (views, likes, komentar).</li>
-                    <li>Konten tidak tampil di FYP/TikTok Explore atau halaman publik lain.</li>
-                    <li>Tayangan terbatas hanya pada sebagian follower atau tidak muncul sama sekali.</li>
-                    <li>Tidak bisa memberikan like/komentar pada konten tertentu.</li>
-                  </ol>
-                </div>
-                <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">Penyebab Umum</p>
-                  <ul className="list-disc space-y-2 pl-5">
-                    <li>Pelanggaran pedoman komunitas: spam, ujaran kebencian, atau konten sensitif.</li>
-                    <li>Aktivitas tidak wajar seperti like, komentar, atau follow berlebihan.</li>
-                    <li>Penggunaan konten berhak cipta tanpa izin.</li>
-                    <li>Penggunaan aplikasi pihak ketiga/bot ilegal.</li>
+                  <p className="font-semibold text-slate-900">1) Prasyarat &amp; Setup Awal</p>
+                  <ul className="list-disc space-y-1 pl-5">
+                    <li>Pastikan direktori pengguna lengkap (Nama, NRP, Satker/Polres, username Instagram, nomor WA).</li>
+                    <li>Verifikasi akun Instagram personil dalam status publik.</li>
+                    <li>Pantau tugas yang dikirim via grup Ditbinmas minimal setiap 30 menit.</li>
                   </ul>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">Cara Mengatasi</p>
+                  <p className="font-semibold text-slate-900">2) Alur Harian</p>
                   <ol className="list-decimal space-y-2 pl-5">
-                    <li>Istirahatkan akun dan hentikan aktivitas berlebihan selama beberapa hari.</li>
-                    <li>Hapus konten yang berpotensi melanggar pedoman.</li>
-                    <li>Putuskan koneksi aplikasi tidak resmi.</li>
-                    <li>Bersihkan cache aplikasi atau instal ulang.</li>
-                    <li>Fokus pada konten orisinal dan aman.</li>
-                    <li>Bangun interaksi natural tanpa spam.</li>
+                    <li>Cek link konten target di WAG Cicero.</li>
+                    <li>Broadcast link dan batas waktu pengerjaan (maksimal 21:00) kepada seluruh personil.</li>
+                    <li>Monitor progres via menu Instagram Engagement Insight, lakukan pencarian nama Polres dan pantau pembaruan (update tiap 30 menit).</li>
+                    <li>Kirim pengingat akhir dan tegur personil yang belum like.</li>
+                    <li>Laporkan nilai kepatuhan harian dan generate rekap (Sudah, Kurang Lengkap, Belum, Belum Update Username).</li>
                   </ol>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">Catatan Penting</p>
+                  <p className="font-semibold text-slate-900">3) Monitoring &amp; Tindak Lanjut</p>
                   <ul className="list-disc space-y-2 pl-5">
-                    <li>Shadowban dapat menimpa akun besar maupun kecil.</li>
-                    <li>Segera siapkan akun cadangan dan daftarkan juga ke sistem WA bot.</li>
-                    <li>Gunakan akun cadangan saat akun utama terkena shadowban untuk menjaga kesinambungan aktivitas.</li>
-                    <li>Shadowban biasanya sementara dan akan dibuka oleh platform setelah masa penalti berakhir.</li>
+                    <li>Gunakan filter status untuk identifikasi cepat.</li>
+                    <li>Perbaiki username salah/berubah dengan meminta update via WA bot lalu lakukan re-fetch.</li>
+                    <li>Instruksikan personil mengatur akun menjadi publik bila terdeteksi privat.</li>
+                    <li>Jika link tugas salah atau terhapus, segera perbarui dan umumkan ulang.</li>
                   </ul>
                 </div>
               </article>
@@ -321,45 +304,63 @@ export default function PanduanSOPPage() {
           </div>
 
           <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
-            <div className="absolute -left-12 top-8 h-32 w-32 rounded-full bg-emerald-100/70 blur-2xl" />
+            <div className="absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-sky-100/70 blur-2xl" />
             <div className="relative flex flex-col gap-5">
-              <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
-                  <ClipboardList className="icon-soft-emerald h-5 w-5" />
+              <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-sky-ink)]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-[color:var(--cicero-soft-sky-ink)]">
+                  <CircleHelp className="icon-soft-sky h-5 w-5" />
                 </span>
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">SOP Operator Polres – Absensi Likes IG</span>
+                <span className="text-sm font-semibold uppercase tracking-[0.2em]">FAQ: Shadowban Instagram &amp; TikTok</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
                 <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">1) Prasyarat &amp; Setup Awal</p>
-                  <ul className="list-disc space-y-1 pl-5">
-                    <li>Pastikan direktori pengguna lengkap (Nama, NRP, Satker/Polres, username Instagram, nomor WA).</li>
-                    <li>Verifikasi akun Instagram personil dalam status publik.</li>
-                    <li>Pantau tugas yang dikirim via grup Ditbinmas minimal setiap 30 menit.</li>
-                  </ul>
+                  <p className="font-semibold text-slate-900">Apa itu Shadowban?</p>
+                  <p>
+                    Shadowban adalah pembatasan otomatis dari platform Instagram maupun TikTok tanpa notifikasi resmi. Dampaknya konten tidak muncul di halaman rekomendasi, hasil pencarian hashtag, maupun timeline pengguna lain secara normal sehingga jangkauan turun drastis.
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">2) Alur Harian</p>
+                  <p className="font-semibold text-slate-900">Ciri-Ciri Akun Terkena Shadowban</p>
                   <ol className="list-decimal space-y-2 pl-5">
-                    <li>Cek link konten target di WAG Cicero.</li>
-                    <li>Broadcast link dan batas waktu pengerjaan (maksimal 21:00) kepada seluruh personil.</li>
-                    <li>Monitor progres via menu Instagram Engagement Insight, lakukan pencarian nama Polres dan pantau pembaruan (update tiap 30 menit).</li>
-                    <li>Kirim pengingat akhir dan tegur personil yang belum like.</li>
-                    <li>Laporkan nilai kepatuhan harian dan generate rekap (Sudah, Kurang Lengkap, Belum, Belum Update Username).</li>
+                    <li>Penurunan interaksi tajam (views, likes, komentar).</li>
+                    <li>Konten tidak tampil di FYP/TikTok Explore atau halaman publik lain.</li>
+                    <li>Tayangan terbatas hanya pada sebagian follower atau tidak muncul sama sekali.</li>
+                    <li>Tidak bisa memberikan like/komentar pada konten tertentu.</li>
                   </ol>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-semibold text-slate-900">3) Monitoring &amp; Tindak Lanjut</p>
+                  <p className="font-semibold text-slate-900">Penyebab Umum</p>
                   <ul className="list-disc space-y-2 pl-5">
-                    <li>Gunakan filter status untuk identifikasi cepat.</li>
-                    <li>Perbaiki username salah/berubah dengan meminta update via WA bot lalu lakukan re-fetch.</li>
-                    <li>Instruksikan personil mengatur akun menjadi publik bila terdeteksi privat.</li>
-                    <li>Jika link tugas salah atau terhapus, segera perbarui dan umumkan ulang.</li>
+                    <li>Pelanggaran pedoman komunitas: spam, ujaran kebencian, atau konten sensitif.</li>
+                    <li>Aktivitas tidak wajar seperti like, komentar, atau follow berlebihan.</li>
+                    <li>Penggunaan konten berhak cipta tanpa izin.</li>
+                    <li>Penggunaan aplikasi pihak ketiga/bot ilegal.</li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold text-slate-900">Cara Mengatasi</p>
+                  <ol className="list-decimal space-y-2 pl-5">
+                    <li>Istirahatkan akun dan hentikan aktivitas berlebihan selama beberapa hari.</li>
+                    <li>Hapus konten yang berpotensi melanggar pedoman.</li>
+                    <li>Putuskan koneksi aplikasi tidak resmi.</li>
+                    <li>Bersihkan cache aplikasi atau instal ulang.</li>
+                    <li>Fokus pada konten orisinal dan aman.</li>
+                    <li>Bangun interaksi natural tanpa spam.</li>
+                  </ol>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold text-slate-900">Catatan Penting</p>
+                  <ul className="list-disc space-y-2 pl-5">
+                    <li>Shadowban dapat menimpa akun besar maupun kecil.</li>
+                    <li>Segera siapkan akun cadangan dan daftarkan juga ke sistem WA bot.</li>
+                    <li>Gunakan akun cadangan saat akun utama terkena shadowban untuk menjaga kesinambungan aktivitas.</li>
+                    <li>Shadowban biasanya sementara dan akan dibuka oleh platform setelah masa penalti berakhir.</li>
                   </ul>
                 </div>
               </article>
             </div>
           </div>
+
         </section>
       </div>
     </main>
