@@ -22,7 +22,7 @@ export default function PanduanSOPPage() {
             Manfaatkan portal Web OTP Cicero untuk memperbarui profil personil secara mandiri dengan validasi berlapis sebelum data disinkronkan ke dashboard.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
-            <li>Buka <span className="font-semibold text-slate-900">account.cicero.id</span> dan pilih tombol <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Masuk dengan OTP</span>.</li>
+            <li>Buka <span className="font-semibold text-slate-900">https://papiqo.com/claim</span> dan pilih tombol <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Masuk dengan OTP</span>.</li>
             <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> serta alamat email aktif, lalu ketuk <span className="font-semibold text-slate-900">Kirim Kode</span>.</li>
             <li>Input kode OTP enam digit yang diterima melalui email resmi Cicero, kemudian tekan <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
             <li>Tinjau ringkasan data saat ini pada panel <span className="font-semibold text-slate-900">Profil Personil</span> dan pilih bidang yang ingin diperbarui (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau nomor kontak).</li>
@@ -69,23 +69,6 @@ export default function PanduanSOPPage() {
               </ul>
             </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      title: "Panduan Penggunaan Chart Visualisasi Data",
-      content: (
-        <div className="space-y-3 text-sm leading-relaxed text-slate-700">
-          <p>
-            Chart pada dashboard dirancang untuk memberikan gambaran cepat terhadap performa engagement setiap satker.
-          </p>
-          <ol className="list-decimal space-y-2 pl-5">
-            <li>Pilih jenis chart pada menu analitik sesuai kebutuhan pemantauan.</li>
-            <li>Gunakan filter periode, satker, dan platform untuk menyesuaikan data yang ingin dievaluasi.</li>
-            <li>Sorot titik data untuk melihat detail metrik; gunakan mode fullscreen bila tersedia untuk presentasi.</li>
-            <li>Unduh chart sebagai gambar atau data mentah untuk keperluan laporan internal.</li>
-            <li>Padukan insight chart dengan rekap harian agar tindak lanjut lebih tepat sasaran.</li>
-          </ol>
         </div>
       ),
     },
@@ -228,7 +211,7 @@ export default function PanduanSOPPage() {
                     SOP Pelaksanaan Like dan Komentar Instagram &amp; TikTok Personil Bhabinkamtibmas
                   </p>
                   <p>
-                    SOP ini menjadi pedoman bagi seluruh personil Bhabinkamtibmas dalam melaksanakan engagement digital sesuai arahan Ditbinmas Polda Jatim.
+                    SOP ini menjadi pedoman bagi seluruh personil Binmas dan Bhabinkamtibmas dalam melaksanakan engagement digital sesuai arahan Ditbinmas Polda Jatim.
                   </p>
                 </div>
                 <div className="space-y-2">
