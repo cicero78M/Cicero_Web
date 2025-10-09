@@ -572,6 +572,7 @@ export async function getClaimUserData(
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ nrp, email }),
   });
   if (!res.ok) throw new Error("Failed to fetch user");
@@ -587,6 +588,7 @@ export async function requestClaimOtp(
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ nrp, email }),
   });
   if (!res.ok) throw new Error("Failed to request OTP");
@@ -603,6 +605,7 @@ export async function verifyClaimOtp(
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ nrp, email, otp }),
   });
   if (!res.ok) throw new Error("Failed to verify OTP");
@@ -628,6 +631,7 @@ export async function updateUserViaClaim(
   const res = await fetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to update user");
