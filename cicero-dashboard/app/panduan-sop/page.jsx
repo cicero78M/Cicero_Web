@@ -33,45 +33,6 @@ export default function PanduanSOPPage() {
         </div>
       ),
     },
-    {
-      title: "Panduan Operator Update, Rekap, dan Absensi",
-      content: (
-        <div className="space-y-3 text-sm leading-relaxed text-slate-700">
-          <p>
-            Operator Polres bertanggung jawab mengawal kepatuhan harian like dan komentar di Instagram serta TikTok melalui dashboard Cicero.
-          </p>
-          <div className="space-y-3">
-            <div>
-              <p className="font-semibold text-[color:var(--cicero-soft-sky-ink)]">Prasyarat &amp; Setup Awal</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>Pastikan direktori pengguna terisi lengkap: Nama, NRP, Satker/Polres, username Instagram, dan nomor WhatsApp.</li>
-                <li>Pastikan akun Instagram personil bersifat publik.</li>
-                <li>Pantau distribusi tugas yang dibagikan melalui grup WhatsApp Ditbinmas setiap 30 menit.</li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-[color:var(--cicero-soft-sky-ink)]">Alur Harian</p>
-              <ol className="list-decimal space-y-2 pl-5">
-                <li>Cek link konten target yang dibagikan di WAG Social Media Ditbinmas untuk hari berjalan.</li>
-                <li>Kirim pesan tugas konten kepada group / personil beserta batas waktu pengerjaan (maksimal pukul 20.30 WIB).</li>
-                <li>Monitor progres melalui menu <span className="font-semibold text-slate-900">Instagram Engagement Insight</span> dengan filter nama Polres.</li>
-                <li>Secara berkala kirim laporan absensi personil yang sudah dan belum menyelesaikan tugas (Ambil data via web dashboard).</li>
-                <li>Laporkan nilai kepatuhan harian dan generate rekap dari dashboard (kategori: Sudah, Kurang Lengkap, Belum, Belum Update Username).</li>
-              </ol>
-            </div>
-            <div>
-              <p className="font-semibold text-[color:var(--cicero-soft-sky-ink)]">Monitoring &amp; Tindak Lanjut</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>Gunakan filter status untuk mengidentifikasi progres (Sudah, Kurang Lengkap, Belum, Belum Update Username IG).</li>
-                <li>Jika username salah/berubah, instruksikan personil memperbarui data via web https://papiqo.com/claim.</li>
-                <li>Jika akun bersifat privat, minta personil mengubah ke publik sebelum batas waktu.</li>
-                <li>Perbarui dan sebarkan ulang link tugas jika tautan sebelumnya tidak valid.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      ),
-    },
   ];
 
   return (
