@@ -159,7 +159,9 @@ export default function PanduanSOPPage() {
             <div className="absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-emerald-100/60 blur-2xl" />
             <div className="relative flex flex-col gap-4">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <MessageCircle className="icon-soft-emerald h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <MessageCircle className="icon-soft-emerald h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tips Keamanan Web OTP</span>
               </div>
               <p className="text-sm text-slate-600">
@@ -191,11 +193,13 @@ export default function PanduanSOPPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-sky-50 p-8 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
             <div className="absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-sky-100/70 blur-2xl" />
             <div className="relative flex flex-col gap-5">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-sky-ink)]">
-                <CircleHelp className="icon-soft-sky h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-[color:var(--cicero-soft-sky-ink)]">
+                  <CircleHelp className="icon-soft-sky h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">FAQ: Shadowban Instagram &amp; TikTok</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
@@ -247,11 +251,13 @@ export default function PanduanSOPPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-white p-8 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
             <div className="absolute -right-12 top-8 h-32 w-32 rounded-full bg-emerald-100/60 blur-2xl" />
             <div className="relative flex flex-col gap-5">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <ShieldCheck className="icon-soft-emerald h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <ShieldCheck className="icon-soft-emerald h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">SOP Pelaksanaan Like &amp; Komentar</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
@@ -335,11 +341,13 @@ export default function PanduanSOPPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-emerald-50 p-8 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white p-8 shadow-md">
             <div className="absolute -left-12 top-8 h-32 w-32 rounded-full bg-emerald-100/70 blur-2xl" />
             <div className="relative flex flex-col gap-5">
               <div className="inline-flex items-center gap-3 text-[color:var(--cicero-soft-emerald-ink)]">
-                <ClipboardList className="icon-soft-emerald h-6 w-6" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
+                  <ClipboardList className="icon-soft-emerald h-5 w-5" />
+                </span>
                 <span className="text-sm font-semibold uppercase tracking-[0.2em]">SOP Operator Polres – Absensi Likes IG</span>
               </div>
               <article className="space-y-5 text-sm leading-relaxed text-slate-700">
