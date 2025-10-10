@@ -12,6 +12,84 @@ export function normalizeWhatsapp(whatsapp: string): string {
   return trimmed.startsWith("0") ? `62${trimmed.slice(1)}` : trimmed;
 }
 
+type ApiMessageResponse = {
+  success: boolean;
+  message: string;
+};
+
+export type DashboardPasswordResetRequestPayload = {
+  username: string;
+  whatsapp?: string;
+  email?: string;
+};
+
+export type DashboardPasswordResetConfirmPayload = {
+  token: string;
+  password: string;
+  confirm_password?: string;
+};
+
+async function postMessagePayload(
+  endpoint: string,
+  payload: Record<string, any>,
+  signal?: AbortSignal,
+): Promise<ApiMessageResponse> {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal,
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  const success = data?.success ?? res.ok;
+  const message =
+    data?.message ||
+    data?.status ||
+    data?.detail ||
+    (success ? "Permintaan berhasil diproses." : "Permintaan gagal diproses.");
+
+  if (!res.ok) {
+    return { success: false, message };
+  }
+
+  return { success: Boolean(success), message };
+}
+
+export async function requestDashboardPasswordReset(
+  payload: DashboardPasswordResetRequestPayload,
+  signal?: AbortSignal,
+): Promise<ApiMessageResponse> {
+  return postMessagePayload(
+    `${API_BASE_URL}/api/auth/dashboard-password-reset`,
+    payload,
+    signal,
+  );
+}
+
+export async function confirmDashboardPasswordReset(
+  payload: DashboardPasswordResetConfirmPayload,
+  signal?: AbortSignal,
+): Promise<ApiMessageResponse> {
+  const body = {
+    ...payload,
+  };
+  if (!body.confirm_password) {
+    body.confirm_password = body.password;
+  }
+  return postMessagePayload(
+    `${API_BASE_URL}/api/auth/dashboard-password-reset/confirm`,
+    body,
+    signal,
+  );
+}
+
 // Handle expired or invalid token by clearing storage and redirecting to login
 function handleTokenExpired(): void {
   if (typeof window !== "undefined") {
