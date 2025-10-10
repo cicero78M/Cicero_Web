@@ -16,10 +16,15 @@ export default function ResetPasswordClient({ token }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [tokenInput, setTokenInput] = useState(token || "");
   const redirectTimer = useRef(null);
 
   const networkErrorMessage =
     "Server tidak merespons. Silakan hubungi admin Cicero.";
+
+  useEffect(() => {
+    setTokenInput(token || "");
+  }, [token]);
 
   useEffect(() => {
     return () => {
@@ -42,9 +47,12 @@ export default function ResetPasswordClient({ token }) {
 
     const trimmedPassword = password.trim();
     const trimmedConfirmPassword = confirmPassword.trim();
+    const trimmedToken = (tokenInput || "").trim();
 
-    if (!token) {
-      setError("Token reset tidak ditemukan. Mohon gunakan tautan terbaru.");
+    if (!trimmedToken) {
+      setError(
+        "Token reset diperlukan. Mohon masukkan token atau gunakan tautan terbaru.",
+      );
       return;
     }
 
@@ -62,7 +70,7 @@ export default function ResetPasswordClient({ token }) {
 
     try {
       const response = await confirmDashboardPasswordReset({
-        token,
+        token: trimmedToken,
         password: trimmedPassword,
         confirmPassword: trimmedConfirmPassword,
       });
@@ -77,7 +85,7 @@ export default function ResetPasswordClient({ token }) {
       } else {
         setError(
           response.message ||
-            "Gagal memperbarui password. Mohon cek kembali tautan reset Anda.",
+            "Gagal memperbarui password. Mohon cek kembali token reset Anda.",
         );
       }
     } catch (err) {
@@ -120,6 +128,32 @@ export default function ResetPasswordClient({ token }) {
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
+            {!token && (
+              <div className="space-y-2">
+                <div>
+                  <label
+                    htmlFor="reset_token"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Token reset
+                  </label>
+                </div>
+                <input
+                  id="reset_token"
+                  type="text"
+                  placeholder="Masukkan token reset dari email"
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  onBlur={(e) => setTokenInput(e.target.value.trim())}
+                  required
+                  className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                />
+                <p className="text-xs text-slate-500">
+                  Salin token unik dari email reset password Anda dan tempel di sini.
+                </p>
+              </div>
+            )}
+
             <div className="relative">
               <label htmlFor="password" className="sr-only">
                 Password baru
