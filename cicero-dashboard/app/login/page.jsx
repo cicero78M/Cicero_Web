@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import useAuth from "@/hooks/useAuth";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
-import { normalizeWhatsapp } from "@/utils/api";
+import { normalizeWhatsapp, requestDashboardPasswordReset } from "@/utils/api";
 
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
@@ -26,15 +26,31 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [client_id, setClientId] = useState("");
   const [role, setRole] = useState("");
-  const [isRegister, setIsRegister] = useState(false);
+  const [formMode, setFormMode] = useState("login");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [whatsapp, setWhatsapp] = useState("");
+  const [forgotUsername, setForgotUsername] = useState("");
+  const [recoveryContact, setRecoveryContact] = useState("");
   const router = useRouter();
   const handleTrim = (setter) => (e) => setter(e.target.value.trim());
+  const networkErrorMessage =
+    "Server tidak merespons. Silakan hubungi admin Cicero.";
+
+  useEffect(() => {
+    setError("");
+    setMessage("");
+    setLoading(false);
+  }, [formMode]);
+
+  const handleNetworkFailure = () => {
+    if (typeof window !== "undefined") {
+      window.alert(networkErrorMessage);
+    }
+  };
 
   const highlightItems = useMemo(
     () => [
@@ -89,7 +105,8 @@ export default function LoginPage() {
         setError(data.message || "Login gagal");
       }
     } catch (err) {
-      setError("Gagal koneksi ke server");
+      setError(networkErrorMessage);
+      handleNetworkFailure();
     }
     setLoading(false);
   };
@@ -127,11 +144,12 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (data.success) {
-        const msg = data.status === false
-          ? "Registrasi berhasil, menunggu persetujuan admin"
-          : "Registrasi berhasil, silakan login";
-        setMessage(msg);
-        setIsRegister(false);
+        const msg =
+          data.status === false
+            ? "Registrasi berhasil, menunggu persetujuan admin"
+            : "Registrasi berhasil, silakan login";
+        setFormMode("login");
+        setTimeout(() => setMessage(msg), 0);
         setUsername("");
         setPassword("");
         setConfirmPassword("");
@@ -142,10 +160,79 @@ export default function LoginPage() {
         setError(data.message || "Registrasi gagal");
       }
     } catch (err) {
-      setError("Gagal koneksi ke server");
+      setError(networkErrorMessage);
+      handleNetworkFailure();
     }
     setLoading(false);
   };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    const trimmedUsername = forgotUsername.trim();
+    const trimmedContact = recoveryContact.trim();
+    const isEmail = trimmedContact.includes("@");
+    const sanitizedContact = isEmail
+      ? trimmedContact
+      : trimmedContact.replace(/[\s()-]/g, "");
+    if (!trimmedUsername || !sanitizedContact) {
+      setError("Lengkapi username dan kontak pemulihan");
+      setLoading(false);
+      return;
+    }
+
+    const normalizedContact = normalizeWhatsapp(sanitizedContact);
+
+    try {
+      const payload = {
+        username: trimmedUsername,
+        ...(isEmail
+          ? { email: sanitizedContact }
+          : { whatsapp: normalizedContact }),
+      };
+      const response = await requestDashboardPasswordReset(payload);
+      if (response.success !== false) {
+        const target = isEmail ? sanitizedContact : normalizedContact;
+        setMessage(
+          response.message ||
+            `Instruksi reset dikirim ke ${target}. Silakan periksa pesan yang masuk.`,
+        );
+        setForgotUsername("");
+        setRecoveryContact("");
+      } else {
+        setError(
+          response.message ||
+            "Gagal mengirim instruksi reset. Pastikan data yang dimasukkan benar.",
+        );
+      }
+    } catch (err) {
+      setError(networkErrorMessage);
+      handleNetworkFailure();
+    }
+
+    setLoading(false);
+  };
+
+  const submitHandler =
+    formMode === "register"
+      ? handleRegister
+      : formMode === "forgot"
+        ? handleForgotPassword
+        : handleLogin;
+
+  const submitLabel = (() => {
+    if (loading) {
+      if (formMode === "register") return "Memproses registrasi...";
+      if (formMode === "forgot") return "Mengirim instruksi reset...";
+      return "Memverifikasi login...";
+    }
+    if (formMode === "register") return "Buat akun baru";
+    if (formMode === "forgot") return "Kirim instruksi reset";
+    return "Masuk sekarang";
+  })();
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#e9f3ff,_#cde9ff_58%)] text-slate-900">
@@ -232,15 +319,19 @@ export default function LoginPage() {
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-[0.3em] text-sky-600/90">Cicero Access</p>
                   <h2 className="text-2xl font-semibold text-slate-900">
-                    {isRegister ? "Aktivasi Akun" : "Masuk Dashboard"}
+                    {formMode === "register"
+                      ? "Aktivasi Akun"
+                      : formMode === "forgot"
+                        ? "Reset Password"
+                        : "Masuk Dashboard"}
                   </h2>
                 </div>
                 <div className="flex self-start rounded-full border border-sky-200/60 bg-white/60 p-1 text-xs font-medium sm:self-auto">
                   <button
                     type="button"
-                    onClick={() => setIsRegister(false)}
+                    onClick={() => setFormMode("login")}
                     className={`rounded-full px-3 py-1 transition ${
-                      !isRegister
+                      formMode === "login"
                         ? "bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400 text-slate-900"
                         : "text-slate-500"
                     }`}
@@ -249,9 +340,9 @@ export default function LoginPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsRegister(true)}
+                    onClick={() => setFormMode("register")}
                     className={`rounded-full px-3 py-1 transition ${
-                      isRegister
+                      formMode === "register"
                         ? "bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400 text-slate-900"
                         : "text-slate-500"
                     }`}
@@ -264,49 +355,103 @@ export default function LoginPage() {
               <p className="mb-7 rounded-2xl border border-sky-200/60 bg-white/50 p-4 text-xs text-slate-600">
                 Masuk dengan akun instansi Anda. Kami menjaga data dengan protokol berlapis dan memastikan tim Anda selalu mendapat panduan terkini.
               </p>
+              <form className="space-y-5" onSubmit={submitHandler}>
+                {formMode !== "forgot" ? (
+                  <>
+                    <div>
+                      <label htmlFor="username" className="sr-only">
+                        Username
+                      </label>
+                      <input
+                        id="username"
+                        type="text"
+                        placeholder="Username dinas"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        onBlur={handleTrim(setUsername)}
+                        required
+                        className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                      />
+                    </div>
+                    <div className="relative">
+                      <label htmlFor="password" className="sr-only">
+                        Password
+                      </label>
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onBlur={handleTrim(setPassword)}
+                        required
+                        autoComplete={
+                          formMode === "register"
+                            ? "new-password"
+                            : "current-password"
+                        }
+                        className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 pr-12 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-4 flex items-center text-slate-500"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {formMode === "login" && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setFormMode("forgot")}
+                          className="text-xs font-semibold text-sky-600 transition hover:text-sky-700"
+                        >
+                          Lupa password?
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label htmlFor="forgot_username" className="sr-only">
+                        Username
+                      </label>
+                      <input
+                        id="forgot_username"
+                        type="text"
+                        placeholder="Username yang terdaftar"
+                        value={forgotUsername}
+                        onChange={(e) => setForgotUsername(e.target.value)}
+                        onBlur={handleTrim(setForgotUsername)}
+                        required
+                        className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="recovery_contact" className="sr-only">
+                        Kontak pemulihan
+                      </label>
+                      <input
+                        id="recovery_contact"
+                        type="text"
+                        placeholder="WhatsApp aktif atau email dinas"
+                        value={recoveryContact}
+                        onChange={(e) => setRecoveryContact(e.target.value)}
+                        onBlur={handleTrim(setRecoveryContact)}
+                        required
+                        className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Kami akan mengirim tautan reset ke kontak resmi yang Anda daftarkan.
+                    </p>
+                  </>
+                )}
 
-              <form className="space-y-5" onSubmit={isRegister ? handleRegister : handleLogin}>
-                <div>
-                  <label htmlFor="username" className="sr-only">
-                    Username
-                  </label>
-                  <input
-                    id="username"
-                    type="text"
-                    placeholder="Username dinas"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    onBlur={handleTrim(setUsername)}
-                    required
-                    className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                  />
-                </div>
-                <div className="relative">
-                  <label htmlFor="password" className="sr-only">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onBlur={handleTrim(setPassword)}
-                    required
-                    autoComplete={isRegister ? "new-password" : "current-password"}
-                    className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 pr-12 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-4 flex items-center text-slate-500"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-
-                {isRegister && (
+                {formMode === "register" && (
                   <div className="space-y-4">
                     <div className="relative">
                       <label htmlFor="confirm_password" className="sr-only">
@@ -452,18 +597,24 @@ export default function LoginPage() {
                     loading ? "opacity-60" : "hover:shadow-xl hover:shadow-sky-200/60"
                   }`}
                 >
-                  {loading
-                    ? isRegister
-                      ? "Memproses registrasi..."
-                      : "Memverifikasi login..."
-                    : isRegister
-                      ? "Buat akun baru"
-                      : "Masuk sekarang"}
+                  {submitLabel}
                 </button>
 
                 <p className="text-center text-[0.7rem] text-slate-500">
                   Dengan masuk, Anda menyetujui protokol keamanan Cicero dan penggunaan data sesuai kebijakan internal.
                 </p>
+
+                {formMode === "forgot" && (
+                  <div className="text-center text-xs text-slate-500">
+                    <button
+                      type="button"
+                      onClick={() => setFormMode("login")}
+                      className="font-semibold text-sky-600 transition hover:text-sky-700"
+                    >
+                      Kembali ke halaman login
+                    </button>
+                  </div>
+                )}
               </form>
             </motion.div>
 
