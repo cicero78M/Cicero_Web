@@ -184,18 +184,17 @@ export default function LoginPage() {
       return;
     }
 
-    const normalizedContact = normalizeWhatsapp(sanitizedContact);
+    const contact = isEmail
+      ? sanitizedContact
+      : normalizeWhatsapp(sanitizedContact);
 
     try {
-      const payload = {
+      const response = await requestDashboardPasswordReset({
         username: trimmedUsername,
-        ...(isEmail
-          ? { email: sanitizedContact }
-          : { whatsapp: normalizedContact }),
-      };
-      const response = await requestDashboardPasswordReset(payload);
+        contact,
+      });
       if (response.success !== false) {
-        const target = isEmail ? sanitizedContact : normalizedContact;
+        const target = contact;
         setMessage(
           response.message ||
             `Instruksi reset dikirim ke ${target}. Silakan periksa pesan yang masuk.`,

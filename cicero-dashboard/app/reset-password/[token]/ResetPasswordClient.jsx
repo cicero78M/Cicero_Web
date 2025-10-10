@@ -64,7 +64,7 @@ export default function ResetPasswordClient({ token }) {
       const response = await confirmDashboardPasswordReset({
         token,
         password: trimmedPassword,
-        confirm_password: trimmedConfirmPassword,
+        confirmPassword: trimmedConfirmPassword,
       });
       if (response.success !== false) {
         setMessage(

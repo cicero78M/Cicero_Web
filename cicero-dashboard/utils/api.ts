@@ -19,14 +19,14 @@ type ApiMessageResponse = {
 
 export type DashboardPasswordResetRequestPayload = {
   username: string;
-  whatsapp?: string;
-  email?: string;
+  contact: string;
 };
 
 export type DashboardPasswordResetConfirmPayload = {
   token: string;
   password: string;
-  confirm_password?: string;
+  confirmPassword?: string;
+  password_confirmation?: string;
 };
 
 async function postMessagePayload(
@@ -67,8 +67,8 @@ export async function requestDashboardPasswordReset(
   signal?: AbortSignal,
 ): Promise<ApiMessageResponse> {
   return postMessagePayload(
-    `${API_BASE_URL}/api/auth/dashboard-password-reset`,
-    payload,
+    `${API_BASE_URL}/api/auth/dashboard-password-reset/request`,
+    { username: payload.username, contact: payload.contact },
     signal,
   );
 }
@@ -77,12 +77,14 @@ export async function confirmDashboardPasswordReset(
   payload: DashboardPasswordResetConfirmPayload,
   signal?: AbortSignal,
 ): Promise<ApiMessageResponse> {
+  const confirmation =
+    payload.confirmPassword ?? payload.password_confirmation ?? payload.password;
   const body = {
-    ...payload,
+    token: payload.token,
+    password: payload.password,
+    confirmPassword: confirmation,
+    password_confirmation: confirmation,
   };
-  if (!body.confirm_password) {
-    body.confirm_password = body.password;
-  }
   return postMessagePayload(
     `${API_BASE_URL}/api/auth/dashboard-password-reset/confirm`,
     body,
