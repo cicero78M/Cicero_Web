@@ -24,6 +24,10 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    insta: "",
+    tiktok: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -65,12 +69,25 @@ export default function EditUserPage() {
     e.preventDefault();
     setError("");
     setMessage("");
+
+    const nextFieldErrors = {
+      insta: "",
+      tiktok: "",
+    };
+
     if (insta && !isValidInstagram(insta)) {
-      setError("Link Instagram tidak valid");
-      return;
+      nextFieldErrors.insta =
+        "Gunakan format https://www.instagram.com/nama_pengguna (contoh: https://www.instagram.com/polri)";
     }
+
     if (tiktok && !isValidTiktok(tiktok)) {
-      setError("Link TikTok tidak valid");
+      nextFieldErrors.tiktok =
+        "Gunakan format https://www.tiktok.com/@nama_pengguna (contoh: https://www.tiktok.com/@polri)";
+    }
+
+    setFieldErrors(nextFieldErrors);
+
+    if (nextFieldErrors.insta || nextFieldErrors.tiktok) {
       return;
     }
     const instaUsername = extractInstagramUsername(insta);
@@ -191,18 +208,36 @@ export default function EditUserPage() {
           <input
             type="text"
             value={insta}
-            onChange={(e) => setInsta(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setInsta(value);
+              if (!value || isValidInstagram(value)) {
+                setFieldErrors((prev) => ({ ...prev, insta: "" }));
+              }
+            }}
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
+          {fieldErrors.insta && (
+            <p className="mt-1 text-xs text-red-500">{fieldErrors.insta}</p>
+          )}
         </div>
         <div className="mb-4">
           <label className="block text-sm mb-1">Link Profile TikTok</label>
           <input
             type="text"
             value={tiktok}
-            onChange={(e) => setTiktok(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTiktok(value);
+              if (!value || isValidTiktok(value)) {
+                setFieldErrors((prev) => ({ ...prev, tiktok: "" }));
+              }
+            }}
             className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
           />
+          {fieldErrors.tiktok && (
+            <p className="mt-1 text-xs text-red-500">{fieldErrors.tiktok}</p>
+          )}
         </div>
         <button
           type="submit"
