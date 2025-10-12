@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle2, Edit3, Info, TriangleAlert } from "lucide-react";
+
+import ClaimLayout from "@/components/claim/ClaimLayout";
 import { getClaimUserData, updateUserViaClaim } from "@/utils/api";
 import {
   extractInstagramUsername,
@@ -125,128 +128,181 @@ export default function EditUserPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-2xl shadow-md w-full max-w-md"
-      >
-        <h2 className="text-xl font-semibold text-center mb-4">
-          Edit Data User
-        </h2>
-        {error && (
-          <p className="mb-2 text-red-500 text-sm text-center">{error}</p>
-        )}
-        {message && (
-          <p className="mb-2 text-green-600 text-sm text-center">{message}</p>
-        )}
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Kesatuan</label>
-          <input
-            type="text"
-            value={kesatuan}
-            readOnly
-            className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-100"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Nama</label>
-          <input
-            type="text"
-            value={nama}
-            onChange={(e) => setNama(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Pangkat</label>
-          <input
-            type="text"
-            value={pangkat}
-            onChange={(e) => setPangkat(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">NRP</label>
-          <input
-            type="text"
-            value={nrp}
-            readOnly
-            className="w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-100"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Satfung</label>
-          <input
-            type="text"
-            value={satfung}
-            onChange={(e) => setSatfung(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Jabatan</label>
-          <input
-            type="text"
-            value={jabatan}
-            onChange={(e) => setJabatan(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Desa Binaan</label>
-          <input
-            type="text"
-            value={desa}
-            onChange={(e) => setDesa(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Link Profile Instagram</label>
-          <input
-            type="text"
-            value={insta}
-            onChange={(e) => {
-              const value = e.target.value;
-              setInsta(value);
-              if (!value || isValidInstagram(value)) {
-                setFieldErrors((prev) => ({ ...prev, insta: "" }));
-              }
-            }}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-          {fieldErrors.insta && (
-            <p className="mt-1 text-xs text-red-500">{fieldErrors.insta}</p>
+    <ClaimLayout
+      stepLabel="Langkah 3 dari 3"
+      title="Perbarui & Sempurnakan Data Profil"
+      description="Periksa kembali detailmu, tambahkan tautan media sosial aktif, dan simpan pembaruan agar profilmu tampil optimal."
+      icon={<Edit3 className="h-5 w-5" />}
+      infoTitle="Selesaikan pembaruan dengan penuh semangat"
+      infoDescription="Langkah terakhir ini memastikan informasi pribadimu konsisten dan siap ditampilkan kepada publik."
+      infoHighlights={[
+        "Pastikan nama dan jabatan sesuai dokumen resmi.",
+        "Gunakan tautan media sosial yang mudah diakses dan akurat.",
+        "Simpan perubahan untuk memperbarui profil secara realtime.",
+      ]}
+      cardAccent="spirit"
+    >
+      <div className="space-y-8">
+        <section className="rounded-3xl border border-spirit-200/80 bg-gradient-to-br from-white/80 via-spirit-50/70 to-trust-50/70 px-6 py-5 text-sm text-neutral-slate shadow-inner">
+          <div className="flex items-start gap-3">
+            <Info className="mt-0.5 h-5 w-5 text-spirit-500" />
+            <div className="space-y-3">
+              <p className="text-neutral-navy">
+                Verifikasi kembali nama, pangkat, satfung, dan jabatan sesuai data resmi sebelum menyimpan perubahan.
+              </p>
+              <p>
+                Untuk Instagram, buka profilmu lalu ketuk tombol bagikan dan salin tautan penuh dengan format <span className="font-medium text-spirit-600">https://www.instagram.com/nama_pengguna</span>.
+              </p>
+              <p>
+                Untuk TikTok, buka profil di aplikasi atau web, pilih bagikan profil, kemudian salin tautan dengan format <span className="font-medium text-spirit-600">https://www.tiktok.com/@nama_pengguna</span>.
+              </p>
+              <p>
+                Pastikan kedua akun disetel publik agar tim kami dapat melakukan verifikasi.
+              </p>
+              <p>
+                Setelah menyesuaikan data dan menempelkan tautan, klik tombol <span className="font-medium text-spirit-600">Simpan</span> agar sistem memperbarui profilmu.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 shadow-sm">
+              <TriangleAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
           )}
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm mb-1">Link Profile TikTok</label>
-          <input
-            type="text"
-            value={tiktok}
-            onChange={(e) => {
-              const value = e.target.value;
-              setTiktok(value);
-              if (!value || isValidTiktok(value)) {
-                setFieldErrors((prev) => ({ ...prev, tiktok: "" }));
-              }
-            }}
-            className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-400"
-          />
-          {fieldErrors.tiktok && (
-            <p className="mt-1 text-xs text-red-500">{fieldErrors.tiktok}</p>
+          {message && (
+            <div className="flex items-start gap-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-600 shadow-sm">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>{message}</span>
+            </div>
           )}
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Menyimpan..." : "Simpan"}
-        </button>
-      </form>
-    </main>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Kesatuan</label>
+              <input
+                type="text"
+                value={kesatuan}
+                readOnly
+                className="w-full rounded-2xl border border-spirit-200/60 bg-neutral-50 px-4 py-3 text-sm text-neutral-navy shadow-inner focus:outline-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">NRP</label>
+              <input
+                type="text"
+                value={nrp}
+                readOnly
+                className="w-full rounded-2xl border border-spirit-200/60 bg-neutral-50 px-4 py-3 text-sm text-neutral-navy shadow-inner focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Nama</label>
+              <input
+                type="text"
+                value={nama}
+                onChange={(e) => setNama(e.target.value)}
+                required
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Pangkat</label>
+              <input
+                type="text"
+                value={pangkat}
+                onChange={(e) => setPangkat(e.target.value)}
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Satfung</label>
+              <input
+                type="text"
+                value={satfung}
+                onChange={(e) => setSatfung(e.target.value)}
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Jabatan</label>
+              <input
+                type="text"
+                value={jabatan}
+                onChange={(e) => setJabatan(e.target.value)}
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-navy">Desa Binaan</label>
+            <input
+              type="text"
+              value={desa}
+              onChange={(e) => setDesa(e.target.value)}
+              className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-navy">Link Profil Instagram</label>
+            <input
+              type="text"
+              value={insta}
+              onChange={(e) => {
+                const value = e.target.value;
+                setInsta(value);
+                if (!value || isValidInstagram(value)) {
+                  setFieldErrors((prev) => ({ ...prev, insta: "" }));
+                }
+              }}
+              placeholder="https://www.instagram.com/nama_pengguna"
+              className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+            />
+            {fieldErrors.insta && (
+              <p className="text-xs text-red-500">{fieldErrors.insta}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-navy">Link Profil TikTok</label>
+            <input
+              type="text"
+              value={tiktok}
+              onChange={(e) => {
+                const value = e.target.value;
+                setTiktok(value);
+                if (!value || isValidTiktok(value)) {
+                  setFieldErrors((prev) => ({ ...prev, tiktok: "" }));
+                }
+              }}
+              placeholder="https://www.tiktok.com/@nama_pengguna"
+              className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+            />
+            {fieldErrors.tiktok && (
+              <p className="text-xs text-red-500">{fieldErrors.tiktok}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-2xl bg-gradient-to-r from-spirit-400 via-consistency-300 to-trust-300 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-spirit-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Menyimpan..." : "Simpan"}
+          </button>
+        </form>
+      </div>
+    </ClaimLayout>
   );
 }
