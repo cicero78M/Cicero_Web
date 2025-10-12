@@ -3,6 +3,7 @@ import {
   getRekapAmplify,
   getRekapLikesIG,
   getRekapKomentarTiktok,
+  updateUserViaClaim,
 } from "../utils/api";
 
 beforeEach(() => {
@@ -102,5 +103,17 @@ test("getDashboardStats includes client_id when provided", async () => {
   const url = (global.fetch as jest.Mock).mock.calls[0][0];
   expect(url).toContain("/api/dashboard/stats");
   expect(url).toContain("client_id=DITBINMAS");
+});
+
+test("updateUserViaClaim throws backend validation messages", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    headers: { get: () => "application/json" },
+    json: () => Promise.resolve({ message: "Link Instagram tidak valid" }),
+  });
+
+  await expect(
+    updateUserViaClaim({ nrp: "1", email: "user@example.com", insta: "bad" }),
+  ).rejects.toThrow("Link Instagram tidak valid");
 });
 

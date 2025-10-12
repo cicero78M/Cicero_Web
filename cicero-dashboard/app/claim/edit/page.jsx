@@ -131,9 +131,17 @@ export default function EditUserPage() {
         setError(res.message || "Gagal memperbarui data");
       }
     } catch (err) {
-      setError("Gagal terhubung ke server");
+      if (err instanceof TypeError) {
+        setError("Gagal terhubung ke server");
+      } else {
+        const message = err?.message?.trim()
+          ? err.message
+          : "Gagal memperbarui data";
+        setError(message);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

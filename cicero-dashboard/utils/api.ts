@@ -714,7 +714,46 @@ export async function updateUserViaClaim(
     credentials: "include",
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to update user");
+  if (!res.ok) {
+    const defaultMessage = "Failed to update user";
+    let message = defaultMessage;
+    const contentType = res.headers?.get?.("content-type") ?? "";
+    try {
+      if (contentType.includes("application/json")) {
+        const errorJson = await res.json();
+        if (errorJson && typeof errorJson === "object") {
+          const candidates: unknown[] = [
+            errorJson.message,
+            errorJson.error,
+            errorJson.detail,
+            errorJson.status,
+            errorJson.data?.message,
+          ];
+          if (Array.isArray((errorJson as any).errors)) {
+            candidates.push((errorJson as any).errors[0]);
+          } else if (typeof (errorJson as any).errors === "string") {
+            candidates.push((errorJson as any).errors);
+          }
+          const picked = candidates.find(
+            (msg): msg is string => typeof msg === "string" && msg.trim().length > 0,
+          );
+          if (picked) {
+            message = picked.trim();
+          }
+        } else if (typeof errorJson === "string") {
+          message = errorJson.trim() || defaultMessage;
+        }
+      } else if (typeof res.text === "function") {
+        const text = await res.text();
+        if (text && typeof text === "string") {
+          message = text.trim() || defaultMessage;
+        }
+      }
+    } catch (err) {
+      // Ignore parsing errors and fall back to default message
+    }
+    throw new Error(message);
+  }
   return res.json();
 }
 
