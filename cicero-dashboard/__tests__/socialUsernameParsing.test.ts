@@ -1,7 +1,7 @@
 import {
   extractInstagramUsername,
   extractTiktokUsername,
-} from "@/app/claim/edit/page";
+} from "@/app/claim/edit/socialUtils";
 
 describe("extractInstagramUsername", () => {
   it("returns username for plain handles", () => {

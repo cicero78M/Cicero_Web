@@ -3,90 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClaimUserData, updateUserViaClaim } from "@/utils/api";
-
-const INSTAGRAM_USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
-const TIKTOK_USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
-
-export function extractInstagramUsername(url) {
-  if (!url) return "";
-  try {
-    const link = url.trim();
-    if (!link) return "";
-    if (!/^https?:\/\//i.test(link)) {
-      const normalized = link.replace(/^@/, "");
-      const lower = normalized.toLowerCase();
-      if (
-        !normalized ||
-        /[\s/\\]/.test(normalized) ||
-        lower.includes("instagram.com") ||
-        lower.includes("tiktok.com") ||
-        lower.startsWith("http")
-      ) {
-        return "";
-      }
-      return INSTAGRAM_USERNAME_PATTERN.test(normalized) ? normalized : "";
-    }
-    const u = new URL(link);
-    const host = u.hostname.toLowerCase();
-    if (
-      host !== "instagram.com" &&
-      host !== "www.instagram.com" &&
-      !host.endsWith(".instagram.com")
-    ) {
-      return "";
-    }
-    const segments = u.pathname.split("/").filter(Boolean);
-    return segments[0] ? segments[0].replace(/^@/, "") : "";
-  } catch {
-    return "";
-  }
-}
-
-export function extractTiktokUsername(url) {
-  if (!url) return "";
-  try {
-    const link = url.trim();
-    if (!link) return "";
-    if (!/^https?:\/\//i.test(link)) {
-      const normalized = link.replace(/^@/, "");
-      const lower = normalized.toLowerCase();
-      if (
-        !normalized ||
-        /[\s/\\]/.test(normalized) ||
-        lower.includes("instagram.com") ||
-        lower.includes("tiktok.com") ||
-        lower.startsWith("http")
-      ) {
-        return "";
-      }
-      return TIKTOK_USERNAME_PATTERN.test(normalized) ? normalized : "";
-    }
-    const u = new URL(link);
-    const host = u.hostname.toLowerCase();
-    if (
-      host !== "tiktok.com" &&
-      host !== "www.tiktok.com" &&
-      !host.endsWith(".tiktok.com")
-    ) {
-      return "";
-    }
-    const segments = u.pathname.split("/").filter(Boolean);
-    if (!segments[0]) return "";
-    return segments[0].startsWith("@") ? segments[0].slice(1) : segments[0];
-  } catch {
-    return "";
-  }
-}
-
-function isValidInstagram(url) {
-  if (!url) return true;
-  return !!extractInstagramUsername(url);
-}
-
-function isValidTiktok(url) {
-  if (!url) return true;
-  return !!extractTiktokUsername(url);
-}
+import {
+  extractInstagramUsername,
+  extractTiktokUsername,
+  isValidInstagram,
+  isValidTiktok,
+} from "./socialUtils";
 
 export default function EditUserPage() {
   const [nrp, setNrp] = useState("");
@@ -143,16 +65,16 @@ export default function EditUserPage() {
     e.preventDefault();
     setError("");
     setMessage("");
-    const instaUsername = extractInstagramUsername(insta);
-    if (insta && !instaUsername) {
+    if (insta && !isValidInstagram(insta)) {
       setError("Link Instagram tidak valid");
       return;
     }
-    const tiktokUsername = extractTiktokUsername(tiktok);
-    if (tiktok && !tiktokUsername) {
+    if (tiktok && !isValidTiktok(tiktok)) {
       setError("Link TikTok tidak valid");
       return;
     }
+    const instaUsername = extractInstagramUsername(insta);
+    const tiktokUsername = extractTiktokUsername(tiktok);
     setLoading(true);
     try {
       const res = await updateUserViaClaim({
