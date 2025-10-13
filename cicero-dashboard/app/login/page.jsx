@@ -76,6 +76,13 @@ export default function LoginPage() {
     setMessage("");
     setLoading(true);
 
+    const trimmedUsername = username.trim();
+    if (/\s/.test(trimmedUsername)) {
+      setError("Username tidak boleh mengandung spasi");
+      setLoading(false);
+      return;
+    }
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || ""; // fall back to relative '/api'
       if (!process.env.NEXT_PUBLIC_API_URL) {
@@ -86,7 +93,7 @@ export default function LoginPage() {
       const res = await fetch(`${apiUrl}/api/auth/dashboard-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password: password.trim() }),
+        body: JSON.stringify({ username: trimmedUsername, password: password.trim() }),
       });
 
       const data = await res.json();
@@ -125,9 +132,15 @@ export default function LoginPage() {
       return;
     }
 
+    const trimmedUsername = username.trim();
+    if (/\s/.test(trimmedUsername)) {
+      setError("Username tidak boleh mengandung spasi");
+      setLoading(false);
+      return;
+    }
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const trimmedUsername = username.trim();
       const trimmedRole = role.trim();
       const trimmedClientId = client_id.trim();
       const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
