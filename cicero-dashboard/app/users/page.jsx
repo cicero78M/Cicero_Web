@@ -652,7 +652,7 @@ export default function UserDirectoryPage() {
             )}
           </div>
 
-          <div className="relative mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl backdrop-blur">
+          <div className="relative mt-6 overflow-x-auto overflow-y-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl backdrop-blur">
             <table className="min-w-full text-sm text-slate-700">
               <thead className="bg-sky-50 text-slate-600">
                 <tr className="text-left text-xs uppercase tracking-wider">
