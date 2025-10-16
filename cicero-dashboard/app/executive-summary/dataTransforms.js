@@ -474,28 +474,139 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return { clientId, clientKey, clientName };
   };
 
+  const isTraversable = (value) => {
+    if (!value || typeof value !== "object") {
+      return false;
+    }
+    if (Array.isArray(value)) {
+      return true;
+    }
+    const tag = Object.prototype.toString.call(value);
+    return tag === "[object Object]";
+  };
+
+  const collectFieldValues = (root, fieldNames = []) => {
+    if (!isTraversable(root)) {
+      return [];
+    }
+
+    const queue = [root];
+    const seen = new Set();
+    const values = [];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!isTraversable(current) || seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+
+      fieldNames.forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(current, field)) {
+          const candidate = current[field];
+          if (candidate != null) {
+            values.push(candidate);
+          }
+        }
+      });
+
+      Object.values(current).forEach((value) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) => {
+            if (isTraversable(item) && !seen.has(item)) {
+              queue.push(item);
+            }
+          });
+        } else if (isTraversable(value) && !seen.has(value)) {
+          queue.push(value);
+        }
+      });
+    }
+
+    return values;
+  };
+
+  const sanitizeHandle = (value) => {
+    const normalized = toNormalizedString(value);
+    if (!normalized) {
+      return "";
+    }
+
+    let handle = normalized
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, "")
+      .trim();
+
+    handle = handle.split(/[?#]/, 1)[0];
+
+    if (handle.includes("/")) {
+      const segments = handle.split("/").filter(Boolean);
+      if (segments.length > 0) {
+        handle = segments[segments.length - 1];
+      }
+    }
+
+    handle = handle.replace(/^@+/, "").trim();
+
+    if (!handle || /\s/.test(handle) || handle.includes("@")) {
+      return "";
+    }
+
+    return handle;
+  };
+
+  const pickFirstNormalized = (candidates = []) => {
+    for (const candidate of candidates) {
+      const normalized = toNormalizedString(candidate);
+      if (normalized) {
+        return normalized;
+      }
+    }
+    return "";
+  };
+
   const resolvePersonnelNames = (source = {}) => {
-    const username =
-      toNormalizedString(
-        source?.username ??
-          source?.user_name ??
-          source?.userName ??
-          source?.user ??
-          source?.email ??
-          source?.akun ??
-          source?.akun_media_sosial ??
-          source?.akunMediaSosial,
-      ) || "";
-    const nama =
-      toNormalizedString(
-        source?.nama ??
-          source?.name ??
-          source?.full_name ??
-          source?.fullName ??
-          source?.display_name ??
-          source?.displayName,
-      ) || "";
-    return { username, nama };
+    const handleFields = [
+      "insta",
+      "instagram",
+      "instagram_username",
+      "instagramUsername",
+      "tiktok",
+      "tiktok_username",
+      "tiktokUsername",
+    ];
+    const genericUsernameFields = [
+      "username",
+      "user_name",
+      "userName",
+      "user",
+      "email",
+      "akun",
+      "akun_media_sosial",
+      "akunMediaSosial",
+    ];
+    const nameFields = [
+      "nama",
+      "name",
+      "full_name",
+      "fullName",
+      "display_name",
+      "displayName",
+    ];
+    const pangkatFields = ["title", "pangkat", "pangkat_title", "pangkatTitle", "golongan"];
+
+    const handleCandidates = collectFieldValues(source, handleFields);
+    const sanitizedHandles = handleCandidates
+      .map((candidate) => sanitizeHandle(candidate))
+      .filter(Boolean);
+
+    const usernameCandidates = collectFieldValues(source, genericUsernameFields);
+    const username = sanitizedHandles[0] || pickFirstNormalized(usernameCandidates) || "";
+
+    const nama = pickFirstNormalized(collectFieldValues(source, nameFields));
+    const pangkat = pickFirstNormalized(collectFieldValues(source, pangkatFields));
+
+    return { username, nama, pangkat };
   };
 
   const buildPersonnelKey = (source = {}, clientKey, fallbackIndex) => {
@@ -573,6 +684,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         clientName: clientEntry.clientName,
         username: "",
         nama: "",
+        pangkat: "",
         likes: 0,
         comments: 0,
         active: false,
@@ -590,19 +702,21 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   directoryUsersRaw.forEach((user, index) => {
     const identifiers = resolveClientIdentifiers(user);
     const clientEntry = ensureClientEntry(identifiers);
-    const { username, nama } = resolvePersonnelNames(user);
+    const { username, nama, pangkat } = resolvePersonnelNames(user);
     const personnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
       username,
       nama,
+      pangkat,
     });
 
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
+    updateIfEmpty(personnelRecord, "pangkat", pangkat);
   });
 
   safeRecords.forEach((record, index) => {
@@ -637,7 +751,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         record?.metrics?.totalComments ??
         record?.metrics?.total_comments,
     );
-    const { username, nama } = resolvePersonnelNames(record);
+    const { username, nama, pangkat } = resolvePersonnelNames(record);
     const personnelKey = buildPersonnelKey(
       record,
       identifiers.clientKey,
@@ -648,6 +762,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       clientName: identifiers.clientName,
       username,
       nama,
+      pangkat,
     });
 
     personnelRecord.likes += likes;
@@ -660,6 +775,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
+    updateIfEmpty(personnelRecord, "pangkat", pangkat);
 
     clientEntry.totalLikes += likes;
     clientEntry.totalComments += comments;
