@@ -30,6 +30,7 @@ interface LikesSummaryPersonnel {
   clientName: string;
   username: string;
   nama: string;
+  pangkat?: string;
   likes: number;
   comments: number;
   active: boolean;
@@ -420,16 +421,20 @@ const PlatformLikesSummary = ({
             </p>
             <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {topCommentPersonnel.map((person) => {
-                const identity = person.username || person.nama || "Tanpa Nama";
-                const additional = [person.nama, person.clientName]
-                  .filter((value) => value && value !== identity)
+                const displayName = [person.pangkat, person.nama].filter(Boolean).join(" ");
+                const identity = person.username || displayName || "Tanpa Nama";
+                const secondary = [
+                  displayName && displayName !== identity ? displayName : null,
+                  person.clientName,
+                ]
+                  .filter(Boolean)
                   .join(" · ");
                 return (
                   <li key={`commenter-${person.key}`} className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-100">{identity}</p>
-                      {additional ? (
-                        <p className="text-xs text-slate-400">{additional}</p>
+                      {secondary ? (
+                        <p className="text-xs text-slate-400">{secondary}</p>
                       ) : null}
                     </div>
                     <div className="text-right">
@@ -462,16 +467,20 @@ const PlatformLikesSummary = ({
             </p>
             <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {standoutPersonnel.map((person) => {
-                const identity = person.username || person.nama || "Tanpa Nama";
-                const additional = [person.nama, person.clientName]
-                  .filter((value) => value && value !== identity)
+                const displayName = [person.pangkat, person.nama].filter(Boolean).join(" ");
+                const identity = person.username || displayName || "Tanpa Nama";
+                const secondary = [
+                  displayName && displayName !== identity ? displayName : null,
+                  person.clientName,
+                ]
+                  .filter(Boolean)
                   .join(" · ");
                 return (
                   <li key={`personnel-${person.key}`} className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-100">{identity}</p>
-                      {additional ? (
-                        <p className="text-xs text-slate-400">{additional}</p>
+                      {secondary ? (
+                        <p className="text-xs text-slate-400">{secondary}</p>
                       ) : null}
                     </div>
                     <div className="text-right">
