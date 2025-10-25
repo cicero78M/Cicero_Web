@@ -449,8 +449,10 @@ export default function WeeklyReportPageClient() {
     return String(window.localStorage.getItem("client_id") || "").trim().toLowerCase();
   }, [clientId]);
 
-  const isDitbinmasAuthorized =
-    normalizedRole === "ditbinmas" && normalizedClientId === "ditbinmas";
+  const isDitbinmasRole = normalizedRole === "ditbinmas";
+  const ditbinmasClientScope = isDitbinmasRole ? "ditbinmas" : normalizedClientId;
+
+  const isDitbinmasAuthorized = isDitbinmasRole;
 
   const formatNumber = useMemo(
     () =>
@@ -495,7 +497,13 @@ export default function WeeklyReportPageClient() {
     isValidating: weeklyValidating,
   } = useSWR(
     token && isDitbinmasAuthorized
-      ? ["ditbinmas-weekly-report", token, normalizedClientId, selectedMonth, selectedYear]
+      ? [
+          "ditbinmas-weekly-report",
+          token,
+          ditbinmasClientScope,
+          selectedMonth,
+          selectedYear,
+        ]
       : null,
     fetchDitbinmasWeeklyData,
     {
