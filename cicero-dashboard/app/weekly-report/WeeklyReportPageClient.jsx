@@ -6,240 +6,359 @@ import PlatformEngagementTrendChart from "@/components/executive-summary/Platfor
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { getUserDirectory } from "@/utils/api";
+import {
+  aggregateLikesRecords,
+  mergeActivityRecords,
+  prepareTrendActivityRecords,
+  createEmptyLikesSummary,
+} from "@/app/executive-summary/dataTransforms";
+import {
+  formatWeekRangeLabel,
+  parseDateValue,
+  resolveRecordDate,
+} from "@/app/executive-summary/weeklyTrendUtils";
+import {
+  POST_DATE_PATHS,
+  normalizePlatformPost,
+} from "@/app/executive-summary/sharedUtils";
+import {
+  getInstagramPosts,
+  getRekapKomentarTiktok,
+  getRekapLikesIG,
+  getTiktokPosts,
+  getUserDirectory,
+} from "@/utils/api";
 
-const RANK_ORDER = [
-  "komisaris besar polisi",
-  "akbp",
-  "kompol",
-  "akp",
-  "iptu",
-  "ipda",
-  "aiptu",
-  "aipda",
-  "bripka",
-  "brigadir",
-  "brigpol",
-  "briptu",
-  "bripda",
-];
-
-const RANK_PRIORITY = new Map(RANK_ORDER.map((rank, index) => [rank, index]));
-
-const SATFUNG_DEFINITIONS = [
-  {
-    key: "bagbinops",
-    name: "Bagbinops Ditbinmas",
-    likeWeight: 1.18,
-    commentWeight: 1.12,
-    activeWeight: 1.16,
-    totalWeight: 1.15,
-    basePersonnel: 22,
-  },
-  {
-    key: "bhabinkamtibmas",
-    name: "Subdit Bhabinkamtibmas",
-    likeWeight: 1.22,
-    commentWeight: 1.25,
-    activeWeight: 1.2,
-    totalWeight: 1.25,
-    basePersonnel: 28,
-  },
-  {
-    key: "binpolmas",
-    name: "Subdit Binpolmas",
-    likeWeight: 1.05,
-    commentWeight: 1.08,
-    activeWeight: 1.04,
-    totalWeight: 1.05,
-    basePersonnel: 20,
-  },
-  {
-    key: "kerma",
-    name: "Subdit Kerma Ditbinmas",
-    likeWeight: 0.95,
-    commentWeight: 0.9,
-    activeWeight: 0.92,
-    totalWeight: 0.94,
-    basePersonnel: 16,
-  },
-  {
-    key: "renbin",
-    name: "Subbag Renbin Ditbinmas",
-    likeWeight: 0.88,
-    commentWeight: 0.9,
-    activeWeight: 0.86,
-    totalWeight: 0.9,
-    basePersonnel: 14,
-  },
-  {
-    key: "program",
-    name: "Subbag Program Ditbinmas",
-    likeWeight: 0.84,
-    commentWeight: 0.85,
-    activeWeight: 0.82,
-    totalWeight: 0.85,
-    basePersonnel: 12,
-  },
-];
-
-const PERSONNEL_DEFINITIONS = [
-  {
-    key: "kombes-yudi",
-    pangkat: "Komisaris Besar Polisi",
-    nama: "Yudi Pratama",
-    satfungKey: "bagbinops",
-    likeWeight: 1.2,
-    commentWeight: 1.05,
-    baseContent: 5,
-  },
-  {
-    key: "akbp-ratna",
-    pangkat: "AKBP",
-    nama: "Ratna Dewi",
-    satfungKey: "bhabinkamtibmas",
-    likeWeight: 1.15,
-    commentWeight: 1.12,
-    baseContent: 5,
-  },
-  {
-    key: "kompol-satria",
-    pangkat: "Kompol",
-    nama: "Satria Nugraha",
-    satfungKey: "binpolmas",
-    likeWeight: 1.08,
-    commentWeight: 1.02,
-    baseContent: 4,
-  },
-  {
-    key: "akp-laras",
-    pangkat: "AKP",
-    nama: "Laras Widodo",
-    satfungKey: "kerma",
-    likeWeight: 1,
-    commentWeight: 1.05,
-    baseContent: 4,
-  },
-  {
-    key: "iptu-andika",
-    pangkat: "Iptu",
-    nama: "Andika Mahesa",
-    satfungKey: "renbin",
-    likeWeight: 0.95,
-    commentWeight: 1,
-    baseContent: 4,
-  },
-  {
-    key: "ipda-rika",
-    pangkat: "Ipda",
-    nama: "Rika Anjani",
-    satfungKey: "program",
-    likeWeight: 0.92,
-    commentWeight: 0.98,
-    baseContent: 3,
-  },
-  {
-    key: "aiptu-seno",
-    pangkat: "Aiptu",
-    nama: "Seno Prabowo",
-    satfungKey: "bagbinops",
-    likeWeight: 0.88,
-    commentWeight: 0.9,
-    baseContent: 3,
-  },
-  {
-    key: "aipda-dita",
-    pangkat: "Aipda",
-    nama: "Dita Kurniasih",
-    satfungKey: "bhabinkamtibmas",
-    likeWeight: 0.86,
-    commentWeight: 0.92,
-    baseContent: 3,
-  },
-  {
-    key: "bripka-adi",
-    pangkat: "Bripka",
-    nama: "Adi Saputra",
-    satfungKey: "binpolmas",
-    likeWeight: 0.82,
-    commentWeight: 0.88,
-    baseContent: 3,
-  },
-  {
-    key: "brigadir-nanda",
-    pangkat: "Brigadir",
-    nama: "Nanda Putra",
-    satfungKey: "kerma",
-    likeWeight: 0.78,
-    commentWeight: 0.85,
-    baseContent: 2,
-  },
-  {
-    key: "brigpol-gita",
-    pangkat: "Brigpol",
-    nama: "Gita Pertiwi",
-    satfungKey: "renbin",
-    likeWeight: 0.75,
-    commentWeight: 0.82,
-    baseContent: 2,
-  },
-  {
-    key: "briptu-rizky",
-    pangkat: "Briptu",
-    nama: "Rizky Ramadhan",
-    satfungKey: "program",
-    likeWeight: 0.72,
-    commentWeight: 0.78,
-    baseContent: 2,
-  },
-  {
-    key: "bripda-salsa",
-    pangkat: "Bripda",
-    nama: "Salsa Damayanti",
-    satfungKey: "bhabinkamtibmas",
-    likeWeight: 0.7,
-    commentWeight: 0.76,
-    baseContent: 2,
-  },
-];
-
-const distributeByWeights = (totalValue, weights) => {
-  const safeTotal = Number.isFinite(totalValue) ? Math.round(totalValue) : 0;
-  const normalizedWeights = weights.map((weight) =>
-    Number.isFinite(weight) && weight > 0 ? weight : 0,
-  );
-  const sumWeights = normalizedWeights.reduce((acc, weight) => acc + weight, 0);
-  if (sumWeights <= 0 || safeTotal === 0) {
-    return normalizedWeights.map(() => 0);
-  }
-
-  const provisional = normalizedWeights.map((weight) =>
-    Math.round((safeTotal * weight) / sumWeights),
-  );
-  let difference = safeTotal - provisional.reduce((acc, value) => acc + value, 0);
-
-  const order = normalizedWeights
-    .map((weight, index) => ({ index, weight }))
-    .sort((a, b) => b.weight - a.weight)
-    .map((item) => item.index);
-
-  let pointer = 0;
-  while (difference !== 0 && order.length > 0) {
-    const targetIndex = order[pointer % order.length];
-    const nextValue = provisional[targetIndex] + (difference > 0 ? 1 : -1);
-    if (nextValue >= 0) {
-      provisional[targetIndex] = nextValue;
-      difference += difference > 0 ? -1 : 1;
+const ensureArray = (...candidates) => {
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
     }
-    pointer += 1;
+
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+
+    if (Array.isArray(candidate?.data)) {
+      return candidate.data;
+    }
+
+    if (Array.isArray(candidate?.items)) {
+      return candidate.items;
+    }
+
+    if (Array.isArray(candidate?.results)) {
+      return candidate.results;
+    }
+
+    if (Array.isArray(candidate?.records)) {
+      return candidate.records;
+    }
   }
 
-  return provisional;
+  return [];
 };
 
-const getRankPriority = (pangkat) => {
-  const normalized = typeof pangkat === "string" ? pangkat.trim().toLowerCase() : "";
-  return RANK_PRIORITY.get(normalized) ?? RANK_ORDER.length;
+const buildWeekRanges = (monthValue, yearValue) => {
+  const monthNumber = Number(monthValue);
+  const yearNumber = Number(yearValue);
+
+  if (!Number.isFinite(monthNumber) || !Number.isFinite(yearNumber)) {
+    return [];
+  }
+
+  const daysInMonth = new Date(yearNumber, monthNumber, 0).getDate();
+  const ranges = [];
+
+  for (let index = 1; index <= 4; index += 1) {
+    const startDay = 1 + (index - 1) * 7;
+    if (startDay > daysInMonth) {
+      break;
+    }
+    const endDay = Math.min(startDay + 6, daysInMonth);
+
+    const start = new Date(yearNumber, monthNumber - 1, startDay);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(yearNumber, monthNumber - 1, endDay);
+    end.setHours(23, 59, 59, 999);
+
+    ranges.push({
+      index,
+      start,
+      end,
+      key: `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`,
+    });
+  }
+
+  return ranges;
+};
+
+const findWeekRange = (ranges, weekIndex) =>
+  ranges.find((range) => range.index === weekIndex) ?? null;
+
+const computePreviousRange = (ranges, currentRange) => {
+  if (!currentRange) {
+    return null;
+  }
+
+  const previousIndex = currentRange.index - 1;
+  if (previousIndex < 1) {
+    return null;
+  }
+
+  return findWeekRange(ranges, previousIndex) ?? null;
+};
+
+const normalizePostsForPlatform = (records = [], { platformKey, platformLabel }) => {
+  const safeRecords = Array.isArray(records)
+    ? records.filter((record) => record && typeof record === "object")
+    : [];
+
+  return safeRecords
+    .map((record, index) => {
+      const normalized = normalizePlatformPost(record, {
+        platformKey,
+        platformLabel,
+        fallbackIndex: index,
+      });
+
+      if (!normalized) {
+        return null;
+      }
+
+      const resolvedDate = (() => {
+        if (record?.activityDate instanceof Date) {
+          return record.activityDate;
+        }
+
+        const parsedActivity = parseDateValue(record?.activityDate);
+        if (parsedActivity) {
+          return parsedActivity;
+        }
+
+        const resolved = resolveRecordDate(record, POST_DATE_PATHS);
+        if (resolved?.parsed) {
+          return resolved.parsed;
+        }
+
+        if (normalized.publishedAt instanceof Date) {
+          return normalized.publishedAt;
+        }
+
+        const parsedPublished = parseDateValue(normalized.publishedAt);
+        if (parsedPublished) {
+          return parsedPublished;
+        }
+
+        return null;
+      })();
+
+      if (!(resolvedDate instanceof Date) || Number.isNaN(resolvedDate.valueOf())) {
+        return null;
+      }
+
+      const likes = Number.isFinite(normalized.likes) ? Math.max(0, Number(normalized.likes)) : 0;
+      const comments = Number.isFinite(normalized.comments)
+        ? Math.max(0, Number(normalized.comments))
+        : 0;
+      const interactionsCandidate = normalized.interactions;
+      const interactions = Number.isFinite(interactionsCandidate)
+        ? Math.max(0, Number(interactionsCandidate))
+        : likes + comments;
+
+      const date = new Date(resolvedDate);
+      date.setHours(0, 0, 0, 0);
+
+      return {
+        key: normalized.id ?? normalized.key ?? `${platformKey}-${index}`,
+        activityDate: date,
+        likes,
+        comments,
+        interactions,
+      };
+    })
+    .filter(Boolean);
+};
+
+const buildWeeklySeries = (normalizedPosts, weekRanges, monthLabel) =>
+  weekRanges.map((range) => {
+    const totals = normalizedPosts.reduce(
+      (acc, post) => {
+        if (
+          post.activityDate instanceof Date &&
+          post.activityDate.getTime() >= range.start.getTime() &&
+          post.activityDate.getTime() <= range.end.getTime()
+        ) {
+          acc.posts += 1;
+          acc.likes += post.likes ?? 0;
+          acc.comments += post.comments ?? 0;
+          acc.interactions += post.interactions ?? 0;
+        }
+        return acc;
+      },
+      { interactions: 0, likes: 0, comments: 0, posts: 0 },
+    );
+
+    return {
+      key: range.key,
+      index: range.index,
+      label: `Minggu ${range.index} ${monthLabel}`,
+      interactions: totals.interactions,
+      likes: totals.likes,
+      comments: totals.comments,
+      posts: totals.posts,
+      rangeLabel: formatWeekRangeLabel(range.start, range.end),
+    };
+  });
+
+const filterActivityRecordsByRange = (records, range) => {
+  if (!Array.isArray(records) || !range) {
+    return [];
+  }
+
+  const startTime = range.start.getTime();
+  const endTime = range.end.getTime();
+
+  return records.filter((record) => {
+    const resolved = resolveRecordDate(record, [
+      "activityDate",
+      "rekap.activityDate",
+      "rekap.activity_date",
+      "tanggal",
+      "date",
+      "created_at",
+      "createdAt",
+    ]);
+
+    if (!resolved?.parsed) {
+      return false;
+    }
+
+    const parsed = new Date(resolved.parsed);
+    if (Number.isNaN(parsed.valueOf())) {
+      return false;
+    }
+
+    parsed.setHours(0, 0, 0, 0);
+    const timestamp = parsed.getTime();
+    return timestamp >= startTime && timestamp <= endTime;
+  });
+};
+
+const extractClientPersonnel = (clients = []) =>
+  clients
+    .flatMap((client) => {
+      if (!client || !Array.isArray(client.personnel)) {
+        return [];
+      }
+      return client.personnel.map((person) => ({
+        key:
+          person?.key ||
+          `${client.key || client.clientId || "client"}-${person?.username || person?.nama || "person"}`,
+        pangkat: person?.pangkat || "",
+        nama: person?.nama || person?.username || "",
+        satfung: person?.clientName || client?.clientName || client?.clientId || "",
+        likes: Number.isFinite(person?.likes) ? Number(person.likes) : 0,
+        comments: Number.isFinite(person?.comments) ? Number(person.comments) : 0,
+      }));
+    })
+    .filter((person) => person.nama);
+
+const safeFetch = async (factory) => {
+  try {
+    const data = await factory();
+    return { data, error: null };
+  } catch (error) {
+    console.warn("Gagal memuat data weekly report", error);
+    return { data: null, error };
+  }
+};
+
+const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValue]) => {
+  const monthNumber = Number(monthValue);
+  const yearNumber = Number(yearValue);
+
+  if (!Number.isFinite(monthNumber) || !Number.isFinite(yearNumber)) {
+    throw new Error("Periode mingguan tidak valid");
+  }
+
+  const monthStart = new Date(Date.UTC(yearNumber, monthNumber - 1, 1));
+  const monthEnd = new Date(Date.UTC(yearNumber, monthNumber, 0));
+
+  const toDateString = (date) => date.toISOString().slice(0, 10);
+
+  const [likesResult, commentsResult, instagramResult, tiktokResult] = await Promise.all([
+    safeFetch(() =>
+      getRekapLikesIG(
+        token,
+        clientId,
+        "harian",
+        undefined,
+        toDateString(monthStart),
+        toDateString(monthEnd),
+      ),
+    ),
+    safeFetch(() =>
+      getRekapKomentarTiktok(
+        token,
+        clientId,
+        "harian",
+        undefined,
+        toDateString(monthStart),
+        toDateString(monthEnd),
+      ),
+    ),
+    safeFetch(() =>
+      getInstagramPosts(token, clientId, {
+        startDate: toDateString(monthStart),
+        endDate: toDateString(monthEnd),
+      }),
+    ),
+    safeFetch(() =>
+      getTiktokPosts(token, clientId, {
+        startDate: toDateString(monthStart),
+        endDate: toDateString(monthEnd),
+      }),
+    ),
+  ]);
+
+  const likesRecords = ensureArray(
+    likesResult.data?.data,
+    likesResult.data?.records,
+    likesResult.data?.rekap,
+    likesResult.data,
+  );
+  const commentRecords = ensureArray(
+    commentsResult.data?.data,
+    commentsResult.data?.records,
+    commentsResult.data?.rekap,
+    commentsResult.data,
+  );
+  const instagramPosts = ensureArray(
+    instagramResult.data?.data,
+    instagramResult.data?.posts,
+    instagramResult.data,
+  );
+  const tiktokPosts = ensureArray(
+    tiktokResult.data?.data,
+    tiktokResult.data?.posts,
+    tiktokResult.data,
+  );
+
+  return {
+    monthStart,
+    monthEnd,
+    likesRecords,
+    commentRecords,
+    instagramPosts,
+    tiktokPosts,
+    errors: {
+      likes: likesResult.error,
+      comments: commentsResult.error,
+      instagram: instagramResult.error,
+      tiktok: tiktokResult.error,
+    },
+  };
 };
 
 const resolveActiveLabel = (options, value) =>
@@ -366,9 +485,46 @@ export default function WeeklyReportPageClient() {
     },
   );
 
-  const ditbinmasPersonnelCount = useMemo(() => {
-    if (!ditbinmasDirectory) {
+  const {
+    data: weeklySource,
+    error: weeklySourceError,
+    isValidating: weeklyValidating,
+  } = useSWR(
+    token && isDitbinmasAuthorized
+      ? ["ditbinmas-weekly-report", token, normalizedClientId, selectedMonth, selectedYear]
+      : null,
+    fetchDitbinmasWeeklyData,
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
+    },
+  );
+
+  const weekRanges = useMemo(
+    () => buildWeekRanges(selectedMonth, selectedYear),
+    [selectedMonth, selectedYear],
+  );
+
+  const activeWeekRange = useMemo(() => {
+    if (!weekRanges.length) {
       return null;
+    }
+    const weekIndex = Number(selectedWeek) || 1;
+    return findWeekRange(weekRanges, weekIndex) ?? weekRanges[0] ?? null;
+  }, [weekRanges, selectedWeek]);
+
+  const previousWeekRange = useMemo(
+    () => computePreviousRange(weekRanges, activeWeekRange),
+    [weekRanges, activeWeekRange],
+  );
+
+  const weeklyLoading = Boolean(
+    isDitbinmasAuthorized && !weeklySource && !weeklySourceError && weeklyValidating,
+  );
+
+  const ditbinmasUsers = useMemo(() => {
+    if (!ditbinmasDirectory) {
+      return [];
     }
 
     const possibleCollections = [
@@ -380,52 +536,17 @@ export default function WeeklyReportPageClient() {
       ditbinmasDirectory?.data?.users,
     ];
 
-    const raw = possibleCollections.find((collection) => Array.isArray(collection));
+    const rawCollection = possibleCollections.find((collection) => Array.isArray(collection));
+    const resolvedEntries = Array.isArray(rawCollection) ? rawCollection : [];
 
-    const resolvedEntries = Array.isArray(raw) ? raw : [];
-    const normalizedRoleValue = "ditbinmas";
-    const normalizedClientValue = "DITBINMAS";
+    const uniqueUsers = new Map();
 
-    if (!resolvedEntries.length) {
-      const possibleTotals = [
-        ditbinmasDirectory?.total,
-        ditbinmasDirectory?.count,
-        ditbinmasDirectory?.data?.total,
-        ditbinmasDirectory?.data?.count,
-        ditbinmasDirectory?.data?.length,
-        ditbinmasDirectory?.users?.length,
-      ];
-      const numericTotal = possibleTotals.find((value) =>
-        typeof value === "number" && Number.isFinite(value),
-      );
-      if (typeof numericTotal === "number") {
-        return numericTotal;
-      }
-      return null;
-    }
-
-    const resolveEntryIdentifier = (entry) =>
-      String(
-        entry?.user_id ||
-          entry?.userId ||
-          entry?.userID ||
-          entry?.id ||
-          entry?.email ||
-          JSON.stringify(entry),
-      );
-
-    const matchByRoleAndClient = resolvedEntries.filter((entry) => {
+    resolvedEntries.forEach((entry) => {
       const entryRole = String(
-        entry?.role ||
-          entry?.user_role ||
-          entry?.userRole ||
-          entry?.roleName ||
-          entry?.role_name ||
-          "",
+        entry?.role || entry?.user_role || entry?.userRole || "",
       )
         .trim()
         .toLowerCase();
-
       const entryClientId = String(
         entry?.client_id ||
           entry?.clientId ||
@@ -437,52 +558,52 @@ export default function WeeklyReportPageClient() {
         .trim()
         .toUpperCase();
 
-      const matchesRole =
-        entryRole === normalizedRoleValue || entryRole.includes(normalizedRoleValue);
-      const matchesClient =
-        entryClientId === normalizedClientValue ||
-        entryClientId.includes(normalizedClientValue);
+      if (entryClientId !== "DITBINMAS") {
+        return;
+      }
 
-      return matchesRole && matchesClient;
+      if (entryRole && !entryRole.includes("ditbinmas")) {
+        return;
+      }
+
+      const identifier =
+        entry?.user_id ||
+        entry?.userId ||
+        entry?.userID ||
+        entry?.nrp ||
+        entry?.nip ||
+        entry?.email ||
+        entry?.id ||
+        JSON.stringify(entry);
+
+      if (!uniqueUsers.has(identifier)) {
+        uniqueUsers.set(identifier, entry);
+      }
     });
 
-    if (matchByRoleAndClient.length > 0) {
-      const uniqueRoleClientEntries = new Set(
-        matchByRoleAndClient.map((entry) => resolveEntryIdentifier(entry)),
-      );
-      return uniqueRoleClientEntries.size || matchByRoleAndClient.length;
+    if (uniqueUsers.size === 0 && Array.isArray(resolvedEntries) && resolvedEntries.length) {
+      // fallback: when entries exist but without client info, include all unique entries
+      resolvedEntries.forEach((entry) => {
+        const identifier =
+          entry?.user_id ||
+          entry?.userId ||
+          entry?.userID ||
+          entry?.nrp ||
+          entry?.nip ||
+          entry?.email ||
+          entry?.id ||
+          JSON.stringify(entry);
+
+        if (!uniqueUsers.has(identifier)) {
+          uniqueUsers.set(identifier, entry);
+        }
+      });
     }
 
-    const matchByClientOnly = resolvedEntries.filter((entry) => {
-      const entryClientId = String(
-        entry?.client_id ||
-          entry?.clientId ||
-          entry?.clientID ||
-          entry?.client ||
-          entry?.client_code ||
-          "",
-      )
-        .trim()
-        .toUpperCase();
-
-      return (
-        entryClientId === normalizedClientValue || entryClientId.includes(normalizedClientValue)
-      );
-    });
-
-    if (matchByClientOnly.length > 0) {
-      const uniqueClientEntries = new Set(
-        matchByClientOnly.map((entry) => resolveEntryIdentifier(entry)),
-      );
-      return uniqueClientEntries.size || matchByClientOnly.length;
-    }
-
-    const uniqueEntries = new Set(
-      resolvedEntries.map((entry) => resolveEntryIdentifier(entry)),
-    );
-
-    return uniqueEntries.size || resolvedEntries.length;
+    return Array.from(uniqueUsers.values());
   }, [ditbinmasDirectory]);
+
+  const ditbinmasPersonnelCount = ditbinmasUsers.length;
 
   const ditbinmasPersonnelDescriptor = useMemo(() => {
     const resolvedLabel = "Personil Ditbinmas";
@@ -493,290 +614,154 @@ export default function WeeklyReportPageClient() {
     return `${formatNumber(ditbinmasPersonnelCount, { maximumFractionDigits: 0 })} ${resolvedLabel}`;
   }, [ditbinmasPersonnelCount, formatNumber]);
 
-  const mockWeeklySeries = useMemo(() => {
-    const base = Number(selectedWeek);
-    const monthLabel = MONTH_OPTIONS.find((option) => option.value === selectedMonth)?.label ?? "";
-
-    return [
-      {
-        key: `${selectedYear}-W${Math.max(base - 2, 1)}`,
-        label: `Minggu ${Math.max(base - 2, 1)} ${monthLabel}`,
-        interactions: Math.max(0, 1200 - base * 45),
-        posts: Math.max(0, 18 - base),
-        likes: Math.max(0, 780 - base * 28),
-        comments: Math.max(0, 420 - base * 9),
-      },
-      {
-        key: `${selectedYear}-W${Math.max(base - 1, 1)}`,
-        label: `Minggu ${Math.max(base - 1, 1)} ${monthLabel}`,
-        interactions: Math.max(0, 1340 - base * 30),
-        posts: Math.max(0, 19 - base),
-        likes: Math.max(0, 860 - base * 24),
-        comments: Math.max(0, 470 - base * 7),
-      },
-      {
-        key: `${selectedYear}-W${base}`,
-        label: `Minggu ${base} ${monthLabel}`,
-        interactions: Math.max(0, 1460 - base * 18),
-        posts: Math.max(0, 20 - base),
-        likes: Math.max(0, 930 - base * 18),
-        comments: Math.max(0, 520 - base * 5),
-      },
-    ];
-  }, [selectedWeek, selectedMonth, selectedYear]);
-
-  const instagramLatest = mockWeeklySeries[mockWeeklySeries.length - 1] ?? null;
-  const instagramPrevious = mockWeeklySeries[mockWeeklySeries.length - 2] ?? null;
-
-  const tiktokSeries = useMemo(
-    () =>
-      mockWeeklySeries.map((point, index) => ({
-        ...point,
-        key: `${point.key}-tt`,
-        label: point.label?.replace("Minggu", "TikTok Minggu"),
-        interactions: Math.max(0, (point.interactions ?? 0) - 120 + index * 18),
-        likes: Math.max(0, (point.likes ?? 0) - 160 + index * 14),
-        comments: Math.max(0, (point.comments ?? 0) - 70 + index * 10),
-      })),
-    [mockWeeklySeries],
-  );
-
-  const tiktokLatest = tiktokSeries[tiktokSeries.length - 1] ?? null;
-  const tiktokPrevious = tiktokSeries[tiktokSeries.length - 2] ?? null;
-
   const weeklyPlatformSnapshot = useMemo(() => {
-    const weekNumber = Number(selectedWeek) || 1;
-    const weekOptionLabel = resolveActiveLabel(WEEK_OPTIONS, selectedWeek);
-    const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth);
-    const weekRange = resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear);
-    const weekDescriptor = `Minggu ${weekNumber} ${monthLabel} ${selectedYear}`;
-
-    const instagramPosts = Math.max(0, Number(instagramLatest?.posts) || 0);
-    const tiktokPosts = Math.max(0, Number(tiktokLatest?.posts) || 0);
-    const totalPosts = instagramPosts + tiktokPosts;
-
-    const prevInstagramPosts = Math.max(0, Number(instagramPrevious?.posts) || instagramPosts);
-    const prevTiktokPosts = Math.max(0, Number(tiktokPrevious?.posts) || tiktokPosts);
-    const previousPosts = prevInstagramPosts + prevTiktokPosts;
-
-    const instagramLikes = Math.max(0, Number(instagramLatest?.likes) || 0);
-    const tiktokLikes = Math.max(0, Number(tiktokLatest?.likes) || 0);
-    const totalLikes = instagramLikes + tiktokLikes;
-
-    const prevInstagramLikes = Math.max(0, Number(instagramPrevious?.likes) || instagramLikes);
-    const prevTiktokLikes = Math.max(0, Number(tiktokPrevious?.likes) || tiktokLikes);
-    const previousLikes = prevInstagramLikes + prevTiktokLikes;
-
-    const instagramComments = Math.max(0, Number(instagramLatest?.comments) || 0);
-    const tiktokComments = Math.max(0, Number(tiktokLatest?.comments) || 0);
-    const totalComments = instagramComments + tiktokComments;
-
-    const prevInstagramComments = Math.max(0, Number(instagramPrevious?.comments) || instagramComments);
-    const prevTiktokComments = Math.max(0, Number(tiktokPrevious?.comments) || tiktokComments);
-    const previousComments = prevInstagramComments + prevTiktokComments;
-
-    const defaultTotalPersonnel = SATFUNG_DEFINITIONS.reduce(
-      (sum, definition) => sum + (definition.basePersonnel || 0),
-      0,
-    );
-    const providedPersonnel = Number(ditbinmasPersonnelCount);
-    const resolvedTotalPersonnel = Number.isFinite(providedPersonnel)
-      ? Math.max(0, Math.round(providedPersonnel))
-      : Math.max(0, defaultTotalPersonnel);
-
-    const complianceForWeek = (value) => {
-      const normalized = Math.max(1, Number(value) || 1);
-      return Math.min(0.93, 0.62 + (normalized - 1) * 0.045);
+    const emptySnapshot = {
+      likesSummaryData: createEmptyLikesSummary(),
+      summaryCards: [],
+      labelOverrides: {},
+      personnelDistribution: [],
+      distributionMeta: { note: "" },
+      postTotals: { instagram: 0, tiktok: 0 },
+      periodLabel: "",
+      weekDescriptor: "",
+      instagramSeries: [],
+      tiktokSeries: [],
+      instagramLatest: null,
+      instagramPrevious: null,
+      tiktokLatest: null,
+      tiktokPrevious: null,
+      totals: {
+        totalPosts: 0,
+        previousPosts: 0,
+        totalLikes: 0,
+        previousLikes: 0,
+        totalComments: 0,
+        previousComments: 0,
+        complianceRate: 0,
+        previousComplianceRate: 0,
+      },
+      fetchErrors: weeklySource?.errors ?? {},
     };
 
-    const currentComplianceRatio = complianceForWeek(weekNumber);
-    const previousComplianceRatio =
-      weekNumber > 1 ? complianceForWeek(weekNumber - 1) : Math.max(0.5, currentComplianceRatio - 0.04);
-
-    const activePersonnelTarget = Math.min(
-      resolvedTotalPersonnel,
-      Math.max(0, Math.round(resolvedTotalPersonnel * currentComplianceRatio)),
-    );
-    const previousActivePersonnel = Math.min(
-      resolvedTotalPersonnel,
-      Math.max(0, Math.round(resolvedTotalPersonnel * previousComplianceRatio)),
-    );
-
-    const likeWeights = SATFUNG_DEFINITIONS.map(
-      (definition, index) => definition.likeWeight * (1 + (weekNumber - 1) * 0.04 + index * 0.015),
-    );
-    const commentWeights = SATFUNG_DEFINITIONS.map(
-      (definition, index) => definition.commentWeight * (1 + (weekNumber - 1) * 0.035 + index * 0.012),
-    );
-    const activeWeights = SATFUNG_DEFINITIONS.map(
-      (definition, index) => definition.activeWeight * (1 + (weekNumber - 1) * 0.028 + index * 0.01),
-    );
-    const totalWeights = SATFUNG_DEFINITIONS.map((definition) => definition.totalWeight);
-
-    const distributedLikes = distributeByWeights(totalLikes, likeWeights);
-    const distributedComments = distributeByWeights(totalComments, commentWeights);
-    const distributedActive = distributeByWeights(activePersonnelTarget, activeWeights);
-    const distributedTotalBase = distributeByWeights(resolvedTotalPersonnel, totalWeights);
-
-    const adjustedTotal = distributedTotalBase.map((value, index) =>
-      Math.max(value, distributedActive[index] ?? 0),
-    );
-    let totalDiff = Math.round(resolvedTotalPersonnel) - adjustedTotal.reduce((sum, value) => sum + value, 0);
-    if (adjustedTotal.length > 0 && totalDiff !== 0) {
-      const order = SATFUNG_DEFINITIONS.map((definition, index) => ({ index, weight: definition.totalWeight }))
-        .sort((a, b) => b.weight - a.weight)
-        .map((item) => item.index);
-      let pointer = 0;
-      while (totalDiff !== 0 && order.length > 0) {
-        const idx = order[pointer % order.length];
-        const candidate = adjustedTotal[idx] + (totalDiff > 0 ? 1 : -1);
-        if (candidate >= (distributedActive[idx] ?? 0)) {
-          adjustedTotal[idx] = candidate;
-          totalDiff += totalDiff > 0 ? -1 : 1;
-        }
-        pointer += 1;
-      }
+    if (!isDitbinmasAuthorized) {
+      return emptySnapshot;
     }
 
-    const satfungData = SATFUNG_DEFINITIONS.map((definition, index) => {
-      const totalPersonnel = Math.max(0, adjustedTotal[index] ?? 0);
-      const activePersonnel = Math.min(totalPersonnel, distributedActive[index] ?? 0);
-      const likes = distributedLikes[index] ?? 0;
-      const comments = distributedComments[index] ?? 0;
-      const averageLikesPerUser = activePersonnel > 0 ? likes / activePersonnel : 0;
-      const averageCommentsPerUser = activePersonnel > 0 ? comments / activePersonnel : 0;
+    if (!weeklySource || !activeWeekRange) {
+      return emptySnapshot;
+    }
 
-      return {
-        key: definition.key,
-        name: definition.name,
-        likes,
-        comments,
-        active: activePersonnel,
-        total: totalPersonnel,
-        averageLikesPerUser,
-        averageCommentsPerUser,
-        complianceRate: totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0,
-      };
+    const weekIndex = activeWeekRange.index;
+    const weekOptionLabel = resolveActiveLabel(WEEK_OPTIONS, selectedWeek);
+    const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth) || "";
+    const weekDescriptor = `Minggu ${weekIndex} ${monthLabel} ${selectedYear}`;
+    const weekRangeLabel = formatWeekRangeLabel(activeWeekRange.start, activeWeekRange.end);
+    const periodLabel = `${weekOptionLabel} • ${weekRangeLabel} ${monthLabel} ${selectedYear}`;
+
+    const fallbackDate =
+      weeklySource.monthStart instanceof Date ? weeklySource.monthStart : null;
+    const fallbackIso = fallbackDate ? fallbackDate.toISOString() : undefined;
+
+    const likesRecordsAll = prepareTrendActivityRecords(weeklySource.likesRecords, {
+      fallbackDate: fallbackIso,
+    });
+    const commentRecordsAll = prepareTrendActivityRecords(weeklySource.commentRecords, {
+      fallbackDate: fallbackIso,
     });
 
-    const totalActive = satfungData.reduce((sum, entry) => sum + entry.active, 0);
+    const likesWeekRecords = filterActivityRecordsByRange(likesRecordsAll, activeWeekRange);
+    const commentsWeekRecords = filterActivityRecordsByRange(commentRecordsAll, activeWeekRange);
+    const likesPrevRecords = filterActivityRecordsByRange(likesRecordsAll, previousWeekRange);
+    const commentsPrevRecords = filterActivityRecordsByRange(commentRecordsAll, previousWeekRange);
+
+    const mergedWeekRecords = mergeActivityRecords(likesWeekRecords, commentsWeekRecords);
+    const mergedPrevRecords = mergeActivityRecords(likesPrevRecords, commentsPrevRecords);
+
+    const summaryWeekRaw = aggregateLikesRecords(mergedWeekRecords, {
+      directoryUsers: ditbinmasUsers,
+    });
+    const summaryPrevRaw = aggregateLikesRecords(mergedPrevRecords, {
+      directoryUsers: ditbinmasUsers,
+    });
+
+    const resolvedTotalPersonnel =
+      summaryWeekRaw?.totals?.totalPersonnel || ditbinmasUsers.length;
+    const totalActive = summaryWeekRaw?.totals?.activePersonnel || 0;
+    const previousActive = summaryPrevRaw?.totals?.activePersonnel || 0;
+
     const complianceRate =
       resolvedTotalPersonnel > 0 ? (totalActive / resolvedTotalPersonnel) * 100 : 0;
     const previousComplianceRate =
-      resolvedTotalPersonnel > 0 ? (previousActivePersonnel / resolvedTotalPersonnel) * 100 : 0;
+      resolvedTotalPersonnel > 0 ? (previousActive / resolvedTotalPersonnel) * 100 : 0;
 
-    const weeklyClients = satfungData.map((entry) => ({
-      key: entry.key,
-      clientName: entry.name,
-      totalLikes: entry.likes,
-      totalComments: entry.comments,
-      activePersonnel: entry.active,
-      totalPersonnel: entry.total,
-      complianceRate: entry.complianceRate,
-      averageLikesPerUser: entry.averageLikesPerUser,
-      averageCommentsPerUser: entry.averageCommentsPerUser,
-    }));
-
-    const totalLikeAllocation = Math.round(totalLikes * 0.65);
-    const totalCommentAllocation = Math.round(totalComments * 0.7);
-    const personnelLikeWeights = PERSONNEL_DEFINITIONS.map(
-      (definition, index) => definition.likeWeight * (1 + (weekNumber - 1) * 0.03 + index * 0.008),
-    );
-    const personnelCommentWeights = PERSONNEL_DEFINITIONS.map(
-      (definition, index) => definition.commentWeight * (1 + (weekNumber - 1) * 0.028 + index * 0.006),
-    );
-
-    const distributedPersonnelLikes = distributeByWeights(totalLikeAllocation, personnelLikeWeights);
-    const distributedPersonnelComments = distributeByWeights(
-      totalCommentAllocation,
-      personnelCommentWeights,
-    );
-
-    const personnelRowsRaw = PERSONNEL_DEFINITIONS.map((person, index) => {
-      const satfungName =
-        SATFUNG_DEFINITIONS.find((definition) => definition.key === person.satfungKey)?.name || "Ditbinmas";
-      const likes = distributedPersonnelLikes[index] ?? 0;
-      const comments = distributedPersonnelComments[index] ?? 0;
-      const offset = ((weekNumber + index) % 3) - 1;
-      const contentCount = Math.max(1, person.baseContent + offset);
-      const avgLikes = contentCount > 0 ? likes / contentCount : 0;
-      const avgComments = contentCount > 0 ? comments / contentCount : 0;
-
-      return {
-        key: person.key,
-        pangkat: person.pangkat,
-        nama: person.nama,
-        satfung: satfungName,
-        likes,
-        comments,
-        avgLikes,
-        avgComments,
-        contentCount,
-      };
-    });
-
-    const sortedPersonnelRows = [...personnelRowsRaw].sort((a, b) => {
-      const rankDelta = getRankPriority(a.pangkat) - getRankPriority(b.pangkat);
-      if (rankDelta !== 0) {
-        return rankDelta;
-      }
-
-      if ((b.likes ?? 0) !== (a.likes ?? 0)) {
-        return (b.likes ?? 0) - (a.likes ?? 0);
-      }
-
-      if ((b.comments ?? 0) !== (a.comments ?? 0)) {
-        return (b.comments ?? 0) - (a.comments ?? 0);
-      }
-
-      return (a.nama || "").localeCompare(b.nama || "", "id-ID", { sensitivity: "base" });
-    });
-
-    const totalContentCount = sortedPersonnelRows.reduce(
-      (sum, row) => sum + (row.contentCount ?? 0),
-      0,
-    );
-
-    const topPersonnelEntries = [...personnelRowsRaw]
-      .sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
-      .map((row) => ({
-        key: row.key,
-        clientName: row.satfung,
-        username: row.nama,
-        nama: row.nama,
-        pangkat: row.pangkat,
-        likes: row.likes,
-        comments: row.comments,
-        active: (row.likes ?? 0) + (row.comments ?? 0) > 0,
-      }));
-
-    const personnelDistribution = sortedPersonnelRows.map((row) => ({
-      key: row.key,
-      pangkat: row.pangkat,
-      nama: row.nama,
-      satfung: row.satfung,
-      likes: row.likes,
-      averageLikes: row.avgLikes,
-      comments: row.comments,
-      averageComments: row.avgComments,
-    }));
-
-    const distributionNote = weekRange
-      ? `Minggu ${weekNumber} (${weekRange} ${monthLabel} ${selectedYear}) · ${formatNumber(totalContentCount, {
-          maximumFractionDigits: 0,
-        })} konten dipantau`
-      : `${weekDescriptor} · ${formatNumber(totalContentCount, { maximumFractionDigits: 0 })} konten dipantau`;
-
-    const labelOverrides = {
-      likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
-      commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
-      tableTitle: "Distribusi Engagement Per User / Personil",
-      tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
+    const summaryWeek = {
+      ...summaryWeekRaw,
+      totals: {
+        ...summaryWeekRaw.totals,
+        totalPersonnel: resolvedTotalPersonnel,
+        activePersonnel: totalActive,
+        complianceRate,
+      },
+      lastUpdated: summaryWeekRaw.lastUpdated ?? activeWeekRange.end,
     };
+
+    const summaryPrev = {
+      ...summaryPrevRaw,
+      totals: {
+        ...summaryPrevRaw.totals,
+        totalPersonnel: resolvedTotalPersonnel,
+        activePersonnel: previousActive,
+        complianceRate: previousComplianceRate,
+      },
+    };
+
+    const instagramNormalized = normalizePostsForPlatform(weeklySource.instagramPosts, {
+      platformKey: "instagram",
+      platformLabel: "Instagram",
+    });
+    const tiktokNormalized = normalizePostsForPlatform(weeklySource.tiktokPosts, {
+      platformKey: "tiktok",
+      platformLabel: "TikTok",
+    });
+
+    const instagramSeries = buildWeeklySeries(instagramNormalized, weekRanges, monthLabel);
+    const tiktokSeries = buildWeeklySeries(tiktokNormalized, weekRanges, monthLabel);
+
+    const instagramLatest =
+      instagramSeries.find((point) => point.index === weekIndex) ?? null;
+    const instagramPrevious =
+      previousWeekRange?.index
+        ? instagramSeries.find((point) => point.index === previousWeekRange.index) ?? null
+        : null;
+    const tiktokLatest = tiktokSeries.find((point) => point.index === weekIndex) ?? null;
+    const tiktokPrevious =
+      previousWeekRange?.index
+        ? tiktokSeries.find((point) => point.index === previousWeekRange.index) ?? null
+        : null;
+
+    const totalPosts = (instagramLatest?.posts ?? 0) + (tiktokLatest?.posts ?? 0);
+    const previousPosts =
+      (instagramPrevious?.posts ?? 0) + (tiktokPrevious?.posts ?? 0);
+
+    const totalLikes = summaryWeek.totals.totalLikes ?? 0;
+    const previousLikes = summaryPrev.totals.totalLikes ?? 0;
+    const totalComments = summaryWeek.totals.totalComments ?? 0;
+    const previousComments = summaryPrev.totals.totalComments ?? 0;
 
     const buildComparison = (currentValue, previousValue, formatter) => {
       const currentNumeric = Number.isFinite(currentValue) ? Number(currentValue) : 0;
-      const previousNumeric = Number.isFinite(previousValue) ? Number(previousValue) : 0;
+      const previousNumeric =
+        Number.isFinite(previousValue) || previousValue === 0
+          ? Number(previousValue)
+          : null;
+
+      if (previousNumeric === null) {
+        return {
+          label: "Tidak ada data pembanding minggu sebelumnya",
+          direction: "flat",
+        };
+      }
+
       const delta = currentNumeric - previousNumeric;
 
       if (Math.abs(delta) < 0.0001) {
@@ -807,8 +792,14 @@ export default function WeeklyReportPageClient() {
     );
 
     const complianceComparison = (() => {
-      if (!Number.isFinite(complianceRate) || !Number.isFinite(previousComplianceRate)) {
+      if (!Number.isFinite(complianceRate)) {
         return null;
+      }
+      if (!Number.isFinite(previousComplianceRate)) {
+        return {
+          label: "Tidak ada data pembanding minggu sebelumnya",
+          direction: "flat",
+        };
       }
 
       const delta = complianceRate - previousComplianceRate;
@@ -840,7 +831,11 @@ export default function WeeklyReportPageClient() {
         key: "total-posts",
         label: "Total Post",
         value: formatNumber(totalPosts, { maximumFractionDigits: 0 }),
-        description: `Post Instagram: ${formatNumber(instagramPosts, { maximumFractionDigits: 0 })} · Post TikTok: ${formatNumber(tiktokPosts, { maximumFractionDigits: 0 })}`,
+        description: `Post Instagram: ${formatNumber(instagramLatest?.posts ?? 0, {
+          maximumFractionDigits: 0,
+        })} · Post TikTok: ${formatNumber(tiktokLatest?.posts ?? 0, {
+          maximumFractionDigits: 0,
+        })}`,
         comparison: postsComparison,
       },
       {
@@ -861,76 +856,80 @@ export default function WeeklyReportPageClient() {
         key: "overall-compliance",
         label: "Kepatuhan Personil",
         value: formatPercentValue(complianceRate),
-        description: `${formatNumber(totalActive, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(resolvedTotalPersonnel, { maximumFractionDigits: 0 })} personil.`,
+        description: `${formatNumber(totalActive, {
+          maximumFractionDigits: 0,
+        })} aktif dari ${formatNumber(resolvedTotalPersonnel, { maximumFractionDigits: 0 })} personil.`,
         comparison: complianceComparison,
       },
     ];
 
-    const lastUpdated = (() => {
-      if (weekRange && weekRange.includes("-")) {
-        const [, endDayString] = weekRange.split("-");
-        const endDay = Number(endDayString);
-        const monthNumber = Number(selectedMonth);
-        const yearNumber = Number(selectedYear);
-        if (
-          Number.isFinite(endDay) &&
-          Number.isFinite(monthNumber) &&
-          Number.isFinite(yearNumber)
-        ) {
-          return new Date(yearNumber, monthNumber - 1, endDay);
-        }
-      }
+    const personnelDistribution = extractClientPersonnel(summaryWeek.clients || [])
+      .map((person) => ({
+        ...person,
+        averageLikes: person.likes,
+        averageComments: person.comments,
+      }))
+      .slice(0, 20);
 
-      const monthNumber = Number(selectedMonth);
-      const yearNumber = Number(selectedYear);
-      if (Number.isFinite(monthNumber) && Number.isFinite(yearNumber)) {
-        return new Date(yearNumber, monthNumber - 1, 1);
-      }
-
-      return new Date();
-    })();
-
-    const likesSummaryData = {
-      totals: {
-        totalClients: weeklyClients.length,
-        totalLikes,
-        totalComments,
-        totalPersonnel: resolvedTotalPersonnel,
-        activePersonnel: totalActive,
-        complianceRate,
-        averageComplianceRate: complianceRate,
-      },
-      clients: weeklyClients,
-      topPersonnel: topPersonnelEntries,
-      lastUpdated,
+    const labelOverrides = {
+      likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
+      commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
+      tableTitle: "Distribusi Engagement Per User / Personil",
+      tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
     };
 
-    const periodLabel = `${weekOptionLabel} • ${weekRange ? `${weekRange} ${monthLabel}` : monthLabel} ${selectedYear}`;
+    const distributionMeta = {
+      note: `${weekDescriptor} • ${formatNumber(totalActive, {
+        maximumFractionDigits: 0,
+      })} personil aktif`,
+    };
+
+    const likesSummaryData = {
+      ...summaryWeek,
+    };
 
     return {
       likesSummaryData,
       summaryCards,
       labelOverrides,
       personnelDistribution,
-      distributionMeta: { note: distributionNote },
+      distributionMeta,
       postTotals: {
-        instagram: instagramPosts,
-        tiktok: tiktokPosts,
+        instagram: instagramLatest?.posts ?? 0,
+        tiktok: tiktokLatest?.posts ?? 0,
       },
       periodLabel,
       weekDescriptor,
+      instagramSeries,
+      tiktokSeries,
+      instagramLatest,
+      instagramPrevious,
+      tiktokLatest,
+      tiktokPrevious,
+      totals: {
+        totalPosts,
+        previousPosts,
+        totalLikes,
+        previousLikes,
+        totalComments,
+        previousComments,
+        complianceRate,
+        previousComplianceRate,
+      },
+      fetchErrors: weeklySource.errors || {},
     };
   }, [
+    isDitbinmasAuthorized,
+    weeklySource,
+    activeWeekRange,
+    previousWeekRange,
+    weekRanges,
     selectedWeek,
     selectedMonth,
     selectedYear,
-    instagramLatest,
-    instagramPrevious,
-    tiktokLatest,
-    tiktokPrevious,
-    ditbinmasPersonnelCount,
     formatNumber,
     formatPercentValue,
+    ditbinmasUsers,
   ]);
 
   const {
@@ -942,7 +941,28 @@ export default function WeeklyReportPageClient() {
     postTotals: weeklyPostTotals,
     periodLabel: weeklyPeriodLabel,
     weekDescriptor,
+    instagramSeries,
+    tiktokSeries,
+    instagramLatest,
+    instagramPrevious,
+    tiktokLatest,
+    tiktokPrevious,
+    fetchErrors: weeklyFetchErrors,
   } = weeklyPlatformSnapshot;
+
+  const generalWeeklyError = weeklySourceError
+    ? "Gagal memuat data mingguan Ditbinmas."
+    : "";
+  const instagramTrendError = generalWeeklyError
+    ? generalWeeklyError
+    : weeklyFetchErrors?.instagram
+    ? "Gagal memuat data konten Instagram."
+    : "";
+  const tiktokTrendError = generalWeeklyError
+    ? generalWeeklyError
+    : weeklyFetchErrors?.tiktok
+    ? "Gagal memuat data konten TikTok."
+    : "";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-slate-800">
@@ -1045,11 +1065,11 @@ export default function WeeklyReportPageClient() {
                 <PlatformEngagementTrendChart
                   platformKey="instagram"
                   platformLabel="Instagram"
-                  series={mockWeeklySeries}
+                  series={instagramSeries}
                   latest={instagramLatest}
                   previous={instagramPrevious}
-                  loading={false}
-                  error=""
+                  loading={weeklyLoading}
+                  error={instagramTrendError}
                   formatNumber={formatNumber}
                   personnelCount={ditbinmasPersonnelCount ?? undefined}
                 />
@@ -1060,8 +1080,8 @@ export default function WeeklyReportPageClient() {
                   series={tiktokSeries}
                   latest={tiktokLatest}
                   previous={tiktokPrevious}
-                  loading={false}
-                  error=""
+                  loading={weeklyLoading}
+                  error={tiktokTrendError}
                   formatNumber={formatNumber}
                   personnelCount={ditbinmasPersonnelCount ?? undefined}
                 />
