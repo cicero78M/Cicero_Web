@@ -352,13 +352,24 @@ const entityHasRole = (entity, targetRole) => {
 };
 
 const filterCollectionByClientId = (records, clientId) => {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
   const normalizedTarget = normalizeClientId(clientId);
-  if (!normalizedTarget || !Array.isArray(records)) {
-    return Array.isArray(records) ? records : [];
+  if (!normalizedTarget) {
+    return records;
   }
 
   return records.filter((record) => {
     const recordClientId = resolveEntityClientId(record);
+
+    if (!recordClientId) {
+      // Jika data tidak memiliki informasi client secara eksplisit,
+      // asumsi bahwa hasil sudah difilter di tingkat API sehingga tetap disertakan.
+      return true;
+    }
+
     return recordClientId === normalizedTarget;
   });
 };
@@ -1171,6 +1182,7 @@ export default function WeeklyReportPageClient() {
         "Divisi dengan jumlah komentar terbanyak selama minggu ini.",
       tableTitle: "Distribusi Engagement Per Personil",
       tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
+      tableNameHeaderLabel: "Pangkat & Nama",
       tableDivisionHeaderLabel: "Divisi",
     }),
     [],
@@ -1194,6 +1206,12 @@ export default function WeeklyReportPageClient() {
         const nama = normalizeString(person?.nama);
         const username = normalizeString(person?.username);
         const divisionLabel =
+          normalizeString(person?.division) ||
+          normalizeString(person?.divisi) ||
+          normalizeString(person?.unit) ||
+          normalizeString(person?.unitKerja) ||
+          normalizeString(person?.satfung) ||
+          normalizeString(person?.satker) ||
           normalizeString(person?.clientName) ||
           normalizeString(client?.clientName) ||
           normalizeClientId(client?.clientId);
