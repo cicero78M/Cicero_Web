@@ -1,34 +1,268 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import {
-  getInstagramPosts,
-  getRekapKomentarTiktok,
-  getRekapLikesIG,
-  getTiktokPosts,
-  getUserDirectory,
-} from "@/utils/api";
-import {
-  aggregateLikesRecords,
-  createEmptyLikesSummary,
-  ensureRecordsHaveActivityDate,
-  mergeActivityRecords,
-  prepareTrendActivityRecords,
-} from "@/app/executive-summary/dataTransforms";
-import {
-  POST_DATE_PATHS,
-  normalizePlatformPost,
-} from "@/app/executive-summary/sharedUtils";
-import {
-  formatWeekRangeLabel,
-  groupRecordsByWeek,
-  parseDateValue,
-} from "@/app/executive-summary/weeklyTrendUtils";
+import { getUserDirectory } from "@/utils/api";
+
+const RANK_ORDER = [
+  "komisaris besar polisi",
+  "akbp",
+  "kompol",
+  "akp",
+  "iptu",
+  "ipda",
+  "aiptu",
+  "aipda",
+  "bripka",
+  "brigadir",
+  "brigpol",
+  "briptu",
+  "bripda",
+];
+
+const RANK_PRIORITY = new Map(RANK_ORDER.map((rank, index) => [rank, index]));
+
+const SATFUNG_DEFINITIONS = [
+  {
+    key: "bagbinops",
+    name: "Bagbinops Ditbinmas",
+    likeWeight: 1.18,
+    commentWeight: 1.12,
+    activeWeight: 1.16,
+    totalWeight: 1.15,
+    basePersonnel: 22,
+  },
+  {
+    key: "bhabinkamtibmas",
+    name: "Subdit Bhabinkamtibmas",
+    likeWeight: 1.22,
+    commentWeight: 1.25,
+    activeWeight: 1.2,
+    totalWeight: 1.25,
+    basePersonnel: 28,
+  },
+  {
+    key: "binpolmas",
+    name: "Subdit Binpolmas",
+    likeWeight: 1.05,
+    commentWeight: 1.08,
+    activeWeight: 1.04,
+    totalWeight: 1.05,
+    basePersonnel: 20,
+  },
+  {
+    key: "kerma",
+    name: "Subdit Kerma Ditbinmas",
+    likeWeight: 0.95,
+    commentWeight: 0.9,
+    activeWeight: 0.92,
+    totalWeight: 0.94,
+    basePersonnel: 16,
+  },
+  {
+    key: "renbin",
+    name: "Subbag Renbin Ditbinmas",
+    likeWeight: 0.88,
+    commentWeight: 0.9,
+    activeWeight: 0.86,
+    totalWeight: 0.9,
+    basePersonnel: 14,
+  },
+  {
+    key: "program",
+    name: "Subbag Program Ditbinmas",
+    likeWeight: 0.84,
+    commentWeight: 0.85,
+    activeWeight: 0.82,
+    totalWeight: 0.85,
+    basePersonnel: 12,
+  },
+];
+
+const PERSONNEL_DEFINITIONS = [
+  {
+    key: "kombes-yudi",
+    pangkat: "Komisaris Besar Polisi",
+    nama: "Yudi Pratama",
+    satfungKey: "bagbinops",
+    likeWeight: 1.2,
+    commentWeight: 1.05,
+    baseContent: 5,
+  },
+  {
+    key: "akbp-ratna",
+    pangkat: "AKBP",
+    nama: "Ratna Dewi",
+    satfungKey: "bhabinkamtibmas",
+    likeWeight: 1.15,
+    commentWeight: 1.12,
+    baseContent: 5,
+  },
+  {
+    key: "kompol-satria",
+    pangkat: "Kompol",
+    nama: "Satria Nugraha",
+    satfungKey: "binpolmas",
+    likeWeight: 1.08,
+    commentWeight: 1.02,
+    baseContent: 4,
+  },
+  {
+    key: "akp-laras",
+    pangkat: "AKP",
+    nama: "Laras Widodo",
+    satfungKey: "kerma",
+    likeWeight: 1,
+    commentWeight: 1.05,
+    baseContent: 4,
+  },
+  {
+    key: "iptu-andika",
+    pangkat: "Iptu",
+    nama: "Andika Mahesa",
+    satfungKey: "renbin",
+    likeWeight: 0.95,
+    commentWeight: 1,
+    baseContent: 4,
+  },
+  {
+    key: "ipda-rika",
+    pangkat: "Ipda",
+    nama: "Rika Anjani",
+    satfungKey: "program",
+    likeWeight: 0.92,
+    commentWeight: 0.98,
+    baseContent: 3,
+  },
+  {
+    key: "aiptu-seno",
+    pangkat: "Aiptu",
+    nama: "Seno Prabowo",
+    satfungKey: "bagbinops",
+    likeWeight: 0.88,
+    commentWeight: 0.9,
+    baseContent: 3,
+  },
+  {
+    key: "aipda-dita",
+    pangkat: "Aipda",
+    nama: "Dita Kurniasih",
+    satfungKey: "bhabinkamtibmas",
+    likeWeight: 0.86,
+    commentWeight: 0.92,
+    baseContent: 3,
+  },
+  {
+    key: "bripka-adi",
+    pangkat: "Bripka",
+    nama: "Adi Saputra",
+    satfungKey: "binpolmas",
+    likeWeight: 0.82,
+    commentWeight: 0.88,
+    baseContent: 3,
+  },
+  {
+    key: "brigadir-nanda",
+    pangkat: "Brigadir",
+    nama: "Nanda Putra",
+    satfungKey: "kerma",
+    likeWeight: 0.78,
+    commentWeight: 0.85,
+    baseContent: 2,
+  },
+  {
+    key: "brigpol-gita",
+    pangkat: "Brigpol",
+    nama: "Gita Pertiwi",
+    satfungKey: "renbin",
+    likeWeight: 0.75,
+    commentWeight: 0.82,
+    baseContent: 2,
+  },
+  {
+    key: "briptu-rizky",
+    pangkat: "Briptu",
+    nama: "Rizky Ramadhan",
+    satfungKey: "program",
+    likeWeight: 0.72,
+    commentWeight: 0.78,
+    baseContent: 2,
+  },
+  {
+    key: "bripda-salsa",
+    pangkat: "Bripda",
+    nama: "Salsa Damayanti",
+    satfungKey: "bhabinkamtibmas",
+    likeWeight: 0.7,
+    commentWeight: 0.76,
+    baseContent: 2,
+  },
+];
+
+const distributeByWeights = (totalValue, weights) => {
+  const safeTotal = Number.isFinite(totalValue) ? Math.round(totalValue) : 0;
+  const normalizedWeights = weights.map((weight) =>
+    Number.isFinite(weight) && weight > 0 ? weight : 0,
+  );
+  const sumWeights = normalizedWeights.reduce((acc, weight) => acc + weight, 0);
+  if (sumWeights <= 0 || safeTotal === 0) {
+    return normalizedWeights.map(() => 0);
+  }
+
+  const provisional = normalizedWeights.map((weight) =>
+    Math.round((safeTotal * weight) / sumWeights),
+  );
+  let difference = safeTotal - provisional.reduce((acc, value) => acc + value, 0);
+
+  const order = normalizedWeights
+    .map((weight, index) => ({ index, weight }))
+    .sort((a, b) => b.weight - a.weight)
+    .map((item) => item.index);
+
+  let pointer = 0;
+  while (difference !== 0 && order.length > 0) {
+    const targetIndex = order[pointer % order.length];
+    const nextValue = provisional[targetIndex] + (difference > 0 ? 1 : -1);
+    if (nextValue >= 0) {
+      provisional[targetIndex] = nextValue;
+      difference += difference > 0 ? -1 : 1;
+    }
+    pointer += 1;
+  }
+
+  return provisional;
+};
+
+const getRankPriority = (pangkat) => {
+  const normalized = typeof pangkat === "string" ? pangkat.trim().toLowerCase() : "";
+  return RANK_PRIORITY.get(normalized) ?? RANK_ORDER.length;
+};
+
+const resolveActiveLabel = (options, value) =>
+  options.find((option) => option.value === value)?.label ?? "";
+
+const resolveWeekDateRange = (weekValue, monthValue, yearValue) => {
+  const weekNumber = Number(weekValue);
+  const monthNumber = Number(monthValue);
+  const yearNumber = Number(yearValue);
+
+  if (!Number.isFinite(weekNumber) || !Number.isFinite(monthNumber) || !Number.isFinite(yearNumber)) {
+    return "";
+  }
+
+  const normalizedWeek = Math.min(Math.max(Math.floor(weekNumber), 1), 4);
+  const normalizedMonth = Math.min(Math.max(Math.floor(monthNumber), 1), 12);
+  const startDay = 1 + (normalizedWeek - 1) * 7;
+  const daysInMonth = new Date(yearNumber, normalizedMonth, 0).getDate();
+  const endDay = Math.min(startDay + 6, daysInMonth);
+
+  const formatDay = (day) => String(day).padStart(2, "0");
+  return `${formatDay(startDay)}-${formatDay(endDay)}`;
+};
 
 const WEEK_OPTIONS = [
   { label: "Minggu 1", value: "1" },
@@ -52,441 +286,30 @@ const MONTH_OPTIONS = [
   "Desember",
 ].map((label, index) => ({ label, value: String(index + 1) }));
 
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, index) => {
-  const year = 2023 + index;
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => {
+  const year = 2025 + index;
   return { label: String(year), value: String(year) };
 });
 
-const CLIENT_ID = "DITBINMAS";
-
-const padNumber = (value) => String(value).padStart(2, "0");
-
-const buildMonthKey = (year, month) => {
-  const numericYear = Number(year);
-  const numericMonth = Number(month);
-  if (!Number.isFinite(numericYear) || !Number.isFinite(numericMonth)) {
-    return null;
-  }
-  return `${numericYear}-${padNumber(Math.max(1, Math.min(12, numericMonth)))}`;
-};
-
-const getMonthDateRange = (monthKey) => {
-  if (typeof monthKey !== "string") {
-    return null;
-  }
-  const [yearStr, monthStr] = monthKey.split("-");
-  const year = Number(yearStr);
-  const monthIndex = Number(monthStr) - 1;
-  if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) {
-    return null;
-  }
-  const startDate = `${year}-${padNumber(monthIndex + 1)}-01`;
-  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
-  const endDate = `${year}-${padNumber(monthIndex + 1)}-${padNumber(lastDay)}`;
-  return {
-    startDate,
-    endDate,
-    start: new Date(year, monthIndex, 1),
-    end: new Date(year, monthIndex, lastDay),
-  };
-};
-
-const getWeekDateRange = (weekValue, monthValue, yearValue) => {
-  const weekNumber = Math.max(1, Math.min(4, Number(weekValue) || 1));
-  const monthNumber = Math.max(1, Math.min(12, Number(monthValue) || 1));
-  const yearNumber = Number(yearValue) || new Date().getFullYear();
-
-  const startDay = 1 + (weekNumber - 1) * 7;
-  const start = new Date(yearNumber, monthNumber - 1, startDay);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-
-  const daysInMonth = new Date(yearNumber, monthNumber, 0).getDate();
-  if (end.getMonth() !== monthNumber - 1) {
-    end.setFullYear(yearNumber, monthNumber - 1, daysInMonth);
-  }
-
-  const startDate = `${yearNumber}-${padNumber(monthNumber)}-${padNumber(start.getDate())}`;
-  const endDate = `${yearNumber}-${padNumber(monthNumber)}-${padNumber(
-    Math.min(end.getDate(), daysInMonth),
-  )}`;
+const getCurrentSelections = () => {
+  const now = new Date();
+  const weekOfMonth = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)));
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
 
   return {
-    weekNumber,
-    monthNumber,
-    yearNumber,
-    start,
-    end,
-    startDate,
-    endDate,
-  };
-};
-
-const getPreviousWeekRange = (range) => {
-  if (!range?.start) {
-    return null;
-  }
-  const end = new Date(range.start);
-  end.setDate(end.getDate() - 1);
-  const start = new Date(end);
-  start.setDate(start.getDate() - 6);
-
-  return {
-    start,
-    end,
-    startDate: `${start.getFullYear()}-${padNumber(start.getMonth() + 1)}-${padNumber(start.getDate())}`,
-    endDate: `${end.getFullYear()}-${padNumber(end.getMonth() + 1)}-${padNumber(end.getDate())}`,
-  };
-};
-
-const ensureArray = (...candidates) => {
-  for (const candidate of candidates) {
-    if (!candidate) {
-      continue;
-    }
-    if (Array.isArray(candidate)) {
-      return candidate;
-    }
-    if (Array.isArray(candidate?.data)) {
-      return candidate.data;
-    }
-    if (Array.isArray(candidate?.items)) {
-      return candidate.items;
-    }
-    if (Array.isArray(candidate?.results)) {
-      return candidate.results;
-    }
-    if (Array.isArray(candidate?.records)) {
-      return candidate.records;
-    }
-  }
-  return [];
-};
-
-const filterRecordsByDateRange = (records, range) => {
-  if (!Array.isArray(records)) {
-    return [];
-  }
-
-  if (!range?.startDate && !range?.endDate) {
-    return records;
-  }
-
-  const startDate = range?.startDate ? parseDateValue(range.startDate) : null;
-  const endDate = range?.endDate ? parseDateValue(range.endDate) : null;
-
-  const startTime = startDate
-    ? Date.UTC(
-        startDate.getUTCFullYear(),
-        startDate.getUTCMonth(),
-        startDate.getUTCDate(),
-        0,
-        0,
-        0,
-        0,
-      )
-    : null;
-  const endTime = endDate
-    ? Date.UTC(
-        endDate.getUTCFullYear(),
-        endDate.getUTCMonth(),
-        endDate.getUTCDate(),
-        23,
-        59,
-        59,
-        999,
-      )
-    : null;
-
-  return records.filter((record) => {
-    const resolvedDate = parseDateValue(record?.activityDate) ??
-      parseDateValue(record?.tanggal ?? record?.date) ??
-      parseDateValue(record?.created_at ?? record?.createdAt);
-
-    if (!resolvedDate) {
-      return false;
-    }
-
-    const timestamp = resolvedDate.getTime();
-
-    if (startTime !== null && timestamp < startTime) {
-      return false;
-    }
-
-    if (endTime !== null && timestamp > endTime) {
-      return false;
-    }
-
-    return true;
-  });
-};
-
-const buildWeeklyEngagementTrend = (records = [], { platformKey = "", platformLabel = "" } = {}) => {
-  const safeRecords = Array.isArray(records)
-    ? records.filter((record) => record && typeof record === "object")
-    : [];
-
-  const normalizedPosts = safeRecords
-    .map((record, index) => {
-      const normalized = normalizePlatformPost(record, {
-        platformKey,
-        platformLabel,
-        fallbackIndex: index,
-      });
-
-      if (!normalized) {
-        return null;
-      }
-
-      const resolvedDate =
-        (record?.activityDate instanceof Date && !Number.isNaN(record.activityDate.valueOf())
-          ? record.activityDate
-          : null) ??
-        parseDateValue(record?.activityDate) ??
-        parseDateValue(record?.tanggal ?? record?.date) ??
-        parseDateValue(
-          record?.createdAt ?? record?.created_at ?? record?.timestamp ?? record?.published_at ?? null,
-        ) ??
-        (normalized.publishedAt instanceof Date && !Number.isNaN(normalized.publishedAt.valueOf())
-          ? normalized.publishedAt
-          : null);
-
-      if (!(resolvedDate instanceof Date) || Number.isNaN(resolvedDate.valueOf())) {
-        return null;
-      }
-
-      return {
-        ...normalized,
-        activityDate: resolvedDate,
-      };
-    })
-    .filter(Boolean);
-
-  if (normalizedPosts.length === 0) {
-    return {
-      series: [],
-      latestWeek: null,
-      previousWeek: null,
-      hasRecords: false,
-      weeksCount: 0,
-      hasAnyPosts: safeRecords.length > 0,
-      hasTrendSamples: false,
-    };
-  }
-
-  const weeklyBuckets = groupRecordsByWeek(normalizedPosts, {
-    getDate: (post) => post.activityDate ?? post.publishedAt ?? null,
-  });
-
-  if (!Array.isArray(weeklyBuckets) || weeklyBuckets.length === 0) {
-    return {
-      series: [],
-      latestWeek: null,
-      previousWeek: null,
-      hasRecords: false,
-      weeksCount: 0,
-      hasAnyPosts: safeRecords.length > 0,
-      hasTrendSamples: normalizedPosts.length > 0,
-    };
-  }
-
-  const weeklySeries = weeklyBuckets.map((bucket) => {
-    const totals = bucket.records.reduce(
-      (acc, post) => {
-        const metrics = post?.metrics ?? {};
-        const likes = Number(metrics.likes);
-        const comments = Number(metrics.comments);
-        const shares = Number(metrics.shares);
-        const saves = Number(metrics.saves);
-
-        const interactionsCandidate =
-          metrics.interactions !== undefined
-            ? Number(metrics.interactions)
-            : (Number.isFinite(likes) ? Math.max(0, likes) : 0) +
-              (Number.isFinite(comments) ? Math.max(0, comments) : 0) +
-              (Number.isFinite(shares) ? Math.max(0, shares) : 0) +
-              (Number.isFinite(saves) ? Math.max(0, saves) : 0);
-
-        acc.interactions += Number.isFinite(interactionsCandidate)
-          ? Math.max(0, interactionsCandidate)
-          : 0;
-        acc.likes += Number.isFinite(likes) ? Math.max(0, likes) : 0;
-        acc.comments += Number.isFinite(comments) ? Math.max(0, comments) : 0;
-        acc.posts += 1;
-        return acc;
-      },
-      { interactions: 0, posts: 0, likes: 0, comments: 0 },
-    );
-
-    return {
-      key: bucket.key,
-      label: formatWeekRangeLabel(bucket.start, bucket.end),
-      interactions: totals.interactions,
-      posts: totals.posts,
-      likes: totals.likes,
-      comments: totals.comments,
-    };
-  });
-
-  const trimmedSeries = weeklySeries.slice(-8);
-  const weeksCount = trimmedSeries.length;
-
-  return {
-    series: trimmedSeries,
-    latestWeek: weeksCount > 0 ? trimmedSeries[weeksCount - 1] : null,
-    previousWeek: weeksCount > 1 ? trimmedSeries[weeksCount - 2] : null,
-    hasRecords: weeksCount > 0,
-    weeksCount,
-    hasAnyPosts: safeRecords.length > 0,
-    hasTrendSamples: normalizedPosts.length > 0,
-  };
-};
-
-const resolveActiveLabel = (options, value) =>
-  options.find((option) => option.value === value)?.label ?? "";
-
-const resolveWeekDateRange = (weekValue, monthValue, yearValue) => {
-  const range = getWeekDateRange(weekValue, monthValue, yearValue);
-  if (!range) {
-    return "";
-  }
-  const formatDay = (date) => padNumber(date.getDate());
-  return `${formatDay(range.start)}-${formatDay(range.end)}`;
-};
-
-const buildComparison = (currentValue, previousValue, formatter) => {
-  const currentNumeric = Number.isFinite(currentValue) ? Number(currentValue) : 0;
-  const previousNumeric = Number.isFinite(previousValue) ? Number(previousValue) : 0;
-  const delta = currentNumeric - previousNumeric;
-
-  if (Math.abs(delta) < 0.0001) {
-    return {
-      label: "Setara dengan minggu sebelumnya",
-      direction: "flat",
-    };
-  }
-
-  const direction = delta > 0 ? "up" : "down";
-  const formattedDelta = formatter(Math.abs(delta));
-  const sign = delta > 0 ? "+" : "-";
-
-  return {
-    label: `${sign}${formattedDelta} dibanding minggu sebelumnya`,
-    direction,
-  };
-};
-
-const formatNumberFactory = () => {
-  const cache = new Map();
-  return (value, options) => {
-    const numericValue = Number.isFinite(value) ? Number(value) : 0;
-    const key = JSON.stringify(options ?? {});
-    if (!cache.has(key)) {
-      cache.set(key, new Intl.NumberFormat("id-ID", options ?? {}));
-    }
-    const formatter = cache.get(key);
-    return formatter.format(Math.max(0, numericValue));
-  };
-};
-
-const formatPercentFactory = () => {
-  const cache = new Map();
-  return (value) => {
-    const numericValue = Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
-    const fractionDigits = numericValue > 0 && numericValue < 10 ? 1 : 0;
-    const key = String(fractionDigits);
-    if (!cache.has(key)) {
-      cache.set(
-        key,
-        new Intl.NumberFormat("id-ID", {
-          maximumFractionDigits: fractionDigits,
-          minimumFractionDigits: fractionDigits,
-        }),
-      );
-    }
-    const formatter = cache.get(key);
-    return `${formatter.format(numericValue)}%`;
-  };
-};
-
-const extractDirectoryUsers = (directoryResponse) => {
-  const possibleCollections = [
-    directoryResponse,
-    directoryResponse?.data,
-    directoryResponse?.users,
-    directoryResponse?.payload,
-    directoryResponse?.data?.data,
-    directoryResponse?.data?.users,
-  ];
-
-  const collection = possibleCollections.find((value) => Array.isArray(value));
-  return Array.isArray(collection) ? collection : [];
-};
-
-const normalizeDirectoryCount = (directoryResponse) => {
-  const users = extractDirectoryUsers(directoryResponse);
-  if (users.length > 0) {
-    return users.length;
-  }
-
-  const possibleTotals = [
-    directoryResponse?.total,
-    directoryResponse?.count,
-    directoryResponse?.data?.total,
-    directoryResponse?.data?.count,
-    directoryResponse?.data?.length,
-    directoryResponse?.users?.length,
-  ];
-
-  const numericTotal = possibleTotals.find((value) => typeof value === "number" && Number.isFinite(value));
-  return typeof numericTotal === "number" ? numericTotal : null;
-};
-
-const formatDirectoryDescriptor = (count, formatNumber) => {
-  const label = "Personil Ditbinmas";
-  if (count == null) {
-    return label;
-  }
-  return `${formatNumber(count, { maximumFractionDigits: 0 })} ${label}`;
-};
-
-const computeSelectedSeriesPoint = (seriesData, selectedLabel) => {
-  if (!Array.isArray(seriesData?.series) || seriesData.series.length === 0) {
-    return { latest: seriesData?.latestWeek ?? null, previous: seriesData?.previousWeek ?? null };
-  }
-
-  if (!selectedLabel) {
-    return { latest: seriesData.latestWeek ?? null, previous: seriesData.previousWeek ?? null };
-  }
-
-  const index = seriesData.series.findIndex((entry) => entry.label === selectedLabel);
-  if (index < 0) {
-    return { latest: seriesData.latestWeek ?? null, previous: seriesData.previousWeek ?? null };
-  }
-
-  return {
-    latest: seriesData.series[index] ?? seriesData.latestWeek ?? null,
-    previous:
-      index > 0
-        ? seriesData.series[index - 1]
-        : seriesData.series.length > 1
-        ? seriesData.series[0]
-        : seriesData.previousWeek ?? null,
+    week: WEEK_OPTIONS.find((option) => option.value === String(weekOfMonth))?.value ?? WEEK_OPTIONS[0].value,
+    month:
+      MONTH_OPTIONS.find((option) => option.value === String(month))?.value ?? MONTH_OPTIONS[0].value,
+    year:
+      YEAR_OPTIONS.find((option) => option.value === String(year))?.value ?? YEAR_OPTIONS[0].value,
   };
 };
 
 export default function WeeklyReportPageClient() {
   useRequireAuth();
   const { token, role, clientId } = useAuth();
-  const [{ week: defaultWeek, month: defaultMonth, year: defaultYear }] = useState(() => {
-    const now = new Date();
-    const weekOfMonth = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)));
-    return {
-      week: String(weekOfMonth),
-      month: String(now.getMonth() + 1),
-      year: String(now.getFullYear()),
-    };
-  });
+  const [{ week: defaultWeek, month: defaultMonth, year: defaultYear }] = useState(() => getCurrentSelections());
   const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [selectedYear, setSelectedYear] = useState(defaultYear);
@@ -504,334 +327,476 @@ export default function WeeklyReportPageClient() {
   }, [clientId]);
 
   const isDitbinmasAuthorized =
-    normalizedRole === "ditbinmas" && normalizedClientId === CLIENT_ID;
+    normalizedRole === "ditbinmas" && normalizedClientId === "DITBINMAS";
 
-  const formatNumber = useMemo(() => formatNumberFactory(), []);
-  const formatPercentValue = useMemo(() => formatPercentFactory(), []);
+  const formatNumber = useMemo(
+    () =>
+      (value, options) => {
+        const numericValue = Number.isFinite(value) ? Number(value) : 0;
+        const formatter = new Intl.NumberFormat("id-ID", {
+          maximumFractionDigits: 0,
+          minimumFractionDigits: 0,
+          ...(options ?? {}),
+        });
+        return formatter.format(Math.max(0, numericValue));
+      },
+    [],
+  );
+
+  const formatPercentValue = useMemo(
+    () =>
+      (value) => {
+        const numericValue = Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
+        const fractionDigits = numericValue > 0 && numericValue < 10 ? 1 : 0;
+        const formatter = new Intl.NumberFormat("id-ID", {
+          maximumFractionDigits: fractionDigits,
+          minimumFractionDigits: fractionDigits,
+        });
+        return `${formatter.format(numericValue)}%`;
+      },
+    [],
+  );
 
   const { data: ditbinmasDirectory } = useSWR(
     token && isDitbinmasAuthorized ? ["ditbinmas-directory", token] : null,
-    ([, tk]) => getUserDirectory(tk, CLIENT_ID),
+    ([, tk]) => getUserDirectory(tk, "DITBINMAS"),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
     },
   );
 
-  const ditbinmasUsers = useMemo(
-    () => extractDirectoryUsers(ditbinmasDirectory),
-    [ditbinmasDirectory],
-  );
-
   const ditbinmasPersonnelCount = useMemo(() => {
-    const directoryCount = normalizeDirectoryCount(ditbinmasDirectory);
-    if (directoryCount != null) {
-      return directoryCount;
-    }
-    return ditbinmasUsers.length > 0 ? ditbinmasUsers.length : null;
-  }, [ditbinmasDirectory, ditbinmasUsers.length]);
-
-  const ditbinmasPersonnelDescriptor = useMemo(
-    () => formatDirectoryDescriptor(ditbinmasPersonnelCount, formatNumber),
-    [ditbinmasPersonnelCount, formatNumber],
-  );
-
-  const monthKey = useMemo(
-    () => buildMonthKey(selectedYear, selectedMonth),
-    [selectedMonth, selectedYear],
-  );
-  const monthRange = useMemo(() => getMonthDateRange(monthKey), [monthKey]);
-  const weeklyRange = useMemo(
-    () => getWeekDateRange(selectedWeek, selectedMonth, selectedYear),
-    [selectedWeek, selectedMonth, selectedYear],
-  );
-  const previousWeekRange = useMemo(
-    () => getPreviousWeekRange(weeklyRange),
-    [weeklyRange],
-  );
-
-  const [monthlyState, setMonthlyState] = useState({
-    loading: false,
-    error: "",
-    likesRecords: [],
-    commentRecords: [],
-    instagramPosts: [],
-    tiktokPosts: [],
-  });
-
-  useEffect(() => {
-    if (!token || !isDitbinmasAuthorized || !monthRange) {
-      setMonthlyState((prev) => ({
-        ...prev,
-        loading: false,
-      }));
-      return;
+    if (!ditbinmasDirectory) {
+      return null;
     }
 
-    const controller = new AbortController();
-    let cancelled = false;
+    const possibleCollections = [
+      ditbinmasDirectory,
+      ditbinmasDirectory?.data,
+      ditbinmasDirectory?.users,
+      ditbinmasDirectory?.payload,
+      ditbinmasDirectory?.data?.data,
+      ditbinmasDirectory?.data?.users,
+    ];
 
-    const loadData = async () => {
-      setMonthlyState({
-        loading: true,
-        error: "",
-        likesRecords: [],
-        commentRecords: [],
-        instagramPosts: [],
-        tiktokPosts: [],
-      });
+    const raw = possibleCollections.find((collection) => Array.isArray(collection));
 
-      const errorTargets = [];
+    const resolvedEntries = Array.isArray(raw) ? raw : [];
+    const normalizedRoleValue = "ditbinmas";
+    const normalizedClientValue = "DITBINMAS";
 
-      try {
-        const likesPromise = getRekapLikesIG(
-          token,
-          CLIENT_ID,
-          "harian",
-          undefined,
-          monthRange.startDate,
-          monthRange.endDate,
-          controller.signal,
-        ).catch((error) => {
-          console.warn("Gagal memuat rekap likes IG", error);
-          errorTargets.push("rekap likes Instagram");
-          return { data: [] };
-        });
-
-        const commentsPromise = getRekapKomentarTiktok(
-          token,
-          CLIENT_ID,
-          "harian",
-          undefined,
-          monthRange.startDate,
-          monthRange.endDate,
-          controller.signal,
-        ).catch((error) => {
-          console.warn("Gagal memuat rekap komentar TikTok", error);
-          errorTargets.push("rekap komentar TikTok");
-          return { data: [] };
-        });
-
-        const instagramPromise = getInstagramPosts(token, CLIENT_ID, {
-          startDate: monthRange.startDate,
-          endDate: monthRange.endDate,
-          signal: controller.signal,
-        }).catch((error) => {
-          console.warn("Gagal memuat konten Instagram", error);
-          errorTargets.push("konten Instagram");
-          return [];
-        });
-
-        const tiktokPromise = getTiktokPosts(token, CLIENT_ID, {
-          startDate: monthRange.startDate,
-          endDate: monthRange.endDate,
-          signal: controller.signal,
-        }).catch((error) => {
-          console.warn("Gagal memuat konten TikTok", error);
-          errorTargets.push("konten TikTok");
-          return [];
-        });
-
-        const [likesRes, commentsRes, instagramRes, tiktokRes] = await Promise.all([
-          likesPromise,
-          commentsPromise,
-          instagramPromise,
-          tiktokPromise,
-        ]);
-
-        if (cancelled) {
-          return;
-        }
-
-        const likesRecords = prepareTrendActivityRecords(ensureArray(likesRes), {
-          fallbackDate: monthRange.startDate,
-        });
-        const commentRecords = prepareTrendActivityRecords(ensureArray(commentsRes), {
-          fallbackDate: monthRange.startDate,
-        });
-        const instagramPosts = ensureRecordsHaveActivityDate(ensureArray(instagramRes), {
-          extraPaths: POST_DATE_PATHS,
-        });
-        const tiktokPosts = ensureRecordsHaveActivityDate(ensureArray(tiktokRes), {
-          extraPaths: POST_DATE_PATHS,
-        });
-
-        const errorMessage = errorTargets.length
-          ? `Gagal memuat ${errorTargets.join(", ")}.`
-          : "";
-
-        setMonthlyState({
-          loading: false,
-          error: errorMessage,
-          likesRecords,
-          commentRecords,
-          instagramPosts,
-          tiktokPosts,
-        });
-      } catch (error) {
-        if (cancelled || error?.name === "AbortError") {
-          return;
-        }
-        console.error("Gagal memuat data mingguan", error);
-        setMonthlyState({
-          loading: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Gagal memuat data mingguan Ditbinmas.",
-          likesRecords: [],
-          commentRecords: [],
-          instagramPosts: [],
-          tiktokPosts: [],
-        });
+    if (!resolvedEntries.length) {
+      const possibleTotals = [
+        ditbinmasDirectory?.total,
+        ditbinmasDirectory?.count,
+        ditbinmasDirectory?.data?.total,
+        ditbinmasDirectory?.data?.count,
+        ditbinmasDirectory?.data?.length,
+        ditbinmasDirectory?.users?.length,
+      ];
+      const numericTotal = possibleTotals.find((value) =>
+        typeof value === "number" && Number.isFinite(value),
+      );
+      if (typeof numericTotal === "number") {
+        return numericTotal;
       }
+      return null;
+    }
+
+    const resolveEntryIdentifier = (entry) =>
+      String(
+        entry?.user_id ||
+          entry?.userId ||
+          entry?.userID ||
+          entry?.id ||
+          entry?.email ||
+          JSON.stringify(entry),
+      );
+
+    const matchByRoleAndClient = resolvedEntries.filter((entry) => {
+      const entryRole = String(
+        entry?.role ||
+          entry?.user_role ||
+          entry?.userRole ||
+          entry?.roleName ||
+          entry?.role_name ||
+          "",
+      )
+        .trim()
+        .toLowerCase();
+
+      const entryClientId = String(
+        entry?.client_id ||
+          entry?.clientId ||
+          entry?.clientID ||
+          entry?.client ||
+          entry?.client_code ||
+          "",
+      )
+        .trim()
+        .toUpperCase();
+
+      const matchesRole =
+        entryRole === normalizedRoleValue || entryRole.includes(normalizedRoleValue);
+      const matchesClient =
+        entryClientId === normalizedClientValue ||
+        entryClientId.includes(normalizedClientValue);
+
+      return matchesRole && matchesClient;
+    });
+
+    if (matchByRoleAndClient.length > 0) {
+      const uniqueRoleClientEntries = new Set(
+        matchByRoleAndClient.map((entry) => resolveEntryIdentifier(entry)),
+      );
+      return uniqueRoleClientEntries.size || matchByRoleAndClient.length;
+    }
+
+    const matchByClientOnly = resolvedEntries.filter((entry) => {
+      const entryClientId = String(
+        entry?.client_id ||
+          entry?.clientId ||
+          entry?.clientID ||
+          entry?.client ||
+          entry?.client_code ||
+          "",
+      )
+        .trim()
+        .toUpperCase();
+
+      return (
+        entryClientId === normalizedClientValue || entryClientId.includes(normalizedClientValue)
+      );
+    });
+
+    if (matchByClientOnly.length > 0) {
+      const uniqueClientEntries = new Set(
+        matchByClientOnly.map((entry) => resolveEntryIdentifier(entry)),
+      );
+      return uniqueClientEntries.size || matchByClientOnly.length;
+    }
+
+    const uniqueEntries = new Set(
+      resolvedEntries.map((entry) => resolveEntryIdentifier(entry)),
+    );
+
+    return uniqueEntries.size || resolvedEntries.length;
+  }, [ditbinmasDirectory]);
+
+  const ditbinmasPersonnelDescriptor = useMemo(() => {
+    const resolvedLabel = "Personil Ditbinmas";
+    if (ditbinmasPersonnelCount === null || ditbinmasPersonnelCount === undefined) {
+      return resolvedLabel;
+    }
+
+    return `${formatNumber(ditbinmasPersonnelCount, { maximumFractionDigits: 0 })} ${resolvedLabel}`;
+  }, [ditbinmasPersonnelCount, formatNumber]);
+
+  const mockWeeklySeries = useMemo(() => {
+    const base = Number(selectedWeek);
+    const monthLabel = MONTH_OPTIONS.find((option) => option.value === selectedMonth)?.label ?? "";
+
+    return [
+      {
+        key: `${selectedYear}-W${Math.max(base - 2, 1)}`,
+        label: `Minggu ${Math.max(base - 2, 1)} ${monthLabel}`,
+        interactions: Math.max(0, 1200 - base * 45),
+        posts: Math.max(0, 18 - base),
+        likes: Math.max(0, 780 - base * 28),
+        comments: Math.max(0, 420 - base * 9),
+      },
+      {
+        key: `${selectedYear}-W${Math.max(base - 1, 1)}`,
+        label: `Minggu ${Math.max(base - 1, 1)} ${monthLabel}`,
+        interactions: Math.max(0, 1340 - base * 30),
+        posts: Math.max(0, 19 - base),
+        likes: Math.max(0, 860 - base * 24),
+        comments: Math.max(0, 470 - base * 7),
+      },
+      {
+        key: `${selectedYear}-W${base}`,
+        label: `Minggu ${base} ${monthLabel}`,
+        interactions: Math.max(0, 1460 - base * 18),
+        posts: Math.max(0, 20 - base),
+        likes: Math.max(0, 930 - base * 18),
+        comments: Math.max(0, 520 - base * 5),
+      },
+    ];
+  }, [selectedWeek, selectedMonth, selectedYear]);
+
+  const instagramLatest = mockWeeklySeries[mockWeeklySeries.length - 1] ?? null;
+  const instagramPrevious = mockWeeklySeries[mockWeeklySeries.length - 2] ?? null;
+
+  const tiktokSeries = useMemo(
+    () =>
+      mockWeeklySeries.map((point, index) => ({
+        ...point,
+        key: `${point.key}-tt`,
+        label: point.label?.replace("Minggu", "TikTok Minggu"),
+        interactions: Math.max(0, (point.interactions ?? 0) - 120 + index * 18),
+        likes: Math.max(0, (point.likes ?? 0) - 160 + index * 14),
+        comments: Math.max(0, (point.comments ?? 0) - 70 + index * 10),
+      })),
+    [mockWeeklySeries],
+  );
+
+  const tiktokLatest = tiktokSeries[tiktokSeries.length - 1] ?? null;
+  const tiktokPrevious = tiktokSeries[tiktokSeries.length - 2] ?? null;
+
+  const weeklyPlatformSnapshot = useMemo(() => {
+    const weekNumber = Number(selectedWeek) || 1;
+    const weekOptionLabel = resolveActiveLabel(WEEK_OPTIONS, selectedWeek);
+    const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth);
+    const weekRange = resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear);
+    const weekDescriptor = `Minggu ${weekNumber} ${monthLabel} ${selectedYear}`;
+
+    const instagramPosts = Math.max(0, Number(instagramLatest?.posts) || 0);
+    const tiktokPosts = Math.max(0, Number(tiktokLatest?.posts) || 0);
+    const totalPosts = instagramPosts + tiktokPosts;
+
+    const prevInstagramPosts = Math.max(0, Number(instagramPrevious?.posts) || instagramPosts);
+    const prevTiktokPosts = Math.max(0, Number(tiktokPrevious?.posts) || tiktokPosts);
+    const previousPosts = prevInstagramPosts + prevTiktokPosts;
+
+    const instagramLikes = Math.max(0, Number(instagramLatest?.likes) || 0);
+    const tiktokLikes = Math.max(0, Number(tiktokLatest?.likes) || 0);
+    const totalLikes = instagramLikes + tiktokLikes;
+
+    const prevInstagramLikes = Math.max(0, Number(instagramPrevious?.likes) || instagramLikes);
+    const prevTiktokLikes = Math.max(0, Number(tiktokPrevious?.likes) || tiktokLikes);
+    const previousLikes = prevInstagramLikes + prevTiktokLikes;
+
+    const instagramComments = Math.max(0, Number(instagramLatest?.comments) || 0);
+    const tiktokComments = Math.max(0, Number(tiktokLatest?.comments) || 0);
+    const totalComments = instagramComments + tiktokComments;
+
+    const prevInstagramComments = Math.max(0, Number(instagramPrevious?.comments) || instagramComments);
+    const prevTiktokComments = Math.max(0, Number(tiktokPrevious?.comments) || tiktokComments);
+    const previousComments = prevInstagramComments + prevTiktokComments;
+
+    const defaultTotalPersonnel = SATFUNG_DEFINITIONS.reduce(
+      (sum, definition) => sum + (definition.basePersonnel || 0),
+      0,
+    );
+    const providedPersonnel = Number(ditbinmasPersonnelCount);
+    const resolvedTotalPersonnel = Number.isFinite(providedPersonnel)
+      ? Math.max(0, Math.round(providedPersonnel))
+      : Math.max(0, defaultTotalPersonnel);
+
+    const complianceForWeek = (value) => {
+      const normalized = Math.max(1, Number(value) || 1);
+      return Math.min(0.93, 0.62 + (normalized - 1) * 0.045);
     };
 
-    loadData();
+    const currentComplianceRatio = complianceForWeek(weekNumber);
+    const previousComplianceRatio =
+      weekNumber > 1 ? complianceForWeek(weekNumber - 1) : Math.max(0.5, currentComplianceRatio - 0.04);
 
-    return () => {
-      cancelled = true;
-      controller.abort();
+    const activePersonnelTarget = Math.min(
+      resolvedTotalPersonnel,
+      Math.max(0, Math.round(resolvedTotalPersonnel * currentComplianceRatio)),
+    );
+    const previousActivePersonnel = Math.min(
+      resolvedTotalPersonnel,
+      Math.max(0, Math.round(resolvedTotalPersonnel * previousComplianceRatio)),
+    );
+
+    const likeWeights = SATFUNG_DEFINITIONS.map(
+      (definition, index) => definition.likeWeight * (1 + (weekNumber - 1) * 0.04 + index * 0.015),
+    );
+    const commentWeights = SATFUNG_DEFINITIONS.map(
+      (definition, index) => definition.commentWeight * (1 + (weekNumber - 1) * 0.035 + index * 0.012),
+    );
+    const activeWeights = SATFUNG_DEFINITIONS.map(
+      (definition, index) => definition.activeWeight * (1 + (weekNumber - 1) * 0.028 + index * 0.01),
+    );
+    const totalWeights = SATFUNG_DEFINITIONS.map((definition) => definition.totalWeight);
+
+    const distributedLikes = distributeByWeights(totalLikes, likeWeights);
+    const distributedComments = distributeByWeights(totalComments, commentWeights);
+    const distributedActive = distributeByWeights(activePersonnelTarget, activeWeights);
+    const distributedTotalBase = distributeByWeights(resolvedTotalPersonnel, totalWeights);
+
+    const adjustedTotal = distributedTotalBase.map((value, index) =>
+      Math.max(value, distributedActive[index] ?? 0),
+    );
+    let totalDiff = Math.round(resolvedTotalPersonnel) - adjustedTotal.reduce((sum, value) => sum + value, 0);
+    if (adjustedTotal.length > 0 && totalDiff !== 0) {
+      const order = SATFUNG_DEFINITIONS.map((definition, index) => ({ index, weight: definition.totalWeight }))
+        .sort((a, b) => b.weight - a.weight)
+        .map((item) => item.index);
+      let pointer = 0;
+      while (totalDiff !== 0 && order.length > 0) {
+        const idx = order[pointer % order.length];
+        const candidate = adjustedTotal[idx] + (totalDiff > 0 ? 1 : -1);
+        if (candidate >= (distributedActive[idx] ?? 0)) {
+          adjustedTotal[idx] = candidate;
+          totalDiff += totalDiff > 0 ? -1 : 1;
+        }
+        pointer += 1;
+      }
+    }
+
+    const satfungData = SATFUNG_DEFINITIONS.map((definition, index) => {
+      const totalPersonnel = Math.max(0, adjustedTotal[index] ?? 0);
+      const activePersonnel = Math.min(totalPersonnel, distributedActive[index] ?? 0);
+      const likes = distributedLikes[index] ?? 0;
+      const comments = distributedComments[index] ?? 0;
+      const averageLikesPerUser = activePersonnel > 0 ? likes / activePersonnel : 0;
+      const averageCommentsPerUser = activePersonnel > 0 ? comments / activePersonnel : 0;
+
+      return {
+        key: definition.key,
+        name: definition.name,
+        likes,
+        comments,
+        active: activePersonnel,
+        total: totalPersonnel,
+        averageLikesPerUser,
+        averageCommentsPerUser,
+        complianceRate: totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0,
+      };
+    });
+
+    const totalActive = satfungData.reduce((sum, entry) => sum + entry.active, 0);
+    const complianceRate =
+      resolvedTotalPersonnel > 0 ? (totalActive / resolvedTotalPersonnel) * 100 : 0;
+    const previousComplianceRate =
+      resolvedTotalPersonnel > 0 ? (previousActivePersonnel / resolvedTotalPersonnel) * 100 : 0;
+
+    const weeklyClients = satfungData.map((entry) => ({
+      key: entry.key,
+      clientName: entry.name,
+      totalLikes: entry.likes,
+      totalComments: entry.comments,
+      activePersonnel: entry.active,
+      totalPersonnel: entry.total,
+      complianceRate: entry.complianceRate,
+      averageLikesPerUser: entry.averageLikesPerUser,
+      averageCommentsPerUser: entry.averageCommentsPerUser,
+    }));
+
+    const totalLikeAllocation = Math.round(totalLikes * 0.65);
+    const totalCommentAllocation = Math.round(totalComments * 0.7);
+    const personnelLikeWeights = PERSONNEL_DEFINITIONS.map(
+      (definition, index) => definition.likeWeight * (1 + (weekNumber - 1) * 0.03 + index * 0.008),
+    );
+    const personnelCommentWeights = PERSONNEL_DEFINITIONS.map(
+      (definition, index) => definition.commentWeight * (1 + (weekNumber - 1) * 0.028 + index * 0.006),
+    );
+
+    const distributedPersonnelLikes = distributeByWeights(totalLikeAllocation, personnelLikeWeights);
+    const distributedPersonnelComments = distributeByWeights(
+      totalCommentAllocation,
+      personnelCommentWeights,
+    );
+
+    const personnelRowsRaw = PERSONNEL_DEFINITIONS.map((person, index) => {
+      const satfungName =
+        SATFUNG_DEFINITIONS.find((definition) => definition.key === person.satfungKey)?.name || "Ditbinmas";
+      const likes = distributedPersonnelLikes[index] ?? 0;
+      const comments = distributedPersonnelComments[index] ?? 0;
+      const offset = ((weekNumber + index) % 3) - 1;
+      const contentCount = Math.max(1, person.baseContent + offset);
+      const avgLikes = contentCount > 0 ? likes / contentCount : 0;
+      const avgComments = contentCount > 0 ? comments / contentCount : 0;
+
+      return {
+        key: person.key,
+        pangkat: person.pangkat,
+        nama: person.nama,
+        satfung: satfungName,
+        likes,
+        comments,
+        avgLikes,
+        avgComments,
+        contentCount,
+      };
+    });
+
+    const sortedPersonnelRows = [...personnelRowsRaw].sort((a, b) => {
+      const rankDelta = getRankPriority(a.pangkat) - getRankPriority(b.pangkat);
+      if (rankDelta !== 0) {
+        return rankDelta;
+      }
+
+      if ((b.likes ?? 0) !== (a.likes ?? 0)) {
+        return (b.likes ?? 0) - (a.likes ?? 0);
+      }
+
+      if ((b.comments ?? 0) !== (a.comments ?? 0)) {
+        return (b.comments ?? 0) - (a.comments ?? 0);
+      }
+
+      return (a.nama || "").localeCompare(b.nama || "", "id-ID", { sensitivity: "base" });
+    });
+
+    const totalContentCount = sortedPersonnelRows.reduce(
+      (sum, row) => sum + (row.contentCount ?? 0),
+      0,
+    );
+
+    const topPersonnelEntries = [...personnelRowsRaw]
+      .sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
+      .map((row) => ({
+        key: row.key,
+        clientName: row.satfung,
+        username: row.nama,
+        nama: row.nama,
+        pangkat: row.pangkat,
+        likes: row.likes,
+        comments: row.comments,
+        active: (row.likes ?? 0) + (row.comments ?? 0) > 0,
+      }));
+
+    const personnelDistribution = sortedPersonnelRows.map((row) => ({
+      key: row.key,
+      pangkat: row.pangkat,
+      nama: row.nama,
+      satfung: row.satfung,
+      likes: row.likes,
+      averageLikes: row.avgLikes,
+      comments: row.comments,
+      averageComments: row.avgComments,
+    }));
+
+    const distributionNote = weekRange
+      ? `Minggu ${weekNumber} (${weekRange} ${monthLabel} ${selectedYear}) · ${formatNumber(totalContentCount, {
+          maximumFractionDigits: 0,
+        })} konten dipantau`
+      : `${weekDescriptor} · ${formatNumber(totalContentCount, { maximumFractionDigits: 0 })} konten dipantau`;
+
+    const labelOverrides = {
+      likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
+      commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
+      tableTitle: "Distribusi Engagement Per User / Personil",
+      tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
     };
-  }, [token, isDitbinmasAuthorized, monthRange?.startDate, monthRange?.endDate]);
 
-  const weeklyLikesRecords = useMemo(
-    () => filterRecordsByDateRange(monthlyState.likesRecords, weeklyRange),
-    [monthlyState.likesRecords, weeklyRange],
-  );
+    const buildComparison = (currentValue, previousValue, formatter) => {
+      const currentNumeric = Number.isFinite(currentValue) ? Number(currentValue) : 0;
+      const previousNumeric = Number.isFinite(previousValue) ? Number(previousValue) : 0;
+      const delta = currentNumeric - previousNumeric;
 
-  const weeklyCommentRecords = useMemo(
-    () => filterRecordsByDateRange(monthlyState.commentRecords, weeklyRange),
-    [monthlyState.commentRecords, weeklyRange],
-  );
+      if (Math.abs(delta) < 0.0001) {
+        return {
+          label: "Setara dengan minggu sebelumnya",
+          direction: "flat",
+        };
+      }
 
-  const previousLikesRecords = useMemo(() => {
-    if (!previousWeekRange) {
-      return [];
-    }
-    return filterRecordsByDateRange(monthlyState.likesRecords, previousWeekRange);
-  }, [monthlyState.likesRecords, previousWeekRange]);
+      const direction = delta > 0 ? "up" : "down";
+      const formattedDelta = formatter(Math.abs(delta));
+      const sign = delta > 0 ? "+" : "-";
 
-  const previousCommentRecords = useMemo(() => {
-    if (!previousWeekRange) {
-      return [];
-    }
-    return filterRecordsByDateRange(monthlyState.commentRecords, previousWeekRange);
-  }, [monthlyState.commentRecords, previousWeekRange]);
+      return {
+        label: `${sign}${formattedDelta} dibanding minggu sebelumnya`,
+        direction,
+      };
+    };
 
-  const weeklyMergedRecords = useMemo(
-    () => mergeActivityRecords(weeklyLikesRecords, weeklyCommentRecords),
-    [weeklyLikesRecords, weeklyCommentRecords],
-  );
-  const previousMergedRecords = useMemo(
-    () => mergeActivityRecords(previousLikesRecords, previousCommentRecords),
-    [previousLikesRecords, previousCommentRecords],
-  );
-
-  const weeklyLikesSummary = useMemo(() => {
-    if (weeklyMergedRecords.length === 0 && ditbinmasUsers.length === 0) {
-      return createEmptyLikesSummary();
-    }
-    return aggregateLikesRecords(weeklyMergedRecords, { directoryUsers: ditbinmasUsers });
-  }, [weeklyMergedRecords, ditbinmasUsers]);
-
-  const previousWeeklySummary = useMemo(() => {
-    if (previousMergedRecords.length === 0 && ditbinmasUsers.length === 0) {
-      return createEmptyLikesSummary();
-    }
-    return aggregateLikesRecords(previousMergedRecords, { directoryUsers: ditbinmasUsers });
-  }, [previousMergedRecords, ditbinmasUsers]);
-
-  const weeklyInstagramPosts = useMemo(
-    () => filterRecordsByDateRange(monthlyState.instagramPosts, weeklyRange),
-    [monthlyState.instagramPosts, weeklyRange],
-  );
-
-  const weeklyTiktokPosts = useMemo(
-    () => filterRecordsByDateRange(monthlyState.tiktokPosts, weeklyRange),
-    [monthlyState.tiktokPosts, weeklyRange],
-  );
-
-  const previousInstagramPosts = useMemo(() => {
-    if (!previousWeekRange) {
-      return [];
-    }
-    return filterRecordsByDateRange(monthlyState.instagramPosts, previousWeekRange);
-  }, [monthlyState.instagramPosts, previousWeekRange]);
-
-  const previousTiktokPosts = useMemo(() => {
-    if (!previousWeekRange) {
-      return [];
-    }
-    return filterRecordsByDateRange(monthlyState.tiktokPosts, previousWeekRange);
-  }, [monthlyState.tiktokPosts, previousWeekRange]);
-
-  const totalPosts = weeklyInstagramPosts.length + weeklyTiktokPosts.length;
-  const previousTotalPosts = previousInstagramPosts.length + previousTiktokPosts.length;
-
-  const weeklyTotals = weeklyLikesSummary.totals ?? {
-    totalLikes: 0,
-    totalComments: 0,
-    totalPersonnel: 0,
-    activePersonnel: 0,
-    complianceRate: 0,
-    averageComplianceRate: 0,
-  };
-
-  const previousTotals = previousWeeklySummary.totals ?? {
-    totalLikes: 0,
-    totalComments: 0,
-    totalPersonnel: 0,
-    activePersonnel: 0,
-    complianceRate: 0,
-    averageComplianceRate: 0,
-  };
-
-  const resolvedTotalPersonnel = weeklyTotals.totalPersonnel || ditbinmasPersonnelCount || 0;
-  const totalActive = weeklyTotals.activePersonnel || 0;
-  const totalLikes = weeklyTotals.totalLikes || 0;
-  const totalComments = weeklyTotals.totalComments || 0;
-  const complianceRate = weeklyTotals.complianceRate || 0;
-  const previousLikes = previousTotals.totalLikes || 0;
-  const previousComments = previousTotals.totalComments || 0;
-  const previousComplianceRate = previousTotals.complianceRate || 0;
-
-  const instagramTrendData = useMemo(() => {
-    const postsForTrend = monthRange
-      ? filterRecordsByDateRange(monthlyState.instagramPosts, monthRange)
-      : monthlyState.instagramPosts;
-    return buildWeeklyEngagementTrend(postsForTrend, {
-      platformKey: "instagram",
-      platformLabel: "Instagram",
-    });
-  }, [monthlyState.instagramPosts, monthRange]);
-
-  const tiktokTrendData = useMemo(() => {
-    const postsForTrend = monthRange
-      ? filterRecordsByDateRange(monthlyState.tiktokPosts, monthRange)
-      : monthlyState.tiktokPosts;
-    return buildWeeklyEngagementTrend(postsForTrend, {
-      platformKey: "tiktok",
-      platformLabel: "TikTok",
-    });
-  }, [monthlyState.tiktokPosts, monthRange]);
-
-  const selectedWeekLabel = weeklyRange
-    ? formatWeekRangeLabel(weeklyRange.start, weeklyRange.end)
-    : "";
-
-  const { latest: instagramLatest, previous: instagramPrevious } = useMemo(
-    () => computeSelectedSeriesPoint(instagramTrendData, selectedWeekLabel),
-    [instagramTrendData, selectedWeekLabel],
-  );
-
-  const { latest: tiktokLatest, previous: tiktokPrevious } = useMemo(
-    () => computeSelectedSeriesPoint(tiktokTrendData, selectedWeekLabel),
-    [tiktokTrendData, selectedWeekLabel],
-  );
-
-  const weeklySummaryCards = useMemo(() => {
-    const postsComparison = buildComparison(totalPosts, previousTotalPosts, (value) =>
+    const postsComparison = buildComparison(totalPosts, previousPosts, (value) =>
       formatNumber(value, { maximumFractionDigits: 0 }),
     );
     const likesComparison = buildComparison(totalLikes, previousLikes, (value) =>
@@ -845,6 +810,7 @@ export default function WeeklyReportPageClient() {
       if (!Number.isFinite(complianceRate) || !Number.isFinite(previousComplianceRate)) {
         return null;
       }
+
       const delta = complianceRate - previousComplianceRate;
       if (Math.abs(delta) < 0.01) {
         return {
@@ -852,16 +818,18 @@ export default function WeeklyReportPageClient() {
           direction: "flat",
         };
       }
+
       const direction = delta > 0 ? "up" : "down";
       const formatter = new Intl.NumberFormat("id-ID", {
         maximumFractionDigits: Math.abs(delta) < 10 ? 1 : 0,
         minimumFractionDigits: Math.abs(delta) < 10 ? 1 : 0,
       });
       const label = `${delta > 0 ? "+" : "-"}${formatter.format(Math.abs(delta))} poin dibanding minggu sebelumnya`;
+
       return { label, direction };
     })();
 
-    return [
+    const summaryCards = [
       {
         key: "personnel-total",
         label: "Jumlah Personil",
@@ -872,9 +840,7 @@ export default function WeeklyReportPageClient() {
         key: "total-posts",
         label: "Total Post",
         value: formatNumber(totalPosts, { maximumFractionDigits: 0 }),
-        description: `Post Instagram: ${formatNumber(weeklyInstagramPosts.length, {
-          maximumFractionDigits: 0,
-        })} · Post TikTok: ${formatNumber(weeklyTiktokPosts.length, { maximumFractionDigits: 0 })}`,
+        description: `Post Instagram: ${formatNumber(instagramPosts, { maximumFractionDigits: 0 })} · Post TikTok: ${formatNumber(tiktokPosts, { maximumFractionDigits: 0 })}`,
         comparison: postsComparison,
       },
       {
@@ -895,178 +861,168 @@ export default function WeeklyReportPageClient() {
         key: "overall-compliance",
         label: "Kepatuhan Personil",
         value: formatPercentValue(complianceRate),
-        description: `${formatNumber(totalActive, {
-          maximumFractionDigits: 0,
-        })} aktif dari ${formatNumber(resolvedTotalPersonnel, {
-          maximumFractionDigits: 0,
-        })} personil.`,
+        description: `${formatNumber(totalActive, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(resolvedTotalPersonnel, { maximumFractionDigits: 0 })} personil.`,
         comparison: complianceComparison,
       },
     ];
+
+    const lastUpdated = (() => {
+      if (weekRange && weekRange.includes("-")) {
+        const [, endDayString] = weekRange.split("-");
+        const endDay = Number(endDayString);
+        const monthNumber = Number(selectedMonth);
+        const yearNumber = Number(selectedYear);
+        if (
+          Number.isFinite(endDay) &&
+          Number.isFinite(monthNumber) &&
+          Number.isFinite(yearNumber)
+        ) {
+          return new Date(yearNumber, monthNumber - 1, endDay);
+        }
+      }
+
+      const monthNumber = Number(selectedMonth);
+      const yearNumber = Number(selectedYear);
+      if (Number.isFinite(monthNumber) && Number.isFinite(yearNumber)) {
+        return new Date(yearNumber, monthNumber - 1, 1);
+      }
+
+      return new Date();
+    })();
+
+    const likesSummaryData = {
+      totals: {
+        totalClients: weeklyClients.length,
+        totalLikes,
+        totalComments,
+        totalPersonnel: resolvedTotalPersonnel,
+        activePersonnel: totalActive,
+        complianceRate,
+        averageComplianceRate: complianceRate,
+      },
+      clients: weeklyClients,
+      topPersonnel: topPersonnelEntries,
+      lastUpdated,
+    };
+
+    const periodLabel = `${weekOptionLabel} • ${weekRange ? `${weekRange} ${monthLabel}` : monthLabel} ${selectedYear}`;
+
+    return {
+      likesSummaryData,
+      summaryCards,
+      labelOverrides,
+      personnelDistribution,
+      distributionMeta: { note: distributionNote },
+      postTotals: {
+        instagram: instagramPosts,
+        tiktok: tiktokPosts,
+      },
+      periodLabel,
+      weekDescriptor,
+    };
   }, [
-    totalPosts,
-    previousTotalPosts,
-    totalLikes,
-    previousLikes,
-    totalComments,
-    previousComments,
-    complianceRate,
-    previousComplianceRate,
-    resolvedTotalPersonnel,
-    totalActive,
-    weeklyInstagramPosts.length,
-    weeklyTiktokPosts.length,
+    selectedWeek,
+    selectedMonth,
+    selectedYear,
+    instagramLatest,
+    instagramPrevious,
+    tiktokLatest,
+    tiktokPrevious,
+    ditbinmasPersonnelCount,
     formatNumber,
     formatPercentValue,
   ]);
 
-  const likesSummaryData = useMemo(() => ({
-    ...weeklyLikesSummary,
-    totals: {
-      ...weeklyLikesSummary.totals,
-      totalPersonnel: resolvedTotalPersonnel,
-      activePersonnel: totalActive,
-      complianceRate,
-      averageComplianceRate:
-        weeklyLikesSummary.totals?.averageComplianceRate ?? complianceRate ?? 0,
-    },
-  }), [weeklyLikesSummary, resolvedTotalPersonnel, totalActive, complianceRate]);
-
-  const weeklyLabelOverrides = useMemo(
-    () => ({
-      likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
-      commentContributorsDescription:
-        "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
-      tableTitle: "Distribusi Engagement Per Satker",
-      tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
-    }),
-    [],
-  );
-
-  const weekDescriptor = useMemo(() => {
-    const weekLabel = resolveActiveLabel(WEEK_OPTIONS, selectedWeek);
-    const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth);
-    if (!weekLabel || !monthLabel) {
-      return "Periode terpilih";
-    }
-    return `${weekLabel} ${monthLabel} ${selectedYear}`;
-  }, [selectedWeek, selectedMonth, selectedYear]);
-
-  const weekRangeLabel = useMemo(
-    () => resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear),
-    [selectedWeek, selectedMonth, selectedYear],
-  );
-
-  const weeklyPeriodLabel = useMemo(() => {
-    if (!weeklyRange) {
-      return weekDescriptor;
-    }
-    const formattedRange = formatWeekRangeLabel(weeklyRange.start, weeklyRange.end);
-    return `${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${formattedRange} ${selectedYear}`;
-  }, [weeklyRange, weekDescriptor, selectedWeek, selectedYear]);
-
-  const weeklyDistributionMeta = useMemo(() => {
-    if (!weeklyRange) {
-      return null;
-    }
-    const formattedRange = formatWeekRangeLabel(weeklyRange.start, weeklyRange.end);
-    return {
-      note: `${formattedRange} ${selectedYear} · ${formatNumber(totalPosts, {
-        maximumFractionDigits: 0,
-      })} konten dipantau`,
-    };
-  }, [weeklyRange, selectedYear, totalPosts, formatNumber]);
-
-  const weeklyPostTotals = useMemo(
-    () => ({
-      instagram: weeklyInstagramPosts.length,
-      tiktok: weeklyTiktokPosts.length,
-    }),
-    [weeklyInstagramPosts.length, weeklyTiktokPosts.length],
-  );
-
-  const loadingState = monthlyState.loading;
-  const fetchError = monthlyState.error;
-
-  const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth);
+  const {
+    likesSummaryData,
+    summaryCards: weeklySummaryCards,
+    labelOverrides: weeklyLabelOverrides,
+    personnelDistribution: weeklyPersonnelDistribution,
+    distributionMeta: weeklyDistributionMeta,
+    postTotals: weeklyPostTotals,
+    periodLabel: weeklyPeriodLabel,
+    weekDescriptor,
+  } = weeklyPlatformSnapshot;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-24">
-      <div className="mx-auto w-full max-w-6xl space-y-10 px-4 pt-8 sm:px-6 lg:px-8">
-        <header className="rounded-3xl border border-emerald-200/40 bg-gradient-to-br from-emerald-100/20 via-emerald-50/10 to-sky-100/10 p-8 shadow-[0_30px_70px_rgba(16,185,129,0.22)] backdrop-blur">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-200/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200">
-                Ditbinmas Weekly Report
-              </div>
-              <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
-                Laporan Mingguan Engagement Ditbinmas
-              </h1>
-              <p className="max-w-2xl text-sm text-emerald-100/80">
-                Halaman ini merangkum analisis mingguan atas pelaksanaan likes dan komentar oleh Personil Ditbinmas,
-                sehingga Anda dapat langsung melihat perkembangan interaksi dari pekan ke pekan berdasarkan pilihan
-                periode di bawah.
-              </p>
-            </div>
-            <div className="w-full rounded-2xl border border-emerald-200/30 bg-white/90 p-6 text-sm shadow-lg sm:w-80">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.28em] text-emerald-800">
-                <span>Periode</span>
-                <span>{selectedYear}</span>
-              </div>
-              <div className="mt-4 grid gap-3">
-                <label className="flex flex-col text-sm font-medium text-slate-700">
-                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Minggu</span>
-                  <select
-                    value={selectedWeek}
-                    onChange={(event) => setSelectedWeek(event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-emerald-200/70 bg-white px-4 py-2 text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
-                  >
-                    {WEEK_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col text-sm font-medium text-slate-700">
-                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Bulan</span>
-                  <select
-                    value={selectedMonth}
-                    onChange={(event) => setSelectedMonth(event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-emerald-200/70 bg-white px-4 py-2 text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
-                  >
-                    {MONTH_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col text-sm font-medium text-slate-700">
-                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Tahun</span>
-                  <select
-                    value={selectedYear}
-                    onChange={(event) => setSelectedYear(event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-emerald-200/70 bg-white px-4 py-2 text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/60"
-                  >
-                    {YEAR_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="mt-4 rounded-xl bg-emerald-50/70 px-4 py-3 text-xs text-emerald-700">
-                <p className="font-semibold text-emerald-900">Ringkasan</p>
-                <p className="mt-1 leading-relaxed text-emerald-700/80">
-                  {weekDescriptor} · {monthLabel} {selectedYear}
-                  {weekRangeLabel ? ` · Rentang ${weekRangeLabel}` : ""}
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-slate-800">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-sky-200/50 blur-3xl" />
+        <div className="absolute -right-12 bottom-12 h-80 w-80 rounded-full bg-emerald-200/40 blur-3xl" />
+        <div className="absolute inset-x-16 bottom-10 h-64 rounded-full bg-[radial-gradient(circle_at_center,_rgba(224,242,254,0.45),_rgba(255,255,255,0))] blur-2xl" />
+      </div>
+
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16">
+        <section className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white/80 p-8 shadow-xl backdrop-blur">
+          <div className="pointer-events-none absolute -top-16 right-12 h-40 w-40 rounded-full bg-sky-100/70 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-20 left-14 h-44 w-44 rounded-full bg-emerald-100/70 blur-3xl" />
+
+          <div className="relative flex flex-col gap-6">
+            <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-2">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600">
+                  Ditbinmas Insight
+                </span>
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                  Laporan Mingguan Engagement Ditbinmas
+                </h1>
+                <p className="max-w-2xl text-sm text-slate-600">
+                  Halaman ini merangkum analisis mingguan atas pelaksanaan likes dan komentar oleh Personil Ditbinmas, sehingga Anda dapat langsung melihat perkembangan interaksi dari pekan ke pekan berdasarkan pilihan periode di bawah.
                 </p>
               </div>
-            </div>
+
+              <div className="flex flex-col gap-3 sm:items-end">
+                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                  Show Data By
+                </span>
+                <div className="grid w-full gap-2 sm:auto-cols-max sm:grid-flow-col sm:justify-end">
+                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Minggu
+                    <select
+                      className="w-full min-w-[140px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      value={selectedWeek}
+                      onChange={(event) => setSelectedWeek(event.target.value)}
+                    >
+                      {WEEK_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Bulan
+                    <select
+                      className="w-full min-w-[160px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      value={selectedMonth}
+                      onChange={(event) => setSelectedMonth(event.target.value)}
+                    >
+                      {MONTH_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Tahun
+                    <select
+                      className="w-full min-w-[130px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      value={selectedYear}
+                      onChange={(event) => setSelectedYear(event.target.value)}
+                    >
+                      {YEAR_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </header>
           </div>
-        </header>
+        </section>
 
         {isDitbinmasAuthorized ? (
           <>
@@ -1081,7 +1037,7 @@ export default function WeeklyReportPageClient() {
                   </p>
                 </div>
                 <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
-                  {weeklyPeriodLabel}
+                  {weeklyPeriodLabel || `${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(YEAR_OPTIONS, selectedYear)}`}
                 </div>
               </div>
 
@@ -1089,25 +1045,25 @@ export default function WeeklyReportPageClient() {
                 <PlatformEngagementTrendChart
                   platformKey="instagram"
                   platformLabel="Instagram"
-                  series={instagramTrendData.series}
+                  series={mockWeeklySeries}
                   latest={instagramLatest}
                   previous={instagramPrevious}
-                  loading={loadingState}
-                  error={fetchError}
+                  loading={false}
+                  error=""
                   formatNumber={formatNumber}
-                  personnelCount={resolvedTotalPersonnel || undefined}
+                  personnelCount={ditbinmasPersonnelCount ?? undefined}
                 />
 
                 <PlatformEngagementTrendChart
                   platformKey="tiktok"
                   platformLabel="TikTok"
-                  series={tiktokTrendData.series}
+                  series={tiktokSeries}
                   latest={tiktokLatest}
                   previous={tiktokPrevious}
-                  loading={loadingState}
-                  error={fetchError}
+                  loading={false}
+                  error=""
                   formatNumber={formatNumber}
-                  personnelCount={resolvedTotalPersonnel || undefined}
+                  personnelCount={ditbinmasPersonnelCount ?? undefined}
                 />
               </div>
             </section>
@@ -1129,7 +1085,7 @@ export default function WeeklyReportPageClient() {
                       Detail Kinerja Kanal Mingguan
                     </h2>
                     <p className="max-w-2xl text-sm leading-relaxed text-emerald-800/80">
-                      Menampilkan distribusi likes dan komentar per satfung Ditbinmas selama {weekDescriptor}, sehingga perkembangan kontribusi personil mudah dipantau.
+                      Menampilkan distribusi likes dan komentar per satfung Ditbinmas selama {weekDescriptor || "periode terpilih"}, sehingga perkembangan kontribusi personil mudah dipantau.
                     </p>
                     <p className="text-xs text-emerald-700/70">
                       Data diringkas otomatis mengikuti pilihan minggu, bulan, dan tahun pada bagian atas halaman.
@@ -1142,36 +1098,22 @@ export default function WeeklyReportPageClient() {
                 </div>
 
                 <div className="rounded-3xl border border-white/80 bg-white/85 p-6 shadow-[0_24px_50px_rgba(16,185,129,0.18)] backdrop-blur">
-                  {loadingState ? (
-                    <div className="flex h-32 items-center justify-center text-sm text-emerald-700/70">
-                      Menyiapkan ringkasan mingguan…
-                    </div>
-                  ) : (
-                    <PlatformLikesSummary
-                      data={{
-                        ...likesSummaryData,
-                        lastUpdated: likesSummaryData.lastUpdated ?? weeklyRange?.end ?? new Date(),
-                      }}
-                      formatNumber={formatNumber}
-                      formatPercent={formatPercentValue}
-                      personnelActivity={null}
-                      postTotals={weeklyPostTotals}
-                      summaryCards={weeklySummaryCards}
-                      labelOverrides={weeklyLabelOverrides}
-                      personnelDistribution={null}
-                      personnelDistributionMeta={weeklyDistributionMeta}
-                      hiddenSections={{
-                        topCompliance: true,
-                        topCommentPersonnel: true,
-                        topLikesPersonnel: true,
-                      }}
-                    />
-                  )}
-                  {fetchError ? (
-                    <p className="mt-4 text-center text-xs font-semibold text-rose-600">
-                      {fetchError}
-                    </p>
-                  ) : null}
+                  <PlatformLikesSummary
+                    data={likesSummaryData}
+                    formatNumber={formatNumber}
+                    formatPercent={formatPercentValue}
+                    personnelActivity={null}
+                    postTotals={weeklyPostTotals}
+                    summaryCards={weeklySummaryCards}
+                    labelOverrides={weeklyLabelOverrides}
+                    personnelDistribution={weeklyPersonnelDistribution}
+                    personnelDistributionMeta={weeklyDistributionMeta}
+                    hiddenSections={{
+                      topCompliance: true,
+                      topCommentPersonnel: true,
+                      topLikesPersonnel: true,
+                    }}
+                  />
                 </div>
               </div>
             </section>
@@ -1191,4 +1133,3 @@ export default function WeeklyReportPageClient() {
     </main>
   );
 }
-
