@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import useSWR from "swr";
 import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { getUserDirectory } from "@/utils/api";
 
 const WEEK_OPTIONS = [
   { label: "Minggu 1", value: "1" },
@@ -49,7 +51,7 @@ const getCurrentSelections = () => {
 
 export default function WeeklyReportPageClient() {
   useRequireAuth();
-  const { role, clientId } = useAuth();
+  const { token, role, clientId } = useAuth();
   const [{ week: defaultWeek, month: defaultMonth, year: defaultYear }] = useState(() => getCurrentSelections());
   const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
@@ -83,6 +85,58 @@ export default function WeeklyReportPageClient() {
       },
     [],
   );
+
+  const { data: ditbinmasDirectory } = useSWR(
+    token && isDitbinmasAuthorized ? ["ditbinmas-directory", token] : null,
+    ([, tk]) => getUserDirectory(tk, "DITBINMAS"),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    },
+  );
+
+  const ditbinmasPersonnelCount = useMemo(() => {
+    const raw = ditbinmasDirectory?.data ?? ditbinmasDirectory?.users ?? ditbinmasDirectory;
+    if (!Array.isArray(raw)) {
+      return null;
+    }
+
+    const normalizedRoleValue = "ditbinmas";
+    const normalizedClientValue = "DITBINMAS";
+
+    return raw.filter((entry) => {
+      const entryRole = String(
+        entry?.role ||
+          entry?.user_role ||
+          entry?.userRole ||
+          entry?.roleName ||
+          "",
+      )
+        .trim()
+        .toLowerCase();
+
+      const entryClientId = String(
+        entry?.client_id ||
+          entry?.clientId ||
+          entry?.clientID ||
+          entry?.client ||
+          "",
+      )
+        .trim()
+        .toUpperCase();
+
+      return entryRole === normalizedRoleValue && entryClientId === normalizedClientValue;
+    }).length;
+  }, [ditbinmasDirectory]);
+
+  const ditbinmasPersonnelDescriptor = useMemo(() => {
+    const resolvedLabel = "Personil Ditbinmas";
+    if (ditbinmasPersonnelCount === null || ditbinmasPersonnelCount === undefined) {
+      return resolvedLabel;
+    }
+
+    return `${formatNumber(ditbinmasPersonnelCount, { maximumFractionDigits: 0 })} ${resolvedLabel}`;
+  }, [ditbinmasPersonnelCount, formatNumber]);
 
   const mockWeeklySeries = useMemo(() => {
     const base = Number(selectedWeek);
@@ -243,7 +297,7 @@ export default function WeeklyReportPageClient() {
                   Tren Interaksi Mingguan
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok oleh Jumlah Personil Ditbinmas.
+                  Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok oleh {ditbinmasPersonnelDescriptor}.
                 </p>
               </div>
               <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
@@ -261,6 +315,7 @@ export default function WeeklyReportPageClient() {
                 loading={false}
                 error=""
                 formatNumber={formatNumber}
+                personnelCount={ditbinmasPersonnelCount ?? undefined}
               />
 
               <PlatformEngagementTrendChart
@@ -272,6 +327,7 @@ export default function WeeklyReportPageClient() {
                 loading={false}
                 error=""
                 formatNumber={formatNumber}
+                personnelCount={ditbinmasPersonnelCount ?? undefined}
               />
             </div>
           </section>

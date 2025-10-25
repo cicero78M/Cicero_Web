@@ -34,6 +34,8 @@ type PlatformEngagementTrendChartProps = {
   loading?: boolean;
   error?: string;
   formatNumber?: FormatNumberFn;
+  personnelCount?: number | null;
+  personnelLabel?: string | null;
 };
 
 const defaultNumberFormatter: FormatNumberFn = (value, options) => {
@@ -79,6 +81,8 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   loading = false,
   error = "",
   formatNumber = defaultNumberFormatter,
+  personnelCount = null,
+  personnelLabel = null,
 }) => {
   if (loading) {
     return (
@@ -304,17 +308,27 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
 
     const sentences: string[] = [];
 
+    const numericPersonnelCount = Number(personnelCount);
+    const normalizedPersonnelCount = Number.isFinite(numericPersonnelCount)
+      ? Math.max(0, numericPersonnelCount)
+      : null;
+    const basePersonnelLabel = String(personnelLabel ?? "Personil Ditbinmas").trim() || "Personil Ditbinmas";
+    const personnelDescriptor =
+      normalizedPersonnelCount !== null
+        ? `${formatInteger(normalizedPersonnelCount)} ${basePersonnelLabel}`
+        : basePersonnelLabel;
+
     if (postsNow > 0) {
       const averageSentence =
         averageNow !== null
           ? ` dengan rata-rata ${formatAverage(averageNow)} interaksi per konten`
           : "";
       sentences.push(
-        `Minggu ini, ${platformDescriptor} oleh Personil Ditbinmas menghasilkan ${formatInteger(interactionsNow)} interaksi dari ${formatInteger(postsNow)} konten${averageSentence}.`,
+        `Minggu ini, ${platformDescriptor} oleh ${personnelDescriptor} menghasilkan ${formatInteger(interactionsNow)} interaksi dari ${formatInteger(postsNow)} konten${averageSentence}.`,
       );
     } else {
       sentences.push(
-        `Minggu ini, ${platformDescriptor} oleh Personil Ditbinmas mencatat ${formatInteger(interactionsNow)} interaksi meski belum ada konten baru.`,
+        `Minggu ini, ${platformDescriptor} oleh ${personnelDescriptor} mencatat ${formatInteger(interactionsNow)} interaksi meski belum ada konten baru.`,
       );
     }
 
@@ -326,7 +340,9 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       engagementDetails.push(`${formatInteger(commentsNow)} komentar`);
     }
     if (engagementDetails.length > 0) {
-      sentences.push(`Keterlibatan tersebut bersumber dari ${engagementDetails.join(" dan ")} yang dihimpun Personil Ditbinmas.`);
+      sentences.push(
+        `Keterlibatan tersebut bersumber dari ${engagementDetails.join(" dan ")} yang dihimpun oleh ${personnelDescriptor}.`,
+      );
     }
 
     if (previousPoint) {
