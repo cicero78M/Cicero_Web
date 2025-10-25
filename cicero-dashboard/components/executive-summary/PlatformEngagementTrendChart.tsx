@@ -295,6 +295,7 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       });
 
     const platformName = platformLabel ?? "Platform";
+    const platformDescriptor = `Pelaksanaan Likes dan Komentar pada ${platformName}`;
     const interactionsNow = latestPoint.interactions ?? 0;
     const postsNow = latestPoint.posts ?? 0;
     const likesNow = shouldShowLikes ? latestPoint.likes ?? 0 : null;
@@ -309,11 +310,11 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
           ? ` dengan rata-rata ${formatAverage(averageNow)} interaksi per konten`
           : "";
       sentences.push(
-        `Minggu ini, ${platformName} meraih ${formatInteger(interactionsNow)} interaksi dari ${formatInteger(postsNow)} konten${averageSentence}.`,
+        `Minggu ini, ${platformDescriptor} oleh Personil Ditbinmas menghasilkan ${formatInteger(interactionsNow)} interaksi dari ${formatInteger(postsNow)} konten${averageSentence}.`,
       );
     } else {
       sentences.push(
-        `Minggu ini, ${platformName} mencatat ${formatInteger(interactionsNow)} interaksi meski belum ada konten baru.`,
+        `Minggu ini, ${platformDescriptor} oleh Personil Ditbinmas mencatat ${formatInteger(interactionsNow)} interaksi meski belum ada konten baru.`,
       );
     }
 
@@ -325,7 +326,7 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       engagementDetails.push(`${formatInteger(commentsNow)} komentar`);
     }
     if (engagementDetails.length > 0) {
-      sentences.push(`Engagement tersebut datang dari ${engagementDetails.join(" dan ")}.`);
+      sentences.push(`Keterlibatan tersebut bersumber dari ${engagementDetails.join(" dan ")} yang dihimpun Personil Ditbinmas.`);
     }
 
     if (previousPoint) {
@@ -342,8 +343,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
     } else {
       sentences.push("Belum ada pembanding minggu lalu, jadikan capaian ini pijakan untuk ide berikutnya.");
     }
-
-    sentences.push("Terus hadirkan konten yang dekat dengan audiens!");
 
     return sentences.join(" ");
   })();

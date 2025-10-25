@@ -136,6 +136,24 @@ export default function WeeklyReportPageClient() {
   const tiktokPrevious = tiktokSeries[tiktokSeries.length - 2] ?? null;
 
   const resolveActiveLabel = (options, value) => options.find((option) => option.value === value)?.label ?? "";
+  const resolveWeekDateRange = (weekValue, monthValue, yearValue) => {
+    const weekNumber = Number(weekValue);
+    const monthNumber = Number(monthValue);
+    const yearNumber = Number(yearValue);
+
+    if (!Number.isFinite(weekNumber) || !Number.isFinite(monthNumber) || !Number.isFinite(yearNumber)) {
+      return "";
+    }
+
+    const normalizedWeek = Math.min(Math.max(Math.floor(weekNumber), 1), 4);
+    const normalizedMonth = Math.min(Math.max(Math.floor(monthNumber), 1), 12);
+    const startDay = 1 + (normalizedWeek - 1) * 7;
+    const daysInMonth = new Date(yearNumber, normalizedMonth, 0).getDate();
+    const endDay = Math.min(startDay + 6, daysInMonth);
+
+    const formatDay = (day) => String(day).padStart(2, "0");
+    return `${formatDay(startDay)}-${formatDay(endDay)}`;
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-slate-800">
@@ -160,7 +178,7 @@ export default function WeeklyReportPageClient() {
                   Laporan Mingguan Engagement Ditbinmas
                 </h1>
                 <p className="max-w-2xl text-sm text-slate-600">
-                  Pantau progres engagement lintas satfung Ditbinmas dengan nuansa pastel yang konsisten dengan dashboard utama. Gunakan filter di bawah ini untuk menyesuaikan periode agregasi.
+                  Halaman ini merangkum analisis mingguan atas pelaksanaan likes dan komentar oleh Personil Ditbinmas, sehingga Anda dapat langsung melihat perkembangan interaksi dari pekan ke pekan berdasarkan pilihan periode di bawah.
                 </p>
               </div>
 
@@ -225,11 +243,11 @@ export default function WeeklyReportPageClient() {
                   Tren Interaksi Mingguan
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok.
+                  Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok oleh Jumlah Personil Ditbinmas.
                 </p>
               </div>
               <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
-                {`${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(YEAR_OPTIONS, selectedYear)}`}
+                {`${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(YEAR_OPTIONS, selectedYear)}`}
               </div>
             </div>
 
