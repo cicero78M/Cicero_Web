@@ -1,40 +1,141 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { cn } from "@/lib/utils";
 
-const VIEW_OPTIONS = [
-  { label: "Week", value: "week" },
-  { label: "Month", value: "month" },
-  { label: "Year", value: "year" },
+const WEEK_OPTIONS = [
+  { label: "Minggu 1", value: "1" },
+  { label: "Minggu 2", value: "2" },
+  { label: "Minggu 3", value: "3" },
+  { label: "Minggu 4", value: "4" },
 ];
+
+const MONTH_OPTIONS = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+].map((label, index) => ({ label, value: String(index + 1) }));
+
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => {
+  const year = 2025 + index;
+  return { label: String(year), value: String(year) };
+});
+
+const getCurrentSelections = () => {
+  const now = new Date();
+  const weekOfMonth = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)));
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+
+  return {
+    week: WEEK_OPTIONS.find((option) => option.value === String(weekOfMonth))?.value ?? WEEK_OPTIONS[0].value,
+    month:
+      MONTH_OPTIONS.find((option) => option.value === String(month))?.value ?? MONTH_OPTIONS[0].value,
+    year:
+      YEAR_OPTIONS.find((option) => option.value === String(year))?.value ?? YEAR_OPTIONS[0].value,
+  };
+};
 
 export default function WeeklyReportPageClient() {
   useRequireAuth();
   const { role, clientId } = useAuth();
-  const [activeRange, setActiveRange] = useState("week");
+  const [{ week: defaultWeek, month: defaultMonth, year: defaultYear }] = useState(() => getCurrentSelections());
+  const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
 
   const normalizedRole = useMemo(() => {
     if (role) return String(role).trim().toLowerCase();
     if (typeof window === "undefined") return "";
-    return String(window.localStorage.getItem("user_role") || "")
-      .trim()
-      .toLowerCase();
+    return String(window.localStorage.getItem("user_role") || "").trim().toLowerCase();
   }, [role]);
 
   const normalizedClientId = useMemo(() => {
     if (clientId) return String(clientId).trim().toUpperCase();
     if (typeof window === "undefined") return "";
-    return String(window.localStorage.getItem("client_id") || "")
-      .trim()
-      .toUpperCase();
+    return String(window.localStorage.getItem("client_id") || "").trim().toUpperCase();
   }, [clientId]);
 
   const isDitbinmasAuthorized =
-    normalizedRole === "ditbinmas" || normalizedClientId === "DITBINMAS";
+    normalizedRole === "ditbinmas" && normalizedClientId === "DITBINMAS";
+
+  const formatNumber = useMemo(
+    () =>
+      (value, options) => {
+        const numericValue = Number.isFinite(value) ? Number(value) : 0;
+        const formatter = new Intl.NumberFormat("id-ID", {
+          maximumFractionDigits: 0,
+          minimumFractionDigits: 0,
+          ...(options ?? {}),
+        });
+        return formatter.format(Math.max(0, numericValue));
+      },
+    [],
+  );
+
+  const mockWeeklySeries = useMemo(() => {
+    const base = Number(selectedWeek);
+    const monthLabel = MONTH_OPTIONS.find((option) => option.value === selectedMonth)?.label ?? "";
+
+    return [
+      {
+        key: `${selectedYear}-W${Math.max(base - 2, 1)}`,
+        label: `Minggu ${Math.max(base - 2, 1)} ${monthLabel}`,
+        interactions: Math.max(0, 1200 - base * 45),
+        posts: Math.max(0, 18 - base),
+        likes: Math.max(0, 780 - base * 28),
+        comments: Math.max(0, 420 - base * 9),
+      },
+      {
+        key: `${selectedYear}-W${Math.max(base - 1, 1)}`,
+        label: `Minggu ${Math.max(base - 1, 1)} ${monthLabel}`,
+        interactions: Math.max(0, 1340 - base * 30),
+        posts: Math.max(0, 19 - base),
+        likes: Math.max(0, 860 - base * 24),
+        comments: Math.max(0, 470 - base * 7),
+      },
+      {
+        key: `${selectedYear}-W${base}`,
+        label: `Minggu ${base} ${monthLabel}`,
+        interactions: Math.max(0, 1460 - base * 18),
+        posts: Math.max(0, 20 - base),
+        likes: Math.max(0, 930 - base * 18),
+        comments: Math.max(0, 520 - base * 5),
+      },
+    ];
+  }, [selectedWeek, selectedMonth, selectedYear]);
+
+  const instagramLatest = mockWeeklySeries[mockWeeklySeries.length - 1] ?? null;
+  const instagramPrevious = mockWeeklySeries[mockWeeklySeries.length - 2] ?? null;
+
+  const tiktokSeries = useMemo(
+    () =>
+      mockWeeklySeries.map((point, index) => ({
+        ...point,
+        key: `${point.key}-tt`,
+        label: point.label?.replace("Minggu", "TikTok Minggu"),
+        interactions: Math.max(0, (point.interactions ?? 0) - 120 + index * 18),
+        likes: Math.max(0, (point.likes ?? 0) - 160 + index * 14),
+        comments: Math.max(0, (point.comments ?? 0) - 70 + index * 10),
+      })),
+    [mockWeeklySeries],
+  );
+
+  const tiktokLatest = tiktokSeries[tiktokSeries.length - 1] ?? null;
+  const tiktokPrevious = tiktokSeries[tiktokSeries.length - 2] ?? null;
+
+  const resolveActiveLabel = (options, value) => options.find((option) => option.value === value)?.label ?? "";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-slate-800">
@@ -63,30 +164,53 @@ export default function WeeklyReportPageClient() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 sm:items-end">
+              <div className="flex flex-col gap-3 sm:items-end">
                 <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                   Show Data By
                 </span>
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-slate-50/80 p-1">
-                  {VIEW_OPTIONS.map(({ label, value }) => {
-                    const isActive = activeRange === value;
-                    return (
-                      <Button
-                        key={value}
-                        type="button"
-                        aria-pressed={isActive}
-                        onClick={() => setActiveRange(value)}
-                        className={cn(
-                          "rounded-full px-5 py-2 text-sm font-semibold transition-all",
-                          isActive
-                            ? "bg-[color:var(--cicero-soft-emerald-ink)] text-white shadow-[0_10px_30px_rgba(45,212,191,0.35)] hover:bg-[color:var(--cicero-soft-emerald-ink)]"
-                            : "border border-transparent bg-white/70 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700",
-                        )}
-                      >
-                        {label}
-                      </Button>
-                    );
-                  })}
+                <div className="grid w-full gap-2 sm:auto-cols-max sm:grid-flow-col sm:justify-end">
+                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Minggu
+                    <select
+                      className="w-full min-w-[140px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      value={selectedWeek}
+                      onChange={(event) => setSelectedWeek(event.target.value)}
+                    >
+                      {WEEK_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Bulan
+                    <select
+                      className="w-full min-w-[160px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      value={selectedMonth}
+                      onChange={(event) => setSelectedMonth(event.target.value)}
+                    >
+                      {MONTH_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Tahun
+                    <select
+                      className="w-full min-w-[130px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      value={selectedYear}
+                      onChange={(event) => setSelectedYear(event.target.value)}
+                    >
+                      {YEAR_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </div>
             </header>
@@ -94,65 +218,43 @@ export default function WeeklyReportPageClient() {
         </section>
 
         {isDitbinmasAuthorized ? (
-          <section className="grid gap-6 lg:grid-cols-2">
-            <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-white/70 p-6 shadow-lg backdrop-blur">
-              <div className="pointer-events-none absolute -right-16 top-12 h-36 w-36 rounded-full bg-emerald-100/80 blur-3xl" />
-              <div className="pointer-events-none absolute -left-14 bottom-10 h-32 w-32 rounded-full bg-sky-100/60 blur-2xl" />
-              <div className="relative space-y-3">
-                <h2 className="text-lg font-semibold text-slate-900">
-                  Ringkasan KPI Ditbinmas ({VIEW_OPTIONS.find((opt) => opt.value === activeRange)?.label})
+          <section className="space-y-6 rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-white via-emerald-50/80 to-sky-50/80 p-6 shadow-[0_20px_45px_rgba(45,212,191,0.15)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-emerald-600">
+                  Tren Interaksi Mingguan
                 </h2>
-                <p className="text-sm leading-relaxed text-slate-600">
-                  Placeholder komponen rekap engagement akan ditempatkan di sini. Setiap grafik akan menyorot tingkat kepatuhan likes, komentar, dan amplifikasi lintas satfung sesuai periode terpilih.
+                <p className="text-sm text-slate-600">
+                  Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok.
                 </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-sky-100 bg-white/80 p-4 text-sm text-slate-700 shadow-inner">
-                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
-                      Capaian Likes
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-900">—%</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Akan otomatis terisi berdasarkan rekap harian Ditbinmas.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-sky-100 bg-white/80 p-4 text-sm text-slate-700 shadow-inner">
-                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-500">
-                      Partisipasi Komentar
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-900">—%</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Placeholder untuk insight komentar lintas polres.
-                    </p>
-                  </div>
-                </div>
+              </div>
+              <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
+                {`${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(YEAR_OPTIONS, selectedYear)}`}
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white/70 p-6 shadow-lg backdrop-blur">
-              <div className="pointer-events-none absolute -top-12 left-14 h-32 w-32 rounded-full bg-sky-100/70 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-12 right-14 h-36 w-36 rounded-full bg-emerald-100/70 blur-3xl" />
-              <div className="relative space-y-4">
-                <h2 className="text-lg font-semibold text-slate-900">
-                  Agenda Tindak Lanjut
-                </h2>
-                <p className="text-sm text-slate-600">
-                  Daftar tindakan korektif dan apresiasi akan muncul di sini berdasarkan data engagement mingguan. Gunakan insight ini untuk memandu briefing Ditbinmas berikutnya.
-                </p>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
-                    <span className="text-lg">📈</span>
-                    <span>Placeholder analitik tren kenaikan interaksi polres prioritas.</span>
-                  </li>
-                  <li className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-3">
-                    <span className="text-lg">🛠️</span>
-                    <span>Rencana intervensi bagi satfung dengan capaian engagement terendah.</span>
-                  </li>
-                  <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
-                    <span className="text-lg">🤝</span>
-                    <span>Kolaborasi lintas kanal yang akan diprioritaskan minggu depan.</span>
-                  </li>
-                </ul>
-              </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PlatformEngagementTrendChart
+                platformKey="instagram"
+                platformLabel="Instagram"
+                series={mockWeeklySeries}
+                latest={instagramLatest}
+                previous={instagramPrevious}
+                loading={false}
+                error=""
+                formatNumber={formatNumber}
+              />
+
+              <PlatformEngagementTrendChart
+                platformKey="tiktok"
+                platformLabel="TikTok"
+                series={tiktokSeries}
+                latest={tiktokLatest}
+                previous={tiktokPrevious}
+                loading={false}
+                error=""
+                formatNumber={formatNumber}
+              />
             </div>
           </section>
         ) : (
@@ -162,7 +264,7 @@ export default function WeeklyReportPageClient() {
               Akses Terbatas
             </h2>
             <p className="mt-2 text-sm">
-              Laporan mingguan Ditbinmas hanya dapat diakses oleh peran Ditbinmas atau client ID DITBINMAS. Silakan hubungi admin untuk meminta akses.
+              Laporan mingguan Ditbinmas hanya dapat diakses oleh pengguna dengan peran dan client ID Ditbinmas. Silakan hubungi admin untuk meminta akses.
             </p>
           </section>
         )}
