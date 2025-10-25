@@ -282,6 +282,10 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
     throw new Error("Periode mingguan tidak valid");
   }
 
+  const normalizedClientId =
+    typeof clientId === "string" ? clientId.trim().toUpperCase() : "";
+  const resolvedClientId = normalizedClientId || "DITBINMAS";
+
   const monthStart = new Date(Date.UTC(yearNumber, monthNumber - 1, 1));
   const monthEnd = new Date(Date.UTC(yearNumber, monthNumber, 0));
 
@@ -291,7 +295,7 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
     safeFetch(() =>
       getRekapLikesIG(
         token,
-        clientId,
+        resolvedClientId,
         "harian",
         undefined,
         toDateString(monthStart),
@@ -301,7 +305,7 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
     safeFetch(() =>
       getRekapKomentarTiktok(
         token,
-        clientId,
+        resolvedClientId,
         "harian",
         undefined,
         toDateString(monthStart),
@@ -309,13 +313,13 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
       ),
     ),
     safeFetch(() =>
-      getInstagramPosts(token, clientId, {
+      getInstagramPosts(token, resolvedClientId, {
         startDate: toDateString(monthStart),
         endDate: toDateString(monthEnd),
       }),
     ),
     safeFetch(() =>
-      getTiktokPosts(token, clientId, {
+      getTiktokPosts(token, resolvedClientId, {
         startDate: toDateString(monthStart),
         endDate: toDateString(monthEnd),
       }),
@@ -440,13 +444,13 @@ export default function WeeklyReportPageClient() {
   }, [role]);
 
   const normalizedClientId = useMemo(() => {
-    if (clientId) return String(clientId).trim().toUpperCase();
+    if (clientId) return String(clientId).trim().toLowerCase();
     if (typeof window === "undefined") return "";
-    return String(window.localStorage.getItem("client_id") || "").trim().toUpperCase();
+    return String(window.localStorage.getItem("client_id") || "").trim().toLowerCase();
   }, [clientId]);
 
   const isDitbinmasAuthorized =
-    normalizedRole === "ditbinmas" && normalizedClientId === "DITBINMAS";
+    normalizedRole === "ditbinmas" && normalizedClientId === "ditbinmas";
 
   const formatNumber = useMemo(
     () =>
