@@ -367,20 +367,60 @@ export default function WeeklyReportPageClient() {
   );
 
   const ditbinmasPersonnelCount = useMemo(() => {
-    const raw = ditbinmasDirectory?.data ?? ditbinmasDirectory?.users ?? ditbinmasDirectory;
-    if (!Array.isArray(raw)) {
+    if (!ditbinmasDirectory) {
       return null;
     }
 
+    const possibleCollections = [
+      ditbinmasDirectory,
+      ditbinmasDirectory?.data,
+      ditbinmasDirectory?.users,
+      ditbinmasDirectory?.payload,
+      ditbinmasDirectory?.data?.data,
+      ditbinmasDirectory?.data?.users,
+    ];
+
+    const raw = possibleCollections.find((collection) => Array.isArray(collection));
+
+    const resolvedEntries = Array.isArray(raw) ? raw : [];
     const normalizedRoleValue = "ditbinmas";
     const normalizedClientValue = "DITBINMAS";
 
-    return raw.filter((entry) => {
+    if (!resolvedEntries.length) {
+      const possibleTotals = [
+        ditbinmasDirectory?.total,
+        ditbinmasDirectory?.count,
+        ditbinmasDirectory?.data?.total,
+        ditbinmasDirectory?.data?.count,
+        ditbinmasDirectory?.data?.length,
+        ditbinmasDirectory?.users?.length,
+      ];
+      const numericTotal = possibleTotals.find((value) =>
+        typeof value === "number" && Number.isFinite(value),
+      );
+      if (typeof numericTotal === "number") {
+        return numericTotal;
+      }
+      return null;
+    }
+
+    const resolveEntryIdentifier = (entry) =>
+      String(
+        entry?.user_id ||
+          entry?.userId ||
+          entry?.userID ||
+          entry?.id ||
+          entry?.email ||
+          JSON.stringify(entry),
+      );
+
+    const matchByRoleAndClient = resolvedEntries.filter((entry) => {
       const entryRole = String(
         entry?.role ||
           entry?.user_role ||
           entry?.userRole ||
           entry?.roleName ||
+          entry?.role_name ||
           "",
       )
         .trim()
@@ -391,13 +431,57 @@ export default function WeeklyReportPageClient() {
           entry?.clientId ||
           entry?.clientID ||
           entry?.client ||
+          entry?.client_code ||
           "",
       )
         .trim()
         .toUpperCase();
 
-      return entryRole === normalizedRoleValue && entryClientId === normalizedClientValue;
-    }).length;
+      const matchesRole =
+        entryRole === normalizedRoleValue || entryRole.includes(normalizedRoleValue);
+      const matchesClient =
+        entryClientId === normalizedClientValue ||
+        entryClientId.includes(normalizedClientValue);
+
+      return matchesRole && matchesClient;
+    });
+
+    if (matchByRoleAndClient.length > 0) {
+      const uniqueRoleClientEntries = new Set(
+        matchByRoleAndClient.map((entry) => resolveEntryIdentifier(entry)),
+      );
+      return uniqueRoleClientEntries.size || matchByRoleAndClient.length;
+    }
+
+    const matchByClientOnly = resolvedEntries.filter((entry) => {
+      const entryClientId = String(
+        entry?.client_id ||
+          entry?.clientId ||
+          entry?.clientID ||
+          entry?.client ||
+          entry?.client_code ||
+          "",
+      )
+        .trim()
+        .toUpperCase();
+
+      return (
+        entryClientId === normalizedClientValue || entryClientId.includes(normalizedClientValue)
+      );
+    });
+
+    if (matchByClientOnly.length > 0) {
+      const uniqueClientEntries = new Set(
+        matchByClientOnly.map((entry) => resolveEntryIdentifier(entry)),
+      );
+      return uniqueClientEntries.size || matchByClientOnly.length;
+    }
+
+    const uniqueEntries = new Set(
+      resolvedEntries.map((entry) => resolveEntryIdentifier(entry)),
+    );
+
+    return uniqueEntries.size || resolvedEntries.length;
   }, [ditbinmasDirectory]);
 
   const ditbinmasPersonnelDescriptor = useMemo(() => {
