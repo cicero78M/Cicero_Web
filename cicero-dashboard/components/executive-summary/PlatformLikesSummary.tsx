@@ -51,6 +51,52 @@ interface LikesSummaryData {
   lastUpdated: Date | string | null;
 }
 
+type SummaryCardTrend = "up" | "down" | "flat";
+
+interface SummaryCardComparison {
+  label: string;
+  direction?: SummaryCardTrend;
+}
+
+interface SummaryCardInfo {
+  key: string;
+  label: string;
+  value: string;
+  description?: string;
+  comparison?: SummaryCardComparison | null;
+}
+
+interface LabelOverrides {
+  likesContributorsTitle?: string;
+  likesContributorsDescription?: string;
+  commentContributorsTitle?: string;
+  commentContributorsDescription?: string;
+  topComplianceTitle?: string;
+  topComplianceDescription?: string;
+  commentPersonnelTitle?: string;
+  commentPersonnelDescription?: string;
+  likesPersonnelTitle?: string;
+  likesPersonnelDescription?: string;
+  tableTitle?: string;
+  tableSubtitle?: string | null;
+  tableEmptyLabel?: string;
+}
+
+interface PersonnelDistributionRow {
+  key: string;
+  pangkat?: string | null;
+  nama?: string | null;
+  satfung?: string | null;
+  likes: number;
+  averageLikes?: number;
+  comments: number;
+  averageComments?: number;
+}
+
+interface PersonnelDistributionMeta {
+  note?: string | null;
+}
+
 interface ActivityCategory {
   key: string;
   label: string;
@@ -76,6 +122,10 @@ interface PlatformLikesSummaryProps {
     instagram: number;
     tiktok: number;
   } | null;
+  summaryCards?: SummaryCardInfo[] | null;
+  labelOverrides?: LabelOverrides | null;
+  personnelDistribution?: PersonnelDistributionRow[] | null;
+  personnelDistributionMeta?: PersonnelDistributionMeta | null;
 }
 
 const formatDateTime = (value: Date | string | null) => {
@@ -102,13 +152,21 @@ const PlatformLikesSummary = ({
   formatPercent,
   personnelActivity,
   postTotals,
+  summaryCards,
+  labelOverrides,
+  personnelDistribution,
+  personnelDistributionMeta,
 }: PlatformLikesSummaryProps) => {
   const clients = Array.isArray(data?.clients) ? data.clients : [];
   const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
   const instagramPostCount = Math.max(0, Number(postTotals?.instagram) || 0);
   const tiktokPostCount = Math.max(0, Number(postTotals?.tiktok) || 0);
 
-  const summaryCards = useMemo(() => {
+  const computedSummaryCards = useMemo((): SummaryCardInfo[] => {
+    if (Array.isArray(summaryCards) && summaryCards.length > 0) {
+      return summaryCards;
+    }
+
     const totals = data?.totals;
     if (!totals) {
       return [];
@@ -158,7 +216,33 @@ const PlatformLikesSummary = ({
     formatPercent,
     instagramPostCount,
     tiktokPostCount,
+    summaryCards,
   ]);
+
+  const resolvedLabels: Required<LabelOverrides> = useMemo(
+    () => ({
+      likesContributorsTitle: "Kontributor Likes Teratas",
+      likesContributorsDescription:
+        "Satker dengan kontribusi likes tertinggi pada periode terpilih.",
+      commentContributorsTitle: "Kontributor Komentar Teratas",
+      commentContributorsDescription:
+        "Satker dengan jumlah komentar terbanyak beserta rasio kepatuhan.",
+      topComplianceTitle: "Kepatuhan Tertinggi",
+      topComplianceDescription:
+        "Satker dengan rasio kepatuhan tertinggi berdasarkan personil aktif.",
+      commentPersonnelTitle: "Personil dengan Komentar Tertinggi",
+      commentPersonnelDescription:
+        "Individu dengan komentar terbanyak beserta asal satker terkait.",
+      likesPersonnelTitle: "Personil dengan Likes Tertinggi",
+      likesPersonnelDescription:
+        "Individu dengan likes terbanyak beserta asal satker terkait.",
+      tableTitle: "Distribusi Engagement per Satker",
+      tableSubtitle: null,
+      tableEmptyLabel: "Belum ada data distribusi engagement.",
+      ...(labelOverrides ?? {}),
+    }),
+    [labelOverrides],
+  );
 
   const distributionData = useMemo(() => {
     return [...clients]
@@ -244,6 +328,8 @@ const PlatformLikesSummary = ({
   const totalContentEvaluated = activitySummary?.totalContentEvaluated ?? 0;
 
   const lastUpdatedLabel = formatDateTime(data?.lastUpdated);
+  const hasPersonnelDistribution = Array.isArray(personnelDistribution) && personnelDistribution.length > 0;
+  const distributionMetaNote = personnelDistributionMeta?.note ?? null;
 
   if (clients.length === 0 && standoutPersonnel.length === 0) {
     return (
@@ -256,18 +342,39 @@ const PlatformLikesSummary = ({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {summaryCards.map((card) => (
-          <div
-            key={card.key}
-            className="h-full rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              {card.label}
-            </p>
-            <p className="mt-3 text-2xl font-semibold text-white">{card.value}</p>
-            <p className="mt-2 text-xs text-slate-400">{card.description}</p>
-          </div>
-        ))}
+        {computedSummaryCards.map((card) => {
+          const comparison = card.comparison ?? null;
+          const direction = comparison?.direction ?? "flat";
+          const toneClass =
+            direction === "up"
+              ? "text-emerald-300"
+              : direction === "down"
+              ? "text-rose-300"
+              : "text-slate-400";
+          const icon =
+            direction === "up" ? "▲" : direction === "down" ? "▼" : "▬";
+
+          return (
+            <div
+              key={card.key}
+              className="h-full rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                {card.label}
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-white">{card.value}</p>
+              {card.description ? (
+                <p className="mt-2 text-xs text-slate-400">{card.description}</p>
+              ) : null}
+              {comparison ? (
+                <p className={`mt-3 text-xs font-semibold ${toneClass}`}>
+                  <span className="mr-1 inline-block text-sm">{icon}</span>
+                  {comparison.label}
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
 
       {lastUpdatedLabel ? (
@@ -279,11 +386,9 @@ const PlatformLikesSummary = ({
       <div className="grid gap-6 md:grid-cols-2">
         <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-            Kontributor Likes Teratas
+            {resolvedLabels.likesContributorsTitle}
           </h3>
-          <p className="mt-2 text-xs text-slate-400">
-            Satker dengan kontribusi likes tertinggi pada periode terpilih.
-          </p>
+          <p className="mt-2 text-xs text-slate-400">{resolvedLabels.likesContributorsDescription}</p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -331,11 +436,9 @@ const PlatformLikesSummary = ({
 
         <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-            Kontributor Komentar Teratas
+            {resolvedLabels.commentContributorsTitle}
           </h3>
-          <p className="mt-2 text-xs text-slate-400">
-            Satker dengan jumlah komentar terbanyak beserta rasio kepatuhan.
-          </p>
+          <p className="mt-2 text-xs text-slate-400">{resolvedLabels.commentContributorsDescription}</p>
           <div className="mt-4 h-64">
             {commentDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -389,11 +492,9 @@ const PlatformLikesSummary = ({
 
         <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
           <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-            Kepatuhan Tertinggi
+            {resolvedLabels.topComplianceTitle}
           </h3>
-          <p className="mt-2 text-xs text-slate-400">
-            Satker dengan rasio kepatuhan tertinggi berdasarkan personil aktif.
-          </p>
+          <p className="mt-2 text-xs text-slate-400">{resolvedLabels.topComplianceDescription}</p>
           <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
             {topCompliance.map((client) => (
               <li key={`compliance-${client.key}`} className="flex items-start justify-between">
@@ -414,11 +515,9 @@ const PlatformLikesSummary = ({
         {topCommentPersonnel.length > 0 ? (
           <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              Personil dengan Komentar Tertinggi
+              {resolvedLabels.commentPersonnelTitle}
             </h3>
-            <p className="mt-2 text-xs text-slate-400">
-              Individu dengan komentar terbanyak beserta asal satker terkait.
-            </p>
+            <p className="mt-2 text-xs text-slate-400">{resolvedLabels.commentPersonnelDescription}</p>
             <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {topCommentPersonnel.map((person) => {
                 const displayName = [person.pangkat, person.nama].filter(Boolean).join(" ");
@@ -460,11 +559,9 @@ const PlatformLikesSummary = ({
         {standoutPersonnel.length > 0 ? (
           <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-              Personil dengan Likes Tertinggi
+              {resolvedLabels.likesPersonnelTitle}
             </h3>
-            <p className="mt-2 text-xs text-slate-400">
-              Individu dengan likes terbanyak beserta asal satker terkait.
-            </p>
+            <p className="mt-2 text-xs text-slate-400">{resolvedLabels.likesPersonnelDescription}</p>
             <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
               {standoutPersonnel.map((person) => {
                 const displayName = [person.pangkat, person.nama].filter(Boolean).join(" ");
@@ -561,54 +658,108 @@ const PlatformLikesSummary = ({
 
       <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
         <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-          Distribusi Engagement per Satker
+          {resolvedLabels.tableTitle}
         </h3>
+        {resolvedLabels.tableSubtitle ? (
+          <p className="mt-2 text-xs text-slate-400">{resolvedLabels.tableSubtitle}</p>
+        ) : null}
+        {distributionMetaNote ? (
+          <p className="mt-2 text-xs font-semibold text-cyan-200/80">{distributionMetaNote}</p>
+        ) : null}
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-800 text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
-                <th className="py-3 pr-4">Satker</th>
-                <th className="px-4 py-3 text-right">Likes</th>
-                <th className="px-4 py-3 text-right">Avg. Likes</th>
-                <th className="px-4 py-3 text-right">Komentar</th>
-                <th className="px-4 py-3 text-right">Avg. Komentar</th>
-                <th className="px-4 py-3 text-right">Personil Aktif</th>
-                <th className="px-4 py-3 text-right">Total Personil</th>
-                <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {clientsByCompliance.map((client) => {
-                const compliance = formatPercent(client.complianceRate ?? 0);
-                return (
-                  <tr key={client.key} className="text-slate-200">
-                    <td className="py-3 pr-4 font-semibold text-slate-100">
-                      {client.clientName}
+          {hasPersonnelDistribution ? (
+            <table className="min-w-full divide-y divide-slate-800 text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
+                  <th className="py-3 pr-4">Pangkat &amp; Nama</th>
+                  <th className="px-4 py-3">Satfung</th>
+                  <th className="px-4 py-3 text-right">Likes</th>
+                  <th className="px-4 py-3 text-right">Avg. Likes</th>
+                  <th className="px-4 py-3 text-right">Komentar</th>
+                  <th className="px-4 py-3 text-right">Avg. Komentar</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {personnelDistribution!.map((row) => {
+                  const pangkatNama = [row.pangkat, row.nama].filter(Boolean).join(" ");
+                  return (
+                    <tr key={row.key} className="text-slate-200">
+                      <td className="py-3 pr-4 font-semibold text-slate-100">
+                        {pangkatNama || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-300">{row.satfung || "-"}</td>
+                      <td className="px-4 py-3 text-right">
+                        {formatNumber(row.likes ?? 0, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {formatNumber(row.averageLikes ?? 0, { maximumFractionDigits: 1 })}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {formatNumber(row.comments ?? 0, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {formatNumber(row.averageComments ?? 0, { maximumFractionDigits: 1 })}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <table className="min-w-full divide-y divide-slate-800 text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
+                  <th className="py-3 pr-4">Satker</th>
+                  <th className="px-4 py-3 text-right">Likes</th>
+                  <th className="px-4 py-3 text-right">Avg. Likes</th>
+                  <th className="px-4 py-3 text-right">Komentar</th>
+                  <th className="px-4 py-3 text-right">Avg. Komentar</th>
+                  <th className="px-4 py-3 text-right">Personil Aktif</th>
+                  <th className="px-4 py-3 text-right">Total Personil</th>
+                  <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {clientsByCompliance.length > 0 ? (
+                  clientsByCompliance.map((client) => {
+                    const compliance = formatPercent(client.complianceRate ?? 0);
+                    return (
+                      <tr key={client.key} className="text-slate-200">
+                        <td className="py-3 pr-4 font-semibold text-slate-100">
+                          {client.clientName}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatNumber(client.totalLikes, { maximumFractionDigits: 0 })}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatNumber(client.averageLikesPerUser ?? 0)}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatNumber(client.totalComments, { maximumFractionDigits: 0 })}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatNumber(client.averageCommentsPerUser ?? 0)}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
+                        </td>
+                        <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td className="px-4 py-6 text-center text-slate-400" colSpan={8}>
+                      {resolvedLabels.tableEmptyLabel}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      {formatNumber(client.totalLikes, { maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {formatNumber(client.averageLikesPerUser ?? 0)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {formatNumber(client.totalComments, { maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {formatNumber(client.averageCommentsPerUser ?? 0)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
