@@ -19,6 +19,7 @@ import {
   FilePieChart,
   Book,
   Workflow,
+  Calendar,
 } from "lucide-react";
 import {
   Sheet,
@@ -52,6 +53,8 @@ export default function Sidebar() {
   const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
   const isOperator = role?.toLowerCase() === "operator";
   const canSeeExecutiveSummary =
+    clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
+  const canSeeWeeklyReport =
     clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
 
   const menu = [
@@ -91,6 +94,9 @@ export default function Sidebar() {
       : []),
     ...(canSeeExecutiveSummary
       ? [{ label: "Executive Summary", path: "/executive-summary", icon: FilePieChart }]
+      : []),
+    ...(canSeeWeeklyReport
+      ? [{ label: "Weekly Report", path: "/weekly-report", icon: Calendar }]
       : []),
     {
       label: "Mekanisme Sistem Absensi",
