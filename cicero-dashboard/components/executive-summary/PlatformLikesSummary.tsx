@@ -113,6 +113,11 @@ interface PersonnelActivitySummary {
   hasSummary: boolean;
 }
 
+type HiddenSectionKey =
+  | "topCompliance"
+  | "topCommentPersonnel"
+  | "topLikesPersonnel";
+
 interface PlatformLikesSummaryProps {
   data: LikesSummaryData;
   formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
@@ -126,6 +131,7 @@ interface PlatformLikesSummaryProps {
   labelOverrides?: LabelOverrides | null;
   personnelDistribution?: PersonnelDistributionRow[] | null;
   personnelDistributionMeta?: PersonnelDistributionMeta | null;
+  hiddenSections?: Partial<Record<HiddenSectionKey, boolean>> | null;
 }
 
 const formatDateTime = (value: Date | string | null) => {
@@ -156,11 +162,13 @@ const PlatformLikesSummary = ({
   labelOverrides,
   personnelDistribution,
   personnelDistributionMeta,
+  hiddenSections,
 }: PlatformLikesSummaryProps) => {
   const clients = Array.isArray(data?.clients) ? data.clients : [];
   const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
   const instagramPostCount = Math.max(0, Number(postTotals?.instagram) || 0);
   const tiktokPostCount = Math.max(0, Number(postTotals?.tiktok) || 0);
+  const sectionVisibility: Partial<Record<HiddenSectionKey, boolean>> = hiddenSections ?? {};
 
   const computedSummaryCards = useMemo((): SummaryCardInfo[] => {
     if (Array.isArray(summaryCards) && summaryCards.length > 0) {
@@ -331,7 +339,11 @@ const PlatformLikesSummary = ({
   const hasPersonnelDistribution = Array.isArray(personnelDistribution) && personnelDistribution.length > 0;
   const distributionMetaNote = personnelDistributionMeta?.note ?? null;
 
-  if (clients.length === 0 && standoutPersonnel.length === 0) {
+  const hasVisibleStandoutPersonnel =
+    !sectionVisibility.topLikesPersonnel && standoutPersonnel.length > 0;
+  const hasVisibleClients = clients.length > 0;
+
+  if (!hasVisibleClients && !hasVisibleStandoutPersonnel) {
     return (
       <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
         Belum ada data rekap likes yang dapat ditampilkan.
@@ -490,29 +502,31 @@ const PlatformLikesSummary = ({
           </div>
         </div>
 
-        <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-            {resolvedLabels.topComplianceTitle}
-          </h3>
-          <p className="mt-2 text-xs text-slate-400">{resolvedLabels.topComplianceDescription}</p>
-          <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
-            {topCompliance.map((client) => (
-              <li key={`compliance-${client.key}`} className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-slate-100">{client.clientName}</p>
-                  <p className="text-xs text-slate-400">
-                    {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })} personil aktif
-                  </p>
-                </div>
-                <span className="text-sm font-semibold text-cyan-300">
-                  {formatPercent(client.complianceRate ?? 0)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {!sectionVisibility.topCompliance ? (
+          <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+              {resolvedLabels.topComplianceTitle}
+            </h3>
+            <p className="mt-2 text-xs text-slate-400">{resolvedLabels.topComplianceDescription}</p>
+            <ul className="mt-4 flex-1 space-y-3 text-sm text-slate-200">
+              {topCompliance.map((client) => (
+                <li key={`compliance-${client.key}`} className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-slate-100">{client.clientName}</p>
+                    <p className="text-xs text-slate-400">
+                      {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })} personil aktif
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold text-cyan-300">
+                    {formatPercent(client.complianceRate ?? 0)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
-        {topCommentPersonnel.length > 0 ? (
+        {!sectionVisibility.topCommentPersonnel && topCommentPersonnel.length > 0 ? (
           <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               {resolvedLabels.commentPersonnelTitle}
@@ -556,7 +570,7 @@ const PlatformLikesSummary = ({
           </div>
         ) : null}
 
-        {standoutPersonnel.length > 0 ? (
+        {!sectionVisibility.topLikesPersonnel && standoutPersonnel.length > 0 ? (
           <div className="flex h-full flex-col rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6">
             <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
               {resolvedLabels.likesPersonnelTitle}

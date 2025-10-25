@@ -770,12 +770,7 @@ export default function WeeklyReportPageClient() {
     const labelOverrides = {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
       commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
-      topComplianceDescription:
-        "Satfung dengan rasio kepatuhan personil tertinggi berdasarkan evaluasi mingguan.",
-      commentPersonnelDescription: "Personil Ditbinmas dengan komentar terbanyak beserta satfung asal.",
-      likesPersonnelDescription: "Personil Ditbinmas dengan likes terbanyak beserta satfung asal.",
       tableTitle: "Distribusi Engagement Per User / Personil",
-      tableSubtitle: "Urutan sesuai jenjang kepangkatan personil Ditbinmas.",
       tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
     };
 
@@ -1113,6 +1108,11 @@ export default function WeeklyReportPageClient() {
                     labelOverrides={weeklyLabelOverrides}
                     personnelDistribution={weeklyPersonnelDistribution}
                     personnelDistributionMeta={weeklyDistributionMeta}
+                    hiddenSections={{
+                      topCompliance: true,
+                      topCommentPersonnel: true,
+                      topLikesPersonnel: true,
+                    }}
                   />
                 </div>
               </div>
