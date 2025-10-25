@@ -80,13 +80,15 @@ interface LabelOverrides {
   tableTitle?: string;
   tableSubtitle?: string | null;
   tableEmptyLabel?: string;
+  tableNameHeaderLabel?: string;
+  tableDivisionHeaderLabel?: string;
 }
 
 interface PersonnelDistributionRow {
   key: string;
   pangkat?: string | null;
   nama?: string | null;
-  satfung?: string | null;
+  division?: string | null;
   likes: number;
   averageLikes?: number;
   comments: number;
@@ -247,6 +249,8 @@ const PlatformLikesSummary = ({
       tableTitle: "Distribusi Engagement per Satker",
       tableSubtitle: null,
       tableEmptyLabel: "Belum ada data distribusi engagement.",
+      tableNameHeaderLabel: "Pangkat & Nama",
+      tableDivisionHeaderLabel: "Satfung",
       ...(labelOverrides ?? {}),
     }),
     [labelOverrides],
@@ -685,8 +689,8 @@ const PlatformLikesSummary = ({
             <table className="min-w-full divide-y divide-slate-800 text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
-                  <th className="py-3 pr-4">Pangkat &amp; Nama</th>
-                  <th className="px-4 py-3">Satfung</th>
+                  <th className="py-3 pr-4">{resolvedLabels.tableNameHeaderLabel}</th>
+                  <th className="px-4 py-3">{resolvedLabels.tableDivisionHeaderLabel}</th>
                   <th className="px-4 py-3 text-right">Likes</th>
                   <th className="px-4 py-3 text-right">Avg. Likes</th>
                   <th className="px-4 py-3 text-right">Komentar</th>
@@ -701,7 +705,7 @@ const PlatformLikesSummary = ({
                       <td className="py-3 pr-4 font-semibold text-slate-100">
                         {pangkatNama || "-"}
                       </td>
-                      <td className="px-4 py-3 text-slate-300">{row.satfung || "-"}</td>
+                      <td className="px-4 py-3 text-slate-300">{row.division || "-"}</td>
                       <td className="px-4 py-3 text-right">
                         {formatNumber(row.likes ?? 0, { maximumFractionDigits: 0 })}
                       </td>
@@ -723,20 +727,16 @@ const PlatformLikesSummary = ({
             <table className="min-w-full divide-y divide-slate-800 text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-400">
-                  <th className="py-3 pr-4">Satker</th>
+                  <th className="py-3 pr-4">{resolvedLabels.tableDivisionHeaderLabel}</th>
                   <th className="px-4 py-3 text-right">Likes</th>
                   <th className="px-4 py-3 text-right">Avg. Likes</th>
                   <th className="px-4 py-3 text-right">Komentar</th>
                   <th className="px-4 py-3 text-right">Avg. Komentar</th>
-                  <th className="px-4 py-3 text-right">Personil Aktif</th>
-                  <th className="px-4 py-3 text-right">Total Personil</th>
-                  <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {clientsByCompliance.length > 0 ? (
                   clientsByCompliance.map((client) => {
-                    const compliance = formatPercent(client.complianceRate ?? 0);
                     return (
                       <tr key={client.key} className="text-slate-200">
                         <td className="py-3 pr-4 font-semibold text-slate-100">
@@ -754,22 +754,15 @@ const PlatformLikesSummary = ({
                         <td className="px-4 py-3 text-right">
                           {formatNumber(client.averageCommentsPerUser ?? 0)}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
-                        </td>
-                        <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
                       </tr>
                     );
                   })
                 ) : (
-                  <tr>
-                    <td className="px-4 py-6 text-center text-slate-400" colSpan={8}>
-                      {resolvedLabels.tableEmptyLabel}
-                    </td>
-                  </tr>
+                    <tr>
+                      <td className="px-4 py-6 text-center text-slate-400" colSpan={5}>
+                        {resolvedLabels.tableEmptyLabel}
+                      </td>
+                    </tr>
                 )}
               </tbody>
             </table>

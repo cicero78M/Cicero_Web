@@ -163,6 +163,225 @@ const ensureArray = (...candidates) => {
   return [];
 };
 
+const normalizeString = (value) => {
+  if (value == null) {
+    return "";
+  }
+  return String(value).trim();
+};
+
+const normalizeClientId = (value) => {
+  const normalized = normalizeString(value);
+  return normalized ? normalized.toUpperCase() : "";
+};
+
+const CLIENT_ID_FIELD_CANDIDATES = [
+  "client_id",
+  "clientId",
+  "clientID",
+  "client",
+  "clientid",
+  "id_client",
+  "idClient",
+  "client_code",
+  "clientCode",
+  "kode_client",
+  "kodeClient",
+];
+
+const EXTENDED_CLIENT_ID_FIELDS = [
+  "satker",
+  "satuan_kerja",
+  "nama_satker",
+  "nama_satuan_kerja",
+  "satfung",
+  "divisi",
+  "division",
+  "unit",
+  "unitKerja",
+];
+
+const ROLE_FIELD_CANDIDATES = [
+  "role",
+  "user_role",
+  "userRole",
+  "role_name",
+  "roleName",
+  "roles",
+  "role_list",
+  "groups",
+];
+
+const collectTraversableValues = (source) => {
+  if (!source || typeof source !== "object") {
+    return [];
+  }
+
+  const values = [];
+  Object.values(source).forEach((value) => {
+    if (!value) {
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((entry) => {
+        if (entry && typeof entry === "object") {
+          values.push(entry);
+        }
+      });
+    } else if (typeof value === "object") {
+      values.push(value);
+    }
+  });
+
+  return values;
+};
+
+const resolveEntityClientId = (entity) => {
+  if (!entity || typeof entity !== "object") {
+    return "";
+  }
+
+  const visited = new Set();
+  const queue = [entity];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || typeof current !== "object" || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    for (const field of CLIENT_ID_FIELD_CANDIDATES) {
+      if (!Object.prototype.hasOwnProperty.call(current, field)) {
+        continue;
+      }
+      const value = current[field];
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          const normalized = normalizeClientId(entry);
+          if (normalized) {
+            return normalized;
+          }
+        }
+      } else {
+        const normalized = normalizeClientId(value);
+        if (normalized) {
+          return normalized;
+        }
+      }
+    }
+
+    for (const field of EXTENDED_CLIENT_ID_FIELDS) {
+      if (!Object.prototype.hasOwnProperty.call(current, field)) {
+        continue;
+      }
+      const value = current[field];
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          const normalized = normalizeClientId(entry);
+          if (normalized) {
+            return normalized;
+          }
+        }
+      } else {
+        const normalized = normalizeClientId(value);
+        if (normalized) {
+          return normalized;
+        }
+      }
+    }
+
+    collectTraversableValues(current).forEach((value) => {
+      if (!visited.has(value)) {
+        queue.push(value);
+      }
+    });
+  }
+
+  return "";
+};
+
+const entityHasRole = (entity, targetRole) => {
+  const normalizedTarget = normalizeString(targetRole).toLowerCase();
+  if (!normalizedTarget || !entity || typeof entity !== "object") {
+    return false;
+  }
+
+  const visited = new Set();
+  const queue = [entity];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || typeof current !== "object" || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    for (const field of ROLE_FIELD_CANDIDATES) {
+      if (!Object.prototype.hasOwnProperty.call(current, field)) {
+        continue;
+      }
+      const value = current[field];
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          if (typeof entry === "string" || typeof entry === "number") {
+            if (normalizeString(entry).toLowerCase() === normalizedTarget) {
+              return true;
+            }
+          } else if (entry && typeof entry === "object" && !visited.has(entry)) {
+            queue.push(entry);
+          }
+        }
+      } else if (typeof value === "string" || typeof value === "number") {
+        if (normalizeString(value).toLowerCase() === normalizedTarget) {
+          return true;
+        }
+      } else if (value && typeof value === "object" && !visited.has(value)) {
+        queue.push(value);
+      }
+    }
+
+    collectTraversableValues(current).forEach((value) => {
+      if (!visited.has(value)) {
+        queue.push(value);
+      }
+    });
+  }
+
+  return false;
+};
+
+const filterCollectionByClientId = (records, clientId) => {
+  const normalizedTarget = normalizeClientId(clientId);
+  if (!normalizedTarget || !Array.isArray(records)) {
+    return Array.isArray(records) ? records : [];
+  }
+
+  return records.filter((record) => {
+    const recordClientId = resolveEntityClientId(record);
+    return recordClientId === normalizedTarget;
+  });
+};
+
+const filterDirectoryByClientAndRole = (users, clientId, roleName) => {
+  if (!Array.isArray(users)) {
+    return [];
+  }
+
+  const normalizedTarget = normalizeClientId(clientId);
+
+  return users.filter((user) => {
+    const userClientId = resolveEntityClientId(user);
+    if (!userClientId || userClientId !== normalizedTarget) {
+      return false;
+    }
+    if (roleName && !entityHasRole(user, roleName)) {
+      return false;
+    }
+    return true;
+  });
+};
+
 const filterRecordsByDateRange = (records, range) => {
   if (!Array.isArray(records)) {
     return [];
@@ -518,17 +737,25 @@ export default function WeeklyReportPageClient() {
     },
   );
 
-  const ditbinmasUsers = useMemo(
+  const rawDitbinmasUsers = useMemo(
     () => extractDirectoryUsers(ditbinmasDirectory),
     [ditbinmasDirectory],
   );
 
+  const ditbinmasUsers = useMemo(
+    () => filterDirectoryByClientAndRole(rawDitbinmasUsers, CLIENT_ID, "ditbinmas"),
+    [rawDitbinmasUsers],
+  );
+
   const ditbinmasPersonnelCount = useMemo(() => {
+    if (ditbinmasUsers.length > 0) {
+      return ditbinmasUsers.length;
+    }
     const directoryCount = normalizeDirectoryCount(ditbinmasDirectory);
     if (directoryCount != null) {
       return directoryCount;
     }
-    return ditbinmasUsers.length > 0 ? ditbinmasUsers.length : null;
+    return null;
   }, [ditbinmasDirectory, ditbinmasUsers.length]);
 
   const ditbinmasPersonnelDescriptor = useMemo(
@@ -643,18 +870,23 @@ export default function WeeklyReportPageClient() {
           return;
         }
 
-        const likesRecords = prepareTrendActivityRecords(ensureArray(likesRes), {
+        const rawLikesRecords = prepareTrendActivityRecords(ensureArray(likesRes), {
           fallbackDate: monthRange.startDate,
         });
-        const commentRecords = prepareTrendActivityRecords(ensureArray(commentsRes), {
+        const rawCommentRecords = prepareTrendActivityRecords(ensureArray(commentsRes), {
           fallbackDate: monthRange.startDate,
         });
-        const instagramPosts = ensureRecordsHaveActivityDate(ensureArray(instagramRes), {
+        const rawInstagramPosts = ensureRecordsHaveActivityDate(ensureArray(instagramRes), {
           extraPaths: POST_DATE_PATHS,
         });
-        const tiktokPosts = ensureRecordsHaveActivityDate(ensureArray(tiktokRes), {
+        const rawTiktokPosts = ensureRecordsHaveActivityDate(ensureArray(tiktokRes), {
           extraPaths: POST_DATE_PATHS,
         });
+
+        const likesRecords = filterCollectionByClientId(rawLikesRecords, CLIENT_ID);
+        const commentRecords = filterCollectionByClientId(rawCommentRecords, CLIENT_ID);
+        const instagramPosts = filterCollectionByClientId(rawInstagramPosts, CLIENT_ID);
+        const tiktokPosts = filterCollectionByClientId(rawTiktokPosts, CLIENT_ID);
 
         const errorMessage = errorTargets.length
           ? `Gagal memuat ${errorTargets.join(", ")}.`
@@ -934,14 +1166,69 @@ export default function WeeklyReportPageClient() {
 
   const weeklyLabelOverrides = useMemo(
     () => ({
-      likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
+      likesContributorsDescription: "Divisi dengan kontribusi likes tertinggi pada minggu ini.",
       commentContributorsDescription:
-        "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
-      tableTitle: "Distribusi Engagement Per Satker",
+        "Divisi dengan jumlah komentar terbanyak selama minggu ini.",
+      tableTitle: "Distribusi Engagement Per Personil",
       tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
+      tableDivisionHeaderLabel: "Divisi",
     }),
     [],
   );
+
+  const weeklyPersonnelDistribution = useMemo(() => {
+    const clients = Array.isArray(weeklyLikesSummary?.clients)
+      ? weeklyLikesSummary.clients
+      : [];
+
+    const rows = [];
+
+    clients.forEach((client, clientIndex) => {
+      const personnel = Array.isArray(client?.personnel) ? client.personnel : [];
+      personnel.forEach((person, personIndex) => {
+        const likesCandidate = Number(person?.likes ?? 0);
+        const commentsCandidate = Number(person?.comments ?? 0);
+        const likes = Number.isFinite(likesCandidate) ? likesCandidate : 0;
+        const comments = Number.isFinite(commentsCandidate) ? commentsCandidate : 0;
+        const pangkat = normalizeString(person?.pangkat);
+        const nama = normalizeString(person?.nama);
+        const username = normalizeString(person?.username);
+        const divisionLabel =
+          normalizeString(person?.clientName) ||
+          normalizeString(client?.clientName) ||
+          normalizeClientId(client?.clientId);
+
+        rows.push({
+          key:
+            normalizeString(person?.key) ||
+            `${
+              normalizeString(client?.key) ||
+              normalizeClientId(client?.clientId) ||
+              `client-${clientIndex}`
+            }:person-${personIndex}`,
+          pangkat,
+          nama: nama || username,
+          division: divisionLabel || CLIENT_ID,
+          likes,
+          averageLikes: likes,
+          comments,
+          averageComments: comments,
+        });
+      });
+    });
+
+    return rows
+      .filter((row) => row.nama || row.pangkat || row.division)
+      .sort((a, b) => {
+        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
+          return (b.likes ?? 0) - (a.likes ?? 0);
+        }
+        if ((b.comments ?? 0) !== (a.comments ?? 0)) {
+          return (b.comments ?? 0) - (a.comments ?? 0);
+        }
+        return normalizeString(b.nama).localeCompare(normalizeString(a.nama));
+      });
+  }, [weeklyLikesSummary]);
 
   const weekDescriptor = useMemo(() => {
     const weekLabel = resolveActiveLabel(WEEK_OPTIONS, selectedWeek);
@@ -1129,7 +1416,7 @@ export default function WeeklyReportPageClient() {
                       Detail Kinerja Kanal Mingguan
                     </h2>
                     <p className="max-w-2xl text-sm leading-relaxed text-emerald-800/80">
-                      Menampilkan distribusi likes dan komentar per satfung Ditbinmas selama {weekDescriptor}, sehingga perkembangan kontribusi personil mudah dipantau.
+                      Menampilkan distribusi likes dan komentar per divisi Ditbinmas selama {weekDescriptor}, sehingga perkembangan kontribusi personil mudah dipantau.
                     </p>
                     <p className="text-xs text-emerald-700/70">
                       Data diringkas otomatis mengikuti pilihan minggu, bulan, dan tahun pada bagian atas halaman.
@@ -1158,7 +1445,7 @@ export default function WeeklyReportPageClient() {
                       postTotals={weeklyPostTotals}
                       summaryCards={weeklySummaryCards}
                       labelOverrides={weeklyLabelOverrides}
-                      personnelDistribution={null}
+                      personnelDistribution={weeklyPersonnelDistribution}
                       personnelDistributionMeta={weeklyDistributionMeta}
                       hiddenSections={{
                         topCompliance: true,
