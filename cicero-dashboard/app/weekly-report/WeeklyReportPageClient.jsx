@@ -201,15 +201,108 @@ const buildWeekRanges = (monthValue, yearValue) => {
   return ranges;
 };
 
+const DITBINMAS_CLIENT_TARGET = "DITBINMAS";
+const DITBINMAS_ROLE_TARGET = "DITBINMAS";
+
+const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) => {
+  if (value == null) {
+    return false;
+  }
+
+  const raw = String(value).trim();
+
+  if (!raw) {
+    return false;
+  }
+
+  const collapsed = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  if (collapsed === target) {
+    return true;
+  }
+
+  if (!allowWordMatch) {
+    return false;
+  }
+
+  const spaced = raw.toUpperCase().replace(/[^A-Z0-9]/g, " ");
+  const segments = spaced
+    .split(" ")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  if (!segments.length) {
+    return false;
+  }
+
+  if (segments.includes("NON") && segments.includes(target)) {
+    return false;
+  }
+
+  return segments.includes(target);
+};
+
+const matchCandidates = (candidates, target, options) => {
+  if (!Array.isArray(candidates)) {
+    return false;
+  }
+
+  for (const candidate of candidates) {
+    if (candidate == null) {
+      continue;
+    }
+
+    if (Array.isArray(candidate)) {
+      if (matchCandidates(candidate, target, options)) {
+        return true;
+      }
+      continue;
+    }
+
+    if (typeof candidate === "object") {
+      const nestedCandidates = [
+        candidate.client_id,
+        candidate.clientId,
+        candidate.clientID,
+        candidate.client,
+        candidate.id_client,
+        candidate.idClient,
+        candidate.client_code,
+        candidate.clientCode,
+        candidate.client_name,
+        candidate.clientName,
+        candidate.name,
+        candidate.label,
+        candidate.value,
+        candidate.role,
+        candidate.role_name,
+        candidate.roleName,
+      ];
+
+      if (matchCandidates(nestedCandidates, target, options)) {
+        return true;
+      }
+      continue;
+    }
+
+    if (matchNormalizedValue(candidate, target, options)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const filterDitbinmasRecords = (records = []) => {
-  const target = "DITBINMAS";
+  const clientMatcherOptions = { allowWordMatch: false };
+  const roleMatcherOptions = { allowWordMatch: true };
 
   return (Array.isArray(records) ? records : []).filter((record) => {
     if (!record || typeof record !== "object") {
       return false;
     }
 
-    const candidates = [
+    const clientCandidates = [
       record.client_id,
       record.clientId,
       record.client,
@@ -223,23 +316,52 @@ export const filterDitbinmasRecords = (records = []) => {
       record.clientName,
       record.name,
       record?.client?.name,
+      record?.rekap?.client_id,
+      record?.rekap?.clientId,
+      record?.rekap?.clientID,
+      record?.rekap?.client,
+      record?.rekap?.client_code,
+      record?.rekap?.clientCode,
+      record?.rekap?.client_name,
+      record?.rekap?.clientName,
+      record?.rekap?.name,
     ];
 
-    return candidates.some((candidate) => {
-      if (candidate == null) {
-        return false;
-      }
+    const roleCandidates = [
+      record.role,
+      record.roles,
+      record.user_role,
+      record.userRole,
+      record.role_name,
+      record.roleName,
+      record?.user?.role,
+      record?.akun?.role,
+      record?.profile?.role,
+      record?.rekap?.role,
+      record?.rekap?.roles,
+      record?.rekap?.user_role,
+      record?.rekap?.userRole,
+      record?.rekap?.role_name,
+      record?.rekap?.roleName,
+    ];
 
-      const normalized = String(candidate)
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "");
+    const matchesClient = matchCandidates(
+      clientCandidates,
+      DITBINMAS_CLIENT_TARGET,
+      clientMatcherOptions,
+    );
 
-      if (!normalized) {
-        return false;
-      }
+    if (!matchesClient) {
+      return false;
+    }
 
-      return normalized === target;
-    });
+    const matchesRole = matchCandidates(
+      roleCandidates,
+      DITBINMAS_ROLE_TARGET,
+      roleMatcherOptions,
+    );
+
+    return matchesRole;
   });
 };
 

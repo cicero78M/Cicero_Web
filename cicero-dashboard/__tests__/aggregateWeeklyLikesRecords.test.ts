@@ -64,7 +64,9 @@ describe("aggregateWeeklyLikesRecords", () => {
           client_id: "DITBINMAS",
           client_name: "Satfung C",
           total_like: 7,
+          role: "Ditbinmas",
         },
+        role: "Ditbinmas",
       },
     ];
 
@@ -74,7 +76,9 @@ describe("aggregateWeeklyLikesRecords", () => {
           client_id: "DITBINMAS",
           client_name: "Satfung C",
           total_komentar: 3,
+          role: "Ditbinmas",
         },
+        role: "Ditbinmas",
       },
     ];
 
