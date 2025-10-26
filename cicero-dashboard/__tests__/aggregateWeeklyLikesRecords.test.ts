@@ -1,4 +1,8 @@
-import { aggregateWeeklyLikesRecords } from "@/app/weekly-report/lib/dataTransforms";
+import {
+  aggregateWeeklyLikesRecords,
+  mergeWeeklyActivityRecords,
+} from "@/app/weekly-report/lib/dataTransforms";
+import { filterDitbinmasRecords } from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("aggregateWeeklyLikesRecords", () => {
   it("creates separate clients for Ditbinmas satfung with different divisi", () => {
@@ -46,6 +50,57 @@ describe("aggregateWeeklyLikesRecords", () => {
       expect.arrayContaining([
         expect.objectContaining({ clientName: "Satfung A", likes: 5 }),
         expect.objectContaining({ clientName: "Satfung B", likes: 3 }),
+      ]),
+    );
+  });
+
+  it("retains metrics for records whose client details exist only inside rekap", () => {
+    const likesRecords = [
+      {
+        rekap: {
+          client_id: "DITBINMAS",
+          client_name: "Satfung C",
+          total_like: 7,
+        },
+      },
+    ];
+
+    const commentRecords = [
+      {
+        rekap: {
+          client_id: "DITBINMAS",
+          client_name: "Satfung C",
+          total_komentar: 3,
+        },
+      },
+    ];
+
+    const mergedRecords = mergeWeeklyActivityRecords(likesRecords, commentRecords);
+    expect(mergedRecords).toHaveLength(1);
+    expect(mergedRecords[0]).toEqual(
+      expect.objectContaining({
+        client_id: "DITBINMAS",
+        client_name: "Satfung C",
+        total_like: 7,
+        total_komentar: 3,
+      }),
+    );
+
+    const filteredRecords = filterDitbinmasRecords(mergedRecords);
+    expect(filteredRecords).toHaveLength(1);
+
+    const summary = aggregateWeeklyLikesRecords(filteredRecords);
+
+    expect(summary.totals.totalLikes).toBe(7);
+    expect(summary.totals.totalComments).toBe(3);
+    expect(summary.clients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientId: "DITBINMAS",
+          clientName: "Satfung C",
+          totalLikes: 7,
+          totalComments: 3,
+        }),
       ]),
     );
   });
