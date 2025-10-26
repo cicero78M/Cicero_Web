@@ -336,8 +336,10 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
 
     const clientMatchesTarget =
       comparableClientId && targetClientIds.has(comparableClientId);
-    const shouldInclude =
-      clientIsDitbinmas || roleIndicatesDitbinmas || targetsDitbinmas || clientMatchesTarget;
+    const hasDitbinmasRole = roleIndicatesDitbinmas;
+    const hasDitbinmasClient =
+      clientIsDitbinmas || targetsDitbinmas || clientMatchesTarget;
+    const shouldInclude = hasDitbinmasRole && hasDitbinmasClient;
 
     if (!shouldInclude) {
       return;
@@ -370,7 +372,7 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
   });
 
   if (uniqueUsers.size === 0 && Array.isArray(resolvedEntries) && resolvedEntries.length) {
-    // fallback: when entries exist but without client info, include all unique entries
+    // fallback: when entries exist but without client info, include ditbinmas role entries only
     resolvedEntries.forEach((entry) => {
       const identifier =
         entry?.user_id ||
@@ -383,6 +385,11 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
         JSON.stringify(entry);
 
       if (!uniqueUsers.has(identifier)) {
+        const entryRole = resolveRole(entry?.role || entry?.user_role || entry?.userRole);
+        if (!entryRole.includes("ditbinmas")) {
+          return;
+        }
+
         const normalizedEntry = { ...entry };
 
         if (!normalizedEntry?.client_id) {
