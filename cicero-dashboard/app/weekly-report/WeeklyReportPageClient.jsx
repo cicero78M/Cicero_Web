@@ -2,25 +2,25 @@
 
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
-import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
-import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
+import WeeklyPlatformEngagementTrendChart from "@/components/weekly-report/WeeklyPlatformEngagementTrendChart";
+import WeeklyPlatformLikesSummary from "@/components/weekly-report/WeeklyPlatformLikesSummary";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import {
-  aggregateLikesRecords,
-  mergeActivityRecords,
-  prepareTrendActivityRecords,
-  createEmptyLikesSummary,
-} from "@/app/executive-summary/dataTransforms";
+  aggregateWeeklyLikesRecords,
+  mergeWeeklyActivityRecords,
+  prepareWeeklyTrendActivityRecords,
+  createEmptyWeeklyLikesSummary,
+} from "./lib/dataTransforms";
 import {
-  formatWeekRangeLabel,
-  parseDateValue,
-  resolveRecordDate,
-} from "@/app/executive-summary/weeklyTrendUtils";
+  formatWeeklyRangeLabel,
+  parseWeeklyDateValue,
+  resolveWeeklyRecordDate,
+} from "./lib/weeklyTrendUtils";
 import {
-  POST_DATE_PATHS,
-  normalizePlatformPost,
-} from "@/app/executive-summary/sharedUtils";
+  WEEKLY_POST_DATE_PATHS,
+  normalizeWeeklyPlatformPost,
+} from "./lib/postUtils";
 import {
   getInstagramPosts,
   getRekapKomentarTiktok,
@@ -138,7 +138,7 @@ export const normalizePostsForPlatform = (
 
   return safeRecords
     .map((record, index) => {
-      const normalized = normalizePlatformPost(record, {
+      const normalized = normalizeWeeklyPlatformPost(record, {
         platformKey,
         platformLabel,
         fallbackIndex: index,
@@ -153,12 +153,12 @@ export const normalizePostsForPlatform = (
           return record.activityDate;
         }
 
-        const parsedActivity = parseDateValue(record?.activityDate);
+        const parsedActivity = parseWeeklyDateValue(record?.activityDate);
         if (parsedActivity) {
           return parsedActivity;
         }
 
-        const resolved = resolveRecordDate(record, POST_DATE_PATHS);
+        const resolved = resolveWeeklyRecordDate(record, WEEKLY_POST_DATE_PATHS);
         if (resolved?.parsed) {
           return resolved.parsed;
         }
@@ -167,7 +167,7 @@ export const normalizePostsForPlatform = (
           return normalized.publishedAt;
         }
 
-        const parsedPublished = parseDateValue(normalized.publishedAt);
+        const parsedPublished = parseWeeklyDateValue(normalized.publishedAt);
         if (parsedPublished) {
           return parsedPublished;
         }
@@ -236,7 +236,7 @@ export const buildWeeklySeries = (normalizedPosts, weekRanges, monthLabel) =>
       likes: totals.likes,
       comments: totals.comments,
       posts: totals.posts,
-      rangeLabel: formatWeekRangeLabel(range.start, range.end),
+      rangeLabel: formatWeeklyRangeLabel(range.start, range.end),
     };
   });
 
@@ -300,7 +300,7 @@ export const filterActivityRecordsByRange = (recordSets, range) => {
   const endTime = range.end.getTime();
 
   return records.filter((record) => {
-    const resolved = resolveRecordDate(record, [
+    const resolved = resolveWeeklyRecordDate(record, [
       "activityDate",
       "rekap.activityDate",
       "rekap.activity_date",
@@ -331,7 +331,7 @@ export const prepareActivityRecordsByWeek = (
 ) => {
   const safeFallback = fallbackDate ?? null;
 
-  const defaultRecords = prepareTrendActivityRecords(records, {
+  const defaultRecords = prepareWeeklyTrendActivityRecords(records, {
     fallbackDate: safeFallback,
   });
 
@@ -352,7 +352,7 @@ export const prepareActivityRecordsByWeek = (
       return;
     }
 
-    const sanitized = prepareTrendActivityRecords(records, {
+    const sanitized = prepareWeeklyTrendActivityRecords(records, {
       fallbackDate: fallbackCandidate,
     });
 
@@ -890,7 +890,7 @@ export default function WeeklyReportPageClient() {
 
   const weeklyPlatformSnapshot = useMemo(() => {
     const emptySnapshot = {
-      likesSummaryData: createEmptyLikesSummary(),
+      likesSummaryData: createEmptyWeeklyLikesSummary(),
       summaryCards: [],
       labelOverrides: {},
       personnelDistribution: [],
@@ -929,7 +929,10 @@ export default function WeeklyReportPageClient() {
     const weekOptionLabel = resolveActiveLabel(weekOptions, selectedWeek);
     const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth) || "";
     const weekDescriptor = `Minggu ${weekIndex} ${monthLabel} ${selectedYear}`;
-    const weekRangeLabel = formatWeekRangeLabel(activeWeekRange.start, activeWeekRange.end);
+    const weekRangeLabel = formatWeeklyRangeLabel(
+      activeWeekRange.start,
+      activeWeekRange.end,
+    );
     const periodLabel = `${weekOptionLabel} • ${weekRangeLabel} ${monthLabel} ${selectedYear}`;
 
     const fallbackDate =
@@ -967,16 +970,22 @@ export default function WeeklyReportPageClient() {
       ? filterActivityRecordsByRange(commentRecordsByWeek, previousWeekRange)
       : [];
 
-    const mergedWeekRecords = mergeActivityRecords(likesWeekRecords, commentsWeekRecords);
-    const mergedPrevRecords = mergeActivityRecords(likesPrevRecords, commentsPrevRecords);
+    const mergedWeekRecords = mergeWeeklyActivityRecords(
+      likesWeekRecords,
+      commentsWeekRecords,
+    );
+    const mergedPrevRecords = mergeWeeklyActivityRecords(
+      likesPrevRecords,
+      commentsPrevRecords,
+    );
 
     const filteredWeekRecords = filterDitbinmasRecords(mergedWeekRecords);
     const filteredPrevRecords = filterDitbinmasRecords(mergedPrevRecords);
 
-    const summaryWeekRaw = aggregateLikesRecords(filteredWeekRecords, {
+    const summaryWeekRaw = aggregateWeeklyLikesRecords(filteredWeekRecords, {
       directoryUsers: ditbinmasUsers,
     });
-    const summaryPrevRaw = aggregateLikesRecords(filteredPrevRecords, {
+    const summaryPrevRaw = aggregateWeeklyLikesRecords(filteredPrevRecords, {
       directoryUsers: ditbinmasUsers,
     });
 
@@ -1370,7 +1379,7 @@ export default function WeeklyReportPageClient() {
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
-                <PlatformEngagementTrendChart
+                <WeeklyPlatformEngagementTrendChart
                   platformKey="instagram"
                   platformLabel="Instagram"
                   series={instagramSeries}
@@ -1382,7 +1391,7 @@ export default function WeeklyReportPageClient() {
                   personnelCount={ditbinmasPersonnelCount ?? undefined}
                 />
 
-                <PlatformEngagementTrendChart
+                <WeeklyPlatformEngagementTrendChart
                   platformKey="tiktok"
                   platformLabel="TikTok"
                   series={tiktokSeries}
@@ -1426,7 +1435,7 @@ export default function WeeklyReportPageClient() {
                 </div>
 
                 <div className="rounded-3xl border border-white/80 bg-white/85 p-6 shadow-[0_24px_50px_rgba(16,185,129,0.18)] backdrop-blur">
-                  <PlatformLikesSummary
+                  <WeeklyPlatformLikesSummary
                     data={likesSummaryData}
                     formatNumber={formatNumber}
                     formatPercent={formatPercentValue}
