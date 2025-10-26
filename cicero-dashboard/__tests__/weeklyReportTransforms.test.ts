@@ -105,4 +105,36 @@ describe("weekly report data transforms", () => {
 
     expect(extractClientPersonnel(clients)).toEqual([]);
   });
+
+  it("prefers divisi as satfung label for personnel distribution", () => {
+    const clients = [
+      {
+        key: "client-ditbinmas",
+        clientId: "DITBINMAS",
+        divisi: "Subdit Binmas",
+        personnel: [
+          {
+            key: "person-1",
+            nama: "Person One",
+            divisi: "Divisi Bhabinkamtibmas",
+            likes: 3,
+            comments: 2,
+          },
+        ],
+      },
+    ];
+
+    const distribution = extractClientPersonnel(clients);
+
+    expect(distribution).toEqual([
+      expect.objectContaining({
+        key: "person-1",
+        nama: "Person One",
+        satfung: "Divisi Bhabinkamtibmas",
+        likes: 3,
+        comments: 2,
+        interactions: 5,
+      }),
+    ]);
+  });
 });
