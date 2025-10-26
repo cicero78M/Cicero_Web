@@ -3,6 +3,7 @@ import {
   normalizePostsForPlatform,
   filterActivityRecordsByRange,
   prepareActivityRecordsByWeek,
+  extractClientPersonnel,
 } from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("weekly report data transforms", () => {
@@ -88,5 +89,20 @@ describe("weekly report data transforms", () => {
       activeWeekRange,
     );
     expect(activeWeekRecords).toHaveLength(1);
+  });
+
+  it("returns no personnel when interactions are absent", () => {
+    const clients = [
+      {
+        key: "client-1",
+        clientName: "Satfung A",
+        personnel: [
+          { key: "person-1", nama: "Person A", likes: 0, comments: 0 },
+          { key: "person-2", nama: "Person B", likes: null, comments: undefined },
+        ],
+      },
+    ];
+
+    expect(extractClientPersonnel(clients)).toEqual([]);
   });
 });
