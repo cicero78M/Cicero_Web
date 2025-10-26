@@ -362,6 +362,19 @@ export const aggregateWeeklyLikesRecords = (
     return normalized ? normalized.toUpperCase() : "";
   };
 
+  const toComparableToken = (value: any) =>
+    normalizeKeyComponent(value).replace(/[^A-Z0-9]/g, "");
+
+  const isGenericClientIdentifier = (value: any) => {
+    const comparable = toComparableToken(value);
+    if (!comparable) {
+      return true;
+    }
+
+    const GENERIC_TOKENS = ["LAINNYA", "DITBINMAS"];
+    return GENERIC_TOKENS.some((token) => comparable.startsWith(token));
+  };
+
   const resolveClientIdentifiers = (source: any = {}) => {
     const rawClientId =
       source?.client_id ??
@@ -374,7 +387,6 @@ export const aggregateWeeklyLikesRecords = (
       "";
 
     const clientId = toNormalizedString(rawClientId) || "LAINNYA";
-    const clientKey = normalizeKeyComponent(clientId) || "LAINNYA";
     const divisi = toNormalizedString(source?.divisi) || "";
     const clientName =
       toNormalizedString(
@@ -389,6 +401,29 @@ export const aggregateWeeklyLikesRecords = (
           source?.nama_satuan_kerja ??
           clientId,
       ) || "LAINNYA";
+
+    const normalizedClientIdKey =
+      normalizeKeyComponent(clientId) || "LAINNYA";
+    const normalizedDivisiKey = normalizeKeyComponent(divisi);
+    const normalizedClientNameKey = normalizeKeyComponent(clientName);
+
+    const extraSegments: string[] = [];
+    if (normalizedDivisiKey) {
+      extraSegments.push(normalizedDivisiKey);
+    }
+    if (
+      normalizedClientNameKey &&
+      normalizedClientNameKey !== normalizedClientIdKey &&
+      !extraSegments.includes(normalizedClientNameKey)
+    ) {
+      extraSegments.push(normalizedClientNameKey);
+    }
+
+    const clientKey = isGenericClientIdentifier(normalizedClientIdKey)
+      ? [normalizedClientIdKey, ...extraSegments].filter(Boolean).join("::") ||
+        normalizedClientIdKey ||
+        "LAINNYA"
+      : normalizedClientIdKey || "LAINNYA";
 
     return { clientId, clientKey, clientName, divisi };
   };
@@ -566,6 +601,42 @@ export const aggregateWeeklyLikesRecords = (
   const personnelMap = new Map<string, any>();
   let latestActivity: Date | null = null;
 
+  const shouldReplaceIdentifierValue = (current: any, incoming: any) => {
+    const incomingString = toNormalizedString(incoming);
+    if (!incomingString) {
+      return false;
+    }
+
+    const currentString = toNormalizedString(current);
+    if (!currentString) {
+      return true;
+    }
+
+    const currentComparable = toComparableToken(currentString);
+    const incomingComparable = toComparableToken(incomingString);
+
+    if (!currentComparable) {
+      return true;
+    }
+
+    if (currentComparable === incomingComparable) {
+      return false;
+    }
+
+    const currentIsGeneric = isGenericClientIdentifier(currentString);
+    const incomingIsGeneric = isGenericClientIdentifier(incomingString);
+
+    if (currentIsGeneric && !incomingIsGeneric) {
+      return true;
+    }
+
+    if (currentIsGeneric && incomingIsGeneric) {
+      return incomingComparable.length > currentComparable.length;
+    }
+
+    return false;
+  };
+
   const ensureClientEntry = (identifiers: any) => {
     if (!clientsMap.has(identifiers.clientKey)) {
       clientsMap.set(identifiers.clientKey, {
@@ -579,7 +650,23 @@ export const aggregateWeeklyLikesRecords = (
       });
     }
 
-    return clientsMap.get(identifiers.clientKey)!;
+    const clientEntry = clientsMap.get(identifiers.clientKey)!;
+
+    if (shouldReplaceIdentifierValue(clientEntry.clientId, identifiers.clientId)) {
+      clientEntry.clientId = identifiers.clientId;
+    }
+
+    if (
+      shouldReplaceIdentifierValue(clientEntry.clientName, identifiers.clientName)
+    ) {
+      clientEntry.clientName = identifiers.clientName;
+    }
+
+    if (shouldReplaceIdentifierValue(clientEntry.divisi, identifiers.divisi)) {
+      clientEntry.divisi = identifiers.divisi;
+    }
+
+    return clientEntry;
   };
 
   const registerPersonnel = (clientEntry: any, personnelKey: string, defaults: any) => {
