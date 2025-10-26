@@ -1142,8 +1142,7 @@ export default function WeeklyReportPageClient() {
           return (b.likes ?? 0) - (a.likes ?? 0);
         }
         return (b.comments ?? 0) - (a.comments ?? 0);
-      })
-      .slice(0, 20);
+      });
 
     const labelOverrides = {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
