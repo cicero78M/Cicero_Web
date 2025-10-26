@@ -28,6 +28,7 @@ import {
   getTiktokPosts,
   getUserDirectory,
 } from "@/utils/api";
+import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 
 const ensureArray = (...candidates) => {
   for (const candidate of candidates) {
@@ -1116,6 +1117,47 @@ export const extractClientPersonnel = (clients = []) => {
     .filter((person) => person.nama);
 };
 
+const PRIORITY_PERSONNEL_NAMES = [
+  "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+  "AKBP ARY MURTINI, S.I.K., M.SI.",
+];
+
+const normalizePersonnelName = (person) =>
+  String(person?.nama || person?.username || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+
+const resolvePersonnelPriorityIndex = (person) => {
+  const normalized = normalizePersonnelName(person);
+  if (!normalized) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const index = PRIORITY_PERSONNEL_NAMES.findIndex((priorityName) =>
+    normalized.includes(priorityName),
+  );
+
+  return index === -1 ? Number.POSITIVE_INFINITY : index;
+};
+
+export const sortPersonnelDistribution = (personnel = []) => {
+  return [...personnel].sort((a, b) => {
+    const priorityDiff =
+      resolvePersonnelPriorityIndex(a) - resolvePersonnelPriorityIndex(b);
+    if (priorityDiff !== 0) {
+      return priorityDiff;
+    }
+
+    const interactionsDiff = (b.interactions ?? 0) - (a.interactions ?? 0);
+    if (interactionsDiff !== 0) {
+      return interactionsDiff;
+    }
+
+    return compareUsersByPangkatOnly(a, b);
+  });
+};
+
 const safeFetch = async (factory) => {
   try {
     const data = await factory();
@@ -1775,16 +1817,9 @@ export default function WeeklyReportPageClient() {
       summaryWeek.clients || [],
     );
 
-    const personnelDistribution = rawPersonnelDistribution
-      .sort((a, b) => {
-        if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
-          return (b.interactions ?? 0) - (a.interactions ?? 0);
-        }
-        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
-          return (b.likes ?? 0) - (a.likes ?? 0);
-        }
-        return (b.comments ?? 0) - (a.comments ?? 0);
-      });
+    const personnelDistribution = sortPersonnelDistribution(
+      rawPersonnelDistribution,
+    );
 
     const labelOverrides = {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",

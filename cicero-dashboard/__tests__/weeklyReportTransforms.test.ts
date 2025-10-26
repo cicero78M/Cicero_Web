@@ -4,6 +4,7 @@ import {
   filterActivityRecordsByRange,
   prepareActivityRecordsByWeek,
   extractClientPersonnel,
+  sortPersonnelDistribution,
 } from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("weekly report data transforms", () => {
@@ -150,6 +151,46 @@ describe("weekly report data transforms", () => {
         comments: 2,
         interactions: 5,
       }),
+    ]);
+  });
+
+  it("prioritizes key personnel before sorting by interactions", () => {
+    const personnel = [
+      { nama: "Person A", pangkat: "AKP", interactions: 50 },
+      {
+        nama: "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+        pangkat: "KOMISARIS BESAR POLISI",
+        interactions: 10,
+      },
+      {
+        nama: "AKBP ARY MURTINI, S.I.K., M.SI.",
+        pangkat: "AKBP",
+        interactions: 5,
+      },
+      { nama: "Person B", pangkat: "KOMPOL", interactions: 40 },
+    ];
+
+    const sorted = sortPersonnelDistribution(personnel);
+
+    expect(sorted.map((person) => person.nama)).toEqual([
+      "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+      "AKBP ARY MURTINI, S.I.K., M.SI.",
+      "Person A",
+      "Person B",
+    ]);
+  });
+
+  it("uses pangkat order to break interaction ties", () => {
+    const personnel = [
+      { nama: "Person High", pangkat: "AKBP", interactions: 20 },
+      { nama: "Person Lower", pangkat: "AKP", interactions: 20 },
+    ];
+
+    const sorted = sortPersonnelDistribution(personnel);
+
+    expect(sorted.map((person) => person.nama)).toEqual([
+      "Person High",
+      "Person Lower",
     ]);
   });
 });
