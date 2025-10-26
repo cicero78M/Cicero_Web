@@ -1177,7 +1177,9 @@ export default function WeeklyReportPageClient() {
       });
 
     const labelOverrides = {
+      likesContributorsTitle: "Kontribusi Likes Per Satfung",
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
+      commentContributorsTitle: "Kontributor Komentar Per Satfung",
       commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
       tableTitle: "Distribusi Engagement Per User / Personil",
       tableEmptyLabel,

@@ -228,10 +228,10 @@ const PlatformLikesSummary = ({
 
   const resolvedLabels: Required<LabelOverrides> = useMemo(
     () => ({
-      likesContributorsTitle: "Kontributor Likes Teratas",
+      likesContributorsTitle: "Kontribusi Likes Per Satfung",
       likesContributorsDescription:
         "Satker dengan kontribusi likes tertinggi pada periode terpilih.",
-      commentContributorsTitle: "Kontributor Komentar Teratas",
+      commentContributorsTitle: "Kontributor Komentar Per Satfung",
       commentContributorsDescription:
         "Satker dengan jumlah komentar terbanyak beserta rasio kepatuhan.",
       topComplianceTitle: "Kepatuhan Tertinggi",
