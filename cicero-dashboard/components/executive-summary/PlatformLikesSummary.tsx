@@ -133,6 +133,15 @@ interface PlatformLikesSummaryProps {
   hiddenSections?: Partial<Record<HiddenSectionKey, boolean>> | null;
 }
 
+const computeChartMinWidth = (count: number) => {
+  if (!count || count <= 0) {
+    return 600;
+  }
+
+  const perItemWidth = 90;
+  return Math.max(600, count * perItemWidth);
+};
+
 const formatDateTime = (value: Date | string | null) => {
   if (!value) {
     return "";
@@ -254,7 +263,6 @@ const PlatformLikesSummary = ({
   const distributionData = useMemo(() => {
     return [...clients]
       .sort((a, b) => b.totalLikes - a.totalLikes)
-      .slice(0, 8)
       .map((client) => ({
         name: client.clientName,
         likes: client.totalLikes,
@@ -265,13 +273,21 @@ const PlatformLikesSummary = ({
   const commentDistributionData = useMemo(() => {
     return [...clients]
       .sort((a, b) => b.totalComments - a.totalComments)
-      .slice(0, 8)
       .map((client) => ({
         name: client.clientName,
         comments: client.totalComments,
         compliance: client.complianceRate,
       }));
   }, [clients]);
+
+  const likesChartMinWidth = useMemo(() => computeChartMinWidth(distributionData.length), [
+    distributionData.length,
+  ]);
+
+  const commentsChartMinWidth = useMemo(
+    () => computeChartMinWidth(commentDistributionData.length),
+    [commentDistributionData.length],
+  );
 
   const topCompliance = useMemo(() => {
     return [...clients]
@@ -400,12 +416,13 @@ const PlatformLikesSummary = ({
             {resolvedLabels.likesContributorsTitle}
           </h3>
           <p className="mt-2 text-xs text-slate-400">{resolvedLabels.likesContributorsDescription}</p>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={distributionData}
-                margin={{ bottom: 40, left: 12, right: 12 }}
-              >
+          <div className="mt-4 h-64 overflow-x-auto">
+            <div style={{ minWidth: likesChartMinWidth }} className="h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={distributionData}
+                  margin={{ bottom: 40, left: 12, right: 12 }}
+                >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
                 <XAxis
                   dataKey="name"
@@ -439,9 +456,10 @@ const PlatformLikesSummary = ({
                     return label as string;
                   }}
                 />
-                <Bar dataKey="likes" fill="#22d3ee" />
-              </BarChart>
-            </ResponsiveContainer>
+                  <Bar dataKey="likes" fill="#22d3ee" barSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
@@ -452,11 +470,13 @@ const PlatformLikesSummary = ({
           <p className="mt-2 text-xs text-slate-400">{resolvedLabels.commentContributorsDescription}</p>
           <div className="mt-4 h-64">
             {commentDistributionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={commentDistributionData}
-                  margin={{ bottom: 40, left: 12, right: 12 }}
-                >
+              <div className="h-full overflow-x-auto">
+                <div style={{ minWidth: commentsChartMinWidth }} className="h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={commentDistributionData}
+                      margin={{ bottom: 40, left: 12, right: 12 }}
+                    >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
                   <XAxis
                     dataKey="name"
@@ -490,9 +510,11 @@ const PlatformLikesSummary = ({
                       return label as string;
                     }}
                   />
-                  <Bar dataKey="comments" fill="#f97316" />
-                </BarChart>
-              </ResponsiveContainer>
+                      <Bar dataKey="comments" fill="#f97316" barSize={32} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-slate-400">
                 Belum ada data komentar teratas.
