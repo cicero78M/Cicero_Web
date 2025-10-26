@@ -136,6 +136,111 @@ export const filterDitbinmasRecords = (records = []) => {
   });
 };
 
+export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
+  if (!ditbinmasDirectory) {
+    return [];
+  }
+
+  const possibleCollections = [
+    ditbinmasDirectory,
+    ditbinmasDirectory?.data,
+    ditbinmasDirectory?.users,
+    ditbinmasDirectory?.payload,
+    ditbinmasDirectory?.data?.data,
+    ditbinmasDirectory?.data?.users,
+  ];
+
+  const rawCollection = possibleCollections.find((collection) => Array.isArray(collection));
+  const resolvedEntries = Array.isArray(rawCollection) ? rawCollection : [];
+
+  const uniqueUsers = new Map();
+
+  const resolveRole = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
+
+  const resolveClientId = (value) =>
+    String(value || "")
+      .trim()
+      .toUpperCase();
+
+  resolvedEntries.forEach((entry) => {
+    const entryRole = resolveRole(entry?.role || entry?.user_role || entry?.userRole);
+    const entryClientId = resolveClientId(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        entry?.client_code,
+    );
+
+    if (entryClientId !== "DITBINMAS") {
+      return;
+    }
+
+    const identifier =
+      entry?.user_id ||
+      entry?.userId ||
+      entry?.userID ||
+      entry?.nrp ||
+      entry?.nip ||
+      entry?.email ||
+      entry?.id ||
+      JSON.stringify(entry);
+
+    if (!identifier) {
+      return;
+    }
+
+    const existingEntry = uniqueUsers.get(identifier);
+    const existingRole = resolveRole(
+      existingEntry?.role || existingEntry?.user_role || existingEntry?.userRole,
+    );
+    const entryIsPreferred = entryRole.includes("ditbinmas");
+    const existingIsPreferred = existingRole.includes("ditbinmas");
+
+    if (!existingEntry || (!existingIsPreferred && entryIsPreferred)) {
+      uniqueUsers.set(identifier, entry);
+    }
+  });
+
+  if (uniqueUsers.size === 0 && Array.isArray(resolvedEntries) && resolvedEntries.length) {
+    // fallback: when entries exist but without client info, include all unique entries
+    resolvedEntries.forEach((entry) => {
+      const identifier =
+        entry?.user_id ||
+        entry?.userId ||
+        entry?.userID ||
+        entry?.nrp ||
+        entry?.nip ||
+        entry?.email ||
+        entry?.id ||
+        JSON.stringify(entry);
+
+      if (!uniqueUsers.has(identifier)) {
+        const normalizedEntry = { ...entry };
+
+        if (!normalizedEntry?.client_id) {
+          normalizedEntry.client_id = "DITBINMAS";
+        }
+
+        if (!normalizedEntry?.clientId) {
+          normalizedEntry.clientId = normalizedEntry.client_id ?? "DITBINMAS";
+        }
+
+        if (!normalizedEntry?.client) {
+          normalizedEntry.client = normalizedEntry.client_id ?? "DITBINMAS";
+        }
+
+        uniqueUsers.set(identifier, normalizedEntry);
+      }
+    });
+  }
+
+  return Array.from(uniqueUsers.values());
+};
+
 const findWeekRange = (ranges, weekIndex) =>
   ranges.find((range) => range.index === weekIndex) ?? null;
 
@@ -812,100 +917,10 @@ export default function WeeklyReportPageClient() {
     isDitbinmasAuthorized && !weeklySource && !weeklySourceError && weeklyValidating,
   );
 
-  const ditbinmasUsers = useMemo(() => {
-    if (!ditbinmasDirectory) {
-      return [];
-    }
-
-    const possibleCollections = [
-      ditbinmasDirectory,
-      ditbinmasDirectory?.data,
-      ditbinmasDirectory?.users,
-      ditbinmasDirectory?.payload,
-      ditbinmasDirectory?.data?.data,
-      ditbinmasDirectory?.data?.users,
-    ];
-
-    const rawCollection = possibleCollections.find((collection) => Array.isArray(collection));
-    const resolvedEntries = Array.isArray(rawCollection) ? rawCollection : [];
-
-    const uniqueUsers = new Map();
-
-    const resolveRole = (value) =>
-      String(value || "")
-        .trim()
-        .toLowerCase();
-
-    const resolveClientId = (value) =>
-      String(value || "")
-        .trim()
-        .toUpperCase();
-
-    resolvedEntries.forEach((entry) => {
-      const entryRole = resolveRole(
-        entry?.role || entry?.user_role || entry?.userRole,
-      );
-      const entryClientId = resolveClientId(
-        entry?.client_id ||
-          entry?.clientId ||
-          entry?.clientID ||
-          entry?.client ||
-          entry?.client_code,
-      );
-
-      if (entryClientId !== "DITBINMAS") {
-        return;
-      }
-
-      const identifier =
-        entry?.user_id ||
-        entry?.userId ||
-        entry?.userID ||
-        entry?.nrp ||
-        entry?.nip ||
-        entry?.email ||
-        entry?.id ||
-        JSON.stringify(entry);
-
-      if (!identifier) {
-        return;
-      }
-
-      const existingEntry = uniqueUsers.get(identifier);
-      const existingRole = resolveRole(
-        existingEntry?.role ||
-          existingEntry?.user_role ||
-          existingEntry?.userRole,
-      );
-      const entryIsPreferred = entryRole.includes("ditbinmas");
-      const existingIsPreferred = existingRole.includes("ditbinmas");
-
-      if (!existingEntry || (!existingIsPreferred && entryIsPreferred)) {
-        uniqueUsers.set(identifier, entry);
-      }
-    });
-
-    if (uniqueUsers.size === 0 && Array.isArray(resolvedEntries) && resolvedEntries.length) {
-      // fallback: when entries exist but without client info, include all unique entries
-      resolvedEntries.forEach((entry) => {
-        const identifier =
-          entry?.user_id ||
-          entry?.userId ||
-          entry?.userID ||
-          entry?.nrp ||
-          entry?.nip ||
-          entry?.email ||
-          entry?.id ||
-          JSON.stringify(entry);
-
-        if (!uniqueUsers.has(identifier)) {
-          uniqueUsers.set(identifier, entry);
-        }
-      });
-    }
-
-    return Array.from(uniqueUsers.values());
-  }, [ditbinmasDirectory]);
+  const ditbinmasUsers = useMemo(
+    () => resolveDitbinmasDirectoryUsers(ditbinmasDirectory),
+    [ditbinmasDirectory],
+  );
 
   const ditbinmasPersonnelCount = ditbinmasUsers.length;
 
