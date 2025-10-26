@@ -94,6 +94,24 @@ const buildWeekRanges = (monthValue, yearValue) => {
   return ranges;
 };
 
+const filterDitbinmasRecords = (records = []) => {
+  const target = "DITBINMAS";
+
+  return (Array.isArray(records) ? records : []).filter((record) => {
+    if (!record || typeof record !== "object") {
+      return false;
+    }
+
+    const clientValue = record.client_id ?? record.clientId ?? record.client;
+
+    if (typeof clientValue !== "string") {
+      return false;
+    }
+
+    return clientValue.toUpperCase() === target;
+  });
+};
+
 const findWeekRange = (ranges, weekIndex) =>
   ranges.find((range) => range.index === weekIndex) ?? null;
 
@@ -920,10 +938,13 @@ export default function WeeklyReportPageClient() {
     const mergedWeekRecords = mergeActivityRecords(likesWeekRecords, commentsWeekRecords);
     const mergedPrevRecords = mergeActivityRecords(likesPrevRecords, commentsPrevRecords);
 
-    const summaryWeekRaw = aggregateLikesRecords(mergedWeekRecords, {
+    const filteredWeekRecords = filterDitbinmasRecords(mergedWeekRecords);
+    const filteredPrevRecords = filterDitbinmasRecords(mergedPrevRecords);
+
+    const summaryWeekRaw = aggregateLikesRecords(filteredWeekRecords, {
       directoryUsers: ditbinmasUsers,
     });
-    const summaryPrevRaw = aggregateLikesRecords(mergedPrevRecords, {
+    const summaryPrevRaw = aggregateLikesRecords(filteredPrevRecords, {
       directoryUsers: ditbinmasUsers,
     });
 
