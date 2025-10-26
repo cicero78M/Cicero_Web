@@ -40,4 +40,17 @@ describe("filterDitbinmasRecords", () => {
 
     expect(result).toHaveLength(0);
   });
+
+  it("accepts Ditbinmas aliases with whitespace, dashes, and underscores", () => {
+    const records = [
+      { client_name: "Dit Binmas" },
+      { clientName: "DIT-BINMAS" },
+      { clientCode: "dit_binmas" },
+      { client_id: "dit bin mas" },
+    ];
+
+    const result = filterDitbinmasRecords(records);
+
+    expect(result).toHaveLength(4);
+  });
 });

@@ -123,7 +123,9 @@ export const filterDitbinmasRecords = (records = []) => {
         return false;
       }
 
-      const normalized = String(candidate).trim().toUpperCase();
+      const normalized = String(candidate)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "");
 
       if (!normalized) {
         return false;
