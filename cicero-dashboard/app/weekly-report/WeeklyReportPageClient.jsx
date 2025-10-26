@@ -801,28 +801,29 @@ export default function WeeklyReportPageClient() {
 
     const uniqueUsers = new Map();
 
-    resolvedEntries.forEach((entry) => {
-      const entryRole = String(
-        entry?.role || entry?.user_role || entry?.userRole || "",
-      )
+    const resolveRole = (value) =>
+      String(value || "")
         .trim()
         .toLowerCase();
-      const entryClientId = String(
+
+    const resolveClientId = (value) =>
+      String(value || "")
+        .trim()
+        .toUpperCase();
+
+    resolvedEntries.forEach((entry) => {
+      const entryRole = resolveRole(
+        entry?.role || entry?.user_role || entry?.userRole,
+      );
+      const entryClientId = resolveClientId(
         entry?.client_id ||
           entry?.clientId ||
           entry?.clientID ||
           entry?.client ||
-          entry?.client_code ||
-          "",
-      )
-        .trim()
-        .toUpperCase();
+          entry?.client_code,
+      );
 
       if (entryClientId !== "DITBINMAS") {
-        return;
-      }
-
-      if (entryRole && !entryRole.includes("ditbinmas")) {
         return;
       }
 
@@ -836,7 +837,20 @@ export default function WeeklyReportPageClient() {
         entry?.id ||
         JSON.stringify(entry);
 
-      if (!uniqueUsers.has(identifier)) {
+      if (!identifier) {
+        return;
+      }
+
+      const existingEntry = uniqueUsers.get(identifier);
+      const existingRole = resolveRole(
+        existingEntry?.role ||
+          existingEntry?.user_role ||
+          existingEntry?.userRole,
+      );
+      const entryIsPreferred = entryRole.includes("ditbinmas");
+      const existingIsPreferred = existingRole.includes("ditbinmas");
+
+      if (!existingEntry || (!existingIsPreferred && entryIsPreferred)) {
         uniqueUsers.set(identifier, entry);
       }
     });
