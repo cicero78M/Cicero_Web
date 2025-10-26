@@ -67,28 +67,45 @@ const buildWeekRanges = (monthValue, yearValue) => {
     return [];
   }
 
-  const daysInMonth = new Date(yearNumber, monthNumber, 0).getDate();
+  const firstDayOfMonth = new Date(yearNumber, monthNumber - 1, 1);
+  firstDayOfMonth.setHours(0, 0, 0, 0);
+
+  const lastDayOfMonth = new Date(yearNumber, monthNumber, 0);
+  lastDayOfMonth.setHours(23, 59, 59, 999);
+
+  const resolveKey = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate(),
+    ).padStart(2, "0")}`;
+
+  const startOfFirstWeek = new Date(firstDayOfMonth.getTime());
+  const firstDayWeekday = startOfFirstWeek.getDay();
+  const offsetToMonday = (firstDayWeekday + 6) % 7;
+  startOfFirstWeek.setDate(startOfFirstWeek.getDate() - offsetToMonday);
+
   const ranges = [];
-
   let index = 1;
-  let startDay = 1;
-  while (startDay <= daysInMonth) {
-    const endDay = Math.min(startDay + 6, daysInMonth);
 
-    const start = new Date(yearNumber, monthNumber - 1, startDay);
+  for (
+    let cursor = new Date(startOfFirstWeek.getTime());
+    cursor.getTime() <= lastDayOfMonth.getTime();
+    cursor.setDate(cursor.getDate() + 7)
+  ) {
+    const start = new Date(cursor.getTime());
     start.setHours(0, 0, 0, 0);
-    const end = new Date(yearNumber, monthNumber - 1, endDay);
+
+    const end = new Date(cursor.getTime());
+    end.setDate(end.getDate() + 6);
     end.setHours(23, 59, 59, 999);
 
     ranges.push({
       index,
       start,
       end,
-      key: `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`,
+      key: resolveKey(start),
     });
 
     index += 1;
-    startDay += 7;
   }
 
   return ranges;
