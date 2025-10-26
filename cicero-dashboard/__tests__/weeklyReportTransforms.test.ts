@@ -180,6 +180,32 @@ describe("weekly report data transforms", () => {
     ]);
   });
 
+  it("prioritizes key personnel even when the name uses abbreviations", () => {
+    const personnel = [
+      { nama: "Person A", pangkat: "AKP", interactions: 60 },
+      { nama: "Person B", pangkat: "AKBP", interactions: 50 },
+      {
+        nama: "KOMBES POL. LAFRI PRASETYONO",
+        pangkat: "KOMISARIS BESAR POLISI",
+        interactions: 10,
+      },
+      {
+        nama: "AKBP ARY MURTINI",
+        pangkat: "AKBP",
+        interactions: 5,
+      },
+    ];
+
+    const sorted = sortPersonnelDistribution(personnel);
+
+    expect(sorted.map((person) => person.nama)).toEqual([
+      "KOMBES POL. LAFRI PRASETYONO",
+      "AKBP ARY MURTINI",
+      "Person A",
+      "Person B",
+    ]);
+  });
+
   it("uses pangkat order to break interaction ties", () => {
     const personnel = [
       { nama: "Person High", pangkat: "AKBP", interactions: 20 },
