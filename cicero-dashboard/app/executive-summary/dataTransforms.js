@@ -609,6 +609,39 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return { username, nama, pangkat };
   };
 
+  const resolveSatfungDetails = (source = {}) => {
+    const divisionFields = [
+      "divisi",
+      "satfung",
+      "nama_satfung",
+      "namaSatfung",
+      "satfung_name",
+      "satfungName",
+    ];
+    const satkerFields = [
+      "satker",
+      "nama_satker",
+      "namaSatker",
+      "satuan_kerja",
+      "nama_satuan_kerja",
+      "satuanKerja",
+    ];
+
+    const divisionCandidates = collectFieldValues(source, divisionFields);
+    const satkerCandidates = collectFieldValues(source, satkerFields);
+
+    const divisi = pickFirstNormalized([
+      ...divisionCandidates,
+      ...satkerCandidates,
+    ]);
+    const satker = pickFirstNormalized([
+      ...satkerCandidates,
+      ...divisionCandidates,
+    ]);
+
+    return { divisi, satker };
+  };
+
   const buildPersonnelKey = (source = {}, clientKey, fallbackIndex) => {
     const candidates = [
       source?.person_id,
@@ -658,12 +691,20 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelMap = new Map();
   let latestActivity = null;
 
-  const ensureClientEntry = ({ clientId, clientKey, clientName }) => {
+  const ensureClientEntry = ({
+    clientId,
+    clientKey,
+    clientName,
+    divisi,
+    satker,
+  }) => {
     if (!clientsMap.has(clientKey)) {
       clientsMap.set(clientKey, {
         key: clientKey,
         clientId: clientId || "LAINNYA",
         clientName: clientName || "LAINNYA",
+        divisi: divisi || "",
+        satker: satker || "",
         totalLikes: 0,
         totalComments: 0,
         personnel: [],
@@ -673,6 +714,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const clientEntry = clientsMap.get(clientKey);
     updateIfEmpty(clientEntry, "clientId", clientId);
     updateIfEmpty(clientEntry, "clientName", clientName);
+    updateIfEmpty(clientEntry, "divisi", divisi);
+    updateIfEmpty(clientEntry, "satker", satker);
     return clientEntry;
   };
 
@@ -682,6 +725,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         key,
         clientId: clientEntry.clientId,
         clientName: clientEntry.clientName,
+        divisi: clientEntry.divisi || "",
+        satker: clientEntry.satker || "",
         username: "",
         nama: "",
         pangkat: "",
@@ -701,12 +746,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
   directoryUsersRaw.forEach((user, index) => {
     const identifiers = resolveClientIdentifiers(user);
-    const clientEntry = ensureClientEntry(identifiers);
+    const { divisi, satker } = resolveSatfungDetails(user);
+    const clientEntry = ensureClientEntry({
+      ...identifiers,
+      divisi,
+      satker,
+    });
     const { username, nama, pangkat } = resolvePersonnelNames(user);
     const personnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
+      divisi,
+      satker,
       username,
       nama,
       pangkat,
@@ -714,14 +766,23 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "divisi", divisi);
+    updateIfEmpty(personnelRecord, "satker", satker);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
+    updateIfEmpty(clientEntry, "divisi", divisi);
+    updateIfEmpty(clientEntry, "satker", satker);
   });
 
   safeRecords.forEach((record, index) => {
     const identifiers = resolveClientIdentifiers(record);
-    const clientEntry = ensureClientEntry(identifiers);
+    const { divisi, satker } = resolveSatfungDetails(record);
+    const clientEntry = ensureClientEntry({
+      ...identifiers,
+      divisi,
+      satker,
+    });
     const likes = toSafeNumber(
       record?.jumlah_like ??
         record?.jumlahLike ??
@@ -760,6 +821,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
+      divisi,
+      satker,
       username,
       nama,
       pangkat,
@@ -773,9 +836,13 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "divisi", divisi);
+    updateIfEmpty(personnelRecord, "satker", satker);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
+    updateIfEmpty(clientEntry, "divisi", divisi);
+    updateIfEmpty(clientEntry, "satker", satker);
 
     clientEntry.totalLikes += likes;
     clientEntry.totalComments += comments;
