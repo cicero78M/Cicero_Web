@@ -6,7 +6,6 @@ import WeeklyPlatformEngagementTrendChart from "@/components/weekly-report/Weekl
 import WeeklyPlatformLikesSummary from "@/components/weekly-report/WeeklyPlatformLikesSummary";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { computeActivityBuckets } from "../executive-summary/activityBuckets";
 import {
   aggregateWeeklyLikesRecords,
   mergeWeeklyActivityRecords,
@@ -1108,16 +1107,6 @@ export default function WeeklyReportPageClient() {
         previousComplianceRate: 0,
       },
       fetchErrors: weeklySource?.errors ?? {},
-      personnelActivity: {
-        loading: weeklyLoading,
-        error: weeklySourceError
-          ? "Gagal memuat ringkasan aktivitas personil Ditbinmas."
-          : null,
-        categories: [],
-        totalEvaluated: 0,
-        totalContentEvaluated: 0,
-        hasSummary: false,
-      },
     };
 
     if (!isDitbinmasAuthorized) {
@@ -1173,28 +1162,22 @@ export default function WeeklyReportPageClient() {
       ? filterActivityRecordsByRange(commentRecordsByWeek, previousWeekRange)
       : [];
 
-    const filteredLikesWeekRecords = filterDitbinmasRecords(likesWeekRecords);
-    const filteredCommentsWeekRecords = filterDitbinmasRecords(
+    const mergedWeekRecords = mergeWeeklyActivityRecords(
+      likesWeekRecords,
       commentsWeekRecords,
     );
-    const filteredLikesPrevRecords = filterDitbinmasRecords(likesPrevRecords);
-    const filteredCommentsPrevRecords = filterDitbinmasRecords(
+    const mergedPrevRecords = mergeWeeklyActivityRecords(
+      likesPrevRecords,
       commentsPrevRecords,
     );
 
-    const mergedWeekRecords = mergeWeeklyActivityRecords(
-      filteredLikesWeekRecords,
-      filteredCommentsWeekRecords,
-    );
-    const mergedPrevRecords = mergeWeeklyActivityRecords(
-      filteredLikesPrevRecords,
-      filteredCommentsPrevRecords,
-    );
+    const filteredWeekRecords = filterDitbinmasRecords(mergedWeekRecords);
+    const filteredPrevRecords = filterDitbinmasRecords(mergedPrevRecords);
 
-    const summaryWeekRaw = aggregateWeeklyLikesRecords(mergedWeekRecords, {
+    const summaryWeekRaw = aggregateWeeklyLikesRecords(filteredWeekRecords, {
       directoryUsers: ditbinmasUsers,
     });
-    const summaryPrevRaw = aggregateWeeklyLikesRecords(mergedPrevRecords, {
+    const summaryPrevRaw = aggregateWeeklyLikesRecords(filteredPrevRecords, {
       directoryUsers: ditbinmasUsers,
     });
 
@@ -1256,10 +1239,7 @@ export default function WeeklyReportPageClient() {
     const hasPreviousWeekRange = Boolean(previousWeekRange);
     const hasPreviousEngagementRecords =
       hasPreviousWeekRange &&
-      ((mergedPrevRecords?.length ?? 0) > 0 ||
-        filteredLikesPrevRecords.length > 0 ||
-        filteredCommentsPrevRecords.length > 0 ||
-        summaryPrevRaw?.lastUpdated instanceof Date);
+      (filteredPrevRecords.length > 0 || summaryPrevRaw?.lastUpdated instanceof Date);
     const hasPreviousPostRecords =
       hasPreviousWeekRange && (instagramPrevious || tiktokPrevious);
 
@@ -1442,49 +1422,6 @@ export default function WeeklyReportPageClient() {
       ...summaryWeek,
     };
 
-    const activityBuckets = computeActivityBuckets({
-      users: ditbinmasUsers,
-      likes: filteredLikesWeekRecords,
-      comments: filteredCommentsWeekRecords,
-      totalIGPosts: instagramLatest?.posts ?? 0,
-      totalTikTokPosts: tiktokLatest?.posts ?? 0,
-    });
-
-    const activityCategories = Array.isArray(activityBuckets?.categories)
-      ? activityBuckets.categories.map((category) => ({
-          ...category,
-          count: Number.isFinite(Number(category?.count))
-            ? Math.max(0, Number(category.count))
-            : 0,
-        }))
-      : [];
-
-    const resolvedActivityError = weeklySourceError
-      ? "Gagal memuat ringkasan aktivitas personil Ditbinmas."
-      : weeklySource?.errors?.likes || weeklySource?.errors?.comments
-      ? "Sebagian data likes atau komentar tidak tersedia lengkap."
-      : null;
-
-    const totalEvaluatedRaw = activityBuckets?.totalUsers;
-    const totalEvaluated = Number.isFinite(totalEvaluatedRaw)
-      ? totalEvaluatedRaw
-      : 0;
-    const totalContentEvaluatedRaw = activityBuckets?.totalContent;
-    const totalContentEvaluated = Number.isFinite(totalContentEvaluatedRaw)
-      ? totalContentEvaluatedRaw
-      : totalPosts;
-
-    const personnelActivity = {
-      loading: weeklyLoading,
-      error: resolvedActivityError,
-      categories: activityCategories,
-      totalEvaluated,
-      totalContentEvaluated,
-      hasSummary:
-        activityCategories.some((category) => category.count > 0) ||
-        totalEvaluated > 0,
-    };
-
     return {
       likesSummaryData,
       summaryCards,
@@ -1503,7 +1440,6 @@ export default function WeeklyReportPageClient() {
       instagramPrevious,
       tiktokLatest,
       tiktokPrevious,
-      personnelActivity,
       totals: {
         totalPosts,
         previousPosts,
@@ -1528,8 +1464,6 @@ export default function WeeklyReportPageClient() {
     formatNumber,
     formatPercentValue,
     ditbinmasUsers,
-    weeklyLoading,
-    weeklySourceError,
   ]);
 
   const {
@@ -1547,7 +1481,6 @@ export default function WeeklyReportPageClient() {
     instagramPrevious,
     tiktokLatest,
     tiktokPrevious,
-    personnelActivity: weeklyPersonnelActivity,
     fetchErrors: weeklyFetchErrors,
   } = weeklyPlatformSnapshot;
 
@@ -1723,7 +1656,7 @@ export default function WeeklyReportPageClient() {
                     data={likesSummaryData}
                     formatNumber={formatNumber}
                     formatPercent={formatPercentValue}
-                    personnelActivity={weeklyPersonnelActivity}
+                    personnelActivity={null}
                     postTotals={weeklyPostTotals}
                     summaryCards={weeklySummaryCards}
                     labelOverrides={weeklyLabelOverrides}
