@@ -409,10 +409,36 @@ const MONTH_OPTIONS = [
   "Desember",
 ].map((label, index) => ({ label, value: String(index + 1) }));
 
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => {
-  const year = 2025 + index;
-  return { label: String(year), value: String(year) };
-});
+const DEFAULT_EARLIEST_YEAR = 2020;
+
+const buildYearOptions = (earliestYear = DEFAULT_EARLIEST_YEAR) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const resolvedEarliestYear = Number.isFinite(earliestYear)
+    ? Math.min(Math.floor(earliestYear), currentYear)
+    : currentYear;
+
+  const options = [];
+
+  for (let year = currentYear; year >= resolvedEarliestYear; year -= 1) {
+    options.push({ label: String(year), value: String(year) });
+  }
+
+  return options;
+};
+
+const ensureYearOption = (options, year) => {
+  const yearValue = String(year);
+  if (options.some((option) => option.value === yearValue)) {
+    return options;
+  }
+
+  return [...options, { label: yearValue, value: yearValue }].sort(
+    (left, right) => Number(right.value) - Number(left.value),
+  );
+};
+
+const YEAR_OPTIONS = buildYearOptions();
 
 const getCurrentSelections = () => {
   const now = new Date();
@@ -420,12 +446,18 @@ const getCurrentSelections = () => {
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
 
+  const yearOptions = ensureYearOption(YEAR_OPTIONS, year);
+
   return {
-    week: WEEK_OPTIONS.find((option) => option.value === String(weekOfMonth))?.value ?? WEEK_OPTIONS[0].value,
+    week:
+      WEEK_OPTIONS.find((option) => option.value === String(weekOfMonth))?.value ??
+      WEEK_OPTIONS[0].value,
     month:
-      MONTH_OPTIONS.find((option) => option.value === String(month))?.value ?? MONTH_OPTIONS[0].value,
+      MONTH_OPTIONS.find((option) => option.value === String(month))?.value ??
+      MONTH_OPTIONS[0].value,
     year:
-      YEAR_OPTIONS.find((option) => option.value === String(year))?.value ?? YEAR_OPTIONS[0].value,
+      yearOptions.find((option) => option.value === String(year))?.value ??
+      yearOptions[0]?.value ?? String(year),
   };
 };
 
@@ -436,6 +468,11 @@ export default function WeeklyReportPageClient() {
   const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [selectedYear, setSelectedYear] = useState(defaultYear);
+
+  const yearOptions = useMemo(
+    () => ensureYearOption(YEAR_OPTIONS, selectedYear),
+    [selectedYear],
+  );
 
   const normalizedRole = useMemo(() => {
     if (role) return String(role).trim().toLowerCase();
@@ -1043,7 +1080,7 @@ export default function WeeklyReportPageClient() {
                       value={selectedYear}
                       onChange={(event) => setSelectedYear(event.target.value)}
                     >
-                      {YEAR_OPTIONS.map((option) => (
+                      {yearOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -1069,7 +1106,7 @@ export default function WeeklyReportPageClient() {
                   </p>
                 </div>
                 <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
-                  {weeklyPeriodLabel || `${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(YEAR_OPTIONS, selectedYear)}`}
+                  {weeklyPeriodLabel || `${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(yearOptions, selectedYear)}`}
                 </div>
               </div>
 
