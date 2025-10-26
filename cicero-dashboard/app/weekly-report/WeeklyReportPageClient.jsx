@@ -94,7 +94,7 @@ const buildWeekRanges = (monthValue, yearValue) => {
   return ranges;
 };
 
-const filterDitbinmasRecords = (records = []) => {
+export const filterDitbinmasRecords = (records = []) => {
   const target = "DITBINMAS";
 
   return (Array.isArray(records) ? records : []).filter((record) => {
@@ -102,13 +102,35 @@ const filterDitbinmasRecords = (records = []) => {
       return false;
     }
 
-    const clientValue = record.client_id ?? record.clientId ?? record.client;
+    const candidates = [
+      record.client_id,
+      record.clientId,
+      record.client,
+      record.clientID,
+      record.clientid,
+      record.id_client,
+      record.idClient,
+      record.client_code,
+      record.clientCode,
+      record.client_name,
+      record.clientName,
+      record.name,
+      record?.client?.name,
+    ];
 
-    if (typeof clientValue !== "string") {
-      return false;
-    }
+    return candidates.some((candidate) => {
+      if (candidate == null) {
+        return false;
+      }
 
-    return clientValue.toUpperCase() === target;
+      const normalized = String(candidate).trim().toUpperCase();
+
+      if (!normalized) {
+        return false;
+      }
+
+      return normalized === target;
+    });
   });
 };
 
