@@ -659,94 +659,136 @@ export const prepareActivityRecordsByWeek = (
 };
 
 export const extractClientPersonnel = (clients = []) => {
-  const personnelMap = new Map();
+  const rows = [];
 
-  clients.forEach((client) => {
-    if (!client || !Array.isArray(client.personnel)) {
+  (Array.isArray(clients) ? clients : []).forEach((client, clientIndex) => {
+    if (!client) {
       return;
     }
 
-    client.personnel.forEach((person, index) => {
-      if (!person || typeof person !== "object") {
+    const personnel = Array.isArray(client.personnel) ? client.personnel : [];
+    const baseKey =
+      client?.key ||
+      client?.clientKey ||
+      client?.clientId ||
+      client?.client_id ||
+      `client-${clientIndex}`;
+
+    const satfungLabel =
+      client?.divisi ||
+      client?.clientName ||
+      client?.client_name ||
+      client?.clientId ||
+      client?.client_id ||
+      `Satfung ${clientIndex + 1}`;
+
+    const resolveNumber = (value, fallback = 0) => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : fallback;
+    };
+
+    const activeCountFromClient = resolveNumber(client?.activePersonnel, null);
+    const activeCount =
+      activeCountFromClient != null
+        ? activeCountFromClient
+        : personnel.reduce((count, person) => (person?.active ? count + 1 : count), 0);
+
+    const totalPersonnelFromClient = resolveNumber(client?.totalPersonnel, null);
+    const totalPersonnel =
+      totalPersonnelFromClient != null
+        ? totalPersonnelFromClient
+        : Math.max(activeCount, personnel.length);
+    const inactiveCount = Math.max(totalPersonnel - activeCount, 0);
+
+    let activeLikes = 0;
+    let activeComments = 0;
+
+    personnel.forEach((person) => {
+      if (!person || !person.active) {
         return;
       }
 
-      const baseKey = person?.key ||
-        `${client.key || client.clientId || "client"}-${person?.username || person?.nama || index || "person"}`;
-      const key = String(baseKey);
-
-      if (!personnelMap.has(key)) {
-        personnelMap.set(key, {
-          key,
-          pangkat: person?.pangkat || "",
-          nama: person?.nama || "",
-          username: person?.username || "",
-          satfung:
-            person?.divisi ||
-            client?.divisi ||
-            person?.clientName ||
-            client?.clientName ||
-            client?.clientId ||
-            "",
-          likes: 0,
-          comments: 0,
-        });
-      }
-
-      const record = personnelMap.get(key);
       const likesValue = Number(person?.likes);
-      const likes = Number.isFinite(likesValue) ? likesValue : 0;
       const commentsValue = Number(person?.comments);
-      const comments = Number.isFinite(commentsValue) ? commentsValue : 0;
 
-      record.likes += likes;
-      record.comments += comments;
+      if (Number.isFinite(likesValue)) {
+        activeLikes += likesValue;
+      }
 
-      if (!record.pangkat && person?.pangkat) {
-        record.pangkat = person.pangkat;
-      }
-      if (!record.nama && person?.nama) {
-        record.nama = person.nama;
-      }
-      if (!record.username && person?.username) {
-        record.username = person.username;
-      }
-      if (
-        !record.satfung &&
-        (person?.divisi ||
-          client?.divisi ||
-          person?.clientName ||
-          client?.clientName ||
-          client?.clientId)
-      ) {
-        record.satfung =
-          person?.divisi ||
-          client?.divisi ||
-          person?.clientName ||
-          client?.clientName ||
-          client?.clientId ||
-          record.satfung;
+      if (Number.isFinite(commentsValue)) {
+        activeComments += commentsValue;
       }
     });
-  });
 
-  return Array.from(personnelMap.values())
-    .map((person) => {
-      const likesValue = Number(person.likes);
-      const safeLikes = Number.isFinite(likesValue) ? likesValue : 0;
-      const commentsValue = Number(person.comments);
-      const safeComments = Number.isFinite(commentsValue) ? commentsValue : 0;
-      const resolvedName = person.nama || person.username || "";
+    const fallbackLikes = resolveNumber(client?.totalLikes, 0);
+    const fallbackComments = resolveNumber(client?.totalComments, 0);
 
-      return {
-        ...person,
-        nama: resolvedName,
+    if (activeLikes === 0 && fallbackLikes > 0) {
+      activeLikes = fallbackLikes;
+    }
+
+    if (activeComments === 0 && fallbackComments > 0) {
+      activeComments = fallbackComments;
+    }
+
+    const groupInteractions = activeLikes + activeComments;
+
+    const registerRow = (bucketKey, bucketLabel, { likes, comments, personnelCount, order }) => {
+      const safeLikes = resolveNumber(likes, 0);
+      const safeComments = resolveNumber(comments, 0);
+      const safePersonnelCount = resolveNumber(personnelCount, 0);
+
+      rows.push({
+        key: `${baseKey}-${bucketKey}`,
+        bucketKey,
+        bucketLabel,
+        bucketOrder: order,
+        groupKey: baseKey,
+        groupLabel: satfungLabel,
+        personnelCount: safePersonnelCount,
+        totalPersonnel,
         likes: safeLikes,
         comments: safeComments,
         interactions: safeLikes + safeComments,
-      };
-    })
-    .filter((person) => person.nama);
+        activePersonnel: activeCount,
+        inactivePersonnel: inactiveCount,
+        groupInteractions,
+      });
+    };
+
+    registerRow("active", "Aktif", {
+      likes: activeLikes,
+      comments: activeComments,
+      personnelCount: activeCount,
+      order: 0,
+    });
+
+    registerRow("inactive", "Belum Aktivitas", {
+      likes: 0,
+      comments: 0,
+      personnelCount: inactiveCount,
+      order: 1,
+    });
+  });
+
+  return rows
+    .filter((row) => row.totalPersonnel > 0 || row.personnelCount > 0)
+    .sort((a, b) => {
+      if (b.groupInteractions !== a.groupInteractions) {
+        return b.groupInteractions - a.groupInteractions;
+      }
+
+      const labelComparison = (a.groupLabel || "").localeCompare(b.groupLabel || "", "id");
+      if (labelComparison !== 0) {
+        return labelComparison;
+      }
+
+      if (a.bucketOrder !== b.bucketOrder) {
+        return a.bucketOrder - b.bucketOrder;
+      }
+
+      return (a.bucketKey || "").localeCompare(b.bucketKey || "");
+    });
 };
 
 const safeFetch = async (factory) => {
@@ -1402,27 +1444,37 @@ export default function WeeklyReportPageClient() {
       },
     ];
 
-    const tableEmptyLabel = "Belum ada data engagement personil untuk minggu ini.";
+    const tableEmptyLabel = "Belum ada ringkasan aktivitas personil untuk minggu ini.";
 
     const rawPersonnelDistribution = extractClientPersonnel(
       summaryWeek.clients || [],
     );
 
-    const personnelDistribution = rawPersonnelDistribution
-      .sort((a, b) => {
-        if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
-          return (b.interactions ?? 0) - (a.interactions ?? 0);
-        }
-        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
-          return (b.likes ?? 0) - (a.likes ?? 0);
-        }
-        return (b.comments ?? 0) - (a.comments ?? 0);
-      });
+    const personnelDistribution = rawPersonnelDistribution.map((row) => {
+      const activeCount = Number.isFinite(row?.personnelCount)
+        ? row.personnelCount
+        : 0;
+      const totalCount = Number.isFinite(row?.totalPersonnel)
+        ? row.totalPersonnel
+        : activeCount;
+
+      const ratioLabel = `${formatNumber(activeCount, {
+        maximumFractionDigits: 0,
+      })} dari ${formatNumber(totalCount, { maximumFractionDigits: 0 })} personil`;
+
+      return {
+        ...row,
+        pangkat: row?.bucketLabel || row?.pangkat || "",
+        nama: row?.groupLabel || row?.nama || "",
+        satfung: ratioLabel,
+      };
+    });
 
     const labelOverrides = {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
       commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
-      tableTitle: "Distribusi Engagement Per User / Personil",
+      tableTitle: "Ringkasan Aktivitas Personil per Satfung",
+      tableSubtitle: "Setiap satfung ditampilkan sebagai status Aktif dan Belum Aktivitas.",
       tableEmptyLabel,
     };
 
@@ -1431,7 +1483,7 @@ export default function WeeklyReportPageClient() {
         rawPersonnelDistribution.length > 0
           ? `${weekDescriptor} • ${formatNumber(totalActive, {
               maximumFractionDigits: 0,
-            })} personil aktif`
+            })} aktif dari ${formatNumber(resolvedTotalPersonnel, { maximumFractionDigits: 0 })} personil`
           : tableEmptyLabel,
     };
 
