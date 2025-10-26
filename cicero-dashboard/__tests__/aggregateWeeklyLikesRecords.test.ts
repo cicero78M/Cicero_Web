@@ -188,6 +188,74 @@ describe("aggregateWeeklyLikesRecords", () => {
     expect(summary.totals.totalComments).toBe(3);
   });
 
+  it("keeps separate personnel entries for different identities within the same client", () => {
+    const likesRecords = [
+      {
+        client_id: "DITBINMAS",
+        nama_client: "Satfung D",
+        username: "person_a",
+        nama: "Person A",
+        jumlah_like: 7,
+      },
+      {
+        client_id: "DITBINMAS",
+        nama_client: "Satfung D",
+        nrp: "12345678",
+        nama: "Person B",
+        jumlah_like: 5,
+      },
+    ];
+
+    const commentRecords = [
+      {
+        client_id: "DITBINMAS",
+        nama_client: "Satfung D",
+        nama: "Person A",
+        jumlah_komentar: 2,
+      },
+      {
+        client_id: "DITBINMAS",
+        nama_client: "Satfung D",
+        nrp: "12345678",
+        jumlah_komentar: 4,
+      },
+    ];
+
+    const merged = mergeWeeklyActivityRecords(likesRecords, commentRecords);
+
+    expect(merged).toHaveLength(2);
+
+    const summary = aggregateWeeklyLikesRecords(merged);
+
+    expect(summary.clients).toHaveLength(1);
+    const clientEntry = summary.clients[0];
+    expect(clientEntry.personnel).toHaveLength(2);
+
+    const firstPersonnel = clientEntry.personnel.find(
+      (person: any) => person.username === "person_a" || person.nama === "Person A",
+    );
+    const secondPersonnel = clientEntry.personnel.find(
+      (person: any) => person.nama === "Person B",
+    );
+
+    expect(firstPersonnel).toEqual(
+      expect.objectContaining({
+        username: "person_a",
+        nama: "Person A",
+        likes: 7,
+        comments: 2,
+      }),
+    );
+
+    expect(secondPersonnel).toEqual(
+      expect.objectContaining({
+        nama: "Person B",
+        likes: 5,
+        comments: 4,
+      }),
+    );
+  });
+
   it("counts likes and comments stored inside nested rekap structures", () => {
     const likesRecords = [
       {
