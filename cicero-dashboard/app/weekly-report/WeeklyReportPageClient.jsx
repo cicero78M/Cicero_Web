@@ -59,6 +59,96 @@ const ensureArray = (...candidates) => {
   return [];
 };
 
+const resolveActivityFlag = (value) => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (value == null) {
+    return null;
+  }
+
+  const normalized = String(value)
+    .trim()
+    .toLowerCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const positive = [
+    "active",
+    "aktif",
+    "ya",
+    "yes",
+    "true",
+    "1",
+    "on",
+    "enabled",
+    "enable",
+  ];
+
+  if (positive.includes(normalized)) {
+    return true;
+  }
+
+  const negative = [
+    "inactive",
+    "inaktif",
+    "nonaktif",
+    "non-aktif",
+    "tidak aktif",
+    "tidakaktif",
+    "tidak",
+    "no",
+    "false",
+    "0",
+    "off",
+    "disabled",
+    "disable",
+    "suspend",
+    "suspended",
+    "deactivated",
+  ];
+
+  if (negative.includes(normalized)) {
+    return false;
+  }
+
+  return null;
+};
+
+const resolveDirectoryIsActive = (entry) => {
+  if (!entry || typeof entry !== "object") {
+    return true;
+  }
+
+  const candidates = [
+    entry?.is_active,
+    entry?.isActive,
+    entry?.active,
+    entry?.aktif,
+    entry?.enabled,
+    entry?.is_enabled,
+    entry?.isEnabled,
+    entry?.status,
+    entry?.user_status,
+    entry?.userStatus,
+    entry?.status_keaktifan,
+    entry?.statusKeaktifan,
+    entry?.keaktifan,
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = resolveActivityFlag(candidate);
+    if (resolved != null) {
+      return resolved;
+    }
+  }
+
+  return true;
+};
+
 const buildWeekRanges = (monthValue, yearValue) => {
   const monthNumber = Number(monthValue);
   const yearNumber = Number(yearValue);
@@ -267,6 +357,7 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
     const roleIndicatesDitbinmas = entryRole.includes("ditbinmas");
     const targetsDitbinmas = comparableTargets.has("DITBINMAS");
     const clientIsDitbinmas = comparableClientId === "DITBINMAS";
+    const isActive = resolveDirectoryIsActive(entry);
 
     return {
       entry,
@@ -278,6 +369,7 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       roleIndicatesDitbinmas,
       targetsDitbinmas,
       clientIsDitbinmas,
+      isActive,
     };
   });
 
@@ -296,6 +388,7 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       roleIndicatesDitbinmas,
       targetsDitbinmas,
       clientIsDitbinmas,
+      isActive,
     } = normalized;
 
     const hasDitbinmasSignal =
@@ -332,6 +425,7 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       roleIndicatesDitbinmas,
       targetsDitbinmas,
       clientIsDitbinmas,
+      isActive,
     } = normalized;
 
     const clientMatchesTarget =
@@ -340,6 +434,10 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       clientIsDitbinmas || roleIndicatesDitbinmas || targetsDitbinmas || clientMatchesTarget;
 
     if (!shouldInclude) {
+      return;
+    }
+
+    if (!isActive) {
       return;
     }
 
@@ -369,9 +467,13 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
     }
   });
 
-  if (uniqueUsers.size === 0 && Array.isArray(resolvedEntries) && resolvedEntries.length) {
+  if (uniqueUsers.size === 0 && Array.isArray(normalizedEntries) && normalizedEntries.length) {
     // fallback: when entries exist but without client info, include all unique entries
-    resolvedEntries.forEach((entry) => {
+    normalizedEntries.forEach(({ entry, isActive }) => {
+      if (!isActive) {
+        return;
+      }
+
       const identifier =
         entry?.user_id ||
         entry?.userId ||
