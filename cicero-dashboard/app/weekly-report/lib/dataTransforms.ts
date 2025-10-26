@@ -94,8 +94,8 @@ export const mergeWeeklyActivityRecords = (
 
   const assignClientDetails = (
     target: any,
-    clientIdValue: any,
-    clientNameValue: any,
+    clientIdCandidates: any[] = [],
+    clientNameCandidates: any[] = [],
   ) => {
     const updateStringField = (field: string, value: any) => {
       if (value == null) {
@@ -119,20 +119,35 @@ export const mergeWeeklyActivityRecords = (
       }
     };
 
-    if (clientIdValue != null && clientIdValue !== "") {
-      updateStringField("client_id", clientIdValue);
-      updateStringField("clientId", clientIdValue);
-      updateStringField("clientID", clientIdValue);
-      updateStringField("id_client", clientIdValue);
-      updateStringField("clientid", clientIdValue);
-    }
+    const normalizeCandidates = (candidates: any[]) =>
+      candidates
+        .flatMap((candidate) =>
+          Array.isArray(candidate) ? candidate : [candidate],
+        )
+        .map((candidate) =>
+          typeof candidate === "string" ? candidate.trim() : candidate,
+        )
+        .filter((candidate) => candidate != null && candidate !== "");
 
-    if (clientNameValue != null && clientNameValue !== "") {
-      updateStringField("nama_client", clientNameValue);
-      updateStringField("client_name", clientNameValue);
-      updateStringField("client", clientNameValue);
-      updateStringField("namaClient", clientNameValue);
-    }
+    const normalizedClientIds = normalizeCandidates(clientIdCandidates);
+    const normalizedClientNames = normalizeCandidates(clientNameCandidates);
+
+    normalizedClientIds.forEach((value) => {
+      updateStringField("client_id", value);
+      updateStringField("clientId", value);
+      updateStringField("clientID", value);
+      updateStringField("id_client", value);
+      updateStringField("clientid", value);
+      updateStringField("idClient", value);
+    });
+
+    normalizedClientNames.forEach((value) => {
+      updateStringField("nama_client", value);
+      updateStringField("client_name", value);
+      updateStringField("client", value);
+      updateStringField("namaClient", value);
+      updateStringField("clientName", value);
+    });
   };
 
   const assignIfEmpty = (target: any, field: string, value: any) => {
@@ -306,7 +321,35 @@ export const mergeWeeklyActivityRecords = (
       }
 
       const { existing, isNew } = ensureExistingRecord(identifiers, record);
-      assignClientDetails(existing, record?.client_id ?? record?.clientId, record?.client ?? record?.nama_client);
+      assignClientDetails(
+        existing,
+        [
+          record?.client_id,
+          record?.clientId,
+          record?.clientID,
+          record?.id_client,
+          record?.clientid,
+          record?.idClient,
+          record?.rekap?.client_id,
+          record?.rekap?.clientId,
+          record?.rekap?.clientID,
+          record?.rekap?.id_client,
+          record?.rekap?.clientid,
+          record?.rekap?.idClient,
+        ],
+        [
+          record?.nama_client,
+          record?.client_name,
+          record?.client,
+          record?.namaClient,
+          record?.clientName,
+          record?.rekap?.nama_client,
+          record?.rekap?.client_name,
+          record?.rekap?.client,
+          record?.rekap?.namaClient,
+          record?.rekap?.clientName,
+        ],
+      );
       assignIfEmpty(existing, "rekap", record?.rekap);
       assignIfEmpty(existing, "metrics", record?.metrics);
       assignIfEmpty(existing, "activityDate", record?.activityDate);
