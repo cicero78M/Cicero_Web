@@ -229,6 +229,97 @@ const WeeklyPlatformLikesSummary = ({
     summaryCards,
   ]);
 
+  const personnelDistributionAnalytics = useMemo(() => {
+    if (!Array.isArray(personnelDistribution) || personnelDistribution.length === 0) {
+      return null;
+    }
+
+    const normalizedRows = personnelDistribution
+      .map((row) => {
+        const likesValue = Number(row.likes);
+        const commentsValue = Number(row.comments);
+        const interactionsValueRaw =
+          row.interactions != null ? Number(row.interactions) : likesValue + commentsValue;
+
+        const likes = Number.isFinite(likesValue) ? likesValue : 0;
+        const comments = Number.isFinite(commentsValue) ? commentsValue : 0;
+        const interactions = Number.isFinite(interactionsValueRaw) ? interactionsValueRaw : likes + comments;
+
+        return {
+          key: row.key,
+          name: [row.pangkat, row.nama].filter(Boolean).join(" ") || "Personil Tanpa Nama",
+          satfung: row.satfung || "Satfung tidak diketahui",
+          likes,
+          comments,
+          interactions,
+        };
+      })
+      .filter((entry) => Number.isFinite(entry.interactions));
+
+    if (normalizedRows.length === 0) {
+      return null;
+    }
+
+    const totalInteractions = normalizedRows.reduce((sum, entry) => sum + entry.interactions, 0);
+    const sortedRows = [...normalizedRows].sort((a, b) => b.interactions - a.interactions);
+    const topPerformer = sortedRows[0];
+    const topThree = sortedRows.slice(0, 3);
+
+    return {
+      totalPersonnel: normalizedRows.length,
+      totalInteractions,
+      topPerformer,
+      topThree,
+    };
+  }, [personnelDistribution]);
+
+  const personnelDistributionNarrative = useMemo(() => {
+    if (!personnelDistributionAnalytics) {
+      return null;
+    }
+
+    const { totalPersonnel, totalInteractions, topPerformer, topThree } = personnelDistributionAnalytics;
+
+    const totalInteractionsLabel = formatNumber(Math.max(totalInteractions, 0), {
+      maximumFractionDigits: 0,
+    });
+    const totalPersonnelLabel = formatNumber(totalPersonnel, {
+      maximumFractionDigits: 0,
+    });
+
+    const baseNarrative = `Sebanyak ${totalPersonnelLabel} personil tercatat dalam tabel dengan total ${totalInteractionsLabel} interaksi.`;
+
+    if (!topPerformer) {
+      return baseNarrative;
+    }
+
+    const topInteractionsLabel = formatNumber(Math.max(topPerformer.interactions, 0), {
+      maximumFractionDigits: 0,
+    });
+    const share = totalInteractions > 0 ? (topPerformer.interactions / totalInteractions) * 100 : 0;
+    const shareLabel = formatPercent(share);
+
+    const topNarrative = `${topPerformer.name} dari ${topPerformer.satfung} memimpin dengan ${topInteractionsLabel} interaksi (${shareLabel} dari total), terdiri dari ${formatNumber(Math.max(topPerformer.likes, 0), {
+      maximumFractionDigits: 0,
+    })} likes dan ${formatNumber(Math.max(topPerformer.comments, 0), { maximumFractionDigits: 0 })} komentar.`;
+
+    if (topThree.length <= 1) {
+      return `${baseNarrative} ${topNarrative}`.trim();
+    }
+
+    const additionalHighlights = topThree
+      .slice(1)
+      .map((entry) => {
+        const interactionsLabel = formatNumber(Math.max(entry.interactions, 0), {
+          maximumFractionDigits: 0,
+        });
+        return `${entry.name} (${entry.satfung}) ${interactionsLabel} interaksi`;
+      })
+      .join("; ");
+
+    return `${baseNarrative} ${topNarrative} Kontributor berikutnya: ${additionalHighlights}.`;
+  }, [formatNumber, formatPercent, personnelDistributionAnalytics]);
+
   const resolvedLabels: Required<LabelOverrides> = useMemo(
     () => ({
       likesContributorsTitle: "Kontributor Likes Teratas",
@@ -782,6 +873,11 @@ const WeeklyPlatformLikesSummary = ({
             </table>
           )}
         </div>
+        {personnelDistributionNarrative ? (
+          <p className="mt-4 text-xs leading-relaxed text-slate-400">
+            {personnelDistributionNarrative}
+          </p>
+        ) : null}
       </div>
     </div>
   );
