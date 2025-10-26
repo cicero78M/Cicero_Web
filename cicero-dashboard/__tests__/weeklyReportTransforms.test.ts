@@ -131,6 +131,42 @@ describe("weekly report data transforms", () => {
     expect(personnel[0].satfung).toBe("Satfung Bhayangkara");
   });
 
+  it("retains satfung labels from alternative Ditbinmas fields", () => {
+    const clients = [
+      {
+        key: "client-ditbinmas",
+        clientId: "DIV-001",
+        clientName: "DIV-001",
+        personnel: [
+          {
+            key: "person-1",
+            nama: "Person A",
+            likes: 5,
+            comments: 2,
+            divisi_satker: "Satfung Polmas",
+          },
+          {
+            key: "person-1",
+            likes: 3,
+            comments: 1,
+            client_name: "Satfung Polmas",
+          },
+        ],
+      },
+    ];
+
+    const personnel = extractClientPersonnel(clients);
+
+    expect(personnel).toHaveLength(1);
+    expect(personnel[0].satfung).toBe("Satfung Polmas");
+
+    const satfungTotals = aggregateSatfungTotals(personnel);
+
+    expect(satfungTotals).toHaveLength(1);
+    expect(satfungTotals[0].clientName).toBe("Satfung Polmas");
+    expect(satfungTotals[0].clientName).not.toBe("DIV-001");
+  });
+
   it("aggregates likes and comments per satfung", () => {
     const personnel = [
       {
