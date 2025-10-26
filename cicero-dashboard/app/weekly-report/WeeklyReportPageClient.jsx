@@ -347,7 +347,7 @@ export const prepareActivityRecordsByWeek = (
   return { defaultRecords, byRange };
 };
 
-const extractClientPersonnel = (clients = []) => {
+export const extractClientPersonnel = (clients = []) => {
   const personnelMap = new Map();
 
   clients.forEach((client) => {
@@ -411,7 +411,7 @@ const extractClientPersonnel = (clients = []) => {
         interactions: safeLikes + safeComments,
       };
     })
-    .filter((person) => person.nama);
+    .filter((person) => person.nama && person.interactions > 0);
 };
 
 const safeFetch = async (factory) => {
@@ -1106,7 +1106,13 @@ export default function WeeklyReportPageClient() {
       },
     ];
 
-    const personnelDistribution = extractClientPersonnel(summaryWeek.clients || [])
+    const tableEmptyLabel = "Belum ada data engagement personil untuk minggu ini.";
+
+    const rawPersonnelDistribution = extractClientPersonnel(
+      summaryWeek.clients || [],
+    );
+
+    const personnelDistribution = rawPersonnelDistribution
       .sort((a, b) => {
         if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
           return (b.interactions ?? 0) - (a.interactions ?? 0);
@@ -1122,13 +1128,16 @@ export default function WeeklyReportPageClient() {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
       commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
       tableTitle: "Distribusi Engagement Per User / Personil",
-      tableEmptyLabel: "Belum ada data engagement personil untuk minggu ini.",
+      tableEmptyLabel,
     };
 
     const distributionMeta = {
-      note: `${weekDescriptor} • ${formatNumber(totalActive, {
-        maximumFractionDigits: 0,
-      })} personil aktif`,
+      note:
+        rawPersonnelDistribution.length > 0
+          ? `${weekDescriptor} • ${formatNumber(totalActive, {
+              maximumFractionDigits: 0,
+            })} personil aktif`
+          : tableEmptyLabel,
     };
 
     const likesSummaryData = {
