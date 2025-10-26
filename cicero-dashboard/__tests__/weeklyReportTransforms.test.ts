@@ -91,65 +91,47 @@ describe("weekly report data transforms", () => {
     expect(activeWeekRecords).toHaveLength(1);
   });
 
-  it("aggregates personnel into active and inactive buckets per satfung", () => {
+  it("keeps personnel with zero interactions when a name is available", () => {
     const clients = [
       {
         key: "client-1",
         clientName: "Satfung A",
-        divisi: "Divisi A",
-        totalPersonnel: 5,
-        activePersonnel: 2,
-        totalLikes: 5,
-        totalComments: 3,
         personnel: [
-          { key: "person-1", nama: "Person A", active: true, likes: 3, comments: 1 },
-          { key: "person-2", nama: "Person B", active: true, likes: 0, comments: 2 },
-          { key: "person-3", nama: "Person C", active: false, likes: 7, comments: 4 },
+          { key: "person-1", nama: "Person A", likes: 0, comments: 0 },
+          { username: "person-b", likes: null, comments: undefined },
         ],
       },
     ];
 
-    const distribution = extractClientPersonnel(clients);
-
-    expect(distribution).toHaveLength(2);
-
-    const activeRow = distribution.find((row) => row.bucketKey === "active");
-    const inactiveRow = distribution.find((row) => row.bucketKey === "inactive");
-
-    expect(activeRow).toMatchObject({
-      key: "client-1-active",
-      bucketLabel: "Aktif",
-      groupLabel: "Divisi A",
-      personnelCount: 2,
-      totalPersonnel: 5,
-      likes: 3,
-      comments: 3,
-      interactions: 6,
-    });
-
-    expect(inactiveRow).toMatchObject({
-      key: "client-1-inactive",
-      bucketLabel: "Belum Aktivitas",
-      personnelCount: 3,
-      likes: 0,
-      comments: 0,
-      interactions: 0,
-    });
+    expect(extractClientPersonnel(clients)).toEqual([
+      expect.objectContaining({
+        key: "person-1",
+        nama: "Person A",
+        likes: 0,
+        comments: 0,
+        interactions: 0,
+      }),
+      expect.objectContaining({
+        key: "client-1-person-b",
+        nama: "person-b",
+        likes: 0,
+        comments: 0,
+        interactions: 0,
+      }),
+    ]);
   });
 
-  it("prefers divisi as satfung label while preserving compliance metadata", () => {
+  it("prefers divisi as satfung label for personnel distribution", () => {
     const clients = [
       {
         key: "client-ditbinmas",
         clientId: "DITBINMAS",
         divisi: "Subdit Binmas",
-        totalPersonnel: 4,
-        activePersonnel: 1,
         personnel: [
           {
             key: "person-1",
             nama: "Person One",
-            active: true,
+            divisi: "Divisi Bhabinkamtibmas",
             likes: 3,
             comments: 2,
           },
@@ -159,21 +141,15 @@ describe("weekly report data transforms", () => {
 
     const distribution = extractClientPersonnel(clients);
 
-    expect(distribution).toHaveLength(2);
-
-    const [activeRow, inactiveRow] = distribution;
-
-    expect(activeRow).toMatchObject({
-      bucketLabel: "Aktif",
-      groupLabel: "Subdit Binmas",
-      personnelCount: 1,
-      totalPersonnel: 4,
-    });
-
-    expect(inactiveRow).toMatchObject({
-      bucketLabel: "Belum Aktivitas",
-      personnelCount: 3,
-      totalPersonnel: 4,
-    });
+    expect(distribution).toEqual([
+      expect.objectContaining({
+        key: "person-1",
+        nama: "Person One",
+        satfung: "Divisi Bhabinkamtibmas",
+        likes: 3,
+        comments: 2,
+        interactions: 5,
+      }),
+    ]);
   });
 });
