@@ -110,7 +110,10 @@ const computePreviousRange = (ranges, currentRange) => {
   return findWeekRange(ranges, previousIndex) ?? null;
 };
 
-const normalizePostsForPlatform = (records = [], { platformKey, platformLabel }) => {
+export const normalizePostsForPlatform = (
+  records = [],
+  { platformKey, platformLabel },
+) => {
   const safeRecords = Array.isArray(records)
     ? records.filter((record) => record && typeof record === "object")
     : [];
@@ -158,13 +161,20 @@ const normalizePostsForPlatform = (records = [], { platformKey, platformLabel })
         return null;
       }
 
-      const likes = Number.isFinite(normalized.likes) ? Math.max(0, Number(normalized.likes)) : 0;
-      const comments = Number.isFinite(normalized.comments)
-        ? Math.max(0, Number(normalized.comments))
-        : 0;
-      const interactionsCandidate = normalized.interactions;
+      const metrics = normalized.metrics ?? {};
+      const {
+        likes: metricLikes,
+        comments: metricComments,
+        interactions: metricInteractions,
+      } = metrics;
+
+      const likesValue = Number(metricLikes);
+      const likes = Number.isFinite(likesValue) ? Math.max(0, likesValue) : 0;
+      const commentsValue = Number(metricComments);
+      const comments = Number.isFinite(commentsValue) ? Math.max(0, commentsValue) : 0;
+      const interactionsCandidate = Number(metricInteractions);
       const interactions = Number.isFinite(interactionsCandidate)
-        ? Math.max(0, Number(interactionsCandidate))
+        ? Math.max(0, interactionsCandidate)
         : likes + comments;
 
       const date = new Date(resolvedDate);
@@ -181,7 +191,7 @@ const normalizePostsForPlatform = (records = [], { platformKey, platformLabel })
     .filter(Boolean);
 };
 
-const buildWeeklySeries = (normalizedPosts, weekRanges, monthLabel) =>
+export const buildWeeklySeries = (normalizedPosts, weekRanges, monthLabel) =>
   weekRanges.map((range) => {
     const totals = normalizedPosts.reduce(
       (acc, post) => {
