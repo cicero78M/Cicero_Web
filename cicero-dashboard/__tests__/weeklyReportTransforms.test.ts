@@ -1,4 +1,9 @@
-import { buildWeeklySeries, normalizePostsForPlatform } from "@/app/weekly-report/WeeklyReportPageClient";
+import {
+  buildWeeklySeries,
+  normalizePostsForPlatform,
+  filterActivityRecordsByRange,
+  prepareActivityRecordsByWeek,
+} from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("weekly report data transforms", () => {
   it("preserves metrics totals when building weekly series", () => {
@@ -36,5 +41,52 @@ describe("weekly report data transforms", () => {
     expect(series.comments).toBe(3);
     expect(series.interactions).toBe(12);
     expect(series.posts).toBe(1);
+  });
+
+  it("assigns records without dates to the active week range", () => {
+    const weekRanges = [
+      {
+        key: "2024-07-01",
+        index: 1,
+        start: new Date(Date.UTC(2024, 6, 1, 0, 0, 0, 0)),
+        end: new Date(Date.UTC(2024, 6, 7, 23, 59, 59, 999)),
+      },
+      {
+        key: "2024-07-08",
+        index: 2,
+        start: new Date(Date.UTC(2024, 6, 8, 0, 0, 0, 0)),
+        end: new Date(Date.UTC(2024, 6, 14, 23, 59, 59, 999)),
+      },
+    ];
+
+    const activeWeekRange = weekRanges[1];
+    const previousWeekRange = weekRanges[0];
+
+    const records = [
+      {
+        client_id: "unit-1",
+        jumlah_like: 5,
+      },
+    ];
+
+    const fallbackDate = new Date(Date.UTC(2024, 6, 1, 0, 0, 0, 0));
+
+    const recordSets = prepareActivityRecordsByWeek(records, {
+      fallbackDate,
+      activeWeekRange,
+      previousWeekRange,
+    });
+
+    const defaultWeekTwoRecords = filterActivityRecordsByRange(
+      recordSets.defaultRecords,
+      activeWeekRange,
+    );
+    expect(defaultWeekTwoRecords).toHaveLength(0);
+
+    const activeWeekRecords = filterActivityRecordsByRange(
+      recordSets,
+      activeWeekRange,
+    );
+    expect(activeWeekRecords).toHaveLength(1);
   });
 });

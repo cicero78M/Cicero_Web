@@ -222,8 +222,59 @@ export const buildWeeklySeries = (normalizedPosts, weekRanges, monthLabel) =>
     };
   });
 
-const filterActivityRecordsByRange = (records, range) => {
-  if (!Array.isArray(records) || !range) {
+const resolveRecordsForRange = (recordSets, range) => {
+  if (!range) {
+    return [];
+  }
+
+  if (Array.isArray(recordSets)) {
+    return recordSets;
+  }
+
+  if (recordSets instanceof Map) {
+    const fromMap = recordSets.get(range.key);
+    return Array.isArray(fromMap) ? fromMap : [];
+  }
+
+  if (recordSets && typeof recordSets === "object") {
+    const { byRange } = recordSets;
+
+    if (byRange instanceof Map) {
+      const mapped = byRange.get(range.key);
+      if (Array.isArray(mapped)) {
+        return mapped;
+      }
+    } else if (byRange && typeof byRange === "object") {
+      const mapped = byRange[range.key];
+      if (Array.isArray(mapped)) {
+        return mapped;
+      }
+    }
+
+    const fallbackCandidates = [
+      recordSets.defaultRecords,
+      recordSets.default,
+      recordSets.records,
+    ];
+
+    for (const candidate of fallbackCandidates) {
+      if (Array.isArray(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  return [];
+};
+
+export const filterActivityRecordsByRange = (recordSets, range) => {
+  if (!range) {
+    return [];
+  }
+
+  const records = resolveRecordsForRange(recordSets, range);
+
+  if (!Array.isArray(records) || records.length === 0) {
     return [];
   }
 
@@ -254,6 +305,46 @@ const filterActivityRecordsByRange = (records, range) => {
     const timestamp = parsed.getTime();
     return timestamp >= startTime && timestamp <= endTime;
   });
+};
+
+export const prepareActivityRecordsByWeek = (
+  records,
+  { activeWeekRange, previousWeekRange, fallbackDate } = {},
+) => {
+  const safeFallback = fallbackDate ?? null;
+
+  const defaultRecords = prepareTrendActivityRecords(records, {
+    fallbackDate: safeFallback,
+  });
+
+  const byRange = new Map();
+
+  const registerRange = (range) => {
+    if (!range?.key) {
+      return;
+    }
+
+    const fallbackCandidate =
+      range.start instanceof Date && !Number.isNaN(range.start.valueOf())
+        ? range.start
+        : safeFallback;
+
+    if (!fallbackCandidate) {
+      byRange.set(range.key, defaultRecords);
+      return;
+    }
+
+    const sanitized = prepareTrendActivityRecords(records, {
+      fallbackDate: fallbackCandidate,
+    });
+
+    byRange.set(range.key, sanitized);
+  };
+
+  registerRange(activeWeekRange);
+  registerRange(previousWeekRange);
+
+  return { defaultRecords, byRange };
 };
 
 const extractClientPersonnel = (clients = []) => {
@@ -793,19 +884,38 @@ export default function WeeklyReportPageClient() {
 
     const fallbackDate =
       weeklySource.monthStart instanceof Date ? weeklySource.monthStart : null;
-    const fallbackIso = fallbackDate ? fallbackDate.toISOString() : undefined;
 
-    const likesRecordsAll = prepareTrendActivityRecords(weeklySource.likesRecords, {
-      fallbackDate: fallbackIso,
-    });
-    const commentRecordsAll = prepareTrendActivityRecords(weeklySource.commentRecords, {
-      fallbackDate: fallbackIso,
-    });
+    const likesRecordsByWeek = prepareActivityRecordsByWeek(
+      weeklySource.likesRecords,
+      {
+        fallbackDate,
+        activeWeekRange,
+        previousWeekRange,
+      },
+    );
+    const commentRecordsByWeek = prepareActivityRecordsByWeek(
+      weeklySource.commentRecords,
+      {
+        fallbackDate,
+        activeWeekRange,
+        previousWeekRange,
+      },
+    );
 
-    const likesWeekRecords = filterActivityRecordsByRange(likesRecordsAll, activeWeekRange);
-    const commentsWeekRecords = filterActivityRecordsByRange(commentRecordsAll, activeWeekRange);
-    const likesPrevRecords = filterActivityRecordsByRange(likesRecordsAll, previousWeekRange);
-    const commentsPrevRecords = filterActivityRecordsByRange(commentRecordsAll, previousWeekRange);
+    const likesWeekRecords = filterActivityRecordsByRange(
+      likesRecordsByWeek,
+      activeWeekRange,
+    );
+    const commentsWeekRecords = filterActivityRecordsByRange(
+      commentRecordsByWeek,
+      activeWeekRange,
+    );
+    const likesPrevRecords = previousWeekRange
+      ? filterActivityRecordsByRange(likesRecordsByWeek, previousWeekRange)
+      : [];
+    const commentsPrevRecords = previousWeekRange
+      ? filterActivityRecordsByRange(commentRecordsByWeek, previousWeekRange)
+      : [];
 
     const mergedWeekRecords = mergeActivityRecords(likesWeekRecords, commentsWeekRecords);
     const mergedPrevRecords = mergeActivityRecords(likesPrevRecords, commentsPrevRecords);
