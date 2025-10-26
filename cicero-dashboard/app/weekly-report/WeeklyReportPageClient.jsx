@@ -203,8 +203,6 @@ const buildWeekRanges = (monthValue, yearValue) => {
 
 const DITBINMAS_CLIENT_TARGET = "DITBINMAS";
 const DITBINMAS_ROLE_TARGET = "DITBINMAS";
-const CLIENT_MATCHER_OPTIONS = { allowWordMatch: false };
-const ROLE_MATCHER_OPTIONS = { allowWordMatch: true };
 
 const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) => {
   if (value == null) {
@@ -296,6 +294,9 @@ const matchCandidates = (candidates, target, options) => {
 };
 
 export const filterDitbinmasRecords = (records = []) => {
+  const clientMatcherOptions = { allowWordMatch: false };
+  const roleMatcherOptions = { allowWordMatch: true };
+
   return (Array.isArray(records) ? records : []).filter((record) => {
     if (!record || typeof record !== "object") {
       return false;
@@ -347,7 +348,7 @@ export const filterDitbinmasRecords = (records = []) => {
     const matchesClient = matchCandidates(
       clientCandidates,
       DITBINMAS_CLIENT_TARGET,
-      CLIENT_MATCHER_OPTIONS,
+      clientMatcherOptions,
     );
 
     if (!matchesClient) {
@@ -357,7 +358,7 @@ export const filterDitbinmasRecords = (records = []) => {
     const matchesRole = matchCandidates(
       roleCandidates,
       DITBINMAS_ROLE_TARGET,
-      ROLE_MATCHER_OPTIONS,
+      roleMatcherOptions,
     );
 
     return matchesRole;
@@ -393,188 +394,144 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       .trim()
       .toUpperCase();
 
-  const collectClientIdentifiers = (entry) => {
-    const values = [];
+  const toComparableClientId = (value) =>
+    resolveClientId(value)
+      .replace(/[^A-Z0-9]/g, "")
+      .trim();
 
-    const append = (candidate) => {
-      if (candidate == null) {
-        return;
-      }
-
-      if (Array.isArray(candidate)) {
-        candidate.forEach(append);
-        return;
-      }
-
-      if (typeof candidate === "object") {
-        const nestedCandidates = [
-          candidate?.client_id,
-          candidate?.clientId,
-          candidate?.clientID,
-          candidate?.client,
-          candidate?.id_client,
-          candidate?.idClient,
-          candidate?.client_code,
-          candidate?.clientCode,
-          candidate?.client_name,
-          candidate?.clientName,
-          candidate?.code,
-          candidate?.value,
-          candidate?.name,
-          candidate?.label,
-        ];
-
-        nestedCandidates.forEach(append);
-        return;
-      }
-
-      values.push(candidate);
-    };
-
-    const baseCandidates = [
-      entry?.client_id,
-      entry?.clientId,
-      entry?.clientID,
-      entry?.client,
-      entry?.clientid,
-      entry?.id_client,
-      entry?.idClient,
-      entry?.client_code,
-      entry?.clientCode,
-      entry?.client_name,
-      entry?.clientName,
-      entry?.client_ids,
-      entry?.clientIds,
-      entry?.client_data,
-      entry?.clientData,
-      entry?.client_info,
-      entry?.clientInfo,
-      entry?.client_detail,
-      entry?.clientDetail,
-      entry?.clientRef,
-      entry?.clientRefId,
-      entry?.clientRefID,
-      entry?.clientRefValue,
-      entry?.profile?.client_id,
-      entry?.profile?.clientId,
-      entry?.profile?.clientID,
-      entry?.profile?.client,
-      entry?.profile?.client_code,
-      entry?.profile?.clientCode,
-      entry?.profile?.client_name,
-      entry?.profile?.clientName,
-      entry?.akun?.client_id,
-      entry?.akun?.clientId,
-      entry?.akun?.clientID,
-      entry?.akun?.client,
-      entry?.akun?.client_code,
-      entry?.akun?.clientCode,
-      entry?.akun?.client_name,
-      entry?.akun?.clientName,
-      entry?.user?.client_id,
-      entry?.user?.clientId,
-      entry?.user?.clientID,
-      entry?.user?.client,
-      entry?.user?.client_code,
-      entry?.user?.clientCode,
-      entry?.user?.client_name,
-      entry?.user?.clientName,
-      entry?.client,
-      entry?.profile,
-      entry?.akun,
-      entry?.user,
+  const collectTargetClientIds = (entry) => {
+    const candidates = [
+      entry?.target_client,
+      entry?.targetClient,
+      entry?.target_clients,
+      entry?.targetClients,
+      entry?.target_client_ids,
+      entry?.targetClientIds,
+      entry?.client_targets,
+      entry?.clientTargets,
+      entry?.ditbinmas_targets,
+      entry?.ditbinmasTargets,
+      entry?.target_ids,
+      entry?.targetIds,
+      entry?.targets,
     ];
 
-    baseCandidates.forEach(append);
+    const targetIds = new Set();
 
-    return values;
-  };
-
-  const collectRoleIdentifiers = (entry) => {
-    const values = [];
-
-    const append = (candidate) => {
-      if (candidate == null) {
+    const appendValue = (value) => {
+      if (value == null) {
         return;
       }
 
-      if (Array.isArray(candidate)) {
-        candidate.forEach(append);
+      if (Array.isArray(value)) {
+        value.forEach(appendValue);
         return;
       }
 
-      if (typeof candidate === "object") {
+      if (typeof value === "object") {
         const nestedCandidates = [
-          candidate?.role,
-          candidate?.roles,
-          candidate?.user_role,
-          candidate?.userRole,
-          candidate?.role_name,
-          candidate?.roleName,
-          candidate?.name,
-          candidate?.value,
-          candidate?.label,
+          value?.client_id,
+          value?.clientId,
+          value?.clientID,
+          value?.client,
+          value?.id,
+          value?.code,
+          value?.value,
+          value?.name,
+          value?.label,
         ];
 
-        nestedCandidates.forEach(append);
+        nestedCandidates.forEach(appendValue);
         return;
       }
 
-      values.push(candidate);
+      const normalized = resolveClientId(value);
+      if (!normalized) {
+        return;
+      }
+
+      normalized
+        .split(/[;,\s]+/)
+        .map((part) => resolveClientId(part))
+        .filter(Boolean)
+        .forEach((part) => targetIds.add(part));
     };
 
-    const baseCandidates = [
-      entry?.role,
-      entry?.roles,
-      entry?.user_role,
-      entry?.userRole,
-      entry?.role_name,
-      entry?.roleName,
-      entry?.role_data,
-      entry?.roleData,
-      entry?.role_detail,
-      entry?.roleDetail,
-      entry?.profile?.role,
-      entry?.akun?.role,
-      entry?.user?.role,
-      entry?.profile,
-      entry?.akun,
-      entry?.user,
-    ];
+    candidates.forEach(appendValue);
 
-    baseCandidates.forEach(append);
-
-    return values;
+    return targetIds;
   };
 
   const normalizedEntries = resolvedEntries.map((entry) => {
     const entryRole = resolveRole(entry?.role || entry?.user_role || entry?.userRole);
-    const clientCandidates = collectClientIdentifiers(entry);
-    const roleCandidates = collectRoleIdentifiers(entry);
-
-    const firstClientCandidate = clientCandidates.find((candidate) => {
-      const normalized = resolveClientId(candidate);
-      return Boolean(normalized);
-    });
-
-    const resolvedClientId = firstClientCandidate ? resolveClientId(firstClientCandidate) : "";
-
-    const hasDitbinmasClient = clientCandidates.some((candidate) =>
-      matchNormalizedValue(candidate, DITBINMAS_CLIENT_TARGET, CLIENT_MATCHER_OPTIONS),
+    const entryClientId = resolveClientId(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        entry?.client_code,
     );
-    const hasDitbinmasRole = roleCandidates.some((candidate) =>
-      matchNormalizedValue(candidate, DITBINMAS_ROLE_TARGET, ROLE_MATCHER_OPTIONS),
+    const comparableClientId = toComparableClientId(entryClientId);
+    const targetIds = collectTargetClientIds(entry);
+    const comparableTargets = new Set(
+      Array.from(targetIds).map((target) => toComparableClientId(target)).filter(Boolean),
     );
+    const roleIndicatesDitbinmas = entryRole.includes("ditbinmas");
+    const targetsDitbinmas = comparableTargets.has("DITBINMAS");
+    const clientIsDitbinmas = comparableClientId === "DITBINMAS";
     const isActive = resolveDirectoryIsActive(entry);
 
     return {
       entry,
       entryRole,
-      resolvedClientId,
-      hasDitbinmasClient,
-      hasDitbinmasRole,
+      entryClientId,
+      comparableClientId,
+      targetIds,
+      comparableTargets,
+      roleIndicatesDitbinmas,
+      targetsDitbinmas,
+      clientIsDitbinmas,
       isActive,
     };
+  });
+
+  const targetClientIds = new Set(["DITBINMAS"]);
+
+  normalizedEntries.forEach((normalized) => {
+    if (!normalized) {
+      return;
+    }
+
+    const {
+      entryClientId,
+      comparableClientId,
+      targetIds,
+      comparableTargets,
+      roleIndicatesDitbinmas,
+      targetsDitbinmas,
+      clientIsDitbinmas,
+      isActive,
+    } = normalized;
+
+    const hasDitbinmasSignal =
+      roleIndicatesDitbinmas || targetsDitbinmas || clientIsDitbinmas;
+
+    if (hasDitbinmasSignal && comparableClientId) {
+      targetClientIds.add(comparableClientId);
+    }
+
+    if (hasDitbinmasSignal) {
+      targetIds.forEach((targetId) => {
+        const comparable = toComparableClientId(targetId);
+        if (comparable) {
+          targetClientIds.add(comparable);
+        }
+      });
+    }
+
+    if (hasDitbinmasSignal && entryClientId && !targetIds.has(entryClientId)) {
+      targetIds.add(entryClientId);
+    }
   });
 
   normalizedEntries.forEach((normalized) => {
@@ -585,13 +542,20 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
     const {
       entry,
       entryRole,
-      resolvedClientId,
-      hasDitbinmasClient,
-      hasDitbinmasRole,
+      entryClientId,
+      comparableClientId,
+      roleIndicatesDitbinmas,
+      targetsDitbinmas,
+      clientIsDitbinmas,
       isActive,
     } = normalized;
 
-    if (!hasDitbinmasClient || !hasDitbinmasRole) {
+    const clientMatchesTarget =
+      comparableClientId && targetClientIds.has(comparableClientId);
+    const shouldInclude =
+      clientIsDitbinmas || roleIndicatesDitbinmas || targetsDitbinmas || clientMatchesTarget;
+
+    if (!shouldInclude) {
       return;
     }
 
@@ -613,20 +577,6 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       return;
     }
 
-    const normalizedEntry = { ...entry };
-
-    if (resolvedClientId) {
-      if (!normalizedEntry?.client_id) {
-        normalizedEntry.client_id = resolvedClientId;
-      }
-      if (!normalizedEntry?.clientId) {
-        normalizedEntry.clientId = normalizedEntry.client_id ?? resolvedClientId;
-      }
-      if (!normalizedEntry?.client) {
-        normalizedEntry.client = normalizedEntry.client_id ?? resolvedClientId;
-      }
-    }
-
     const existingEntry = uniqueUsers.get(identifier);
     const existingRole = resolveRole(
       existingEntry?.role || existingEntry?.user_role || existingEntry?.userRole,
@@ -635,9 +585,46 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
     const existingIsPreferred = existingRole.includes("ditbinmas");
 
     if (!existingEntry || (!existingIsPreferred && entryIsPreferred)) {
-      uniqueUsers.set(identifier, normalizedEntry);
+      uniqueUsers.set(identifier, entry);
     }
   });
+
+  if (uniqueUsers.size === 0 && Array.isArray(normalizedEntries) && normalizedEntries.length) {
+    // fallback: when entries exist but without client info, include all unique entries
+    normalizedEntries.forEach(({ entry, isActive }) => {
+      if (!isActive) {
+        return;
+      }
+
+      const identifier =
+        entry?.user_id ||
+        entry?.userId ||
+        entry?.userID ||
+        entry?.nrp ||
+        entry?.nip ||
+        entry?.email ||
+        entry?.id ||
+        JSON.stringify(entry);
+
+      if (!uniqueUsers.has(identifier)) {
+        const normalizedEntry = { ...entry };
+
+        if (!normalizedEntry?.client_id) {
+          normalizedEntry.client_id = "DITBINMAS";
+        }
+
+        if (!normalizedEntry?.clientId) {
+          normalizedEntry.clientId = normalizedEntry.client_id ?? "DITBINMAS";
+        }
+
+        if (!normalizedEntry?.client) {
+          normalizedEntry.client = normalizedEntry.client_id ?? "DITBINMAS";
+        }
+
+        uniqueUsers.set(identifier, normalizedEntry);
+      }
+    });
+  }
 
   return Array.from(uniqueUsers.values());
 };
