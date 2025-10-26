@@ -165,7 +165,75 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       .trim()
       .toUpperCase();
 
-  resolvedEntries.forEach((entry) => {
+  const toComparableClientId = (value) =>
+    resolveClientId(value)
+      .replace(/[^A-Z0-9]/g, "")
+      .trim();
+
+  const collectTargetClientIds = (entry) => {
+    const candidates = [
+      entry?.target_client,
+      entry?.targetClient,
+      entry?.target_clients,
+      entry?.targetClients,
+      entry?.target_client_ids,
+      entry?.targetClientIds,
+      entry?.client_targets,
+      entry?.clientTargets,
+      entry?.ditbinmas_targets,
+      entry?.ditbinmasTargets,
+      entry?.target_ids,
+      entry?.targetIds,
+      entry?.targets,
+    ];
+
+    const targetIds = new Set();
+
+    const appendValue = (value) => {
+      if (value == null) {
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach(appendValue);
+        return;
+      }
+
+      if (typeof value === "object") {
+        const nestedCandidates = [
+          value?.client_id,
+          value?.clientId,
+          value?.clientID,
+          value?.client,
+          value?.id,
+          value?.code,
+          value?.value,
+          value?.name,
+          value?.label,
+        ];
+
+        nestedCandidates.forEach(appendValue);
+        return;
+      }
+
+      const normalized = resolveClientId(value);
+      if (!normalized) {
+        return;
+      }
+
+      normalized
+        .split(/[;,\s]+/)
+        .map((part) => resolveClientId(part))
+        .filter(Boolean)
+        .forEach((part) => targetIds.add(part));
+    };
+
+    candidates.forEach(appendValue);
+
+    return targetIds;
+  };
+
+  const normalizedEntries = resolvedEntries.map((entry) => {
     const entryRole = resolveRole(entry?.role || entry?.user_role || entry?.userRole);
     const entryClientId = resolveClientId(
       entry?.client_id ||
@@ -174,8 +242,87 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
         entry?.client ||
         entry?.client_code,
     );
+    const comparableClientId = toComparableClientId(entryClientId);
+    const targetIds = collectTargetClientIds(entry);
+    const comparableTargets = new Set(
+      Array.from(targetIds).map((target) => toComparableClientId(target)).filter(Boolean),
+    );
+    const roleIndicatesDitbinmas = entryRole.includes("ditbinmas");
+    const targetsDitbinmas = comparableTargets.has("DITBINMAS");
+    const clientIsDitbinmas = comparableClientId === "DITBINMAS";
 
-    if (entryClientId !== "DITBINMAS") {
+    return {
+      entry,
+      entryRole,
+      entryClientId,
+      comparableClientId,
+      targetIds,
+      comparableTargets,
+      roleIndicatesDitbinmas,
+      targetsDitbinmas,
+      clientIsDitbinmas,
+    };
+  });
+
+  const targetClientIds = new Set(["DITBINMAS"]);
+
+  normalizedEntries.forEach((normalized) => {
+    if (!normalized) {
+      return;
+    }
+
+    const {
+      entryClientId,
+      comparableClientId,
+      targetIds,
+      comparableTargets,
+      roleIndicatesDitbinmas,
+      targetsDitbinmas,
+      clientIsDitbinmas,
+    } = normalized;
+
+    const hasDitbinmasSignal =
+      roleIndicatesDitbinmas || targetsDitbinmas || clientIsDitbinmas;
+
+    if (hasDitbinmasSignal && comparableClientId) {
+      targetClientIds.add(comparableClientId);
+    }
+
+    if (hasDitbinmasSignal) {
+      targetIds.forEach((targetId) => {
+        const comparable = toComparableClientId(targetId);
+        if (comparable) {
+          targetClientIds.add(comparable);
+        }
+      });
+    }
+
+    if (hasDitbinmasSignal && entryClientId && !targetIds.has(entryClientId)) {
+      targetIds.add(entryClientId);
+    }
+  });
+
+  normalizedEntries.forEach((normalized) => {
+    if (!normalized) {
+      return;
+    }
+
+    const {
+      entry,
+      entryRole,
+      entryClientId,
+      comparableClientId,
+      roleIndicatesDitbinmas,
+      targetsDitbinmas,
+      clientIsDitbinmas,
+    } = normalized;
+
+    const clientMatchesTarget =
+      comparableClientId && targetClientIds.has(comparableClientId);
+    const shouldInclude =
+      clientIsDitbinmas || roleIndicatesDitbinmas || targetsDitbinmas || clientMatchesTarget;
+
+    if (!shouldInclude) {
       return;
     }
 

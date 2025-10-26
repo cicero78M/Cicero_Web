@@ -209,4 +209,95 @@ describe("aggregateWeeklyLikesRecords", () => {
       }),
     );
   });
+
+  it("retains Ditbinmas personnel across mixed client identifiers", () => {
+    const rawDirectoryUsers = [
+      {
+        user_id: "user-1",
+        client_id: "DITBINMAS",
+        divisi: "Satfung Alfa",
+        role: "admin ditbinmas",
+        nama: "Person Alfa",
+      },
+      {
+        user_id: "user-2",
+        client_id: "CLIENT_X",
+        divisi: "Satfung Bravo",
+        role: "Operator Ditbinmas",
+        nama: "Person Bravo",
+      },
+      {
+        user_id: "user-3",
+        client_id: "CLIENT_Y",
+        divisi: "Satfung Charlie",
+        target_clients: ["DITBINMAS"],
+        nama: "Person Charlie",
+      },
+    ];
+
+    const weeklyRecords = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Satfung Alfa",
+        nama: "Person Alfa",
+        jumlah_like: 6,
+        jumlah_komentar: 1,
+      },
+      {
+        client_id: "CLIENT_X",
+        divisi: "Satfung Bravo",
+        nama: "Person Bravo",
+        jumlah_like: 4,
+        jumlah_komentar: 2,
+      },
+    ];
+
+    const normalizedDirectoryUsers = resolveDitbinmasDirectoryUsers(rawDirectoryUsers);
+
+    expect(normalizedDirectoryUsers).toHaveLength(3);
+    expect(normalizedDirectoryUsers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ user_id: "user-1", client_id: "DITBINMAS" }),
+        expect.objectContaining({ user_id: "user-2", client_id: "CLIENT_X" }),
+        expect.objectContaining({ user_id: "user-3", client_id: "CLIENT_Y" }),
+      ]),
+    );
+
+    const summary = aggregateWeeklyLikesRecords(weeklyRecords, {
+      directoryUsers: normalizedDirectoryUsers,
+    });
+
+    expect(summary.totals.totalPersonnel).toBe(3);
+    expect(summary.totals.activePersonnel).toBe(2);
+    expect(summary.totals.complianceRate).toBeCloseTo((2 / 3) * 100, 5);
+    expect(summary.clients).toHaveLength(3);
+    expect(summary.clients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientId: "DITBINMAS",
+          clientName: "Satfung Alfa",
+          totalLikes: 6,
+          totalComments: 1,
+          totalPersonnel: 1,
+          activePersonnel: 1,
+        }),
+        expect.objectContaining({
+          clientId: "CLIENT_X",
+          clientName: "Satfung Bravo",
+          totalLikes: 4,
+          totalComments: 2,
+          totalPersonnel: 1,
+          activePersonnel: 1,
+        }),
+        expect.objectContaining({
+          clientId: "CLIENT_Y",
+          clientName: "Satfung Charlie",
+          totalLikes: 0,
+          totalComments: 0,
+          totalPersonnel: 1,
+          activePersonnel: 0,
+        }),
+      ]),
+    );
+  });
 });
