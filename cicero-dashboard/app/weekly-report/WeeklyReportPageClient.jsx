@@ -1488,14 +1488,11 @@ export default function WeeklyReportPageClient() {
       },
     };
 
-    const instagramFiltered = filterDitbinmasRecords(weeklySource.instagramPosts);
-    const tiktokFiltered = filterDitbinmasRecords(weeklySource.tiktokPosts);
-
-    const instagramNormalized = normalizePostsForPlatform(instagramFiltered, {
+    const instagramNormalized = normalizePostsForPlatform(weeklySource.instagramPosts, {
       platformKey: "instagram",
       platformLabel: "Instagram",
     });
-    const tiktokNormalized = normalizePostsForPlatform(tiktokFiltered, {
+    const tiktokNormalized = normalizePostsForPlatform(weeklySource.tiktokPosts, {
       platformKey: "tiktok",
       platformLabel: "TikTok",
     });
