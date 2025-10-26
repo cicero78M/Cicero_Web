@@ -179,22 +179,25 @@ const WeeklyPlatformLikesSummary = ({
       return [];
     }
 
+    const totalPersonnel = totals.totalPersonnel ?? 0;
+    const activePersonnel = totals.activePersonnel ?? 0;
+
     return [
       {
-        key: "total-clients",
-        label: "Satker Terdata",
-        value: formatNumber(totals.totalClients ?? 0, { maximumFractionDigits: 0 }),
-        description: "Jumlah satker/polres yang tercakup dalam rekap.",
+        key: "personnel-total",
+        label: "Jumlah Personil",
+        value: formatNumber(totalPersonnel, { maximumFractionDigits: 0 }),
+        description: "Total personil Ditbinmas terdaftar.",
       },
       {
         key: "total-posts",
-        label: "Total Post Minggu Ini",
+        label: "Total Post",
         value: formatNumber(instagramPostCount + tiktokPostCount, {
           maximumFractionDigits: 0,
         }),
-        description: `Post Instagram minggu ini: ${formatNumber(instagramPostCount, {
+        description: `Post Instagram: ${formatNumber(instagramPostCount, {
           maximumFractionDigits: 0,
-        })} · Post TikTok minggu ini: ${formatNumber(tiktokPostCount, {
+        })} · Post TikTok: ${formatNumber(tiktokPostCount, {
           maximumFractionDigits: 0,
         })}`,
       },
@@ -214,7 +217,7 @@ const WeeklyPlatformLikesSummary = ({
         key: "overall-compliance",
         label: "Kepatuhan Personil",
         value: formatPercent(totals.complianceRate ?? 0),
-        description: `${formatNumber(totals.activePersonnel ?? 0, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(totals.totalPersonnel ?? 0, { maximumFractionDigits: 0 })} personil terdata.`,
+        description: `${formatNumber(activePersonnel, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(totalPersonnel, { maximumFractionDigits: 0 })} personil.`,
       },
     ];
   }, [
