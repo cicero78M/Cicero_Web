@@ -344,4 +344,56 @@ describe("aggregateWeeklyLikesRecords", () => {
     const clientY = summary.clients.find((client) => client.clientId === "CLIENT_Y");
     expect(clientY?.personnel).toHaveLength(0);
   });
+
+  it("filters out inactive personnel from the Ditbinmas directory", () => {
+    const rawDirectoryUsers = [
+      {
+        user_id: "user-1",
+        client_id: "DITBINMAS",
+        divisi: "Satfung Alfa",
+        role: "admin ditbinmas",
+        nama: "Person Alfa",
+      },
+      {
+        user_id: "user-2",
+        client_id: "DITBINMAS",
+        divisi: "Satfung Alfa",
+        role: "operator ditbinmas",
+        nama: "Person Bravo",
+        status: "inactive",
+      },
+      {
+        user_id: "user-3",
+        client_id: "DITBINMAS",
+        divisi: "Satfung Alfa",
+        role: "operator ditbinmas",
+        nama: "Person Charlie",
+        is_active: false,
+      },
+      {
+        user_id: "user-4",
+        client_id: "DITBINMAS",
+        divisi: "Satfung Alfa",
+        role: "operator ditbinmas",
+        nama: "Person Delta",
+        aktif: "aktif",
+      },
+    ];
+
+    const normalizedDirectoryUsers = resolveDitbinmasDirectoryUsers(rawDirectoryUsers);
+
+    expect(normalizedDirectoryUsers).toHaveLength(2);
+    expect(normalizedDirectoryUsers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ user_id: "user-1" }),
+        expect.objectContaining({ user_id: "user-4" }),
+      ]),
+    );
+    expect(normalizedDirectoryUsers).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ user_id: "user-2" }),
+        expect.objectContaining({ user_id: "user-3" }),
+      ]),
+    );
+  });
 });
