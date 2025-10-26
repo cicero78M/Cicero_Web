@@ -1117,9 +1117,22 @@ export const extractClientPersonnel = (clients = []) => {
     .filter((person) => person.nama);
 };
 
-const PRIORITY_PERSONNEL_NAMES = [
-  "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
-  "AKBP ARY MURTINI, S.I.K., M.SI.",
+const PRIORITY_PERSONNEL_PATTERNS = [
+  {
+    tokens: ["LAFRI", "PRASETYONO"],
+    aliases: [
+      "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+      "KOMBES POL LAFRI PRASETYONO",
+      "KOMBESPOL LAFRI PRASETYONO",
+    ],
+  },
+  {
+    tokens: ["ARY", "MURTINI"],
+    aliases: [
+      "AKBP ARY MURTINI, S.I.K., M.SI.",
+      "AKBP ARY MURTINI",
+    ],
+  },
 ];
 
 const normalizePersonnelName = (person) =>
@@ -1128,17 +1141,38 @@ const normalizePersonnelName = (person) =>
     .trim()
     .toUpperCase();
 
+const sanitizePersonnelName = (person) =>
+  normalizePersonnelName(person).replace(/[^A-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+
 const resolvePersonnelPriorityIndex = (person) => {
   const normalized = normalizePersonnelName(person);
   if (!normalized) {
     return Number.POSITIVE_INFINITY;
   }
 
-  const index = PRIORITY_PERSONNEL_NAMES.findIndex((priorityName) =>
-    normalized.includes(priorityName),
-  );
+  const sanitized = sanitizePersonnelName(person);
 
-  return index === -1 ? Number.POSITIVE_INFINITY : index;
+  for (let index = 0; index < PRIORITY_PERSONNEL_PATTERNS.length; index += 1) {
+    const pattern = PRIORITY_PERSONNEL_PATTERNS[index];
+
+    const aliasMatch = pattern.aliases.some((alias) =>
+      sanitized.includes(alias.replace(/[^A-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim()),
+    );
+
+    if (aliasMatch) {
+      return index;
+    }
+
+    const tokensMatch = pattern.tokens.every((token) =>
+      sanitized.includes(token.replace(/[^A-Z0-9]/g, "")),
+    );
+
+    if (tokensMatch) {
+      return index;
+    }
+  }
+
+  return Number.POSITIVE_INFINITY;
 };
 
 export const sortPersonnelDistribution = (personnel = []) => {
