@@ -424,86 +424,24 @@ export const prepareActivityRecordsByWeek = (
 
 export const extractClientPersonnel = (clients = []) => {
   const resolveSatfung = (person, client, fallback = "") => {
-    const fieldCandidates = [
-      "divisi",
-      "satker",
-      "satfung",
-      "divisi_satker",
-      "divisiSatker",
-      "divisi_satfung",
-      "divisiSatfung",
-      "client_name",
-      "clientName",
-      "nama_client",
-      "namaClient",
-      "client_label",
-      "clientLabel",
+    const candidates = [
+      person?.divisi,
+      person?.satker,
+      client?.divisi,
+      person?.clientName,
+      client?.clientName,
+      client?.clientId,
+      fallback,
     ];
 
-    const candidateValues = [];
-    const valueToPriority = new Map();
-
-    const registerCandidate = (value) => {
-      if (value == null) {
-        return;
+    for (let index = 0; index < candidates.length; index += 1) {
+      const candidate = candidates[index];
+      if (typeof candidate === "string" && candidate.trim()) {
+        return { value: candidate, priority: index };
       }
-
-      let normalized = "";
-      if (typeof value === "string") {
-        normalized = value.trim();
-      } else if (typeof value === "number") {
-        normalized = String(value);
-      }
-
-      if (!normalized) {
-        return;
-      }
-
-      if (valueToPriority.has(normalized)) {
-        return;
-      }
-
-      const priority = candidateValues.length;
-      candidateValues.push(normalized);
-      valueToPriority.set(normalized, priority);
-    };
-
-    const registerFromSource = (source) => {
-      if (!source || typeof source !== "object") {
-        return;
-      }
-
-      fieldCandidates.forEach((field) => {
-        if (Object.prototype.hasOwnProperty.call(source, field)) {
-          registerCandidate(source[field]);
-        }
-      });
-    };
-
-    registerFromSource(person);
-    registerFromSource(person?.client);
-    registerFromSource(client);
-    registerFromSource(client?.client);
-
-    registerCandidate(fallback);
-
-    [
-      person?.clientId,
-      client?.clientId,
-      client?.client_id,
-      client?.clientID,
-      client?.id,
-    ].forEach(registerCandidate);
-
-    if (candidateValues.length === 0) {
-      return { value: "", priority: candidateValues.length };
     }
 
-    const [firstCandidate] = candidateValues;
-    return {
-      value: firstCandidate,
-      priority: valueToPriority.get(firstCandidate) ?? candidateValues.length,
-    };
+    return { value: "", priority: candidates.length };
   };
 
   const personnelMap = new Map();
@@ -563,10 +501,8 @@ export const extractClientPersonnel = (clients = []) => {
       const hasBetterSatfung =
         satfungCandidate &&
         (typeof record.__satfungPriority !== "number" ||
-          !record.satfung ||
           candidatePriority < record.__satfungPriority ||
-          (candidatePriority === record.__satfungPriority &&
-            satfungCandidate !== record.satfung));
+          !record.satfung);
 
       if (hasBetterSatfung) {
         record.satfung = satfungCandidate;
