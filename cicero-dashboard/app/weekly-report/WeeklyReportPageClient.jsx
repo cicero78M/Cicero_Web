@@ -996,7 +996,7 @@ export default function WeeklyReportPageClient() {
 
     const complianceRate =
       resolvedTotalPersonnel > 0 ? (totalActive / resolvedTotalPersonnel) * 100 : 0;
-    const previousComplianceRate =
+    const previousComplianceRateRaw =
       resolvedTotalPersonnel > 0 ? (previousActive / resolvedTotalPersonnel) * 100 : 0;
 
     const summaryWeek = {
@@ -1016,7 +1016,7 @@ export default function WeeklyReportPageClient() {
         ...summaryPrevRaw.totals,
         totalPersonnel: resolvedTotalPersonnel,
         activePersonnel: previousActive,
-        complianceRate: previousComplianceRate,
+        complianceRate: previousComplianceRateRaw,
       },
     };
 
@@ -1044,21 +1044,40 @@ export default function WeeklyReportPageClient() {
         ? tiktokSeries.find((point) => point.index === previousWeekRange.index) ?? null
         : null;
 
+    const hasPreviousWeekRange = Boolean(previousWeekRange);
+    const hasPreviousEngagementRecords =
+      hasPreviousWeekRange &&
+      (filteredPrevRecords.length > 0 || summaryPrevRaw?.lastUpdated instanceof Date);
+    const hasPreviousPostRecords =
+      hasPreviousWeekRange && (instagramPrevious || tiktokPrevious);
+
     const totalPosts = (instagramLatest?.posts ?? 0) + (tiktokLatest?.posts ?? 0);
-    const previousPosts =
-      (instagramPrevious?.posts ?? 0) + (tiktokPrevious?.posts ?? 0);
+    const previousPosts = hasPreviousPostRecords
+      ? (instagramPrevious?.posts ?? 0) + (tiktokPrevious?.posts ?? 0)
+      : null;
 
     const totalLikes = summaryWeek.totals.totalLikes ?? 0;
-    const previousLikes = summaryPrev.totals.totalLikes ?? 0;
+    const previousLikes = hasPreviousEngagementRecords
+      ? summaryPrev.totals.totalLikes ?? 0
+      : null;
     const totalComments = summaryWeek.totals.totalComments ?? 0;
-    const previousComments = summaryPrev.totals.totalComments ?? 0;
+    const previousComments = hasPreviousEngagementRecords
+      ? summaryPrev.totals.totalComments ?? 0
+      : null;
 
     const buildComparison = (currentValue, previousValue, formatter) => {
-      const currentNumeric = Number.isFinite(currentValue) ? Number(currentValue) : 0;
-      const previousNumeric =
-        Number.isFinite(previousValue) || previousValue === 0
+      const currentCandidate =
+        typeof currentValue === "number" || typeof currentValue === "string"
+          ? Number(currentValue)
+          : NaN;
+      const currentNumeric = Number.isFinite(currentCandidate) ? currentCandidate : 0;
+      const previousCandidate =
+        previousValue == null
+          ? NaN
+          : typeof previousValue === "number" || typeof previousValue === "string"
           ? Number(previousValue)
-          : null;
+          : NaN;
+      const previousNumeric = Number.isFinite(previousCandidate) ? previousCandidate : null;
 
       if (previousNumeric === null) {
         return {
@@ -1096,11 +1115,17 @@ export default function WeeklyReportPageClient() {
       formatNumber(value, { maximumFractionDigits: 0 }),
     );
 
+    const previousComplianceRate = hasPreviousEngagementRecords
+      ? resolvedTotalPersonnel > 0
+        ? (previousActive / resolvedTotalPersonnel) * 100
+        : 0
+      : null;
+
     const complianceComparison = (() => {
       if (!Number.isFinite(complianceRate)) {
         return null;
       }
-      if (!Number.isFinite(previousComplianceRate)) {
+      if (previousComplianceRate == null || !Number.isFinite(previousComplianceRate)) {
         return {
           label: "Tidak ada data pembanding minggu sebelumnya",
           direction: "flat",
