@@ -6,6 +6,7 @@ import PlatformEngagementTrendChart from "@/components/executive-summary/Platfor
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 import {
   aggregateLikesRecords,
   mergeActivityRecords,
@@ -1326,16 +1327,26 @@ export default function WeeklyReportPageClient() {
 
     const satfungTotals = aggregateSatfungTotals(rawPersonnelDistribution);
 
-    const personnelDistribution = rawPersonnelDistribution
-      .sort((a, b) => {
-        if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
-          return (b.interactions ?? 0) - (a.interactions ?? 0);
-        }
-        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
-          return (b.likes ?? 0) - (a.likes ?? 0);
-        }
+    const personnelDistribution = rawPersonnelDistribution.sort((a, b) => {
+      const pangkatDiff = compareUsersByPangkatOnly(a, b);
+      if (pangkatDiff !== 0) {
+        return pangkatDiff;
+      }
+
+      if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
+        return (b.interactions ?? 0) - (a.interactions ?? 0);
+      }
+
+      if ((b.likes ?? 0) !== (a.likes ?? 0)) {
+        return (b.likes ?? 0) - (a.likes ?? 0);
+      }
+
+      if ((b.comments ?? 0) !== (a.comments ?? 0)) {
         return (b.comments ?? 0) - (a.comments ?? 0);
-      });
+      }
+
+      return 0;
+    });
 
     const labelOverrides = {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
