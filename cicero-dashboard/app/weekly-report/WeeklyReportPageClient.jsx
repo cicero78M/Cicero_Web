@@ -339,6 +339,83 @@ const matchCandidates = (candidates, target, options) => {
   return false;
 };
 
+const hasEvaluableCandidateValue = (candidate) => {
+  if (candidate == null) {
+    return false;
+  }
+
+  if (typeof candidate === "string") {
+    return candidate.trim().length > 0;
+  }
+
+  if (typeof candidate === "number" || typeof candidate === "boolean") {
+    return true;
+  }
+
+  if (Array.isArray(candidate)) {
+    return candidate.some((entry) => hasEvaluableCandidateValue(entry));
+  }
+
+  if (typeof candidate === "object") {
+    const nestedCandidates = [
+      candidate.role,
+      candidate.roles,
+      candidate.user_role,
+      candidate.userRole,
+      candidate.role_name,
+      candidate.roleName,
+      candidate.name,
+      candidate.label,
+      candidate.value,
+    ];
+
+    return nestedCandidates.some((entry) => hasEvaluableCandidateValue(entry));
+  }
+
+  return false;
+};
+
+const mentionsTargetValue = (candidate, target) => {
+  if (candidate == null) {
+    return false;
+  }
+
+  if (typeof candidate === "string" || typeof candidate === "number") {
+    const normalized = String(candidate)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
+    if (!normalized) {
+      return false;
+    }
+
+    return normalized.includes(target);
+  }
+
+  if (Array.isArray(candidate)) {
+    return candidate.some((entry) => mentionsTargetValue(entry, target));
+  }
+
+  if (typeof candidate === "object") {
+    const nestedCandidates = [
+      candidate.role,
+      candidate.roles,
+      candidate.user_role,
+      candidate.userRole,
+      candidate.role_name,
+      candidate.roleName,
+      candidate.name,
+      candidate.label,
+      candidate.value,
+    ];
+
+    return nestedCandidates.some((entry) => mentionsTargetValue(entry, target));
+  }
+
+  return false;
+};
+
 export const filterDitbinmasRecords = (records = []) => {
   const clientMatcherOptions = { allowWordMatch: false };
   const roleMatcherOptions = { allowWordMatch: true };
@@ -407,7 +484,27 @@ export const filterDitbinmasRecords = (records = []) => {
       roleMatcherOptions,
     );
 
-    return matchesRole;
+    if (matchesRole) {
+      return true;
+    }
+
+    const hasEvaluableRoles = roleCandidates.some((candidate) =>
+      hasEvaluableCandidateValue(candidate),
+    );
+
+    if (!hasEvaluableRoles) {
+      return true;
+    }
+
+    const mentionsDitbinmas = roleCandidates.some((candidate) =>
+      mentionsTargetValue(candidate, DITBINMAS_ROLE_TARGET),
+    );
+
+    if (mentionsDitbinmas) {
+      return false;
+    }
+
+    return true;
   });
 };
 
