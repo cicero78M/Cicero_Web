@@ -6,6 +6,7 @@ import {
   extractClientPersonnel,
   aggregateSatfungTotals,
 } from "@/app/weekly-report/WeeklyReportPageClient";
+import { aggregateLikesRecords } from "@/app/executive-summary/dataTransforms";
 
 describe("weekly report data transforms", () => {
   it("preserves metrics totals when building weekly series", () => {
@@ -128,6 +129,34 @@ describe("weekly report data transforms", () => {
 
     expect(personnel).toHaveLength(1);
     expect(personnel[0].satfung).toBe("Satfung Bhayangkara");
+  });
+
+  it("populates satfung entries for records that provide divisi", () => {
+    const records = [
+      {
+        client_id: "client-1",
+        person_id: "person-1",
+        jumlah_like: 8,
+        jumlah_komentar: 2,
+        divisi: "Satfung Operasional",
+        nama: "Person Divisi",
+      },
+    ];
+
+    const summary = aggregateLikesRecords(records);
+    const personnel = extractClientPersonnel(summary.clients);
+
+    expect(personnel).toHaveLength(1);
+    expect(personnel[0].satfung).toBe("Satfung Operasional");
+
+    const satfungTotals = aggregateSatfungTotals(personnel);
+    const satfungEntry = satfungTotals.find(
+      (entry) => entry.clientName === "Satfung Operasional",
+    );
+
+    expect(satfungEntry).toBeDefined();
+    expect(satfungEntry?.totalLikes).toBe(8);
+    expect(satfungEntry?.totalComments).toBe(2);
   });
 
   it("aggregates likes and comments per satfung", () => {
