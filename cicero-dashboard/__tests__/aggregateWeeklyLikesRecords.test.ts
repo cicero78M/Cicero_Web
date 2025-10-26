@@ -104,4 +104,41 @@ describe("aggregateWeeklyLikesRecords", () => {
       ]),
     );
   });
+
+  it("merges directory placeholders with activity records for the same personnel", () => {
+    const directoryUsers = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E.",
+      },
+    ];
+
+    const records = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E.",
+        instagram_username: "fatkurrohmanse",
+        jumlah_like: 10,
+        jumlah_komentar: 5,
+      },
+    ];
+
+    const summary = aggregateWeeklyLikesRecords(records, { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(1);
+    expect(summary.totals.activePersonnel).toBe(1);
+    expect(summary.clients).toHaveLength(1);
+    expect(summary.clients[0].personnel).toHaveLength(1);
+    expect(summary.clients[0].personnel[0]).toEqual(
+      expect.objectContaining({
+        nama: "Aipda Fatkur Rohman, S.E.",
+        username: "fatkurrohmanse",
+        likes: 10,
+        comments: 5,
+        active: true,
+      }),
+    );
+  });
 });

@@ -642,7 +642,51 @@ export const aggregateWeeklyLikesRecords = (
 
   const clientsMap = new Map<string, any>();
   const personnelMap = new Map<string, any>();
+  const personnelIdentityMap = new Map<string, string>();
   let latestActivity: Date | null = null;
+
+  const isPlaceholderPersonnelKey = (key: string) =>
+    typeof key === "string" && /:person-(directory|record)-/i.test(key);
+
+  const toIdentityKey = (clientKey: string, value: any) => {
+    const normalized = normalizeKeyComponent(value);
+    return normalized ? `${clientKey}:${normalized}` : "";
+  };
+
+  const syncPersonnelIdentity = (
+    record: any,
+    clientKey: string,
+    extraSources: Array<{ username?: any; nama?: any }> = [],
+  ) => {
+    if (!record) {
+      return;
+    }
+
+    const candidates: string[] = [];
+
+    const collect = (source: { username?: any; nama?: any } | null | undefined) => {
+      if (!source) {
+        return;
+      }
+
+      const usernameKey = toIdentityKey(clientKey, source.username);
+      const namaKey = toIdentityKey(clientKey, source.nama);
+
+      if (usernameKey) {
+        candidates.push(usernameKey);
+      }
+      if (namaKey) {
+        candidates.push(namaKey);
+      }
+    };
+
+    collect(record);
+    extraSources.forEach((source) => collect(source));
+
+    candidates.forEach((identityKey) => {
+      personnelIdentityMap.set(identityKey, record.key);
+    });
+  };
 
   const shouldReplaceIdentifierValue = (current: any, incoming: any) => {
     const incomingString = toNormalizedString(incoming);
@@ -713,19 +757,67 @@ export const aggregateWeeklyLikesRecords = (
   };
 
   const registerPersonnel = (clientEntry: any, personnelKey: string, defaults: any) => {
-    if (!personnelMap.has(personnelKey)) {
+    const identityCandidates = [
+      { username: defaults?.username, nama: defaults?.nama },
+    ];
+
+    const resolveExistingKey = () => {
+      for (const candidate of identityCandidates) {
+        if (!candidate) {
+          continue;
+        }
+
+        const usernameKey = toIdentityKey(clientEntry.key, candidate.username);
+        if (usernameKey && personnelIdentityMap.has(usernameKey)) {
+          return personnelIdentityMap.get(usernameKey)!;
+        }
+
+        const namaKey = toIdentityKey(clientEntry.key, candidate.nama);
+        if (namaKey && personnelIdentityMap.has(namaKey)) {
+          return personnelIdentityMap.get(namaKey)!;
+        }
+      }
+
+      if (personnelMap.has(personnelKey)) {
+        return personnelKey;
+      }
+
+      return null;
+    };
+
+    const existingKey = resolveExistingKey();
+    let targetKey = existingKey || personnelKey;
+
+    if (!personnelMap.has(targetKey)) {
       const record = {
-        key: personnelKey,
+        key: targetKey,
         likes: 0,
         comments: 0,
         active: false,
         ...defaults,
       };
-      personnelMap.set(personnelKey, record);
+      personnelMap.set(targetKey, record);
       clientEntry.personnel.push(record);
     }
 
-    return personnelMap.get(personnelKey)!;
+    const record = personnelMap.get(targetKey)!;
+
+    const shouldUpgradeKey =
+      targetKey !== personnelKey &&
+      !personnelMap.has(personnelKey) &&
+      !isPlaceholderPersonnelKey(personnelKey) &&
+      isPlaceholderPersonnelKey(record.key);
+
+    if (shouldUpgradeKey) {
+      personnelMap.delete(record.key);
+      record.key = personnelKey;
+      personnelMap.set(personnelKey, record);
+      targetKey = personnelKey;
+    }
+
+    syncPersonnelIdentity(record, clientEntry.key, identityCandidates);
+
+    return record;
   };
 
   const updateIfEmpty = (target: any, field: string, value: any) => {
@@ -770,6 +862,10 @@ export const aggregateWeeklyLikesRecords = (
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
+
+    syncPersonnelIdentity(personnelRecord, clientEntry.key, [
+      { username, nama },
+    ]);
   });
 
   safeRecords.forEach((record, index) => {
@@ -831,6 +927,10 @@ export const aggregateWeeklyLikesRecords = (
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
+
+    syncPersonnelIdentity(personnelRecord, clientEntry.key, [
+      { username, nama },
+    ]);
 
     clientEntry.totalLikes += likes;
     clientEntry.totalComments += comments;
