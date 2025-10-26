@@ -408,7 +408,8 @@ export const extractClientPersonnel = (clients = []) => {
         personnelMap.set(key, {
           key,
           pangkat: person?.pangkat || "",
-          nama: person?.nama || person?.username || "",
+          nama: person?.nama || "",
+          username: person?.username || "",
           satfung:
             person?.divisi ||
             client?.divisi ||
@@ -433,8 +434,11 @@ export const extractClientPersonnel = (clients = []) => {
       if (!record.pangkat && person?.pangkat) {
         record.pangkat = person.pangkat;
       }
-      if (!record.nama && (person?.nama || person?.username)) {
-        record.nama = person?.nama || person?.username || "";
+      if (!record.nama && person?.nama) {
+        record.nama = person.nama;
+      }
+      if (!record.username && person?.username) {
+        record.username = person.username;
       }
       if (
         !record.satfung &&
@@ -461,15 +465,17 @@ export const extractClientPersonnel = (clients = []) => {
       const safeLikes = Number.isFinite(likesValue) ? likesValue : 0;
       const commentsValue = Number(person.comments);
       const safeComments = Number.isFinite(commentsValue) ? commentsValue : 0;
+      const resolvedName = person.nama || person.username || "";
 
       return {
         ...person,
+        nama: resolvedName,
         likes: safeLikes,
         comments: safeComments,
         interactions: safeLikes + safeComments,
       };
     })
-    .filter((person) => person.nama && person.interactions > 0);
+    .filter((person) => person.nama);
 };
 
 const safeFetch = async (factory) => {
