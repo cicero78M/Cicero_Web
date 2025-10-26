@@ -16,6 +16,7 @@ export const createEmptyWeeklyLikesSummary = () => ({
     totalComments: 0,
     totalPersonnel: 0,
     activePersonnel: 0,
+    inactiveCount: 0,
     complianceRate: 0,
     averageComplianceRate: 0,
   },
@@ -643,6 +644,7 @@ export const aggregateWeeklyLikesRecords = (
   const clientsMap = new Map<string, any>();
   const personnelMap = new Map<string, any>();
   const personnelIdentityMap = new Map<string, string>();
+  const clientDirectoryPersonnelKeys = new Map<string, Set<string>>();
   let latestActivity: Date | null = null;
 
   const isPlaceholderPersonnelKey = (key: string) =>
@@ -770,7 +772,13 @@ export const aggregateWeeklyLikesRecords = (
     return clientEntry;
   };
 
-  const registerPersonnel = (clientEntry: any, personnelKey: string, defaults: any) => {
+  const registerPersonnel = (
+    clientEntry: any,
+    personnelKey: string,
+    defaults: any,
+    options: { createIfMissing?: boolean; markActive?: boolean } = {},
+  ) => {
+    const { createIfMissing = true, markActive = false } = options;
     const identityCandidates = [
       { username: defaults?.username, nama: defaults?.nama },
     ];
@@ -804,6 +812,10 @@ export const aggregateWeeklyLikesRecords = (
     let targetKey = existingKey || personnelKey;
 
     if (!personnelMap.has(targetKey)) {
+      if (!createIfMissing) {
+        return null;
+      }
+
       const record = {
         key: targetKey,
         likes: 0,
@@ -830,6 +842,10 @@ export const aggregateWeeklyLikesRecords = (
       targetKey = personnelKey;
     }
 
+    if (markActive) {
+      record.active = true;
+    }
+
     syncPersonnelIdentity(record, clientEntry.key, identityCandidates);
 
     return record;
@@ -848,40 +864,17 @@ export const aggregateWeeklyLikesRecords = (
     }
   };
 
-  const directoryUsers = directoryUsersRaw.map((user, index) => ({
-    ...user,
-    __directoryIndex: index,
-  }));
-
-  directoryUsers.forEach((user, index) => {
-    if (!user) {
+  const updateIfPreferredString = (target: any, field: string, value: any) => {
+    const incoming = toNormalizedString(value);
+    if (!incoming) {
       return;
     }
 
-    const identifiers = resolveClientIdentifiers(user);
-    const clientEntry = ensureClientEntry(identifiers);
-    const { username, nama, pangkat } = resolvePersonnelNames(user);
-    const personnelKey = buildPersonnelKey(user, identifiers.clientKey, `directory-${index}`);
-    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
-      clientId: identifiers.clientId,
-      clientName: identifiers.clientName,
-      divisi: identifiers.divisi,
-      username,
-      nama,
-      pangkat,
-    });
-
-    updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
-    updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
-    updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
-    updateIfEmpty(personnelRecord, "username", username);
-    updateIfEmpty(personnelRecord, "nama", nama);
-    updateIfEmpty(personnelRecord, "pangkat", pangkat);
-
-    syncPersonnelIdentity(personnelRecord, clientEntry.key, [
-      { username, nama },
-    ]);
-  });
+    const current = toNormalizedString(target?.[field]);
+    if (!current || incoming.length > current.length) {
+      target[field] = value;
+    }
+  };
 
   safeRecords.forEach((record, index) => {
     const identifiers = resolveClientIdentifiers(record);
@@ -915,26 +908,35 @@ export const aggregateWeeklyLikesRecords = (
         record?.metrics?.totalComments ??
         record?.metrics?.total_comments,
     );
+    if (likes <= 0 && comments <= 0) {
+      return;
+    }
     const { username, nama, pangkat } = resolvePersonnelNames(record);
     const personnelKey = buildPersonnelKey(
       record,
       identifiers.clientKey,
       `record-${index}`,
     );
-    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
-      clientId: identifiers.clientId,
-      clientName: identifiers.clientName,
-      divisi: identifiers.divisi,
-      username,
-      nama,
-      pangkat,
-    });
+    const personnelRecord = registerPersonnel(
+      clientEntry,
+      personnelKey,
+      {
+        clientId: identifiers.clientId,
+        clientName: identifiers.clientName,
+        divisi: identifiers.divisi,
+        username,
+        nama,
+        pangkat,
+      },
+      { markActive: true },
+    );
+
+    if (!personnelRecord) {
+      return;
+    }
 
     personnelRecord.likes += likes;
     personnelRecord.comments += comments;
-    if (likes > 0 || comments > 0) {
-      personnelRecord.active = true;
-    }
 
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
@@ -961,9 +963,60 @@ export const aggregateWeeklyLikesRecords = (
     }
   });
 
+  const directoryUsers = directoryUsersRaw.map((user, index) => ({
+    ...user,
+    __directoryIndex: index,
+  }));
+
+  directoryUsers.forEach((user, index) => {
+    if (!user) {
+      return;
+    }
+
+    const identifiers = resolveClientIdentifiers(user);
+    const clientEntry = ensureClientEntry(identifiers);
+    const { username, nama, pangkat } = resolvePersonnelNames(user);
+    const personnelKey = buildPersonnelKey(user, identifiers.clientKey, `directory-${index}`);
+    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key) || new Set<string>();
+    clientDirectoryPersonnelKeys.set(clientEntry.key, directorySet);
+
+    const personnelRecord = registerPersonnel(
+      clientEntry,
+      personnelKey,
+      {
+        clientId: identifiers.clientId,
+        clientName: identifiers.clientName,
+        divisi: identifiers.divisi,
+        username,
+        nama,
+        pangkat,
+      },
+      { createIfMissing: false },
+    );
+
+    if (personnelRecord) {
+      updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
+      updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+      updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
+      updateIfEmpty(personnelRecord, "username", username);
+      updateIfPreferredString(personnelRecord, "nama", nama);
+      updateIfPreferredString(personnelRecord, "pangkat", pangkat);
+
+      syncPersonnelIdentity(personnelRecord, clientEntry.key, [
+        { username, nama },
+      ]);
+
+      directorySet.add(personnelRecord.key);
+    } else {
+      directorySet.add(personnelKey);
+    }
+  });
+
   const clients = Array.from(clientsMap.values()).map((client) => {
-    const totalPersonnel = client.personnel.length;
+    const directorySet = clientDirectoryPersonnelKeys.get(client.key);
     const activePersonnel = client.personnel.filter((person: any) => person.active).length;
+    const totalPersonnel = directorySet?.size ?? activePersonnel;
+    const inactiveCount = Math.max(totalPersonnel - activePersonnel, 0);
 
     const complianceRate =
       totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
@@ -976,6 +1029,7 @@ export const aggregateWeeklyLikesRecords = (
       ...client,
       totalPersonnel,
       activePersonnel,
+      inactiveCount,
       complianceRate,
       averageLikesPerUser,
       averageCommentsPerUser,
@@ -988,6 +1042,7 @@ export const aggregateWeeklyLikesRecords = (
       accumulator.totalComments += client.totalComments;
       accumulator.totalPersonnel += client.totalPersonnel;
       accumulator.activePersonnel += client.activePersonnel;
+      accumulator.inactiveCount += client.inactiveCount;
       return accumulator;
     },
     {
@@ -995,6 +1050,7 @@ export const aggregateWeeklyLikesRecords = (
       totalComments: 0,
       totalPersonnel: 0,
       activePersonnel: 0,
+      inactiveCount: 0,
     },
   );
 
@@ -1032,6 +1088,7 @@ export const aggregateWeeklyLikesRecords = (
       totalComments: totals.totalComments,
       totalPersonnel: totals.totalPersonnel,
       activePersonnel: totals.activePersonnel,
+      inactiveCount: totals.inactiveCount,
       complianceRate:
         totals.totalPersonnel > 0
           ? (totals.activePersonnel / totals.totalPersonnel) * 100
