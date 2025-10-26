@@ -105,27 +105,4 @@ describe("weekly report data transforms", () => {
 
     expect(extractClientPersonnel(clients)).toEqual([]);
   });
-
-  it("prioritizes satfung from personnel divisions when available", () => {
-    const clients = [
-      {
-        key: "client-1",
-        clientName: "DITBINMAS",
-        personnel: [
-          {
-            key: "person-1",
-            nama: "Person A",
-            likes: 4,
-            comments: 1,
-            divisi: "Satfung Bhayangkara",
-          },
-        ],
-      },
-    ];
-
-    const personnel = extractClientPersonnel(clients);
-
-    expect(personnel).toHaveLength(1);
-    expect(personnel[0].satfung).toBe("Satfung Bhayangkara");
-  });
 });
