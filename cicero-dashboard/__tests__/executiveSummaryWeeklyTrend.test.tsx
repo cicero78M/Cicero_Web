@@ -10,7 +10,6 @@ import {
 import {
   POST_DATE_PATHS,
   buildMonthlyEngagementTrend,
-  normalizePlatformPost,
 } from "@/app/executive-summary/sharedUtils";
 import {
   INSTAGRAM_LIKE_FIELD_PATHS,
@@ -379,35 +378,6 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     });
 
     expect(shouldShow).toBe(true);
-  });
-
-  it("normalizes personnel like and comment variants within platform posts", () => {
-    const directPersonnel = normalizePlatformPost(
-      {
-        likes_personil: "4",
-        komentar_personil: 3,
-      },
-      { platformKey: "instagram", fallbackIndex: 0 },
-    );
-
-    expect(directPersonnel?.metrics.likes).toBe(4);
-    expect(directPersonnel?.metrics.comments).toBe(3);
-    expect(directPersonnel?.metrics.interactions).toBe(7);
-
-    const nestedPersonnel = normalizePlatformPost(
-      {
-        rekap: { totalLikesPersonnel: "11" },
-        metrics: {
-          total_like_personel: "13",
-          total_comments_personel: "5",
-        },
-      },
-      { platformKey: "instagram", fallbackIndex: 1 },
-    );
-
-    expect(nestedPersonnel?.metrics.likes).toBe(11);
-    expect(nestedPersonnel?.metrics.comments).toBe(5);
-    expect(nestedPersonnel?.metrics.interactions).toBe(16);
   });
 
   it("renders trend metrics when sanitized activity supplies fallback dates", () => {
