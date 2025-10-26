@@ -9,6 +9,21 @@ const toSafeNumber = (value: any): number => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
+const normalizeKeyValue = (value: any): string | null => {
+  if (value == null) {
+    return null;
+  }
+
+  const stringValue =
+    typeof value === "string" ? value.trim() : String(value ?? "").trim();
+
+  if (!stringValue) {
+    return null;
+  }
+
+  return stringValue.toLowerCase();
+};
+
 const extractWeeklyMetricValue = (
   record: any,
   type: "likes" | "comments",
@@ -146,6 +161,130 @@ export const mergeWeeklyActivityRecords = (
 ) => {
   const records = new Map<string, any>();
   const aliasToCanonical = new Map<string, string>();
+
+  const PERSONNEL_IDENTIFIER_FIELDS = [
+    "user_id",
+    "userId",
+    "userID",
+    "id_user",
+    "idUser",
+    "person_id",
+    "personId",
+    "personID",
+    "personil_id",
+    "personilId",
+    "personel_id",
+    "personelId",
+    "personnel_id",
+    "id_personil",
+    "idPersonil",
+    "id_personel",
+    "idPersonel",
+    "id_personnel",
+    "idPersonnel",
+    "nrp",
+    "nip",
+    "nik",
+    "username",
+    "user_name",
+    "userName",
+    "instagram_username",
+    "instagramUsername",
+    "akun",
+    "akun_media_sosial",
+    "akunMediaSosial",
+    "akun_instagram",
+    "akunInstagram",
+    "nama",
+    "name",
+    "full_name",
+    "fullName",
+    "nama_personil",
+    "nama_personel",
+    "nama_personnel",
+    "namaPersonil",
+    "namaPersonel",
+    "namaPersonnel",
+    "namaLengkap",
+    "nama_lengkap",
+    "display_name",
+    "displayName",
+  ];
+
+  const collectPersonnelIdentifiers = (record: any): string[] => {
+    const sources = [
+      record,
+      record?.rekap,
+      record?.metrics,
+      record?.personel,
+      record?.personil,
+      record?.personnel,
+      record?.user,
+    ];
+
+    const identifiers = new Set<string>();
+
+    sources.forEach((source) => {
+      if (!source || typeof source !== "object") {
+        return;
+      }
+
+      PERSONNEL_IDENTIFIER_FIELDS.forEach((field) => {
+        const value = source[field];
+        if (Array.isArray(value)) {
+          value.forEach((item) => {
+            const normalized = normalizeKeyValue(item);
+            if (normalized) {
+              identifiers.add(normalized);
+              const comparable = normalized.replace(/[^a-z0-9]/g, "");
+              if (comparable && comparable !== normalized) {
+                identifiers.add(comparable);
+              }
+            }
+          });
+        } else {
+          const normalized = normalizeKeyValue(value);
+          if (normalized) {
+            identifiers.add(normalized);
+            const comparable = normalized.replace(/[^a-z0-9]/g, "");
+            if (comparable && comparable !== normalized) {
+              identifiers.add(comparable);
+            }
+          }
+        }
+      });
+    });
+
+    return Array.from(identifiers.values());
+  };
+
+  const assignPersonnelDetails = (target: any, source: any) => {
+    if (!source || typeof source !== "object") {
+      return;
+    }
+
+    const sources = [
+      source,
+      source?.rekap,
+      source?.metrics,
+      source?.personel,
+      source?.personil,
+      source?.personnel,
+      source?.user,
+    ];
+
+    sources.forEach((item) => {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+
+      PERSONNEL_IDENTIFIER_FIELDS.forEach((field) => {
+        if (field in item) {
+          assignIfEmpty(target, field, item[field]);
+        }
+      });
+    });
+  };
 
   const LIKE_FIELDS = [
     "jumlah_like",
@@ -302,64 +441,79 @@ export const mergeWeeklyActivityRecords = (
       return;
     }
 
-    recordsToIngest.forEach((record) => {
+    recordsToIngest.forEach((record, recordIndex) => {
       if (!record || typeof record !== "object") {
         return;
       }
 
-      const identifiers = [
+      const clientIdCandidates = [
         record?.client_id,
         record?.clientId,
         record?.clientID,
-        record?.client,
-        record?.nama_client,
-        record?.client_name,
+        record?.id_client,
+        record?.clientid,
+        record?.idClient,
         record?.rekap?.client_id,
         record?.rekap?.clientId,
         record?.rekap?.clientID,
-        record?.rekap?.client,
+        record?.rekap?.id_client,
+        record?.rekap?.clientid,
+        record?.rekap?.idClient,
+      ];
+
+      const clientNameCandidates = [
+        record?.nama_client,
+        record?.client_name,
+        record?.client,
+        record?.namaClient,
+        record?.clientName,
         record?.rekap?.nama_client,
         record?.rekap?.client_name,
-      ]
-        .map((value) =>
-          typeof value === "string" ? value.trim() : value,
-        )
-        .filter(Boolean) as string[];
+        record?.rekap?.client,
+        record?.rekap?.namaClient,
+        record?.rekap?.clientName,
+      ];
 
-      if (identifiers.length === 0) {
-        identifiers.push(`fallback-${type}-${recordsToIngest.indexOf(record)}`);
+      const normalizedClientIdentifiers = new Set<string>();
+      [...clientIdCandidates, ...clientNameCandidates].forEach((value) => {
+        const normalized = normalizeKeyValue(value);
+        if (normalized) {
+          normalizedClientIdentifiers.add(normalized);
+        }
+      });
+
+      if (normalizedClientIdentifiers.size === 0) {
+        normalizedClientIdentifiers.add(`fallback-${type}-${recordIndex}`);
       }
 
-      const { existing, isNew } = ensureExistingRecord(identifiers, record);
+      const personnelIdentifiers = collectPersonnelIdentifiers(record);
+      let keyCandidates: string[] = [];
+
+      if (personnelIdentifiers.length > 0) {
+        normalizedClientIdentifiers.forEach((clientIdentifier) => {
+          personnelIdentifiers.forEach((personIdentifier) => {
+            keyCandidates.push(`${clientIdentifier}::${personIdentifier}`);
+          });
+        });
+      }
+
+      if (keyCandidates.length === 0) {
+        keyCandidates = Array.from(normalizedClientIdentifiers.values());
+      }
+
+      if (keyCandidates.length === 0) {
+        keyCandidates.push(`fallback-${type}-${recordIndex}`);
+      }
+
+      keyCandidates = Array.from(new Set(keyCandidates));
+
+      const { existing, isNew } = ensureExistingRecord(keyCandidates, record);
       assignClientDetails(
         existing,
-        [
-          record?.client_id,
-          record?.clientId,
-          record?.clientID,
-          record?.id_client,
-          record?.clientid,
-          record?.idClient,
-          record?.rekap?.client_id,
-          record?.rekap?.clientId,
-          record?.rekap?.clientID,
-          record?.rekap?.id_client,
-          record?.rekap?.clientid,
-          record?.rekap?.idClient,
-        ],
-        [
-          record?.nama_client,
-          record?.client_name,
-          record?.client,
-          record?.namaClient,
-          record?.clientName,
-          record?.rekap?.nama_client,
-          record?.rekap?.client_name,
-          record?.rekap?.client,
-          record?.rekap?.namaClient,
-          record?.rekap?.clientName,
-        ],
+        clientIdCandidates,
+        clientNameCandidates,
       );
+      assignPersonnelDetails(existing, record);
       assignIfEmpty(existing, "rekap", record?.rekap);
       assignIfEmpty(existing, "metrics", record?.metrics);
       assignIfEmpty(existing, "activityDate", record?.activityDate);
