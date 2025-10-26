@@ -366,6 +366,27 @@ export const prepareActivityRecordsByWeek = (
 };
 
 export const extractClientPersonnel = (clients = []) => {
+  const resolveSatfung = (person, client, fallback = "") => {
+    const candidates = [
+      person?.divisi,
+      person?.satker,
+      client?.divisi,
+      person?.clientName,
+      client?.clientName,
+      client?.clientId,
+      fallback,
+    ];
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      const candidate = candidates[index];
+      if (typeof candidate === "string" && candidate.trim()) {
+        return { value: candidate, priority: index };
+      }
+    }
+
+    return { value: "", priority: candidates.length };
+  };
+
   const personnelMap = new Map();
 
   clients.forEach((client) => {
@@ -378,16 +399,22 @@ export const extractClientPersonnel = (clients = []) => {
         return;
       }
 
-      const baseKey = person?.key ||
-        `${client.key || client.clientId || "client"}-${person?.username || person?.nama || index || "person"}`;
+      const baseKey =
+        person?.key ||
+        `${
+          client.key || client.clientId || "client"
+        }-${person?.username || person?.nama || index || "person"}`;
       const key = String(baseKey);
 
       if (!personnelMap.has(key)) {
+        const { value: satfung, priority: satfungPriority } = resolveSatfung(person, client);
+
         personnelMap.set(key, {
           key,
           pangkat: person?.pangkat || "",
           nama: person?.nama || person?.username || "",
-          satfung: person?.clientName || client?.clientName || client?.clientId || "",
+          satfung,
+          __satfungPriority: satfungPriority,
           likes: 0,
           comments: 0,
         });
@@ -408,15 +435,27 @@ export const extractClientPersonnel = (clients = []) => {
       if (!record.nama && (person?.nama || person?.username)) {
         record.nama = person?.nama || person?.username || "";
       }
-      if (!record.satfung && (person?.clientName || client?.clientName || client?.clientId)) {
-        record.satfung =
-          person?.clientName || client?.clientName || client?.clientId || record.satfung;
+
+      const { value: satfungCandidate, priority: candidatePriority } = resolveSatfung(
+        person,
+        client,
+        record.satfung,
+      );
+      const hasBetterSatfung =
+        satfungCandidate &&
+        (typeof record.__satfungPriority !== "number" ||
+          candidatePriority < record.__satfungPriority ||
+          !record.satfung);
+
+      if (hasBetterSatfung) {
+        record.satfung = satfungCandidate;
+        record.__satfungPriority = candidatePriority;
       }
     });
   });
 
   return Array.from(personnelMap.values())
-    .map((person) => {
+    .map(({ __satfungPriority, ...person }) => {
       const likesValue = Number(person.likes);
       const safeLikes = Number.isFinite(likesValue) ? likesValue : 0;
       const commentsValue = Number(person.comments);
