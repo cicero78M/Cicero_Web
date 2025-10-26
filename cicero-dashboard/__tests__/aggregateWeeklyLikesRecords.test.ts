@@ -132,6 +132,7 @@ describe("aggregateWeeklyLikesRecords", () => {
 
     expect(summary.totals.totalPersonnel).toBe(1);
     expect(summary.totals.activePersonnel).toBe(1);
+    expect(summary.totals.inactiveCount).toBe(0);
     expect(summary.clients).toHaveLength(1);
     expect(summary.clients[0].personnel).toHaveLength(1);
     expect(summary.clients[0].personnel[0]).toEqual(
@@ -168,6 +169,7 @@ describe("aggregateWeeklyLikesRecords", () => {
     const summary = aggregateWeeklyLikesRecords(records, { directoryUsers });
 
     expect(summary.totals.totalPersonnel).toBe(1);
+    expect(summary.totals.inactiveCount).toBe(0);
     expect(summary.clients).toHaveLength(1);
     expect(summary.clients[0].personnel).toHaveLength(1);
     expect(summary.clients[0].personnel[0]).toEqual(
@@ -306,6 +308,7 @@ describe("aggregateWeeklyLikesRecords", () => {
 
     expect(summary.totals.totalPersonnel).toBe(3);
     expect(summary.totals.activePersonnel).toBe(2);
+    expect(summary.totals.inactiveCount).toBe(1);
     expect(summary.totals.complianceRate).toBeCloseTo((2 / 3) * 100, 5);
     expect(summary.clients).toHaveLength(3);
     expect(summary.clients).toEqual(
@@ -333,8 +336,12 @@ describe("aggregateWeeklyLikesRecords", () => {
           totalComments: 0,
           totalPersonnel: 1,
           activePersonnel: 0,
+          inactiveCount: 1,
         }),
       ]),
     );
+
+    const clientY = summary.clients.find((client) => client.clientId === "CLIENT_Y");
+    expect(clientY?.personnel).toHaveLength(0);
   });
 });
