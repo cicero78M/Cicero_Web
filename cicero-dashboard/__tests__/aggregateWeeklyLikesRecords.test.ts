@@ -145,6 +145,43 @@ describe("aggregateWeeklyLikesRecords", () => {
     );
   });
 
+  it("merges personnel identities that differ only by punctuation", () => {
+    const directoryUsers = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E.",
+      },
+    ];
+
+    const records = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E",
+        instagram_username: "fatkurrohmanse",
+        jumlah_like: 8,
+        jumlah_komentar: 3,
+      },
+    ];
+
+    const summary = aggregateWeeklyLikesRecords(records, { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(1);
+    expect(summary.clients).toHaveLength(1);
+    expect(summary.clients[0].personnel).toHaveLength(1);
+    expect(summary.clients[0].personnel[0]).toEqual(
+      expect.objectContaining({
+        nama: "Aipda Fatkur Rohman, S.E.",
+        username: "fatkurrohmanse",
+        likes: 8,
+        comments: 3,
+      }),
+    );
+    expect(summary.totals.totalLikes).toBe(8);
+    expect(summary.totals.totalComments).toBe(3);
+  });
+
   it("deduplicates Ditbinmas personnel when directory entries lack client identifiers", () => {
     const rawDirectoryUsers = [
       {

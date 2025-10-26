@@ -650,7 +650,20 @@ export const aggregateWeeklyLikesRecords = (
 
   const toIdentityKey = (clientKey: string, value: any) => {
     const normalized = normalizeKeyComponent(value);
-    return normalized ? `${clientKey}:${normalized}` : "";
+    const comparable = toComparableToken(value);
+
+    if (!normalized) {
+      return [] as string[];
+    }
+
+    const keys = new Set<string>();
+    keys.add(`${clientKey}:${normalized}`);
+
+    if (comparable && comparable !== normalized) {
+      keys.add(`${clientKey}:${comparable}`);
+    }
+
+    return Array.from(keys);
   };
 
   const syncPersonnelIdentity = (
@@ -662,28 +675,29 @@ export const aggregateWeeklyLikesRecords = (
       return;
     }
 
-    const candidates: string[] = [];
+    const identityKeys = new Set<string>();
 
     const collect = (source: { username?: any; nama?: any } | null | undefined) => {
       if (!source) {
         return;
       }
 
-      const usernameKey = toIdentityKey(clientKey, source.username);
-      const namaKey = toIdentityKey(clientKey, source.nama);
+      const keys = [
+        ...toIdentityKey(clientKey, source.username),
+        ...toIdentityKey(clientKey, source.nama),
+      ];
 
-      if (usernameKey) {
-        candidates.push(usernameKey);
-      }
-      if (namaKey) {
-        candidates.push(namaKey);
-      }
+      keys.forEach((key) => {
+        if (key) {
+          identityKeys.add(key);
+        }
+      });
     };
 
     collect(record);
     extraSources.forEach((source) => collect(source));
 
-    candidates.forEach((identityKey) => {
+    identityKeys.forEach((identityKey) => {
       personnelIdentityMap.set(identityKey, record.key);
     });
   };
@@ -767,14 +781,15 @@ export const aggregateWeeklyLikesRecords = (
           continue;
         }
 
-        const usernameKey = toIdentityKey(clientEntry.key, candidate.username);
-        if (usernameKey && personnelIdentityMap.has(usernameKey)) {
-          return personnelIdentityMap.get(usernameKey)!;
-        }
+        const keys = [
+          ...toIdentityKey(clientEntry.key, candidate.username),
+          ...toIdentityKey(clientEntry.key, candidate.nama),
+        ];
 
-        const namaKey = toIdentityKey(clientEntry.key, candidate.nama);
-        if (namaKey && personnelIdentityMap.has(namaKey)) {
-          return personnelIdentityMap.get(namaKey)!;
+        for (const identityKey of keys) {
+          if (identityKey && personnelIdentityMap.has(identityKey)) {
+            return personnelIdentityMap.get(identityKey)!;
+          }
         }
       }
 
