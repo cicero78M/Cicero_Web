@@ -88,9 +88,8 @@ interface PersonnelDistributionRow {
   nama?: string | null;
   satfung?: string | null;
   likes: number;
-  averageLikes?: number;
   comments: number;
-  averageComments?: number;
+  interactions?: number;
 }
 
 interface PersonnelDistributionMeta {
@@ -688,14 +687,22 @@ const PlatformLikesSummary = ({
                   <th className="py-3 pr-4">Pangkat &amp; Nama</th>
                   <th className="px-4 py-3">Satfung</th>
                   <th className="px-4 py-3 text-right">Likes</th>
-                  <th className="px-4 py-3 text-right">Avg. Likes</th>
                   <th className="px-4 py-3 text-right">Komentar</th>
-                  <th className="px-4 py-3 text-right">Avg. Komentar</th>
+                  <th className="px-4 py-3 text-right">Total Interaksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {personnelDistribution!.map((row) => {
                   const pangkatNama = [row.pangkat, row.nama].filter(Boolean).join(" ");
+                  const likesValue = Number(row.likes);
+                  const safeLikes = Number.isFinite(likesValue) ? likesValue : 0;
+                  const commentsValue = Number(row.comments);
+                  const safeComments = Number.isFinite(commentsValue) ? commentsValue : 0;
+                  const interactionsValueRaw =
+                    row.interactions != null ? Number(row.interactions) : safeLikes + safeComments;
+                  const interactionsValue = Number.isFinite(interactionsValueRaw)
+                    ? interactionsValueRaw
+                    : safeLikes + safeComments;
                   return (
                     <tr key={row.key} className="text-slate-200">
                       <td className="py-3 pr-4 font-semibold text-slate-100">
@@ -703,16 +710,13 @@ const PlatformLikesSummary = ({
                       </td>
                       <td className="px-4 py-3 text-slate-300">{row.satfung || "-"}</td>
                       <td className="px-4 py-3 text-right">
-                        {formatNumber(row.likes ?? 0, { maximumFractionDigits: 0 })}
+                        {formatNumber(safeLikes, { maximumFractionDigits: 0 })}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {formatNumber(row.averageLikes ?? 0, { maximumFractionDigits: 1 })}
+                        {formatNumber(safeComments, { maximumFractionDigits: 0 })}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {formatNumber(row.comments ?? 0, { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {formatNumber(row.averageComments ?? 0, { maximumFractionDigits: 1 })}
+                        {formatNumber(interactionsValue, { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                   );

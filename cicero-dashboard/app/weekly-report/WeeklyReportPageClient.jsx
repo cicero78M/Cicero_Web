@@ -246,24 +246,72 @@ const filterActivityRecordsByRange = (records, range) => {
   });
 };
 
-const extractClientPersonnel = (clients = []) =>
-  clients
-    .flatMap((client) => {
-      if (!client || !Array.isArray(client.personnel)) {
-        return [];
+const extractClientPersonnel = (clients = []) => {
+  const personnelMap = new Map();
+
+  clients.forEach((client) => {
+    if (!client || !Array.isArray(client.personnel)) {
+      return;
+    }
+
+    client.personnel.forEach((person, index) => {
+      if (!person || typeof person !== "object") {
+        return;
       }
-      return client.personnel.map((person) => ({
-        key:
-          person?.key ||
-          `${client.key || client.clientId || "client"}-${person?.username || person?.nama || "person"}`,
-        pangkat: person?.pangkat || "",
-        nama: person?.nama || person?.username || "",
-        satfung: person?.clientName || client?.clientName || client?.clientId || "",
-        likes: Number.isFinite(person?.likes) ? Number(person.likes) : 0,
-        comments: Number.isFinite(person?.comments) ? Number(person.comments) : 0,
-      }));
+
+      const baseKey = person?.key ||
+        `${client.key || client.clientId || "client"}-${person?.username || person?.nama || index || "person"}`;
+      const key = String(baseKey);
+
+      if (!personnelMap.has(key)) {
+        personnelMap.set(key, {
+          key,
+          pangkat: person?.pangkat || "",
+          nama: person?.nama || person?.username || "",
+          satfung: person?.clientName || client?.clientName || client?.clientId || "",
+          likes: 0,
+          comments: 0,
+        });
+      }
+
+      const record = personnelMap.get(key);
+      const likesValue = Number(person?.likes);
+      const likes = Number.isFinite(likesValue) ? likesValue : 0;
+      const commentsValue = Number(person?.comments);
+      const comments = Number.isFinite(commentsValue) ? commentsValue : 0;
+
+      record.likes += likes;
+      record.comments += comments;
+
+      if (!record.pangkat && person?.pangkat) {
+        record.pangkat = person.pangkat;
+      }
+      if (!record.nama && (person?.nama || person?.username)) {
+        record.nama = person?.nama || person?.username || "";
+      }
+      if (!record.satfung && (person?.clientName || client?.clientName || client?.clientId)) {
+        record.satfung =
+          person?.clientName || client?.clientName || client?.clientId || record.satfung;
+      }
+    });
+  });
+
+  return Array.from(personnelMap.values())
+    .map((person) => {
+      const likesValue = Number(person.likes);
+      const safeLikes = Number.isFinite(likesValue) ? likesValue : 0;
+      const commentsValue = Number(person.comments);
+      const safeComments = Number.isFinite(commentsValue) ? commentsValue : 0;
+
+      return {
+        ...person,
+        likes: safeLikes,
+        comments: safeComments,
+        interactions: safeLikes + safeComments,
+      };
     })
     .filter((person) => person.nama);
+};
 
 const safeFetch = async (factory) => {
   try {
@@ -939,11 +987,15 @@ export default function WeeklyReportPageClient() {
     ];
 
     const personnelDistribution = extractClientPersonnel(summaryWeek.clients || [])
-      .map((person) => ({
-        ...person,
-        averageLikes: person.likes,
-        averageComments: person.comments,
-      }))
+      .sort((a, b) => {
+        if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
+          return (b.interactions ?? 0) - (a.interactions ?? 0);
+        }
+        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
+          return (b.likes ?? 0) - (a.likes ?? 0);
+        }
+        return (b.comments ?? 0) - (a.comments ?? 0);
+      })
       .slice(0, 20);
 
     const labelOverrides = {
