@@ -5,6 +5,7 @@ import {
   prepareActivityRecordsByWeek,
   extractClientPersonnel,
   aggregateSatfungTotals,
+  comparePersonnelByEngagement,
 } from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("weekly report data transforms", () => {
@@ -170,5 +171,36 @@ describe("weekly report data transforms", () => {
     expect(pembinaan?.totalComments).toBe(3);
     expect(operasional?.totalLikes).toBe(3);
     expect(operasional?.totalComments).toBe(5);
+  });
+
+  it("sorts personnel ties by pangkat when engagements match", () => {
+    const clients = [
+      {
+        key: "client-1",
+        clientName: "DITBINMAS",
+        personnel: [
+          {
+            key: "person-high",
+            nama: "Person Pangkat Tinggi",
+            likes: 2,
+            comments: 1,
+            pangkat: "AKBP",
+          },
+          {
+            key: "person-low",
+            nama: "Person Pangkat Rendah",
+            likes: 2,
+            comments: 1,
+            pangkat: "AIPTU",
+          },
+        ],
+      },
+    ];
+
+    const personnel = extractClientPersonnel(clients);
+    const sorted = [...personnel].sort(comparePersonnelByEngagement);
+
+    expect(sorted[0].key).toBe("person-high");
+    expect(sorted[0].pangkat).toBe("AKBP");
   });
 });
