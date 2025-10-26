@@ -91,19 +91,34 @@ describe("weekly report data transforms", () => {
     expect(activeWeekRecords).toHaveLength(1);
   });
 
-  it("returns no personnel when interactions are absent", () => {
+  it("keeps personnel with zero interactions when a name is available", () => {
     const clients = [
       {
         key: "client-1",
         clientName: "Satfung A",
         personnel: [
           { key: "person-1", nama: "Person A", likes: 0, comments: 0 },
-          { key: "person-2", nama: "Person B", likes: null, comments: undefined },
+          { username: "person-b", likes: null, comments: undefined },
         ],
       },
     ];
 
-    expect(extractClientPersonnel(clients)).toEqual([]);
+    expect(extractClientPersonnel(clients)).toEqual([
+      expect.objectContaining({
+        key: "person-1",
+        nama: "Person A",
+        likes: 0,
+        comments: 0,
+        interactions: 0,
+      }),
+      expect.objectContaining({
+        key: "client-1-person-b",
+        nama: "person-b",
+        likes: 0,
+        comments: 0,
+        interactions: 0,
+      }),
+    ]);
   });
 
   it("prefers divisi as satfung label for personnel distribution", () => {
