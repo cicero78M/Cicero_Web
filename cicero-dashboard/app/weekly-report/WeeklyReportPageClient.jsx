@@ -216,9 +216,21 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
   }
 
   const collapsed = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
-
   if (collapsed === target) {
     return true;
+  }
+
+  const collapsedIncludesTarget = collapsed.includes(target);
+  if (collapsedIncludesTarget) {
+    const nonIndex = collapsed.indexOf("NON");
+    const targetIndex = collapsed.indexOf(target);
+    if (nonIndex !== -1 && nonIndex <= targetIndex) {
+      return false;
+    }
+
+    if (!allowWordMatch) {
+      return true;
+    }
   }
 
   if (!allowWordMatch) {
@@ -235,11 +247,34 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
     return false;
   }
 
-  if (segments.includes("NON") && segments.includes(target)) {
+  const contiguousMatch = segments.some((_, startIndex) => {
+    let combined = "";
+    for (let cursor = startIndex; cursor < segments.length; cursor += 1) {
+      combined += segments[cursor];
+      if (combined.length > target.length) {
+        break;
+      }
+      if (combined === target) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (!contiguousMatch) {
     return false;
   }
 
-  return segments.includes(target);
+  const nonIndex = segments.indexOf("NON");
+  if (nonIndex === -1) {
+    return true;
+  }
+
+  const combinedAfterNon = segments
+    .slice(nonIndex + 1)
+    .reduce((acc, segment) => acc + segment, "");
+
+  return !combinedAfterNon.includes(target);
 };
 
 const matchCandidates = (candidates, target, options) => {
