@@ -387,7 +387,13 @@ export const extractClientPersonnel = (clients = []) => {
           key,
           pangkat: person?.pangkat || "",
           nama: person?.nama || person?.username || "",
-          satfung: person?.clientName || client?.clientName || client?.clientId || "",
+          satfung:
+            person?.divisi ||
+            client?.divisi ||
+            person?.clientName ||
+            client?.clientName ||
+            client?.clientId ||
+            "",
           likes: 0,
           comments: 0,
         });
@@ -408,9 +414,21 @@ export const extractClientPersonnel = (clients = []) => {
       if (!record.nama && (person?.nama || person?.username)) {
         record.nama = person?.nama || person?.username || "";
       }
-      if (!record.satfung && (person?.clientName || client?.clientName || client?.clientId)) {
+      if (
+        !record.satfung &&
+        (person?.divisi ||
+          client?.divisi ||
+          person?.clientName ||
+          client?.clientName ||
+          client?.clientId)
+      ) {
         record.satfung =
-          person?.clientName || client?.clientName || client?.clientId || record.satfung;
+          person?.divisi ||
+          client?.divisi ||
+          person?.clientName ||
+          client?.clientName ||
+          client?.clientId ||
+          record.satfung;
       }
     });
   });

@@ -458,6 +458,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     const clientId = toNormalizedString(rawClientId) || "LAINNYA";
     const clientKey = normalizeKeyComponent(clientId) || "LAINNYA";
+    const divisi = toNormalizedString(source?.divisi) || "";
     const clientName =
       toNormalizedString(
         source?.nama_client ??
@@ -465,13 +466,14 @@ const aggregateLikesRecords = (records = [], options = {}) => {
           source?.client ??
           source?.namaClient ??
           source?.clientName ??
+          source?.divisi ??
           source?.satker ??
           source?.satuan_kerja ??
           source?.nama_satuan_kerja ??
           clientId,
       ) || "LAINNYA";
 
-    return { clientId, clientKey, clientName };
+    return { clientId, clientKey, clientName, divisi };
   };
 
   const isTraversable = (value) => {
@@ -658,12 +660,13 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelMap = new Map();
   let latestActivity = null;
 
-  const ensureClientEntry = ({ clientId, clientKey, clientName }) => {
+  const ensureClientEntry = ({ clientId, clientKey, clientName, divisi }) => {
     if (!clientsMap.has(clientKey)) {
       clientsMap.set(clientKey, {
         key: clientKey,
         clientId: clientId || "LAINNYA",
         clientName: clientName || "LAINNYA",
+        divisi: divisi || "",
         totalLikes: 0,
         totalComments: 0,
         personnel: [],
@@ -673,6 +676,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const clientEntry = clientsMap.get(clientKey);
     updateIfEmpty(clientEntry, "clientId", clientId);
     updateIfEmpty(clientEntry, "clientName", clientName);
+    updateIfEmpty(clientEntry, "divisi", divisi);
     return clientEntry;
   };
 
@@ -682,6 +686,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         key,
         clientId: clientEntry.clientId,
         clientName: clientEntry.clientName,
+        divisi: clientEntry.divisi || "",
         username: "",
         nama: "",
         pangkat: "",
@@ -707,6 +712,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
+      divisi: identifiers.divisi,
       username,
       nama,
       pangkat,
@@ -714,6 +720,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
@@ -760,6 +767,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
+      divisi: identifiers.divisi,
       username,
       nama,
       pangkat,
@@ -773,6 +781,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
