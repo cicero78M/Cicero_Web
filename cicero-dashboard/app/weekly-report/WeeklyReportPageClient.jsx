@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import PlatformEngagementTrendChart from "@/components/executive-summary/PlatformEngagementTrendChart";
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
@@ -70,11 +70,9 @@ const buildWeekRanges = (monthValue, yearValue) => {
   const daysInMonth = new Date(yearNumber, monthNumber, 0).getDate();
   const ranges = [];
 
-  for (let index = 1; index <= 4; index += 1) {
-    const startDay = 1 + (index - 1) * 7;
-    if (startDay > daysInMonth) {
-      break;
-    }
+  let index = 1;
+  let startDay = 1;
+  while (startDay <= daysInMonth) {
     const endDay = Math.min(startDay + 6, daysInMonth);
 
     const start = new Date(yearNumber, monthNumber - 1, startDay);
@@ -88,6 +86,9 @@ const buildWeekRanges = (monthValue, yearValue) => {
       end,
       key: `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`,
     });
+
+    index += 1;
+    startDay += 7;
   }
 
   return ranges;
@@ -377,7 +378,7 @@ const resolveWeekDateRange = (weekValue, monthValue, yearValue) => {
     return "";
   }
 
-  const normalizedWeek = Math.min(Math.max(Math.floor(weekNumber), 1), 4);
+  const normalizedWeek = Math.max(Math.floor(weekNumber), 1);
   const normalizedMonth = Math.min(Math.max(Math.floor(monthNumber), 1), 12);
   const startDay = 1 + (normalizedWeek - 1) * 7;
   const daysInMonth = new Date(yearNumber, normalizedMonth, 0).getDate();
@@ -386,13 +387,6 @@ const resolveWeekDateRange = (weekValue, monthValue, yearValue) => {
   const formatDay = (day) => String(day).padStart(2, "0");
   return `${formatDay(startDay)}-${formatDay(endDay)}`;
 };
-
-const WEEK_OPTIONS = [
-  { label: "Minggu 1", value: "1" },
-  { label: "Minggu 2", value: "2" },
-  { label: "Minggu 3", value: "3" },
-  { label: "Minggu 4", value: "4" },
-];
 
 const MONTH_OPTIONS = [
   "Januari",
@@ -442,16 +436,27 @@ const YEAR_OPTIONS = buildYearOptions();
 
 const getCurrentSelections = () => {
   const now = new Date();
-  const weekOfMonth = Math.min(4, Math.max(1, Math.ceil(now.getDate() / 7)));
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
+  const currentDay = now.getDate();
 
   const yearOptions = ensureYearOption(YEAR_OPTIONS, year);
+  const weekRanges = buildWeekRanges(month, year);
+
+  const referenceDate = new Date(year, month - 1, currentDay);
+  referenceDate.setHours(0, 0, 0, 0);
+
+  const matchingRange = weekRanges.find(
+    (range) =>
+      referenceDate.getTime() >= range.start.getTime() &&
+      referenceDate.getTime() <= range.end.getTime(),
+  );
+
+  const fallbackRange = matchingRange ?? weekRanges[weekRanges.length - 1] ?? weekRanges[0] ?? null;
+  const resolvedWeek = fallbackRange ? String(fallbackRange.index) : "1";
 
   return {
-    week:
-      WEEK_OPTIONS.find((option) => option.value === String(weekOfMonth))?.value ??
-      WEEK_OPTIONS[0].value,
+    week: resolvedWeek,
     month:
       MONTH_OPTIONS.find((option) => option.value === String(month))?.value ??
       MONTH_OPTIONS[0].value,
@@ -553,6 +558,27 @@ export default function WeeklyReportPageClient() {
     () => buildWeekRanges(selectedMonth, selectedYear),
     [selectedMonth, selectedYear],
   );
+
+  const weekOptions = useMemo(() => {
+    if (!weekRanges.length) {
+      return [{ label: "Minggu 1", value: "1" }];
+    }
+
+    return weekRanges.map((range) => ({
+      label: `Minggu ${range.index}`,
+      value: String(range.index),
+    }));
+  }, [weekRanges]);
+
+  useEffect(() => {
+    if (!weekOptions.length) {
+      return;
+    }
+
+    if (!weekOptions.some((option) => option.value === selectedWeek)) {
+      setSelectedWeek(weekOptions[0].value);
+    }
+  }, [weekOptions, selectedWeek]);
 
   const activeWeekRange = useMemo(() => {
     if (!weekRanges.length) {
@@ -701,7 +727,7 @@ export default function WeeklyReportPageClient() {
     }
 
     const weekIndex = activeWeekRange.index;
-    const weekOptionLabel = resolveActiveLabel(WEEK_OPTIONS, selectedWeek);
+    const weekOptionLabel = resolveActiveLabel(weekOptions, selectedWeek);
     const monthLabel = resolveActiveLabel(MONTH_OPTIONS, selectedMonth) || "";
     const weekDescriptor = `Minggu ${weekIndex} ${monthLabel} ${selectedYear}`;
     const weekRangeLabel = formatWeekRangeLabel(activeWeekRange.start, activeWeekRange.end);
@@ -1052,7 +1078,7 @@ export default function WeeklyReportPageClient() {
                       value={selectedWeek}
                       onChange={(event) => setSelectedWeek(event.target.value)}
                     >
-                      {WEEK_OPTIONS.map((option) => (
+                      {weekOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -1106,7 +1132,7 @@ export default function WeeklyReportPageClient() {
                   </p>
                 </div>
                 <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
-                  {weeklyPeriodLabel || `${resolveActiveLabel(WEEK_OPTIONS, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(yearOptions, selectedYear)}`}
+                  {weeklyPeriodLabel || `${resolveActiveLabel(weekOptions, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(yearOptions, selectedYear)}`}
                 </div>
               </div>
 
