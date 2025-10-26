@@ -47,6 +47,8 @@ interface LikesSummaryData {
     averageComplianceRate: number;
   };
   clients: LikesSummaryClient[];
+  satfungTotals?: LikesSummaryClient[];
+  originalClients?: LikesSummaryClient[];
   topPersonnel: LikesSummaryPersonnel[];
   lastUpdated: Date | string | null;
 }
@@ -164,6 +166,9 @@ const PlatformLikesSummary = ({
   hiddenSections,
 }: PlatformLikesSummaryProps) => {
   const clients = Array.isArray(data?.clients) ? data.clients : [];
+  const satfungTotals = Array.isArray(data?.satfungTotals)
+    ? data.satfungTotals
+    : [];
   const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
   const instagramPostCount = Math.max(0, Number(postTotals?.instagram) || 0);
   const tiktokPostCount = Math.max(0, Number(postTotals?.tiktok) || 0);
@@ -251,8 +256,13 @@ const PlatformLikesSummary = ({
     [labelOverrides],
   );
 
+  const distributionSource = useMemo(
+    () => (satfungTotals.length > 0 ? satfungTotals : clients),
+    [satfungTotals, clients],
+  );
+
   const distributionData = useMemo(() => {
-    return [...clients]
+    return [...distributionSource]
       .sort((a, b) => b.totalLikes - a.totalLikes)
       .slice(0, 8)
       .map((client) => ({
@@ -260,10 +270,10 @@ const PlatformLikesSummary = ({
         likes: client.totalLikes,
         compliance: client.complianceRate,
       }));
-  }, [clients]);
+  }, [distributionSource]);
 
   const commentDistributionData = useMemo(() => {
-    return [...clients]
+    return [...distributionSource]
       .sort((a, b) => b.totalComments - a.totalComments)
       .slice(0, 8)
       .map((client) => ({
@@ -271,7 +281,7 @@ const PlatformLikesSummary = ({
         comments: client.totalComments,
         compliance: client.complianceRate,
       }));
-  }, [clients]);
+  }, [distributionSource]);
 
   const topCompliance = useMemo(() => {
     return [...clients]

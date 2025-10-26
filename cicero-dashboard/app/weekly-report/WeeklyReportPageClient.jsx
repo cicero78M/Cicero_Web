@@ -96,19 +96,75 @@ const buildWeekRanges = (monthValue, yearValue) => {
 
 const filterDitbinmasRecords = (records = []) => {
   const target = "DITBINMAS";
+  const candidateFields = [
+    "client_id",
+    "clientId",
+    "clientID",
+    "client",
+    "client_name",
+    "clientName",
+    "nama_client",
+    "namaClient",
+    "divisi",
+    "satker",
+    "satfung",
+    "divisi_satker",
+    "divisiSatker",
+  ];
+
+  const matchesScope = (value) => {
+    if (value == null) {
+      return false;
+    }
+
+    const normalized = String(value).trim().toUpperCase();
+    if (!normalized) {
+      return false;
+    }
+
+    return normalized === target || normalized.includes(target);
+  };
+
+  const collectCandidateValues = (source) => {
+    if (!source || typeof source !== "object") {
+      if (typeof source === "string" || typeof source === "number") {
+        return [source];
+      }
+      return [];
+    }
+
+    const values = [];
+
+    candidateFields.forEach((field) => {
+      const candidate = source[field];
+      if (candidate == null) {
+        return;
+      }
+      if (typeof candidate === "string") {
+        if (candidate.trim()) {
+          values.push(candidate);
+        }
+        return;
+      }
+      if (typeof candidate === "number") {
+        values.push(String(candidate));
+      }
+    });
+
+    return values;
+  };
 
   return (Array.isArray(records) ? records : []).filter((record) => {
     if (!record || typeof record !== "object") {
       return false;
     }
 
-    const clientValue = record.client_id ?? record.clientId ?? record.client;
+    const candidates = [
+      ...collectCandidateValues(record),
+      ...collectCandidateValues(record.client),
+    ];
 
-    if (typeof clientValue !== "string") {
-      return false;
-    }
-
-    return clientValue.toUpperCase() === target;
+    return candidates.some((candidate) => matchesScope(candidate));
   });
 };
 
@@ -469,6 +525,102 @@ export const extractClientPersonnel = (clients = []) => {
       };
     })
     .filter((person) => person.nama && person.interactions > 0);
+};
+
+export const aggregateSatfungTotals = (personnel = []) => {
+  const groups = new Map();
+
+  const ensureGroup = (satfungLabel) => {
+    if (!satfungLabel) {
+      return null;
+    }
+
+    const key = satfungLabel.toUpperCase();
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        clientId: key,
+        clientName: satfungLabel,
+        totalLikes: 0,
+        totalComments: 0,
+        personnelIds: new Set(),
+      });
+    }
+
+    return groups.get(key);
+  };
+
+  (Array.isArray(personnel) ? personnel : []).forEach((person) => {
+    if (!person || typeof person !== "object") {
+      return;
+    }
+
+    const satfungLabel =
+      typeof person.satfung === "string" && person.satfung.trim()
+        ? person.satfung.trim()
+        : typeof person.divisi === "string" && person.divisi.trim()
+        ? person.divisi.trim()
+        : "";
+
+    if (!satfungLabel) {
+      return;
+    }
+
+    const group = ensureGroup(satfungLabel);
+    if (!group) {
+      return;
+    }
+
+    const likesValue = Number(person.likes);
+    const commentsValue = Number(person.comments);
+    const likes = Number.isFinite(likesValue) ? likesValue : 0;
+    const comments = Number.isFinite(commentsValue) ? commentsValue : 0;
+
+    group.totalLikes += likes;
+    group.totalComments += comments;
+
+    const personKey =
+      person.key || person.nrp || person.nip || person.nama || person.username;
+
+    if (personKey) {
+      group.personnelIds.add(personKey);
+    } else {
+      group.personnelIds.add(JSON.stringify(person));
+    }
+  });
+
+  return Array.from(groups.values())
+    .map((group) => {
+      const { personnelIds, totalLikes, totalComments, clientName, key } = group;
+      const activePersonnel = personnelIds.size;
+      const totalPersonnel = activePersonnel;
+      const complianceRate =
+        totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
+      const averageLikesPerUser =
+        activePersonnel > 0 ? totalLikes / activePersonnel : 0;
+      const averageCommentsPerUser =
+        activePersonnel > 0 ? totalComments / activePersonnel : 0;
+
+      return {
+        key,
+        clientId: key,
+        clientName,
+        totalLikes,
+        totalComments,
+        activePersonnel,
+        totalPersonnel,
+        complianceRate,
+        averageLikesPerUser,
+        averageCommentsPerUser,
+      };
+    })
+    .sort((a, b) => {
+      if ((b.totalLikes ?? 0) !== (a.totalLikes ?? 0)) {
+        return (b.totalLikes ?? 0) - (a.totalLikes ?? 0);
+      }
+      return (b.totalComments ?? 0) - (a.totalComments ?? 0);
+    });
 };
 
 const safeFetch = async (factory) => {
@@ -1172,6 +1324,8 @@ export default function WeeklyReportPageClient() {
       summaryWeek.clients || [],
     );
 
+    const satfungTotals = aggregateSatfungTotals(rawPersonnelDistribution);
+
     const personnelDistribution = rawPersonnelDistribution
       .sort((a, b) => {
         if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
@@ -1199,8 +1353,24 @@ export default function WeeklyReportPageClient() {
           : tableEmptyLabel,
     };
 
+    const originalClients = Array.isArray(summaryWeek.clients)
+      ? summaryWeek.clients
+      : [];
+
+    const likesSummaryTotals = {
+      ...(summaryWeek.totals || {}),
+    };
+
+    if (satfungTotals.length > 0) {
+      likesSummaryTotals.totalClients = satfungTotals.length;
+    }
+
     const likesSummaryData = {
       ...summaryWeek,
+      totals: likesSummaryTotals,
+      clients: satfungTotals.length > 0 ? satfungTotals : originalClients,
+      satfungTotals,
+      originalClients,
     };
 
     return {

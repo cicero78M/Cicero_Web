@@ -4,6 +4,7 @@ import {
   filterActivityRecordsByRange,
   prepareActivityRecordsByWeek,
   extractClientPersonnel,
+  aggregateSatfungTotals,
 } from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("weekly report data transforms", () => {
@@ -127,5 +128,47 @@ describe("weekly report data transforms", () => {
 
     expect(personnel).toHaveLength(1);
     expect(personnel[0].satfung).toBe("Satfung Bhayangkara");
+  });
+
+  it("aggregates likes and comments per satfung", () => {
+    const personnel = [
+      {
+        key: "person-1",
+        nama: "Person A",
+        satfung: "Satfung Pembinaan",
+        likes: 6,
+        comments: 2,
+      },
+      {
+        key: "person-2",
+        nama: "Person B",
+        satfung: "Satfung Pembinaan",
+        likes: 4,
+        comments: 1,
+      },
+      {
+        key: "person-3",
+        nama: "Person C",
+        satfung: "Satfung Operasional",
+        likes: 3,
+        comments: 5,
+      },
+    ];
+
+    const satfungTotals = aggregateSatfungTotals(personnel);
+
+    expect(satfungTotals).toHaveLength(2);
+
+    const pembinaan = satfungTotals.find(
+      (entry) => entry.clientName === "Satfung Pembinaan",
+    );
+    const operasional = satfungTotals.find(
+      (entry) => entry.clientName === "Satfung Operasional",
+    );
+
+    expect(pembinaan?.totalLikes).toBe(10);
+    expect(pembinaan?.totalComments).toBe(3);
+    expect(operasional?.totalLikes).toBe(3);
+    expect(operasional?.totalComments).toBe(5);
   });
 });
