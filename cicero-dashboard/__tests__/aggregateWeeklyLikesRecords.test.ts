@@ -2,7 +2,10 @@ import {
   aggregateWeeklyLikesRecords,
   mergeWeeklyActivityRecords,
 } from "@/app/weekly-report/lib/dataTransforms";
-import { filterDitbinmasRecords } from "@/app/weekly-report/WeeklyReportPageClient";
+import {
+  filterDitbinmasRecords,
+  resolveDitbinmasDirectoryUsers,
+} from "@/app/weekly-report/WeeklyReportPageClient";
 
 describe("aggregateWeeklyLikesRecords", () => {
   it("creates separate clients for Ditbinmas satfung with different divisi", () => {
@@ -137,6 +140,71 @@ describe("aggregateWeeklyLikesRecords", () => {
         username: "fatkurrohmanse",
         likes: 10,
         comments: 5,
+        active: true,
+      }),
+    );
+  });
+
+  it("deduplicates Ditbinmas personnel when directory entries lack client identifiers", () => {
+    const rawDirectoryUsers = [
+      {
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E.",
+        nrp: "66030339",
+      },
+    ];
+
+    const weeklyRecords = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E.",
+        instagram_username: "fatkurrohmanse",
+        jumlah_like: 6,
+        jumlah_komentar: 1,
+      },
+      {
+        client_id: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        nama: "Aipda Fatkur Rohman, S.E.",
+        instagram_username: "fatkurrohmanse",
+        jumlah_like: 4,
+        jumlah_komentar: 2,
+      },
+    ];
+
+    const normalizedDirectoryUsers = resolveDitbinmasDirectoryUsers(rawDirectoryUsers);
+
+    expect(normalizedDirectoryUsers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          client_id: "DITBINMAS",
+          clientId: "DITBINMAS",
+          client: "DITBINMAS",
+        }),
+      ]),
+    );
+
+    const summary = aggregateWeeklyLikesRecords(weeklyRecords, {
+      directoryUsers: normalizedDirectoryUsers,
+    });
+
+    expect(summary.clients).toHaveLength(1);
+    expect(summary.clients[0]).toEqual(
+      expect.objectContaining({
+        clientId: "DITBINMAS",
+        divisi: "Subbagrenmin",
+        totalLikes: 10,
+        totalComments: 3,
+      }),
+    );
+
+    expect(summary.clients[0].personnel).toHaveLength(1);
+    expect(summary.clients[0].personnel[0]).toEqual(
+      expect.objectContaining({
+        nama: "Aipda Fatkur Rohman, S.E.",
+        likes: 10,
+        comments: 3,
         active: true,
       }),
     );
