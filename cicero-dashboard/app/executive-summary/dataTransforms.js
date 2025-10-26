@@ -642,121 +642,15 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return `${clientKey}:AUTO:${fallbackIndex}`;
   };
 
-  const SATFUNG_FIELD_CANDIDATES = [
-    "divisi",
-    "divisi_satker",
-    "divisiSatker",
-    "divisi_satfung",
-    "divisiSatfung",
-    "satker",
-    "satfung",
-    "client",
-    "client_name",
-    "clientName",
-    "nama_client",
-    "namaClient",
-    "client_label",
-    "clientLabel",
-  ];
-
   const updateIfEmpty = (target, field, value) => {
-    if (!target || typeof target !== "object") {
-      return;
-    }
-
     const normalized = toNormalizedString(value);
     if (!normalized) {
       return;
     }
 
-    const assignIfNeeded = (candidate) => {
-      if (!candidate || typeof candidate !== "object") {
-        return;
-      }
-
-      const currentValue = candidate[field];
-      if (currentValue && typeof currentValue === "object") {
-        candidate[field] = normalized;
-        return;
-      }
-
-      if (!toNormalizedString(currentValue) || currentValue === "LAINNYA") {
-        candidate[field] = normalized;
-      }
-    };
-
-    assignIfNeeded(target);
-
-    if (target.client && target.client !== target) {
-      assignIfNeeded(target.client);
+    if (!toNormalizedString(target[field]) || target[field] === "LAINNYA") {
+      target[field] = normalized;
     }
-  };
-
-  const registerSatfungCandidate = (target, value, priority) => {
-    if (!target || typeof target !== "object") {
-      return;
-    }
-
-    const normalized = toNormalizedString(value);
-    if (!normalized) {
-      return;
-    }
-
-    const current = target.satfung;
-    const currentPriority = target.__satfungPriority;
-    const shouldAssign =
-      !toNormalizedString(current) ||
-      current === "LAINNYA" ||
-      typeof currentPriority !== "number" ||
-      priority < currentPriority;
-
-    if (shouldAssign) {
-      target.satfung = normalized;
-      target.__satfungPriority = priority;
-    }
-  };
-
-  const propagateSatfungFields = (target, ...sources) => {
-    if (!target || typeof target !== "object") {
-      return;
-    }
-
-    sources.forEach((source) => {
-      if (!source || typeof source !== "object") {
-        return;
-      }
-
-      SATFUNG_FIELD_CANDIDATES.forEach((field, index) => {
-        if (!Object.prototype.hasOwnProperty.call(source, field)) {
-          return;
-        }
-
-        const value = source[field];
-        if (field === "client") {
-          if (value && typeof value === "object") {
-            propagateSatfungFields(target, value);
-            return;
-          }
-
-          updateIfEmpty(target, field, value);
-          [
-            "client_name",
-            "clientName",
-            "client_label",
-            "clientLabel",
-            "nama_client",
-            "namaClient",
-          ].forEach((aliasField) => {
-            updateIfEmpty(target, aliasField, value);
-          });
-          registerSatfungCandidate(target, value, index);
-          return;
-        }
-
-        updateIfEmpty(target, field, value);
-        registerSatfungCandidate(target, value, index);
-      });
-    });
   };
 
   const clientsMap = new Map();
@@ -823,7 +717,6 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
-    propagateSatfungFields(personnelRecord, user, user?.client, clientEntry);
   });
 
   safeRecords.forEach((record, index) => {
@@ -883,14 +776,6 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
-    propagateSatfungFields(
-      personnelRecord,
-      record,
-      record?.rekap,
-      record?.metrics,
-      record?.client,
-      clientEntry,
-    );
 
     clientEntry.totalLikes += likes;
     clientEntry.totalComments += comments;

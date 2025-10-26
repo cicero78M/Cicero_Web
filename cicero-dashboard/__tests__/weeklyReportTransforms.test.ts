@@ -7,7 +7,6 @@ import {
   aggregateSatfungTotals,
   comparePersonnelByEngagement,
 } from "@/app/weekly-report/WeeklyReportPageClient";
-import { aggregateLikesRecords } from "@/app/executive-summary/dataTransforms";
 
 describe("weekly report data transforms", () => {
   it("preserves metrics totals when building weekly series", () => {
@@ -166,66 +165,6 @@ describe("weekly report data transforms", () => {
     expect(satfungTotals).toHaveLength(1);
     expect(satfungTotals[0].clientName).toBe("Satfung Polmas");
     expect(satfungTotals[0].clientName).not.toBe("DIV-001");
-  });
-
-  it("preserves satfung values when aggregating likes records", () => {
-    const directoryUsers = [
-      {
-        client_id: "client-001",
-        client_name: "DITBINMAS",
-        username: "user-a",
-        nama: "Person A",
-        divisi: "Satfung A",
-      },
-      {
-        client_id: "client-001",
-        client_name: "DITBINMAS",
-        username: "user-b",
-        nama: "Person B",
-        divisi_satker: "Satfung B",
-      },
-    ];
-
-    const likesRecords = [
-      {
-        client_id: "client-001",
-        client_name: "DITBINMAS",
-        username: "user-a",
-        nama: "Person A",
-        divisi: "Satfung A",
-        jumlah_like: 3,
-        jumlah_komentar: 1,
-      },
-      {
-        client_id: "client-001",
-        client_name: "DITBINMAS",
-        username: "user-b",
-        nama: "Person B",
-        divisi_satker: "Satfung B",
-        jumlah_like: 2,
-        jumlah_komentar: 2,
-      },
-      {
-        client_id: "client-001",
-        client_name: "DITBINMAS",
-        username: "user-c",
-        nama: "Person C",
-        client: "Satfung C",
-        jumlah_like: 5,
-      },
-    ];
-
-    const summary = aggregateLikesRecords(likesRecords, { directoryUsers });
-    const personnel = extractClientPersonnel(summary.clients);
-
-    expect(personnel).toHaveLength(3);
-
-    const satfungLabels = personnel
-      .map((person) => person.satfung)
-      .filter(Boolean)
-      .sort();
-
-    expect(satfungLabels).toEqual(["Satfung A", "Satfung B", "Satfung C"]);
   });
 
   it("aggregates likes and comments per satfung", () => {
