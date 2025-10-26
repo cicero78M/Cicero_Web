@@ -28,6 +28,7 @@ import {
   getTiktokPosts,
   getUserDirectory,
 } from "@/utils/api";
+import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 
 const ensureArray = (...candidates) => {
   for (const candidate of candidates) {
@@ -525,6 +526,61 @@ export const extractClientPersonnel = (clients = []) => {
       };
     })
     .filter((person) => person.nama && person.interactions > 0);
+};
+
+export const comparePersonnelByEngagement = (a = {}, b = {}) => {
+  const rawTotalA = Number(a?.interactions);
+  const rawTotalB = Number(b?.interactions);
+  const totalA = Number.isFinite(rawTotalA) ? rawTotalA : 0;
+  const totalB = Number.isFinite(rawTotalB) ? rawTotalB : 0;
+
+  if (totalB !== totalA) {
+    return totalB - totalA;
+  }
+
+  const rawLikesA = Number(a?.likes);
+  const rawLikesB = Number(b?.likes);
+  const likesA = Number.isFinite(rawLikesA) ? rawLikesA : 0;
+  const likesB = Number.isFinite(rawLikesB) ? rawLikesB : 0;
+
+  if (likesB !== likesA) {
+    return likesB - likesA;
+  }
+
+  const rawCommentsA = Number(a?.comments);
+  const rawCommentsB = Number(b?.comments);
+  const commentsA = Number.isFinite(rawCommentsA) ? rawCommentsA : 0;
+  const commentsB = Number.isFinite(rawCommentsB) ? rawCommentsB : 0;
+
+  if (commentsB !== commentsA) {
+    return commentsB - commentsA;
+  }
+
+  const pangkatDiff = compareUsersByPangkatOnly(a, b);
+  if (pangkatDiff !== 0) {
+    return pangkatDiff;
+  }
+
+  const nameA = String(a?.nama || a?.name || a?.username || "").trim();
+  const nameB = String(b?.nama || b?.name || b?.username || "").trim();
+
+  if (nameA && nameB) {
+    const nameDiff = nameA.localeCompare(nameB, "id", { sensitivity: "base" });
+    if (nameDiff !== 0) {
+      return nameDiff;
+    }
+  } else if (nameA || nameB) {
+    return nameA ? -1 : 1;
+  }
+
+  const keyA = String(
+    a?.key || a?.nrp || a?.nip || a?.nrp_nip || a?.nrpNip || "",
+  );
+  const keyB = String(
+    b?.key || b?.nrp || b?.nip || b?.nrp_nip || b?.nrpNip || "",
+  );
+
+  return keyA.localeCompare(keyB, "id", { sensitivity: "base" });
 };
 
 export const aggregateSatfungTotals = (personnel = []) => {
@@ -1326,16 +1382,9 @@ export default function WeeklyReportPageClient() {
 
     const satfungTotals = aggregateSatfungTotals(rawPersonnelDistribution);
 
-    const personnelDistribution = rawPersonnelDistribution
-      .sort((a, b) => {
-        if ((b.interactions ?? 0) !== (a.interactions ?? 0)) {
-          return (b.interactions ?? 0) - (a.interactions ?? 0);
-        }
-        if ((b.likes ?? 0) !== (a.likes ?? 0)) {
-          return (b.likes ?? 0) - (a.likes ?? 0);
-        }
-        return (b.comments ?? 0) - (a.comments ?? 0);
-      });
+    const personnelDistribution = rawPersonnelDistribution.sort(
+      comparePersonnelByEngagement,
+    );
 
     const labelOverrides = {
       likesContributorsDescription: "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
