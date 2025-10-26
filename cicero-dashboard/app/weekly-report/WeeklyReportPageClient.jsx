@@ -204,6 +204,27 @@ const buildWeekRanges = (monthValue, yearValue) => {
 const DITBINMAS_CLIENT_TARGET = "DITBINMAS";
 const DITBINMAS_ROLE_TARGET = "DITBINMAS";
 
+const NEGATION_PREFIXES = [
+  "NON",
+  "NOT",
+  "NO",
+  "ANTI",
+  "BKN",
+  "BUKAN",
+  "TIDAK",
+];
+
+const hasNegationPrefix = (collapsed, targetIndex) => {
+  if (targetIndex <= 0) {
+    return false;
+  }
+
+  const prefix = collapsed.slice(0, targetIndex);
+  return NEGATION_PREFIXES.some((token) =>
+    prefix.endsWith(token.replace(/[^A-Z0-9]/g, "")),
+  );
+};
+
 const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) => {
   if (value == null) {
     return false;
@@ -215,29 +236,19 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
     return false;
   }
 
-  const collapsed = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (collapsed === target) {
-    return true;
-  }
+  const uppercased = raw.toUpperCase();
+  const collapsed = uppercased.replace(/[^A-Z0-9]/g, "");
+  const targetIndex = collapsed.indexOf(target);
 
-  const collapsedIncludesTarget = collapsed.includes(target);
-  if (collapsedIncludesTarget) {
-    const nonIndex = collapsed.indexOf("NON");
-    const targetIndex = collapsed.indexOf(target);
-    if (nonIndex !== -1 && nonIndex <= targetIndex) {
-      return false;
-    }
-
+  if (targetIndex !== -1 && !hasNegationPrefix(collapsed, targetIndex)) {
     if (!allowWordMatch) {
       return true;
     }
-  }
-
-  if (!allowWordMatch) {
+  } else if (!allowWordMatch) {
     return false;
   }
 
-  const spaced = raw.toUpperCase().replace(/[^A-Z0-9]/g, " ");
+  const spaced = uppercased.replace(/[^A-Z0-9]/g, " ");
   const segments = spaced
     .split(" ")
     .map((segment) => segment.trim())
@@ -247,7 +258,8 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
     return false;
   }
 
-  const contiguousMatch = segments.some((_, startIndex) => {
+  let matchStartIndex = -1;
+  for (let startIndex = 0; startIndex < segments.length; startIndex += 1) {
     let combined = "";
     for (let cursor = startIndex; cursor < segments.length; cursor += 1) {
       combined += segments[cursor];
@@ -255,26 +267,25 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
         break;
       }
       if (combined === target) {
-        return true;
+        matchStartIndex = startIndex;
+        break;
       }
     }
-    return false;
-  });
+    if (matchStartIndex !== -1) {
+      break;
+    }
+  }
 
-  if (!contiguousMatch) {
+  if (matchStartIndex === -1) {
     return false;
   }
 
-  const nonIndex = segments.indexOf("NON");
-  if (nonIndex === -1) {
-    return true;
-  }
+  const prefixSegments = segments.slice(0, matchStartIndex);
+  const hasNegationSegment = prefixSegments.some((segment) =>
+    NEGATION_PREFIXES.some((token) => segment.endsWith(token)),
+  );
 
-  const combinedAfterNon = segments
-    .slice(nonIndex + 1)
-    .reduce((acc, segment) => acc + segment, "");
-
-  return !combinedAfterNon.includes(target);
+  return !hasNegationSegment;
 };
 
 const matchCandidates = (candidates, target, options) => {

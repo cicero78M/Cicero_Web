@@ -188,6 +188,46 @@ describe("aggregateWeeklyLikesRecords", () => {
     expect(summary.totals.totalComments).toBe(3);
   });
 
+  it("counts likes and comments stored inside nested rekap structures", () => {
+    const likesRecords = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Satfung Rekap",
+        rekap: {
+          total_like_personil: "6",
+        },
+      },
+    ];
+
+    const commentRecords = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Satfung Rekap",
+        rekap: {
+          total_comments_personil: "5",
+        },
+      },
+    ];
+
+    const merged = mergeWeeklyActivityRecords(likesRecords, commentRecords);
+
+    expect(merged).toHaveLength(1);
+
+    const summary = aggregateWeeklyLikesRecords(merged);
+
+    expect(summary.totals.totalLikes).toBe(6);
+    expect(summary.totals.totalComments).toBe(5);
+    expect(summary.clients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientName: "Satfung Rekap",
+          totalLikes: 6,
+          totalComments: 5,
+        }),
+      ]),
+    );
+  });
+
   it("deduplicates Ditbinmas personnel when directory entries lack client identifiers", () => {
     const rawDirectoryUsers = [
       {

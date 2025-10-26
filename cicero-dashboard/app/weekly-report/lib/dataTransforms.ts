@@ -9,6 +9,121 @@ const toSafeNumber = (value: any): number => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
+const extractWeeklyMetricValue = (
+  record: any,
+  type: "likes" | "comments",
+): any => {
+  if (!record || typeof record !== "object") {
+    return 0;
+  }
+
+  if (type === "likes") {
+    return (
+      record?.likes_personil ??
+      record?.likes_personel ??
+      record?.likes_personnel ??
+      record?.total_like_personil ??
+      record?.total_like_personel ??
+      record?.total_like_personnel ??
+      record?.totalLikesPersonil ??
+      record?.totalLikesPersonel ??
+      record?.totalLikesPersonnel ??
+      record?.rekap?.likes_personil ??
+      record?.rekap?.likes_personel ??
+      record?.rekap?.likes_personnel ??
+      record?.rekap?.total_like_personil ??
+      record?.rekap?.total_like_personel ??
+      record?.rekap?.total_like_personnel ??
+      record?.rekap?.totalLikesPersonil ??
+      record?.rekap?.totalLikesPersonel ??
+      record?.rekap?.totalLikesPersonnel ??
+      record?.metrics?.likes_personil ??
+      record?.metrics?.likes_personel ??
+      record?.metrics?.likes_personnel ??
+      record?.metrics?.total_like_personil ??
+      record?.metrics?.total_like_personel ??
+      record?.metrics?.total_like_personnel ??
+      record?.metrics?.totalLikesPersonil ??
+      record?.metrics?.totalLikesPersonel ??
+      record?.metrics?.totalLikesPersonnel ??
+      record?.jumlah_like ??
+      record?.jumlahLike ??
+      record?.total_like ??
+      record?.likes ??
+      record?.totalLikes ??
+      record?.like_count ??
+      record?.likeCount ??
+      record?.total_likes ??
+      record?.rekap?.jumlah_like ??
+      record?.rekap?.jumlahLike ??
+      record?.rekap?.total_like ??
+      record?.rekap?.likes ??
+      record?.rekap?.totalLikes ??
+      record?.rekap?.like_count ??
+      record?.rekap?.likeCount ??
+      record?.rekap?.total_likes ??
+      record?.metrics?.jumlah_like ??
+      record?.metrics?.jumlahLike ??
+      record?.metrics?.total_like ??
+      record?.metrics?.likes ??
+      record?.metrics?.totalLikes ??
+      record?.metrics?.like_count ??
+      record?.metrics?.likeCount ??
+      record?.metrics?.total_likes ??
+      0
+    );
+  }
+
+  return (
+    record?.total_comments_personil ??
+    record?.total_comments_personel ??
+    record?.total_comments_personnel ??
+    record?.totalCommentsPersonil ??
+    record?.totalCommentsPersonel ??
+    record?.totalCommentsPersonnel ??
+    record?.rekap?.total_comments_personil ??
+    record?.rekap?.total_comments_personel ??
+    record?.rekap?.total_comments_personnel ??
+    record?.rekap?.totalCommentsPersonil ??
+    record?.rekap?.totalCommentsPersonel ??
+    record?.rekap?.totalCommentsPersonnel ??
+    record?.metrics?.total_comments_personil ??
+    record?.metrics?.total_comments_personel ??
+    record?.metrics?.total_comments_personnel ??
+    record?.metrics?.totalCommentsPersonil ??
+    record?.metrics?.totalCommentsPersonel ??
+    record?.metrics?.totalCommentsPersonnel ??
+    record?.jumlah_komentar ??
+    record?.jumlahKomentar ??
+    record?.total_komentar ??
+    record?.totalKomentar ??
+    record?.total_comments ??
+    record?.totalComments ??
+    record?.comment_count ??
+    record?.commentCount ??
+    record?.comments ??
+    record?.rekap?.jumlah_komentar ??
+    record?.rekap?.jumlahKomentar ??
+    record?.rekap?.total_komentar ??
+    record?.rekap?.totalKomentar ??
+    record?.rekap?.total_comments ??
+    record?.rekap?.totalComments ??
+    record?.rekap?.comment_count ??
+    record?.rekap?.commentCount ??
+    record?.rekap?.comments ??
+    record?.metrics?.jumlah_komentar ??
+    record?.metrics?.jumlahKomentar ??
+    record?.metrics?.total_komentar ??
+    record?.metrics?.totalKomentar ??
+    record?.metrics?.total_comments ??
+    record?.metrics?.totalComments ??
+    record?.metrics?.comment_count ??
+    record?.metrics?.commentCount ??
+    record?.metrics?.comments ??
+    0
+  );
+};
+
 export const createEmptyWeeklyLikesSummary = () => ({
   totals: {
     totalClients: 0,
@@ -182,112 +297,6 @@ export const mergeWeeklyActivityRecords = (
     });
   };
 
-  const extractMetricValue = (record: any, type: "likes" | "comments") => {
-    if (type === "likes") {
-      return (
-        record?.likes_personil ??
-        record?.likes_personel ??
-        record?.likes_personnel ??
-        record?.total_like_personil ??
-        record?.total_like_personel ??
-        record?.total_like_personnel ??
-        record?.totalLikesPersonil ??
-        record?.totalLikesPersonel ??
-        record?.totalLikesPersonnel ??
-        record?.rekap?.likes_personil ??
-        record?.rekap?.likes_personel ??
-        record?.rekap?.likes_personnel ??
-        record?.rekap?.total_like_personil ??
-        record?.rekap?.total_like_personel ??
-        record?.rekap?.total_like_personnel ??
-        record?.rekap?.totalLikesPersonil ??
-        record?.rekap?.totalLikesPersonel ??
-        record?.rekap?.totalLikesPersonnel ??
-        record?.metrics?.likes_personil ??
-        record?.metrics?.likes_personel ??
-        record?.metrics?.likes_personnel ??
-        record?.metrics?.total_like_personil ??
-        record?.metrics?.total_like_personel ??
-        record?.metrics?.total_like_personnel ??
-        record?.metrics?.totalLikesPersonil ??
-        record?.metrics?.totalLikesPersonel ??
-        record?.metrics?.totalLikesPersonnel ??
-        record?.jumlah_like ??
-        record?.jumlahLike ??
-        record?.total_like ??
-        record?.likes ??
-        record?.totalLikes ??
-        record?.like_count ??
-        record?.likeCount ??
-        record?.total_likes ??
-        record?.rekap?.jumlah_like ??
-        record?.rekap?.jumlahLike ??
-        record?.rekap?.total_like ??
-        record?.rekap?.likes ??
-        record?.rekap?.totalLikes ??
-        record?.rekap?.like_count ??
-        record?.rekap?.likeCount ??
-        record?.rekap?.total_likes ??
-        record?.metrics?.jumlah_like ??
-        record?.metrics?.jumlahLike ??
-        record?.metrics?.total_like ??
-        record?.metrics?.likes ??
-        record?.metrics?.totalLikes ??
-        record?.metrics?.like_count ??
-        record?.metrics?.likeCount ??
-        record?.metrics?.total_likes
-      );
-    }
-
-    return (
-      record?.total_comments_personil ??
-      record?.total_comments_personel ??
-      record?.total_comments_personnel ??
-      record?.totalCommentsPersonil ??
-      record?.totalCommentsPersonel ??
-      record?.totalCommentsPersonnel ??
-      record?.rekap?.total_comments_personil ??
-      record?.rekap?.total_comments_personel ??
-      record?.rekap?.total_comments_personnel ??
-      record?.rekap?.totalCommentsPersonil ??
-      record?.rekap?.totalCommentsPersonel ??
-      record?.rekap?.totalCommentsPersonnel ??
-      record?.metrics?.total_comments_personil ??
-      record?.metrics?.total_comments_personel ??
-      record?.metrics?.total_comments_personnel ??
-      record?.metrics?.totalCommentsPersonil ??
-      record?.metrics?.totalCommentsPersonel ??
-      record?.metrics?.totalCommentsPersonnel ??
-      record?.jumlah_komentar ??
-      record?.jumlahKomentar ??
-      record?.total_komentar ??
-      record?.totalKomentar ??
-      record?.total_comments ??
-      record?.totalComments ??
-      record?.comment_count ??
-      record?.commentCount ??
-      record?.comments ??
-      record?.rekap?.jumlah_komentar ??
-      record?.rekap?.jumlahKomentar ??
-      record?.rekap?.total_komentar ??
-      record?.rekap?.totalKomentar ??
-      record?.rekap?.total_comments ??
-      record?.rekap?.totalComments ??
-      record?.rekap?.comment_count ??
-      record?.rekap?.commentCount ??
-      record?.rekap?.comments ??
-      record?.metrics?.jumlah_komentar ??
-      record?.metrics?.jumlahKomentar ??
-      record?.metrics?.total_komentar ??
-      record?.metrics?.totalKomentar ??
-      record?.metrics?.total_comments ??
-      record?.metrics?.totalComments ??
-      record?.metrics?.comment_count ??
-      record?.metrics?.commentCount ??
-      record?.metrics?.comments
-    );
-  };
-
   const ingest = (recordsToIngest: any[], type: "likes" | "comments") => {
     if (!Array.isArray(recordsToIngest)) {
       return;
@@ -355,7 +364,7 @@ export const mergeWeeklyActivityRecords = (
       assignIfEmpty(existing, "metrics", record?.metrics);
       assignIfEmpty(existing, "activityDate", record?.activityDate);
 
-      const metricValue = extractMetricValue(record, type);
+      const metricValue = extractWeeklyMetricValue(record, type);
       if (isNew) {
         setMetricValue(
           existing,
@@ -880,33 +889,10 @@ export const aggregateWeeklyLikesRecords = (
     const identifiers = resolveClientIdentifiers(record);
     const clientEntry = ensureClientEntry(identifiers);
     const likes = toSafeNumber(
-      record?.jumlah_like ??
-        record?.jumlahLike ??
-        record?.total_like ??
-        record?.likes ??
-        record?.totalLikes,
+      extractWeeklyMetricValue(record, "likes"),
     );
     const comments = toSafeNumber(
-      record?.jumlah_komentar ??
-        record?.jumlahKomentar ??
-        record?.total_komentar ??
-        record?.totalKomentar ??
-        record?.total_comments ??
-        record?.totalComments ??
-        record?.total_comments_personil ??
-        record?.total_comments_personel ??
-        record?.total_comments_personnel ??
-        record?.totalCommentsPersonil ??
-        record?.totalCommentsPersonel ??
-        record?.totalCommentsPersonnel ??
-        record?.comment_count ??
-        record?.commentCount ??
-        record?.comments ??
-        record?.metrics?.comments ??
-        record?.metrics?.comment_count ??
-        record?.metrics?.commentCount ??
-        record?.metrics?.totalComments ??
-        record?.metrics?.total_comments,
+      extractWeeklyMetricValue(record, "comments"),
     );
     if (likes <= 0 && comments <= 0) {
       return;
