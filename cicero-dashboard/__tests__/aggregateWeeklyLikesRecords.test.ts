@@ -128,6 +128,45 @@ describe("aggregateWeeklyLikesRecords", () => {
     expect(result.totals.totalClients).toBe(2);
   });
 
+  it("uses subsatker fields when satfung data is missing", () => {
+    const records = [
+      {
+        client_id: "DITBINMAS",
+        subsatker: "Subsatker A",
+        nama: "Person Subsatker",
+        jumlah_like: 4,
+        jumlah_komentar: 1,
+      },
+    ];
+
+    const result = aggregateWeeklyLikesRecords(records);
+
+    expect(result.clients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientId: "DITBINMAS",
+          clientName: "Subsatker A",
+          satfung: "Subsatker A",
+          subsatker: "Subsatker A",
+          totalLikes: 4,
+          totalComments: 1,
+        }),
+      ]),
+    );
+
+    expect(result.topPersonnel).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientName: "Subsatker A",
+          satfung: "Subsatker A",
+          subsatker: "Subsatker A",
+          likes: 4,
+          comments: 1,
+        }),
+      ]),
+    );
+  });
+
   it("retains metrics for records whose client details exist only inside rekap", () => {
     const likesRecords = [
       {

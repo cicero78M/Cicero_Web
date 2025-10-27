@@ -756,6 +756,37 @@ export const aggregateWeeklyLikesRecords = (
       "";
 
     const clientId = toNormalizedString(rawClientId) || "LAINNYA";
+    const subsatker = pickFirstNonEmptyString([
+      source?.subsatker,
+      source?.subSatker,
+      source?.sub_satker,
+      source?.nama_subsatker,
+      source?.namaSubsatker,
+      source?.subsatker_name,
+      source?.subsatkerName,
+      source?.subsatker_unit,
+      source?.subsatkerUnit,
+      source?.unit_subsatker,
+      source?.unitSubsatker,
+      source?.subsatker_label,
+      source?.subsatkerLabel,
+      source?.rekap?.subsatker,
+      source?.rekap?.subSatker,
+      source?.rekap?.sub_satker,
+      source?.rekap?.nama_subsatker,
+      source?.rekap?.namaSubsatker,
+      source?.rekap?.subsatker_name,
+      source?.rekap?.subsatkerName,
+      source?.rekap?.subsatker_label,
+      source?.metrics?.subsatker,
+      source?.metrics?.subSatker,
+      source?.metrics?.sub_satker,
+      source?.metrics?.nama_subsatker,
+      source?.metrics?.namaSubsatker,
+      source?.metrics?.subsatker_name,
+      source?.metrics?.subsatkerName,
+      source?.metrics?.subsatker_label,
+    ]);
     const satfung = pickFirstNonEmptyString([
       source?.satfung,
       source?.nama_satfung,
@@ -777,6 +808,7 @@ export const aggregateWeeklyLikesRecords = (
       source?.metrics?.satfung_name,
       source?.metrics?.satfungName,
       source?.metrics?.satfung_label,
+      subsatker,
     ]);
     const divisiRaw = pickFirstNonEmptyString([
       source?.divisi,
@@ -796,6 +828,7 @@ export const aggregateWeeklyLikesRecords = (
         source?.satker,
         source?.satuan_kerja,
         source?.nama_satuan_kerja,
+        subsatker,
         divisiRaw,
         divisi,
         clientId,
@@ -805,6 +838,7 @@ export const aggregateWeeklyLikesRecords = (
       normalizeKeyComponent(clientId) || "LAINNYA";
     const normalizedDivisiKey = normalizeKeyComponent(divisi);
     const normalizedSatfungKey = normalizeKeyComponent(satfung);
+    const normalizedSubsatkerKey = normalizeKeyComponent(subsatker);
     const normalizedClientNameKey = normalizeKeyComponent(clientName);
 
     const extraSegments: string[] = [];
@@ -819,6 +853,7 @@ export const aggregateWeeklyLikesRecords = (
 
     pushUniqueSegment(normalizedSatfungKey);
     pushUniqueSegment(normalizedDivisiKey);
+    pushUniqueSegment(normalizedSubsatkerKey);
     if (
       normalizedClientNameKey &&
       normalizedClientNameKey !== normalizedClientIdKey
@@ -832,7 +867,7 @@ export const aggregateWeeklyLikesRecords = (
         "LAINNYA"
       : normalizedClientIdKey || "LAINNYA";
 
-    return { clientId, clientKey, clientName, divisi, satfung };
+    return { clientId, clientKey, clientName, divisi, satfung, subsatker };
   };
 
   const isTraversable = (value: any) => {
@@ -1111,6 +1146,7 @@ export const aggregateWeeklyLikesRecords = (
         clientName: identifiers.clientName,
         divisi: identifiers.divisi,
         satfung: identifiers.satfung,
+        subsatker: identifiers.subsatker,
         totalLikes: 0,
         totalComments: 0,
         personnel: [],
@@ -1135,6 +1171,10 @@ export const aggregateWeeklyLikesRecords = (
 
     if (shouldReplaceIdentifierValue(clientEntry.satfung, identifiers.satfung)) {
       clientEntry.satfung = identifiers.satfung;
+    }
+
+    if (shouldReplaceIdentifierValue(clientEntry.subsatker, identifiers.subsatker)) {
+      clientEntry.subsatker = identifiers.subsatker;
     }
 
     return clientEntry;
@@ -1270,6 +1310,7 @@ export const aggregateWeeklyLikesRecords = (
         clientName: identifiers.clientName,
         divisi: identifiers.divisi,
         satfung: identifiers.satfung,
+        subsatker: identifiers.subsatker,
         username,
         nama,
         pangkat,
@@ -1288,6 +1329,7 @@ export const aggregateWeeklyLikesRecords = (
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
     updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
     updateIfEmpty(personnelRecord, "satfung", identifiers.satfung);
+    updateIfEmpty(personnelRecord, "subsatker", identifiers.subsatker);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
@@ -1335,6 +1377,7 @@ export const aggregateWeeklyLikesRecords = (
         clientName: identifiers.clientName,
         divisi: identifiers.divisi,
         satfung: identifiers.satfung,
+        subsatker: identifiers.subsatker,
         username,
         nama,
         pangkat,
@@ -1347,6 +1390,7 @@ export const aggregateWeeklyLikesRecords = (
       updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
       updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
       updateIfEmpty(personnelRecord, "satfung", identifiers.satfung);
+      updateIfEmpty(personnelRecord, "subsatker", identifiers.subsatker);
       updateIfEmpty(personnelRecord, "username", username);
       updateIfPreferredString(personnelRecord, "nama", nama);
       updateIfPreferredString(personnelRecord, "pangkat", pangkat);
