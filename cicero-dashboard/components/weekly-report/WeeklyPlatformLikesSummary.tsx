@@ -17,6 +17,7 @@ interface LikesSummaryClient {
   clientName: string;
   divisi?: string | null;
   satfung?: string | null;
+  personnel?: LikesSummaryPersonnel[];
   totalLikes: number;
   totalComments: number;
   activePersonnel: number;
@@ -33,6 +34,8 @@ interface LikesSummaryPersonnel {
   username: string;
   nama: string;
   pangkat?: string;
+  divisi?: string | null;
+  satfung?: string | null;
   likes: number;
   comments: number;
   active: boolean;
@@ -186,28 +189,56 @@ const isGenericClientLabel = (value: unknown) => {
   );
 };
 
-const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null) => {
-  if (!client) {
-    return CLIENT_LABEL_FALLBACK;
-  }
-
-  const candidates = [client.clientName, client.satfung, client.divisi, client.clientId];
-
+const pickNonGenericLabel = (
+  candidates: Array<string | number | null | undefined>,
+) => {
   for (const candidate of candidates) {
     if (candidate == null) {
       continue;
     }
 
     const label = String(candidate).trim();
-    if (!label) {
-      continue;
-    }
-
-    if (isGenericClientLabel(label)) {
+    if (!label || isGenericClientLabel(label)) {
       continue;
     }
 
     return label;
+  }
+
+  return null;
+};
+
+const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null) => {
+  if (!client) {
+    return CLIENT_LABEL_FALLBACK;
+  }
+
+  const topLevelLabel = pickNonGenericLabel([
+    client.clientName,
+    client.divisi,
+    client.satfung,
+  ]);
+
+  if (topLevelLabel) {
+    return topLevelLabel;
+  }
+
+  if (Array.isArray(client.personnel)) {
+    for (const person of client.personnel) {
+      const personnelLabel = pickNonGenericLabel([
+        person?.divisi,
+        person?.satfung,
+      ]);
+
+      if (personnelLabel) {
+        return personnelLabel;
+      }
+    }
+  }
+
+  const fallbackLabel = pickNonGenericLabel([client.clientId]);
+  if (fallbackLabel) {
+    return fallbackLabel;
   }
 
   return CLIENT_LABEL_FALLBACK;
