@@ -52,10 +52,80 @@ describe("aggregateWeeklyLikesRecords", () => {
     expect(result.totals.totalClients).toBe(2);
     expect(result.topPersonnel).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ clientName: "Satfung A", likes: 5 }),
-        expect.objectContaining({ clientName: "Satfung B", likes: 3 }),
+        expect.objectContaining({
+          clientName: "Satfung A",
+          likes: 5,
+        }),
+        expect.objectContaining({
+          clientName: "Satfung B",
+          likes: 3,
+        }),
       ]),
     );
+  });
+
+  it("prefers satfung identifiers when divisi is generic", () => {
+    const records = [
+      {
+        client_id: "DITBINMAS",
+        divisi: "Direktorat Binmas",
+        satfung: "Satfung Pelayanan Masyarakat",
+        nama: "Person A",
+        jumlah_like: 12,
+        jumlah_komentar: 4,
+      },
+      {
+        client_id: "DITBINMAS",
+        divisi: "Direktorat Binmas",
+        satfung: "Satfung Pengawasan",
+        nama: "Person B",
+        jumlah_like: 8,
+        jumlah_komentar: 1,
+      },
+    ];
+
+    const result = aggregateWeeklyLikesRecords(records);
+
+    expect(result.clients).toHaveLength(2);
+    expect(result.clients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientId: "DITBINMAS",
+          clientName: "Satfung Pelayanan Masyarakat",
+          satfung: "Satfung Pelayanan Masyarakat",
+          divisi: "Direktorat Binmas",
+          totalLikes: 12,
+          totalComments: 4,
+        }),
+        expect.objectContaining({
+          clientId: "DITBINMAS",
+          clientName: "Satfung Pengawasan",
+          satfung: "Satfung Pengawasan",
+          divisi: "Direktorat Binmas",
+          totalLikes: 8,
+          totalComments: 1,
+        }),
+      ]),
+    );
+
+    expect(result.topPersonnel).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientName: "Satfung Pelayanan Masyarakat",
+          satfung: "Satfung Pelayanan Masyarakat",
+          likes: 12,
+          comments: 4,
+        }),
+        expect.objectContaining({
+          clientName: "Satfung Pengawasan",
+          satfung: "Satfung Pengawasan",
+          likes: 8,
+          comments: 1,
+        }),
+      ]),
+    );
+
+    expect(result.totals.totalClients).toBe(2);
   });
 
   it("retains metrics for records whose client details exist only inside rekap", () => {

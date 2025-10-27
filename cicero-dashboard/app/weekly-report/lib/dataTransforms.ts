@@ -718,6 +718,17 @@ export const aggregateWeeklyLikesRecords = (
   const toComparableToken = (value: any) =>
     normalizeKeyComponent(value).replace(/[^A-Z0-9]/g, "");
 
+  const pickFirstNonEmptyString = (candidates: any[] = []) => {
+    for (const candidate of candidates) {
+      const normalized = toNormalizedString(candidate);
+      if (normalized) {
+        return normalized;
+      }
+    }
+
+    return "";
+  };
+
   const isGenericClientIdentifier = (value: any) => {
     const comparable = toComparableToken(value);
     if (!comparable) {
@@ -740,27 +751,61 @@ export const aggregateWeeklyLikesRecords = (
       "";
 
     const clientId = toNormalizedString(rawClientId) || "LAINNYA";
-    const divisi = toNormalizedString(source?.divisi) || "";
+    const satfung = pickFirstNonEmptyString([
+      source?.satfung,
+      source?.nama_satfung,
+      source?.satfung_name,
+      source?.satfungName,
+      source?.satfung_unit,
+      source?.satfungUnit,
+      source?.unit_satfung,
+      source?.unitSatfung,
+      source?.satfung_label,
+      source?.satfungLabel,
+      source?.rekap?.satfung,
+      source?.rekap?.nama_satfung,
+      source?.rekap?.satfung_name,
+      source?.rekap?.satfungName,
+      source?.rekap?.satfung_label,
+      source?.metrics?.satfung,
+      source?.metrics?.nama_satfung,
+      source?.metrics?.satfung_name,
+      source?.metrics?.satfungName,
+      source?.metrics?.satfung_label,
+    ]);
+    const divisiRaw = pickFirstNonEmptyString([
+      source?.divisi,
+      source?.rekap?.divisi,
+      source?.metrics?.divisi,
+    ]);
+    const divisi = divisiRaw || satfung || "";
     const clientName =
-      toNormalizedString(
-        source?.nama_client ??
-          source?.client_name ??
-          source?.client ??
-          source?.namaClient ??
-          source?.clientName ??
-          source?.divisi ??
-          source?.satker ??
-          source?.satuan_kerja ??
-          source?.nama_satuan_kerja ??
-          clientId,
-      ) || "LAINNYA";
+      pickFirstNonEmptyString([
+        satfung,
+        source?.nama_client,
+        source?.client_name,
+        source?.client,
+        source?.namaClient,
+        source?.clientName,
+        source?.divisi,
+        source?.satker,
+        source?.satuan_kerja,
+        source?.nama_satuan_kerja,
+        divisiRaw,
+        divisi,
+        clientId,
+      ]) || "LAINNYA";
 
     const normalizedClientIdKey =
       normalizeKeyComponent(clientId) || "LAINNYA";
     const normalizedDivisiKey = normalizeKeyComponent(divisi);
+    const normalizedSatfungKey = normalizeKeyComponent(satfung);
     const normalizedClientNameKey = normalizeKeyComponent(clientName);
 
     const extraSegments: string[] = [];
+    if (normalizedSatfungKey) {
+      extraSegments.push(normalizedSatfungKey);
+    }
     if (normalizedDivisiKey) {
       extraSegments.push(normalizedDivisiKey);
     }
@@ -778,7 +823,7 @@ export const aggregateWeeklyLikesRecords = (
         "LAINNYA"
       : normalizedClientIdKey || "LAINNYA";
 
-    return { clientId, clientKey, clientName, divisi };
+    return { clientId, clientKey, clientName, divisi, satfung };
   };
 
   const isTraversable = (value: any) => {
@@ -1056,6 +1101,7 @@ export const aggregateWeeklyLikesRecords = (
         clientId: identifiers.clientId,
         clientName: identifiers.clientName,
         divisi: identifiers.divisi,
+        satfung: identifiers.satfung,
         totalLikes: 0,
         totalComments: 0,
         personnel: [],
@@ -1076,6 +1122,10 @@ export const aggregateWeeklyLikesRecords = (
 
     if (shouldReplaceIdentifierValue(clientEntry.divisi, identifiers.divisi)) {
       clientEntry.divisi = identifiers.divisi;
+    }
+
+    if (shouldReplaceIdentifierValue(clientEntry.satfung, identifiers.satfung)) {
+      clientEntry.satfung = identifiers.satfung;
     }
 
     return clientEntry;
@@ -1210,6 +1260,7 @@ export const aggregateWeeklyLikesRecords = (
         clientId: identifiers.clientId,
         clientName: identifiers.clientName,
         divisi: identifiers.divisi,
+        satfung: identifiers.satfung,
         username,
         nama,
         pangkat,
@@ -1227,6 +1278,7 @@ export const aggregateWeeklyLikesRecords = (
     updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
     updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
     updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
+    updateIfEmpty(personnelRecord, "satfung", identifiers.satfung);
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
@@ -1273,6 +1325,7 @@ export const aggregateWeeklyLikesRecords = (
         clientId: identifiers.clientId,
         clientName: identifiers.clientName,
         divisi: identifiers.divisi,
+        satfung: identifiers.satfung,
         username,
         nama,
         pangkat,
@@ -1284,6 +1337,7 @@ export const aggregateWeeklyLikesRecords = (
       updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
       updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
       updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
+      updateIfEmpty(personnelRecord, "satfung", identifiers.satfung);
       updateIfEmpty(personnelRecord, "username", username);
       updateIfPreferredString(personnelRecord, "nama", nama);
       updateIfPreferredString(personnelRecord, "pangkat", pangkat);

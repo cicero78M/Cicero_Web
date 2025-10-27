@@ -15,6 +15,7 @@ interface LikesSummaryClient {
   key: string;
   clientId?: string | null;
   clientName: string;
+  satfung?: string | null;
   totalLikes: number;
   totalComments: number;
   activePersonnel: number;
