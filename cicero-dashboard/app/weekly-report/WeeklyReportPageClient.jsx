@@ -1004,21 +1004,7 @@ export const prepareActivityRecordsByWeek = (
       return;
     }
 
-    const fallbackCandidate =
-      range.start instanceof Date && !Number.isNaN(range.start.valueOf())
-        ? range.start
-        : safeFallback;
-
-    if (!fallbackCandidate) {
-      byRange.set(range.key, defaultRecords);
-      return;
-    }
-
-    const sanitized = prepareWeeklyTrendActivityRecords(records, {
-      fallbackDate: fallbackCandidate,
-    });
-
-    byRange.set(range.key, sanitized);
+    byRange.set(range.key, defaultRecords);
   };
 
   registerRange(activeWeekRange);

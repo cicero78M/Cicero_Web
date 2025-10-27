@@ -46,7 +46,7 @@ describe("weekly report data transforms", () => {
     expect(series.posts).toBe(1);
   });
 
-  it("assigns records without dates to the active week range", () => {
+  it("assigns records without dates to the fallback date range only", () => {
     const weekRanges = [
       {
         key: "2024-07-01",
@@ -80,17 +80,23 @@ describe("weekly report data transforms", () => {
       previousWeekRange,
     });
 
-    const defaultWeekTwoRecords = filterActivityRecordsByRange(
+    const activeWeekFromDefaults = filterActivityRecordsByRange(
       recordSets.defaultRecords,
       activeWeekRange,
     );
-    expect(defaultWeekTwoRecords).toHaveLength(0);
+    expect(activeWeekFromDefaults).toHaveLength(0);
 
     const activeWeekRecords = filterActivityRecordsByRange(
       recordSets,
       activeWeekRange,
     );
-    expect(activeWeekRecords).toHaveLength(1);
+    expect(activeWeekRecords).toHaveLength(0);
+
+    const previousWeekRecords = filterActivityRecordsByRange(
+      recordSets,
+      previousWeekRange,
+    );
+    expect(previousWeekRecords).toHaveLength(1);
   });
 
   it("uses a stable client key when satfung and divisi match", () => {
