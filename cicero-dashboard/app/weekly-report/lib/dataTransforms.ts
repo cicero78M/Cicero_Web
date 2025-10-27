@@ -735,7 +735,12 @@ export const aggregateWeeklyLikesRecords = (
       return true;
     }
 
-    const GENERIC_TOKENS = ["LAINNYA", "DITBINMAS"];
+    const GENERIC_TOKENS = [
+      "LAINNYA",
+      "DITBINMAS",
+      "DIREKTORATBINMAS",
+      "DIREKTORATBINAMASYARAKAT",
+    ];
     return GENERIC_TOKENS.some((token) => comparable.startsWith(token));
   };
 
