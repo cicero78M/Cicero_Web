@@ -374,15 +374,81 @@ export const mergeWeeklyActivityRecords = (
       }
     };
 
-    const normalizeCandidates = (candidates: any[]) =>
-      candidates
-        .flatMap((candidate) =>
-          Array.isArray(candidate) ? candidate : [candidate],
-        )
-        .map((candidate) =>
-          typeof candidate === "string" ? candidate.trim() : candidate,
-        )
-        .filter((candidate) => candidate != null && candidate !== "");
+    const normalizeCandidates = (candidates: any[]) => {
+      const seenObjects = new WeakSet<object>();
+      const seenStrings = new Set<string>();
+
+      const extractStrings = (value: any): string[] => {
+        if (value == null) {
+          return [];
+        }
+
+        if (typeof value === "string" || typeof value === "number") {
+          const normalized = String(value).trim();
+          return normalized ? [normalized] : [];
+        }
+
+        if (typeof value === "boolean") {
+          return [];
+        }
+
+        if (Array.isArray(value)) {
+          return value.flatMap((item) => extractStrings(item));
+        }
+
+        if (typeof value === "object") {
+          const objectValue = value as Record<string, unknown>;
+          if (seenObjects.has(objectValue)) {
+            return [];
+          }
+          seenObjects.add(objectValue);
+
+          const prioritizedFields = [
+            "name",
+            "nama",
+            "client_name",
+            "clientName",
+            "client",
+            "label",
+            "title",
+            "divisi",
+            "satker",
+            "satuan_kerja",
+            "nama_satuan_kerja",
+            "value",
+          ];
+
+          const prioritized = prioritizedFields.flatMap((field) =>
+            extractStrings(objectValue[field]),
+          );
+
+          const nested = Object.values(objectValue).flatMap((entry) =>
+            extractStrings(entry),
+          );
+
+          return [...prioritized, ...nested];
+        }
+
+        return [];
+      };
+
+      const normalized: string[] = [];
+
+      candidates.forEach((candidate) => {
+        const extracted = extractStrings(candidate);
+        extracted.forEach((item) => {
+          const trimmed = item.trim();
+          if (!trimmed || seenStrings.has(trimmed)) {
+            return;
+          }
+
+          seenStrings.add(trimmed);
+          normalized.push(trimmed);
+        });
+      });
+
+      return normalized;
+    };
 
     const normalizedClientIds = normalizeCandidates(clientIdCandidates);
     const normalizedClientNames = normalizeCandidates(clientNameCandidates);
