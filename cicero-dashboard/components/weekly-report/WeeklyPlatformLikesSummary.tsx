@@ -155,6 +155,37 @@ const formatDateTime = (value: Date | string | null) => {
 
 const CLIENT_LABEL_FALLBACK = "Tidak Teridentifikasi";
 
+const GENERIC_CLIENT_LABEL_TOKENS = [
+  "LAINNYA",
+  "DITBINMAS",
+  "DIREKTORATBINMAS",
+  "DIREKTORATBINAMASYARAKAT",
+];
+
+const sanitizeClientLabelToken = (value: unknown) => {
+  if (value == null) {
+    return "";
+  }
+
+  const normalized = String(value).trim().toUpperCase();
+  if (!normalized) {
+    return "";
+  }
+
+  return normalized.replace(/[^A-Z0-9]/g, "");
+};
+
+const isGenericClientLabel = (value: unknown) => {
+  const sanitized = sanitizeClientLabelToken(value);
+  if (!sanitized) {
+    return true;
+  }
+
+  return GENERIC_CLIENT_LABEL_TOKENS.some((token) =>
+    sanitized.startsWith(token),
+  );
+};
+
 const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null) => {
   if (!client) {
     return CLIENT_LABEL_FALLBACK;
@@ -172,7 +203,7 @@ const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null)
       continue;
     }
 
-    if (label.toUpperCase() === "LAINNYA") {
+    if (isGenericClientLabel(label)) {
       continue;
     }
 
