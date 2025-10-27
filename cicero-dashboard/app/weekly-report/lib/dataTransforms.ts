@@ -607,6 +607,86 @@ export const mergeWeeklyActivityRecords = (
   return Array.from(records.values());
 };
 
+const PERSONNEL_IDENTIFIER_FIELDS = [
+  "person_id",
+  "personId",
+  "personID",
+  "user_id",
+  "userId",
+  "userID",
+  "id",
+  "nrp",
+  "nip",
+  "nik",
+  "username",
+  "user_name",
+  "userName",
+  "email",
+  "akun",
+  "akun_media_sosial",
+  "akunMediaSosial",
+  "nama",
+  "name",
+  "full_name",
+  "fullName",
+];
+
+const toUppercaseIdentifier = (value: any) => {
+  if (value == null) {
+    return "";
+  }
+
+  const stringValue = String(value).trim();
+  if (!stringValue) {
+    return "";
+  }
+
+  return stringValue.toUpperCase();
+};
+
+const buildDirectoryPersonnelIdentity = (
+  source: any = {},
+  fallbackIndex: string | number,
+) => {
+  for (const field of PERSONNEL_IDENTIFIER_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(source ?? {}, field)) {
+      continue;
+    }
+
+    const candidate = source[field];
+    const normalized = toUppercaseIdentifier(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  const fallback = `PERSON-${fallbackIndex}`;
+  return fallback.toUpperCase();
+};
+
+export const countUniquePersonnelRecords = (records: any[] = []) => {
+  if (!Array.isArray(records)) {
+    return 0;
+  }
+
+  const uniqueIdentifiers = new Set<string>();
+
+  records.forEach((record, index) => {
+    if (!record || typeof record !== "object") {
+      return;
+    }
+
+    const identifier = buildDirectoryPersonnelIdentity(record, `record-${index}`);
+    if (!identifier) {
+      return;
+    }
+
+    uniqueIdentifiers.add(identifier);
+  });
+
+  return uniqueIdentifiers.size;
+};
+
 export const aggregateWeeklyLikesRecords = (
   records: any[] = [],
   options: { directoryUsers?: any[] } = {},
@@ -1218,6 +1298,8 @@ export const aggregateWeeklyLikesRecords = (
     }
   });
 
+  const uniqueDirectoryPersonnelCount = countUniquePersonnelRecords(directoryUsers);
+
   const clients = Array.from(clientsMap.values()).map((client) => {
     const directorySet = clientDirectoryPersonnelKeys.get(client.key);
     const activePersonnel = client.personnel.filter((person: any) => person.active).length;
@@ -1287,18 +1369,30 @@ export const aggregateWeeklyLikesRecords = (
     })
     .slice(0, 10);
 
+  const resolvedTotalPersonnel =
+    uniqueDirectoryPersonnelCount > 0
+      ? uniqueDirectoryPersonnelCount
+      : totals.totalPersonnel;
+
+  const resolvedInactiveCount =
+    uniqueDirectoryPersonnelCount > 0
+      ? Math.max(resolvedTotalPersonnel - totals.activePersonnel, 0)
+      : totals.inactiveCount;
+
+  const resolvedComplianceRate =
+    resolvedTotalPersonnel > 0
+      ? (totals.activePersonnel / resolvedTotalPersonnel) * 100
+      : 0;
+
   return {
     totals: {
       totalClients: clients.length,
       totalLikes: totals.totalLikes,
       totalComments: totals.totalComments,
-      totalPersonnel: totals.totalPersonnel,
+      totalPersonnel: resolvedTotalPersonnel,
       activePersonnel: totals.activePersonnel,
-      inactiveCount: totals.inactiveCount,
-      complianceRate:
-        totals.totalPersonnel > 0
-          ? (totals.activePersonnel / totals.totalPersonnel) * 100
-          : 0,
+      inactiveCount: resolvedInactiveCount,
+      complianceRate: resolvedComplianceRate,
       averageComplianceRate,
     },
     clients: clients.sort((a, b) => {

@@ -11,6 +11,7 @@ import {
   mergeWeeklyActivityRecords,
   prepareWeeklyTrendActivityRecords,
   createEmptyWeeklyLikesSummary,
+  countUniquePersonnelRecords,
 } from "./lib/dataTransforms";
 import {
   formatWeeklyRangeLabel,
@@ -505,7 +506,7 @@ export const filterDitbinmasRecords = (records = []) => {
       return false;
     }
 
-    return true;
+    return false;
   });
 };
 
@@ -1659,8 +1660,12 @@ export default function WeeklyReportPageClient() {
       directoryUsers: ditbinmasUsers,
     });
 
+    const uniqueDirectoryPersonnelCount =
+      countUniquePersonnelRecords(ditbinmasUsers);
     const resolvedTotalPersonnel =
-      summaryWeekRaw?.totals?.totalPersonnel || ditbinmasUsers.length;
+      uniqueDirectoryPersonnelCount > 0
+        ? uniqueDirectoryPersonnelCount
+        : summaryWeekRaw?.totals?.totalPersonnel ?? 0;
     const totalActive = summaryWeekRaw?.totals?.activePersonnel || 0;
     const previousActive = summaryPrevRaw?.totals?.activePersonnel || 0;
 
