@@ -233,10 +233,10 @@ const WeeklyPlatformLikesSummary = ({
     () => ({
       likesContributorsTitle: "Kontributor Likes Teratas",
       likesContributorsDescription:
-        "Satker dengan kontribusi likes tertinggi pada minggu terpilih.",
+        "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
       commentContributorsTitle: "Kontributor Komentar Teratas",
       commentContributorsDescription:
-        "Satker dengan jumlah komentar terbanyak beserta rasio kepatuhan mingguan.",
+        "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
       topComplianceTitle: "Kepatuhan Tertinggi",
       topComplianceDescription:
         "Satker dengan rasio kepatuhan tertinggi berdasarkan personil aktif pada minggu tersebut.",
