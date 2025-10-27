@@ -17,6 +17,7 @@ interface LikesSummaryClient {
   clientName: string;
   divisi?: string | null;
   satfung?: string | null;
+  subsatker?: string | null;
   personnel?: LikesSummaryPersonnel[];
   totalLikes: number;
   totalComments: number;
@@ -36,6 +37,7 @@ interface LikesSummaryPersonnel {
   pangkat?: string;
   divisi?: string | null;
   satfung?: string | null;
+  subsatker?: string | null;
   likes: number;
   comments: number;
   active: boolean;
@@ -217,6 +219,7 @@ const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null)
     client.clientName,
     client.divisi,
     client.satfung,
+    client.subsatker,
   ]);
 
   if (topLevelLabel) {
@@ -228,6 +231,7 @@ const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null)
       const personnelLabel = pickNonGenericLabel([
         person?.divisi,
         person?.satfung,
+        person?.subsatker,
       ]);
 
       if (personnelLabel) {
