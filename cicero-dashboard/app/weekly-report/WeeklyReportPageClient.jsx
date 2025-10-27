@@ -1881,7 +1881,7 @@ export default function WeeklyReportPageClient() {
     const labelOverrides = {
       likesContributorsTitle: "Kontributor Likes per Subsatker",
       likesContributorsDescription: "Subsatker dengan kontribusi likes tertinggi pada minggu ini.",
-      commentContributorsDescription: "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
+      commentContributorsDescription: "Subsatker dengan jumlah komentar terbanyak selama minggu ini.",
       tableTitle: "Distribusi Engagement Per User / Personil",
       tableEmptyLabel,
     };
