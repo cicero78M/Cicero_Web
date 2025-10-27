@@ -1,5 +1,6 @@
 import {
   aggregateWeeklyLikesRecords,
+  countUniquePersonnelRecords,
   mergeWeeklyActivityRecords,
 } from "@/app/weekly-report/lib/dataTransforms";
 import {
@@ -506,6 +507,42 @@ describe("aggregateWeeklyLikesRecords", () => {
         expect.objectContaining({ user_id: "user-2" }),
         expect.objectContaining({ user_id: "user-3" }),
       ]),
+    );
+  });
+
+  it("counts unique personnel across multiple satfung entries", () => {
+    const directoryEntries = [
+      { user_id: "user-1", client_id: "CLIENT_A" },
+      { user_id: "user-1", client_id: "CLIENT_B" },
+      { user_id: "user-2", client_id: "CLIENT_A" },
+      { email: "alpha@example.com", client_id: "CLIENT_C" },
+      { email: "ALPHA@example.com", client_id: "CLIENT_D" },
+    ];
+
+    expect(countUniquePersonnelRecords(directoryEntries)).toBe(3);
+  });
+
+  it("deduplicates directory personnel across satfung when summarizing totals", () => {
+    const directoryUsers = [
+      { user_id: "user-1", client_id: "CLIENT_A", divisi: "Satfung A" },
+      { user_id: "user-1", client_id: "CLIENT_B", divisi: "Satfung B" },
+      { user_id: "user-2", client_id: "CLIENT_C", divisi: "Satfung C" },
+    ];
+
+    const summary = aggregateWeeklyLikesRecords([], { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(2);
+    expect(summary.totals.activePersonnel).toBe(0);
+    expect(summary.totals.inactiveCount).toBe(2);
+
+    const clientA = summary.clients.find((client) => client.clientId === "CLIENT_A");
+    const clientB = summary.clients.find((client) => client.clientId === "CLIENT_B");
+
+    expect(clientA).toEqual(
+      expect.objectContaining({ clientId: "CLIENT_A", totalPersonnel: 1 }),
+    );
+    expect(clientB).toEqual(
+      expect.objectContaining({ clientId: "CLIENT_B", totalPersonnel: 1 }),
     );
   });
 });
