@@ -16,6 +16,7 @@ interface LikesSummaryClient {
   clientId?: string | null;
   clientName: string;
   divisi?: string | null;
+  satfung?: string | null;
   totalLikes: number;
   totalComments: number;
   activePersonnel: number;
@@ -159,7 +160,7 @@ const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null)
     return CLIENT_LABEL_FALLBACK;
   }
 
-  const candidates = [client.clientName, client.divisi, client.clientId];
+  const candidates = [client.clientName, client.satfung, client.divisi, client.clientId];
 
   for (const candidate of candidates) {
     if (candidate == null) {
