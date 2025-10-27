@@ -803,18 +803,22 @@ export const aggregateWeeklyLikesRecords = (
     const normalizedClientNameKey = normalizeKeyComponent(clientName);
 
     const extraSegments: string[] = [];
-    if (normalizedSatfungKey) {
-      extraSegments.push(normalizedSatfungKey);
-    }
-    if (normalizedDivisiKey) {
-      extraSegments.push(normalizedDivisiKey);
-    }
+    const extraSegmentSet = new Set<string>();
+    const pushUniqueSegment = (segment: string) => {
+      if (!segment || extraSegmentSet.has(segment)) {
+        return;
+      }
+      extraSegmentSet.add(segment);
+      extraSegments.push(segment);
+    };
+
+    pushUniqueSegment(normalizedSatfungKey);
+    pushUniqueSegment(normalizedDivisiKey);
     if (
       normalizedClientNameKey &&
-      normalizedClientNameKey !== normalizedClientIdKey &&
-      !extraSegments.includes(normalizedClientNameKey)
+      normalizedClientNameKey !== normalizedClientIdKey
     ) {
-      extraSegments.push(normalizedClientNameKey);
+      pushUniqueSegment(normalizedClientNameKey);
     }
 
     const clientKey = isGenericClientIdentifier(normalizedClientIdKey)

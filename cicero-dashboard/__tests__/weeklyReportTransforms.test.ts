@@ -6,6 +6,7 @@ import {
   extractClientPersonnel,
   sortPersonnelDistribution,
 } from "@/app/weekly-report/WeeklyReportPageClient";
+import { aggregateWeeklyLikesRecords } from "@/app/weekly-report/lib/dataTransforms";
 
 describe("weekly report data transforms", () => {
   it("preserves metrics totals when building weekly series", () => {
@@ -90,6 +91,28 @@ describe("weekly report data transforms", () => {
       activeWeekRange,
     );
     expect(activeWeekRecords).toHaveLength(1);
+  });
+
+  it("uses a stable client key when satfung and divisi match", () => {
+    const records = [
+      {
+        client_id: "",
+        satfung: "Direktorat Sabhara",
+        divisi: "Direktorat Sabhara",
+        jumlah_like: 3,
+      },
+      {
+        client_id: null,
+        satfung: "Direktorat Sabhara",
+        divisi: "Direktorat Sabhara",
+        jumlah_like: 2,
+      },
+    ];
+
+    const summary = aggregateWeeklyLikesRecords(records);
+
+    expect(summary.clients).toHaveLength(1);
+    expect(summary.clients[0].key).toBe("LAINNYA::DIREKTORAT SABHARA");
   });
 
   it("keeps personnel with zero interactions when a name is available", () => {
