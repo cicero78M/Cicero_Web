@@ -15,6 +15,7 @@ interface LikesSummaryClient {
   key: string;
   clientId?: string | null;
   clientName: string;
+  divisi?: string | null;
   totalLikes: number;
   totalComments: number;
   activePersonnel: number;
@@ -151,6 +152,35 @@ const formatDateTime = (value: Date | string | null) => {
   return formatter.format(dateValue);
 };
 
+const CLIENT_LABEL_FALLBACK = "Tidak Teridentifikasi";
+
+const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null) => {
+  if (!client) {
+    return CLIENT_LABEL_FALLBACK;
+  }
+
+  const candidates = [client.clientName, client.divisi, client.clientId];
+
+  for (const candidate of candidates) {
+    if (candidate == null) {
+      continue;
+    }
+
+    const label = String(candidate).trim();
+    if (!label) {
+      continue;
+    }
+
+    if (label.toUpperCase() === "LAINNYA") {
+      continue;
+    }
+
+    return label;
+  }
+
+  return CLIENT_LABEL_FALLBACK;
+};
+
 const WeeklyPlatformLikesSummary = ({
   data,
   formatNumber,
@@ -259,7 +289,7 @@ const WeeklyPlatformLikesSummary = ({
       .sort((a, b) => b.totalLikes - a.totalLikes)
       .slice(0, 8)
       .map((client) => ({
-        name: client.clientName,
+        name: resolveClientDisplayName(client),
         likes: client.totalLikes,
         compliance: client.complianceRate,
       }));
@@ -270,7 +300,7 @@ const WeeklyPlatformLikesSummary = ({
       .sort((a, b) => b.totalComments - a.totalComments)
       .slice(0, 8)
       .map((client) => ({
-        name: client.clientName,
+        name: resolveClientDisplayName(client),
         comments: client.totalComments,
         compliance: client.complianceRate,
       }));
