@@ -1217,6 +1217,24 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
   const monthStart = new Date(Date.UTC(yearNumber, monthNumber - 1, 1));
   const monthEnd = new Date(Date.UTC(yearNumber, monthNumber, 0));
 
+  const weekRanges = buildWeekRanges(monthNumber, yearNumber);
+
+  const normalizeToUtcDate = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.valueOf())) {
+      return null;
+    }
+
+    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  };
+
+  const expandedStart = normalizeToUtcDate(weekRanges[0]?.start) ?? monthStart;
+  const expandedEnd =
+    normalizeToUtcDate(weekRanges[weekRanges.length - 1]?.end) ?? monthEnd;
+
+  const fetchStart =
+    expandedStart.getTime() < monthStart.getTime() ? expandedStart : monthStart;
+  const fetchEnd = expandedEnd.getTime() > monthEnd.getTime() ? expandedEnd : monthEnd;
+
   const toDateString = (date) => date.toISOString().slice(0, 10);
 
   const [likesResult, commentsResult, instagramResult, tiktokResult] = await Promise.all([
@@ -1226,8 +1244,8 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
         resolvedClientId,
         "harian",
         undefined,
-        toDateString(monthStart),
-        toDateString(monthEnd),
+        toDateString(fetchStart),
+        toDateString(fetchEnd),
       ),
     ),
     safeFetch(() =>
@@ -1236,20 +1254,20 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
         resolvedClientId,
         "harian",
         undefined,
-        toDateString(monthStart),
-        toDateString(monthEnd),
+        toDateString(fetchStart),
+        toDateString(fetchEnd),
       ),
     ),
     safeFetch(() =>
       getInstagramPosts(token, resolvedClientId, {
-        startDate: toDateString(monthStart),
-        endDate: toDateString(monthEnd),
+        startDate: toDateString(fetchStart),
+        endDate: toDateString(fetchEnd),
       }),
     ),
     safeFetch(() =>
       getTiktokPosts(token, resolvedClientId, {
-        startDate: toDateString(monthStart),
-        endDate: toDateString(monthEnd),
+        startDate: toDateString(fetchStart),
+        endDate: toDateString(fetchEnd),
       }),
     ),
   ]);
