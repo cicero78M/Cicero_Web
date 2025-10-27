@@ -324,9 +324,9 @@ const WeeklyPlatformLikesSummary = ({
 
   const resolvedLabels: Required<LabelOverrides> = useMemo(
     () => ({
-      likesContributorsTitle: "Kontributor Likes Teratas",
+      likesContributorsTitle: "Kontributor Likes per Subsatker",
       likesContributorsDescription:
-        "Satfung dengan kontribusi likes tertinggi pada minggu ini.",
+        "Subsatker dengan kontribusi likes tertinggi pada minggu ini.",
       commentContributorsTitle: "Kontributor Komentar Teratas",
       commentContributorsDescription:
         "Satfung dengan jumlah komentar terbanyak selama minggu ini.",
