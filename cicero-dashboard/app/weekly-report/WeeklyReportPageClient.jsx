@@ -2116,7 +2116,7 @@ export default function WeeklyReportPageClient() {
                       Detail Kinerja Kanal Mingguan
                     </h2>
                     <p className="max-w-2xl text-sm leading-relaxed text-emerald-800/80">
-                      Menampilkan distribusi likes dan komentar per satfung Ditbinmas selama {weekDescriptor || "periode terpilih"}, sehingga perkembangan kontribusi personil mudah dipantau.
+                      Menampilkan distribusi likes dan komentar per Subsatker Ditbinmas selama {weekDescriptor || "periode terpilih"}, sehingga perkembangan kontribusi personil mudah dipantau.
                     </p>
                     <p className="text-xs text-emerald-700/70">
                       Data diringkas otomatis mengikuti pilihan minggu, bulan, dan tahun pada bagian atas halaman.
