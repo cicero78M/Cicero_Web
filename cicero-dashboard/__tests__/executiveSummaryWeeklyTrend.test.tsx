@@ -277,6 +277,51 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(clientB?.complianceRate).toBe(0);
   });
 
+  it("menggabungkan likes dan komentar untuk klien dengan nama sama tetapi ID berbeda", () => {
+    const directoryUsers = [
+      { client_id: "IG-01", nama_client: "Client X", username: "alpha" },
+      { client_id: "TT-02", nama_client: "Client X", username: "bravo" },
+    ];
+
+    const rawLikes = [
+      {
+        client_id: "IG-01",
+        nama_client: "Client X",
+        jumlah_like: 5,
+        jumlah_komentar: 2,
+        username: "alpha",
+      },
+      {
+        client_id: "TT-02",
+        nama_client: "Client X",
+        total_like: 3,
+        total_komentar: 4,
+        username: "bravo",
+      },
+    ];
+
+    const summary = aggregateLikesRecords(rawLikes, { directoryUsers });
+
+    expect(summary.totals.totalClients).toBe(1);
+    expect(summary.totals.totalLikes).toBe(8);
+    expect(summary.totals.totalComments).toBe(6);
+    expect(summary.totals.totalPersonnel).toBe(2);
+    expect(summary.totals.activePersonnel).toBe(2);
+
+    expect(summary.clients).toHaveLength(1);
+    const client = summary.clients[0];
+
+    expect(client.key).toBe("CLIENT X");
+    expect(client.clientName).toBe("Client X");
+    expect(client.totalLikes).toBe(8);
+    expect(client.totalComments).toBe(6);
+    expect(client.totalPersonnel).toBe(2);
+    expect(client.activePersonnel).toBe(2);
+
+    const personnelUsernames = client.personnel.map((person) => person.username);
+    expect(personnelUsernames).toEqual(expect.arrayContaining(["alpha", "bravo"]));
+  });
+
   it("prefers personnel likes when merging records with general totals", () => {
     const merged = mergeActivityRecords(
       [

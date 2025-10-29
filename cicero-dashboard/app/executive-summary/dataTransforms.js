@@ -445,35 +445,93 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return normalized ? normalized.toUpperCase() : "";
   };
 
-  const resolveClientIdentifiers = (source = {}) => {
-    const rawClientId =
-      source?.client_id ??
-      source?.clientId ??
-      source?.clientID ??
-      source?.client ??
-      source?.id_client ??
-      source?.clientid ??
-      source?.idClient ??
-      "";
+  const clientAliasMap = new Map();
 
-    const clientId = toNormalizedString(rawClientId) || "LAINNYA";
-    const clientKey = normalizeKeyComponent(clientId) || "LAINNYA";
-    const divisi = toNormalizedString(source?.divisi) || "";
-    const clientName =
+  const resolveClientIdentifiers = (source = {}) => {
+    const clientIdCandidates = [
+      source?.client_id,
+      source?.clientId,
+      source?.clientID,
+      source?.client,
+      source?.id_client,
+      source?.clientid,
+      source?.idClient,
+    ];
+
+    const nameCandidates = [
+      source?.nama_client,
+      source?.client_name,
+      source?.client,
+      source?.namaClient,
+      source?.clientName,
+      source?.divisi,
+      source?.satker,
+      source?.satuan_kerja,
+      source?.nama_satuan_kerja,
+    ];
+
+    const normalizedIds = clientIdCandidates
+      .map((candidate) => normalizeKeyComponent(candidate))
+      .filter(Boolean);
+    const normalizedNames = nameCandidates
+      .map((candidate) => normalizeKeyComponent(candidate))
+      .filter(Boolean);
+
+    const aliasKeys = Array.from(
+      new Set([...normalizedIds, ...normalizedNames].filter(Boolean)),
+    );
+
+    let canonicalFromAlias = null;
+    for (const alias of aliasKeys) {
+      const mapped = clientAliasMap.get(alias);
+      if (mapped) {
+        canonicalFromAlias = mapped;
+        break;
+      }
+    }
+
+    const preferredNameKey = normalizedNames[0] || "";
+    const fallbackAlias = aliasKeys[0] || "";
+
+    let clientKey =
+      preferredNameKey || canonicalFromAlias || fallbackAlias || "LAINNYA";
+
+    if (!clientKey) {
+      clientKey = "LAINNYA";
+    }
+
+    const legacyKeys = [];
+    if (canonicalFromAlias && canonicalFromAlias !== clientKey) {
+      legacyKeys.push(canonicalFromAlias);
+    }
+
+    const allAliases = new Set([clientKey, ...aliasKeys, ...legacyKeys]);
+    allAliases.forEach((alias) => {
+      if (!alias) {
+        return;
+      }
+      clientAliasMap.set(alias, clientKey);
+    });
+
+    const resolvedClientId =
       toNormalizedString(
-        source?.nama_client ??
-          source?.client_name ??
-          source?.client ??
-          source?.namaClient ??
-          source?.clientName ??
-          source?.divisi ??
-          source?.satker ??
-          source?.satuan_kerja ??
-          source?.nama_satuan_kerja ??
-          clientId,
+        clientIdCandidates.find((candidate) => toNormalizedString(candidate)),
       ) || "LAINNYA";
 
-    return { clientId, clientKey, clientName, divisi };
+    const resolvedClientName =
+      toNormalizedString(
+        nameCandidates.find((candidate) => toNormalizedString(candidate)),
+      ) || resolvedClientId || "LAINNYA";
+
+    const divisi = toNormalizedString(source?.divisi) || "";
+
+    return {
+      clientId: resolvedClientId,
+      clientKey,
+      clientName: resolvedClientName,
+      divisi,
+      legacyKeys,
+    };
   };
 
   const isTraversable = (value) => {
@@ -660,7 +718,13 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelMap = new Map();
   let latestActivity = null;
 
-  const ensureClientEntry = ({ clientId, clientKey, clientName, divisi }) => {
+  const ensureClientEntry = ({
+    clientId,
+    clientKey,
+    clientName,
+    divisi,
+    legacyKeys = [],
+  }) => {
     if (!clientsMap.has(clientKey)) {
       clientsMap.set(clientKey, {
         key: clientKey,
@@ -677,6 +741,72 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     updateIfEmpty(clientEntry, "clientId", clientId);
     updateIfEmpty(clientEntry, "clientName", clientName);
     updateIfEmpty(clientEntry, "divisi", divisi);
+
+    if (Array.isArray(legacyKeys)) {
+      legacyKeys.forEach((legacyKey) => {
+        if (!legacyKey || legacyKey === clientKey) {
+          return;
+        }
+
+        const legacyEntry = clientsMap.get(legacyKey);
+        if (!legacyEntry) {
+          return;
+        }
+
+        clientsMap.delete(legacyKey);
+
+        updateIfEmpty(clientEntry, "clientId", legacyEntry.clientId);
+        updateIfEmpty(clientEntry, "clientName", legacyEntry.clientName);
+        updateIfEmpty(clientEntry, "divisi", legacyEntry.divisi);
+
+        clientEntry.totalLikes += legacyEntry.totalLikes;
+        clientEntry.totalComments += legacyEntry.totalComments;
+
+        legacyEntry.personnel.forEach((person) => {
+          const previousKey = person.key;
+          if (previousKey) {
+            personnelMap.delete(previousKey);
+          }
+
+          const prefix = `${legacyKey}`;
+          const fallbackAlias =
+            normalizeKeyComponent(person.username) ||
+            normalizeKeyComponent(person.nama) ||
+            `AUTO:${personnelList.length}`;
+          const suffix = previousKey?.startsWith(prefix)
+            ? previousKey.slice(prefix.length)
+            : `:${fallbackAlias}`;
+          const normalizedSuffix = suffix.startsWith(":") ? suffix : `:${suffix}`;
+          const nextKey = `${clientKey}${normalizedSuffix}`;
+
+          const mergedRecord = registerPersonnel(clientEntry, nextKey, {
+            clientId: person.clientId,
+            clientName: person.clientName,
+            divisi: person.divisi,
+            username: person.username,
+            nama: person.nama,
+            pangkat: person.pangkat,
+          });
+
+          mergedRecord.likes += person.likes;
+          mergedRecord.comments += person.comments;
+          mergedRecord.active = mergedRecord.active || person.active;
+
+          updateIfEmpty(mergedRecord, "clientId", person.clientId);
+          updateIfEmpty(mergedRecord, "clientName", person.clientName);
+          updateIfEmpty(mergedRecord, "divisi", person.divisi);
+          updateIfEmpty(mergedRecord, "username", person.username);
+          updateIfEmpty(mergedRecord, "nama", person.nama);
+          updateIfEmpty(mergedRecord, "pangkat", person.pangkat);
+
+          const index = personnelList.indexOf(person);
+          if (index >= 0) {
+            personnelList.splice(index, 1);
+          }
+        });
+      });
+    }
+
     return clientEntry;
   };
 
