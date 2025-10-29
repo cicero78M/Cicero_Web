@@ -634,6 +634,9 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       "tiktok",
       "tiktok_username",
       "tiktokUsername",
+      "akun",
+      "akun_media_sosial",
+      "akunMediaSosial",
     ];
     const genericUsernameFields = [
       "username",
@@ -722,7 +725,144 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelList = [];
   const personnelMap = new Map();
   const clientDirectoryPersonnelKeys = new Map();
+  const directoryAliasIndex = new Map();
   let latestActivity = null;
+
+  const expandAliasVariants = (values = []) => {
+    const variants = new Set();
+
+    values.forEach((value) => {
+      const normalized = normalizeKeyComponent(value);
+      if (!normalized) {
+        return;
+      }
+
+      variants.add(normalized);
+
+      const collapsed = normalized.replace(/[^0-9A-Z]+/g, "");
+      if (collapsed && collapsed !== normalized) {
+        variants.add(collapsed);
+      }
+    });
+
+    return Array.from(variants);
+  };
+
+  const collectPersonnelAliasCandidates = (source = {}, resolvedNames) => {
+    const names =
+      resolvedNames && typeof resolvedNames === "object"
+        ? resolvedNames
+        : resolvePersonnelNames(source);
+
+    const handleFields = [
+      "insta",
+      "instagram",
+      "instagram_username",
+      "instagramUsername",
+      "tiktok",
+      "tiktok_username",
+      "tiktokUsername",
+      "akun",
+      "akun_media_sosial",
+      "akunMediaSosial",
+    ];
+
+    const rawHandleAliases = collectFieldValues(source, handleFields)
+      .map((candidate) => sanitizeHandle(candidate))
+      .filter(Boolean);
+    const handleAliases = expandAliasVariants(rawHandleAliases);
+
+    const aliasCandidates = expandAliasVariants([
+      names?.username,
+      names?.nama,
+      source?.username,
+      source?.user_name,
+      source?.userName,
+      source?.user,
+      source?.email,
+      source?.akun,
+      source?.akun_media_sosial,
+      source?.akunMediaSosial,
+      source?.nama,
+      source?.name,
+      source?.full_name,
+      source?.fullName,
+      source?.display_name,
+      source?.displayName,
+      source?.person_id,
+      source?.personId,
+      source?.personID,
+      source?.user_id,
+      source?.userId,
+      source?.userID,
+      source?.nrp,
+      source?.nip,
+      source?.nik,
+    ]);
+
+    return Array.from(new Set([...aliasCandidates, ...handleAliases]));
+  };
+
+  const registerAliasForPersonnel = (
+    aliases = [],
+    clientKey,
+    personnelKey,
+  ) => {
+    if (!clientKey || !personnelKey) {
+      return;
+    }
+
+    aliases.forEach((alias) => {
+      const normalized = normalizeKeyComponent(alias);
+      if (!normalized) {
+        return;
+      }
+
+      if (!directoryAliasIndex.has(normalized)) {
+        directoryAliasIndex.set(normalized, new Map());
+      }
+
+      const aliasEntry = directoryAliasIndex.get(normalized);
+      const existingKey = aliasEntry.get(clientKey);
+      if (existingKey && existingKey !== personnelKey) {
+        return;
+      }
+
+      aliasEntry.set(clientKey, personnelKey);
+    });
+  };
+
+  const findDirectoryKeyForAliases = (aliases = [], clientKey) => {
+    if (!clientKey) {
+      return null;
+    }
+
+    for (const alias of aliases) {
+      const normalized = normalizeKeyComponent(alias);
+      if (!normalized) {
+        continue;
+      }
+
+      const aliasEntry = directoryAliasIndex.get(normalized);
+      if (!aliasEntry) {
+        continue;
+      }
+
+      const directMatch = aliasEntry.get(clientKey);
+      if (directMatch) {
+        return directMatch;
+      }
+
+      if (aliasEntry.size === 1) {
+        const [onlyKey] = aliasEntry.values();
+        if (onlyKey && onlyKey.startsWith(`${clientKey}:`)) {
+          return onlyKey;
+        }
+      }
+    }
+
+    return null;
+  };
 
   const ensureClientEntry = ({
     clientId,
@@ -811,6 +951,16 @@ const aggregateLikesRecords = (records = [], options = {}) => {
           updateIfEmpty(mergedRecord, "nama", person.nama);
           updateIfEmpty(mergedRecord, "pangkat", person.pangkat);
 
+          const mergedAliases = collectPersonnelAliasCandidates(person, {
+            username: person.username,
+            nama: person.nama,
+          });
+          registerAliasForPersonnel(
+            mergedAliases,
+            clientEntry.key,
+            mergedRecord.key,
+          );
+
           if (targetDirectorySet) {
             targetDirectorySet.add(nextKey);
           }
@@ -857,7 +1007,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   directoryUsersRaw.forEach((user, index) => {
     const identifiers = resolveClientIdentifiers(user);
     const clientEntry = ensureClientEntry(identifiers);
-    const { username, nama, pangkat } = resolvePersonnelNames(user);
+    const resolvedNames = resolvePersonnelNames(user);
+    const { username, nama, pangkat } = resolvedNames;
     const personnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
@@ -879,11 +1030,23 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     if (directorySet && personnelRecord?.key) {
       directorySet.add(personnelRecord.key);
     }
+
+    const aliasCandidates = collectPersonnelAliasCandidates(user, resolvedNames);
+    registerAliasForPersonnel(aliasCandidates, clientEntry.key, personnelRecord.key);
   });
 
   safeRecords.forEach((record, index) => {
     const identifiers = resolveClientIdentifiers(record);
     const clientEntry = ensureClientEntry(identifiers);
+    const resolvedNames = resolvePersonnelNames(record);
+    const aliasCandidates = collectPersonnelAliasCandidates(
+      record,
+      resolvedNames,
+    );
+    const matchedDirectoryKey = findDirectoryKeyForAliases(
+      aliasCandidates,
+      clientEntry.key,
+    );
     const likes = toSafeNumber(
       record?.jumlah_like ??
         record?.jumlahLike ??
@@ -913,12 +1076,10 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         record?.metrics?.totalComments ??
         record?.metrics?.total_comments,
     );
-    const { username, nama, pangkat } = resolvePersonnelNames(record);
-    const personnelKey = buildPersonnelKey(
-      record,
-      identifiers.clientKey,
-      `record-${index}`,
-    );
+    const { username, nama, pangkat } = resolvedNames;
+    const personnelKey =
+      matchedDirectoryKey ||
+      buildPersonnelKey(record, identifiers.clientKey, `record-${index}`);
     const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
@@ -943,6 +1104,17 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     clientEntry.totalLikes += likes;
     clientEntry.totalComments += comments;
+
+    registerAliasForPersonnel(
+      aliasCandidates,
+      clientEntry.key,
+      personnelRecord.key,
+    );
+
+    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
+    if (directorySet && personnelRecord?.key) {
+      directorySet.add(personnelRecord.key);
+    }
 
     const activityDate =
       parseDateValue(record?.tanggal ?? record?.date ?? record?.activityDate) ??
