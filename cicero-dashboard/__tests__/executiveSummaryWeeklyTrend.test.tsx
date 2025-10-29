@@ -322,6 +322,41 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(personnelUsernames).toEqual(expect.arrayContaining(["alpha", "bravo"]));
   });
 
+  it("menghitung personil unik berdasarkan handle yang sudah dinormalisasi", () => {
+    const directoryUsers = [
+      {
+        client_id: "CLI-03",
+        nama_client: "Client C",
+        akun_media_sosial: "https://instagram.com/alpha",
+      },
+    ];
+
+    const rawLikes = [
+      {
+        client_id: "CLI-03",
+        nama_client: "Client C",
+        username: "@alpha",
+        jumlah_like: 5,
+      },
+      {
+        client_id: "CLI-03",
+        nama_client: "Client C",
+        akun_media_sosial: "https://instagram.com/alpha",
+        jumlah_like: 3,
+      },
+    ];
+
+    const summary = aggregateLikesRecords(rawLikes, { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(1);
+    expect(summary.totals.activePersonnel).toBe(1);
+
+    const client = summary.clients.find((entry) => entry.clientId === "CLI-03");
+    expect(client).toBeTruthy();
+    expect(client?.totalPersonnel).toBe(1);
+    expect(client?.activePersonnel).toBe(1);
+  });
+
   it("prefers personnel likes when merging records with general totals", () => {
     const merged = mergeActivityRecords(
       [
