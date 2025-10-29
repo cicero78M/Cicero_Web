@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { normalizeNumericInput } from "@/lib/normalizeNumericInput";
 import {
   parseWeeklyDateValue,
   resolveWeeklyRecordDate,
 } from "./weeklyTrendUtils";
 
 const toSafeNumber = (value: any): number => {
-  const numeric = Number(value);
+  const numeric = normalizeNumericInput(value);
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
