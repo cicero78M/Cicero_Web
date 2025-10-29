@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import WeeklyPlatformEngagementTrendChart from "@/components/weekly-report/WeeklyPlatformEngagementTrendChart";
 import WeeklyPlatformLikesSummary from "@/components/weekly-report/WeeklyPlatformLikesSummary";
@@ -1591,9 +1591,82 @@ export default function WeeklyReportPageClient() {
     [weekRanges, activeWeekRange],
   );
 
-  const weeklyLoading = Boolean(
+  const weeklyInitialLoading = Boolean(
     isDitbinmasAuthorized && !weeklySource && !weeklySourceError && weeklyValidating,
   );
+
+  const [hasWeeklyLoaded, setHasWeeklyLoaded] = useState(false);
+  const [weeklyRefreshing, setWeeklyRefreshing] = useState(false);
+  const weeklySelectionRef = useRef({
+    month: selectedMonth,
+    year: selectedYear,
+    week: selectedWeek,
+  });
+
+  useEffect(() => {
+    if (!isDitbinmasAuthorized) {
+      setHasWeeklyLoaded(false);
+      setWeeklyRefreshing(false);
+      weeklySelectionRef.current = {
+        month: selectedMonth,
+        year: selectedYear,
+        week: selectedWeek,
+      };
+      return;
+    }
+
+    if (weeklySource) {
+      setHasWeeklyLoaded(true);
+    }
+  }, [
+    isDitbinmasAuthorized,
+    weeklySource,
+    selectedMonth,
+    selectedYear,
+    selectedWeek,
+  ]);
+
+  useEffect(() => {
+    if (!isDitbinmasAuthorized || !hasWeeklyLoaded) {
+      weeklySelectionRef.current = {
+        month: selectedMonth,
+        year: selectedYear,
+        week: selectedWeek,
+      };
+      return;
+    }
+
+    const previous = weeklySelectionRef.current;
+    const selectionChanged =
+      previous.month !== selectedMonth ||
+      previous.year !== selectedYear ||
+      previous.week !== selectedWeek;
+
+    if (selectionChanged) {
+      weeklySelectionRef.current = {
+        month: selectedMonth,
+        year: selectedYear,
+        week: selectedWeek,
+      };
+      setWeeklyRefreshing(true);
+    }
+  }, [isDitbinmasAuthorized, hasWeeklyLoaded, selectedMonth, selectedYear, selectedWeek]);
+
+  useEffect(() => {
+    if (!isDitbinmasAuthorized || !hasWeeklyLoaded) {
+      setWeeklyRefreshing(false);
+      return;
+    }
+
+    if (weeklyValidating) {
+      setWeeklyRefreshing(true);
+      return;
+    }
+
+    setWeeklyRefreshing(false);
+  }, [isDitbinmasAuthorized, hasWeeklyLoaded, weeklyValidating]);
+
+  const weeklyLoading = weeklyInitialLoading || weeklyRefreshing;
 
   const ditbinmasUsers = useMemo(
     () =>
@@ -2203,6 +2276,7 @@ export default function WeeklyReportPageClient() {
                       topCommentPersonnel: true,
                       topLikesPersonnel: true,
                     }}
+                    loading={weeklyLoading}
                   />
                 </div>
               </div>

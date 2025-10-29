@@ -138,6 +138,7 @@ interface WeeklyPlatformLikesSummaryProps {
   personnelDistribution?: PersonnelDistributionRow[] | null;
   personnelDistributionMeta?: PersonnelDistributionMeta | null;
   hiddenSections?: Partial<Record<HiddenSectionKey, boolean>> | null;
+  loading?: boolean;
 }
 
 const formatDateTime = (value: Date | string | null) => {
@@ -259,7 +260,16 @@ const WeeklyPlatformLikesSummary = ({
   personnelDistribution,
   personnelDistributionMeta,
   hiddenSections,
+  loading = false,
 }: WeeklyPlatformLikesSummaryProps) => {
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+        Menyiapkan ringkasan aktivitas mingguan…
+      </div>
+    );
+  }
+
   const clients = Array.isArray(data?.clients) ? data.clients : [];
   const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
   const instagramPostCount = Math.max(0, Number(postTotals?.instagram) || 0);
