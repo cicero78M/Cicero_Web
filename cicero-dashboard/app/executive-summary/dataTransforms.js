@@ -670,7 +670,12 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   };
 
   const buildPersonnelKey = (source = {}, clientKey, fallbackIndex) => {
+    const { username: resolvedUsername, nama: resolvedNama } =
+      resolvePersonnelNames(source);
+
     const candidates = [
+      resolvedUsername,
+      resolvedNama,
       source?.person_id,
       source?.personId,
       source?.personID,
@@ -716,6 +721,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const clientsMap = new Map();
   const personnelList = [];
   const personnelMap = new Map();
+  const clientDirectoryPersonnelKeys = new Map();
   let latestActivity = null;
 
   const ensureClientEntry = ({
@@ -738,6 +744,9 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     }
 
     const clientEntry = clientsMap.get(clientKey);
+    if (!clientDirectoryPersonnelKeys.has(clientKey)) {
+      clientDirectoryPersonnelKeys.set(clientKey, new Set());
+    }
     updateIfEmpty(clientEntry, "clientId", clientId);
     updateIfEmpty(clientEntry, "clientName", clientName);
     updateIfEmpty(clientEntry, "divisi", divisi);
@@ -761,6 +770,9 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
         clientEntry.totalLikes += legacyEntry.totalLikes;
         clientEntry.totalComments += legacyEntry.totalComments;
+
+        const targetDirectorySet = clientDirectoryPersonnelKeys.get(clientKey);
+        const legacyDirectorySet = clientDirectoryPersonnelKeys.get(legacyKey);
 
         legacyEntry.personnel.forEach((person) => {
           const previousKey = person.key;
@@ -799,11 +811,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
           updateIfEmpty(mergedRecord, "nama", person.nama);
           updateIfEmpty(mergedRecord, "pangkat", person.pangkat);
 
+          if (targetDirectorySet) {
+            targetDirectorySet.add(nextKey);
+          }
+
           const index = personnelList.indexOf(person);
           if (index >= 0) {
             personnelList.splice(index, 1);
           }
         });
+
+        if (legacyDirectorySet) {
+          clientDirectoryPersonnelKeys.delete(legacyKey);
+        }
       });
     }
 
@@ -854,6 +874,11 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     updateIfEmpty(personnelRecord, "username", username);
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
+
+    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
+    if (directorySet && personnelRecord?.key) {
+      directorySet.add(personnelRecord.key);
+    }
   });
 
   safeRecords.forEach((record, index) => {
@@ -931,8 +956,39 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   });
 
   const clients = Array.from(clientsMap.values()).map((client) => {
-    const totalPersonnel = client.personnel.length;
-    const activePersonnel = client.personnel.filter((person) => person.active).length;
+    const directorySet = clientDirectoryPersonnelKeys.get(client.key);
+
+    const uniquePersonnelKeys = new Set(
+      client.personnel
+        .map((person) => person?.key)
+        .filter((key) => typeof key === "string" && key.length > 0),
+    );
+
+    const totalPersonnel =
+      directorySet && directorySet.size > 0
+        ? directorySet.size
+        : uniquePersonnelKeys.size;
+    let activePersonnel = 0;
+
+    if (directorySet && directorySet.size > 0) {
+      directorySet.forEach((personnelKey) => {
+        if (!personnelKey) {
+          return;
+        }
+
+        const record = personnelMap.get(personnelKey);
+        if (record?.active) {
+          activePersonnel += 1;
+        }
+      });
+    } else {
+      const activePersonnelKeys = new Set(
+        client.personnel
+          .filter((person) => person.active && person?.key)
+          .map((person) => person.key),
+      );
+      activePersonnel = activePersonnelKeys.size;
+    }
 
     const complianceRate =
       totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
