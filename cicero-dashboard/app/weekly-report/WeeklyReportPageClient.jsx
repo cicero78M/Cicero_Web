@@ -1475,8 +1475,8 @@ export default function WeeklyReportPageClient() {
     return String(window.localStorage.getItem("client_id") || "").trim().toLowerCase();
   }, [clientId]);
 
-  const isDitbinmasRole = normalizedRole === "ditbinmas";
-  const ditbinmasClientScope = isDitbinmasRole
+  const indicatesDitbinmasRole = normalizedRole.includes("ditbinmas");
+  const ditbinmasClientScope = indicatesDitbinmasRole
     ? normalizedClientId && normalizedClientId !== "ditbinmas"
       ? normalizedClientId
       : "ditbinmas"
@@ -1486,7 +1486,7 @@ export default function WeeklyReportPageClient() {
     [ditbinmasClientScope],
   );
 
-  const isDitbinmasAuthorized = isDitbinmasRole;
+  const isDitbinmasAuthorized = indicatesDitbinmasRole;
 
   const formatNumber = useMemo(
     () =>
