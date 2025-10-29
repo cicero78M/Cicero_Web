@@ -957,21 +957,38 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
   const clients = Array.from(clientsMap.values()).map((client) => {
     const directorySet = clientDirectoryPersonnelKeys.get(client.key);
+    const directoryKeys = Array.isArray(directorySet)
+      ? directorySet
+      : directorySet instanceof Set
+      ? Array.from(directorySet)
+      : [];
 
-    const uniquePersonnelKeys = new Set(
-      client.personnel
-        .map((person) => person?.key)
-        .filter((key) => typeof key === "string" && key.length > 0),
+    const allPersonnelKeys = client.personnel
+      .map((person) => person?.key)
+      .filter((key) => typeof key === "string" && key.length > 0);
+    const uniquePersonnelKeys = new Set(allPersonnelKeys);
+    const fallbackPrefix = `${client.key}:AUTO:`;
+    const nonFallbackPersonnelKeys = new Set(
+      Array.from(uniquePersonnelKeys).filter(
+        (key) => !key.startsWith(fallbackPrefix),
+      ),
     );
 
-    const totalPersonnel =
-      directorySet && directorySet.size > 0
-        ? directorySet.size
-        : uniquePersonnelKeys.size;
+    const hasDirectoryData = directoryKeys.length > 0;
+    const shouldUseFallbackKeys =
+      !hasDirectoryData && nonFallbackPersonnelKeys.size === 0;
+
+    const effectivePersonnelKeySet = hasDirectoryData
+      ? new Set(directoryKeys)
+      : shouldUseFallbackKeys
+      ? uniquePersonnelKeys
+      : nonFallbackPersonnelKeys;
+
+    const totalPersonnel = effectivePersonnelKeySet.size;
     let activePersonnel = 0;
 
-    if (directorySet && directorySet.size > 0) {
-      directorySet.forEach((personnelKey) => {
+    if (hasDirectoryData) {
+      directoryKeys.forEach((personnelKey) => {
         if (!personnelKey) {
           return;
         }
@@ -987,7 +1004,14 @@ const aggregateLikesRecords = (records = [], options = {}) => {
           .filter((person) => person.active && person?.key)
           .map((person) => person.key),
       );
-      activePersonnel = activePersonnelKeys.size;
+      const effectiveActiveKeys = shouldUseFallbackKeys
+        ? activePersonnelKeys
+        : new Set(
+            Array.from(activePersonnelKeys).filter(
+              (key) => !key.startsWith(fallbackPrefix),
+            ),
+          );
+      activePersonnel = effectiveActiveKeys.size;
     }
 
     const complianceRate =
