@@ -181,15 +181,46 @@ const sanitizeClientLabelToken = (value: unknown) => {
   return normalized.replace(/[^A-Z0-9]/g, "");
 };
 
-const isGenericClientLabel = (value: unknown) => {
+export const isGenericClientLabel = (value: unknown) => {
   const sanitized = sanitizeClientLabelToken(value);
   if (!sanitized) {
     return true;
   }
 
-  return GENERIC_CLIENT_LABEL_TOKENS.some((token) =>
-    sanitized.startsWith(token),
-  );
+  return GENERIC_CLIENT_LABEL_TOKENS.some((token) => sanitized === token);
+};
+
+const extractClientKeyQualifier = (value: unknown) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const segments = normalized
+    .split(/::|__/g)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  if (segments.length <= 1) {
+    return null;
+  }
+
+  for (const segment of segments.slice(1)) {
+    if (!isGenericClientLabel(segment)) {
+      return segment;
+    }
+  }
+
+  const lastSegment = segments[segments.length - 1];
+  if (lastSegment && !isGenericClientLabel(lastSegment)) {
+    return lastSegment;
+  }
+
+  return null;
 };
 
 const pickNonGenericLabel = (
@@ -211,7 +242,9 @@ const pickNonGenericLabel = (
   return null;
 };
 
-const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null) => {
+export const resolveClientDisplayName = (
+  client: LikesSummaryClient | undefined | null,
+) => {
   if (!client) {
     return CLIENT_LABEL_FALLBACK;
   }
@@ -244,6 +277,11 @@ const resolveClientDisplayName = (client: LikesSummaryClient | undefined | null)
   const fallbackLabel = pickNonGenericLabel([client.clientId]);
   if (fallbackLabel) {
     return fallbackLabel;
+  }
+
+  const keyQualifier = extractClientKeyQualifier(client.key);
+  if (keyQualifier) {
+    return keyQualifier;
   }
 
   return CLIENT_LABEL_FALLBACK;

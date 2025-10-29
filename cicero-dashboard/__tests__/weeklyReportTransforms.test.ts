@@ -8,6 +8,7 @@ import {
   filterDitbinmasRecords,
 } from "@/app/weekly-report/WeeklyReportPageClient";
 import { aggregateWeeklyLikesRecords } from "@/app/weekly-report/lib/dataTransforms";
+import { resolveClientDisplayName } from "@/components/weekly-report/WeeklyPlatformLikesSummary";
 
 describe("weekly report data transforms", () => {
   it("preserves metrics totals when building weekly series", () => {
@@ -286,5 +287,38 @@ describe("weekly report data transforms", () => {
     expect(summary.totals.totalLikes).toBe(7);
     expect(summary.totals.totalComments).toBe(4);
     expect(summary.clients).toHaveLength(1);
+  });
+
+  it("derives distinct labels for generic client tokens with qualifiers", () => {
+    const baseClient = {
+      totalLikes: 0,
+      totalComments: 0,
+      activePersonnel: 0,
+      totalPersonnel: 0,
+      complianceRate: 0,
+      averageLikesPerUser: 0,
+    };
+
+    const clients = [
+      {
+        ...baseClient,
+        key: "LAINNYA::SUBBAGRENMIN",
+        clientName: "LAINNYA::SUBBAGRENMIN",
+      },
+      {
+        ...baseClient,
+        key: "LAINNYA::BAGOPS",
+        clientName: "LAINNYA",
+      },
+    ];
+
+    const labels = clients.map((client) => resolveClientDisplayName(client));
+
+    expect(labels).toEqual([
+      "LAINNYA::SUBBAGRENMIN",
+      "BAGOPS",
+    ]);
+    expect(new Set(labels).size).toBe(clients.length);
+    expect(labels).not.toContain("Tidak Teridentifikasi");
   });
 });
