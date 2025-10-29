@@ -206,6 +206,32 @@ const buildWeekRanges = (monthValue, yearValue) => {
 const DITBINMAS_CLIENT_TARGET = "DITBINMAS";
 const DITBINMAS_ROLE_TARGET = "DITBINMAS";
 
+const normalizeClientScopeIdentifier = (value) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.toUpperCase();
+};
+
+const toComparableClientScope = (value) =>
+  normalizeClientScopeIdentifier(value).replace(/[^A-Z0-9]/g, "");
+
+const resolveClientScopeTarget = (value) => {
+  const comparable = toComparableClientScope(value);
+  if (comparable) {
+    return comparable;
+  }
+
+  return DITBINMAS_CLIENT_TARGET;
+};
+
 const NEGATION_PREFIXES = [
   "NON",
   "NOT",
@@ -418,9 +444,10 @@ const mentionsTargetValue = (candidate, target) => {
   return false;
 };
 
-export const filterDitbinmasRecords = (records = []) => {
+export const filterDitbinmasRecords = (records = [], options = {}) => {
   const clientMatcherOptions = { allowWordMatch: false };
   const roleMatcherOptions = { allowWordMatch: true };
+  const clientTarget = resolveClientScopeTarget(options?.clientScope);
 
   return (Array.isArray(records) ? records : []).filter((record) => {
     if (!record || typeof record !== "object") {
@@ -472,7 +499,7 @@ export const filterDitbinmasRecords = (records = []) => {
 
     const matchesClient = matchCandidates(
       clientCandidates,
-      DITBINMAS_CLIENT_TARGET,
+      clientTarget,
       clientMatcherOptions,
     );
 
@@ -510,7 +537,10 @@ export const filterDitbinmasRecords = (records = []) => {
   });
 };
 
-export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
+export const resolveDitbinmasDirectoryUsers = (
+  ditbinmasDirectory,
+  options = {},
+) => {
   if (!ditbinmasDirectory) {
     return [];
   }
@@ -526,6 +556,12 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
 
   const rawCollection = possibleCollections.find((collection) => Array.isArray(collection));
   const resolvedEntries = Array.isArray(rawCollection) ? rawCollection : [];
+
+  const { clientScope } = options ?? {};
+  const normalizedClientScope = normalizeClientScopeIdentifier(clientScope);
+  const comparableScopeTarget = toComparableClientScope(normalizedClientScope);
+  const hasCustomScope =
+    Boolean(comparableScopeTarget) && comparableScopeTarget !== DITBINMAS_CLIENT_TARGET;
 
   const uniqueUsers = new Map();
 
@@ -640,7 +676,9 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
     };
   });
 
-  const targetClientIds = new Set(["DITBINMAS"]);
+  const targetClientIds = new Set(
+    comparableScopeTarget ? [comparableScopeTarget] : [DITBINMAS_CLIENT_TARGET],
+  );
 
   normalizedEntries.forEach((normalized) => {
     if (!normalized) {
@@ -661,11 +699,11 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
     const hasDitbinmasSignal =
       roleIndicatesDitbinmas || targetsDitbinmas || clientIsDitbinmas;
 
-    if (hasDitbinmasSignal && comparableClientId) {
+    if (!hasCustomScope && hasDitbinmasSignal && comparableClientId) {
       targetClientIds.add(comparableClientId);
     }
 
-    if (hasDitbinmasSignal) {
+    if (!hasCustomScope && hasDitbinmasSignal) {
       targetIds.forEach((targetId) => {
         const comparable = toComparableClientId(targetId);
         if (comparable) {
@@ -674,7 +712,12 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       });
     }
 
-    if (hasDitbinmasSignal && entryClientId && !targetIds.has(entryClientId)) {
+    if (
+      !hasCustomScope &&
+      hasDitbinmasSignal &&
+      entryClientId &&
+      !targetIds.has(entryClientId)
+    ) {
       targetIds.add(entryClientId);
     }
   });
@@ -689,6 +732,7 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
       entryRole,
       entryClientId,
       comparableClientId,
+      comparableTargets,
       roleIndicatesDitbinmas,
       targetsDitbinmas,
       clientIsDitbinmas,
@@ -697,8 +741,15 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
 
     const clientMatchesTarget =
       comparableClientId && targetClientIds.has(comparableClientId);
-    const shouldInclude =
-      clientIsDitbinmas || roleIndicatesDitbinmas || targetsDitbinmas || clientMatchesTarget;
+    const matchesComparableTargets =
+      hasCustomScope && comparableScopeTarget && comparableTargets
+        ? comparableTargets.has(comparableScopeTarget)
+        : false;
+    const hasDitbinmasSignal =
+      roleIndicatesDitbinmas || targetsDitbinmas || clientIsDitbinmas;
+    const shouldInclude = hasCustomScope
+      ? clientMatchesTarget || matchesComparableTargets
+      : hasDitbinmasSignal || clientMatchesTarget;
 
     if (!shouldInclude) {
       return;
@@ -753,17 +804,18 @@ export const resolveDitbinmasDirectoryUsers = (ditbinmasDirectory) => {
 
       if (!uniqueUsers.has(identifier)) {
         const normalizedEntry = { ...entry };
+        const fallbackClientId = normalizedClientScope || DITBINMAS_CLIENT_TARGET;
 
         if (!normalizedEntry?.client_id) {
-          normalizedEntry.client_id = "DITBINMAS";
+          normalizedEntry.client_id = fallbackClientId;
         }
 
         if (!normalizedEntry?.clientId) {
-          normalizedEntry.clientId = normalizedEntry.client_id ?? "DITBINMAS";
+          normalizedEntry.clientId = normalizedEntry.client_id ?? fallbackClientId;
         }
 
         if (!normalizedEntry?.client) {
-          normalizedEntry.client = normalizedEntry.client_id ?? "DITBINMAS";
+          normalizedEntry.client = normalizedEntry.client_id ?? fallbackClientId;
         }
 
         uniqueUsers.set(identifier, normalizedEntry);
@@ -1424,7 +1476,15 @@ export default function WeeklyReportPageClient() {
   }, [clientId]);
 
   const isDitbinmasRole = normalizedRole === "ditbinmas";
-  const ditbinmasClientScope = isDitbinmasRole ? "ditbinmas" : normalizedClientId;
+  const ditbinmasClientScope = isDitbinmasRole
+    ? normalizedClientId && normalizedClientId !== "ditbinmas"
+      ? normalizedClientId
+      : "ditbinmas"
+    : normalizedClientId;
+  const resolvedDitbinmasClientScope = useMemo(
+    () => normalizeClientScopeIdentifier(ditbinmasClientScope) || DITBINMAS_CLIENT_TARGET,
+    [ditbinmasClientScope],
+  );
 
   const isDitbinmasAuthorized = isDitbinmasRole;
 
@@ -1457,8 +1517,14 @@ export default function WeeklyReportPageClient() {
   );
 
   const { data: ditbinmasDirectory } = useSWR(
-    token && isDitbinmasAuthorized ? ["ditbinmas-directory", token] : null,
-    ([, tk]) => getUserDirectory(tk, "DITBINMAS"),
+    token && isDitbinmasAuthorized
+      ? ["ditbinmas-directory", token, ditbinmasClientScope]
+      : null,
+    ([, tk, scope]) =>
+      getUserDirectory(
+        tk,
+        normalizeClientScopeIdentifier(scope) || resolvedDitbinmasClientScope,
+      ),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -1530,8 +1596,11 @@ export default function WeeklyReportPageClient() {
   );
 
   const ditbinmasUsers = useMemo(
-    () => resolveDitbinmasDirectoryUsers(ditbinmasDirectory),
-    [ditbinmasDirectory],
+    () =>
+      resolveDitbinmasDirectoryUsers(ditbinmasDirectory, {
+        clientScope: ditbinmasClientScope,
+      }),
+    [ditbinmasDirectory, ditbinmasClientScope],
   );
 
   const ditbinmasPersonnelCount = ditbinmasUsers.length;
@@ -1636,8 +1705,12 @@ export default function WeeklyReportPageClient() {
       commentsPrevRecords,
     );
 
-    const filteredWeekRecords = filterDitbinmasRecords(mergedWeekRecords);
-    const filteredPrevRecords = filterDitbinmasRecords(mergedPrevRecords);
+    const filteredWeekRecords = filterDitbinmasRecords(mergedWeekRecords, {
+      clientScope: ditbinmasClientScope,
+    });
+    const filteredPrevRecords = filterDitbinmasRecords(mergedPrevRecords, {
+      clientScope: ditbinmasClientScope,
+    });
 
     const summaryWeekRaw = aggregateWeeklyLikesRecords(filteredWeekRecords, {
       directoryUsers: ditbinmasUsers,

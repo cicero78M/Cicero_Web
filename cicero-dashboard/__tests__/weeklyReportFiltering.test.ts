@@ -73,4 +73,23 @@ describe("filterDitbinmasRecords", () => {
       ]),
     );
   });
+
+  it("limits matches to the provided client scope when specified", () => {
+    const records = [
+      { client_id: "DITBINMAS", role: "Ditbinmas" },
+      { client_id: "POLDA_JATIM", role: "Operator Ditbinmas" },
+      { client_id: "POLDA JATIM", role_name: "Ditbinmas" },
+      { client_id: "POLDA_JABAR", role: "Ditbinmas" },
+    ];
+
+    const result = filterDitbinmasRecords(records, { clientScope: "polda_jatim" });
+
+    expect(result).toHaveLength(2);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ client_id: "POLDA_JATIM" }),
+        expect.objectContaining({ client_id: "POLDA JATIM" }),
+      ]),
+    );
+  });
 });

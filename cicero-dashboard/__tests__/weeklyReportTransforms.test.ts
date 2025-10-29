@@ -5,6 +5,7 @@ import {
   prepareActivityRecordsByWeek,
   extractClientPersonnel,
   sortPersonnelDistribution,
+  filterDitbinmasRecords,
 } from "@/app/weekly-report/WeeklyReportPageClient";
 import { aggregateWeeklyLikesRecords } from "@/app/weekly-report/lib/dataTransforms";
 
@@ -247,5 +248,43 @@ describe("weekly report data transforms", () => {
       "Person High",
       "Person Lower",
     ]);
+  });
+
+  it("filters aggregated weekly metrics to the specified Ditbinmas client scope", () => {
+    const mergedRecords = [
+      {
+        client_id: "DITBINMAS",
+        role: "Ditbinmas",
+        jumlah_like: 5,
+        jumlah_komentar: 2,
+      },
+      {
+        client_id: "POLDA_JATIM",
+        role: "Operator Ditbinmas",
+        jumlah_like: 7,
+        jumlah_komentar: 4,
+      },
+      {
+        client_id: "POLDA_JABAR",
+        role: "Ditbinmas",
+        jumlah_like: 3,
+        jumlah_komentar: 1,
+      },
+    ];
+
+    const filtered = filterDitbinmasRecords(mergedRecords, {
+      clientScope: "POLDA_JATIM",
+    });
+
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]).toEqual(
+      expect.objectContaining({ client_id: "POLDA_JATIM" }),
+    );
+
+    const summary = aggregateWeeklyLikesRecords(filtered);
+
+    expect(summary.totals.totalLikes).toBe(7);
+    expect(summary.totals.totalComments).toBe(4);
+    expect(summary.clients).toHaveLength(1);
   });
 });
