@@ -21,6 +21,8 @@ const resolveActivityFlag = (value) => {
     return null;
   }
 
+  const collapsedNormalized = normalized.replace(/[\s\W_]+/g, "");
+
   const positive = [
     "active",
     "aktif",
@@ -32,10 +34,6 @@ const resolveActivityFlag = (value) => {
     "enabled",
     "enable",
   ];
-
-  if (positive.includes(normalized)) {
-    return true;
-  }
 
   const negative = [
     "inactive",
@@ -56,7 +54,32 @@ const resolveActivityFlag = (value) => {
     "deactivated",
   ];
 
+  const keywordMatches = (candidate, keywords) =>
+    keywords.some((keyword) => candidate.includes(keyword));
+
+  if (positive.includes(normalized)) {
+    return true;
+  }
+
   if (negative.includes(normalized)) {
+    return false;
+  }
+
+  if (collapsedNormalized && collapsedNormalized !== normalized) {
+    if (positive.includes(collapsedNormalized)) {
+      return true;
+    }
+
+    if (negative.includes(collapsedNormalized)) {
+      return false;
+    }
+  }
+
+  if (collapsedNormalized && keywordMatches(collapsedNormalized, negative)) {
+    return false;
+  }
+
+  if (keywordMatches(normalized, negative)) {
     return false;
   }
 
