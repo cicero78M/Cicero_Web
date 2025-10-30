@@ -147,6 +147,7 @@ export const createEmptyWeeklyLikesSummary = () => ({
     totalComments: 0,
     totalPersonnel: 0,
     activePersonnel: 0,
+    personnelWithLikes: 0,
     inactiveCount: 0,
     complianceRate: 0,
     averageComplianceRate: 0,
@@ -1413,9 +1414,23 @@ export const aggregateWeeklyLikesRecords = (
     const activePersonnel = client.personnel.filter((person: any) => person.active).length;
     const totalPersonnel = directorySet?.size ?? activePersonnel;
     const inactiveCount = Math.max(totalPersonnel - activePersonnel, 0);
+    const personnelWithLikes = directorySet
+      ? Array.from(directorySet).reduce((count, personnelKey) => {
+          if (!personnelKey) {
+            return count;
+          }
+
+          const record = personnelMap.get(personnelKey);
+          if (!record) {
+            return count;
+          }
+
+          return toSafeNumber(record.likes) > 0 ? count + 1 : count;
+        }, 0)
+      : client.personnel.filter((person: any) => toSafeNumber(person.likes) > 0).length;
 
     const complianceRate =
-      totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
+      activePersonnel > 0 ? (personnelWithLikes / activePersonnel) * 100 : 0;
     const averageLikesPerUser =
       totalPersonnel > 0 ? client.totalLikes / totalPersonnel : 0;
     const averageCommentsPerUser =
@@ -1425,6 +1440,7 @@ export const aggregateWeeklyLikesRecords = (
       ...client,
       totalPersonnel,
       activePersonnel,
+      personnelWithLikes,
       inactiveCount,
       complianceRate,
       averageLikesPerUser,
@@ -1438,6 +1454,7 @@ export const aggregateWeeklyLikesRecords = (
       accumulator.totalComments += client.totalComments;
       accumulator.totalPersonnel += client.totalPersonnel;
       accumulator.activePersonnel += client.activePersonnel;
+      accumulator.personnelWithLikes += client.personnelWithLikes;
       accumulator.inactiveCount += client.inactiveCount;
       return accumulator;
     },
@@ -1446,6 +1463,7 @@ export const aggregateWeeklyLikesRecords = (
       totalComments: 0,
       totalPersonnel: 0,
       activePersonnel: 0,
+      personnelWithLikes: 0,
       inactiveCount: 0,
     },
   );
@@ -1488,8 +1506,8 @@ export const aggregateWeeklyLikesRecords = (
       : totals.inactiveCount;
 
   const resolvedComplianceRate =
-    resolvedTotalPersonnel > 0
-      ? (totals.activePersonnel / resolvedTotalPersonnel) * 100
+    totals.activePersonnel > 0
+      ? (totals.personnelWithLikes / totals.activePersonnel) * 100
       : 0;
 
   return {
@@ -1499,6 +1517,7 @@ export const aggregateWeeklyLikesRecords = (
       totalComments: totals.totalComments,
       totalPersonnel: resolvedTotalPersonnel,
       activePersonnel: totals.activePersonnel,
+      personnelWithLikes: totals.personnelWithLikes,
       inactiveCount: resolvedInactiveCount,
       complianceRate: resolvedComplianceRate,
       averageComplianceRate,

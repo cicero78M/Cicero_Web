@@ -12,6 +12,7 @@ const createEmptyLikesSummary = () => ({
     totalComments: 0,
     totalPersonnel: 0,
     activePersonnel: 0,
+    personnelWithLikes: 0,
     complianceRate: 0,
     averageComplianceRate: 0,
   },
@@ -1158,6 +1159,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     const totalPersonnel = effectivePersonnelKeySet.size;
     let activePersonnel = 0;
+    let personnelWithLikes = 0;
 
     if (hasDirectoryData) {
       directoryKeys.forEach((personnelKey) => {
@@ -1166,14 +1168,26 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         }
 
         const record = personnelMap.get(personnelKey);
-        if (record?.active) {
+        if (!record) {
+          return;
+        }
+
+        if (record.active) {
           activePersonnel += 1;
+        }
+        if (toSafeNumber(record.likes) > 0) {
+          personnelWithLikes += 1;
         }
       });
     } else {
       const activePersonnelKeys = new Set(
         client.personnel
           .filter((person) => person.active && person?.key)
+          .map((person) => person.key),
+      );
+      const personnelWithLikesKeys = new Set(
+        client.personnel
+          .filter((person) => toSafeNumber(person.likes) > 0 && person?.key)
           .map((person) => person.key),
       );
       const effectiveActiveKeys = shouldUseFallbackKeys
@@ -1183,11 +1197,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
               (key) => !key.startsWith(fallbackPrefix),
             ),
           );
+      const effectiveLikesKeys = shouldUseFallbackKeys
+        ? personnelWithLikesKeys
+        : new Set(
+            Array.from(personnelWithLikesKeys).filter(
+              (key) => !key.startsWith(fallbackPrefix),
+            ),
+          );
       activePersonnel = effectiveActiveKeys.size;
+      personnelWithLikes = effectiveLikesKeys.size;
     }
 
     const complianceRate =
-      totalPersonnel > 0 ? (activePersonnel / totalPersonnel) * 100 : 0;
+      activePersonnel > 0 ? (personnelWithLikes / activePersonnel) * 100 : 0;
     const averageLikesPerUser =
       totalPersonnel > 0 ? client.totalLikes / totalPersonnel : 0;
     const averageCommentsPerUser =
@@ -1197,6 +1219,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       ...client,
       totalPersonnel,
       activePersonnel,
+      personnelWithLikes,
       complianceRate,
       averageLikesPerUser,
       averageCommentsPerUser,
@@ -1209,6 +1232,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       accumulator.totalComments += client.totalComments;
       accumulator.totalPersonnel += client.totalPersonnel;
       accumulator.activePersonnel += client.activePersonnel;
+      accumulator.personnelWithLikes += client.personnelWithLikes;
       return accumulator;
     },
     {
@@ -1216,6 +1240,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       totalComments: 0,
       totalPersonnel: 0,
       activePersonnel: 0,
+      personnelWithLikes: 0,
     },
   );
 
@@ -1249,9 +1274,10 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       totalComments: totals.totalComments,
       totalPersonnel: totals.totalPersonnel,
       activePersonnel: totals.activePersonnel,
+      personnelWithLikes: totals.personnelWithLikes,
       complianceRate:
-        totals.totalPersonnel > 0
-          ? (totals.activePersonnel / totals.totalPersonnel) * 100
+        totals.activePersonnel > 0
+          ? (totals.personnelWithLikes / totals.activePersonnel) * 100
           : 0,
       averageComplianceRate,
     },

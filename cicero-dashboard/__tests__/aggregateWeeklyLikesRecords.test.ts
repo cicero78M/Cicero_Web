@@ -530,8 +530,9 @@ describe("aggregateWeeklyLikesRecords", () => {
 
     expect(summary.totals.totalPersonnel).toBe(3);
     expect(summary.totals.activePersonnel).toBe(2);
+    expect(summary.totals.personnelWithLikes).toBe(2);
     expect(summary.totals.inactiveCount).toBe(1);
-    expect(summary.totals.complianceRate).toBeCloseTo((2 / 3) * 100, 5);
+    expect(summary.totals.complianceRate).toBeCloseTo(100, 5);
     expect(summary.clients).toHaveLength(3);
     expect(summary.clients).toEqual(
       expect.arrayContaining([

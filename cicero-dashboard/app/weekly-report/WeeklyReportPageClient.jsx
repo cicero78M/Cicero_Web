@@ -1799,12 +1799,18 @@ export default function WeeklyReportPageClient() {
         ? uniqueDirectoryPersonnelCount
         : summaryWeekRaw?.totals?.totalPersonnel ?? 0;
     const totalActive = summaryWeekRaw?.totals?.activePersonnel || 0;
+    const totalPersonnelWithLikes =
+      summaryWeekRaw?.totals?.personnelWithLikes || 0;
     const previousActive = summaryPrevRaw?.totals?.activePersonnel || 0;
+    const previousPersonnelWithLikes =
+      summaryPrevRaw?.totals?.personnelWithLikes || 0;
 
     const complianceRate =
-      resolvedTotalPersonnel > 0 ? (totalActive / resolvedTotalPersonnel) * 100 : 0;
+      totalActive > 0 ? (totalPersonnelWithLikes / totalActive) * 100 : 0;
     const previousComplianceRateRaw =
-      resolvedTotalPersonnel > 0 ? (previousActive / resolvedTotalPersonnel) * 100 : 0;
+      previousActive > 0
+        ? (previousPersonnelWithLikes / previousActive) * 100
+        : 0;
 
     const summaryWeek = {
       ...summaryWeekRaw,
@@ -1812,6 +1818,7 @@ export default function WeeklyReportPageClient() {
         ...summaryWeekRaw.totals,
         totalPersonnel: resolvedTotalPersonnel,
         activePersonnel: totalActive,
+        personnelWithLikes: totalPersonnelWithLikes,
         complianceRate,
       },
       lastUpdated: summaryWeekRaw.lastUpdated ?? activeWeekRange.end,
@@ -1823,6 +1830,7 @@ export default function WeeklyReportPageClient() {
         ...summaryPrevRaw.totals,
         totalPersonnel: resolvedTotalPersonnel,
         activePersonnel: previousActive,
+        personnelWithLikes: previousPersonnelWithLikes,
         complianceRate: previousComplianceRateRaw,
       },
     };
