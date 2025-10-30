@@ -277,6 +277,45 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(clientB?.complianceRate).toBe(0);
   });
 
+  it("mengabaikan entri direktori yang ditandai tidak aktif ketika menghitung total personil", () => {
+    const directoryUsers = [
+      {
+        client_id: "CLI-05",
+        nama_client: "Client E",
+        username: "alpha",
+        status: "Aktif",
+      },
+      {
+        client_id: "CLI-05",
+        nama_client: "Client E",
+        username: "bravo",
+        status_keaktifan: "nonaktif",
+      },
+      {
+        client_id: "CLI-06",
+        nama_client: "Client F",
+        username: "charlie",
+        is_active: true,
+      },
+      {
+        client_id: "CLI-06",
+        nama_client: "Client F",
+        username: "delta",
+        is_active: 0,
+      },
+    ];
+
+    const summary = aggregateLikesRecords([], { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(2);
+
+    const clientE = summary.clients.find((client) => client.clientId === "CLI-05");
+    const clientF = summary.clients.find((client) => client.clientId === "CLI-06");
+
+    expect(clientE?.totalPersonnel).toBe(1);
+    expect(clientF?.totalPersonnel).toBe(1);
+  });
+
   it("menggabungkan likes dan komentar untuk klien dengan nama sama tetapi ID berbeda", () => {
     const directoryUsers = [
       { client_id: "IG-01", nama_client: "Client X", username: "alpha" },

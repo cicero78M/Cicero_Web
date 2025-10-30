@@ -47,6 +47,7 @@ import {
   aggregateLikesRecords,
   ensureRecordsHaveActivityDate,
   prepareTrendActivityRecords,
+  resolveDirectoryIsActive,
 } from "./dataTransforms";
 import {
   pickNestedValue,
@@ -2957,7 +2958,10 @@ export default function ExecutiveSummaryPage() {
         const rawDirectory =
           directoryResponse?.data || directoryResponse?.users || directoryResponse;
         const users = Array.isArray(rawDirectory) ? rawDirectory : [];
-        const insight = computeUserInsight(users);
+        const activeDirectoryUsers = users.filter((user) =>
+          resolveDirectoryIsActive(user),
+        );
+        const insight = computeUserInsight(activeDirectoryUsers);
 
         const stats = statsResult?.data ?? statsResult ?? {};
         const totalIGPosts = extractNumericValue(
@@ -3068,7 +3072,7 @@ export default function ExecutiveSummaryPage() {
         })();
 
         const activityBuckets = computeActivityBuckets({
-          users,
+          users: activeDirectoryUsers,
           likes: likesRecordsInSelectedRange,
           comments: commentsRecordsInSelectedRange,
           totalIGPosts,
@@ -3080,7 +3084,7 @@ export default function ExecutiveSummaryPage() {
           commentsRecordsInSelectedRange,
         );
         const likesSummary = aggregateLikesRecords(mergedActivityRecords, {
-          directoryUsers: users,
+          directoryUsers: activeDirectoryUsers,
         });
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,

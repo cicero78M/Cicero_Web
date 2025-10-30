@@ -1,5 +1,99 @@
 import { parseDateValue, resolveRecordDate } from "./weeklyTrendUtils";
 
+const resolveActivityFlag = (value) => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+    return value !== 0;
+  }
+
+  if (value == null) {
+    return null;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  const positive = [
+    "active",
+    "aktif",
+    "ya",
+    "yes",
+    "true",
+    "1",
+    "on",
+    "enabled",
+    "enable",
+  ];
+
+  if (positive.includes(normalized)) {
+    return true;
+  }
+
+  const negative = [
+    "inactive",
+    "inaktif",
+    "nonaktif",
+    "non-aktif",
+    "tidak aktif",
+    "tidakaktif",
+    "tidak",
+    "no",
+    "false",
+    "0",
+    "off",
+    "disabled",
+    "disable",
+    "suspend",
+    "suspended",
+    "deactivated",
+  ];
+
+  if (negative.includes(normalized)) {
+    return false;
+  }
+
+  return null;
+};
+
+const resolveDirectoryIsActive = (entry) => {
+  if (!entry || typeof entry !== "object") {
+    return true;
+  }
+
+  const candidates = [
+    entry?.is_active,
+    entry?.isActive,
+    entry?.active,
+    entry?.aktif,
+    entry?.enabled,
+    entry?.is_enabled,
+    entry?.isEnabled,
+    entry?.status,
+    entry?.user_status,
+    entry?.userStatus,
+    entry?.status_keaktifan,
+    entry?.statusKeaktifan,
+    entry?.keaktifan,
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = resolveActivityFlag(candidate);
+    if (resolved != null) {
+      return resolved;
+    }
+  }
+
+  return true;
+};
+
 const toSafeNumber = (value) => {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : 0;
@@ -428,8 +522,11 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const directoryUsersRaw = Array.isArray(options?.directoryUsers)
     ? options.directoryUsers.filter((item) => item && typeof item === "object")
     : [];
+  const activeDirectoryUsers = directoryUsersRaw.filter((user) =>
+    resolveDirectoryIsActive(user),
+  );
 
-  if (safeRecords.length === 0 && directoryUsersRaw.length === 0) {
+  if (safeRecords.length === 0 && activeDirectoryUsers.length === 0) {
     return createEmptyLikesSummary();
   }
 
@@ -1014,7 +1111,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return personnelMap.get(key);
   };
 
-  directoryUsersRaw.forEach((user, index) => {
+  activeDirectoryUsers.forEach((user, index) => {
     const identifiers = resolveClientIdentifiers(user);
     const clientEntry = ensureClientEntry(identifiers);
     const resolvedNames = resolvePersonnelNames(user);
@@ -1429,4 +1526,5 @@ export {
   aggregateLikesRecords,
   ensureRecordsHaveActivityDate,
   prepareTrendActivityRecords,
+  resolveDirectoryIsActive,
 };
