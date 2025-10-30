@@ -20,6 +20,7 @@ import {
   aggregateLikesRecords,
   mergeActivityRecords,
   prepareTrendActivityRecords,
+  resolveDirectoryIsActive,
 } from "@/app/executive-summary/dataTransforms";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 
@@ -314,6 +315,14 @@ describe("groupRecordsByMonth monthly trend integration", () => {
 
     expect(clientE?.totalPersonnel).toBe(1);
     expect(clientF?.totalPersonnel).toBe(1);
+  });
+
+  it("menandai personel direktori dengan status non aktif sebagai tidak aktif", () => {
+    expect(resolveDirectoryIsActive({ status: "Non Aktif" })).toBe(false);
+    expect(resolveDirectoryIsActive({ status_keaktifan: "tidak-aktif" })).toBe(
+      false,
+    );
+    expect(resolveDirectoryIsActive({ status: "non aktif" })).toBe(false);
   });
 
   it("menggabungkan likes dan komentar untuk klien dengan nama sama tetapi ID berbeda", () => {
