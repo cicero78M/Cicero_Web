@@ -723,7 +723,7 @@ const buildUserNarrative = ({
   return sentences.join(" ");
 };
 
-const computeUserInsight = (users = []) => {
+export const computeUserInsight = (users = []) => {
   const totalUsers = users.length;
   let instagramFilled = 0;
   let tiktokFilled = 0;
