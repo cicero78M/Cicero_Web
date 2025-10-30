@@ -91,18 +91,36 @@ const extractWeeklyMetricValue = (
   }
 
   return (
+    record?.komentar_personil ??
+    record?.komentar_personel ??
+    record?.komentar_personnel ??
+    record?.comments_personil ??
+    record?.comments_personel ??
+    record?.comments_personnel ??
     record?.total_comments_personil ??
     record?.total_comments_personel ??
     record?.total_comments_personnel ??
     record?.totalCommentsPersonil ??
     record?.totalCommentsPersonel ??
     record?.totalCommentsPersonnel ??
+    record?.rekap?.komentar_personil ??
+    record?.rekap?.komentar_personel ??
+    record?.rekap?.komentar_personnel ??
+    record?.rekap?.comments_personil ??
+    record?.rekap?.comments_personel ??
+    record?.rekap?.comments_personnel ??
     record?.rekap?.total_comments_personil ??
     record?.rekap?.total_comments_personel ??
     record?.rekap?.total_comments_personnel ??
     record?.rekap?.totalCommentsPersonil ??
     record?.rekap?.totalCommentsPersonel ??
     record?.rekap?.totalCommentsPersonnel ??
+    record?.metrics?.komentar_personil ??
+    record?.metrics?.komentar_personel ??
+    record?.metrics?.komentar_personnel ??
+    record?.metrics?.comments_personil ??
+    record?.metrics?.comments_personel ??
+    record?.metrics?.comments_personnel ??
     record?.metrics?.total_comments_personil ??
     record?.metrics?.total_comments_personel ??
     record?.metrics?.total_comments_personnel ??
@@ -300,6 +318,12 @@ export const mergeWeeklyActivityRecords = (
   ];
 
   const COMMENT_FIELDS = [
+    "komentar_personil",
+    "komentar_personel",
+    "komentar_personnel",
+    "comments_personil",
+    "comments_personel",
+    "comments_personnel",
     "jumlah_komentar",
     "jumlahKomentar",
     "total_komentar",
