@@ -726,6 +726,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelList = [];
   const personnelMap = new Map();
   const clientDirectoryPersonnelKeys = new Map();
+  const clientHasDirectoryData = new Map();
   const directoryAliasIndex = new Map();
   let latestActivity = null;
 
@@ -888,6 +889,9 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     if (!clientDirectoryPersonnelKeys.has(clientKey)) {
       clientDirectoryPersonnelKeys.set(clientKey, new Set());
     }
+    if (!clientHasDirectoryData.has(clientKey)) {
+      clientHasDirectoryData.set(clientKey, false);
+    }
     updateIfEmpty(clientEntry, "clientId", clientId);
     updateIfEmpty(clientEntry, "clientName", clientName);
     updateIfEmpty(clientEntry, "divisi", divisi);
@@ -914,6 +918,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
         const targetDirectorySet = clientDirectoryPersonnelKeys.get(clientKey);
         const legacyDirectorySet = clientDirectoryPersonnelKeys.get(legacyKey);
+        const legacyHasDirectoryData = clientHasDirectoryData.get(legacyKey);
 
         legacyEntry.personnel.forEach((person) => {
           const previousKey = person.key;
@@ -975,6 +980,10 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         if (legacyDirectorySet) {
           clientDirectoryPersonnelKeys.delete(legacyKey);
         }
+        if (legacyHasDirectoryData) {
+          clientHasDirectoryData.set(clientKey, true);
+        }
+        clientHasDirectoryData.delete(legacyKey);
       });
     }
 
@@ -1031,6 +1040,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     if (directorySet && personnelRecord?.key) {
       directorySet.add(personnelRecord.key);
     }
+
+    clientHasDirectoryData.set(clientEntry.key, true);
 
     const aliasCandidates = collectPersonnelAliasCandidates(user, resolvedNames);
     registerAliasForPersonnel(aliasCandidates, clientEntry.key, personnelRecord.key);
@@ -1113,8 +1124,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     );
 
     const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
-    if (directorySet && personnelRecord?.key) {
-      directorySet.add(personnelRecord.key);
+    if (directorySet && matchedDirectoryKey) {
+      directorySet.add(matchedDirectoryKey);
     }
 
     const activityDate =
@@ -1147,7 +1158,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       ),
     );
 
-    const hasDirectoryData = directoryKeys.length > 0;
+    const hasDirectoryData = clientHasDirectoryData.get(client.key) === true;
     const shouldUseFallbackKeys =
       !hasDirectoryData && nonFallbackPersonnelKeys.size === 0;
 

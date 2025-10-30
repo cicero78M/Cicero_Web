@@ -357,6 +357,30 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(client?.activePersonnel).toBe(1);
   });
 
+  it("tidak menambah total personel untuk alias aktivitas yang tidak cocok dengan direktori", () => {
+    const directoryUsers = [
+      { client_id: "CLI-04", nama_client: "Client D", username: "alpha" },
+    ];
+
+    const rawLikes = [
+      {
+        client_id: "CLI-04",
+        nama_client: "Client D",
+        username: "beta",
+        jumlah_like: 5,
+      },
+    ];
+
+    const summary = aggregateLikesRecords(rawLikes, { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(1);
+
+    const client = summary.clients.find((entry) => entry.clientId === "CLI-04");
+    expect(client).toBeTruthy();
+    expect(client?.totalPersonnel).toBe(1);
+    expect(client?.activePersonnel).toBe(0);
+  });
+
   it("prefers personnel likes when merging records with general totals", () => {
     const merged = mergeActivityRecords(
       [
