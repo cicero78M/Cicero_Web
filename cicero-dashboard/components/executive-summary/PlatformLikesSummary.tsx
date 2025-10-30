@@ -736,7 +736,6 @@ const PlatformLikesSummary = ({
                   <th className="px-4 py-3 text-right">Komentar</th>
                   <th className="px-4 py-3 text-right">Avg. Komentar</th>
                   <th className="px-4 py-3 text-right">Personil Aktif</th>
-                  <th className="px-4 py-3 text-right">Total Personil</th>
                   <th className="px-4 py-3 text-right">Rasio Kepatuhan</th>
                 </tr>
               </thead>
@@ -764,16 +763,13 @@ const PlatformLikesSummary = ({
                         <td className="px-4 py-3 text-right">
                           {formatNumber(client.activePersonnel, { maximumFractionDigits: 0 })}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          {formatNumber(client.totalPersonnel, { maximumFractionDigits: 0 })}
-                        </td>
                         <td className="px-4 py-3 text-right text-cyan-300">{compliance}</td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td className="px-4 py-6 text-center text-slate-400" colSpan={8}>
+                    <td className="px-4 py-6 text-center text-slate-400" colSpan={7}>
                       {resolvedLabels.tableEmptyLabel}
                     </td>
                   </tr>
