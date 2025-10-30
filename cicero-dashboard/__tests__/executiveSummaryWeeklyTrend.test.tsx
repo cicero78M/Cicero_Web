@@ -22,7 +22,9 @@ import {
   prepareTrendActivityRecords,
   resolveDirectoryIsActive,
 } from "@/app/executive-summary/dataTransforms";
+import { computeUserInsight } from "@/app/executive-summary/page";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
+import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 
 beforeAll(() => {
   const ResizeObserverMock = class {
@@ -276,6 +278,106 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(clientB?.totalLikes).toBe(0);
     expect(clientB?.totalComments).toBe(0);
     expect(clientB?.complianceRate).toBe(0);
+  });
+
+  it("menghitung entri direktori bernama sama sebagai personil terpisah", () => {
+    const directoryUsers = [
+      {
+        client_id: "CLI-07",
+        nama_client: "Client Z",
+        nama: "Sergeant Jane Doe",
+        status: "Aktif",
+      },
+      {
+        client_id: "CLI-07",
+        nama_client: "Client Z",
+        nama: "Sergeant Jane Doe",
+        status: "Aktif",
+        pangkat: "Briptu",
+      },
+      {
+        client_id: "CLI-07",
+        nama_client: "Client Z",
+        nama: "Officer John Smith",
+        status: "Aktif",
+      },
+    ];
+
+    const summary = aggregateLikesRecords([], { directoryUsers });
+    const insight = computeUserInsight(directoryUsers);
+
+    expect(summary.totals.totalPersonnel).toBe(directoryUsers.length);
+    expect(summary.clients).toHaveLength(1);
+    expect(summary.clients[0].totalPersonnel).toBe(directoryUsers.length);
+    expect(insight.summary.totalUsers).toBe(directoryUsers.length);
+    expect(summary.totals.totalPersonnel).toBe(insight.summary.totalUsers);
+  });
+
+  it("menyamakan total personil antara kartu kepatuhan dan insight", () => {
+    const directoryUsers = [
+      {
+        client_id: "CLI-11",
+        nama_client: "Client Q",
+        nama: "Aiptu Andi", 
+        status: "Aktif",
+      },
+      {
+        client_id: "CLI-11",
+        nama_client: "Client Q",
+        nama: "Aiptu Andi",
+        status: "Aktif",
+        pangkat: "Aiptu",
+      },
+      {
+        client_id: "CLI-11",
+        nama_client: "Client Q",
+        nama: "Bripka Sari",
+        status: "Aktif",
+      },
+    ];
+
+    const likesSummary = aggregateLikesRecords([], { directoryUsers });
+    const insight = computeUserInsight(directoryUsers);
+    const formatNumber = (value: number) => String(Math.round(Number(value) || 0));
+    const formatPercent = (value: number) => `${Math.round(Number(value) || 0)}%`;
+
+    render(
+      <div style={{ width: 1024, height: 768 }}>
+        <PlatformLikesSummary
+          data={likesSummary}
+          formatNumber={formatNumber}
+          formatPercent={formatPercent}
+          personnelActivity={null}
+          postTotals={{ instagram: 0, tiktok: 0 }}
+          summaryCards={null}
+          labelOverrides={null}
+          personnelDistribution={null}
+          personnelDistributionMeta={null}
+          hiddenSections={{
+            topCompliance: true,
+            topCommentPersonnel: true,
+            topLikesPersonnel: true,
+          }}
+        />
+        <div data-testid="total-personil-card">
+          Total Personil Insight: {formatNumber(insight.summary.totalUsers)}
+        </div>
+      </div>,
+    );
+
+    const complianceDescription = screen.getByText(/personil terdata\./i);
+    const complianceMatch = complianceDescription.textContent?.match(/(\d+)\s+personil/i);
+    expect(complianceMatch).toBeTruthy();
+    const complianceTotal = complianceMatch ? Number(complianceMatch[1]) : NaN;
+
+    const insightCardText = screen.getByTestId("total-personil-card").textContent ?? "";
+    const insightMatch = insightCardText.match(/(\d+)/);
+    expect(insightMatch).toBeTruthy();
+    const insightTotal = insightMatch ? Number(insightMatch[1]) : NaN;
+
+    expect(complianceTotal).toBe(insightTotal);
+    expect(complianceTotal).toBe(likesSummary.totals.totalPersonnel);
+    expect(insightTotal).toBe(insight.summary.totalUsers);
   });
 
   it("mengabaikan entri direktori yang ditandai tidak aktif ketika menghitung total personil", () => {

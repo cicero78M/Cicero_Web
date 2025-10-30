@@ -846,6 +846,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelList = [];
   const personnelMap = new Map();
   const clientDirectoryPersonnelKeys = new Map();
+  const clientDuplicateKeyTracker = new Map();
   const clientHasDirectoryData = new Map();
   const directoryAliasIndex = new Map();
   let latestActivity = null;
@@ -1134,13 +1135,52 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return personnelMap.get(key);
   };
 
+  const ensureUniqueDirectoryPersonnelKey = (clientKey, proposedKey) => {
+    if (!clientKey || !proposedKey) {
+      return proposedKey;
+    }
+
+    const directorySet = clientDirectoryPersonnelKeys.get(clientKey);
+    const perClientTracker = clientDuplicateKeyTracker.get(clientKey) || new Map();
+
+    if (!clientDuplicateKeyTracker.has(clientKey)) {
+      clientDuplicateKeyTracker.set(clientKey, perClientTracker);
+    }
+
+    const baseKey = proposedKey;
+    const lastSuffix = perClientTracker.get(baseKey) ?? 0;
+
+    if (!(directorySet instanceof Set) || !directorySet.has(baseKey)) {
+      if (!perClientTracker.has(baseKey)) {
+        perClientTracker.set(baseKey, 0);
+      }
+      return baseKey;
+    }
+
+    let suffix = lastSuffix + 1;
+    let candidate = `${baseKey}#${suffix}`;
+
+    while (directorySet.has(candidate)) {
+      suffix += 1;
+      candidate = `${baseKey}#${suffix}`;
+    }
+
+    perClientTracker.set(baseKey, suffix);
+    return candidate;
+  };
+
   activeDirectoryUsers.forEach((user, index) => {
     const identifiers = resolveClientIdentifiers(user);
     const clientEntry = ensureClientEntry(identifiers);
     const resolvedNames = resolvePersonnelNames(user);
     const { username, nama, pangkat } = resolvedNames;
-    const personnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
-    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
+    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
+    const basePersonnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
+    const uniquePersonnelKey = ensureUniqueDirectoryPersonnelKey(
+      clientEntry.key,
+      basePersonnelKey,
+    );
+    const personnelRecord = registerPersonnel(clientEntry, uniquePersonnelKey, {
       clientId: identifiers.clientId,
       clientName: identifiers.clientName,
       divisi: identifiers.divisi,
@@ -1156,7 +1196,6 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     updateIfEmpty(personnelRecord, "nama", nama);
     updateIfEmpty(personnelRecord, "pangkat", pangkat);
 
-    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
     if (directorySet && personnelRecord?.key) {
       directorySet.add(personnelRecord.key);
     }
@@ -1164,6 +1203,12 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     clientHasDirectoryData.set(clientEntry.key, true);
 
     const aliasCandidates = collectPersonnelAliasCandidates(user, resolvedNames);
+    const baseAlias = basePersonnelKey?.includes(":")
+      ? basePersonnelKey.split(":").slice(1).join(":")
+      : basePersonnelKey;
+    if (baseAlias && !baseAlias.startsWith("AUTO:")) {
+      aliasCandidates.push(baseAlias);
+    }
     registerAliasForPersonnel(aliasCandidates, clientEntry.key, personnelRecord.key);
   });
 
