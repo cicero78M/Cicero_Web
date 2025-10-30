@@ -22,7 +22,7 @@ import {
   prepareTrendActivityRecords,
   resolveDirectoryIsActive,
 } from "@/app/executive-summary/dataTransforms";
-import { computeUserInsight } from "@/app/executive-summary/page";
+import { computeUserInsight } from "@/app/executive-summary/userInsight";
 import MonthlyTrendCard from "@/components/executive-summary/MonthlyTrendCard";
 import PlatformLikesSummary from "@/components/executive-summary/PlatformLikesSummary";
 
