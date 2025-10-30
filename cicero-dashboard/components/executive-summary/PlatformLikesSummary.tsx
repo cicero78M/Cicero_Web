@@ -20,6 +20,7 @@ interface LikesSummaryClient {
   totalComments: number;
   activePersonnel: number;
   totalPersonnel: number;
+  personnelWithLikes: number;
   complianceRate: number;
   averageLikesPerUser: number;
   averageCommentsPerUser?: number;
@@ -44,6 +45,7 @@ interface LikesSummaryData {
     totalComments: number;
     totalPersonnel: number;
     activePersonnel: number;
+    personnelWithLikes: number;
     complianceRate: number;
     averageComplianceRate: number;
   };

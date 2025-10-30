@@ -295,6 +295,7 @@ describe("weekly report data transforms", () => {
       totalComments: 0,
       activePersonnel: 0,
       totalPersonnel: 0,
+      personnelWithLikes: 0,
       complianceRate: 0,
       averageLikesPerUser: 0,
     };
