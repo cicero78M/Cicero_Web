@@ -55,7 +55,7 @@ describe("filterDitbinmasRecords", () => {
     expect(result).toHaveLength(4);
   });
 
-  it("filters out records whose role does not include Ditbinmas", () => {
+  it("retains records with matching client_id regardless of role value", () => {
     const records = [
       { client_id: "DITBINMAS", role: "Operator Ditbinmas" },
       { client_id: "DITBINMAS", role: "Admin" },
@@ -65,13 +65,20 @@ describe("filterDitbinmasRecords", () => {
 
     const result = filterDitbinmasRecords(records);
 
-    expect(result).toHaveLength(2);
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ role: "Operator Ditbinmas" }),
-        expect.objectContaining({ role_name: "Ditbinmas" }),
-      ]),
-    );
+    expect(result).toHaveLength(4);
+  });
+
+  it("excludes records whose client_id does not match the requested scope", () => {
+    const records = [
+      { client_id: "DITBINMAS", role: "Ditbinmas" },
+      { client_id: "CLIENT_X", role: "Operator Ditbinmas" },
+      { client_id: "CLIENT_Y", role_name: "Ditbinmas" },
+    ];
+
+    const result = filterDitbinmasRecords(records);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(expect.objectContaining({ client_id: "DITBINMAS" }));
   });
 
   it("limits matches to the provided client scope when specified", () => {
