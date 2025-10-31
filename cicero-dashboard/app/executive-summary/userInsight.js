@@ -1,5 +1,198 @@
 import { normalizeNumericInput } from "@/lib/normalizeNumericInput";
 
+const resolveActivityFlag = (value) => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+    return value !== 0;
+  }
+
+  if (value == null) {
+    return null;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  const collapsedNormalized = normalized.replace(/[\s\W_]+/g, "");
+
+  const positive = [
+    "active",
+    "aktif",
+    "ya",
+    "yes",
+    "true",
+    "1",
+    "on",
+    "enabled",
+    "enable",
+  ];
+
+  const negative = [
+    "inactive",
+    "inaktif",
+    "nonaktif",
+    "non active",
+    "tidak aktif",
+    "0",
+    "off",
+    "disabled",
+    "disable",
+    "mati",
+    "berhenti",
+  ];
+
+  if (positive.includes(normalized)) {
+    return true;
+  }
+
+  if (negative.includes(normalized)) {
+    return false;
+  }
+
+  if (collapsedNormalized && collapsedNormalized !== normalized) {
+    if (positive.includes(collapsedNormalized)) {
+      return true;
+    }
+
+    if (negative.includes(collapsedNormalized)) {
+      return false;
+    }
+  }
+
+  if (collapsedNormalized && negative.some((item) => collapsedNormalized.includes(item))) {
+    return false;
+  }
+
+  if (negative.some((item) => normalized.includes(item))) {
+    return false;
+  }
+
+  return null;
+};
+
+const resolveUserActivity = (entry) => {
+  if (!entry || typeof entry !== "object") {
+    return { active: true, explicit: false };
+  }
+
+  const candidates = [
+    entry?.is_active,
+    entry?.isActive,
+    entry?.active,
+    entry?.aktif,
+    entry?.enabled,
+    entry?.is_enabled,
+    entry?.isEnabled,
+    entry?.status,
+    entry?.user_status,
+    entry?.userStatus,
+    entry?.status_keaktifan,
+    entry?.statusKeaktifan,
+    entry?.keaktifan,
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = resolveActivityFlag(candidate);
+    if (resolved != null) {
+      return { active: resolved, explicit: true };
+    }
+  }
+
+  return { active: true, explicit: false };
+};
+
+const toTrimmedString = (value) => {
+  if (value == null) {
+    return "";
+  }
+
+  const stringified = String(value).trim();
+  return stringified;
+};
+
+const normalizeAliasKey = (value) => {
+  const trimmed = toTrimmedString(value);
+  if (!trimmed) {
+    return "";
+  }
+  return trimmed.toUpperCase();
+};
+
+const collectClientAliasInfo = (user) => {
+  const idFields = [
+    "client_id",
+    "clientId",
+    "clientID",
+    "client",
+    "id_client",
+    "clientid",
+    "idClient",
+  ];
+  const nameFields = [
+    "nama_client",
+    "client_name",
+    "client",
+    "namaClient",
+    "clientName",
+    "divisi",
+    "satker",
+    "satuan_kerja",
+    "nama_satuan_kerja",
+  ];
+
+  const rawIds = new Set();
+  const aliasKeys = new Set();
+  let preferredName = "";
+
+  idFields.forEach((field) => {
+    if (!Object.prototype.hasOwnProperty.call(user ?? {}, field)) {
+      return;
+    }
+    const rawValue = toTrimmedString(user?.[field]);
+    if (!rawValue) {
+      return;
+    }
+    rawIds.add(rawValue);
+    aliasKeys.add(normalizeAliasKey(rawValue));
+    const collapsed = normalizeAliasKey(rawValue).replace(/[^0-9A-Z]+/g, "");
+    if (collapsed) {
+      aliasKeys.add(collapsed);
+    }
+  });
+
+  for (const field of nameFields) {
+    if (!Object.prototype.hasOwnProperty.call(user ?? {}, field)) {
+      continue;
+    }
+    const rawValue = toTrimmedString(user?.[field]);
+    if (!rawValue) {
+      continue;
+    }
+    if (!preferredName) {
+      preferredName = rawValue;
+    }
+    aliasKeys.add(normalizeAliasKey(rawValue));
+    const collapsed = normalizeAliasKey(rawValue).replace(/[^0-9A-Z]+/g, "");
+    if (collapsed) {
+      aliasKeys.add(collapsed);
+    }
+  }
+
+  return {
+    aliasKeys: Array.from(aliasKeys).filter(Boolean),
+    rawClientIds: Array.from(rawIds).filter(Boolean),
+    preferredName,
+  };
+};
+
 const clampValue = (value, min, max) => {
   if (!Number.isFinite(value)) {
     return min;
@@ -258,10 +451,13 @@ export const computeUserInsight = (users = []) => {
   let none = 0;
 
   const divisionMap = new Map();
+  const insightPersonnelAccumulator = new Map();
 
   users.forEach((user) => {
     const hasInstagram = Boolean(user?.insta && String(user.insta).trim() !== "");
     const hasTikTok = Boolean(user?.tiktok && String(user.tiktok).trim() !== "");
+
+    const activityStatus = resolveUserActivity(user);
 
     if (hasInstagram) instagramFilled += 1;
     if (hasTikTok) tiktokFilled += 1;
@@ -276,6 +472,52 @@ export const computeUserInsight = (users = []) => {
     }
 
     const { key: divisionKey, label: divisionLabel } = extractUserGroupInfo(user);
+
+    const { aliasKeys, rawClientIds, preferredName } = collectClientAliasInfo(user);
+    const canonicalKey = divisionKey || "LAINNYA";
+    const displayName = preferredName || divisionLabel || canonicalKey;
+
+    if (!insightPersonnelAccumulator.has(canonicalKey)) {
+      insightPersonnelAccumulator.set(canonicalKey, {
+        key: canonicalKey,
+        label: displayName,
+        total: 0,
+        active: 0,
+        inactive: 0,
+        aliasSet: new Set(),
+        rawClientIdSet: new Set(),
+        hasExplicitActive: false,
+      });
+    }
+
+    const personnelRecord = insightPersonnelAccumulator.get(canonicalKey);
+    personnelRecord.total += 1;
+    if (activityStatus.active) {
+      personnelRecord.active += 1;
+    } else {
+      personnelRecord.inactive += 1;
+    }
+    if (activityStatus.explicit) {
+      personnelRecord.hasExplicitActive = true;
+    }
+
+    personnelRecord.aliasSet.add(canonicalKey);
+    const normalizedDivisionLabel = normalizeAliasKey(divisionLabel);
+    if (normalizedDivisionLabel) {
+      personnelRecord.aliasSet.add(normalizedDivisionLabel);
+    }
+    aliasKeys.forEach((alias) => {
+      if (alias) {
+        personnelRecord.aliasSet.add(alias);
+      }
+    });
+    rawClientIds.forEach((clientId) => {
+      personnelRecord.rawClientIdSet.add(clientId);
+    });
+
+    if (displayName && displayName !== personnelRecord.label) {
+      personnelRecord.label = displayName;
+    }
 
     if (!divisionMap.has(divisionKey)) {
       divisionMap.set(divisionKey, {
@@ -421,6 +663,37 @@ export const computeUserInsight = (users = []) => {
     0,
   );
 
+  const personnelByClient = new Map();
+  let aggregatedActiveUsers = 0;
+  let summaryActiveUsers = 0;
+
+  insightPersonnelAccumulator.forEach((record, key) => {
+    const aliasKeys = Array.from(record.aliasSet).filter(Boolean);
+    const rawClientIds = Array.from(record.rawClientIdSet).filter(Boolean);
+    const sanitizedTotal = Number.isFinite(record.total) ? record.total : 0;
+    const sanitizedActive = Number.isFinite(record.active) ? record.active : 0;
+
+    summaryActiveUsers += sanitizedActive;
+    if (record.hasExplicitActive) {
+      aggregatedActiveUsers += sanitizedActive;
+    }
+
+    personnelByClient.set(key, {
+      key,
+      label: record.label || key,
+      totalPersonnel: sanitizedTotal,
+      activePersonnel: sanitizedActive,
+      inactivePersonnel: Number.isFinite(record.inactive) ? record.inactive : 0,
+      aliasKeys,
+      rawClientIds,
+      hasExplicitActive: record.hasExplicitActive,
+    });
+  });
+
+  const totalActiveUsers = summaryActiveUsers;
+  const explicitActiveUsers = aggregatedActiveUsers;
+  const totalInactiveUsers = Math.max(totalUsers - totalActiveUsers, 0);
+
   const priorityDivisions = lowestCompletionDivisions
     .filter((item) => Number.isFinite(item?.completion))
     .slice(0, 5);
@@ -442,6 +715,9 @@ export const computeUserInsight = (users = []) => {
   return {
     summary: {
       totalUsers,
+      activeUsers: totalActiveUsers,
+      explicitActiveUsers,
+      inactiveUsers: totalInactiveUsers,
       instagramFilled,
       instagramPercent,
       tiktokFilled,
@@ -457,5 +733,6 @@ export const computeUserInsight = (users = []) => {
     divisionCompositionTotal,
     divisionDistribution,
     narrative,
+    personnelByClient,
   };
 };

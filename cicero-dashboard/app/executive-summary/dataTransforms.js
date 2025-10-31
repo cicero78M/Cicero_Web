@@ -558,12 +558,6 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   )
     ? Math.max(0, Math.floor(totalActivePersonnelOverrideRaw))
     : null;
-  const baselineActivePersonnelCount =
-    totalActivePersonnelOverride ?? activeDirectoryUsers.length;
-
-  if (safeRecords.length === 0 && activeDirectoryUsers.length === 0) {
-    return createEmptyLikesSummary();
-  }
 
   const toNormalizedString = (value) => {
     if (value == null) {
@@ -579,6 +573,231 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   };
 
   const clientAliasMap = new Map();
+
+  const normalizeInsightPersonnelMap = (input) => {
+    const canonicalMap = new Map();
+    const aliasIndex = new Map();
+
+    const toPositiveInteger = (value) => {
+      if (value == null) {
+        return null;
+      }
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        return null;
+      }
+      const rounded = Math.round(numeric);
+      return rounded >= 0 ? rounded : 0;
+    };
+
+    const register = (rawKey, rawValue) => {
+      if (!rawValue || typeof rawValue !== "object") {
+        return;
+      }
+
+      const candidateKey =
+        rawValue?.clientKey ??
+        rawValue?.key ??
+        rawValue?.clientId ??
+        rawValue?.clientID ??
+        rawValue?.client_id ??
+        rawValue?.client ??
+        rawKey;
+
+      const normalizedKey = normalizeKeyComponent(candidateKey);
+      if (!normalizedKey) {
+        return;
+      }
+
+      const resolvedTotal =
+        toPositiveInteger(rawValue?.totalPersonnel) ??
+        toPositiveInteger(rawValue?.totalUsers) ??
+        toPositiveInteger(rawValue?.total) ??
+        toPositiveInteger(rawValue?.count);
+
+      const explicitActiveRaw =
+        rawValue?.hasExplicitActive ??
+        rawValue?.explicitActive ??
+        rawValue?.activeAuthoritative ??
+        rawValue?.activeIsAuthoritative ??
+        rawValue?.activeSource;
+      const explicitActive = Boolean(explicitActiveRaw);
+
+      const resolvedActiveRaw =
+        toPositiveInteger(rawValue?.activePersonnel) ??
+        toPositiveInteger(rawValue?.activeUsers) ??
+        toPositiveInteger(rawValue?.active);
+      const resolvedActive =
+        explicitActive && resolvedActiveRaw != null ? resolvedActiveRaw : null;
+
+      const aliasCandidates = [
+        rawKey,
+        rawValue?.key,
+        rawValue?.clientKey,
+        rawValue?.clientId,
+        rawValue?.clientID,
+        rawValue?.client_id,
+        rawValue?.clientName,
+        rawValue?.label,
+        ...(Array.isArray(rawValue?.aliasKeys) ? rawValue.aliasKeys : []),
+        ...(Array.isArray(rawValue?.aliases) ? rawValue.aliases : []),
+        ...(Array.isArray(rawValue?.rawClientIds) ? rawValue.rawClientIds : []),
+      ];
+
+      const normalizedAliases = new Set();
+
+      aliasCandidates.forEach((alias) => {
+        const normalizedAlias = normalizeKeyComponent(alias);
+        if (!normalizedAlias) {
+          return;
+        }
+        normalizedAliases.add(normalizedAlias);
+        const collapsed = normalizedAlias.replace(/[^0-9A-Z]+/g, "");
+        if (collapsed && collapsed !== normalizedAlias) {
+          normalizedAliases.add(collapsed);
+        }
+      });
+
+      normalizedAliases.add(normalizedKey);
+
+      if (!canonicalMap.has(normalizedKey)) {
+        canonicalMap.set(normalizedKey, {
+          key: normalizedKey,
+          total: resolvedTotal != null ? resolvedTotal : null,
+          active: resolvedActive,
+          hasActive: resolvedActive != null,
+          aliasSet: normalizedAliases,
+        });
+        return;
+      }
+
+      const existing = canonicalMap.get(normalizedKey);
+      if (resolvedTotal != null) {
+        existing.total =
+          existing.total == null
+            ? resolvedTotal
+            : Math.max(existing.total, resolvedTotal);
+      }
+      if (resolvedActive != null) {
+        existing.active =
+          existing.hasActive && existing.active != null
+            ? Math.max(existing.active, resolvedActive)
+            : resolvedActive;
+        existing.hasActive = true;
+      }
+      normalizedAliases.forEach((alias) => existing.aliasSet.add(alias));
+    };
+
+    if (input instanceof Map) {
+      input.forEach((value, key) => {
+        register(key, value);
+      });
+    } else if (Array.isArray(input)) {
+      input.forEach((value) => {
+        if (value && typeof value === "object") {
+          const candidateKey =
+            value?.key ??
+            value?.clientKey ??
+            value?.clientId ??
+            value?.clientID ??
+            value?.clientName ??
+            value?.label ??
+            value?.client ??
+            null;
+          register(candidateKey, value);
+        }
+      });
+    } else if (input && typeof input === "object") {
+      Object.entries(input).forEach(([key, value]) => {
+        register(key, value);
+      });
+    }
+
+    canonicalMap.forEach((entry, canonicalKey) => {
+      entry.aliasSet.forEach((alias) => {
+        if (!aliasIndex.has(alias)) {
+          aliasIndex.set(alias, canonicalKey);
+        }
+      });
+    });
+
+    let hasTotal = false;
+    let totalSum = 0;
+    let hasActive = false;
+    let activeSum = 0;
+
+    canonicalMap.forEach((entry) => {
+      if (entry.total != null) {
+        hasTotal = true;
+        totalSum += entry.total;
+      }
+      if (entry.hasActive && entry.active != null) {
+        hasActive = true;
+        activeSum += entry.active;
+      }
+    });
+
+    return {
+      canonicalMap,
+      aliasIndex,
+      totals: {
+        total: hasTotal ? totalSum : null,
+        active: hasActive ? activeSum : null,
+      },
+    };
+  };
+
+  const {
+    canonicalMap: insightPersonnelCanonicalMap,
+    aliasIndex: insightPersonnelAliasIndex,
+    totals: insightPersonnelTotals,
+  } = normalizeInsightPersonnelMap(options?.insightPersonnelByClient);
+
+  insightPersonnelAliasIndex.forEach((canonicalKey, alias) => {
+    if (!clientAliasMap.has(alias)) {
+      clientAliasMap.set(alias, canonicalKey);
+    }
+  });
+
+  const baselineActivePersonnelCount =
+    totalActivePersonnelOverride ??
+    (Number.isFinite(insightPersonnelTotals.active)
+      ? insightPersonnelTotals.active
+      : activeDirectoryUsers.length);
+  const insightTotalPersonnelBaseline = Number.isFinite(
+    insightPersonnelTotals.total,
+  )
+    ? insightPersonnelTotals.total
+    : null;
+
+  if (
+    safeRecords.length === 0 &&
+    activeDirectoryUsers.length === 0 &&
+    insightPersonnelCanonicalMap.size === 0
+  ) {
+    return createEmptyLikesSummary();
+  }
+
+  const findInsightPersonnelEntry = (aliases = []) => {
+    for (const alias of aliases) {
+      const normalizedAlias = normalizeKeyComponent(alias);
+      if (!normalizedAlias) {
+        continue;
+      }
+      const mapped = insightPersonnelAliasIndex.get(normalizedAlias);
+      if (mapped) {
+        return insightPersonnelCanonicalMap.get(mapped) ?? null;
+      }
+      const collapsed = normalizedAlias.replace(/[^0-9A-Z]+/g, "");
+      if (collapsed) {
+        const collapsedMatch = insightPersonnelAliasIndex.get(collapsed);
+        if (collapsedMatch) {
+          return insightPersonnelCanonicalMap.get(collapsedMatch) ?? null;
+        }
+      }
+    }
+    return null;
+  };
 
   const resolveClientIdentifiers = (source = {}) => {
     const clientIdCandidates = [
@@ -1377,13 +1596,20 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const shouldUseFallbackKeys =
       !hasDirectoryData && nonFallbackPersonnelKeys.size === 0;
 
+    const insightPersonnel = findInsightPersonnelEntry([
+      client.key,
+      client.clientId,
+      client.clientName,
+      client.divisi,
+    ]);
+
     const effectivePersonnelKeySet = hasDirectoryData
       ? new Set(directoryKeys)
       : shouldUseFallbackKeys
       ? uniquePersonnelKeys
       : nonFallbackPersonnelKeys;
 
-    const totalPersonnel = effectivePersonnelKeySet.size;
+    let totalPersonnel = effectivePersonnelKeySet.size;
     let activePersonnel = 0;
     let personnelWithLikes = 0;
     let personnelWithComments = 0;
@@ -1461,6 +1687,28 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       ]).size;
     }
 
+    if (insightPersonnel && Number.isFinite(insightPersonnel.total)) {
+      totalPersonnel = insightPersonnel.total;
+    }
+
+    if (
+      insightPersonnel &&
+      insightPersonnel.hasActive &&
+      Number.isFinite(insightPersonnel.active)
+    ) {
+      activePersonnel = insightPersonnel.active;
+    }
+
+    totalPersonnel = Number.isFinite(totalPersonnel)
+      ? Math.max(0, Math.floor(totalPersonnel))
+      : 0;
+    activePersonnel = Number.isFinite(activePersonnel)
+      ? Math.max(0, Math.min(Math.floor(activePersonnel), totalPersonnel))
+      : 0;
+    personnelWithLikes = Math.min(personnelWithLikes, totalPersonnel);
+    personnelWithComments = Math.min(personnelWithComments, totalPersonnel);
+    personnelWithActivity = Math.min(personnelWithActivity, totalPersonnel);
+
     const instagramCompliance =
       activePersonnel > 0 ? (personnelWithLikes / activePersonnel) * 100 : 0;
     const tiktokCompliance =
@@ -1521,14 +1769,26 @@ const aggregateLikesRecords = (records = [], options = {}) => {
             0,
           ) / clients.length
       : 0;
-  const effectiveActivePersonnel =
-    baselineActivePersonnelCount > 0
-      ? baselineActivePersonnelCount
-      : totals.activePersonnel;
-  const effectiveTotalPersonnel =
-    baselineActivePersonnelCount > 0
-      ? Math.max(totals.totalPersonnel, baselineActivePersonnelCount)
-      : totals.totalPersonnel;
+  const resolvedBaselineActivePersonnel = Number.isFinite(
+    baselineActivePersonnelCount,
+  )
+    ? Math.max(0, baselineActivePersonnelCount)
+    : totals.activePersonnel;
+  const effectiveActivePersonnel = Number.isFinite(
+    resolvedBaselineActivePersonnel,
+  )
+    ? resolvedBaselineActivePersonnel
+    : totals.activePersonnel;
+  const resolvedInsightTotalPersonnel = Number.isFinite(
+    insightTotalPersonnelBaseline,
+  )
+    ? Math.max(0, insightTotalPersonnelBaseline)
+    : null;
+  const effectiveTotalPersonnel = Math.max(
+    totals.totalPersonnel,
+    resolvedInsightTotalPersonnel ?? 0,
+    effectiveActivePersonnel,
+  );
 
   const instagramCompliance =
     effectiveActivePersonnel > 0

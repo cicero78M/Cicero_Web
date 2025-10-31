@@ -280,37 +280,47 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(clientB?.complianceRate).toBe(0);
   });
 
-  it("menghitung entri direktori bernama sama sebagai personil terpisah", () => {
+  it("menggunakan total & aktif dari insight user saat tersedia", () => {
     const directoryUsers = [
       {
-        client_id: "CLI-07",
+        client_id: "CLI-22",
         nama_client: "Client Z",
-        nama: "Sergeant Jane Doe",
+        nama: "Officer Jane Doe",
         status: "Aktif",
       },
       {
-        client_id: "CLI-07",
-        nama_client: "Client Z",
-        nama: "Sergeant Jane Doe",
-        status: "Aktif",
-        pangkat: "Briptu",
-      },
-      {
-        client_id: "CLI-07",
+        client_id: "CLI-22",
         nama_client: "Client Z",
         nama: "Officer John Smith",
+        status: "Tidak Aktif",
+      },
+      {
+        client_id: "CLI-33",
+        nama_client: "Client Y",
+        nama: "Officer Alex",
         status: "Aktif",
       },
     ];
 
-    const summary = aggregateLikesRecords([], { directoryUsers });
     const insight = computeUserInsight(directoryUsers);
+    const summary = aggregateLikesRecords([], {
+      directoryUsers,
+      insightPersonnelByClient: insight.personnelByClient,
+    });
 
-    expect(summary.totals.totalPersonnel).toBe(directoryUsers.length);
-    expect(summary.clients).toHaveLength(1);
-    expect(summary.clients[0].totalPersonnel).toBe(directoryUsers.length);
     expect(insight.summary.totalUsers).toBe(directoryUsers.length);
     expect(summary.totals.totalPersonnel).toBe(insight.summary.totalUsers);
+    expect(summary.totals.activePersonnel).toBe(
+      insight.summary.explicitActiveUsers,
+    );
+
+    const clientZ = summary.clients.find((client) => client.clientId === "CLI-22");
+    const clientY = summary.clients.find((client) => client.clientId === "CLI-33");
+
+    expect(clientZ?.totalPersonnel).toBe(2);
+    expect(clientZ?.activePersonnel).toBe(1);
+    expect(clientY?.totalPersonnel).toBe(1);
+    expect(clientY?.activePersonnel).toBe(1);
   });
 
   it(
@@ -338,13 +348,19 @@ describe("groupRecordsByMonth monthly trend integration", () => {
       },
     ];
 
-      const likesSummary = aggregateLikesRecords([], { directoryUsers });
       const insight = computeUserInsight(directoryUsers);
+      const likesSummary = aggregateLikesRecords([], {
+        directoryUsers,
+        insightPersonnelByClient: insight.personnelByClient,
+      });
       const formatNumber = (value: number) => String(Math.round(Number(value) || 0));
       const formatPercent = (value: number) => `${Math.round(Number(value) || 0)}%`;
 
       expect(likesSummary.totals.totalPersonnel).toBe(
         insight.summary.totalUsers,
+      );
+      expect(likesSummary.totals.activePersonnel).toBe(
+        insight.summary.explicitActiveUsers,
       );
 
       render(
