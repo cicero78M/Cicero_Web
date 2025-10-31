@@ -533,7 +533,7 @@ export const resolveDitbinmasDirectoryUsers = (
       ? toComparableClientId(
           resolveClientId(
             existingEntry?.client_id ||
-              existingEntry?.nama ||
+              existingEntry?.nama,
           ),
         ) === comparableScopeTarget
       : false;
