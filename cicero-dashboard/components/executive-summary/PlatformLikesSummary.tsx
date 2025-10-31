@@ -191,12 +191,6 @@ const PlatformLikesSummary = ({
     }
 
     const totalActive = totals.activePersonnel ?? 0;
-    const totalPersonnel = totals.totalPersonnel ?? 0;
-    const engagedPersonnel =
-      totals.personnelWithActivity ??
-      totals.personnelWithLikes ??
-      totals.personnelWithComments ??
-      0;
     const likeContributors = totals.personnelWithLikes ?? 0;
     const commentContributors = totals.personnelWithComments ?? 0;
     const instagramCompliance = totals.instagramCompliance ?? totals.complianceRate ?? 0;
@@ -232,12 +226,6 @@ const PlatformLikesSummary = ({
         label: "Total Komentar",
         value: formatNumber(totals.totalComments ?? 0, { maximumFractionDigits: 0 }),
         description: "Kumulatif komentar personil yang terekam.",
-      },
-      {
-        key: "overall-compliance",
-        label: "Kepatuhan Personil",
-        value: formatPercent(totals.complianceRate ?? 0),
-        description: `${formatNumber(engagedPersonnel, { maximumFractionDigits: 0 })} personil aktif berkontribusi dari ${formatNumber(totalActive, { maximumFractionDigits: 0 })} personil aktif (${formatNumber(totalPersonnel, { maximumFractionDigits: 0 })} terdata).`,
       },
       {
         key: "instagram-compliance",
