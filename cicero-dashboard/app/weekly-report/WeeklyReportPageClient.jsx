@@ -130,19 +130,15 @@ const resolveDirectoryIsActive = (entry) => {
   }
 
   const candidates = [
+    entry?.status,
     entry?.is_active,
     entry?.isActive,
     entry?.active,
-    entry?.aktif,
     entry?.enabled,
     entry?.is_enabled,
     entry?.isEnabled,
-    entry?.status,
     entry?.user_status,
     entry?.userStatus,
-    entry?.status_keaktifan,
-    entry?.statusKeaktifan,
-    entry?.keaktifan,
   ];
 
   for (const candidate of candidates) {
@@ -339,18 +335,7 @@ const matchClientCandidates = (candidates, target, options) => {
     if (typeof candidate === "object") {
       const nestedCandidates = [
         candidate.client_id,
-        candidate.clientId,
-        candidate.clientID,
-        candidate.client,
-        candidate.id_client,
-        candidate.idClient,
-        candidate.client_code,
-        candidate.clientCode,
-        candidate.client_name,
-        candidate.clientName,
-        candidate.name,
-        candidate.label,
-        candidate.value,
+        candidate.nama,
       ];
 
       if (matchClientCandidates(nestedCandidates, target, options)) {
@@ -379,27 +364,7 @@ export const filterDitbinmasRecords = (records = [], options = {}) => {
 
     const clientCandidates = [
       record.client_id,
-      record.clientId,
-      record.client,
-      record.clientID,
-      record.clientid,
-      record.id_client,
-      record.idClient,
-      record.client_code,
-      record.clientCode,
-      record.client_name,
-      record.clientName,
-      record.name,
-      record?.client?.name,
-      record?.rekap?.client_id,
-      record?.rekap?.clientId,
-      record?.rekap?.clientID,
-      record?.rekap?.client,
-      record?.rekap?.client_code,
-      record?.rekap?.clientCode,
-      record?.rekap?.client_name,
-      record?.rekap?.clientName,
-      record?.rekap?.name,
+      record.nama,
     ];
 
     const matchesClient = matchClientCandidates(
@@ -488,14 +453,7 @@ export const resolveDitbinmasDirectoryUsers = (
       if (typeof value === "object") {
         const nestedCandidates = [
           value?.client_id,
-          value?.clientId,
-          value?.clientID,
-          value?.client,
-          value?.id,
-          value?.code,
-          value?.value,
-          value?.name,
-          value?.label,
+          value?.nama,
         ];
 
         nestedCandidates.forEach(appendValue);
@@ -522,10 +480,7 @@ export const resolveDitbinmasDirectoryUsers = (
   const normalizedEntries = resolvedEntries.map((entry) => {
     const entryClientId = resolveClientId(
       entry?.client_id ||
-        entry?.clientId ||
-        entry?.clientID ||
-        entry?.client ||
-        entry?.client_code,
+        entry?.nama,
     );
     const comparableClientId = toComparableClientId(entryClientId);
     const targetIds = collectTargetClientIds(entry);
@@ -564,12 +519,8 @@ export const resolveDitbinmasDirectoryUsers = (
 
     const identifier =
       entry?.user_id ||
-      entry?.userId ||
-      entry?.userID ||
-      entry?.nrp ||
-      entry?.nip ||
-      entry?.email ||
-      entry?.id ||
+      entry?.insta ||
+      entry?.tiktok ||
       JSON.stringify(entry);
 
     if (!identifier) {
@@ -582,9 +533,7 @@ export const resolveDitbinmasDirectoryUsers = (
       ? toComparableClientId(
           resolveClientId(
             existingEntry?.client_id ||
-              existingEntry?.clientId ||
-              existingEntry?.clientID ||
-              existingEntry?.client,
+              existingEntry?.nama ||
           ),
         ) === comparableScopeTarget
       : false;
