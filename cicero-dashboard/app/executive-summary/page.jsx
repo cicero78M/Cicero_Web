@@ -3242,11 +3242,11 @@ export default function ExecutiveSummaryPage() {
   }, [divisionDistribution]);
 
   const topContentRows = useMemo(() => {
-    const instagramPosts = Array.isArray(platformPosts?.instagram)
-      ? platformPosts.instagram
+    const instagramPosts = Array.isArray(instagramPostsForSelectedMonth)
+      ? instagramPostsForSelectedMonth
       : [];
-    const tiktokPosts = Array.isArray(platformPosts?.tiktok)
-      ? platformPosts.tiktok
+    const tiktokPosts = Array.isArray(tiktokPostsForSelectedMonth)
+      ? tiktokPostsForSelectedMonth
       : [];
 
     const buildRow = (normalized, platformLabel) => {
@@ -3325,7 +3325,14 @@ export default function ExecutiveSummaryPage() {
       return [];
     }
 
-    return data.contentTable
+    const periodRange = getMonthDateRange(selectedMonthKey);
+    const filteredContentTable = periodRange
+      ? filterRecordsByDateRange(data.contentTable, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : data.contentTable;
+
+    return filteredContentTable
       .map((row, index) => {
         if (!row || typeof row !== "object") {
           return null;
@@ -3388,7 +3395,12 @@ export default function ExecutiveSummaryPage() {
       })
       .filter((entry) => entry && entry.id)
       .slice(0, 10);
-  }, [platformPosts?.instagram, platformPosts?.tiktok, data.contentTable]);
+  }, [
+    instagramPostsForSelectedMonth,
+    tiktokPostsForSelectedMonth,
+    data.contentTable,
+    selectedMonthKey,
+  ]);
 
   const instagramMonthlyTrend = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
