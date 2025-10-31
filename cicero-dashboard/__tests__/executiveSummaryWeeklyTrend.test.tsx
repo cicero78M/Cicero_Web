@@ -313,12 +313,14 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(summary.totals.totalPersonnel).toBe(insight.summary.totalUsers);
   });
 
-  it("menyamakan total personil antara kartu kepatuhan dan insight", () => {
-    const directoryUsers = [
-      {
-        client_id: "CLI-11",
-        nama_client: "Client Q",
-        nama: "Aiptu Andi", 
+  it(
+    "tidak menampilkan kartu kepatuhan personil dan tetap menampilkan kepatuhan platform",
+    () => {
+      const directoryUsers = [
+        {
+          client_id: "CLI-11",
+          nama_client: "Client Q",
+          nama: "Aiptu Andi",
         status: "Aktif",
       },
       {
@@ -336,16 +338,20 @@ describe("groupRecordsByMonth monthly trend integration", () => {
       },
     ];
 
-    const likesSummary = aggregateLikesRecords([], { directoryUsers });
-    const insight = computeUserInsight(directoryUsers);
-    const formatNumber = (value: number) => String(Math.round(Number(value) || 0));
-    const formatPercent = (value: number) => `${Math.round(Number(value) || 0)}%`;
+      const likesSummary = aggregateLikesRecords([], { directoryUsers });
+      const insight = computeUserInsight(directoryUsers);
+      const formatNumber = (value: number) => String(Math.round(Number(value) || 0));
+      const formatPercent = (value: number) => `${Math.round(Number(value) || 0)}%`;
 
-    render(
-      <div style={{ width: 1024, height: 768 }}>
-        <PlatformLikesSummary
-          data={likesSummary}
-          formatNumber={formatNumber}
+      expect(likesSummary.totals.totalPersonnel).toBe(
+        insight.summary.totalUsers,
+      );
+
+      render(
+        <div style={{ width: 1024, height: 768 }}>
+          <PlatformLikesSummary
+            data={likesSummary}
+            formatNumber={formatNumber}
           formatPercent={formatPercent}
           personnelActivity={null}
           postTotals={{ instagram: 0, tiktok: 0 }}
@@ -364,33 +370,13 @@ describe("groupRecordsByMonth monthly trend integration", () => {
         </div>
       </div>,
     );
-
-    const complianceDescription = screen.getByText(/personil aktif berkontribusi/i);
-    const complianceNumbers =
-      complianceDescription.textContent?.match(/(\d+)/g) ?? [];
-    expect(complianceNumbers.length).toBeGreaterThanOrEqual(3);
-
-    const engagedFromCard = Number(complianceNumbers[0]);
-    const activeFromCard = Number(complianceNumbers[1]);
-    const totalFromCard = Number(complianceNumbers[2]);
-
-    const insightCardText = screen.getByTestId("total-personil-card").textContent ?? "";
-    const insightMatch = insightCardText.match(/(\d+)/);
-    expect(insightMatch).toBeTruthy();
-    const insightTotal = insightMatch ? Number(insightMatch[1]) : NaN;
-
-    expect(engagedFromCard).toBe(
-      Math.round(likesSummary.totals.personnelWithActivity ?? 0),
-    );
-    expect(activeFromCard).toBe(likesSummary.totals.activePersonnel);
-    expect(totalFromCard).toBe(likesSummary.totals.totalPersonnel);
-    expect(totalFromCard).toBe(insightTotal);
-    expect(insightTotal).toBe(insight.summary.totalUsers);
-    expect(screen.getByText("Kepatuhan Instagram")).toBeInTheDocument();
-    expect(screen.getByText("Kepatuhan TikTok")).toBeInTheDocument();
-    expect(screen.getByText(/personil memberi likes/i)).toBeInTheDocument();
-    expect(screen.getByText(/personil berkomentar/i)).toBeInTheDocument();
-  });
+      expect(screen.queryByText("Kepatuhan Personil")).not.toBeInTheDocument();
+      expect(screen.getByText("Kepatuhan Instagram")).toBeInTheDocument();
+      expect(screen.getByText("Kepatuhan TikTok")).toBeInTheDocument();
+      expect(screen.getByText(/personil memberi likes/i)).toBeInTheDocument();
+      expect(screen.getByText(/personil berkomentar/i)).toBeInTheDocument();
+    },
+  );
 
   it("menampilkan nilai kepatuhan platform pada kartu ringkasan", () => {
     const directoryUsers = [
@@ -440,13 +426,7 @@ describe("groupRecordsByMonth monthly trend integration", () => {
       </div>,
     );
 
-    const overallCard = screen.getByText("Kepatuhan Personil").closest("div");
-    expect(overallCard).toBeTruthy();
-    if (overallCard) {
-      expect(overallCard).toHaveTextContent("67%");
-      expect(overallCard).toHaveTextContent(/berkontribusi/i);
-    }
-
+    expect(screen.queryByText("Kepatuhan Personil")).not.toBeInTheDocument();
     const instagramCard = screen.getByText("Kepatuhan Instagram").closest("div");
     expect(instagramCard).toBeTruthy();
     if (instagramCard) {
