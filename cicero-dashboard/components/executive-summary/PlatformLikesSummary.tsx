@@ -21,7 +21,11 @@ interface LikesSummaryClient {
   activePersonnel: number;
   totalPersonnel: number;
   personnelWithLikes: number;
+  personnelWithComments: number;
+  personnelWithActivity?: number;
   complianceRate: number;
+  instagramCompliance?: number;
+  tiktokCompliance?: number;
   averageLikesPerUser: number;
   averageCommentsPerUser?: number;
 }
@@ -46,7 +50,11 @@ interface LikesSummaryData {
     totalPersonnel: number;
     activePersonnel: number;
     personnelWithLikes: number;
+    personnelWithComments: number;
+    personnelWithActivity?: number;
     complianceRate: number;
+    instagramCompliance?: number;
+    tiktokCompliance?: number;
     averageComplianceRate: number;
   };
   clients: LikesSummaryClient[];
@@ -182,6 +190,18 @@ const PlatformLikesSummary = ({
       return [];
     }
 
+    const totalActive = totals.activePersonnel ?? 0;
+    const totalPersonnel = totals.totalPersonnel ?? 0;
+    const engagedPersonnel =
+      totals.personnelWithActivity ??
+      totals.personnelWithLikes ??
+      totals.personnelWithComments ??
+      0;
+    const likeContributors = totals.personnelWithLikes ?? 0;
+    const commentContributors = totals.personnelWithComments ?? 0;
+    const instagramCompliance = totals.instagramCompliance ?? totals.complianceRate ?? 0;
+    const tiktokCompliance = totals.tiktokCompliance ?? 0;
+
     return [
       {
         key: "total-clients",
@@ -217,7 +237,19 @@ const PlatformLikesSummary = ({
         key: "overall-compliance",
         label: "Kepatuhan Personil",
         value: formatPercent(totals.complianceRate ?? 0),
-        description: `${formatNumber(totals.activePersonnel ?? 0, { maximumFractionDigits: 0 })} aktif dari ${formatNumber(totals.totalPersonnel ?? 0, { maximumFractionDigits: 0 })} personil terdata.`,
+        description: `${formatNumber(engagedPersonnel, { maximumFractionDigits: 0 })} personil aktif berkontribusi dari ${formatNumber(totalActive, { maximumFractionDigits: 0 })} personil aktif (${formatNumber(totalPersonnel, { maximumFractionDigits: 0 })} terdata).`,
+      },
+      {
+        key: "instagram-compliance",
+        label: "Kepatuhan Instagram",
+        value: formatPercent(instagramCompliance),
+        description: `${formatNumber(likeContributors, { maximumFractionDigits: 0 })} personil memberi likes dari ${formatNumber(totalActive, { maximumFractionDigits: 0 })} personil aktif.`,
+      },
+      {
+        key: "tiktok-compliance",
+        label: "Kepatuhan TikTok",
+        value: formatPercent(tiktokCompliance),
+        description: `${formatNumber(commentContributors, { maximumFractionDigits: 0 })} personil berkomentar dari ${formatNumber(totalActive, { maximumFractionDigits: 0 })} personil aktif.`,
       },
     ];
   }, [

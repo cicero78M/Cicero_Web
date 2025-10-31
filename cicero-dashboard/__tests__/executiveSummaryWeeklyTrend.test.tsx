@@ -365,19 +365,101 @@ describe("groupRecordsByMonth monthly trend integration", () => {
       </div>,
     );
 
-    const complianceDescription = screen.getByText(/personil terdata\./i);
-    const complianceMatch = complianceDescription.textContent?.match(/(\d+)\s+personil/i);
-    expect(complianceMatch).toBeTruthy();
-    const complianceTotal = complianceMatch ? Number(complianceMatch[1]) : NaN;
+    const complianceDescription = screen.getByText(/personil aktif berkontribusi/i);
+    const complianceNumbers =
+      complianceDescription.textContent?.match(/(\d+)/g) ?? [];
+    expect(complianceNumbers.length).toBeGreaterThanOrEqual(3);
+
+    const engagedFromCard = Number(complianceNumbers[0]);
+    const activeFromCard = Number(complianceNumbers[1]);
+    const totalFromCard = Number(complianceNumbers[2]);
 
     const insightCardText = screen.getByTestId("total-personil-card").textContent ?? "";
     const insightMatch = insightCardText.match(/(\d+)/);
     expect(insightMatch).toBeTruthy();
     const insightTotal = insightMatch ? Number(insightMatch[1]) : NaN;
 
-    expect(complianceTotal).toBe(insightTotal);
-    expect(complianceTotal).toBe(likesSummary.totals.totalPersonnel);
+    expect(engagedFromCard).toBe(
+      Math.round(likesSummary.totals.personnelWithActivity ?? 0),
+    );
+    expect(activeFromCard).toBe(likesSummary.totals.activePersonnel);
+    expect(totalFromCard).toBe(likesSummary.totals.totalPersonnel);
+    expect(totalFromCard).toBe(insightTotal);
     expect(insightTotal).toBe(insight.summary.totalUsers);
+    expect(screen.getByText("Kepatuhan Instagram")).toBeInTheDocument();
+    expect(screen.getByText("Kepatuhan TikTok")).toBeInTheDocument();
+    expect(screen.getByText(/personil memberi likes/i)).toBeInTheDocument();
+    expect(screen.getByText(/personil berkomentar/i)).toBeInTheDocument();
+  });
+
+  it("menampilkan nilai kepatuhan platform pada kartu ringkasan", () => {
+    const directoryUsers = [
+      { client_id: "CLI-21", nama_client: "Client AA", username: "alpha" },
+      { client_id: "CLI-21", nama_client: "Client AA", username: "bravo" },
+      { client_id: "CLI-21", nama_client: "Client AA", username: "charlie" },
+    ];
+
+    const rawLikes = [
+      {
+        client_id: "CLI-21",
+        nama_client: "Client AA",
+        username: "alpha",
+        jumlah_like: 5,
+      },
+      {
+        client_id: "CLI-21",
+        nama_client: "Client AA",
+        username: "bravo",
+        jumlah_komentar: 3,
+      },
+    ];
+
+    const likesSummary = aggregateLikesRecords(rawLikes, { directoryUsers });
+
+    const formatNumber = (value: number) => String(Math.round(Number(value) || 0));
+    const formatPercent = (value: number) => `${Math.round(Number(value) || 0)}%`;
+
+    render(
+      <div style={{ width: 1024, height: 768 }}>
+        <PlatformLikesSummary
+          data={likesSummary}
+          formatNumber={formatNumber}
+          formatPercent={formatPercent}
+          personnelActivity={null}
+          postTotals={{ instagram: 2, tiktok: 1 }}
+          summaryCards={null}
+          labelOverrides={null}
+          personnelDistribution={null}
+          personnelDistributionMeta={null}
+          hiddenSections={{
+            topCompliance: true,
+            topCommentPersonnel: true,
+            topLikesPersonnel: true,
+          }}
+        />
+      </div>,
+    );
+
+    const overallCard = screen.getByText("Kepatuhan Personil").closest("div");
+    expect(overallCard).toBeTruthy();
+    if (overallCard) {
+      expect(overallCard).toHaveTextContent("67%");
+      expect(overallCard).toHaveTextContent(/berkontribusi/i);
+    }
+
+    const instagramCard = screen.getByText("Kepatuhan Instagram").closest("div");
+    expect(instagramCard).toBeTruthy();
+    if (instagramCard) {
+      expect(instagramCard).toHaveTextContent("33%");
+      expect(instagramCard).toHaveTextContent(/memberi likes/i);
+    }
+
+    const tiktokCard = screen.getByText("Kepatuhan TikTok").closest("div");
+    expect(tiktokCard).toBeTruthy();
+    if (tiktokCard) {
+      expect(tiktokCard).toHaveTextContent("33%");
+      expect(tiktokCard).toHaveTextContent(/berkomentar/i);
+    }
   });
 
   it("mengabaikan entri direktori yang ditandai tidak aktif ketika menghitung total personil", () => {
@@ -470,6 +552,50 @@ describe("groupRecordsByMonth monthly trend integration", () => {
 
     const personnelUsernames = client.personnel.map((person) => person.username);
     expect(personnelUsernames).toEqual(expect.arrayContaining(["alpha", "bravo"]));
+  });
+
+  it("menghitung kepatuhan instagram dan tiktok secara terpisah", () => {
+    const directoryUsers = [
+      { client_id: "CLI-12", nama_client: "Client R", username: "alpha" },
+      { client_id: "CLI-12", nama_client: "Client R", username: "bravo" },
+      { client_id: "CLI-12", nama_client: "Client R", username: "charlie" },
+    ];
+
+    const rawLikes = [
+      {
+        client_id: "CLI-12",
+        nama_client: "Client R",
+        username: "alpha",
+        jumlah_like: 6,
+        jumlah_komentar: 0,
+      },
+      {
+        client_id: "CLI-12",
+        nama_client: "Client R",
+        username: "bravo",
+        jumlah_like: 0,
+        jumlah_komentar: 4,
+      },
+    ];
+
+    const summary = aggregateLikesRecords(rawLikes, { directoryUsers });
+
+    expect(summary.clients).toHaveLength(1);
+    const client = summary.clients[0];
+
+    expect(client.personnelWithLikes).toBe(1);
+    expect(client.personnelWithComments).toBe(1);
+    expect(client.personnelWithActivity).toBe(2);
+    expect(client.instagramCompliance).toBeCloseTo((1 / 3) * 100, 5);
+    expect(client.tiktokCompliance).toBeCloseTo((1 / 3) * 100, 5);
+    expect(client.complianceRate).toBeCloseTo((2 / 3) * 100, 5);
+
+    expect(summary.totals.personnelWithLikes).toBe(1);
+    expect(summary.totals.personnelWithComments).toBe(1);
+    expect(summary.totals.personnelWithActivity).toBe(2);
+    expect(summary.totals.instagramCompliance).toBeCloseTo((1 / 3) * 100, 5);
+    expect(summary.totals.tiktokCompliance).toBeCloseTo((1 / 3) * 100, 5);
+    expect(summary.totals.complianceRate).toBeCloseTo((2 / 3) * 100, 5);
   });
 
   it("menghitung personil unik berdasarkan handle yang sudah dinormalisasi", () => {

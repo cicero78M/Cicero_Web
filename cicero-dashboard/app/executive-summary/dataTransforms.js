@@ -130,7 +130,11 @@ const createEmptyLikesSummary = () => ({
     totalPersonnel: 0,
     activePersonnel: 0,
     personnelWithLikes: 0,
+    personnelWithComments: 0,
+    personnelWithActivity: 0,
     complianceRate: 0,
+    instagramCompliance: 0,
+    tiktokCompliance: 0,
     averageComplianceRate: 0,
   },
   clients: [],
@@ -1374,6 +1378,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const totalPersonnel = effectivePersonnelKeySet.size;
     let activePersonnel = 0;
     let personnelWithLikes = 0;
+    let personnelWithComments = 0;
+    let personnelWithActivity = 0;
 
     if (hasDirectoryData) {
       activePersonnel = activeDirectoryKeys.filter(Boolean).length;
@@ -1386,8 +1392,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         if (!record) {
           return;
         }
-        if (toSafeNumber(record.likes) > 0) {
+        const likeCount = toSafeNumber(record.likes);
+        const commentCount = toSafeNumber(record.comments);
+
+        if (likeCount > 0) {
           personnelWithLikes += 1;
+        }
+
+        if (commentCount > 0) {
+          personnelWithComments += 1;
+        }
+
+        if (likeCount > 0 || commentCount > 0) {
+          personnelWithActivity += 1;
         }
       });
     } else {
@@ -1399,6 +1416,11 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       const personnelWithLikesKeys = new Set(
         client.personnel
           .filter((person) => toSafeNumber(person.likes) > 0 && person?.key)
+          .map((person) => person.key),
+      );
+      const personnelWithCommentsKeys = new Set(
+        client.personnel
+          .filter((person) => toSafeNumber(person.comments) > 0 && person?.key)
           .map((person) => person.key),
       );
       const effectiveActiveKeys = shouldUseFallbackKeys
@@ -1415,12 +1437,28 @@ const aggregateLikesRecords = (records = [], options = {}) => {
               (key) => !key.startsWith(fallbackPrefix),
             ),
           );
+      const effectiveCommentKeys = shouldUseFallbackKeys
+        ? personnelWithCommentsKeys
+        : new Set(
+            Array.from(personnelWithCommentsKeys).filter(
+              (key) => !key.startsWith(fallbackPrefix),
+            ),
+          );
       activePersonnel = effectiveActiveKeys.size;
       personnelWithLikes = effectiveLikesKeys.size;
+      personnelWithComments = effectiveCommentKeys.size;
+      personnelWithActivity = new Set([
+        ...effectiveLikesKeys,
+        ...effectiveCommentKeys,
+      ]).size;
     }
 
-    const complianceRate =
+    const instagramCompliance =
       activePersonnel > 0 ? (personnelWithLikes / activePersonnel) * 100 : 0;
+    const tiktokCompliance =
+      activePersonnel > 0 ? (personnelWithComments / activePersonnel) * 100 : 0;
+    const complianceRate =
+      activePersonnel > 0 ? (personnelWithActivity / activePersonnel) * 100 : 0;
     const averageLikesPerUser =
       totalPersonnel > 0 ? client.totalLikes / totalPersonnel : 0;
     const averageCommentsPerUser =
@@ -1431,7 +1469,11 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       totalPersonnel,
       activePersonnel,
       personnelWithLikes,
+      personnelWithComments,
+      personnelWithActivity,
       complianceRate,
+      instagramCompliance,
+      tiktokCompliance,
       averageLikesPerUser,
       averageCommentsPerUser,
     };
@@ -1444,6 +1486,11 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       accumulator.totalPersonnel += client.totalPersonnel;
       accumulator.activePersonnel += client.activePersonnel;
       accumulator.personnelWithLikes += client.personnelWithLikes;
+      accumulator.personnelWithComments +=
+        client.personnelWithComments ?? 0;
+      accumulator.personnelWithActivity +=
+        client.personnelWithActivity ??
+        Math.max(client.personnelWithLikes ?? 0, client.personnelWithComments ?? 0);
       return accumulator;
     },
     {
@@ -1452,6 +1499,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       totalPersonnel: 0,
       activePersonnel: 0,
       personnelWithLikes: 0,
+      personnelWithComments: 0,
+      personnelWithActivity: 0,
     },
   );
 
@@ -1463,6 +1512,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
               sum + (Number.isFinite(client.complianceRate) ? client.complianceRate : 0),
             0,
           ) / clients.length
+      : 0;
+
+  const instagramCompliance =
+    totals.activePersonnel > 0
+      ? (totals.personnelWithLikes / totals.activePersonnel) * 100
+      : 0;
+  const tiktokCompliance =
+    totals.activePersonnel > 0
+      ? (totals.personnelWithComments / totals.activePersonnel) * 100
+      : 0;
+  const overallCompliance =
+    totals.activePersonnel > 0
+      ? (totals.personnelWithActivity / totals.activePersonnel) * 100
       : 0;
 
   const topPersonnel = personnelList
@@ -1486,10 +1548,11 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       totalPersonnel: totals.totalPersonnel,
       activePersonnel: totals.activePersonnel,
       personnelWithLikes: totals.personnelWithLikes,
-      complianceRate:
-        totals.activePersonnel > 0
-          ? (totals.personnelWithLikes / totals.activePersonnel) * 100
-          : 0,
+      personnelWithComments: totals.personnelWithComments,
+      personnelWithActivity: totals.personnelWithActivity,
+      complianceRate: overallCompliance,
+      instagramCompliance,
+      tiktokCompliance,
       averageComplianceRate,
     },
     clients: clients.sort((a, b) => {
