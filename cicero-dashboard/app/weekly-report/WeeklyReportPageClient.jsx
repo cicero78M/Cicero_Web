@@ -131,6 +131,15 @@ const resolveDirectoryIsActive = (entry) => {
 
   const candidates = [
     entry?.status,
+    entry?.user_status,
+    entry?.userStatus,
+    entry?.is_active,
+    entry?.isActive,
+    entry?.active,
+    entry?.aktif,
+    entry?.enabled,
+    entry?.is_enabled,
+    entry?.isEnabled,
   ];
 
   for (const candidate of candidates) {

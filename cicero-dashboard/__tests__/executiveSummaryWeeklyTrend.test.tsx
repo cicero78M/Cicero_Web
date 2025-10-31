@@ -260,7 +260,7 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(summary.totals.totalLikes).toBe(0);
     expect(summary.totals.totalComments).toBe(0);
     expect(summary.totals.totalPersonnel).toBe(3);
-    expect(summary.totals.activePersonnel).toBe(0);
+    expect(summary.totals.activePersonnel).toBe(3);
     expect(summary.totals.complianceRate).toBe(0);
     expect(summary.clients).toHaveLength(2);
 
@@ -268,13 +268,13 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     const clientB = summary.clients.find((client) => client.clientId === "CLI-02");
 
     expect(clientA?.totalPersonnel).toBe(2);
-    expect(clientA?.activePersonnel).toBe(0);
+    expect(clientA?.activePersonnel).toBe(2);
     expect(clientA?.totalLikes).toBe(0);
     expect(clientA?.totalComments).toBe(0);
     expect(clientA?.complianceRate).toBe(0);
 
     expect(clientB?.totalPersonnel).toBe(1);
-    expect(clientB?.activePersonnel).toBe(0);
+    expect(clientB?.activePersonnel).toBe(1);
     expect(clientB?.totalLikes).toBe(0);
     expect(clientB?.totalComments).toBe(0);
     expect(clientB?.complianceRate).toBe(0);
@@ -507,9 +507,11 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(client?.activePersonnel).toBe(1);
   });
 
-  it("tidak menambah total personel untuk alias aktivitas yang tidak cocok dengan direktori", () => {
-    const directoryUsers = [
-      { client_id: "CLI-04", nama_client: "Client D", username: "alpha" },
+  it(
+    "tidak menambah total personel untuk alias aktivitas yang tidak cocok dengan direktori, namun menghitung personel aktif dari direktori",
+    () => {
+      const directoryUsers = [
+        { client_id: "CLI-04", nama_client: "Client D", username: "alpha" },
     ];
 
     const rawLikes = [
@@ -524,11 +526,29 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     const summary = aggregateLikesRecords(rawLikes, { directoryUsers });
 
     expect(summary.totals.totalPersonnel).toBe(1);
+    expect(summary.totals.activePersonnel).toBe(1);
 
     const client = summary.clients.find((entry) => entry.clientId === "CLI-04");
     expect(client).toBeTruthy();
     expect(client?.totalPersonnel).toBe(1);
-    expect(client?.activePersonnel).toBe(0);
+    expect(client?.activePersonnel).toBe(1);
+  });
+
+  it("menggunakan jumlah personel aktif direktori saat tidak ada aktivitas", () => {
+    const directoryUsers = [
+      { client_id: "CLI-05", nama_client: "Client E", username: "alpha" },
+      { client_id: "CLI-05", nama_client: "Client E", username: "bravo" },
+    ];
+
+    const summary = aggregateLikesRecords([], { directoryUsers });
+
+    expect(summary.totals.totalPersonnel).toBe(2);
+    expect(summary.totals.activePersonnel).toBe(2);
+
+    const client = summary.clients.find((entry) => entry.clientId === "CLI-05");
+    expect(client).toBeTruthy();
+    expect(client?.totalPersonnel).toBe(2);
+    expect(client?.activePersonnel).toBe(2);
   });
 
   it("prefers personnel likes when merging records with general totals", () => {
