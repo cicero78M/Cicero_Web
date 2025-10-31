@@ -503,6 +503,30 @@ const getMonthDateRange = (monthKey) => {
   return { startDate, endDate };
 };
 
+const getPreviousMonthKey = (monthKey) => {
+  if (typeof monthKey !== "string") {
+    return null;
+  }
+
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    return null;
+  }
+
+  const nextMonth = month - 1;
+  const previousYear = nextMonth >= 1 ? year : year - 1;
+  const previousMonth = nextMonth >= 1 ? nextMonth : 12;
+
+  if (!Number.isFinite(previousYear) || previousYear <= 0) {
+    return null;
+  }
+
+  return `${previousYear}-${String(previousMonth).padStart(2, "0")}`;
+};
+
 const normalizePlatformKey = (value, fallback = "") => {
   if (typeof value === "string") {
     const cleaned = value.trim().toLowerCase();
@@ -2373,6 +2397,9 @@ export default function ExecutiveSummaryPage() {
     activity: { likes: [], comments: [] },
     trendActivity: { likes: [], comments: [] },
     posts: { instagram: [], tiktok: [] },
+    previousLikesSummary: null,
+    previousPostTotals: null,
+    previousPeriodLabel: "",
   });
 
   const rawMonthlyData = monthlyData[selectedMonthKey];
@@ -2440,6 +2467,9 @@ export default function ExecutiveSummaryPage() {
           trendActivity: { likes: [], comments: [] },
           likesSummary: createEmptyLikesSummary(),
           posts: { instagram: [], tiktok: [] },
+          previousLikesSummary: null,
+          previousPostTotals: null,
+          previousPeriodLabel: "",
         });
         return;
       }
@@ -2462,6 +2492,30 @@ export default function ExecutiveSummaryPage() {
       const startDateParam = periodRange?.startDate;
       const endDateParam = periodRange?.endDate;
       const activityPeriodeParam = "harian";
+      const previousMonthKey = getPreviousMonthKey(selectedMonthKey);
+      const previousPeriodRange = previousMonthKey
+        ? getMonthDateRange(previousMonthKey)
+        : null;
+      const previousPeriodLabel = previousPeriodRange
+        ? (() => {
+            const startDateValue = parseDateValue(previousPeriodRange.startDate);
+            const endDateValue = parseDateValue(previousPeriodRange.endDate);
+            if (
+              startDateValue instanceof Date &&
+              !Number.isNaN(startDateValue.valueOf())
+            ) {
+              return formatMonthRangeLabel(
+                startDateValue,
+                endDateValue instanceof Date && !Number.isNaN(endDateValue.valueOf())
+                  ? endDateValue
+                  : startDateValue,
+              );
+            }
+            return "";
+          })()
+        : "";
+      const previousStartDateParam = previousPeriodRange?.startDate;
+      const previousEndDateParam = previousPeriodRange?.endDate;
 
       try {
         const [directoryResponse, statsResult, likesResult, commentsResult] =
@@ -2563,6 +2617,83 @@ export default function ExecutiveSummaryPage() {
           commentsTrendRecordsWithFallback,
           periodRange,
         );
+        let previousLikesRecordsInRange = [];
+        let previousCommentsRecordsInRange = [];
+
+        if (previousPeriodRange) {
+          previousLikesRecordsInRange = filterRecordsByDateRange(
+            likesTrendRecordsWithFallback,
+            previousPeriodRange,
+          );
+          previousCommentsRecordsInRange = filterRecordsByDateRange(
+            commentsTrendRecordsWithFallback,
+            previousPeriodRange,
+          );
+
+          const previousFallbackTrendDateIso = previousStartDateParam
+            ? `${previousStartDateParam}T00:00:00.000Z`
+            : null;
+
+          if (previousLikesRecordsInRange.length === 0) {
+            try {
+              const previousLikesResponse = await getRekapLikesIG(
+                token,
+                clientId,
+                activityPeriodeParam,
+                previousStartDateParam,
+                previousStartDateParam,
+                previousEndDateParam,
+                controller.signal,
+              );
+              const previousLikesRaw = ensureArray(previousLikesResponse);
+              const preparedPreviousLikes = prepareTrendActivityRecords(
+                previousLikesRaw,
+                previousFallbackTrendDateIso
+                  ? { fallbackDate: previousFallbackTrendDateIso }
+                  : undefined,
+              );
+              previousLikesRecordsInRange = filterRecordsByDateRange(
+                preparedPreviousLikes,
+                previousPeriodRange,
+              );
+            } catch (error) {
+              console.warn(
+                "Gagal memuat rekap likes IG periode sebelumnya",
+                error,
+              );
+            }
+          }
+
+          if (previousCommentsRecordsInRange.length === 0) {
+            try {
+              const previousCommentsResponse = await getRekapKomentarTiktok(
+                token,
+                clientId,
+                activityPeriodeParam,
+                previousStartDateParam,
+                previousStartDateParam,
+                previousEndDateParam,
+                controller.signal,
+              );
+              const previousCommentsRaw = ensureArray(previousCommentsResponse);
+              const preparedPreviousComments = prepareTrendActivityRecords(
+                previousCommentsRaw,
+                previousFallbackTrendDateIso
+                  ? { fallbackDate: previousFallbackTrendDateIso }
+                  : undefined,
+              );
+              previousCommentsRecordsInRange = filterRecordsByDateRange(
+                preparedPreviousComments,
+                previousPeriodRange,
+              );
+            } catch (error) {
+              console.warn(
+                "Gagal memuat rekap komentar TikTok periode sebelumnya",
+                error,
+              );
+            }
+          }
+        }
 
         let instagramPostsRaw = [];
         let tiktokPostsRaw = [];
@@ -2570,6 +2701,10 @@ export default function ExecutiveSummaryPage() {
         let tiktokDatabasePostsRaw = [];
         let instagramDatabaseError = null;
         let tiktokDatabaseError = null;
+        let previousInstagramPostsRaw = [];
+        let previousTiktokPostsRaw = [];
+        let previousInstagramPostsFiltered = [];
+        let previousTiktokPostsFiltered = [];
 
         if (clientId) {
           try {
@@ -2596,6 +2731,38 @@ export default function ExecutiveSummaryPage() {
           } catch (error) {
             console.warn("Gagal memuat konten TikTok dari database", error);
             tiktokDatabaseError = error;
+          }
+        }
+
+        if (clientId && previousPeriodRange) {
+          try {
+            const previousInstagramResponse = await getInstagramPosts(token, clientId, {
+              startDate: previousStartDateParam,
+              endDate: previousEndDateParam,
+              signal: controller.signal,
+            });
+            previousInstagramPostsRaw = ensureArray(previousInstagramResponse);
+          } catch (error) {
+            console.warn(
+              "Gagal memuat konten Instagram periode sebelumnya dari database",
+              error,
+            );
+          }
+        }
+
+        if (clientId && previousPeriodRange) {
+          try {
+            const previousTiktokResponse = await getTiktokPosts(token, clientId, {
+              startDate: previousStartDateParam,
+              endDate: previousEndDateParam,
+              signal: controller.signal,
+            });
+            previousTiktokPostsRaw = ensureArray(previousTiktokResponse);
+          } catch (error) {
+            console.warn(
+              "Gagal memuat konten TikTok periode sebelumnya dari database",
+              error,
+            );
           }
         }
 
@@ -2639,6 +2806,21 @@ export default function ExecutiveSummaryPage() {
           directoryUsers: activeDirectoryUsers,
           insightPersonnelByClient,
         });
+        let previousLikesSummary = null;
+
+        if (previousPeriodRange) {
+          const mergedPreviousActivityRecords = mergeActivityRecords(
+            previousLikesRecordsInRange,
+            previousCommentsRecordsInRange,
+          );
+          previousLikesSummary = aggregateLikesRecords(
+            mergedPreviousActivityRecords,
+            {
+              directoryUsers: activeDirectoryUsers,
+              insightPersonnelByClient,
+            },
+          );
+        }
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
           {
@@ -2651,6 +2833,48 @@ export default function ExecutiveSummaryPage() {
             extraPaths: POST_DATE_PATHS,
           },
         );
+        const previousInstagramPostsSanitized = ensureRecordsHaveActivityDate(
+          previousInstagramPostsRaw,
+          {
+            extraPaths: POST_DATE_PATHS,
+          },
+        );
+        const previousTiktokPostsSanitized = ensureRecordsHaveActivityDate(
+          previousTiktokPostsRaw,
+          {
+            extraPaths: POST_DATE_PATHS,
+          },
+        );
+
+        if (previousPeriodRange) {
+          previousInstagramPostsFiltered = filterRecordsByDateRange(
+            previousInstagramPostsSanitized,
+            previousPeriodRange,
+            {
+              extraPaths: POST_DATE_PATHS,
+            },
+          );
+          previousTiktokPostsFiltered = filterRecordsByDateRange(
+            previousTiktokPostsSanitized,
+            previousPeriodRange,
+            {
+              extraPaths: POST_DATE_PATHS,
+            },
+          );
+        }
+
+        const previousInstagramPostCount = previousPeriodRange
+          ? previousInstagramPostsFiltered.length
+          : 0;
+        const previousTiktokPostCount = previousPeriodRange
+          ? previousTiktokPostsFiltered.length
+          : 0;
+        const previousPostTotals = previousPeriodRange
+          ? {
+              instagram: previousInstagramPostCount,
+              tiktok: previousTiktokPostCount,
+            }
+          : null;
 
         if (cancelled) {
           return;
@@ -2668,10 +2892,13 @@ export default function ExecutiveSummaryPage() {
             comments: commentsTrendRecordsAll,
           },
           likesSummary,
+          previousLikesSummary: previousLikesSummary ?? null,
           posts: {
             instagram: instagramPostsSanitized,
             tiktok: tiktokPostsSanitized,
           },
+          previousPostTotals,
+          previousPeriodLabel,
         });
 
         setUserInsightState({
@@ -2705,6 +2932,9 @@ export default function ExecutiveSummaryPage() {
           trendActivity: { likes: [], comments: [] },
           likesSummary: createEmptyLikesSummary(),
           posts: { instagram: [], tiktok: [] },
+          previousLikesSummary: null,
+          previousPostTotals: null,
+          previousPeriodLabel: "",
         });
       }
     };
@@ -2752,6 +2982,9 @@ export default function ExecutiveSummaryPage() {
     loading: platformsLoading,
     error: platformError,
     likesSummary,
+    previousLikesSummary,
+    previousPostTotals,
+    previousPeriodLabel,
     activity: platformActivityState,
     posts: platformPostsState,
   } = platformState;
@@ -2808,6 +3041,196 @@ export default function ExecutiveSummaryPage() {
 
   const instagramPostCount = instagramPostsForSelectedMonth.length;
   const tiktokPostCount = tiktokPostsForSelectedMonth.length;
+  const summaryCards = useMemo(() => {
+    const totals = likesSummary?.totals;
+
+    if (!totals) {
+      return [];
+    }
+
+    const previousTotals = previousLikesSummary?.totals ?? null;
+    const hasPreviousPosts =
+      previousPostTotals &&
+      Number.isFinite(Number(previousPostTotals.instagram)) &&
+      Number.isFinite(Number(previousPostTotals.tiktok));
+    const previousPostsTotal = hasPreviousPosts
+      ? Number(previousPostTotals.instagram ?? 0) +
+        Number(previousPostTotals.tiktok ?? 0)
+      : null;
+    const comparisonPeriod = previousPeriodLabel
+      ? previousPeriodLabel
+      : "bulan sebelumnya";
+
+    const formatSigned = (value, options = {}) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        return null;
+      }
+      const formatted = formatNumber(Math.abs(numeric), options);
+      if (numeric > 0) {
+        return `+${formatted}`;
+      }
+      if (numeric < 0) {
+        return `-${formatted}`;
+      }
+      return formatted;
+    };
+
+    const buildComparison = (
+      currentValue,
+      previousValue,
+      {
+        absoluteOptions = { maximumFractionDigits: 0 },
+        percentOptions = { maximumFractionDigits: 1 },
+        absoluteSuffix = "",
+        percentSuffix = "%",
+      } = {},
+    ) => {
+      if (previousValue == null || Number.isNaN(previousValue)) {
+        return null;
+      }
+
+      const currentNumeric = Number(currentValue);
+      const previousNumeric = Number(previousValue);
+
+      if (!Number.isFinite(previousNumeric)) {
+        return null;
+      }
+
+      const safeCurrent = Number.isFinite(currentNumeric) ? currentNumeric : 0;
+      const delta = safeCurrent - previousNumeric;
+      const direction = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+
+      if (direction === "flat" || Math.abs(delta) < 0.000001) {
+        return {
+          direction: "flat",
+          label: `Tetap dibanding ${comparisonPeriod}`,
+        };
+      }
+
+      const relativeChange =
+        Math.abs(previousNumeric) > 0.000001
+          ? (delta / previousNumeric) * 100
+          : null;
+      const absoluteLabel = formatSigned(delta, absoluteOptions);
+      const percentLabel =
+        relativeChange != null
+          ? `${formatSigned(relativeChange, percentOptions)}${percentSuffix}`
+          : null;
+      const parts = [
+        absoluteLabel ? `${absoluteLabel}${absoluteSuffix}` : null,
+        percentLabel,
+      ].filter(Boolean);
+
+      if (parts.length === 0) {
+        return {
+          direction: "flat",
+          label: `Tetap dibanding ${comparisonPeriod}`,
+        };
+      }
+
+      return {
+        direction,
+        label: `${parts.join(" · ")} dibanding ${comparisonPeriod}`,
+      };
+    };
+
+    const totalActive = totals.activePersonnel ?? 0;
+    const likeContributors = totals.personnelWithLikes ?? 0;
+    const commentContributors = totals.personnelWithComments ?? 0;
+    const instagramCompliance =
+      totals.instagramCompliance ?? totals.complianceRate ?? 0;
+    const tiktokCompliance = totals.tiktokCompliance ?? 0;
+    const previousInstagramCompliance = previousTotals
+      ? previousTotals.instagramCompliance ?? previousTotals.complianceRate ?? null
+      : null;
+    const previousTiktokCompliance = previousTotals
+      ? previousTotals.tiktokCompliance ?? null
+      : null;
+
+    return [
+      {
+        key: "total-posts",
+        label: "Total Post",
+        value: formatNumber(instagramPostCount + tiktokPostCount, {
+          maximumFractionDigits: 0,
+        }),
+        description: `Post Instagram: ${formatNumber(instagramPostCount, {
+          maximumFractionDigits: 0,
+        })} · Post TikTok: ${formatNumber(tiktokPostCount, {
+          maximumFractionDigits: 0,
+        })}`,
+        comparison: buildComparison(
+          instagramPostCount + tiktokPostCount,
+          previousPostsTotal,
+          { absoluteOptions: { maximumFractionDigits: 0 } },
+        ),
+      },
+      {
+        key: "total-likes",
+        label: "Total Likes",
+        value: formatNumber(totals.totalLikes ?? 0, {
+          maximumFractionDigits: 0,
+        }),
+        description: "Seluruh likes personil pada periode terpilih.",
+        comparison: buildComparison(
+          totals.totalLikes ?? 0,
+          previousTotals ? previousTotals.totalLikes ?? null : null,
+          { absoluteOptions: { maximumFractionDigits: 0 } },
+        ),
+      },
+      {
+        key: "total-comments",
+        label: "Total Komentar",
+        value: formatNumber(totals.totalComments ?? 0, {
+          maximumFractionDigits: 0,
+        }),
+        description: "Kumulatif komentar personil yang terekam.",
+        comparison: buildComparison(
+          totals.totalComments ?? 0,
+          previousTotals ? previousTotals.totalComments ?? null : null,
+          { absoluteOptions: { maximumFractionDigits: 0 } },
+        ),
+      },
+      {
+        key: "instagram-compliance",
+        label: "Kepatuhan Instagram",
+        value: formatPercent(instagramCompliance),
+        description: `${formatNumber(likeContributors, {
+          maximumFractionDigits: 0,
+        })} personil memberi likes dari ${formatNumber(totalActive, {
+          maximumFractionDigits: 0,
+        })} personil aktif.`,
+        comparison: buildComparison(instagramCompliance, previousInstagramCompliance, {
+          absoluteOptions: { maximumFractionDigits: 1 },
+          percentOptions: { maximumFractionDigits: 1 },
+          absoluteSuffix: " poin",
+        }),
+      },
+      {
+        key: "tiktok-compliance",
+        label: "Kepatuhan TikTok",
+        value: formatPercent(tiktokCompliance),
+        description: `${formatNumber(commentContributors, {
+          maximumFractionDigits: 0,
+        })} personil berkomentar dari ${formatNumber(totalActive, {
+          maximumFractionDigits: 0,
+        })} personil aktif.`,
+        comparison: buildComparison(tiktokCompliance, previousTiktokCompliance, {
+          absoluteOptions: { maximumFractionDigits: 1 },
+          percentOptions: { maximumFractionDigits: 1 },
+          absoluteSuffix: " poin",
+        }),
+      },
+    ];
+  }, [
+    likesSummary,
+    previousLikesSummary,
+    previousPostTotals,
+    previousPeriodLabel,
+    instagramPostCount,
+    tiktokPostCount,
+  ]);
   const maxDistributionTotal = useMemo(() => {
     if (!divisionDistribution.length) {
       return 0;
@@ -4161,6 +4584,7 @@ export default function ExecutiveSummaryPage() {
                     instagram: instagramPostCount,
                     tiktok: tiktokPostCount,
                   }}
+                  summaryCards={summaryCards}
                 />
               </div>
             ) : (
