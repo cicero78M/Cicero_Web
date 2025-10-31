@@ -2509,10 +2509,11 @@ export default function ExecutiveSummaryPage() {
         const rawDirectory =
           directoryResponse?.data || directoryResponse?.users || directoryResponse;
         const users = Array.isArray(rawDirectory) ? rawDirectory : [];
+        const insight = computeUserInsight(users);
+        const insightPersonnelByClient = insight?.personnelByClient;
         const activeDirectoryUsers = users.filter((user) =>
           resolveDirectoryIsActive(user),
         );
-        const insight = computeUserInsight(activeDirectoryUsers);
 
         const stats = statsResult?.data ?? statsResult ?? {};
         const totalIGPosts = extractNumericValue(
@@ -2636,6 +2637,7 @@ export default function ExecutiveSummaryPage() {
         );
         const likesSummary = aggregateLikesRecords(mergedActivityRecords, {
           directoryUsers: activeDirectoryUsers,
+          insightPersonnelByClient,
         });
         const instagramPostsSanitized = ensureRecordsHaveActivityDate(
           instagramPostsRaw,
