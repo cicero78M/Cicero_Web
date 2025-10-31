@@ -289,6 +289,62 @@ describe("weekly report data transforms", () => {
     expect(summary.clients).toHaveLength(1);
   });
 
+  it("aggregates metrics for Ditbinmas child satker records", () => {
+    const mergedRecords = [
+      {
+        client_id: "NGAWI",
+        client_name: "Sat Binmas Ngawi",
+        parent_client_id: "DITBINMAS",
+        jumlah_like: 9,
+        jumlah_komentar: 4,
+      },
+      {
+        client_id: "LAMONGAN",
+        clientName: "Sat Binmas Lamongan",
+        parent_client: "DITBINMAS",
+        jumlah_like: 6,
+        jumlah_komentar: 1,
+      },
+      {
+        client_id: "POLDA_JABAR",
+        client_name: "Sat Binmas Jabar",
+        jumlah_like: 3,
+        jumlah_komentar: 1,
+      },
+    ];
+
+    const filtered = filterDitbinmasRecords(mergedRecords, {
+      clientScope: "Ditbinmas",
+    });
+
+    expect(filtered).toHaveLength(2);
+    expect(filtered).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ client_id: "NGAWI" }),
+        expect.objectContaining({ client_id: "LAMONGAN" }),
+      ]),
+    );
+
+    const summary = aggregateWeeklyLikesRecords(filtered);
+
+    expect(summary.totals.totalLikes).toBe(15);
+    expect(summary.totals.totalComments).toBe(5);
+    expect(summary.clients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          clientId: "NGAWI",
+          totalLikes: 9,
+          totalComments: 4,
+        }),
+        expect.objectContaining({
+          clientId: "LAMONGAN",
+          totalLikes: 6,
+          totalComments: 1,
+        }),
+      ]),
+    );
+  });
+
   it("derives distinct labels for generic client tokens with qualifiers", () => {
     const baseClient = {
       totalLikes: 0,

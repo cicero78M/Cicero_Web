@@ -307,10 +307,66 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
   return !hasNegationSegment;
 };
 
-const matchClientCandidates = (candidates, target, options) => {
+const shouldMatchObjectKey = (key) => {
+  if (typeof key !== "string") {
+    return false;
+  }
+
+  const normalizedKey = key.toLowerCase();
+
+  if (normalizedKey === "name" || normalizedKey === "nama") {
+    return true;
+  }
+
+  if (normalizedKey.startsWith("nama")) {
+    return true;
+  }
+
+  const keyTokens = [
+    "client",
+    "scope",
+    "satker",
+    "subsatker",
+    "satfung",
+    "divisi",
+    "division",
+    "unit",
+    "wilayah",
+    "target",
+    "kode",
+    "code",
+    "parent",
+    "polda",
+    "polres",
+    "polsek",
+    "organisation",
+    "organization",
+    "instansi",
+    "label",
+    "title",
+    "bag",
+  ];
+
+  if (keyTokens.some((token) => normalizedKey.includes(token))) {
+    return true;
+  }
+
+  if (
+    (normalizedKey.endsWith("name") || normalizedKey.endsWith("nama")) &&
+    keyTokens.some((token) => normalizedKey.includes(token))
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+const matchClientCandidates = (candidates, target, options, state) => {
   if (!Array.isArray(candidates)) {
     return false;
   }
+
+  const tracker = state ?? { seenObjects: new WeakSet() };
 
   for (const candidate of candidates) {
     if (candidate == null) {
@@ -318,19 +374,37 @@ const matchClientCandidates = (candidates, target, options) => {
     }
 
     if (Array.isArray(candidate)) {
-      if (matchClientCandidates(candidate, target, options)) {
+      if (matchClientCandidates(candidate, target, options, tracker)) {
         return true;
       }
       continue;
     }
 
     if (typeof candidate === "object") {
-      const nestedCandidates = [
-        candidate.client_id,
-        candidate.nama,
-      ];
+      if (tracker.seenObjects.has(candidate)) {
+        continue;
+      }
 
-      if (matchClientCandidates(nestedCandidates, target, options)) {
+      tracker.seenObjects.add(candidate);
+
+      const nestedCandidates = [];
+
+      Object.entries(candidate).forEach(([key, value]) => {
+        if (value == null) {
+          return;
+        }
+
+        if (typeof value === "object") {
+          nestedCandidates.push(value);
+          return;
+        }
+
+        if (shouldMatchObjectKey(key)) {
+          nestedCandidates.push(value);
+        }
+      });
+
+      if (matchClientCandidates(nestedCandidates, target, options, tracker)) {
         return true;
       }
       continue;
@@ -356,7 +430,61 @@ export const filterDitbinmasRecords = (records = [], options = {}) => {
 
     const clientCandidates = [
       record.client_id,
+      record.clientId,
+      record.clientID,
+      record.id_client,
+      record.idClient,
+      record.clientid,
+      record.client_code,
+      record.clientCode,
       record.nama,
+      record.name,
+      record.client,
+      record.client_name,
+      record.clientName,
+      record.nama_client,
+      record.namaClient,
+      record.client_scope,
+      record.clientScope,
+      record.scope,
+      record.target_clients,
+      record.targetClients,
+      record.target_client_ids,
+      record.targetClientIds,
+      record.client_scopes,
+      record.clientScopes,
+      record.scopes,
+      record.clients,
+      record.client_list,
+      record.clientList,
+      record.parent_client,
+      record.parentClient,
+      record.parent_client_id,
+      record.parentClientId,
+      record.parent,
+      record.parent_profile,
+      record.parentProfile,
+      record.rekap,
+      record.metrics,
+      record.meta,
+      record.metadata,
+      record.client_info,
+      record.clientInfo,
+      record.client_detail,
+      record.clientDetail,
+      record.client_details,
+      record.clientDetails,
+      record.client_metadata,
+      record.clientMetadata,
+      record.client_data,
+      record.clientData,
+      record.info,
+      record.details,
+      record.records,
+      record.items,
+      record.data,
+      record.children,
+      record,
     ];
 
     const matchesClient = matchClientCandidates(

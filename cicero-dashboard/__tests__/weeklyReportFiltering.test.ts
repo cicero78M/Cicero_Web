@@ -99,4 +99,60 @@ describe("filterDitbinmasRecords", () => {
       ]),
     );
   });
+
+  it("treats generic Ditbinmas scope as a parent that keeps descendant satker records", () => {
+    const records = [
+      {
+        client_id: "NGAWI",
+        client_name: "Sat Binmas Ngawi",
+        parent_client_id: "DITBINMAS",
+        target_clients: ["Ditbinmas"],
+      },
+      {
+        client_id: "LAMONGAN",
+        client_name: "Sat Binmas Lamongan",
+        parent_client: "DITBINMAS",
+      },
+      { client_id: "POLDA_JABAR", client_name: "Sat Binmas Jabar" },
+    ];
+
+    const result = filterDitbinmasRecords(records, { clientScope: "DITBINMAS" });
+
+    expect(result).toHaveLength(2);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ client_id: "NGAWI" }),
+        expect.objectContaining({ client_id: "LAMONGAN" }),
+      ]),
+    );
+  });
+
+  it("matches specific client scopes through client name aliases", () => {
+    const records = [
+      {
+        client_id: "POLDA_JATIM",
+        client_name: "Polda Jatim",
+        role: "Operator Ditbinmas",
+      },
+      {
+        client_id: "POLDA_JATIM",
+        clientName: "Sat Binmas Jawa Timur",
+        role: "Admin Ditbinmas",
+      },
+      {
+        client_id: "POLDA_JABAR",
+        client_name: "Polda Jabar",
+        role: "Operator Ditbinmas",
+      },
+    ];
+
+    const result = filterDitbinmasRecords(records, {
+      clientScope: "Sat Binmas Jawa Timur",
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(
+      expect.objectContaining({ client_id: "POLDA_JATIM", clientName: "Sat Binmas Jawa Timur" }),
+    );
+  });
 });
