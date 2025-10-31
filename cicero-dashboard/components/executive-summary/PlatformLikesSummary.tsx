@@ -304,26 +304,19 @@ const PlatformLikesSummary = ({
 
   const clientsByCompliance = useMemo(() => {
     return [...clients].sort((a, b) => {
-      const activePersonnelA = a.activePersonnel ?? 0;
-      const activePersonnelB = b.activePersonnel ?? 0;
+      const totalInteractionsA = (a.totalLikes ?? 0) + (a.totalComments ?? 0);
+      const totalInteractionsB = (b.totalLikes ?? 0) + (b.totalComments ?? 0);
 
-      if (activePersonnelB !== activePersonnelA) {
-        return activePersonnelB - activePersonnelA;
+      if (totalInteractionsB !== totalInteractionsA) {
+        return totalInteractionsB - totalInteractionsA;
       }
 
-      const complianceA = a.complianceRate ?? 0;
-      const complianceB = b.complianceRate ?? 0;
-      const complianceDelta = complianceB - complianceA;
-
-      if (Math.abs(complianceDelta) > 0.0001) {
-        return complianceDelta;
+      if ((b.totalLikes ?? 0) !== (a.totalLikes ?? 0)) {
+        return (b.totalLikes ?? 0) - (a.totalLikes ?? 0);
       }
 
-      const totalPersonnelA = a.totalPersonnel ?? 0;
-      const totalPersonnelB = b.totalPersonnel ?? 0;
-
-      if (totalPersonnelB !== totalPersonnelA) {
-        return totalPersonnelB - totalPersonnelA;
+      if ((b.totalComments ?? 0) !== (a.totalComments ?? 0)) {
+        return (b.totalComments ?? 0) - (a.totalComments ?? 0);
       }
 
       return (a.clientName || "").localeCompare(b.clientName || "");
