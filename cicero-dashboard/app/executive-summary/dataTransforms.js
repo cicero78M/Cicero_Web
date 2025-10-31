@@ -846,6 +846,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const personnelList = [];
   const personnelMap = new Map();
   const clientDirectoryPersonnelKeys = new Map();
+  const clientActiveDirectoryPersonnelKeys = new Map();
   const clientDuplicateKeyTracker = new Map();
   const clientHasDirectoryData = new Map();
   const directoryAliasIndex = new Map();
@@ -1010,6 +1011,9 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     if (!clientDirectoryPersonnelKeys.has(clientKey)) {
       clientDirectoryPersonnelKeys.set(clientKey, new Set());
     }
+    if (!clientActiveDirectoryPersonnelKeys.has(clientKey)) {
+      clientActiveDirectoryPersonnelKeys.set(clientKey, new Set());
+    }
     if (!clientHasDirectoryData.has(clientKey)) {
       clientHasDirectoryData.set(clientKey, false);
     }
@@ -1039,6 +1043,10 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
         const targetDirectorySet = clientDirectoryPersonnelKeys.get(clientKey);
         const legacyDirectorySet = clientDirectoryPersonnelKeys.get(legacyKey);
+        const targetActiveDirectorySet =
+          clientActiveDirectoryPersonnelKeys.get(clientKey);
+        const legacyActiveDirectorySet =
+          clientActiveDirectoryPersonnelKeys.get(legacyKey);
         const legacyHasDirectoryData = clientHasDirectoryData.get(legacyKey);
 
         legacyEntry.personnel.forEach((person) => {
@@ -1092,6 +1100,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
             targetDirectorySet.add(nextKey);
           }
 
+          if (targetActiveDirectorySet) {
+            if (previousKey && targetActiveDirectorySet.has(previousKey)) {
+              targetActiveDirectorySet.delete(previousKey);
+            }
+            if (
+              legacyActiveDirectorySet &&
+              previousKey &&
+              legacyActiveDirectorySet.has(previousKey)
+            ) {
+              targetActiveDirectorySet.add(nextKey);
+            }
+          }
+
           const index = personnelList.indexOf(person);
           if (index >= 0) {
             personnelList.splice(index, 1);
@@ -1101,10 +1122,14 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         if (legacyDirectorySet) {
           clientDirectoryPersonnelKeys.delete(legacyKey);
         }
+        if (legacyActiveDirectorySet) {
+          clientActiveDirectoryPersonnelKeys.delete(legacyKey);
+        }
         if (legacyHasDirectoryData) {
           clientHasDirectoryData.set(clientKey, true);
         }
         clientHasDirectoryData.delete(legacyKey);
+
       });
     }
 
@@ -1175,6 +1200,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const resolvedNames = resolvePersonnelNames(user);
     const { username, nama, pangkat } = resolvedNames;
     const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
+    const activeDirectorySet =
+      clientActiveDirectoryPersonnelKeys.get(clientEntry.key);
     const basePersonnelKey = buildPersonnelKey(user, identifiers.clientKey, index);
     const uniquePersonnelKey = ensureUniqueDirectoryPersonnelKey(
       clientEntry.key,
@@ -1198,6 +1225,10 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
     if (directorySet && personnelRecord?.key) {
       directorySet.add(personnelRecord.key);
+    }
+
+    if (activeDirectorySet && personnelRecord?.key) {
+      activeDirectorySet.add(personnelRecord.key);
     }
 
     clientHasDirectoryData.set(clientEntry.key, true);
@@ -1306,10 +1337,17 @@ const aggregateLikesRecords = (records = [], options = {}) => {
 
   const clients = Array.from(clientsMap.values()).map((client) => {
     const directorySet = clientDirectoryPersonnelKeys.get(client.key);
+    const activeDirectorySet =
+      clientActiveDirectoryPersonnelKeys.get(client.key);
     const directoryKeys = Array.isArray(directorySet)
       ? directorySet
       : directorySet instanceof Set
       ? Array.from(directorySet)
+      : [];
+    const activeDirectoryKeys = Array.isArray(activeDirectorySet)
+      ? activeDirectorySet
+      : activeDirectorySet instanceof Set
+      ? Array.from(activeDirectorySet)
       : [];
 
     const allPersonnelKeys = client.personnel
@@ -1338,6 +1376,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     let personnelWithLikes = 0;
 
     if (hasDirectoryData) {
+      activePersonnel = activeDirectoryKeys.filter(Boolean).length;
       directoryKeys.forEach((personnelKey) => {
         if (!personnelKey) {
           return;
@@ -1346,10 +1385,6 @@ const aggregateLikesRecords = (records = [], options = {}) => {
         const record = personnelMap.get(personnelKey);
         if (!record) {
           return;
-        }
-
-        if (record.active) {
-          activePersonnel += 1;
         }
         if (toSafeNumber(record.likes) > 0) {
           personnelWithLikes += 1;
