@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 import {
   groupRecordsByMonth,
@@ -440,6 +440,140 @@ describe("groupRecordsByMonth monthly trend integration", () => {
       expect(tiktokCard).toHaveTextContent("33%");
       expect(tiktokCard).toHaveTextContent(/berkomentar/i);
     }
+  });
+
+  it("menampilkan total post sesuai bulan terpilih", () => {
+    const filterPostsForMonth = (records: any[], monthKey: string) => {
+      if (!Array.isArray(records) || typeof monthKey !== "string") {
+        return [];
+      }
+
+      const [yearStr, monthStr] = monthKey.split("-");
+      const year = Number.parseInt(yearStr, 10);
+      const monthIndex = Number.parseInt(monthStr, 10) - 1;
+
+      if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) {
+        return [];
+      }
+
+      const startTime = Date.UTC(year, monthIndex, 1, 0, 0, 0, 0);
+      const endTime = Date.UTC(year, monthIndex + 1, 0, 23, 59, 59, 999);
+
+      return records.filter((record) => {
+        const resolved = resolveRecordDate(record, POST_DATE_PATHS);
+        if (!resolved?.parsed) {
+          return false;
+        }
+
+        const timestamp = resolved.parsed.getTime();
+        return timestamp >= startTime && timestamp <= endTime;
+      });
+    };
+
+    const instagramRecords = [
+      { id: "ig-1", tanggal: "2024-05-05" },
+      { id: "ig-2", tanggal: "2024-05-18" },
+      { id: "ig-3", tanggal: "2024-06-02" },
+      { id: "ig-4", caption: "Tanpa tanggal" },
+    ];
+    const tiktokRecords = [
+      { id: "tt-1", created_at: "2024-05-07T08:00:00Z" },
+      { id: "tt-2", created_at: "2024-06-01T08:00:00Z" },
+      { id: "tt-3", created_at: "2024-06-12T11:30:00Z" },
+      { id: "tt-4", created_at: "2024-06-28T15:45:00Z" },
+    ];
+
+    const instagramMay = filterPostsForMonth(instagramRecords, "2024-05");
+    const instagramJune = filterPostsForMonth(instagramRecords, "2024-06");
+    const tiktokMay = filterPostsForMonth(tiktokRecords, "2024-05");
+    const tiktokJune = filterPostsForMonth(tiktokRecords, "2024-06");
+
+    const summaryData: any = {
+      totals: {
+        totalClients: 1,
+        totalLikes: 0,
+        totalComments: 0,
+        totalPersonnel: 0,
+        activePersonnel: 0,
+        personnelWithLikes: 0,
+        personnelWithComments: 0,
+        complianceRate: 0,
+        instagramCompliance: 0,
+        tiktokCompliance: 0,
+        averageComplianceRate: 0,
+      },
+      clients: [
+        {
+          key: "client-1",
+          clientId: "CLI-42",
+          clientName: "Client Simulasi",
+          satfung: null,
+          totalLikes: 0,
+          totalComments: 0,
+          activePersonnel: 0,
+          totalPersonnel: 0,
+          personnelWithLikes: 0,
+          personnelWithComments: 0,
+          complianceRate: 0,
+        },
+      ],
+      topPersonnel: [],
+      lastUpdated: null,
+    };
+
+    const formatNumber = (value: number) => `${Math.round(Number(value) || 0)}`;
+    const formatPercent = (value: number) => `${Math.round(Number(value) || 0)}%`;
+
+    const baseProps = {
+      data: summaryData,
+      formatNumber,
+      formatPercent,
+      personnelActivity: null,
+      summaryCards: null,
+      labelOverrides: null,
+      personnelDistribution: null,
+      personnelDistributionMeta: null,
+      hiddenSections: null,
+    };
+
+    const { rerender } = render(
+      <PlatformLikesSummary
+        {...baseProps}
+        postTotals={{
+          instagram: instagramMay.length,
+          tiktok: tiktokMay.length,
+        }}
+      />,
+    );
+
+    const totalPostCardInitial = screen.getByText("Total Post").closest("div");
+    expect(totalPostCardInitial).not.toBeNull();
+    const initialCard = totalPostCardInitial as HTMLElement;
+    expect(within(initialCard).getByText("3")).toBeInTheDocument();
+    expect(
+      within(initialCard).getByText("Post Instagram: 2 · Post TikTok: 1"),
+    ).toBeInTheDocument();
+
+    rerender(
+      <PlatformLikesSummary
+        {...baseProps}
+        postTotals={{
+          instagram: instagramJune.length,
+          tiktok: tiktokJune.length,
+        }}
+      />,
+    );
+
+    const totalPostCardJune = screen.getByText("Total Post").closest("div");
+    expect(totalPostCardJune).not.toBeNull();
+    const juneCard = totalPostCardJune as HTMLElement;
+    expect(within(juneCard).getByText("4")).toBeInTheDocument();
+    expect(
+      within(juneCard).getByText("Post Instagram: 1 · Post TikTok: 3"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Post Instagram: 2 · Post TikTok: 1"),
+    ).not.toBeInTheDocument();
   });
 
   it("mengabaikan entri direktori yang ditandai tidak aktif ketika menghitung total personil", () => {
