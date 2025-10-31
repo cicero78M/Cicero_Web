@@ -131,14 +131,6 @@ const resolveDirectoryIsActive = (entry) => {
 
   const candidates = [
     entry?.status,
-    entry?.is_active,
-    entry?.isActive,
-    entry?.active,
-    entry?.enabled,
-    entry?.is_enabled,
-    entry?.isEnabled,
-    entry?.user_status,
-    entry?.userStatus,
   ];
 
   for (const candidate of candidates) {
@@ -391,10 +383,6 @@ export const resolveDitbinmasDirectoryUsers = (
   const possibleCollections = [
     ditbinmasDirectory,
     ditbinmasDirectory?.data,
-    ditbinmasDirectory?.users,
-    ditbinmasDirectory?.payload,
-    ditbinmasDirectory?.data?.data,
-    ditbinmasDirectory?.data?.users,
   ];
 
   const rawCollection = possibleCollections.find((collection) => Array.isArray(collection));
@@ -453,7 +441,6 @@ export const resolveDitbinmasDirectoryUsers = (
       if (typeof value === "object") {
         const nestedCandidates = [
           value?.client_id,
-          value?.nama,
         ];
 
         nestedCandidates.forEach(appendValue);
@@ -479,8 +466,7 @@ export const resolveDitbinmasDirectoryUsers = (
 
   const normalizedEntries = resolvedEntries.map((entry) => {
     const entryClientId = resolveClientId(
-      entry?.client_id ||
-        entry?.nama,
+      entry?.client_id    
     );
     const comparableClientId = toComparableClientId(entryClientId);
     const targetIds = collectTargetClientIds(entry);
@@ -532,8 +518,7 @@ export const resolveDitbinmasDirectoryUsers = (
     const existingHasDirectMatch = existingEntry
       ? toComparableClientId(
           resolveClientId(
-            existingEntry?.client_id ||
-              existingEntry?.nama,
+            existingEntry?.client_id
           ),
         ) === comparableScopeTarget
       : false;
@@ -809,11 +794,7 @@ export const extractClientPersonnel = (clients = []) => {
           nama: person?.nama || "",
           username: person?.username || "",
           satfung:
-            person?.divisi ||
-            client?.divisi ||
-            person?.clientName ||
-            client?.clientName ||
-            client?.clientId ||
+            person?.divisi||
             "",
           likes: 0,
           comments: 0,
@@ -840,18 +821,11 @@ export const extractClientPersonnel = (clients = []) => {
       }
       if (
         !record.satfung &&
-        (person?.divisi ||
-          client?.divisi ||
-          person?.clientName ||
-          client?.clientName ||
-          client?.clientId)
+        (person?.divisi
+        )
       ) {
         record.satfung =
           person?.divisi ||
-          client?.divisi ||
-          person?.clientName ||
-          client?.clientName ||
-          client?.clientId ||
           record.satfung;
       }
     });
