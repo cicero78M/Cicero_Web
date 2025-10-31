@@ -208,7 +208,6 @@ const buildWeekRanges = (monthValue, yearValue) => {
 };
 
 const DITBINMAS_CLIENT_TARGET = "DITBINMAS";
-const DITBINMAS_ROLE_TARGET = "DITBINMAS";
 
 const normalizeClientScopeIdentifier = (value) => {
   if (typeof value !== "string") {
@@ -320,7 +319,7 @@ const matchNormalizedValue = (value, target, { allowWordMatch = false } = {}) =>
   return !hasNegationSegment;
 };
 
-const matchCandidates = (candidates, target, options) => {
+const matchClientCandidates = (candidates, target, options) => {
   if (!Array.isArray(candidates)) {
     return false;
   }
@@ -331,7 +330,7 @@ const matchCandidates = (candidates, target, options) => {
     }
 
     if (Array.isArray(candidate)) {
-      if (matchCandidates(candidate, target, options)) {
+      if (matchClientCandidates(candidate, target, options)) {
         return true;
       }
       continue;
@@ -352,12 +351,9 @@ const matchCandidates = (candidates, target, options) => {
         candidate.name,
         candidate.label,
         candidate.value,
-        candidate.role,
-        candidate.role_name,
-        candidate.roleName,
       ];
 
-      if (matchCandidates(nestedCandidates, target, options)) {
+      if (matchClientCandidates(nestedCandidates, target, options)) {
         return true;
       }
       continue;
@@ -371,87 +367,10 @@ const matchCandidates = (candidates, target, options) => {
   return false;
 };
 
-const hasEvaluableCandidateValue = (candidate) => {
-  if (candidate == null) {
-    return false;
-  }
-
-  if (typeof candidate === "string") {
-    return candidate.trim().length > 0;
-  }
-
-  if (typeof candidate === "number" || typeof candidate === "boolean") {
-    return true;
-  }
-
-  if (Array.isArray(candidate)) {
-    return candidate.some((entry) => hasEvaluableCandidateValue(entry));
-  }
-
-  if (typeof candidate === "object") {
-    const nestedCandidates = [
-      candidate.role,
-      candidate.roles,
-      candidate.user_role,
-      candidate.userRole,
-      candidate.role_name,
-      candidate.roleName,
-      candidate.name,
-      candidate.label,
-      candidate.value,
-    ];
-
-    return nestedCandidates.some((entry) => hasEvaluableCandidateValue(entry));
-  }
-
-  return false;
-};
-
-const mentionsTargetValue = (candidate, target) => {
-  if (candidate == null) {
-    return false;
-  }
-
-  if (typeof candidate === "string" || typeof candidate === "number") {
-    const normalized = String(candidate)
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-
-    if (!normalized) {
-      return false;
-    }
-
-    return normalized.includes(target);
-  }
-
-  if (Array.isArray(candidate)) {
-    return candidate.some((entry) => mentionsTargetValue(entry, target));
-  }
-
-  if (typeof candidate === "object") {
-    const nestedCandidates = [
-      candidate.role,
-      candidate.roles,
-      candidate.user_role,
-      candidate.userRole,
-      candidate.role_name,
-      candidate.roleName,
-      candidate.name,
-      candidate.label,
-      candidate.value,
-    ];
-
-    return nestedCandidates.some((entry) => mentionsTargetValue(entry, target));
-  }
-
-  return false;
-};
-
 export const filterDitbinmasRecords = (records = [], options = {}) => {
   const clientMatcherOptions = { allowWordMatch: false };
-  const roleMatcherOptions = { allowWordMatch: true };
   const clientTarget = resolveClientScopeTarget(options?.clientScope);
+  const comparableTarget = toComparableClientScope(clientTarget);
 
   return (Array.isArray(records) ? records : []).filter((record) => {
     if (!record || typeof record !== "object") {
@@ -483,61 +402,16 @@ export const filterDitbinmasRecords = (records = [], options = {}) => {
       record?.rekap?.name,
     ];
 
-    const roleCandidates = [
-      record.role,
-      record.roles,
-      record.user_role,
-      record.userRole,
-      record.role_name,
-      record.roleName,
-      record?.user?.role,
-      record?.akun?.role,
-      record?.profile?.role,
-      record?.rekap?.role,
-      record?.rekap?.roles,
-      record?.rekap?.user_role,
-      record?.rekap?.userRole,
-      record?.rekap?.role_name,
-      record?.rekap?.roleName,
-    ];
-
-    const matchesClient = matchCandidates(
+    const matchesClient = matchClientCandidates(
       clientCandidates,
-      clientTarget,
+      comparableTarget,
       clientMatcherOptions,
     );
 
     if (!matchesClient) {
       return false;
     }
-
-    const matchesRole = matchCandidates(
-      roleCandidates,
-      DITBINMAS_ROLE_TARGET,
-      roleMatcherOptions,
-    );
-
-    if (matchesRole) {
-      return true;
-    }
-
-    const hasEvaluableRoles = roleCandidates.some((candidate) =>
-      hasEvaluableCandidateValue(candidate),
-    );
-
-    if (!hasEvaluableRoles) {
-      return true;
-    }
-
-    const mentionsDitbinmas = roleCandidates.some((candidate) =>
-      mentionsTargetValue(candidate, DITBINMAS_ROLE_TARGET),
-    );
-
-    if (mentionsDitbinmas) {
-      return false;
-    }
-
-    return false;
+    return true;
   });
 };
 
@@ -562,17 +436,15 @@ export const resolveDitbinmasDirectoryUsers = (
   const resolvedEntries = Array.isArray(rawCollection) ? rawCollection : [];
 
   const { clientScope } = options ?? {};
-  const normalizedClientScope = normalizeClientScopeIdentifier(clientScope);
+  const normalizedClientScope =
+    normalizeClientScopeIdentifier(clientScope) || DITBINMAS_CLIENT_TARGET;
   const comparableScopeTarget = toComparableClientScope(normalizedClientScope);
-  const hasCustomScope =
-    Boolean(comparableScopeTarget) && comparableScopeTarget !== DITBINMAS_CLIENT_TARGET;
+
+  if (!comparableScopeTarget) {
+    return [];
+  }
 
   const uniqueUsers = new Map();
-
-  const resolveRole = (value) =>
-    String(value || "")
-      .trim()
-      .toLowerCase();
 
   const resolveClientId = (value) =>
     String(value || "")
@@ -648,7 +520,6 @@ export const resolveDitbinmasDirectoryUsers = (
   };
 
   const normalizedEntries = resolvedEntries.map((entry) => {
-    const entryRole = resolveRole(entry?.role || entry?.user_role || entry?.userRole);
     const entryClientId = resolveClientId(
       entry?.client_id ||
         entry?.clientId ||
@@ -661,101 +532,29 @@ export const resolveDitbinmasDirectoryUsers = (
     const comparableTargets = new Set(
       Array.from(targetIds).map((target) => toComparableClientId(target)).filter(Boolean),
     );
-    const roleIndicatesDitbinmas = entryRole.includes("ditbinmas");
-    const targetsDitbinmas = comparableTargets.has("DITBINMAS");
-    const clientIsDitbinmas = comparableClientId === "DITBINMAS";
     const isActive = resolveDirectoryIsActive(entry);
 
     return {
       entry,
-      entryRole,
       entryClientId,
       comparableClientId,
       targetIds,
       comparableTargets,
-      roleIndicatesDitbinmas,
-      targetsDitbinmas,
-      clientIsDitbinmas,
       isActive,
     };
   });
 
-  const targetClientIds = new Set(
-    comparableScopeTarget ? [comparableScopeTarget] : [DITBINMAS_CLIENT_TARGET],
-  );
-
   normalizedEntries.forEach((normalized) => {
     if (!normalized) {
       return;
     }
 
-    const {
-      entryClientId,
-      comparableClientId,
-      targetIds,
-      comparableTargets,
-      roleIndicatesDitbinmas,
-      targetsDitbinmas,
-      clientIsDitbinmas,
-      isActive,
-    } = normalized;
+    const { entry, comparableClientId, comparableTargets, isActive } = normalized;
 
-    const hasDitbinmasSignal =
-      roleIndicatesDitbinmas || targetsDitbinmas || clientIsDitbinmas;
+    const clientMatchesTarget = comparableClientId === comparableScopeTarget;
+    const matchesComparableTargets = comparableTargets.has(comparableScopeTarget);
 
-    if (!hasCustomScope && hasDitbinmasSignal && comparableClientId) {
-      targetClientIds.add(comparableClientId);
-    }
-
-    if (!hasCustomScope && hasDitbinmasSignal) {
-      targetIds.forEach((targetId) => {
-        const comparable = toComparableClientId(targetId);
-        if (comparable) {
-          targetClientIds.add(comparable);
-        }
-      });
-    }
-
-    if (
-      !hasCustomScope &&
-      hasDitbinmasSignal &&
-      entryClientId &&
-      !targetIds.has(entryClientId)
-    ) {
-      targetIds.add(entryClientId);
-    }
-  });
-
-  normalizedEntries.forEach((normalized) => {
-    if (!normalized) {
-      return;
-    }
-
-    const {
-      entry,
-      entryRole,
-      entryClientId,
-      comparableClientId,
-      comparableTargets,
-      roleIndicatesDitbinmas,
-      targetsDitbinmas,
-      clientIsDitbinmas,
-      isActive,
-    } = normalized;
-
-    const clientMatchesTarget =
-      comparableClientId && targetClientIds.has(comparableClientId);
-    const matchesComparableTargets =
-      hasCustomScope && comparableScopeTarget && comparableTargets
-        ? comparableTargets.has(comparableScopeTarget)
-        : false;
-    const hasDitbinmasSignal =
-      roleIndicatesDitbinmas || targetsDitbinmas || clientIsDitbinmas;
-    const shouldInclude = hasCustomScope
-      ? clientMatchesTarget || matchesComparableTargets
-      : hasDitbinmasSignal || clientMatchesTarget;
-
-    if (!shouldInclude) {
+    if (!clientMatchesTarget && !matchesComparableTargets) {
       return;
     }
 
@@ -778,54 +577,22 @@ export const resolveDitbinmasDirectoryUsers = (
     }
 
     const existingEntry = uniqueUsers.get(identifier);
-    const existingRole = resolveRole(
-      existingEntry?.role || existingEntry?.user_role || existingEntry?.userRole,
-    );
-    const entryIsPreferred = entryRole.includes("ditbinmas");
-    const existingIsPreferred = existingRole.includes("ditbinmas");
+    const entryHasDirectMatch = clientMatchesTarget;
+    const existingHasDirectMatch = existingEntry
+      ? toComparableClientId(
+          resolveClientId(
+            existingEntry?.client_id ||
+              existingEntry?.clientId ||
+              existingEntry?.clientID ||
+              existingEntry?.client,
+          ),
+        ) === comparableScopeTarget
+      : false;
 
-    if (!existingEntry || (!existingIsPreferred && entryIsPreferred)) {
+    if (!existingEntry || (!existingHasDirectMatch && entryHasDirectMatch)) {
       uniqueUsers.set(identifier, entry);
     }
   });
-
-  if (uniqueUsers.size === 0 && Array.isArray(normalizedEntries) && normalizedEntries.length) {
-    // fallback: when entries exist but without client info, include all unique entries
-    normalizedEntries.forEach(({ entry, isActive }) => {
-      if (!isActive) {
-        return;
-      }
-
-      const identifier =
-        entry?.user_id ||
-        entry?.userId ||
-        entry?.userID ||
-        entry?.nrp ||
-        entry?.nip ||
-        entry?.email ||
-        entry?.id ||
-        JSON.stringify(entry);
-
-      if (!uniqueUsers.has(identifier)) {
-        const normalizedEntry = { ...entry };
-        const fallbackClientId = normalizedClientScope || DITBINMAS_CLIENT_TARGET;
-
-        if (!normalizedEntry?.client_id) {
-          normalizedEntry.client_id = fallbackClientId;
-        }
-
-        if (!normalizedEntry?.clientId) {
-          normalizedEntry.clientId = normalizedEntry.client_id ?? fallbackClientId;
-        }
-
-        if (!normalizedEntry?.client) {
-          normalizedEntry.client = normalizedEntry.client_id ?? fallbackClientId;
-        }
-
-        uniqueUsers.set(identifier, normalizedEntry);
-      }
-    });
-  }
 
   return Array.from(uniqueUsers.values());
 };
@@ -1255,7 +1022,12 @@ const fetchDitbinmasWeeklyData = async ([, token, clientId, monthValue, yearValu
 
   const normalizedClientId =
     typeof clientId === "string" ? clientId.trim().toUpperCase() : "";
-  const resolvedClientId = normalizedClientId || "DITBINMAS";
+
+  if (!normalizedClientId) {
+    throw new Error("Client ID tidak valid");
+  }
+
+  const resolvedClientId = normalizedClientId;
 
   const monthStart = new Date(Date.UTC(yearNumber, monthNumber - 1, 1));
   const monthEnd = new Date(Date.UTC(yearNumber, monthNumber, 0));
@@ -1456,7 +1228,7 @@ const getCurrentSelections = () => {
 
 export default function WeeklyReportPageClient() {
   useRequireAuth();
-  const { token, role, clientId } = useAuth();
+  const { token, clientId } = useAuth();
   const [{ week: defaultWeek, month: defaultMonth, year: defaultYear }] = useState(() => getCurrentSelections());
   const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
@@ -1467,30 +1239,12 @@ export default function WeeklyReportPageClient() {
     [selectedYear],
   );
 
-  const normalizedRole = useMemo(() => {
-    if (role) return String(role).trim().toLowerCase();
-    if (typeof window === "undefined") return "";
-    return String(window.localStorage.getItem("user_role") || "").trim().toLowerCase();
-  }, [role]);
-
-  const normalizedClientId = useMemo(() => {
-    if (clientId) return String(clientId).trim().toLowerCase();
-    if (typeof window === "undefined") return "";
-    return String(window.localStorage.getItem("client_id") || "").trim().toLowerCase();
-  }, [clientId]);
-
-  const indicatesDitbinmasRole = normalizedRole.includes("ditbinmas");
-  const ditbinmasClientScope = indicatesDitbinmasRole
-    ? normalizedClientId && normalizedClientId !== "ditbinmas"
-      ? normalizedClientId
-      : "ditbinmas"
-    : normalizedClientId;
-  const resolvedDitbinmasClientScope = useMemo(
-    () => normalizeClientScopeIdentifier(ditbinmasClientScope) || DITBINMAS_CLIENT_TARGET,
-    [ditbinmasClientScope],
+  const resolvedClientScope = useMemo(
+    () => normalizeClientScopeIdentifier(clientId),
+    [clientId],
   );
 
-  const isDitbinmasAuthorized = indicatesDitbinmasRole;
+  const canAccessClientScope = Boolean(token && resolvedClientScope);
 
   const formatNumber = useMemo(
     () =>
@@ -1521,14 +1275,9 @@ export default function WeeklyReportPageClient() {
   );
 
   const { data: ditbinmasDirectory } = useSWR(
-    token && isDitbinmasAuthorized
-      ? ["ditbinmas-directory", token, ditbinmasClientScope]
-      : null,
+    canAccessClientScope ? ["ditbinmas-directory", token, resolvedClientScope] : null,
     ([, tk, scope]) =>
-      getUserDirectory(
-        tk,
-        normalizeClientScopeIdentifier(scope) || resolvedDitbinmasClientScope,
-      ),
+      getUserDirectory(tk, normalizeClientScopeIdentifier(scope) || resolvedClientScope),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -1540,11 +1289,11 @@ export default function WeeklyReportPageClient() {
     error: weeklySourceError,
     isValidating: weeklyValidating,
   } = useSWR(
-    token && isDitbinmasAuthorized
+    canAccessClientScope
       ? [
           "ditbinmas-weekly-report",
           token,
-          ditbinmasClientScope,
+          resolvedClientScope,
           selectedMonth,
           selectedYear,
         ]
@@ -1596,7 +1345,7 @@ export default function WeeklyReportPageClient() {
   );
 
   const weeklyInitialLoading = Boolean(
-    isDitbinmasAuthorized && !weeklySource && !weeklySourceError && weeklyValidating,
+    canAccessClientScope && !weeklySource && !weeklySourceError && weeklyValidating,
   );
 
   const [hasWeeklyLoaded, setHasWeeklyLoaded] = useState(false);
@@ -1608,7 +1357,7 @@ export default function WeeklyReportPageClient() {
   });
 
   useEffect(() => {
-    if (!isDitbinmasAuthorized) {
+    if (!canAccessClientScope) {
       setHasWeeklyLoaded(false);
       setWeeklyRefreshing(false);
       weeklySelectionRef.current = {
@@ -1623,7 +1372,7 @@ export default function WeeklyReportPageClient() {
       setHasWeeklyLoaded(true);
     }
   }, [
-    isDitbinmasAuthorized,
+    canAccessClientScope,
     weeklySource,
     selectedMonth,
     selectedYear,
@@ -1631,7 +1380,7 @@ export default function WeeklyReportPageClient() {
   ]);
 
   useEffect(() => {
-    if (!isDitbinmasAuthorized || !hasWeeklyLoaded) {
+    if (!canAccessClientScope || !hasWeeklyLoaded) {
       weeklySelectionRef.current = {
         month: selectedMonth,
         year: selectedYear,
@@ -1654,10 +1403,10 @@ export default function WeeklyReportPageClient() {
       };
       setWeeklyRefreshing(true);
     }
-  }, [isDitbinmasAuthorized, hasWeeklyLoaded, selectedMonth, selectedYear, selectedWeek]);
+  }, [canAccessClientScope, hasWeeklyLoaded, selectedMonth, selectedYear, selectedWeek]);
 
   useEffect(() => {
-    if (!isDitbinmasAuthorized || !hasWeeklyLoaded) {
+    if (!canAccessClientScope || !hasWeeklyLoaded) {
       setWeeklyRefreshing(false);
       return;
     }
@@ -1668,16 +1417,18 @@ export default function WeeklyReportPageClient() {
     }
 
     setWeeklyRefreshing(false);
-  }, [isDitbinmasAuthorized, hasWeeklyLoaded, weeklyValidating]);
+  }, [canAccessClientScope, hasWeeklyLoaded, weeklyValidating]);
 
   const weeklyLoading = weeklyInitialLoading || weeklyRefreshing;
 
   const ditbinmasUsers = useMemo(
     () =>
-      resolveDitbinmasDirectoryUsers(ditbinmasDirectory, {
-        clientScope: ditbinmasClientScope,
-      }),
-    [ditbinmasDirectory, ditbinmasClientScope],
+      canAccessClientScope
+        ? resolveDitbinmasDirectoryUsers(ditbinmasDirectory, {
+            clientScope: resolvedClientScope,
+          })
+        : [],
+    [canAccessClientScope, ditbinmasDirectory, resolvedClientScope],
   );
 
   const ditbinmasPersonnelCount = ditbinmasUsers.length;
@@ -1720,7 +1471,7 @@ export default function WeeklyReportPageClient() {
       fetchErrors: weeklySource?.errors ?? {},
     };
 
-    if (!isDitbinmasAuthorized) {
+    if (!canAccessClientScope) {
       return emptySnapshot;
     }
 
@@ -1783,10 +1534,10 @@ export default function WeeklyReportPageClient() {
     );
 
     const filteredWeekRecords = filterDitbinmasRecords(mergedWeekRecords, {
-      clientScope: ditbinmasClientScope,
+      clientScope: resolvedClientScope,
     });
     const filteredPrevRecords = filterDitbinmasRecords(mergedPrevRecords, {
-      clientScope: ditbinmasClientScope,
+      clientScope: resolvedClientScope,
     });
 
     const summaryWeekRaw = aggregateWeeklyLikesRecords(filteredWeekRecords, {
@@ -2074,7 +1825,7 @@ export default function WeeklyReportPageClient() {
       fetchErrors: weeklySource.errors || {},
     };
   }, [
-    isDitbinmasAuthorized,
+    canAccessClientScope,
     weeklySource,
     activeWeekRange,
     previousWeekRange,
@@ -2163,7 +1914,7 @@ export default function WeeklyReportPageClient() {
         }
       />
 
-      {isDitbinmasAuthorized ? (
+      {canAccessClientScope ? (
         <>
           <WeeklySummaryCards cards={weeklySummaryCards} loading={weeklyLoading} />
 
