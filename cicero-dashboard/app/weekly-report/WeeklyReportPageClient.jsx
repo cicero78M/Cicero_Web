@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
-import WeeklyPlatformEngagementTrendChart from "@/components/weekly-report/WeeklyPlatformEngagementTrendChart";
-import WeeklyPlatformLikesSummary from "@/components/weekly-report/WeeklyPlatformLikesSummary";
+import WeeklyDistributionSection from "@/components/weekly-report/WeeklyDistributionSection";
+import WeeklyReportFilters from "@/components/weekly-report/WeeklyReportFilters";
+import WeeklyReportHeader from "@/components/weekly-report/WeeklyReportHeader";
+import WeeklyReportLayout from "@/components/weekly-report/WeeklyReportLayout";
+import WeeklySummaryCards from "@/components/weekly-report/WeeklySummaryCards";
+import WeeklyTrendSection from "@/components/weekly-report/WeeklyTrendSection";
 import useAuth from "@/hooks/useAuth";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import {
@@ -2115,193 +2119,103 @@ export default function WeeklyReportPageClient() {
     ? "Gagal memuat data konten TikTok."
     : "";
 
+  const resolvedPeriodLabel =
+    weeklyPeriodLabel ||
+    `${
+      resolveActiveLabel(weekOptions, selectedWeek) ?? "Minggu Berjalan"
+    } • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${
+      resolveActiveLabel(MONTH_OPTIONS, selectedMonth) ?? ""
+    } ${resolveActiveLabel(yearOptions, selectedYear) ?? ""}`.trim();
+
+  const filters = (
+    <WeeklyReportFilters
+      weekOptions={weekOptions}
+      monthOptions={MONTH_OPTIONS}
+      yearOptions={yearOptions}
+      selectedWeek={selectedWeek}
+      selectedMonth={selectedMonth}
+      selectedYear={selectedYear}
+      onWeekChange={setSelectedWeek}
+      onMonthChange={setSelectedMonth}
+      onYearChange={setSelectedYear}
+    />
+  );
+
+  const trendDescription = `Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok oleh ${ditbinmasPersonnelDescriptor}.`;
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-slate-800">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-sky-200/50 blur-3xl" />
-        <div className="absolute -right-12 bottom-12 h-80 w-80 rounded-full bg-emerald-200/40 blur-3xl" />
-        <div className="absolute inset-x-16 bottom-10 h-64 rounded-full bg-[radial-gradient(circle_at_center,_rgba(224,242,254,0.45),_rgba(255,255,255,0))] blur-2xl" />
-      </div>
-
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16">
-        <section className="relative overflow-hidden rounded-3xl border border-sky-100 bg-white/80 p-8 shadow-xl backdrop-blur">
-          <div className="pointer-events-none absolute -top-16 right-12 h-40 w-40 rounded-full bg-sky-100/70 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-20 left-14 h-44 w-44 rounded-full bg-emerald-100/70 blur-3xl" />
-
-          <div className="relative flex flex-col gap-6">
-            <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-2">
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600">
-                  Ditbinmas Insight
-                </span>
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                  Laporan Mingguan Engagement Ditbinmas
-                </h1>
-                <p className="max-w-2xl text-sm text-slate-600">
-                  Halaman ini merangkum analisis mingguan atas pelaksanaan likes dan komentar oleh Personil Ditbinmas, sehingga Anda dapat langsung melihat perkembangan interaksi dari pekan ke pekan berdasarkan pilihan periode di bawah.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:items-end">
-                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                  Show Data By
-                </span>
-                <div className="grid w-full gap-2 sm:auto-cols-max sm:grid-flow-col sm:justify-end">
-                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                    Minggu
-                    <select
-                      className="w-full min-w-[140px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      value={selectedWeek}
-                      onChange={(event) => setSelectedWeek(event.target.value)}
-                    >
-                      {weekOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                    Bulan
-                    <select
-                      className="w-full min-w-[160px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      value={selectedMonth}
-                      onChange={(event) => setSelectedMonth(event.target.value)}
-                    >
-                      {MONTH_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                    Tahun
-                    <select
-                      className="w-full min-w-[130px] rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      value={selectedYear}
-                      onChange={(event) => setSelectedYear(event.target.value)}
-                    >
-                      {yearOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              </div>
-            </header>
+    <WeeklyReportLayout>
+      <WeeklyReportHeader
+        title="Laporan Mingguan Engagement Ditbinmas"
+        description="Halaman ini merangkum analisis mingguan atas pelaksanaan likes dan komentar oleh Personil Ditbinmas, sehingga Anda dapat langsung melihat perkembangan interaksi dari pekan ke pekan berdasarkan pilihan periode di bawah."
+        meta={
+          <div className="rounded-full border border-emerald-200 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600">
+            {ditbinmasPersonnelDescriptor}
           </div>
+        }
+        filters={
+          <div className="flex flex-col gap-2 sm:items-end">
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              Show Data By
+            </span>
+            {filters}
+          </div>
+        }
+      />
+
+      {isDitbinmasAuthorized ? (
+        <>
+          <WeeklySummaryCards cards={weeklySummaryCards} loading={weeklyLoading} />
+
+          <WeeklyTrendSection
+            periodLabel={resolvedPeriodLabel}
+            description={trendDescription}
+            loading={weeklyLoading}
+            personnelCount={ditbinmasPersonnelCount ?? null}
+            datasets={[
+              {
+                platformKey: "instagram",
+                platformLabel: "Instagram",
+                series: instagramSeries,
+                latest: instagramLatest,
+                previous: instagramPrevious,
+                error: instagramTrendError,
+              },
+              {
+                platformKey: "tiktok",
+                platformLabel: "TikTok",
+                series: tiktokSeries,
+                latest: tiktokLatest,
+                previous: tiktokPrevious,
+                error: tiktokTrendError,
+              },
+            ]}
+          />
+
+          <WeeklyDistributionSection
+            description={`Menampilkan distribusi likes dan komentar per Subsatker Ditbinmas selama ${weekDescriptor || "periode terpilih"}, sehingga perkembangan kontribusi personil mudah dipantau.`}
+            periodLabel={weeklyPeriodLabel ?? resolvedPeriodLabel}
+            weekDescriptor={weekDescriptor ?? resolvedPeriodLabel}
+            summaryData={likesSummaryData}
+            summaryCards={weeklySummaryCards}
+            formatNumber={formatNumber}
+            formatPercent={formatPercentValue}
+            postTotals={weeklyPostTotals}
+            labelOverrides={weeklyLabelOverrides}
+            personnelDistribution={weeklyPersonnelDistribution}
+            personnelDistributionMeta={weeklyDistributionMeta}
+            loading={weeklyLoading}
+          />
+        </>
+      ) : (
+        <section className="rounded-3xl border border-rose-100 bg-white/70 p-8 text-center text-slate-600 shadow-lg backdrop-blur">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-2xl">⚠️</div>
+          <h2 className="mt-4 text-xl font-semibold text-slate-900">Akses Terbatas</h2>
+          <p className="mt-2 text-sm">
+            Laporan mingguan Ditbinmas hanya dapat diakses oleh pengguna dengan peran dan client ID Ditbinmas. Silakan hubungi admin untuk meminta akses.
+          </p>
         </section>
-
-        {isDitbinmasAuthorized ? (
-          <>
-            <section className="space-y-6 rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-white via-emerald-50/80 to-sky-50/80 p-6 shadow-[0_20px_45px_rgba(45,212,191,0.15)]">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1">
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-emerald-600">
-                    Tren Interaksi Mingguan
-                  </h2>
-                  <p className="text-sm text-slate-600">
-                    Perbandingan performa konten mingguan berdasarkan total interaksi pada Instagram dan TikTok oleh {ditbinmasPersonnelDescriptor}.
-                  </p>
-                </div>
-                <div className="rounded-full border border-emerald-100 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500">
-                  {weeklyPeriodLabel || `${resolveActiveLabel(weekOptions, selectedWeek)} • ${resolveWeekDateRange(selectedWeek, selectedMonth, selectedYear)} ${resolveActiveLabel(MONTH_OPTIONS, selectedMonth)} ${resolveActiveLabel(yearOptions, selectedYear)}`}
-                </div>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <WeeklyPlatformEngagementTrendChart
-                  platformKey="instagram"
-                  platformLabel="Instagram"
-                  series={instagramSeries}
-                  latest={instagramLatest}
-                  previous={instagramPrevious}
-                  loading={weeklyLoading}
-                  error={instagramTrendError}
-                  formatNumber={formatNumber}
-                  personnelCount={ditbinmasPersonnelCount ?? undefined}
-                />
-
-                <WeeklyPlatformEngagementTrendChart
-                  platformKey="tiktok"
-                  platformLabel="TikTok"
-                  series={tiktokSeries}
-                  latest={tiktokLatest}
-                  previous={tiktokPrevious}
-                  loading={weeklyLoading}
-                  error={tiktokTrendError}
-                  formatNumber={formatNumber}
-                  personnelCount={ditbinmasPersonnelCount ?? undefined}
-                />
-              </div>
-            </section>
-
-            <section
-              className="relative overflow-hidden rounded-[36px] border border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 via-white to-sky-50/90 p-8 shadow-[0_28px_60px_rgba(52,211,153,0.2)]"
-              aria-label="Rincian Kinerja Platform"
-            >
-              <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-emerald-200/50 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-
-              <div className="relative space-y-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-3">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-700 shadow-sm ring-1 ring-white/70">
-                      Rincian Kinerja Platform
-                    </span>
-                    <h2 className="text-2xl font-semibold text-emerald-900">
-                      Detail Kinerja Kanal Mingguan
-                    </h2>
-                    <p className="max-w-2xl text-sm leading-relaxed text-emerald-800/80">
-                      Menampilkan distribusi likes dan komentar per Subsatker Ditbinmas selama {weekDescriptor || "periode terpilih"}, sehingga perkembangan kontribusi personil mudah dipantau.
-                    </p>
-                    <p className="text-xs text-emerald-700/70">
-                      Data diringkas otomatis mengikuti pilihan minggu, bulan, dan tahun pada bagian atas halaman.
-                    </p>
-                  </div>
-
-                  <div className="rounded-full border border-emerald-200 bg-white/85 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600 shadow-sm">
-                    {weeklyPeriodLabel}
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-white/80 bg-white/85 p-6 shadow-[0_24px_50px_rgba(16,185,129,0.18)] backdrop-blur">
-                  <WeeklyPlatformLikesSummary
-                    data={likesSummaryData}
-                    formatNumber={formatNumber}
-                    formatPercent={formatPercentValue}
-                    personnelActivity={null}
-                    postTotals={weeklyPostTotals}
-                    summaryCards={weeklySummaryCards}
-                    labelOverrides={weeklyLabelOverrides}
-                    personnelDistribution={weeklyPersonnelDistribution}
-                    personnelDistributionMeta={weeklyDistributionMeta}
-                    hiddenSections={{
-                      topCompliance: true,
-                      topCommentPersonnel: true,
-                      topLikesPersonnel: true,
-                    }}
-                    loading={weeklyLoading}
-                  />
-                </div>
-              </div>
-            </section>
-          </>
-        ) : (
-          <section className="rounded-3xl border border-rose-100 bg-white/70 p-8 text-center text-slate-600 shadow-lg backdrop-blur">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-2xl">⚠️</div>
-            <h2 className="mt-4 text-xl font-semibold text-slate-900">
-              Akses Terbatas
-            </h2>
-            <p className="mt-2 text-sm">
-              Laporan mingguan Ditbinmas hanya dapat diakses oleh pengguna dengan peran dan client ID Ditbinmas. Silakan hubungi admin untuk meminta akses.
-            </p>
-          </section>
-        )}
-      </div>
-    </main>
+      )}
+    </WeeklyReportLayout>
   );
 }
