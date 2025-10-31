@@ -552,6 +552,14 @@ const aggregateLikesRecords = (records = [], options = {}) => {
   const activeDirectoryUsers = directoryUsersRaw.filter((user) =>
     resolveDirectoryIsActive(user),
   );
+  const totalActivePersonnelOverrideRaw = options?.totalActivePersonnel;
+  const totalActivePersonnelOverride = Number.isFinite(
+    totalActivePersonnelOverrideRaw,
+  )
+    ? Math.max(0, Math.floor(totalActivePersonnelOverrideRaw))
+    : null;
+  const baselineActivePersonnelCount =
+    totalActivePersonnelOverride ?? activeDirectoryUsers.length;
 
   if (safeRecords.length === 0 && activeDirectoryUsers.length === 0) {
     return createEmptyLikesSummary();
@@ -1513,18 +1521,26 @@ const aggregateLikesRecords = (records = [], options = {}) => {
             0,
           ) / clients.length
       : 0;
+  const effectiveActivePersonnel =
+    baselineActivePersonnelCount > 0
+      ? baselineActivePersonnelCount
+      : totals.activePersonnel;
+  const effectiveTotalPersonnel =
+    baselineActivePersonnelCount > 0
+      ? Math.max(totals.totalPersonnel, baselineActivePersonnelCount)
+      : totals.totalPersonnel;
 
   const instagramCompliance =
-    totals.activePersonnel > 0
-      ? (totals.personnelWithLikes / totals.activePersonnel) * 100
+    effectiveActivePersonnel > 0
+      ? (totals.personnelWithLikes / effectiveActivePersonnel) * 100
       : 0;
   const tiktokCompliance =
-    totals.activePersonnel > 0
-      ? (totals.personnelWithComments / totals.activePersonnel) * 100
+    effectiveActivePersonnel > 0
+      ? (totals.personnelWithComments / effectiveActivePersonnel) * 100
       : 0;
   const overallCompliance =
-    totals.activePersonnel > 0
-      ? (totals.personnelWithActivity / totals.activePersonnel) * 100
+    effectiveActivePersonnel > 0
+      ? (totals.personnelWithActivity / effectiveActivePersonnel) * 100
       : 0;
 
   const topPersonnel = personnelList
@@ -1545,8 +1561,8 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       totalClients: clients.length,
       totalLikes: totals.totalLikes,
       totalComments: totals.totalComments,
-      totalPersonnel: totals.totalPersonnel,
-      activePersonnel: totals.activePersonnel,
+      totalPersonnel: effectiveTotalPersonnel,
+      activePersonnel: effectiveActivePersonnel,
       personnelWithLikes: totals.personnelWithLikes,
       personnelWithComments: totals.personnelWithComments,
       personnelWithActivity: totals.personnelWithActivity,
