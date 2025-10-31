@@ -2761,12 +2761,51 @@ export default function ExecutiveSummaryPage() {
     platformPostsState && typeof platformPostsState === "object"
       ? platformPostsState
       : { instagram: [], tiktok: [] };
-  const instagramPostCount = Array.isArray(platformPosts?.instagram)
-    ? platformPosts.instagram.length
-    : 0;
-  const tiktokPostCount = Array.isArray(platformPosts?.tiktok)
-    ? platformPosts.tiktok.length
-    : 0;
+  const postsForSelectedMonth = useMemo(() => {
+    const instagramPosts = filterRecordsWithResolvableDate(
+      Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
+      {
+        extraPaths: POST_DATE_PATHS,
+      },
+    );
+    const tiktokPosts = filterRecordsWithResolvableDate(
+      Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
+      {
+        extraPaths: POST_DATE_PATHS,
+      },
+    );
+    const periodRange = getMonthDateRange(selectedMonthKey);
+
+    if (!periodRange) {
+      return {
+        instagram: instagramPosts,
+        tiktok: tiktokPosts,
+      };
+    }
+
+    return {
+      instagram: filterRecordsByDateRange(instagramPosts, periodRange, {
+        extraPaths: POST_DATE_PATHS,
+      }),
+      tiktok: filterRecordsByDateRange(tiktokPosts, periodRange, {
+        extraPaths: POST_DATE_PATHS,
+      }),
+    };
+  }, [platformPosts?.instagram, platformPosts?.tiktok, selectedMonthKey]);
+
+  const instagramPostsForSelectedMonth = Array.isArray(
+    postsForSelectedMonth?.instagram,
+  )
+    ? postsForSelectedMonth.instagram
+    : [];
+  const tiktokPostsForSelectedMonth = Array.isArray(
+    postsForSelectedMonth?.tiktok,
+  )
+    ? postsForSelectedMonth.tiktok
+    : [];
+
+  const instagramPostCount = instagramPostsForSelectedMonth.length;
+  const tiktokPostCount = tiktokPostsForSelectedMonth.length;
   const maxDistributionTotal = useMemo(() => {
     if (!divisionDistribution.length) {
       return 0;
@@ -2941,25 +2980,11 @@ export default function ExecutiveSummaryPage() {
   }, [platformPosts?.instagram]);
 
   const instagramWeeklyTrendCardData = useMemo(() => {
-    const instagramPosts = filterRecordsWithResolvableDate(
-      Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
-      {
-        extraPaths: POST_DATE_PATHS,
-      },
-    );
-
-    const periodRange = getMonthDateRange(selectedMonthKey);
-    const filteredPosts = periodRange
-      ? filterRecordsByDateRange(instagramPosts, periodRange, {
-          extraPaths: POST_DATE_PATHS,
-        })
-      : instagramPosts;
-
-    return buildWeeklyEngagementTrend(filteredPosts, {
+    return buildWeeklyEngagementTrend(instagramPostsForSelectedMonth, {
       platformKey: "instagram",
       platformLabel: "Instagram",
     });
-  }, [platformPosts?.instagram, selectedMonthKey]);
+  }, [instagramPostsForSelectedMonth]);
 
   const tiktokMonthlyTrend = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
@@ -2976,59 +3001,18 @@ export default function ExecutiveSummaryPage() {
   }, [platformPosts?.tiktok]);
 
   const tiktokWeeklyTrendCardData = useMemo(() => {
-    const tiktokPosts = filterRecordsWithResolvableDate(
-      Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
-      {
-        extraPaths: POST_DATE_PATHS,
-      },
-    );
-
-    const periodRange = getMonthDateRange(selectedMonthKey);
-    const filteredPosts = periodRange
-      ? filterRecordsByDateRange(tiktokPosts, periodRange, {
-          extraPaths: POST_DATE_PATHS,
-        })
-      : tiktokPosts;
-
-    return buildWeeklyEngagementTrend(filteredPosts, {
+    return buildWeeklyEngagementTrend(tiktokPostsForSelectedMonth, {
       platformKey: "tiktok",
       platformLabel: "TikTok",
     });
-  }, [platformPosts?.tiktok, selectedMonthKey]);
+  }, [tiktokPostsForSelectedMonth]);
 
   const dailyInteractionTrend = useMemo(() => {
-    const periodRange = getMonthDateRange(selectedMonthKey);
-
-    const instagramPostsRaw = Array.isArray(platformPosts?.instagram)
-      ? platformPosts.instagram
-      : [];
-    const tiktokPostsRaw = Array.isArray(platformPosts?.tiktok)
-      ? platformPosts.tiktok
-      : [];
-
-    const instagramPosts = filterRecordsWithResolvableDate(instagramPostsRaw, {
-      extraPaths: POST_DATE_PATHS,
-    });
-    const tiktokPosts = filterRecordsWithResolvableDate(tiktokPostsRaw, {
-      extraPaths: POST_DATE_PATHS,
-    });
-
-    const filteredInstagramPosts = periodRange
-      ? filterRecordsByDateRange(instagramPosts, periodRange, {
-          extraPaths: POST_DATE_PATHS,
-        })
-      : instagramPosts;
-    const filteredTiktokPosts = periodRange
-      ? filterRecordsByDateRange(tiktokPosts, periodRange, {
-          extraPaths: POST_DATE_PATHS,
-        })
-      : tiktokPosts;
-
     return buildDailyInteractionTrend({
-      instagramPosts: filteredInstagramPosts,
-      tiktokPosts: filteredTiktokPosts,
+      instagramPosts: instagramPostsForSelectedMonth,
+      tiktokPosts: tiktokPostsForSelectedMonth,
     });
-  }, [platformPosts?.instagram, platformPosts?.tiktok, selectedMonthKey]);
+  }, [instagramPostsForSelectedMonth, tiktokPostsForSelectedMonth]);
 
   const instagramMonthlyCardData = useMemo(() => {
     const trend = instagramMonthlyTrend ?? {};
