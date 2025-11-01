@@ -312,10 +312,13 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
     const normalizedPersonnelCount = Number.isFinite(numericPersonnelCount)
       ? Math.max(0, numericPersonnelCount)
       : null;
+    const hasValidPersonnelCount =
+      normalizedPersonnelCount !== null && normalizedPersonnelCount > 0;
     const basePersonnelLabel = String(personnelLabel ?? "Personil Ditbinmas").trim() || "Personil Ditbinmas";
+    const resolvedPersonnelCount = hasValidPersonnelCount ? normalizedPersonnelCount : null;
     const personnelDescriptor =
-      normalizedPersonnelCount !== null
-        ? `${formatInteger(normalizedPersonnelCount)} ${basePersonnelLabel}`
+      resolvedPersonnelCount !== null
+        ? `${formatInteger(resolvedPersonnelCount)} ${basePersonnelLabel}`
         : basePersonnelLabel;
 
     if (postsNow > 0) {

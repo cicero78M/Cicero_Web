@@ -4317,6 +4317,7 @@ export default function ExecutiveSummaryPage() {
                 loading={showPlatformLoading}
                 error={instagramWeeklyTrendError}
                 formatNumber={formatNumber}
+                personnelCount={userSummary?.totalUsers ?? null}
               />
             ) : null}
 
@@ -4330,6 +4331,7 @@ export default function ExecutiveSummaryPage() {
                 loading={showPlatformLoading}
                 error={tiktokWeeklyTrendError}
                 formatNumber={formatNumber}
+                personnelCount={userSummary?.totalUsers ?? null}
               />
             ) : null}
           </div>
