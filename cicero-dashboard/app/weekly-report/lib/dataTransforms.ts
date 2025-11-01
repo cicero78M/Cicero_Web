@@ -517,14 +517,12 @@ export const mergeWeeklyActivityRecords = (
     });
   };
 
-  const addMetricValue = (target: any, fields: string[], value: any) => {
+  const mergeMetricValue = (target: any, fields: string[], value: any) => {
     const numeric = toSafeNumber(value);
-    if (!numeric) {
-      return;
-    }
 
     fields.forEach((field) => {
-      target[field] = toSafeNumber(target[field]) + numeric;
+      const current = toSafeNumber(target[field]);
+      target[field] = Math.max(current, numeric);
     });
   };
 
@@ -618,7 +616,7 @@ export const mergeWeeklyActivityRecords = (
           metricValue,
         );
       } else {
-        addMetricValue(
+        mergeMetricValue(
           existing,
           type === "likes" ? LIKE_FIELDS : COMMENT_FIELDS,
           metricValue,

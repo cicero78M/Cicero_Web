@@ -267,14 +267,12 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
     });
   };
 
-  const addMetricValue = (target, fields, value) => {
+  const mergeMetricValue = (target, fields, value) => {
     const numeric = toSafeNumber(value);
-    if (!numeric) {
-      return;
-    }
 
     fields.forEach((field) => {
-      target[field] = toSafeNumber(target[field]) + numeric;
+      const current = toSafeNumber(target[field]);
+      target[field] = Math.max(current, numeric);
     });
   };
 
@@ -527,7 +525,7 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
           metricValue,
         );
       } else {
-        addMetricValue(
+        mergeMetricValue(
           existing,
           type === "likes" ? LIKE_FIELDS : COMMENT_FIELDS,
           metricValue,

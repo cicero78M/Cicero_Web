@@ -260,6 +260,75 @@ describe("aggregateWeeklyLikesRecords", () => {
     );
   });
 
+  it("caps cumulative metrics when merging multiple daily records", () => {
+    const likesRecords = [
+      {
+        client_id: "CLIENT_A",
+        nama: "Person A",
+        username: "person.a",
+        tanggal: "2024-01-01",
+        jumlah_like: 4,
+      },
+      {
+        client_id: "CLIENT_A",
+        nama: "Person A",
+        username: "person.a",
+        tanggal: "2024-01-02",
+        jumlah_like: 7,
+      },
+    ];
+
+    const commentRecords = [
+      {
+        client_id: "CLIENT_A",
+        nama: "Person A",
+        username: "person.a",
+        tanggal: "2024-01-01",
+        jumlah_komentar: 1,
+      },
+      {
+        client_id: "CLIENT_A",
+        nama: "Person A",
+        username: "person.a",
+        tanggal: "2024-01-02",
+        jumlah_komentar: 3,
+      },
+    ];
+
+    const mergedRecords = mergeWeeklyActivityRecords(likesRecords, commentRecords);
+
+    expect(mergedRecords).toHaveLength(1);
+    expect(mergedRecords[0]).toEqual(
+      expect.objectContaining({
+        client_id: "CLIENT_A",
+        nama: "Person A",
+        username: "person.a",
+        jumlah_like: 7,
+        total_like: 7,
+        likes: 7,
+        jumlah_komentar: 3,
+        total_komentar: 3,
+        comments: 3,
+      }),
+    );
+
+    const summary = aggregateWeeklyLikesRecords(mergedRecords);
+
+    expect(summary.clients).toHaveLength(1);
+    const clientEntry = summary.clients[0];
+    expect(clientEntry.totalLikes).toBe(7);
+    expect(clientEntry.totalComments).toBe(3);
+    expect(clientEntry.personnel).toHaveLength(1);
+    expect(clientEntry.personnel[0]).toEqual(
+      expect.objectContaining({
+        nama: "Person A",
+        username: "person.a",
+        likes: 7,
+        comments: 3,
+      }),
+    );
+  });
+
   it("merges personnel identities that differ only by punctuation", () => {
     const directoryUsers = [
       {
