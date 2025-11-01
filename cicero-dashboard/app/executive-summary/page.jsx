@@ -3391,308 +3391,6 @@ export default function ExecutiveSummaryPage() {
     data.contentTable,
     selectedMonthKey,
   ]);
-  const pageNarrative = useMemo(() => {
-    const paragraphs = [];
-    const totals = likesSummary?.totals ?? null;
-    const safeNumber = (value) => {
-      const numeric = Number(value);
-      return Number.isFinite(numeric) ? numeric : null;
-    };
-    const joinWithAnd = (items = []) => {
-      const filtered = items.filter((item) => item && typeof item === "string");
-      if (filtered.length === 0) {
-        return "";
-      }
-      if (filtered.length === 1) {
-        return filtered[0];
-      }
-      if (filtered.length === 2) {
-        return `${filtered[0]} dan ${filtered[1]}`;
-      }
-      return `${filtered.slice(0, -1).join(", ")}, dan ${filtered[filtered.length - 1]}`;
-    };
-    const getSummaryCard = (key) =>
-      summaryCards.find((card) => card && card.key === key) ?? null;
-
-    const instagramPostsTotal = safeNumber(instagramPostCount) ?? 0;
-    const tiktokPostsTotal = safeNumber(tiktokPostCount) ?? 0;
-    const totalPostsCount = instagramPostsTotal + tiktokPostsTotal;
-    const totalLikes = safeNumber(totals?.totalLikes);
-    const totalComments = safeNumber(totals?.totalComments);
-
-    if (
-      (Number.isFinite(totalPostsCount) && totalPostsCount > 0) ||
-      totalLikes != null ||
-      totalComments != null
-    ) {
-      const monthLabel = selectedMonthLabel ?? "periode ini";
-      const summaryParts = [];
-      if (Number.isFinite(totalPostsCount) && totalPostsCount > 0) {
-        summaryParts.push(
-          `${formatNumber(totalPostsCount, { maximumFractionDigits: 0 })} konten`,
-        );
-      }
-      if (totalLikes != null) {
-        summaryParts.push(
-          `${formatNumber(totalLikes, { maximumFractionDigits: 0 })} likes`,
-        );
-      }
-      if (totalComments != null) {
-        summaryParts.push(
-          `${formatNumber(totalComments, { maximumFractionDigits: 0 })} komentar`,
-        );
-      }
-
-      if (summaryParts.length > 0) {
-        const totalPostsCard = getSummaryCard("total-posts");
-        const totalLikesCard = getSummaryCard("total-likes");
-        const totalCommentsCard = getSummaryCard("total-comments");
-        const comparisonMessages = [
-          totalPostsCard?.comparison?.label,
-          totalLikesCard?.comparison?.label,
-          totalCommentsCard?.comparison?.label,
-        ]
-          .filter(Boolean)
-          .map((label) => `${label}.`);
-
-        const complianceParts = [];
-        const instagramComplianceCard = getSummaryCard("instagram-compliance");
-        if (instagramComplianceCard?.value) {
-          complianceParts.push(
-            `Kepatuhan Instagram berada di ${instagramComplianceCard.value}${
-              instagramComplianceCard?.comparison?.label
-                ? ` (${instagramComplianceCard.comparison.label})`
-                : ""
-            }`,
-          );
-        }
-        const tiktokComplianceCard = getSummaryCard("tiktok-compliance");
-        if (tiktokComplianceCard?.value) {
-          complianceParts.push(
-            `Kepatuhan TikTok berada di ${tiktokComplianceCard.value}${
-              tiktokComplianceCard?.comparison?.label
-                ? ` (${tiktokComplianceCard.comparison.label})`
-                : ""
-            }`,
-          );
-        }
-
-        let paragraph = `Selama ${monthLabel}, tim menghasilkan ${joinWithAnd(
-          summaryParts,
-        )}.`;
-        if (complianceParts.length > 0) {
-          paragraph += ` ${joinWithAnd(complianceParts)}.`;
-        }
-        if (comparisonMessages.length > 0) {
-          paragraph += ` ${comparisonMessages.join(" ")}`;
-        }
-        paragraphs.push(paragraph.trim());
-      }
-    }
-
-    const dailySeries = Array.isArray(dailyInteractionTrend?.series)
-      ? dailyInteractionTrend.series
-      : [];
-    if (dailySeries.length > 0) {
-      const peakDay = dailySeries.reduce((best, point) => {
-        const interactions = safeNumber(point?.interactions) ?? 0;
-        if (!best || interactions > best.interactions) {
-          return {
-            label: point?.label ?? "",
-            interactions,
-            likes: safeNumber(point?.likes) ?? 0,
-            comments: safeNumber(point?.comments) ?? 0,
-          };
-        }
-        return best;
-      }, null);
-      const totalsInteractions = safeNumber(dailyInteractionTrend?.totals?.interactions);
-      const averageInteractions =
-        totalsInteractions != null && dailySeries.length > 0
-          ? totalsInteractions / dailySeries.length
-          : null;
-      const peakLabel = peakDay?.label ? `pada ${peakDay.label}` : "";
-      const peakInteractionsLabel = formatNumber(peakDay?.interactions ?? 0, {
-        maximumFractionDigits: 0,
-      });
-      const peakLikesLabel = formatNumber(peakDay?.likes ?? 0, {
-        maximumFractionDigits: 0,
-      });
-      const peakCommentsLabel = formatNumber(peakDay?.comments ?? 0, {
-        maximumFractionDigits: 0,
-      });
-      let paragraph = `Aktivitas tertinggi tercatat ${peakLabel} dengan ${peakInteractionsLabel} interaksi (${peakLikesLabel} likes dan ${peakCommentsLabel} komentar).`;
-      if (averageInteractions != null) {
-        paragraph += ` Rata-rata interaksi harian berada di ${formatNumber(averageInteractions, {
-          maximumFractionDigits: 1,
-          minimumFractionDigits: averageInteractions < 10 ? 1 : 0,
-        })}.`;
-      }
-      paragraphs.push(paragraph.trim());
-    }
-
-    const buildWeeklySentence = (trend, platformLabel) => {
-      const latest = trend?.latestWeek ?? null;
-      if (!latest) {
-        return null;
-      }
-      const previous = trend?.previousWeek ?? null;
-      const latestInteractions = safeNumber(latest?.interactions) ?? 0;
-      const latestLabel = latest?.label ?? "pekan ini";
-      let sentence = `${platformLabel} mencatat ${formatNumber(latestInteractions, {
-        maximumFractionDigits: 0,
-      })} interaksi pada ${latestLabel}`;
-      if (previous) {
-        const previousInteractions = safeNumber(previous?.interactions) ?? 0;
-        const delta = latestInteractions - previousInteractions;
-        if (Math.abs(delta) < 0.5) {
-          sentence += `, setara dengan ${previous.label}`;
-        } else {
-          sentence += `, ${delta > 0 ? "naik" : "turun"} ${formatNumber(Math.abs(delta), {
-            maximumFractionDigits: 0,
-          })} dibanding ${previous.label}`;
-        }
-      } else if (trend?.weeksCount > 1 || trend?.hasAnyPosts) {
-        sentence += ", sementara data pekan sebelumnya belum tersedia";
-      }
-      return `${sentence}.`;
-    };
-
-    const weeklySentences = [
-      buildWeeklySentence(instagramWeeklyTrendCardData, "Instagram"),
-      buildWeeklySentence(tiktokWeeklyTrendCardData, "TikTok"),
-    ].filter(Boolean);
-    if (weeklySentences.length > 0) {
-      paragraphs.push(weeklySentences.join(" "));
-    }
-
-    const buildMonthlySentence = (data, platformLabel) => {
-      if (!data?.hasRecords) {
-        return null;
-      }
-      const currentPeriod = data?.currentPeriodLabel ?? "periode ini";
-      const interactionsMetric = Array.isArray(data?.currentMetrics)
-        ? data.currentMetrics.find((metric) => metric?.key === "interactions")
-        : null;
-      const postsMetric = Array.isArray(data?.currentMetrics)
-        ? data.currentMetrics.find((metric) => metric?.key === "posts")
-        : null;
-      const interactionValue = safeNumber(interactionsMetric?.value);
-      const postValue = safeNumber(postsMetric?.value);
-      const interactionLabel =
-        interactionValue != null
-          ? `${formatNumber(interactionValue, { maximumFractionDigits: 0 })} interaksi`
-          : null;
-      const postLabel =
-        postValue != null
-          ? `${formatNumber(postValue, { maximumFractionDigits: 0 })} konten`
-          : null;
-      const changeMetric = Array.isArray(data?.deltaMetrics)
-        ? data.deltaMetrics.find((metric) => metric?.key === "interactions")
-        : null;
-      let changeLabel = "";
-      if (changeMetric && data?.previousPeriodLabel) {
-        const delta = safeNumber(changeMetric?.absolute) ?? 0;
-        if (Math.abs(delta) < 0.5) {
-          changeLabel = ` setara dengan ${data.previousPeriodLabel}`;
-        } else {
-          changeLabel = ` ${delta > 0 ? "naik" : "turun"} ${formatNumber(Math.abs(delta), {
-            maximumFractionDigits: 0,
-          })} dibanding ${data.previousPeriodLabel}`;
-        }
-      }
-      const baseline = joinWithAnd([interactionLabel, postLabel]);
-      if (!baseline) {
-        return null;
-      }
-      return `${platformLabel} pada ${currentPeriod} meraih ${baseline}.${changeLabel}`.trim();
-    };
-
-    const monthlySentences = [
-      buildMonthlySentence(instagramMonthlyCardData, "Instagram"),
-      buildMonthlySentence(tiktokMonthlyCardData, "TikTok"),
-    ].filter(Boolean);
-    if (monthlySentences.length > 0) {
-      paragraphs.push(monthlySentences.join(" "));
-    }
-
-    if (userSummary?.totalUsers) {
-      const instagramPercentLabel = Number.isFinite(userSummary.instagramPercent)
-        ? formatPercent(userSummary.instagramPercent)
-        : null;
-      const tiktokPercentLabel = Number.isFinite(userSummary.tiktokPercent)
-        ? formatPercent(userSummary.tiktokPercent)
-        : null;
-      const parts = [
-        `${formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil terdata`,
-        userSummary.instagramFilled
-          ? `${formatNumber(userSummary.instagramFilled, { maximumFractionDigits: 0 })} memiliki akun Instagram${
-              instagramPercentLabel ? ` (${instagramPercentLabel})` : ""
-            }`
-          : null,
-        userSummary.tiktokFilled
-          ? `${formatNumber(userSummary.tiktokFilled, { maximumFractionDigits: 0 })} memiliki akun TikTok${
-              tiktokPercentLabel ? ` (${tiktokPercentLabel})` : ""
-            }`
-          : null,
-        userSummary.bothCount
-          ? `${formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })} mengisi kedua kanal`
-          : null,
-      ].filter(Boolean);
-      if (parts.length > 0) {
-        paragraphs.push(`Kesiapan personil mencakup ${joinWithAnd(parts)}.`);
-      }
-    }
-
-    const topContent = Array.isArray(topContentRows) && topContentRows.length > 0
-      ? topContentRows[0]
-      : null;
-    if (topContent) {
-      const platformLabel = topContent.platform || "Konten";
-      const publishedLabel = formatPublishedDate(topContent.publishedAt);
-      const topInteractions = formatNumber(topContent.totalInteractions ?? 0, {
-        maximumFractionDigits: 0,
-      });
-      const topLikes = formatNumber(topContent.likes ?? 0, {
-        maximumFractionDigits: 0,
-      });
-      const topComments = formatNumber(topContent.comments ?? 0, {
-        maximumFractionDigits: 0,
-      });
-      const title = topContent.title ? `"${topContent.title}"` : "konten unggulan";
-      paragraphs.push(
-        `${platformLabel} ${title} yang terbit pada ${publishedLabel} menghasilkan ${topInteractions} interaksi (${topLikes} likes dan ${topComments} komentar).`,
-      );
-    }
-
-    return paragraphs.filter(
-      (paragraph) => typeof paragraph === "string" && paragraph.trim().length > 0,
-    );
-  }, [
-    summaryCards,
-    likesSummary,
-    instagramPostCount,
-    tiktokPostCount,
-    selectedMonthLabel,
-    dailyInteractionTrend,
-    instagramWeeklyTrendCardData,
-    tiktokWeeklyTrendCardData,
-    instagramMonthlyCardData,
-    tiktokMonthlyCardData,
-    userSummary,
-    topContentRows,
-  ]);
-  const maxDistributionTotal = useMemo(() => {
-    if (!divisionDistribution.length) {
-      return 0;
-    }
-    return divisionDistribution.reduce((maxValue, item) => {
-      const total = Number(item?.total) || 0;
-      return total > maxValue ? total : maxValue;
-    }, 0);
-  }, [divisionDistribution]);
-
-
   const instagramMonthlyTrend = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
@@ -4093,6 +3791,309 @@ export default function ExecutiveSummaryPage() {
       hasRecords: Boolean(trend.hasRecords && currentMonth),
     };
   }, [tiktokMonthlyTrend, selectedMonthKey]);
+
+  const pageNarrative = useMemo(() => {
+    const paragraphs = [];
+    const totals = likesSummary?.totals ?? null;
+    const safeNumber = (value) => {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numeric : null;
+    };
+    const joinWithAnd = (items = []) => {
+      const filtered = items.filter((item) => item && typeof item === "string");
+      if (filtered.length === 0) {
+        return "";
+      }
+      if (filtered.length === 1) {
+        return filtered[0];
+      }
+      if (filtered.length === 2) {
+        return `${filtered[0]} dan ${filtered[1]}`;
+      }
+      return `${filtered.slice(0, -1).join(", ")}, dan ${filtered[filtered.length - 1]}`;
+    };
+    const getSummaryCard = (key) =>
+      summaryCards.find((card) => card && card.key === key) ?? null;
+
+    const instagramPostsTotal = safeNumber(instagramPostCount) ?? 0;
+    const tiktokPostsTotal = safeNumber(tiktokPostCount) ?? 0;
+    const totalPostsCount = instagramPostsTotal + tiktokPostsTotal;
+    const totalLikes = safeNumber(totals?.totalLikes);
+    const totalComments = safeNumber(totals?.totalComments);
+
+    if (
+      (Number.isFinite(totalPostsCount) && totalPostsCount > 0) ||
+      totalLikes != null ||
+      totalComments != null
+    ) {
+      const monthLabel = selectedMonthLabel ?? "periode ini";
+      const summaryParts = [];
+      if (Number.isFinite(totalPostsCount) && totalPostsCount > 0) {
+        summaryParts.push(
+          `${formatNumber(totalPostsCount, { maximumFractionDigits: 0 })} konten`,
+        );
+      }
+      if (totalLikes != null) {
+        summaryParts.push(
+          `${formatNumber(totalLikes, { maximumFractionDigits: 0 })} likes`,
+        );
+      }
+      if (totalComments != null) {
+        summaryParts.push(
+          `${formatNumber(totalComments, { maximumFractionDigits: 0 })} komentar`,
+        );
+      }
+
+      if (summaryParts.length > 0) {
+        const totalPostsCard = getSummaryCard("total-posts");
+        const totalLikesCard = getSummaryCard("total-likes");
+        const totalCommentsCard = getSummaryCard("total-comments");
+        const comparisonMessages = [
+          totalPostsCard?.comparison?.label,
+          totalLikesCard?.comparison?.label,
+          totalCommentsCard?.comparison?.label,
+        ]
+          .filter(Boolean)
+          .map((label) => `${label}.`);
+
+        const complianceParts = [];
+        const instagramComplianceCard = getSummaryCard("instagram-compliance");
+        if (instagramComplianceCard?.value) {
+          complianceParts.push(
+            `Kepatuhan Instagram berada di ${instagramComplianceCard.value}${
+              instagramComplianceCard?.comparison?.label
+                ? ` (${instagramComplianceCard.comparison.label})`
+                : ""
+            }`,
+          );
+        }
+        const tiktokComplianceCard = getSummaryCard("tiktok-compliance");
+        if (tiktokComplianceCard?.value) {
+          complianceParts.push(
+            `Kepatuhan TikTok berada di ${tiktokComplianceCard.value}${
+              tiktokComplianceCard?.comparison?.label
+                ? ` (${tiktokComplianceCard.comparison.label})`
+                : ""
+            }`,
+          );
+        }
+
+        let paragraph = `Selama ${monthLabel}, tim menghasilkan ${joinWithAnd(
+          summaryParts,
+        )}.`;
+        if (complianceParts.length > 0) {
+          paragraph += ` ${joinWithAnd(complianceParts)}.`;
+        }
+        if (comparisonMessages.length > 0) {
+          paragraph += ` ${comparisonMessages.join(" ")}`;
+        }
+        paragraphs.push(paragraph.trim());
+      }
+    }
+
+    const dailySeries = Array.isArray(dailyInteractionTrend?.series)
+      ? dailyInteractionTrend.series
+      : [];
+    if (dailySeries.length > 0) {
+      const peakDay = dailySeries.reduce((best, point) => {
+        const interactions = safeNumber(point?.interactions) ?? 0;
+        if (!best || interactions > best.interactions) {
+          return {
+            label: point?.label ?? "",
+            interactions,
+            likes: safeNumber(point?.likes) ?? 0,
+            comments: safeNumber(point?.comments) ?? 0,
+          };
+        }
+        return best;
+      }, null);
+      const totalsInteractions = safeNumber(dailyInteractionTrend?.totals?.interactions);
+      const averageInteractions =
+        totalsInteractions != null && dailySeries.length > 0
+          ? totalsInteractions / dailySeries.length
+          : null;
+      const peakLabel = peakDay?.label ? `pada ${peakDay.label}` : "";
+      const peakInteractionsLabel = formatNumber(peakDay?.interactions ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      const peakLikesLabel = formatNumber(peakDay?.likes ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      const peakCommentsLabel = formatNumber(peakDay?.comments ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      let paragraph = `Aktivitas tertinggi tercatat ${peakLabel} dengan ${peakInteractionsLabel} interaksi (${peakLikesLabel} likes dan ${peakCommentsLabel} komentar).`;
+      if (averageInteractions != null) {
+        paragraph += ` Rata-rata interaksi harian berada di ${formatNumber(averageInteractions, {
+          maximumFractionDigits: 1,
+          minimumFractionDigits: averageInteractions < 10 ? 1 : 0,
+        })}.`;
+      }
+      paragraphs.push(paragraph.trim());
+    }
+
+    const buildWeeklySentence = (trend, platformLabel) => {
+      const latest = trend?.latestWeek ?? null;
+      if (!latest) {
+        return null;
+      }
+      const previous = trend?.previousWeek ?? null;
+      const latestInteractions = safeNumber(latest?.interactions) ?? 0;
+      const latestLabel = latest?.label ?? "pekan ini";
+      let sentence = `${platformLabel} mencatat ${formatNumber(latestInteractions, {
+        maximumFractionDigits: 0,
+      })} interaksi pada ${latestLabel}`;
+      if (previous) {
+        const previousInteractions = safeNumber(previous?.interactions) ?? 0;
+        const delta = latestInteractions - previousInteractions;
+        if (Math.abs(delta) < 0.5) {
+          sentence += `, setara dengan ${previous.label}`;
+        } else {
+          sentence += `, ${delta > 0 ? "naik" : "turun"} ${formatNumber(Math.abs(delta), {
+            maximumFractionDigits: 0,
+          })} dibanding ${previous.label}`;
+        }
+      } else if (trend?.weeksCount > 1 || trend?.hasAnyPosts) {
+        sentence += ", sementara data pekan sebelumnya belum tersedia";
+      }
+      return `${sentence}.`;
+    };
+
+    const weeklySentences = [
+      buildWeeklySentence(instagramWeeklyTrendCardData, "Instagram"),
+      buildWeeklySentence(tiktokWeeklyTrendCardData, "TikTok"),
+    ].filter(Boolean);
+    if (weeklySentences.length > 0) {
+      paragraphs.push(weeklySentences.join(" "));
+    }
+
+    const buildMonthlySentence = (data, platformLabel) => {
+      if (!data?.hasRecords) {
+        return null;
+      }
+      const currentPeriod = data?.currentPeriodLabel ?? "periode ini";
+      const interactionsMetric = Array.isArray(data?.currentMetrics)
+        ? data.currentMetrics.find((metric) => metric?.key === "interactions")
+        : null;
+      const postsMetric = Array.isArray(data?.currentMetrics)
+        ? data.currentMetrics.find((metric) => metric?.key === "posts")
+        : null;
+      const interactionValue = safeNumber(interactionsMetric?.value);
+      const postValue = safeNumber(postsMetric?.value);
+      const interactionLabel =
+        interactionValue != null
+          ? `${formatNumber(interactionValue, { maximumFractionDigits: 0 })} interaksi`
+          : null;
+      const postLabel =
+        postValue != null
+          ? `${formatNumber(postValue, { maximumFractionDigits: 0 })} konten`
+          : null;
+      const changeMetric = Array.isArray(data?.deltaMetrics)
+        ? data.deltaMetrics.find((metric) => metric?.key === "interactions")
+        : null;
+      let changeLabel = "";
+      if (changeMetric && data?.previousPeriodLabel) {
+        const delta = safeNumber(changeMetric?.absolute) ?? 0;
+        if (Math.abs(delta) < 0.5) {
+          changeLabel = ` setara dengan ${data.previousPeriodLabel}`;
+        } else {
+          changeLabel = ` ${delta > 0 ? "naik" : "turun"} ${formatNumber(Math.abs(delta), {
+            maximumFractionDigits: 0,
+          })} dibanding ${data.previousPeriodLabel}`;
+        }
+      }
+      const baseline = joinWithAnd([interactionLabel, postLabel]);
+      if (!baseline) {
+        return null;
+      }
+      return `${platformLabel} pada ${currentPeriod} meraih ${baseline}.${changeLabel}`.trim();
+    };
+
+    const monthlySentences = [
+      buildMonthlySentence(instagramMonthlyCardData, "Instagram"),
+      buildMonthlySentence(tiktokMonthlyCardData, "TikTok"),
+    ].filter(Boolean);
+    if (monthlySentences.length > 0) {
+      paragraphs.push(monthlySentences.join(" "));
+    }
+
+    if (userSummary?.totalUsers) {
+      const instagramPercentLabel = Number.isFinite(userSummary.instagramPercent)
+        ? formatPercent(userSummary.instagramPercent)
+        : null;
+      const tiktokPercentLabel = Number.isFinite(userSummary.tiktokPercent)
+        ? formatPercent(userSummary.tiktokPercent)
+        : null;
+      const parts = [
+        `${formatNumber(userSummary.totalUsers, { maximumFractionDigits: 0 })} personil terdata`,
+        userSummary.instagramFilled
+          ? `${formatNumber(userSummary.instagramFilled, { maximumFractionDigits: 0 })} memiliki akun Instagram${
+              instagramPercentLabel ? ` (${instagramPercentLabel})` : ""
+            }`
+          : null,
+        userSummary.tiktokFilled
+          ? `${formatNumber(userSummary.tiktokFilled, { maximumFractionDigits: 0 })} memiliki akun TikTok${
+              tiktokPercentLabel ? ` (${tiktokPercentLabel})` : ""
+            }`
+          : null,
+        userSummary.bothCount
+          ? `${formatNumber(userSummary.bothCount, { maximumFractionDigits: 0 })} mengisi kedua kanal`
+          : null,
+      ].filter(Boolean);
+      if (parts.length > 0) {
+        paragraphs.push(`Kesiapan personil mencakup ${joinWithAnd(parts)}.`);
+      }
+    }
+
+    const topContent = Array.isArray(topContentRows) && topContentRows.length > 0
+      ? topContentRows[0]
+      : null;
+    if (topContent) {
+      const platformLabel = topContent.platform || "Konten";
+      const publishedLabel = formatPublishedDate(topContent.publishedAt);
+      const topInteractions = formatNumber(topContent.totalInteractions ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      const topLikes = formatNumber(topContent.likes ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      const topComments = formatNumber(topContent.comments ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      const title = topContent.title ? `"${topContent.title}"` : "konten unggulan";
+      paragraphs.push(
+        `${platformLabel} ${title} yang terbit pada ${publishedLabel} menghasilkan ${topInteractions} interaksi (${topLikes} likes dan ${topComments} komentar).`,
+      );
+    }
+
+    return paragraphs.filter(
+      (paragraph) => typeof paragraph === "string" && paragraph.trim().length > 0,
+    );
+  }, [
+    summaryCards,
+    likesSummary,
+    instagramPostCount,
+    tiktokPostCount,
+    selectedMonthLabel,
+    dailyInteractionTrend,
+    instagramWeeklyTrendCardData,
+    tiktokWeeklyTrendCardData,
+    instagramMonthlyCardData,
+    tiktokMonthlyCardData,
+    userSummary,
+    topContentRows,
+  ]);
+  const maxDistributionTotal = useMemo(() => {
+    if (!divisionDistribution.length) {
+      return 0;
+    }
+    return divisionDistribution.reduce((maxValue, item) => {
+      const total = Number(item?.total) || 0;
+      return total > maxValue ? total : maxValue;
+    }, 0);
+  }, [divisionDistribution]);
+
+
 
   const showPlatformLoading = platformsLoading;
   const instagramMonthlyTrendDescription =
