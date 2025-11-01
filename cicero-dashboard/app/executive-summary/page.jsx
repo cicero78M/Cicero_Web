@@ -115,6 +115,19 @@ const monthLabelFormatter = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
 });
 
+const ensureValidDate = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.valueOf())) {
+    return value;
+  }
+
+  const parsed = parseDateValue(value);
+  if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) {
+    return parsed;
+  }
+
+  return null;
+};
+
 const aggregateMonthlyActivity = (likesRecords = [], commentRecords = []) => {
   const monthMap = new Map();
 
@@ -440,19 +453,6 @@ const publishedDateFormatter = new Intl.DateTimeFormat("id-ID", {
   month: "short",
   year: "numeric",
 });
-
-const ensureValidDate = (value) => {
-  if (value instanceof Date && !Number.isNaN(value.valueOf())) {
-    return value;
-  }
-
-  const parsed = parseDateValue(value);
-  if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) {
-    return parsed;
-  }
-
-  return null;
-};
 
 const formatPublishedDate = (value) => {
   const date = ensureValidDate(value);
