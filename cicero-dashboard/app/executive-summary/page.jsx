@@ -3231,6 +3231,166 @@ export default function ExecutiveSummaryPage() {
     instagramPostCount,
     tiktokPostCount,
   ]);
+  const topContentRows = useMemo(() => {
+    const instagramPosts = Array.isArray(instagramPostsForSelectedMonth)
+      ? instagramPostsForSelectedMonth
+      : [];
+    const tiktokPosts = Array.isArray(tiktokPostsForSelectedMonth)
+      ? tiktokPostsForSelectedMonth
+      : [];
+
+    const buildRow = (normalized, platformLabel) => {
+      if (!normalized) {
+        return null;
+      }
+
+      const likes = Math.max(0, Number(normalized?.metrics?.likes) || 0);
+      const comments = Math.max(
+        0,
+        Number(normalized?.metrics?.comments) || 0,
+      );
+      const publishedAt = ensureValidDate(normalized?.publishedAt);
+
+      return {
+        id: normalized.id,
+        platform: platformLabel,
+        title: normalized.title,
+        format: normalized.type,
+        publishedAt,
+        likes,
+        comments,
+        totalInteractions: likes + comments,
+      };
+    };
+
+    const normalizedInstagram = instagramPosts
+      .map((post, index) =>
+        buildRow(
+          normalizePlatformPost(post, {
+            platformKey: "instagram",
+            platformLabel: "Instagram",
+            fallbackIndex: index,
+          }),
+          "Instagram",
+        ),
+      )
+      .filter(Boolean);
+
+    const normalizedTiktok = tiktokPosts
+      .map((post, index) =>
+        buildRow(
+          normalizePlatformPost(post, {
+            platformKey: "tiktok",
+            platformLabel: "TikTok",
+            fallbackIndex: index,
+          }),
+          "TikTok",
+        ),
+      )
+      .filter(Boolean);
+
+    const combined = [...normalizedInstagram, ...normalizedTiktok]
+      .filter((entry) => entry && entry.id);
+
+    combined.sort((a, b) => {
+      if (b.totalInteractions !== a.totalInteractions) {
+        return b.totalInteractions - a.totalInteractions;
+      }
+      if (b.likes !== a.likes) {
+        return b.likes - a.likes;
+      }
+      if (b.comments !== a.comments) {
+        return b.comments - a.comments;
+      }
+      return a.title.localeCompare(b.title);
+    });
+
+    const limited = combined.slice(0, 10);
+
+    if (limited.length > 0) {
+      return limited;
+    }
+
+    if (!Array.isArray(data.contentTable)) {
+      return [];
+    }
+
+    const periodRange = getMonthDateRange(selectedMonthKey);
+    const filteredContentTable = periodRange
+      ? filterRecordsByDateRange(data.contentTable, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : data.contentTable;
+
+    return filteredContentTable
+      .map((row, index) => {
+        if (!row || typeof row !== "object") {
+          return null;
+        }
+
+        const likes = Math.max(
+          0,
+          Number(
+            row.likes ??
+              row.likeCount ??
+              row.metrics?.likes ??
+              row.interactions?.likes ??
+              0,
+          ) || 0,
+        );
+        const comments = Math.max(
+          0,
+          Number(
+            row.comments ??
+              row.commentCount ??
+              row.metrics?.comments ??
+              row.interactions?.comments ??
+              0,
+          ) || 0,
+        );
+        const totalInteractions = Math.max(
+          0,
+          Number(
+            row.totalInteractions ??
+              row.interactions ??
+              likes + comments,
+          ) ||
+            likes + comments,
+        );
+
+        const publishedAt = ensureValidDate(
+          row.publishedAt ??
+            row.tanggal ??
+            row.date ??
+            row.published_at ??
+            row.created_at ??
+            null,
+        );
+
+        return {
+          id: String(
+            row.id ??
+              row.contentId ??
+              row.slug ??
+              `${row.platform ?? "content"}-${index + 1}`,
+          ),
+          platform: row.platform ?? row.channel ?? "",
+          title: row.title ?? row.name ?? row.caption ?? "Konten",
+          format: normalizeContentType(row.format ?? row.type ?? ""),
+          publishedAt,
+          likes,
+          comments,
+          totalInteractions,
+        };
+      })
+      .filter((entry) => entry && entry.id)
+      .slice(0, 10);
+  }, [
+    instagramPostsForSelectedMonth,
+    tiktokPostsForSelectedMonth,
+    data.contentTable,
+    selectedMonthKey,
+  ]);
   const pageNarrative = useMemo(() => {
     const paragraphs = [];
     const totals = likesSummary?.totals ?? null;
@@ -3532,166 +3692,6 @@ export default function ExecutiveSummaryPage() {
     }, 0);
   }, [divisionDistribution]);
 
-  const topContentRows = useMemo(() => {
-    const instagramPosts = Array.isArray(instagramPostsForSelectedMonth)
-      ? instagramPostsForSelectedMonth
-      : [];
-    const tiktokPosts = Array.isArray(tiktokPostsForSelectedMonth)
-      ? tiktokPostsForSelectedMonth
-      : [];
-
-    const buildRow = (normalized, platformLabel) => {
-      if (!normalized) {
-        return null;
-      }
-
-      const likes = Math.max(0, Number(normalized?.metrics?.likes) || 0);
-      const comments = Math.max(
-        0,
-        Number(normalized?.metrics?.comments) || 0,
-      );
-      const publishedAt = ensureValidDate(normalized?.publishedAt);
-
-      return {
-        id: normalized.id,
-        platform: platformLabel,
-        title: normalized.title,
-        format: normalized.type,
-        publishedAt,
-        likes,
-        comments,
-        totalInteractions: likes + comments,
-      };
-    };
-
-    const normalizedInstagram = instagramPosts
-      .map((post, index) =>
-        buildRow(
-          normalizePlatformPost(post, {
-            platformKey: "instagram",
-            platformLabel: "Instagram",
-            fallbackIndex: index,
-          }),
-          "Instagram",
-        ),
-      )
-      .filter(Boolean);
-
-    const normalizedTiktok = tiktokPosts
-      .map((post, index) =>
-        buildRow(
-          normalizePlatformPost(post, {
-            platformKey: "tiktok",
-            platformLabel: "TikTok",
-            fallbackIndex: index,
-          }),
-          "TikTok",
-        ),
-      )
-      .filter(Boolean);
-
-    const combined = [...normalizedInstagram, ...normalizedTiktok]
-      .filter((entry) => entry && entry.id);
-
-    combined.sort((a, b) => {
-      if (b.totalInteractions !== a.totalInteractions) {
-        return b.totalInteractions - a.totalInteractions;
-      }
-      if (b.likes !== a.likes) {
-        return b.likes - a.likes;
-      }
-      if (b.comments !== a.comments) {
-        return b.comments - a.comments;
-      }
-      return a.title.localeCompare(b.title);
-    });
-
-    const limited = combined.slice(0, 10);
-
-    if (limited.length > 0) {
-      return limited;
-    }
-
-    if (!Array.isArray(data.contentTable)) {
-      return [];
-    }
-
-    const periodRange = getMonthDateRange(selectedMonthKey);
-    const filteredContentTable = periodRange
-      ? filterRecordsByDateRange(data.contentTable, periodRange, {
-          extraPaths: POST_DATE_PATHS,
-        })
-      : data.contentTable;
-
-    return filteredContentTable
-      .map((row, index) => {
-        if (!row || typeof row !== "object") {
-          return null;
-        }
-
-        const likes = Math.max(
-          0,
-          Number(
-            row.likes ??
-              row.likeCount ??
-              row.metrics?.likes ??
-              row.interactions?.likes ??
-              0,
-          ) || 0,
-        );
-        const comments = Math.max(
-          0,
-          Number(
-            row.comments ??
-              row.commentCount ??
-              row.metrics?.comments ??
-              row.interactions?.comments ??
-              0,
-          ) || 0,
-        );
-        const totalInteractions = Math.max(
-          0,
-          Number(
-            row.totalInteractions ??
-              row.interactions ??
-              likes + comments,
-          ) ||
-            likes + comments,
-        );
-
-        const publishedAt = ensureValidDate(
-          row.publishedAt ??
-            row.tanggal ??
-            row.date ??
-            row.published_at ??
-            row.created_at ??
-            null,
-        );
-
-        return {
-          id: String(
-            row.id ??
-              row.contentId ??
-              row.slug ??
-              `${row.platform ?? "content"}-${index + 1}`,
-          ),
-          platform: row.platform ?? row.channel ?? "",
-          title: row.title ?? row.name ?? row.caption ?? "Konten",
-          format: normalizeContentType(row.format ?? row.type ?? ""),
-          publishedAt,
-          likes,
-          comments,
-          totalInteractions,
-        };
-      })
-      .filter((entry) => entry && entry.id)
-      .slice(0, 10);
-  }, [
-    instagramPostsForSelectedMonth,
-    tiktokPostsForSelectedMonth,
-    data.contentTable,
-    selectedMonthKey,
-  ]);
 
   const instagramMonthlyTrend = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
