@@ -78,6 +78,7 @@ export default function WeeklyDistributionSection({
             personnelDistribution={personnelDistribution}
             personnelDistributionMeta={personnelDistributionMeta}
             hiddenSections={{
+              summaryCards: true,
               topCompliance: true,
               topCommentPersonnel: true,
               topLikesPersonnel: true,

@@ -122,6 +122,7 @@ interface PersonnelActivitySummary {
 }
 
 type HiddenSectionKey =
+  | "summaryCards"
   | "topCompliance"
   | "topCommentPersonnel"
   | "topLikesPersonnel";
@@ -502,41 +503,43 @@ const WeeklyPlatformLikesSummary = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {computedSummaryCards.map((card) => {
-          const comparison = card.comparison ?? null;
-          const direction = comparison?.direction ?? "flat";
-          const toneClass =
-            direction === "up"
-              ? "text-emerald-300"
-              : direction === "down"
-              ? "text-rose-300"
-              : "text-slate-400";
-          const icon =
-            direction === "up" ? "▲" : direction === "down" ? "▼" : "▬";
+      {!sectionVisibility.summaryCards ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {computedSummaryCards.map((card) => {
+            const comparison = card.comparison ?? null;
+            const direction = comparison?.direction ?? "flat";
+            const toneClass =
+              direction === "up"
+                ? "text-emerald-300"
+                : direction === "down"
+                ? "text-rose-300"
+                : "text-slate-400";
+            const icon =
+              direction === "up" ? "▲" : direction === "down" ? "▼" : "▬";
 
-          return (
-            <div
-              key={card.key}
-              className="h-full rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
-                {card.label}
-              </p>
-              <p className="mt-3 text-2xl font-semibold text-white">{card.value}</p>
-              {card.description ? (
-                <p className="mt-2 text-xs text-slate-400">{card.description}</p>
-              ) : null}
-              {comparison ? (
-                <p className={`mt-3 text-xs font-semibold ${toneClass}`}>
-                  <span className="mr-1 inline-block text-sm">{icon}</span>
-                  {comparison.label}
+            return (
+              <div
+                key={card.key}
+                className="h-full rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 to-slate-900/80 p-5 shadow-[0_20px_45px_rgba(56,189,248,0.15)]"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+                  {card.label}
                 </p>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+                <p className="mt-3 text-2xl font-semibold text-white">{card.value}</p>
+                {card.description ? (
+                  <p className="mt-2 text-xs text-slate-400">{card.description}</p>
+                ) : null}
+                {comparison ? (
+                  <p className={`mt-3 text-xs font-semibold ${toneClass}`}>
+                    <span className="mr-1 inline-block text-sm">{icon}</span>
+                    {comparison.label}
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       {lastUpdatedLabel ? (
         <p className="text-xs text-slate-400">
