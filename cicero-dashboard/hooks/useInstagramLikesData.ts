@@ -10,6 +10,7 @@ import {
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatOnly } from "@/utils/pangkat";
+import useAuth from "@/hooks/useAuth";
 
 interface Options {
   viewBy: string;
@@ -35,6 +36,7 @@ export default function useInstagramLikesData({
   toDate,
   scope = "client",
 }: Options) {
+  const { token: authToken, clientId: authClientId, role: authRole } = useAuth();
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,33 +59,37 @@ export default function useInstagramLikesData({
     setLoading(true);
     setError("");
     const token =
-      typeof window !== "undefined"
+      authToken ??
+      (typeof window !== "undefined"
         ? localStorage.getItem("cicero_token") ?? ""
-        : "";
+        : "");
     const userClientId =
-      typeof window !== "undefined"
+      authClientId ??
+      (typeof window !== "undefined"
         ? localStorage.getItem("client_id") ?? ""
-        : "";
+        : "");
     const role =
-      typeof window !== "undefined"
+      authRole ??
+      (typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
-        : "";
-    if (!token || !userClientId) {
+        : "");
+    const normalizedClientId = String(userClientId || "").trim();
+
+    if (!token || !normalizedClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return () => controller.abort();
     }
 
-    const roleLower = String(role).toLowerCase();
-    const isDitbinmasRoleValue = roleLower === "ditbinmas";
-    setIsDitbinmasRole(isDitbinmasRoleValue);
-    const normalizedClientId = String(userClientId || "").trim();
-    const normalizedClientIdUpper = normalizedClientId.toUpperCase();
-    const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
-    setIsDitbinmasScopedClient(isDitbinmasRoleValue && !isDitbinmasClient);
-    const dashboardClientId = isDitbinmasRoleValue
-      ? "DITBINMAS"
-      : userClientId;
+      const roleLower = String(role).toLowerCase();
+      const isDitbinmasRoleValue = roleLower === "ditbinmas";
+      setIsDitbinmasRole(isDitbinmasRoleValue);
+      const normalizedClientIdUpper = normalizedClientId.toUpperCase();
+      const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
+      setIsDitbinmasScopedClient(isDitbinmasRoleValue && !isDitbinmasClient);
+      const dashboardClientId = isDitbinmasRoleValue
+        ? "DITBINMAS"
+        : normalizedClientId;
 
     async function fetchData() {
       try {
@@ -106,7 +112,7 @@ export default function useInstagramLikesData({
                 endDate,
               },
               controller.signal,
-              userClientId,
+              normalizedClientId,
               scope,
             );
           if (controller.signal.aborted) return;
@@ -137,7 +143,7 @@ export default function useInstagramLikesData({
           : [];
         setIgPosts(posts);
 
-        const client_id = userClientId;
+          const client_id = normalizedClientId;
 
         const profileClientId = client_id;
         const profileRes = await getClientProfile(
@@ -332,7 +338,16 @@ export default function useInstagramLikesData({
     fetchData();
 
     return () => controller.abort();
-  }, [viewBy, customDate, fromDate, toDate, scope]);
+  }, [
+    viewBy,
+    customDate,
+    fromDate,
+    toDate,
+    scope,
+    authToken,
+    authClientId,
+    authRole,
+  ]);
 
   return {
     chartData,
