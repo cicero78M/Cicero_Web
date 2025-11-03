@@ -14,7 +14,11 @@ export async function fetchDitbinmasAbsensiLikes(
   loginClientId?: string,
   scope: "client" | "all" = "client",
 ) {
-  const clientId = "DITBINMAS";
+  const normalizedLoginClientId = String(loginClientId || "").trim();
+  if (!normalizedLoginClientId) {
+    throw new Error("Client ID Ditbinmas tidak ditemukan");
+  }
+  const clientId = normalizedLoginClientId;
 
   const statsData = await getDashboardStats(
     token,
@@ -80,10 +84,10 @@ export async function fetchDitbinmasAbsensiLikes(
       : [],
   );
 
-  const normalizedLoginClientId = String(loginClientId || "")
+  const normalizedLoginClientIdLower = normalizedLoginClientId
     .trim()
     .toLowerCase();
-  if (scope === "client" && normalizedLoginClientId) {
+  if (scope === "client" && normalizedLoginClientIdLower) {
     const normalizeValue = (value: unknown) =>
       String(value || "")
         .trim()
@@ -92,7 +96,7 @@ export async function fetchDitbinmasAbsensiLikes(
       const userClientId = normalizeValue(
         u.client_id || u.clientId || u.clientID || u.client || "",
       );
-      return userClientId === normalizedLoginClientId;
+      return userClientId === normalizedLoginClientIdLower;
     });
   }
 
