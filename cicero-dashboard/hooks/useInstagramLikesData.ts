@@ -269,16 +269,29 @@ export default function useInstagramLikesData({
               String(value || "")
                 .trim()
                 .toLowerCase();
-            filteredUsers = users.filter((u: any) => {
-              const userClientId = normalizeValue(
-                u.client_id ??
-                  u.clientId ??
-                  u.clientID ??
-                  u.client ??
-                  "",
-              );
-              return userClientId === normalizedClientId;
-            });
+            const hasClientIdentifiers = users.some((u: any) =>
+              Boolean(
+                normalizeValue(
+                  u.client_id ??
+                    u.clientId ??
+                    u.clientID ??
+                    u.client ??
+                    "",
+                ),
+              ),
+            );
+            if (hasClientIdentifiers) {
+              filteredUsers = users.filter((u: any) => {
+                const userClientId = normalizeValue(
+                  u.client_id ??
+                    u.clientId ??
+                    u.clientID ??
+                    u.client ??
+                    "",
+                );
+                return userClientId === normalizedClientId;
+              });
+            }
           }
         }
 
