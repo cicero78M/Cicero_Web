@@ -8,7 +8,6 @@ import {
   getUserDirectory,
 } from "@/utils/api";
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
-import { extractRekapLikesUsers } from "@/utils/rekapLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatOnly } from "@/utils/pangkat";
 
@@ -216,7 +215,13 @@ export default function useInstagramLikesData({
               ).catch(() => ({ data: [] })),
             ),
           );
-          users = rekapAll.flatMap((res: any) => extractRekapLikesUsers(res));
+          users = rekapAll.flatMap((res: any) =>
+            Array.isArray(res?.data)
+              ? res.data
+              : Array.isArray(res)
+              ? res
+              : [],
+          );
           const nameMap = await getClientNames(
             token,
             users.map((u: any) =>
@@ -247,7 +252,11 @@ export default function useInstagramLikesData({
             endDate,
             controller.signal,
           );
-          users = extractRekapLikesUsers(rekapRes);
+          users = Array.isArray(rekapRes?.data)
+            ? rekapRes.data
+            : Array.isArray(rekapRes)
+            ? rekapRes
+            : [];
         }
 
         let filteredUsers = users;

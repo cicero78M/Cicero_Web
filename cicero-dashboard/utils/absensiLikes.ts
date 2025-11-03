@@ -1,5 +1,4 @@
 import { getDashboardStats, getRekapLikesIG, getClientProfile, getClientNames, getUserDirectory } from "@/utils/api";
-import { extractRekapLikesUsers } from "@/utils/rekapLikes";
 
 interface FetchParams {
   periode: string;
@@ -73,7 +72,13 @@ export async function fetchDitbinmasAbsensiLikes(
     ),
   );
 
-  let users = rekapAll.flatMap((res) => extractRekapLikesUsers(res));
+  let users = rekapAll.flatMap((res) =>
+    Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res)
+      ? res
+      : [],
+  );
 
   const normalizedLoginClientId = String(loginClientId || "")
     .trim()
