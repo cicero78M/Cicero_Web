@@ -150,35 +150,4 @@ describe("useTiktokCommentsData", () => {
     expect(clientIds).toEqual(["DITBINMAS"]);
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
-
-  it("keeps TikTok records without client identifiers for scoped clients", async () => {
-    localStorage.setItem("cicero_token", "token");
-    localStorage.setItem("client_id", "CLIENT_A");
-    localStorage.setItem("user_role", "operator");
-
-    mockedGetClientProfile.mockResolvedValue({ client_type: "SATKER" } as any);
-    mockedGetRekapKomentarTiktok.mockResolvedValue({
-      data: [
-        {
-          username: "user-a",
-          jumlah_komentar: 3,
-        },
-      ],
-    } as any);
-
-    const { result } = renderHook(() =>
-      useTiktokCommentsData({
-        viewBy: "monthly",
-        customDate: "",
-        fromDate: "",
-        toDate: "",
-      }),
-    );
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.chartData).toHaveLength(1);
-    expect(result.current.chartData[0].username).toBe("user-a");
-    expect(result.current.rekapSummary.totalUser).toBe(1);
-  });
 });

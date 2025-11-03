@@ -235,20 +235,12 @@ export default function useTiktokCommentsData({
         }
 
         let filteredUsers = users;
-        const normalizeValue = (value: unknown) =>
-          String(value || "").trim().toLowerCase();
-        const hasClientIdentifiers = users.some((u: any) =>
-          Boolean(
-            normalizeValue(
-              u.client_id || u.clientId || u.clientID || u.client || "",
-            ),
-          ),
-        );
         const shouldFilterByClient =
           Boolean(normalizedClientIdLower) &&
-          hasClientIdentifiers &&
           (isDitbinmasRoleValue || !directorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
+          const normalizeValue = (value: unknown) =>
+            String(value || "").trim().toLowerCase();
           filteredUsers = users.filter((u: any) => {
             const userClient = normalizeValue(
               u.client_id || u.clientId || u.clientID || u.client || "",
