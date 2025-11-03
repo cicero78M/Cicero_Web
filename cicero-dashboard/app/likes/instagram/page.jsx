@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Loader from "@/components/Loader";
 import ChartBox from "@/components/likes/instagram/ChartBox";
 import SummaryItem from "@/components/likes/instagram/SummaryItem";
@@ -12,11 +12,6 @@ import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
 import { buildInstagramRekap } from "@/utils/buildInstagramRekap";
-import useAuth from "@/hooks/useAuth";
-import {
-  buildInstagramSummary,
-  filterUsersByClientId,
-} from "@/utils/instagramLikes";
 import {
   Camera,
   User,
@@ -45,18 +40,6 @@ export default function InstagramEngagementInsightPage() {
     isDitbinmasScopedClient,
     isDitbinmasRole,
   } = useInstagramLikesData({ viewBy, customDate, fromDate, toDate });
-  const { clientId: authClientId } = useAuth();
-  const storedClientId =
-    typeof window !== "undefined" ? window.localStorage.getItem("client_id") : "";
-  const effectiveClientId = authClientId ?? storedClientId ?? "";
-  const filteredChartData = useMemo(
-    () => filterUsersByClientId(chartData, effectiveClientId),
-    [chartData, effectiveClientId],
-  );
-  const derivedSummary = useMemo(
-    () => buildInstagramSummary(filteredChartData, rekapSummary.totalIGPost),
-    [filteredChartData, rekapSummary.totalIGPost],
-  );
 
   const viewOptions = VIEW_OPTIONS;
   if (loading) return <Loader />;
@@ -70,10 +53,7 @@ export default function InstagramEngagementInsightPage() {
     );
 
   // Group chartData by kelompok jika bukan direktorat
-  const kelompok = useMemo(
-    () => (isDirectorate ? null : groupUsersByKelompok(filteredChartData)),
-    [filteredChartData, isDirectorate],
-  );
+  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
   const shouldGroupByClient =
     isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
@@ -82,8 +62,8 @@ export default function InstagramEngagementInsightPage() {
     ? "POLRES JAJARAN"
     : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
 
-  const totalUser = Number(derivedSummary.totalUser) || 0;
-  const totalTanpaUsername = Number(derivedSummary.totalTanpaUsername) || 0;
+  const totalUser = Number(rekapSummary.totalUser) || 0;
+  const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
   const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
@@ -93,11 +73,7 @@ export default function InstagramEngagementInsightPage() {
   };
 
   function handleCopyRekap() {
-    const message = buildInstagramRekap(
-      derivedSummary,
-      filteredChartData,
-      clientName,
-    );
+    const message = buildInstagramRekap(rekapSummary, chartData, clientName);
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(message).then(() => {
@@ -151,7 +127,7 @@ export default function InstagramEngagementInsightPage() {
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <SummaryItem
                     label="Jumlah IG Post"
-                    value={derivedSummary.totalIGPost}
+                    value={rekapSummary.totalIGPost}
                     color="blue"
                     icon={
                       <Camera className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
@@ -159,7 +135,7 @@ export default function InstagramEngagementInsightPage() {
                   />
                   <SummaryItem
                     label="Total User"
-                    value={derivedSummary.totalUser}
+                    value={rekapSummary.totalUser}
                     color="gray"
                     icon={
                       <User className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
@@ -167,40 +143,40 @@ export default function InstagramEngagementInsightPage() {
                   />
                   <SummaryItem
                     label="Sudah Likes"
-                    value={derivedSummary.totalSudahLike}
+                    value={rekapSummary.totalSudahLike}
                     color="green"
                     icon={
                       <ThumbsUp className="h-7 w-7 text-teal-500 drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]" />
                     }
-                    percentage={getPercentage(derivedSummary.totalSudahLike)}
+                    percentage={getPercentage(rekapSummary.totalSudahLike)}
                   />
                   <SummaryItem
                     label="Kurang Likes"
-                    value={derivedSummary.totalKurangLike}
+                    value={rekapSummary.totalKurangLike}
                     color="orange"
                     icon={
                       <ThumbsDown className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.4)]" />
                     }
-                    percentage={getPercentage(derivedSummary.totalKurangLike)}
+                    percentage={getPercentage(rekapSummary.totalKurangLike)}
                   />
                   <SummaryItem
                     label="Belum Likes"
-                    value={derivedSummary.totalBelumLike}
+                    value={rekapSummary.totalBelumLike}
                     color="red"
                     icon={
                       <ThumbsDown className="h-7 w-7 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
                     }
-                    percentage={getPercentage(derivedSummary.totalBelumLike)}
+                    percentage={getPercentage(rekapSummary.totalBelumLike)}
                   />
                   <SummaryItem
                     label="Tanpa Username"
-                    value={derivedSummary.totalTanpaUsername}
+                    value={rekapSummary.totalTanpaUsername}
                     color="gray"
                     icon={
                       <UserX className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
                     }
                     percentage={getPercentage(
-                      derivedSummary.totalTanpaUsername,
+                      rekapSummary.totalTanpaUsername,
                       totalUser,
                     )}
                   />
@@ -212,8 +188,8 @@ export default function InstagramEngagementInsightPage() {
             {isDirectorate ? (
               <ChartBox
                 title={directorateTitle}
-                users={filteredChartData}
-                totalPost={derivedSummary.totalIGPost}
+                users={chartData}
+                totalPost={rekapSummary.totalIGPost}
                 groupBy={directorateGroupBy}
                 orientation={directorateOrientation}
                 sortBy="percentage"
@@ -227,36 +203,36 @@ export default function InstagramEngagementInsightPage() {
               <div className="flex flex-col gap-6">
                 <ChartBox
                   title="BAG"
-                  users={kelompok?.BAG}
-                  totalPost={derivedSummary.totalIGPost}
+                  users={kelompok.BAG}
+                  totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
                   sortBy="percentage"
                 />
                 <ChartBox
                   title="SAT"
-                  users={kelompok?.SAT}
-                  totalPost={derivedSummary.totalIGPost}
+                  users={kelompok.SAT}
+                  totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
                   sortBy="percentage"
                 />
                 <ChartBox
                   title="SI & SPKT"
-                  users={kelompok?.["SI & SPKT"]}
-                  totalPost={derivedSummary.totalIGPost}
+                  users={kelompok["SI & SPKT"]}
+                  totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
                   sortBy="percentage"
                 />
                 <ChartBox
                   title="LAINNYA"
-                  users={kelompok?.LAINNYA}
-                  totalPost={derivedSummary.totalIGPost}
+                  users={kelompok.LAINNYA}
+                  totalPost={rekapSummary.totalIGPost}
                   narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi lainnya."
                   sortBy="percentage"
                 />
                 <ChartHorizontal
                   title="POLSEK"
-                  users={kelompok?.POLSEK}
-                  totalPost={derivedSummary.totalIGPost}
+                  users={kelompok.POLSEK}
+                  totalPost={rekapSummary.totalIGPost}
                   showTotalUser
                   sortBy="percentage"
                 />
