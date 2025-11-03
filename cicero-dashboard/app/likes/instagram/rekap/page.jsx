@@ -9,11 +9,6 @@ import ViewDataSelector, {
   VIEW_OPTIONS,
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
-import useAuth from "@/hooks/useAuth";
-import {
-  buildInstagramSummary,
-  filterUsersByClientId,
-} from "@/utils/instagramLikes";
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear();
@@ -179,18 +174,6 @@ export default function RekapLikesIGPage() {
     toDate: normalizedRange.endDate,
     scope: ditbinmasScope,
   });
-  const { clientId: authClientId } = useAuth();
-  const storedClientId =
-    typeof window !== "undefined" ? window.localStorage.getItem("client_id") : "";
-  const effectiveClientId = authClientId ?? storedClientId ?? "";
-  const filteredChartData = useMemo(
-    () => filterUsersByClientId(chartData, effectiveClientId),
-    [chartData, effectiveClientId],
-  );
-  const derivedSummary = useMemo(
-    () => buildInstagramSummary(filteredChartData, rekapSummary.totalIGPost),
-    [filteredChartData, rekapSummary.totalIGPost],
-  );
 
   const rekapRef = useRef(null);
 
@@ -290,8 +273,8 @@ export default function RekapLikesIGPage() {
 
           <RekapLikesIG
             ref={rekapRef}
-            users={filteredChartData}
-            totalIGPost={derivedSummary.totalIGPost}
+            users={chartData}
+            totalIGPost={rekapSummary.totalIGPost}
             posts={igPosts}
             showRekapButton
             showCopyButton={false}
