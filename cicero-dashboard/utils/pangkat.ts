@@ -147,6 +147,9 @@ export function compareUsersByPangkatOnly(a: any, b: any): number {
   const pangkatDiff = getUserPangkatRank(a) - getUserPangkatRank(b);
   if (pangkatDiff !== 0) return pangkatDiff;
 
+  const nameDiff = compareByName(a, b);
+  if (nameDiff !== 0) return nameDiff;
+
   const idA = getUserDeterministicIdentifier(a);
   const idB = getUserDeterministicIdentifier(b);
 
@@ -157,7 +160,7 @@ export function compareUsersByPangkatOnly(a: any, b: any): number {
     return idA ? -1 : 1;
   }
 
-  return compareByName(a, b);
+  return 0;
 }
 
 export function compareUsersByPangkatAndNrp(a: any, b: any): number {
