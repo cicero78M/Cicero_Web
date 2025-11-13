@@ -23,22 +23,6 @@ const EXTRA_RANKS = [
   "JURU MUDA",
 ];
 
-const CUSTOM_NAME_PRIORITY_LIST = [
-  "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
-  "AKBP ARY MURTINI, S.I.K., M.SI.",
-  "AKBP ARIEF RADINATA",
-  "AKBP HENDY KURNIAWAN, S.SOS",
-  "AKBP I KETUT MADIA, S.SOS.",
-  "AKBP MOCHAMAD FADIL, S.T.",
-  "AKBP SASWITO, S.E., M.M",
-  "AKBP SOEGIJOTO, S.SI.",
-  "AKBP SUTIONO S.PD",
-  "KOMPOL ADY NUGROHO, S.H., S.I.K., M.SI",
-  "KOMPOL KASIANI, S.E., M.M.",
-  "KOMPOL SITI MUK'ANIPAH, S.H.",
-  "KOMPOL BAGUS KURNIAWAN, S.H., M.H.",
-] as const;
-
 export const PANGKAT_ORDER = [
   "KOMISARIS BESAR POLISI",
   "AKBP",
@@ -89,35 +73,9 @@ const USER_IDENTIFIER_FIELDS = [
   "NRP_NIP",
 ];
 
-const USER_NAME_FIELDS = [
-  "nama",
-  "name",
-  "full_name",
-  "fullName",
-  "nama_lengkap",
-  "namaLengkap",
-];
-
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toUpperCase();
 }
-
-function normalizeNameForPriority(value?: unknown): string {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .replace(/\s+,/g, ",")
-    .replace(/,\s+/g, ", ")
-    .toUpperCase();
-}
-
-const CUSTOM_NAME_PRIORITY = CUSTOM_NAME_PRIORITY_LIST.reduce(
-  (map, name, index) => {
-    map.set(normalizeNameForPriority(name), index);
-    return map;
-  },
-  new Map<string, number>(),
-);
 
 export function getPangkatRank(title?: string): number {
   const normalized = normalizeString(title);
@@ -187,33 +145,7 @@ function getUserDeterministicIdentifier(user: any): string {
   return "";
 }
 
-function getCustomNamePriority(user: any): number {
-  for (const field of USER_NAME_FIELDS) {
-    const priority = CUSTOM_NAME_PRIORITY.get(
-      normalizeNameForPriority(user?.[field]),
-    );
-    if (priority !== undefined) {
-      return priority;
-    }
-  }
-
-  const fallback = CUSTOM_NAME_PRIORITY.get(
-    normalizeNameForPriority(user?.nama || user?.name),
-  );
-  if (fallback !== undefined) {
-    return fallback;
-  }
-
-  return Number.POSITIVE_INFINITY;
-}
-
 export function compareUsersByPangkatOnly(a: any, b: any): number {
-  const customPriorityA = getCustomNamePriority(a);
-  const customPriorityB = getCustomNamePriority(b);
-  if (customPriorityA !== customPriorityB) {
-    return customPriorityA < customPriorityB ? -1 : 1;
-  }
-
   const priorityDiff =
     getPersonnelPriorityIndex(a) - getPersonnelPriorityIndex(b);
   if (priorityDiff !== 0) return priorityDiff;
@@ -235,12 +167,6 @@ export function compareUsersByPangkatOnly(a: any, b: any): number {
 }
 
 export function compareUsersByPangkatAndNrp(a: any, b: any): number {
-  const customPriorityA = getCustomNamePriority(a);
-  const customPriorityB = getCustomNamePriority(b);
-  if (customPriorityA !== customPriorityB) {
-    return customPriorityA < customPriorityB ? -1 : 1;
-  }
-
   const priorityDiff =
     getPersonnelPriorityIndex(a) - getPersonnelPriorityIndex(b);
   if (priorityDiff !== 0) return priorityDiff;
