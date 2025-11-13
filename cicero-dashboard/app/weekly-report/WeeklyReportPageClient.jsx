@@ -34,7 +34,6 @@ import {
   getUserDirectory,
 } from "@/utils/api";
 import { compareUsersByPangkatOnly } from "@/utils/pangkat";
-import { getPersonnelPriorityIndex } from "@/utils/personnelPriority";
 
 const ensureArray = (...candidates) => {
   for (const candidate of candidates) {
@@ -988,10 +987,68 @@ export const extractClientPersonnel = (clients = []) => {
     .filter((person) => person.nama);
 };
 
+const PRIORITY_PERSONNEL_PATTERNS = [
+  {
+    tokens: ["LAFRI", "PRASETYONO"],
+    aliases: [
+      "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+      "KOMBES POL LAFRI PRASETYONO",
+      "KOMBESPOL LAFRI PRASETYONO",
+    ],
+  },
+  {
+    tokens: ["ARY", "MURTINI"],
+    aliases: [
+      "AKBP ARY MURTINI, S.I.K., M.SI.",
+      "AKBP ARY MURTINI",
+    ],
+  },
+];
+
+const normalizePersonnelName = (person) =>
+  String(person?.nama || person?.username || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+
+const sanitizePersonnelName = (person) =>
+  normalizePersonnelName(person).replace(/[^A-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+
+const resolvePersonnelPriorityIndex = (person) => {
+  const normalized = normalizePersonnelName(person);
+  if (!normalized) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const sanitized = sanitizePersonnelName(person);
+
+  for (let index = 0; index < PRIORITY_PERSONNEL_PATTERNS.length; index += 1) {
+    const pattern = PRIORITY_PERSONNEL_PATTERNS[index];
+
+    const aliasMatch = pattern.aliases.some((alias) =>
+      sanitized.includes(alias.replace(/[^A-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim()),
+    );
+
+    if (aliasMatch) {
+      return index;
+    }
+
+    const tokensMatch = pattern.tokens.every((token) =>
+      sanitized.includes(token.replace(/[^A-Z0-9]/g, "")),
+    );
+
+    if (tokensMatch) {
+      return index;
+    }
+  }
+
+  return Number.POSITIVE_INFINITY;
+};
+
 export const sortPersonnelDistribution = (personnel = []) => {
   return [...personnel].sort((a, b) => {
     const priorityDiff =
-      getPersonnelPriorityIndex(a) - getPersonnelPriorityIndex(b);
+      resolvePersonnelPriorityIndex(a) - resolvePersonnelPriorityIndex(b);
     if (priorityDiff !== 0) {
       return priorityDiff;
     }

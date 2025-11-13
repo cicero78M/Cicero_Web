@@ -1,5 +1,3 @@
-import { getPersonnelPriorityIndex } from "./personnelPriority";
-
 const EXTRA_RANKS = [
   "BHARAKA",
   "BHARATU",
@@ -146,10 +144,6 @@ function getUserDeterministicIdentifier(user: any): string {
 }
 
 export function compareUsersByPangkatOnly(a: any, b: any): number {
-  const priorityDiff =
-    getPersonnelPriorityIndex(a) - getPersonnelPriorityIndex(b);
-  if (priorityDiff !== 0) return priorityDiff;
-
   const pangkatDiff = getUserPangkatRank(a) - getUserPangkatRank(b);
   if (pangkatDiff !== 0) return pangkatDiff;
 
@@ -167,10 +161,6 @@ export function compareUsersByPangkatOnly(a: any, b: any): number {
 }
 
 export function compareUsersByPangkatAndNrp(a: any, b: any): number {
-  const priorityDiff =
-    getPersonnelPriorityIndex(a) - getPersonnelPriorityIndex(b);
-  if (priorityDiff !== 0) return priorityDiff;
-
   const jabatanDiff = getUserJabatanPriority(a) - getUserJabatanPriority(b);
   if (jabatanDiff !== 0) return jabatanDiff;
 
