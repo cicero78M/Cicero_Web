@@ -8,7 +8,7 @@ import {
 } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
-import { compareUsersByPangkatOnly } from "@/utils/pangkat";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
 
 const PAGE_SIZE = 25;
@@ -37,71 +37,63 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   ref,
 ) {
   const { periodeLabel, viewLabel } = reportContext || {};
-  const sortedUsers = useMemo(() => {
-    const getClientIdentifier = (user) => {
-      const rawClientId =
-        user.client_id ??
-        user.clientId ??
-        user.clientID ??
-        user.client ??
-        "";
-      const clientString = String(rawClientId).trim();
-      if (!clientString) {
-        return { hasValue: false, stringValue: "", numericValue: NaN };
-      }
+  const getClientIdentifier = (user) => {
+    const rawClientId =
+      user.client_id ?? user.clientId ?? user.clientID ?? user.client ?? "";
+    const clientString = String(rawClientId).trim();
+    if (!clientString) {
+      return { hasValue: false, stringValue: "", numericValue: NaN };
+    }
 
-      const numericValue = Number(clientString);
-      return {
-        hasValue: true,
-        stringValue: clientString,
-        numericValue: Number.isFinite(numericValue) ? numericValue : NaN,
-      };
+    const numericValue = Number(clientString);
+    return {
+      hasValue: true,
+      stringValue: clientString,
+      numericValue: Number.isFinite(numericValue) ? numericValue : NaN,
     };
+  };
 
-    const compareByClientIdOnly = (a, b) => {
-      const clientA = getClientIdentifier(a);
-      const clientB = getClientIdentifier(b);
+  const compareByClientIdOnly = (a, b) => {
+    const clientA = getClientIdentifier(a);
+    const clientB = getClientIdentifier(b);
 
-      if (clientA.hasValue && clientB.hasValue) {
-        const bothNumeric =
-          !Number.isNaN(clientA.numericValue) &&
-          !Number.isNaN(clientB.numericValue);
+    if (clientA.hasValue && clientB.hasValue) {
+      const bothNumeric =
+        !Number.isNaN(clientA.numericValue) &&
+        !Number.isNaN(clientB.numericValue);
 
-        if (bothNumeric && clientA.numericValue !== clientB.numericValue) {
-          return clientA.numericValue - clientB.numericValue;
-        }
-
-        const stringCompare = clientA.stringValue.localeCompare(
-          clientB.stringValue,
-          "id",
-          { sensitivity: "base" },
-        );
-        if (stringCompare !== 0) {
-          return stringCompare;
-        }
-      } else if (clientA.hasValue !== clientB.hasValue) {
-        return clientA.hasValue ? -1 : 1;
+      if (bothNumeric && clientA.numericValue !== clientB.numericValue) {
+        return clientA.numericValue - clientB.numericValue;
       }
 
-      return 0;
-    };
-
-    const compareUsers = (a, b) => {
-      const pangkatDiff = compareUsersByPangkatOnly(a, b);
-      if (pangkatDiff !== 0) {
-        return pangkatDiff;
+      const stringCompare = clientA.stringValue.localeCompare(clientB.stringValue, "id", {
+        sensitivity: "base",
+      });
+      if (stringCompare !== 0) {
+        return stringCompare;
       }
+    } else if (clientA.hasValue !== clientB.hasValue) {
+      return clientA.hasValue ? -1 : 1;
+    }
 
-      const clientDiff = compareByClientIdOnly(a, b);
-      if (clientDiff !== 0) {
-        return clientDiff;
-      }
+    return 0;
+  };
 
-      return 0;
-    };
+  const compareUsers = (a, b) => {
+    const pangkatDiff = compareUsersByPangkatAndNrp(a, b);
+    if (pangkatDiff !== 0) {
+      return pangkatDiff;
+    }
 
-    return [...users].sort(compareUsers);
-  }, [users]);
+    const clientDiff = compareByClientIdOnly(a, b);
+    if (clientDiff !== 0) {
+      return clientDiff;
+    }
+
+    return 0;
+  };
+
+  const sortedUsers = useMemo(() => [...users].sort(compareUsers), [users]);
 
   const totalUser = sortedUsers.length;
   const hasClient = useMemo(
@@ -302,8 +294,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       clients[client][status].push(u);
     });
 
-    const sortByRank = (arr) =>
-      [...arr].sort(compareUsersByPangkatOnly);
+    const sortByRank = (arr) => [...arr].sort(compareUsers);
 
     const sortedClients = Object.keys(clients).sort((a, b) => {
       if (a === "Direktorat Binmas") return -1;
