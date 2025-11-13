@@ -16,7 +16,7 @@ import ViewDataSelector, {
   VIEW_OPTIONS,
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
-import { compareUsersByPangkatOnly } from "@/utils/pangkat";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear();
@@ -387,7 +387,7 @@ export default function RekapKomentarTiktokPage() {
         });
 
         const sortedUsers = [...enrichedUsers].sort(
-          compareUsersByPangkatOnly,
+          compareUsersByPangkatAndNrp,
         );
 
         // Sumber utama TikTok Post Hari Ini dari statsRes

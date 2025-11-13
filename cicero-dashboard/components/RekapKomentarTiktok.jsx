@@ -4,7 +4,7 @@ import usePersistentState from "@/hooks/usePersistentState";
 import { AlertTriangle, Music, User, Check, X, Minus, UserX } from "lucide-react";
 import { showToast } from "@/utils/showToast";
 import { cn } from "@/lib/utils";
-import { compareUsersByPangkatOnly } from "@/utils/pangkat";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -108,7 +108,7 @@ export default function RekapKomentarTiktok({
   }, [users, search]);
 
   const sorted = useMemo(
-    () => [...filtered].sort(compareUsersByPangkatOnly),
+    () => [...filtered].sort(compareUsersByPangkatAndNrp),
     [filtered],
   );
 
