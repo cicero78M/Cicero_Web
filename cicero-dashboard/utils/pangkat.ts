@@ -170,14 +170,35 @@ export function compareUsersByPangkatAndNrp(a: any, b: any): number {
   const pangkatDiff = getUserPangkatRank(a) - getUserPangkatRank(b);
   if (pangkatDiff !== 0) return pangkatDiff;
 
-  const nameDiff = compareByName(a, b);
-  if (nameDiff !== 0) return nameDiff;
-
   const aId =
     getUserDeterministicIdentifier(a) ||
     String(a?.user_id || a?.userId || a?.nrp || a?.nip || a?.nrp_nip || "");
   const bId =
     getUserDeterministicIdentifier(b) ||
     String(b?.user_id || b?.userId || b?.nrp || b?.nip || b?.nrp_nip || "");
-  return aId.localeCompare(bId);
+
+  const aNumeric = aId.replace(/\D/g, "");
+  const bNumeric = bId.replace(/\D/g, "");
+
+  if (aNumeric && bNumeric && aNumeric !== bNumeric) {
+    const aValue = BigInt(aNumeric);
+    const bValue = BigInt(bNumeric);
+    if (aValue < bValue) return -1;
+    if (aValue > bValue) return 1;
+  } else if (aNumeric || bNumeric) {
+    if (!aNumeric) return 1;
+    if (!bNumeric) return -1;
+  }
+
+  if (aId && bId) {
+    const idDiff = aId.localeCompare(bId, "id", { sensitivity: "base" });
+    if (idDiff !== 0) return idDiff;
+  } else if (aId || bId) {
+    return aId ? -1 : 1;
+  }
+
+  const nameDiff = compareByName(a, b);
+  if (nameDiff !== 0) return nameDiff;
+
+  return 0;
 }
