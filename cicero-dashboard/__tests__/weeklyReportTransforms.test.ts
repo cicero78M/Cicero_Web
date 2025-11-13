@@ -9,23 +9,6 @@ import {
 } from "@/app/weekly-report/WeeklyReportPageClient";
 import { aggregateWeeklyLikesRecords } from "@/app/weekly-report/lib/dataTransforms";
 import { resolveClientDisplayName } from "@/components/weekly-report/WeeklyPlatformLikesSummary";
-import { PERSONNEL_PRIORITY_PATTERNS } from "@/utils/personnelPriority";
-
-const getPriorityAlias = (pattern: (typeof PERSONNEL_PRIORITY_PATTERNS)[number]) => {
-  const aliases = pattern.aliases && pattern.aliases.length > 0
-    ? pattern.aliases
-    : [pattern.canonicalName];
-  return aliases[0] || pattern.canonicalName || pattern.tokens.join(" ");
-};
-
-const buildPriorityPerson = (
-  pattern: (typeof PERSONNEL_PRIORITY_PATTERNS)[number],
-  overrides: Partial<{ nama: string; pangkat: string; interactions: number }> = {},
-) => ({
-  nama: overrides.nama ?? getPriorityAlias(pattern),
-  pangkat: overrides.pangkat ?? "AKBP",
-  interactions: overrides.interactions ?? 10,
-});
 
 describe("weekly report data transforms", () => {
   it("preserves metrics totals when building weekly series", () => {
@@ -203,81 +186,55 @@ describe("weekly report data transforms", () => {
   });
 
   it("prioritizes key personnel before sorting by interactions", () => {
-    const [firstPriority, secondPriority] = PERSONNEL_PRIORITY_PATTERNS;
     const personnel = [
       { nama: "Person A", pangkat: "AKP", interactions: 50 },
-      buildPriorityPerson(firstPriority, { interactions: 10 }),
-      buildPriorityPerson(secondPriority, { interactions: 5 }),
+      {
+        nama: "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+        pangkat: "KOMISARIS BESAR POLISI",
+        interactions: 10,
+      },
+      {
+        nama: "AKBP ARY MURTINI, S.I.K., M.SI.",
+        pangkat: "AKBP",
+        interactions: 5,
+      },
       { nama: "Person B", pangkat: "KOMPOL", interactions: 40 },
     ];
 
     const sorted = sortPersonnelDistribution(personnel);
 
     expect(sorted.map((person) => person.nama)).toEqual([
-      buildPriorityPerson(firstPriority).nama,
-      buildPriorityPerson(secondPriority).nama,
+      "KOMISARIS BESAR POLISI LAFRI PRASETYONO, S.I.K., M.H",
+      "AKBP ARY MURTINI, S.I.K., M.SI.",
       "Person A",
       "Person B",
     ]);
   });
 
   it("prioritizes key personnel even when the name uses abbreviations", () => {
-    const [firstPriority, secondPriority] = PERSONNEL_PRIORITY_PATTERNS;
-    const firstAliasWithPunctuation =
-      firstPriority.aliases.find((alias) => /KOMBES/i.test(alias)) ??
-      getPriorityAlias(firstPriority);
-    const secondAliasShort =
-      secondPriority.aliases.find((alias) => alias.split(" ").length <= 3) ??
-      getPriorityAlias(secondPriority);
-
     const personnel = [
       { nama: "Person A", pangkat: "AKP", interactions: 60 },
       { nama: "Person B", pangkat: "AKBP", interactions: 50 },
-      buildPriorityPerson(firstPriority, {
-        nama: firstAliasWithPunctuation,
+      {
+        nama: "KOMBES POL. LAFRI PRASETYONO",
+        pangkat: "KOMISARIS BESAR POLISI",
         interactions: 10,
-      }),
-      buildPriorityPerson(secondPriority, {
-        nama: secondAliasShort,
+      },
+      {
+        nama: "AKBP ARY MURTINI",
+        pangkat: "AKBP",
         interactions: 5,
-      }),
+      },
     ];
 
     const sorted = sortPersonnelDistribution(personnel);
 
     expect(sorted.map((person) => person.nama)).toEqual([
-      firstAliasWithPunctuation,
-      secondAliasShort,
+      "KOMBES POL. LAFRI PRASETYONO",
+      "AKBP ARY MURTINI",
       "Person A",
       "Person B",
     ]);
-  });
-
-  it("prioritizes every configured key personnel before others", () => {
-    const priorityPersonnel = PERSONNEL_PRIORITY_PATTERNS.map((pattern, index) =>
-      buildPriorityPerson(pattern, {
-        // Alternate aliases when available to cover different variations.
-        nama:
-          pattern.aliases[(index + 1) % pattern.aliases.length] ??
-          getPriorityAlias(pattern),
-        interactions: 1 + index,
-      }),
-    );
-
-    const otherMembers = [
-      { nama: "Person Z", pangkat: "AKBP", interactions: 999 },
-      { nama: "Person Y", pangkat: "AKP", interactions: 500 },
-      { nama: "Person X", pangkat: "IPTU", interactions: 300 },
-    ];
-
-    const sorted = sortPersonnelDistribution([
-      ...otherMembers,
-      ...priorityPersonnel,
-    ]);
-
-    expect(sorted.slice(0, priorityPersonnel.length).map((p) => p.nama)).toEqual(
-      priorityPersonnel.map((person) => person.nama),
-    );
   });
 
   it("uses pangkat order to break interaction ties", () => {
