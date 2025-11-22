@@ -276,7 +276,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
               >
-                “Cicero — Kendali Terpadu, Data Akurat, Kinerja Selaras.”.
+                Cicero — Kendali Terpadu, Data Akurat, Kinerja Selaras.
               </motion.h1>
               <motion.p
                 className="max-w-xl text-balance text-sm leading-relaxed text-slate-700 md:text-base"
