@@ -659,6 +659,50 @@ export async function getClaimUserData(
   return res.json();
 }
 
+export type ClaimEmailValidationResponse = {
+  status: string;
+  success: boolean;
+  message?: string;
+};
+
+// Validate email deliverability status before requesting an OTP
+export async function checkClaimEmailStatus(
+  email: string,
+): Promise<ClaimEmailValidationResponse> {
+  const url = `${API_BASE_URL}/api/claim/validate-email`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email }),
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  const status =
+    data?.status ||
+    data?.data?.status ||
+    (res.ok ? "deliverable" : "unknown");
+  const message = data?.message || data?.detail || data?.error;
+
+  if (!res.ok) {
+    throw new Error(
+      message || "Failed to validate email. Please check the address.",
+    );
+  }
+
+  return {
+    status,
+    success: data?.success ?? res.ok,
+    message: message || undefined,
+  };
+}
+
 // Request OTP to be sent via email
 export async function requestClaimOtp(
   nrp: string,
