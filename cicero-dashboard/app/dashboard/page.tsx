@@ -566,11 +566,10 @@ export default function DashboardPage() {
               Social Intelligence
             </span>
             <h1 className="text-3xl font-semibold leading-snug text-slate-900 md:text-4xl dark:text-slate-50">
-              Dasbor Kolaboratif yang Membangun Kepercayaan & Semangat Kolektif
+              Dashboard Cicero — Menyatukan Personil, Data, dan Arah Kerja dalam Satu Langkah
             </h1>
             <p className="max-w-2xl text-base text-sky-700 md:text-lg dark:text-slate-300">
-              Rasakan cara baru menafsirkan performa Instagram dan TikTok dengan visual lembut, terkurasi, dan konsisten yang memadukan data kepercayaan, ketelitian insight, serta energi kolaboratif tim Anda.
-            </p>
+              Ruang Kendali Data yang Menyatukan Ritme Kinerja Jajaran.            </p>
             <div className="grid gap-3 text-sm text-sky-700 sm:grid-cols-3 dark:text-slate-300">
               <div className="flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-3 py-1.5 shadow-[0_10px_26px_rgba(56,189,248,0.15)] dark:border-slate-700/60 dark:bg-slate-900/60">
                 <span className="text-sky-600 dark:text-cyan-300">◎</span>
