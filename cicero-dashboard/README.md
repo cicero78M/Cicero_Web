@@ -33,6 +33,11 @@ Klaim data pengguna dilakukan melalui halaman `app/claim/page.jsx` dengan langka
    - Status tak dikenal: pengguna diminta memeriksa kembali alamat email atau mencoba lagi.
 4. Jika validasi berhasil, aplikasi memanggil `requestClaimOtp` untuk mengirim kode verifikasi dan menyimpan NRP/email di `sessionStorage` sebelum mengarahkan ke halaman OTP.
 
+### Penanganan pesan error di halaman klaim
+
+- Ketika backend mengembalikan respons error (misalnya kombinasi NRP/email tidak cocok atau permintaan OTP ditolak), pesan dari backend diteruskan apa adanya ke pengguna agar lebih mudah dipahami.
+- Kesalahan jaringan atau respons tanpa pesan akan menampilkan fallback berbahasa Indonesia seperti "Gagal terhubung ke server" atau "Gagal mengirim OTP".
+
 Catatan untuk pengembang:
 
 - Endpoint `POST /api/claim/validate-email` diharapkan mengembalikan `status` (`deliverable`, `inactive`, `domain_not_found`, `mailbox_full`, dll), `success`, dan `message` opsional.

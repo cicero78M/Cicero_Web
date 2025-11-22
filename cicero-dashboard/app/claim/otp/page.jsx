@@ -41,7 +41,10 @@ export default function OtpPage() {
         setError(res.message || "OTP tidak valid");
       }
     } catch (err) {
-      setError("Gagal terhubung ke server");
+      const message = err?.message?.trim()
+        ? err.message
+        : "Gagal terhubung ke server";
+      setError(message);
     }
     setLoading(false);
   }

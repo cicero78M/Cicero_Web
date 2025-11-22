@@ -64,7 +64,10 @@ export default function EditUserPage() {
       const tiktokUsername = extractTiktokUsername(user.tiktok);
       setTiktok(tiktokUsername ? `https://tiktok.com/${tiktokUsername}` : "");
     } catch (err) {
-      setError("Gagal mengambil data user");
+      const message = err?.message?.trim()
+        ? err.message
+        : "Gagal mengambil data user";
+      setError(message);
     }
   }
 
