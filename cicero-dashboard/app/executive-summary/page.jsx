@@ -4187,7 +4187,7 @@ export default function ExecutiveSummaryPage() {
             <p className="max-w-2xl text-sm text-neutral-slate">
               Sistem Cicero dibangun sebagai sarana pengawasan dan pengendalian terhadap kepatuhan personil Ditbinmas Polda Jatim dan Bhabinkamtibmas Polres Jajaran
               dalam melaksanakan tugas likes dan komentar pada konten akun official Instagram dan TikTok.
-              Melalui data yang dihimpun secara otomatis, Cicero menyajikan gambaran menyeluruh terkait kinerja personil,
+              Melalui data yang dihimpun secara otomatis, Cicero menyajikan gambaran menyeluruh terkait kinerja personil dalam mengelola interaksi digital,
               tingkat partisipasi, serta kualitas pelaksanaan tugas dalam mendukung komunikasi publik Polri.
             </p>
           </div>
@@ -4270,7 +4270,7 @@ export default function ExecutiveSummaryPage() {
             Tren Aktivitas Harian
           </h2>
           <p className="text-sm text-neutral-mist">
-            Pergerakan harian jumlah konten, likes, komentar, dan total interaksi personil pada periode terpilih.
+            Tren harian jumlah konten, likes, komentar, dan total interaksi personil pada periode pilihan.
           </p>
         </div>
 
