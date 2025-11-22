@@ -276,7 +276,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
               >
-                Ruang kendali modern yang menumbuhkan kepercayaan, ketelitian, dan koordinasi lintas satker.
+                “Cicero — Kendali Terpadu, Data Akurat, Kinerja Selaras.”.
               </motion.h1>
               <motion.p
                 className="max-w-xl text-balance text-sm leading-relaxed text-slate-700 md:text-base"
@@ -284,8 +284,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
               >
-                Cicero menyatukan laporan lapangan, analitik presisi, dan komunikasi tim dalam satu alur mulus sehingga setiap personel bergerak percaya diri dan kompak.
-              </motion.p>
+                Cicero mengintegrasikan laporan, performa digital, dan koordinasi satker dalam satu sistem yang memastikan keputusan lebih cepat dan pelaksanaan lebih tertib.              </motion.p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
