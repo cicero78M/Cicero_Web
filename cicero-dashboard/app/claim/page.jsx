@@ -59,9 +59,10 @@ export default function ClaimPage() {
       }
     } catch (err) {
       setValidationStatus("error");
-      setValidationMessage(
-        "Validasi email gagal. Silakan coba lagi atau gunakan alamat email berbeda.",
-      );
+      const message = err?.message?.trim()
+        ? err.message
+        : "Validasi email gagal. Silakan coba lagi atau gunakan alamat email berbeda.";
+      setValidationMessage(message);
       setLoading(false);
       return;
     }
@@ -78,7 +79,10 @@ export default function ClaimPage() {
         setError(res.message || "Gagal mengirim OTP");
       }
     } catch (err) {
-      setError("Gagal terhubung ke server");
+      const message = err?.message?.trim()
+        ? err.message
+        : "Gagal terhubung ke server";
+      setError(message);
     }
     setLoading(false);
   }

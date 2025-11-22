@@ -17,6 +17,33 @@ type ApiMessageResponse = {
   message: string;
 };
 
+function extractResponseMessage(data: any, fallback: string): string {
+  if (!data) return fallback;
+
+  if (typeof data === "string") {
+    return data.trim() || fallback;
+  }
+
+  const candidates: unknown[] = [
+    data.message,
+    data.detail,
+    data.error,
+    data.status,
+  ];
+
+  if (Array.isArray((data as any).errors)) {
+    candidates.push((data as any).errors[0]);
+  } else if ((data as any).errors) {
+    candidates.push((data as any).errors);
+  }
+
+  const message = candidates.find(
+    (entry) => typeof entry === "string" && entry.trim().length > 0,
+  ) as string | undefined;
+
+  return message?.trim() || fallback;
+}
+
 export type DashboardPasswordResetRequestPayload = {
   username: string;
   contact: string;
@@ -688,12 +715,13 @@ export async function checkClaimEmailStatus(
     data?.status ||
     data?.data?.status ||
     (res.ok ? "deliverable" : "unknown");
-  const message = data?.message || data?.detail || data?.error;
+  const message = extractResponseMessage(
+    data,
+    "Failed to validate email. Please check the address.",
+  );
 
   if (!res.ok) {
-    throw new Error(
-      message || "Failed to validate email. Please check the address.",
-    );
+    throw new Error(message);
   }
 
   return {
@@ -715,8 +743,25 @@ export async function requestClaimOtp(
     credentials: "include",
     body: JSON.stringify({ nrp, email }),
   });
-  if (!res.ok) throw new Error("Failed to request OTP");
-  return res.json();
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  const message = extractResponseMessage(
+    data,
+    "Gagal mengirim OTP. Silakan periksa kembali NRP dan email kamu.",
+  );
+
+  if (!res.ok) {
+    throw new Error(message);
+  }
+
+  const success = data?.success ?? res.ok;
+  return { ...data, success, message };
 }
 
 // Verify OTP provided by user
