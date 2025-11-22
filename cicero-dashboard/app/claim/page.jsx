@@ -41,7 +41,7 @@ export default function ClaimPage() {
       title="Klaim & Edit Data User"
       description="Masukkan NRP dan email aktif untuk menerima kode verifikasi ke akunmu."
       icon={<ShieldCheck className="h-5 w-5" />}
-      infoTitle="Mulai proses klaim dengan percaya diri"
+      infoTitle="Mulai proses update data dengan percaya diri"
       infoDescription="Kami memverifikasi identitasmu menggunakan data resmi agar perubahan profil tetap aman dan terkontrol."
       infoHighlights={[
         "Gunakan email aktif agar OTP dapat diterima dengan cepat.",
@@ -72,7 +72,7 @@ export default function ClaimPage() {
         </div>
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium text-neutral-navy">
-            Email Institusi
+            Email Pribadi
           </label>
           <input
             id="email"
