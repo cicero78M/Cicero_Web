@@ -365,7 +365,7 @@ export default function LoginPage() {
               </div>
 
               <p className="mb-7 rounded-2xl border border-sky-200/60 bg-white/50 p-4 text-xs text-slate-600">
-                Masuk dengan akun instansi Anda. Kami menjaga data dengan protokol berlapis dan memastikan tim Anda selalu mendapat panduan terkini.
+                Masuk dengan akun operator Anda. Kami menjaga data dengan protokol berlapis dan memastikan tim Anda selalu mendapat panduan terkini.
               </p>
               <form className="space-y-5" onSubmit={submitHandler}>
                 {formMode !== "forgot" ? (
