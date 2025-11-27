@@ -17,7 +17,7 @@ export const metadata = {
 
 const actors = [
   {
-    name: "Ditbinmas Polda",
+    name: "Tingkat Polda- Direktorat / Bidang",
     icon: Shield,
     focus: "Regulator & pengawas kebijakan",
     responsibilities: [
@@ -61,7 +61,7 @@ const actors = [
       "Menghitung skor pelaksanaan tugas",
       "Membuat rekap kepatuhan harian, mingguan dan bulanan",
       "Mengirim informasi, laporan dan notifikasi via Wa Bot",  
-      "Mendistribusikan laporan har8ian, mingguan dan Executive Summary / Anev Bulanan",
+      "Mendistribusikan laporan harian, mingguan dan Executive Summary / Anev Bulanan",
     ],
   },
 ];
@@ -70,7 +70,7 @@ const steps = [
   {
     title: "Distribusi Tugas Harian",
     detail:
-      "Ditbinmas mengunggah konten harian atau menerima permintaan kolaborasi dari satker, selanjutnya sistem Cicero secara otomatis mengirim rrekap link konten tugas ke WAG pusat, dilanjut operator Polres menyalurkan rekap link tugas ke personil / group satkernya dengan instruksi batas waktu.",
+      "Tingkat Polda - Direktorat / Bidang mengunggah konten harian atau menerima permintaan kolaborasi dari satker, selanjutnya sistem Cicero secara otomatis mengirim rrekap link konten tugas ke WAG pusat, dilanjut operator Polres menyalurkan rekap link tugas ke personil / group satkernya dengan instruksi batas waktu.",
   },
   {
     title: "Pelaksanaan Interaksi",
@@ -85,43 +85,43 @@ const steps = [
   {
     title: "Eskalasi & Pelaporan",
     detail:
-      "Status harian direkap otomatis. Operator mengambil absensi via dashboard, memberi teguran awal kepada personil, selanjutnya Ditbinmas memberikan teguran tindak lanjut bagi satker dengan tingkat kepatuhan rendah.",
+      "Status harian direkap otomatis. Operator mengambil absensi via dashboard, memberi teguran awal kepada personil, selanjutnya Tingkat Polda - Direktorat / Bidang memberikan teguran tindak lanjut bagi satker dengan tingkat kepatuhan rendah.",
   },
 ];
 
 const raciMatrix = [
   {
     activity: "Penetapan target & SOP",
-    r: "Ditbinmas",
-    a: "Ditbinmas",
-    c: "Operator",
+    r: "Tingkat Polda - Direktorat / Bidang",
+    a: "Tingkat Polda - Direktorat / Bidang",
+    c: "Operator Polres",
     i: "Personil",
   },
   {
     activity: "Distribusi link & jadwal",
-    r: "Operator",
-    a: "Ditbinmas",
+    r: "Operator Polres",
+    a: "Tingkat Polda - Direktorat / Bidang",
     c: "Sistem",
     i: "Personil",
   },
   {
     activity: "Eksekusi tugas interaksi",
     r: "Personil",
-    a: "Operator",
-    c: "Ditbinmas",
+    a: "Operator Polres",
+    c: "Tingkat Polda - Direktorat / Bidang",
     i: "Sistem",
   },
   {
     activity: "Monitoring & rekap absensi",
     r: "Sistem",
-    a: "Operator",
-    c: "Ditbinmas",
+    a: "Operator Polres",
+    c: "Tingkat Polda - Direktorat / Bidang",
     i: "Personil",
   },
   {
     activity: "Eskalasi ketidakpatuhan",
-    r: "Operator",
-    a: "Ditbinmas",
+    r: "Operator Polres",
+    a: "Tingkat Polda - Direktorat / Bidang",
     c: "Sistem",
     i: "Personil",
   },
@@ -198,7 +198,7 @@ function RelationshipMap() {
         textAnchor="middle"
       >
         <text x="300" y="140">Sistem Cicero</text>
-        <text x="150" y="75">Ditbinmas</text>
+        <text x="150" y="75">Tingkat Polda - Direktorat / Bidang</text>
         <text x="150" y="195">Operator</text>
         <text x="450" y="75">Analytics</text>
         <text x="450" y="195">Personil</text>
@@ -254,7 +254,7 @@ export default function MekanismeAbsensiPage() {
             Mekanisme Sistem Absensi Cicero
           </h1>
           <p className="mx-auto max-w-3xl text-base text-slate-600">
-            Peta utuh yang merangkum aktor kunci, alur kerja, tanggung jawab RACI, serta koneksi integrasi yang menopang kepatuhan harian di lingkungan Ditbinmas.
+            Peta utuh yang merangkum aktor kunci, alur kerja, tanggung jawab RACI, serta koneksi integrasi yang menopang kepatuhan harian di lingkungan Tingkat Polda - Direktorat / Bidang.
           </p>
         </header>
 

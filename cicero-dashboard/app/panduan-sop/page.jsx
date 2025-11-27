@@ -136,8 +136,8 @@ export default function PanduanSOPPage() {
                 <div className="space-y-2">
                   <p className="font-semibold text-slate-900">2) Alur Harian</p>
                   <ol className="list-decimal space-y-2 pl-5">
-                    <li>Cek link konten tugas di WAG Social Media Ditbinmas.</li>
-                    <li>Bagikan Pesan Tugsa link dari WAG Social Media Ditbinmas (batas waktu pengerjaan maksimal 20:30) kepada seluruh personil / Group Binmas satker nya.</li>
+                    <li>Cek link konten tugas di WAG Social Media Tingkat Polda - Direktorat / Bidang.</li>
+                    <li>Bagikan Pesan Tugas link dari WAG Social Media Tingkat Polda - Direktorat / Bidang (batas waktu pengerjaan maksimal 20:30) kepada seluruh personil / Group Binmas satker nya.</li>
                     <li>Monitor progres via menu Instagram / Tiktok Engagement Insight, lakukan pencarian nama Polres dan pantau pembaruan (update tiap 30 menit).</li>
                     <li>Kirim absesni secara berkala (15.00, 18.00 dan 20.30) untuk mengingatkan personil yang belum like dan komen.</li>
                     <li>Laporkan absensi kepatuhan harian dan generate rekap (Sudah, Kurang Lengkap, Belum, Belum Update Username) kepada pimpinan Kasatker / Kasat Binmas.</li>
