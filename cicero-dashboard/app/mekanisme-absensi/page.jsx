@@ -23,7 +23,7 @@ const actors = [
     responsibilities: [
       "Menetapkan target kepatuhan harian",
       "Upload tugas konten pada akun resmi",
-      "Melakukan briefing harian pada WAG Social Media Ditbinmas",
+      "Melakukan briefing harian pada WAG Social Media Tingkat Polda- Direktorat / Bidang",
       "Mengirim Laporan Kepatuhan kepada satker jajaran",
       "Memonitor permintaan kolaborasi dan mengkurasi konten dari satker jajaran",
     ],
@@ -34,7 +34,7 @@ const actors = [
     focus: "Koordinator lapangan",
     responsibilities: [
       "Mengelola data personil - penambahan akun baru, pergantian akun, permintaan penghapusan akun",
-      "Monitor tugas di WAG Social Media Ditbinmas dan mendistribusikan link tugas harian",
+      "Monitor tugas di WAG Social Media Tingkat Polda- Direktorat / Bidang dan mendistribusikan link tugas harian",
       "Mengakomodir kendala personil dan melaporkan pada Cicero",
       "Melakukan absensi personil harian",
       "Mengirim permintaan kolaborasi konten ke akun resmi Ditbinmas",
@@ -55,7 +55,7 @@ const actors = [
     icon: Network,
     focus: "Otomasi & analytics",
     responsibilities: [
-      "Monitoring akun resmi, mengambil data konten hari ini, membuat dan mengirim pesan tugas ke WAG Ditbinmas",
+      "Monitoring akun resmi, mengambil data konten hari ini, membuat dan mengirim pesan tugas ke WAG Tingkat Polda- Direktorat / Bidang",
       "Menarik data engagement real-time",
       "Menghasilkan status absensi",
       "Menghitung skor pelaksanaan tugas",
