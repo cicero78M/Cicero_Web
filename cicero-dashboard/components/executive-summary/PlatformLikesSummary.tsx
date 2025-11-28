@@ -251,12 +251,12 @@ const PlatformLikesSummary = ({
 
   const resolvedLabels: Required<LabelOverrides> = useMemo(
     () => ({
-      likesContributorsTitle: "Kontributor Likes Teratas",
+      likesContributorsTitle: "Likes per Konten Tertinggi",
       likesContributorsDescription:
-        "Satker dengan kontribusi likes tertinggi pada periode terpilih.",
-      commentContributorsTitle: "Kontributor Komentar Teratas",
+        "Satker dengan rasio likes terhadap jumlah konten tertinggi pada periode terpilih.",
+      commentContributorsTitle: "Komentar per Konten Tertinggi",
       commentContributorsDescription:
-        "Satker dengan jumlah komentar terbanyak beserta rasio kepatuhan.",
+        "Satker dengan rasio komentar terhadap jumlah konten tertinggi beserta rasio kepatuhan.",
       topComplianceTitle: "Kepatuhan Tertinggi",
       topComplianceDescription:
         "Satker dengan rasio kepatuhan tertinggi berdasarkan personil aktif.",
@@ -274,27 +274,45 @@ const PlatformLikesSummary = ({
     [labelOverrides],
   );
 
+  const activitySummary = personnelActivity ?? null;
+  const activityCategories = activitySummary?.categories ?? [];
+  const totalEvaluated = activitySummary?.totalEvaluated ?? 0;
+  const totalContentEvaluated = activitySummary?.totalContentEvaluated ?? 0;
+  const contentDenominator = totalContentEvaluated > 0 ? totalContentEvaluated : null;
+
   const distributionData = useMemo(() => {
+    const denominator = contentDenominator;
+
     return [...clients]
       .sort((a, b) => b.totalLikes - a.totalLikes)
       .slice(0, 8)
       .map((client) => ({
         name: client.clientName,
-        likes: client.totalLikes,
+        likesPerContent:
+          denominator && denominator > 0
+            ? client.totalLikes / denominator
+            : 0,
+        rawLikes: client.totalLikes,
         compliance: client.complianceRate,
       }));
-  }, [clients]);
+  }, [clients, contentDenominator]);
 
   const commentDistributionData = useMemo(() => {
+    const denominator = contentDenominator;
+
     return [...clients]
       .sort((a, b) => b.totalComments - a.totalComments)
       .slice(0, 8)
       .map((client) => ({
         name: client.clientName,
-        comments: client.totalComments,
+        commentsPerContent:
+          denominator && denominator > 0
+            ? client.totalComments / denominator
+            : 0,
+        rawComments: client.totalComments,
         compliance: client.complianceRate,
       }));
-  }, [clients]);
+  }, [clients, contentDenominator]);
 
   const topCompliance = useMemo(() => {
     return [...clients]
@@ -344,11 +362,6 @@ const PlatformLikesSummary = ({
 
   const totalTopCommentPersonnel = topCommentPersonnel.length;
   const totalTopLikesPersonnel = standoutPersonnel.length;
-
-  const activitySummary = personnelActivity ?? null;
-  const activityCategories = activitySummary?.categories ?? [];
-  const totalEvaluated = activitySummary?.totalEvaluated ?? 0;
-  const totalContentEvaluated = activitySummary?.totalContentEvaluated ?? 0;
 
   const lastUpdatedLabel = formatDateTime(data?.lastUpdated);
   const hasPersonnelDistribution = Array.isArray(personnelDistribution) && personnelDistribution.length > 0;
@@ -433,7 +446,13 @@ const PlatformLikesSummary = ({
                   height={70}
                   tickMargin={16}
                 />
-                <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                <YAxis
+                  stroke="#94a3b8"
+                  tick={{ fill: "#cbd5f5", fontSize: 12 }}
+                  tickFormatter={(value: number) =>
+                    formatNumber(value, { maximumFractionDigits: 2 })
+                  }
+                />
                 <Tooltip
                   cursor={{ fill: "rgba(15,23,42,0.3)" }}
                   contentStyle={{
@@ -443,19 +462,26 @@ const PlatformLikesSummary = ({
                     boxShadow: "0 20px 45px rgba(14,116,144,0.3)",
                     color: "#e2e8f0",
                   }}
-                  formatter={(value: number) => [
-                    formatNumber(value, { maximumFractionDigits: 0 }),
-                    "Likes",
-                  ]}
+                  formatter={(value: number, _name: string, tooltipItem) => {
+                    const rawLikes = tooltipItem?.payload?.rawLikes ?? 0;
+                    return [
+                      `${formatNumber(value, { maximumFractionDigits: 2 })} like/konten`,
+                      `Total ${formatNumber(rawLikes, { maximumFractionDigits: 0 })} likes`,
+                    ];
+                  }}
                   labelFormatter={(label: string | number, payload: any[]) => {
                     const entry = payload && payload.length > 0 ? payload[0].payload : null;
+                    const contentContext =
+                      contentDenominator && contentDenominator > 0
+                        ? ` · ${formatNumber(contentDenominator, { maximumFractionDigits: 0 })} konten`
+                        : "";
                     if (entry && typeof entry.compliance === "number") {
-                      return `${label} · Kepatuhan ${formatPercent(entry.compliance)}`;
+                      return `${label} · Kepatuhan ${formatPercent(entry.compliance)}${contentContext}`;
                     }
-                    return label as string;
+                    return `${label}${contentContext}`;
                   }}
                 />
-                <Bar dataKey="likes" fill="#22d3ee" />
+                <Bar dataKey="likesPerContent" fill="#22d3ee" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -484,7 +510,13 @@ const PlatformLikesSummary = ({
                     height={70}
                     tickMargin={16}
                   />
-                  <YAxis stroke="#94a3b8" tick={{ fill: "#cbd5f5", fontSize: 12 }} />
+                  <YAxis
+                    stroke="#94a3b8"
+                    tick={{ fill: "#cbd5f5", fontSize: 12 }}
+                    tickFormatter={(value: number) =>
+                      formatNumber(value, { maximumFractionDigits: 2 })
+                    }
+                  />
                   <Tooltip
                     cursor={{ fill: "rgba(15,23,42,0.3)" }}
                     contentStyle={{
@@ -494,19 +526,26 @@ const PlatformLikesSummary = ({
                       boxShadow: "0 20px 45px rgba(245,158,11,0.25)",
                       color: "#e2e8f0",
                     }}
-                    formatter={(value: number) => [
-                      formatNumber(value, { maximumFractionDigits: 0 }),
-                      "Komentar",
-                    ]}
+                    formatter={(value: number, _name: string, tooltipItem) => {
+                      const rawComments = tooltipItem?.payload?.rawComments ?? 0;
+                      return [
+                        `${formatNumber(value, { maximumFractionDigits: 2 })} komentar/konten`,
+                        `Total ${formatNumber(rawComments, { maximumFractionDigits: 0 })} komentar`,
+                      ];
+                    }}
                     labelFormatter={(label: string | number, payload: any[]) => {
                       const entry = payload && payload.length > 0 ? payload[0].payload : null;
+                      const contentContext =
+                        contentDenominator && contentDenominator > 0
+                          ? ` · ${formatNumber(contentDenominator, { maximumFractionDigits: 0 })} konten`
+                          : "";
                       if (entry && typeof entry.compliance === "number") {
-                        return `${label} · Kepatuhan ${formatPercent(entry.compliance)}`;
+                        return `${label} · Kepatuhan ${formatPercent(entry.compliance)}${contentContext}`;
                       }
-                      return label as string;
+                      return `${label}${contentContext}`;
                     }}
                   />
-                  <Bar dataKey="comments" fill="#f97316" />
+                  <Bar dataKey="commentsPerContent" fill="#f97316" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
