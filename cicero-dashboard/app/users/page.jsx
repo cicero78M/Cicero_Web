@@ -115,8 +115,8 @@ export default function UserDirectoryPage() {
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const { token, clientId, role: authRole } = useAuth();
-  const client_id = clientId || "BOJONEGORO";
-  const role = authRole || "";
+  const client_id = clientId;
+  const role = authRole;
 
   const isDitbinmasClient = client_id === "DITBINMAS";
   const isDitbinmas =
