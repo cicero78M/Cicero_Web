@@ -271,7 +271,7 @@ export default function UserInsightPage() {
       "",
     ];
     if (isDirectorate) {
-      lines.push("POLRES JAJARAN:");
+      lines.push("SATKER :");
       chartPolres.forEach((c) => {
         lines.push(
           `${c.divisi} (${c.total}): IG ${c.instagramFilled}/${c.instagramEmpty}, TikTok ${c.tiktokFilled}/${c.tiktokEmpty}`,
@@ -405,7 +405,7 @@ export default function UserInsightPage() {
 
                 {isDirectorate ? (
                   <ChartBox
-                    title="POLRES JAJARAN"
+                    title="SATKER"
                     data={chartPolres}
                     orientation="horizontal"
                     minHeight={420}
