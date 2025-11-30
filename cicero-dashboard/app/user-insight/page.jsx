@@ -479,7 +479,7 @@ function ChartBox({
               <thead className="bg-sky-50 text-[13px] uppercase tracking-[0.2em] text-slate-500">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-semibold">
-                    Divisi
+                    Satker
                   </th>
                   <th scope="col" className="px-4 py-3 font-semibold">
                     Total User
