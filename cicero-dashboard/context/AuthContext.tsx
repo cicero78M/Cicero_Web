@@ -8,6 +8,7 @@ type AuthState = {
   userId: string | null;
   role: string | null;
   profile: any | null;
+  isHydrating: boolean;
   setAuth: (
     token: string | null,
     clientId: string | null,
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("cicero_token");
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setClientId(storedClient);
     setUserId(storedUser);
     setRole(storedRole);
+    setIsHydrating(false);
   }, []);
 
   useEffect(() => {
@@ -70,7 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, clientId, userId, role, profile, setAuth }}>
+    <AuthContext.Provider
+      value={{ token, clientId, userId, role, profile, isHydrating, setAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -85,6 +85,7 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - Terms of Service and Privacy Policy for Google sign-in are available at `/terms-of-service` and `/privacy-policy`.
 - For Google OAuth verification, `docs/google_auth_policies.md` also includes a short description of the application.
 - Gunakan halaman `/mekanisme-absensi` dan `/panduan-sop` sebagai referensi cepat saat melakukan pelatihan atau audit SOP digital.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
+- Status autentikasi kini memiliki fase hidrasi: `AuthProvider` menandai `isHydrating` saat membaca token dari `localStorage`, sehingga hook seperti `useRequireAuth` menunggu sebelum mengalihkan pengguna. Rute terlindungi terakhir akan disimpan sebagai `last_pathname` (kecuali halaman publik seperti `/`, `/login`, `/claim`) dan dipakai `useAuthRedirect` untuk mengirim pengguna kembali ke halaman sebelumnya setelah login, dengan fallback ke `/dashboard`.
 
 ## Documentation
 
@@ -94,6 +95,7 @@ Additional documents live under the [`docs/`](docs) directory:
 - [`executive_summary.md`](docs/executive_summary.md) – high-level architecture across repositories
 - [`ATTENDANCE.md`](docs/ATTENDANCE.md) – alur absensi digital, logika rekap likes, dan hubungannya dengan WA Bot
 - [`google_auth_policies.md`](docs/google_auth_policies.md) – Google OAuth terms and privacy policy links
+- [`auth-navigation.md`](docs/auth-navigation.md) – ringkasan alur hidrasi autentikasi dan pemulihan rute terakhir
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
