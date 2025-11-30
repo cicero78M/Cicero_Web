@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import SidebarWrapper from "./SidebarWrapper";
 import Header from "./Header";
@@ -7,6 +8,17 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const isStandalone =
     pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/claim");
+
+  useEffect(() => {
+    if (!pathname) return;
+
+    const isPublicPath =
+      pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/claim");
+
+    if (!isPublicPath) {
+      localStorage.setItem("last_pathname", pathname);
+    }
+  }, [pathname]);
 
   // Landing, login, and claim-related pages render without sidebar or header
   if (isStandalone) {

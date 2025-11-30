@@ -6,12 +6,20 @@ import useAuth from "@/hooks/useAuth";
 
 export default function useAuthRedirect() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, isHydrating } = useAuth();
 
   useEffect(() => {
-    // Check the token stored by the login page
+    if (isHydrating) return;
+
     if (token) {
-      router.replace("/dashboard");
+      const storedPath = localStorage.getItem("last_pathname");
+      const shouldUseStoredPath =
+        storedPath &&
+        storedPath !== "/" &&
+        !storedPath.startsWith("/login") &&
+        !storedPath.startsWith("/claim");
+      const targetPath = shouldUseStoredPath ? storedPath : "/dashboard";
+      router.replace(targetPath);
     }
-  }, [router, token]);
+  }, [router, token, isHydrating]);
 }
