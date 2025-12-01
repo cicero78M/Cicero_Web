@@ -1,0 +1,16 @@
+{
+  "name": "cicero-v2-backend",
+  "version": "1.0.0",
+  "description": "Helper modules for Cicero_V2 backend integrations such as Google Contacts and WhatsApp.",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.34.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
