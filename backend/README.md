@@ -1,11 +1,21 @@
 # Cicero_V2 Backend Helpers
 
-Modul di folder `backend/src` fokus pada integrasi Google Contacts dengan kredensial service account.
+Modul di folder `backend/src` fokus pada integrasi Google Contacts dengan kredensial service account serta utilitas WhatsApp.
 
 ## Struktur
 - `config/googleContactsConfig.js` – membaca path `credentials.json` dari environment variable `GOOGLE_CONTACTS_CREDENTIALS_PATH` atau fallback ke `config/google-contacts/credentials.json`.
 - `health/googleContactsHealthCheck.js` – memvalidasi bahwa file kredensial dapat dibaca dan memberi pesan error yang jelas bila tidak ditemukan.
 - `services/googleContactsService.js` – memuat kredensial dan menyiapkan fondasi penyimpanan kontak, termasuk validasi payload kontak.
 - `startup/healthChecks.js` – jalankan health check pada saat start untuk mencegah sinkronisasi kontak dilewati diam-diam.
+- `services/whatsappContactHelper.js` – lookup kontak WhatsApp melalui `store.Contact.get(contactId)` dan membaca flag `isMyContact`/`isBlocked` tanpa memanggil helper legacy yang sudah dihapus dari WhatsApp Web Store.
+
+## Pengujian
+
+```
+npm install
+npm test
+```
+
+Tes Jest (`__tests__/whatsappContactHelper.test.js`) memverifikasi evaluasi `getContact` tidak lagi melempar error saat kontak tidak ditemukan dan memastikan helper hanya memakai properti yang didukung di WhatsApp Web Store.
 
 Gunakan file `docs/google_contacts_service_account.md` untuk panduan lengkap membuat dan menempatkan `credentials.json`.
