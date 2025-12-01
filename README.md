@@ -96,6 +96,7 @@ Additional documents live under the [`docs/`](docs) directory:
 - [`ATTENDANCE.md`](docs/ATTENDANCE.md) – alur absensi digital, logika rekap likes, dan hubungannya dengan WA Bot
 - [`google_auth_policies.md`](docs/google_auth_policies.md) – Google OAuth terms and privacy policy links
 - [`auth-navigation.md`](docs/auth-navigation.md) – ringkasan alur hidrasi autentikasi dan pemulihan rute terakhir
+- [`google_contacts_service_account.md`](docs/google_contacts_service_account.md) – panduan penempatan `credentials.json` untuk layanan Google Contacts di backend Cicero_V2
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
