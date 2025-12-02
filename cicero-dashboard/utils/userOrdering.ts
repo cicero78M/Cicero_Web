@@ -1,5 +1,8 @@
 const BIDHUMAS_CLIENT_ID = "BIDHUMAS";
-const BIDHUMAS_PRIORITY_USER_NAME = "KOMPOL DADANG WIDYO PRABOWO,S.I.K";
+const BIDHUMAS_PRIORITY_USER_NAMES = [
+  "KOMPOL DADANG WIDYO PRABOWO,S.I.K",
+  "DADANG WIDYO PRABOWO,S.I.K",
+];
 
 function normalizeClientId(clientId: unknown): string {
   return String(clientId || "").trim().toUpperCase();
@@ -18,8 +21,10 @@ export function prioritizeUsersForClient<T extends { nama?: string; name?: strin
   const normalizedClientId = normalizeClientId(clientId);
   if (normalizedClientId !== BIDHUMAS_CLIENT_ID) return users;
 
-  const targetIndex = users.findIndex(
-    (user) => normalizeName(user?.nama || (user as any)?.name) === BIDHUMAS_PRIORITY_USER_NAME,
+  const normalizedPriorityNames = new Set(BIDHUMAS_PRIORITY_USER_NAMES.map(normalizeName));
+
+  const targetIndex = users.findIndex((user) =>
+    normalizedPriorityNames.has(normalizeName(user?.nama || (user as any)?.name)),
   );
 
   if (targetIndex <= 0) return users;
@@ -31,5 +36,5 @@ export function prioritizeUsersForClient<T extends { nama?: string; name?: strin
 
 export const userOrderingConstants = {
   BIDHUMAS_CLIENT_ID,
-  BIDHUMAS_PRIORITY_USER_NAME,
+  BIDHUMAS_PRIORITY_USER_NAMES,
 };
