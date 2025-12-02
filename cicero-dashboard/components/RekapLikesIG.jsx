@@ -10,6 +10,7 @@ import usePersistentState from "@/hooks/usePersistentState";
 import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
+import { prioritizeUsersForClient } from "@/utils/userOrdering";
 
 const PAGE_SIZE = 25;
 
@@ -93,7 +94,15 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     return 0;
   };
 
-  const sortedUsers = useMemo(() => [...users].sort(compareUsers), [users]);
+  const inferredClientId = useMemo(() => {
+    const firstWithClient = users.find((u) => getClientIdentifier(u).hasValue);
+    return firstWithClient ? getClientIdentifier(firstWithClient).stringValue : "";
+  }, [users]);
+
+  const sortedUsers = useMemo(() => {
+    const prioritized = prioritizeUsersForClient(users, inferredClientId);
+    return [...prioritized].sort(compareUsers);
+  }, [users, inferredClientId]);
 
   const totalUser = sortedUsers.length;
   const hasClient = useMemo(

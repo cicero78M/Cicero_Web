@@ -17,6 +17,7 @@ import ViewDataSelector, {
 } from "@/components/ViewDataSelector";
 import { ArrowLeft } from "lucide-react";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { prioritizeUsersForClient } from "@/utils/userOrdering";
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear();
@@ -386,8 +387,9 @@ export default function RekapKomentarTiktokPage() {
           return { ...u, nama_client: cName, client_name: cName, client: cName };
         });
 
-        const sortedUsers = [...enrichedUsers].sort(
-          compareUsersByPangkatAndNrp,
+        const sortedUsers = prioritizeUsersForClient(
+          [...enrichedUsers].sort(compareUsersByPangkatAndNrp),
+          normalizedClientId,
         );
 
         // Sumber utama TikTok Post Hari Ini dari statsRes

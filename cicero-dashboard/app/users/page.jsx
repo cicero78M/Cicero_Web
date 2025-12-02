@@ -15,6 +15,7 @@ import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import * as XLSX from "xlsx";
 import { showToast } from "@/utils/showToast";
 import { validateNewUser } from "@/utils/validateUserForm";
@@ -198,10 +199,10 @@ export default function UserDirectoryPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const sortedUsers = useMemo(
-    () => [...users].sort(compareUsersByPangkatAndNrp),
-    [users],
-  );
+  const sortedUsers = useMemo(() => {
+    const baseSorted = [...users].sort(compareUsersByPangkatAndNrp);
+    return prioritizeUsersForClient(baseSorted, client_id);
+  }, [users, client_id]);
 
   const rekapUsers = useMemo(() => {
     const grouped = {};
