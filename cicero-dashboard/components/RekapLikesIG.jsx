@@ -100,8 +100,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   }, [users]);
 
   const sortedUsers = useMemo(() => {
-    const prioritized = prioritizeUsersForClient(users, inferredClientId);
-    return [...prioritized].sort(compareUsers);
+    const sorted = [...users].sort(compareUsers);
+    return prioritizeUsersForClient(sorted, inferredClientId);
   }, [users, inferredClientId]);
 
   const totalUser = sortedUsers.length;
