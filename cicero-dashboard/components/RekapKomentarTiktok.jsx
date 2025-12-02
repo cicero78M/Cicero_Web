@@ -5,6 +5,7 @@ import { AlertTriangle, Music, User, Check, X, Minus, UserX } from "lucide-react
 import { showToast } from "@/utils/showToast";
 import { cn } from "@/lib/utils";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { prioritizeUsersForClient } from "@/utils/userOrdering";
 
 function bersihkanSatfung(divisi = "") {
   return divisi
@@ -106,11 +107,23 @@ export default function RekapKomentarTiktok({
           .includes(term)
     );
   }, [users, search]);
+  const inferredClientId = useMemo(() => {
+    const candidate = users.find(
+      (u) => u.client_id || u.client_name || u.client || u.nama_client,
+    );
+    return (
+      candidate?.client_id ||
+      candidate?.client ||
+      candidate?.client_name ||
+      candidate?.nama_client ||
+      ""
+    );
+  }, [users]);
 
-  const sorted = useMemo(
-    () => [...filtered].sort(compareUsersByPangkatAndNrp),
-    [filtered],
-  );
+  const sorted = useMemo(() => {
+    const prioritized = prioritizeUsersForClient(filtered, inferredClientId);
+    return [...prioritized].sort(compareUsersByPangkatAndNrp);
+  }, [filtered, inferredClientId]);
 
   const [page, setPage] = usePersistentState("rekapKomentarTiktok_page", 1);
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
