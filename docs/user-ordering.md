@@ -2,7 +2,7 @@
 
 Fungsi `prioritizeUsersForClient` (`cicero-dashboard/utils/userOrdering.ts`) memastikan urutan pengguna yang konsisten untuk klien tertentu.
 
-- Untuk `client_id` **BIDHUMAS**, pengguna bernama **"KOMPOL DADANG WIDYO PRABOWO,S.I.K"** selalu ditempatkan di posisi pertama setelah data diurutkan.
+- Untuk `client_id` **BIDHUMAS**, pengguna bernama **"KOMPOL DADANG WIDYO PRABOWO,S.I.K"** atau **"DADANG WIDYO PRABOWO,S.I.K"** selalu ditempatkan di posisi pertama setelah data diurutkan.
 - Fungsi ini digunakan di:
   - Direktori user (`cicero-dashboard/app/users/page.jsx`).
   - Rekap likes Instagram (`cicero-dashboard/hooks/useInstagramLikesData.ts` dan `cicero-dashboard/components/RekapLikesIG.jsx`).
