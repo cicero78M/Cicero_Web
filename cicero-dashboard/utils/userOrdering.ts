@@ -14,12 +14,9 @@ function normalizeName(name: unknown): string {
 
 export function prioritizeUsersForClient<T extends { nama?: string; name?: string }>(
   users: T[],
-  clientId: unknown,
+  _clientId: unknown,
 ): T[] {
   if (!Array.isArray(users) || users.length === 0) return users;
-
-  const normalizedClientId = normalizeClientId(clientId);
-  if (normalizedClientId !== BIDHUMAS_CLIENT_ID) return users;
 
   const normalizedPriorityNames = new Set(BIDHUMAS_PRIORITY_USER_NAMES.map(normalizeName));
 
