@@ -121,8 +121,8 @@ export default function RekapKomentarTiktok({
   }, [users]);
 
   const sorted = useMemo(() => {
-    const prioritized = prioritizeUsersForClient(filtered, inferredClientId);
-    return [...prioritized].sort(compareUsersByPangkatAndNrp);
+    const sortedByRank = [...filtered].sort(compareUsersByPangkatAndNrp);
+    return prioritizeUsersForClient(sortedByRank, inferredClientId);
   }, [filtered, inferredClientId]);
 
   const [page, setPage] = usePersistentState("rekapKomentarTiktok_page", 1);
