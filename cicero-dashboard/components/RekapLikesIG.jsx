@@ -99,6 +99,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     return firstWithClient ? getClientIdentifier(firstWithClient).stringValue : "";
   }, [users]);
 
+  const directorateLabel = useMemo(() => {
+    const trimmedClientName = String(clientName || "").trim();
+    if (trimmedClientName) return trimmedClientName;
+
+    const inferredClientLabel = String(inferredClientId || "").trim();
+    if (inferredClientLabel) return inferredClientLabel;
+
+    return "Ditbinmas";
+  }, [clientName, inferredClientId]);
+
   const sortedUsers = useMemo(() => {
     const sorted = [...users].sort(compareUsers);
     return prioritizeUsersForClient(sorted, inferredClientId);
@@ -305,10 +315,14 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
     const sortByRank = (arr) => [...arr].sort(compareUsers);
 
+    const prioritizedClient = directorateLabel.trim().toUpperCase();
     const sortedClients = Object.keys(clients).sort((a, b) => {
-      if (a === "Direktorat Binmas") return -1;
-      if (b === "Direktorat Binmas") return 1;
-      return a.localeCompare(b);
+      const clientA = String(a || "").trim().toUpperCase();
+      const clientB = String(b || "").trim().toUpperCase();
+
+      if (clientA === prioritizedClient) return -1;
+      if (clientB === prioritizedClient) return 1;
+      return clientA.localeCompare(clientB);
     });
 
     const now = new Date();
@@ -337,12 +351,10 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             .join("\n")
         : "-";
 
-    const headerClientName = clientName ? String(clientName).trim() : "-";
-
     const headerLines = [
       "Mohon ijin Komandan,",
-      "📋 Laporan Rekap Likes Instagram Ditbinmas",
-      "Sumber: Konten akun official Direktorat Binmas",
+      `📋 Laporan Rekap Likes Instagram ${directorateLabel}`,
+      `Sumber: Konten akun official ${directorateLabel}`,
       periodeLabel ? `Periode data: ${periodeLabel}` : null,
       viewLabel ? `Mode tampilan: ${viewLabel}` : null,
       `Waktu kompilasi: ${jam} WIB`,
