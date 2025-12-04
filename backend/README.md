@@ -8,6 +8,7 @@ Modul di folder `backend/src` fokus pada integrasi Google Contacts dengan kreden
 - `services/googleContactsService.js` – memuat kredensial dan menyiapkan fondasi penyimpanan kontak, termasuk validasi payload kontak.
 - `startup/healthChecks.js` – jalankan health check pada saat start untuk mencegah sinkronisasi kontak dilewati diam-diam.
 - `services/whatsappContactHelper.js` – lookup kontak WhatsApp melalui `store.Contact.get(contactId)` dan membaca flag `isMyContact`/`isBlocked` tanpa memanggil helper legacy yang sudah dihapus dari WhatsApp Web Store.
+- `services/cronDirRequestDirektorat.js` – menyusun jadwal pengiriman laporan direktorat berbasis data tabel `clients`. Klien bertipe **Direktorat** dengan status aktif dan bendera `instagram` serta `tiktok` bernilai `true` akan dijadwalkan otomatis. `DITBINMAS` hanya dikirimi laporan ke super admin pada jam lama (default `20:30`), sedangkan `BIDHUMAS` mendapat pengiriman ke grup pada `15:05` dan `18:05` serta pengiriman ganda ke grup dan super admin pada jam lama. Klien direktorat lain dikirimi laporan grup pada jam lama. Gunakan `scheduleJob(time, handler, meta)` untuk mendaftarkan job dan `sendGroupReport`/`sendSuperAdminReport` untuk eksekusi pesan.
 
 ## Pengujian
 
