@@ -7,5 +7,6 @@ Fungsi `prioritizeUsersForClient` (`cicero-dashboard/utils/userOrdering.ts`) mem
   - Direktori user (`cicero-dashboard/app/users/page.jsx`).
   - Rekap likes Instagram (`cicero-dashboard/hooks/useInstagramLikesData.ts` dan `cicero-dashboard/components/RekapLikesIG.jsx`).
   - Rekap komentar TikTok (`cicero-dashboard/app/comments/tiktok/rekap/page.jsx` dan `cicero-dashboard/components/RekapKomentarTiktok.jsx`).
+  - Saat menyalin teks rekap komentar TikTok, header laporan kini mengikuti klien bertipe **DIREKTORAT** sesuai role pengguna. Nama singkat dan nama resmi direktorat ditarik dari profil klien atau layanan `getClientNames`, lalu menggantikan label "Ditbinmas"/"Direktorat Binmas" pada pesan WhatsApp otomatis sehingga sapaan selalu relevan dengan role login.
 
 Tambahkan pemanggilan fungsi ini jika ada modul baru yang menampilkan daftar pengguna terurut untuk klien BIDHUMAS agar konsistensi tetap terjaga.

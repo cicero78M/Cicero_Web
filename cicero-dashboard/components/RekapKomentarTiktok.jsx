@@ -22,7 +22,12 @@ export default function RekapKomentarTiktok({
   showCopyButton = true,
   reportContext = {},
 }) {
-  const { periodeLabel, viewLabel } = reportContext || {};
+  const {
+    periodeLabel,
+    viewLabel,
+    directorateName,
+    directorateOfficialName,
+  } = reportContext || {};
   const totalTiktokPostCount = Number(totalTiktokPost) || 0;
   const summary = useMemo(() => {
     const totalUser = users.length;
@@ -301,9 +306,13 @@ export default function RekapKomentarTiktok({
     const sortByName = (arr) =>
       [...arr].sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
 
+    const reportDirectorateName = directorateName || "Ditbinmas";
+    const reportDirectorateOfficialName =
+      directorateOfficialName || reportDirectorateName;
+
     const sortedClients = Object.keys(clients).sort((a, b) => {
-      if (a === "Direktorat Binmas") return -1;
-      if (b === "Direktorat Binmas") return 1;
+      if (a === reportDirectorateOfficialName) return -1;
+      if (b === reportDirectorateOfficialName) return 1;
       return a.localeCompare(b);
     });
 
@@ -338,9 +347,10 @@ export default function RekapKomentarTiktok({
 
     const headerLines = [
       "*Mohon ijin Komandan,*",
+      "*Mohon ijin Komandan,*",
       "",
-      "📋 *Laporan Rekap Komentar TikTok Ditbinmas*",
-      "Sumber: Konten akun official Direktorat Binmas",
+      `📋 *Laporan Rekap Komentar TikTok ${reportDirectorateName}*`,
+      `Sumber: Konten akun official ${reportDirectorateOfficialName}`,
       `Dilaporkan oleh personel: ${headerClientName}`,
       periodeLabel ? `Periode data: ${periodeLabel}` : null,
       viewLabel ? `Mode tampilan: ${viewLabel}` : null,

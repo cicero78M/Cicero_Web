@@ -91,6 +91,10 @@ export default function RekapKomentarTiktokPage() {
   });
   const [isDitbinmasUser, setIsDitbinmasUser] = useState(false);
   const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const [directorateReportInfo, setDirectorateReportInfo] = useState({
+    shortName: "Ditbinmas",
+    officialName: "Direktorat Binmas",
+  });
 
   const viewOptions = VIEW_OPTIONS;
   const ditbinmasScopeOptions = [
@@ -205,11 +209,11 @@ export default function RekapKomentarTiktokPage() {
         ? localStorage.getItem("user_role")
         : null;
     const roleLower = String(role || "").trim().toLowerCase();
-    const normalizedClientId = String(userClientId || "").trim();
-    const clientIdUpper = normalizedClientId.toUpperCase();
-    const clientIdLower = normalizedClientId.toLowerCase();
-    const isDitbinmasRole = roleLower === "ditbinmas";
-    const ditbinmasClientId = "DITBINMAS";
+        const normalizedClientId = String(userClientId || "").trim();
+        const clientIdUpper = normalizedClientId.toUpperCase();
+        const clientIdLower = normalizedClientId.toLowerCase();
+        const isDitbinmasRole = roleLower === "ditbinmas";
+        const ditbinmasClientId = "DITBINMAS";
     const isDitbinmasClient = clientIdUpper === ditbinmasClientId;
     const isScopedDirectorateClient = isDitbinmasRole && !isDitbinmasClient;
     const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
@@ -356,13 +360,16 @@ export default function RekapKomentarTiktokPage() {
 
         const clientIdsForNames = Array.from(
           new Set(
-            filteredUsers
-              .map((u) =>
-                String(
-                  u.client_id || u.clientId || u.client || u.clientID || "",
-                ),
-              )
-              .filter(Boolean),
+            [
+              ...filteredUsers
+                .map((u) =>
+                  String(
+                    u.client_id || u.clientId || u.client || u.clientID || "",
+                  ),
+                )
+                .filter(Boolean),
+              taskClientId,
+            ].filter(Boolean),
           ),
         );
 
@@ -374,6 +381,18 @@ export default function RekapKomentarTiktokPage() {
             controller.signal,
           );
         }
+
+        const defaultDisplayName =
+          profileData?.client_name ||
+          profileData?.clientName ||
+          profileData?.name ||
+          taskClientId;
+        const directorateDisplayName =
+          nameMap[taskClientId] || defaultDisplayName || taskClientId;
+        setDirectorateReportInfo({
+          shortName: taskClientId || defaultDisplayName || "Ditbinmas",
+          officialName: directorateDisplayName,
+        });
         const enrichedUsers = filteredUsers.map((u) => {
           const cid = String(
             u.client_id || u.clientId || u.client || u.clientID || "",
@@ -541,6 +560,8 @@ export default function RekapKomentarTiktokPage() {
               periodeLabel: reportPeriodeLabel,
               viewLabel:
                 viewOptions.find((option) => option.value === viewBy)?.label,
+              directorateName: directorateReportInfo.shortName,
+              directorateOfficialName: directorateReportInfo.officialName,
             }}
           />
         </div>
