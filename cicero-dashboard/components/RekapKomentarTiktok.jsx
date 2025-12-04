@@ -347,11 +347,10 @@ export default function RekapKomentarTiktok({
 
     const headerLines = [
       "*Mohon ijin Komandan,*",
-      "*Mohon ijin Komandan,*",
       "",
       `📋 *Laporan Rekap Komentar TikTok ${reportDirectorateName}*`,
       `Sumber: Konten akun official ${reportDirectorateOfficialName}`,
-      `Dilaporkan oleh personel: ${headerClientName}`,
+      `Dilaporkan oleh Operator: ${headerClientName}`,
       periodeLabel ? `Periode data: ${periodeLabel}` : null,
       viewLabel ? `Mode tampilan: ${viewLabel}` : null,
       `Waktu kompilasi: ${jam} WIB`,
