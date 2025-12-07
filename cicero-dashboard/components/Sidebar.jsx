@@ -19,7 +19,6 @@ import {
   FilePieChart,
   Book,
   Workflow,
-  Calendar,
   Shield,
 } from "lucide-react";
 import {
@@ -57,7 +56,6 @@ export default function Sidebar() {
     clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
-  const canSeeWeeklyReport = hasDitbinmasAccess;
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -105,9 +103,6 @@ export default function Sidebar() {
             icon: Shield,
           },
         ]
-      : []),
-    ...(canSeeWeeklyReport
-      ? [{ label: "Weekly Report", path: "/weekly-report", icon: Calendar }]
       : []),
     {
       label: "Mekanisme Sistem Absensi",
