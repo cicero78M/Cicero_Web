@@ -49,6 +49,10 @@ cd cicero-dashboard
 npm install
 ```
 
+## Dependency Notes
+
+- The dashboard uses `react-d3-cloud@^1.0.6`, which is compatible with React 18 and ensures the `WordCloudChart` component continues to import the library without API changes. After updating this dependency, regenerate `package-lock.json` from inside `cicero-dashboard` to capture the refreshed peer set.
+
 ## Starting the App
 
 Run the development server with:
