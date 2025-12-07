@@ -1,14 +1,21 @@
+import ExcelJS from 'exceljs';
 import { NextRequest, NextResponse } from 'next/server';
-import * as XLSX from 'xlsx';
 
 export async function POST(req: NextRequest) {
   const { rows, fileName } = await req.json();
 
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Sheet1');
 
-  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  if (Array.isArray(rows) && rows.length > 0) {
+    const columns = Array.from(
+      new Set(rows.flatMap((row: Record<string, unknown>) => Object.keys(row))),
+    );
+    worksheet.columns = columns.map((column) => ({ header: column, key: column }));
+    rows.forEach((row: Record<string, unknown>) => worksheet.addRow(row));
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer();
 
   return new NextResponse(buffer, {
     headers: {
