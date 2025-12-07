@@ -16,7 +16,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { showToast } from "@/utils/showToast";
 import { validateNewUser } from "@/utils/validateUserForm";
 
@@ -357,22 +357,49 @@ export default function UserDirectoryPage() {
     }
   }
 
-  function handleDownloadData() {
-    const data = users.map((u) => ({
-      Nama: (u.title ? `${u.title} ` : "") + (u.nama || "-"),
-      "NRP/NIP": u.user_id || "",
-      [columnLabel]: showKesatuanColumn
-        ? u.nama_client || u.client_name || u.client || u.nama || "-"
-        : u.divisi || "",
-      "Username IG": u.insta || "",
-      "Username TikTok": u.tiktok || "",
-      Status:
-        u.status === true || u.status === "true" ? "Aktif" : "Nonaktif",
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
-    XLSX.writeFile(workbook, "user_directory.xlsx");
+  async function handleDownloadData() {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Users");
+    worksheet.columns = [
+      { header: "Nama", key: "nama", width: 40 },
+      { header: "NRP/NIP", key: "nrp", width: 16 },
+      { header: columnLabel, key: "kesatuan", width: 30 },
+      { header: "Username IG", key: "ig", width: 20 },
+      { header: "Username TikTok", key: "tiktok", width: 20 },
+      { header: "Status", key: "status", width: 10 },
+    ];
+
+    worksheet.addRows(
+      users.map((u) => ({
+        nama: (u.title ? `${u.title} ` : "") + (u.nama || "-"),
+        nrp: u.user_id || "",
+        kesatuan: showKesatuanColumn
+          ? u.nama_client || u.client_name || u.client || u.nama || "-"
+          : u.divisi || "",
+        ig: u.insta || "",
+        tiktok: u.tiktok || "",
+        status:
+          u.status === true || u.status === "true" ? "Aktif" : "Nonaktif",
+      })),
+    );
+
+    try {
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "user_directory.xlsx";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      showToast(
+        "Gagal mengunduh data pengguna: " + (error.message || error),
+        "error",
+      );
+    }
   }
 
   // Data fetching handled by SWR
