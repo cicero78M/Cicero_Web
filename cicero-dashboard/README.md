@@ -8,6 +8,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 - The dashboard pins `react-d3-cloud` to version `1.0.6` with explicit overrides for its `d3-*` transitive dependencies to satisfy current security advisories while keeping React 18 compatibility. If you hit install conflicts, clear any old lockfiles or `node_modules` from earlier installs and run `npm install` again from the `cicero-dashboard` directory.
 - Excel exports now use [`exceljs`](https://www.npmjs.com/package/exceljs) instead of `xlsx` to avoid open vulnerabilities reported by `npm audit` while maintaining the same download features on the user directory and Amplify export API.
+- Builds rely on `exceljs` for both the user directory export and the `/api/download-amplify` route. If you see "Cannot find module 'exceljs'" during `next build`, reinstall dependencies from this folder so the package is available to the bundler.
 
 ## Getting Started
 
