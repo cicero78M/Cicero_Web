@@ -12,6 +12,10 @@
   --cicero-soft-coral: #ffe4e6;
   --cicero-soft-coral-ink: #be123c;
   --cicero-soft-surface-shadow: rgba(148, 163, 184, 0.18);
+  --font-geist-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue",
+    Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 }
 
 html {
