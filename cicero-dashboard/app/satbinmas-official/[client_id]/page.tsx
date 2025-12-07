@@ -192,15 +192,11 @@ function calculatePeriodDays(dates: string[]) {
 }
 
 type SatbinmasClientDashboardProps = {
-  params?: { client_id?: string } | Promise<{ client_id?: string }>;
+  params: { client_id?: string };
 };
 
-function resolveClientId(params: SatbinmasClientDashboardProps["params"]) {
-  if (!params) return "";
-  if (typeof (params as Promise<unknown>).then === "function") {
-    return "";
-  }
-  return (params as { client_id?: string }).client_id || "";
+function resolveClientId(params?: { client_id?: string }) {
+  return params?.client_id || "";
 }
 
 export default function SatbinmasClientDashboard({ params }: SatbinmasClientDashboardProps) {
