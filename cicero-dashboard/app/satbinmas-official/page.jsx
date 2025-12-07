@@ -414,6 +414,28 @@ export default function SatbinmasOfficialPage() {
     });
   }, [content, platformFilter, polresFilter, dateRange]);
 
+  const dailyContentTrends = useMemo(() => {
+    const map = new Map();
+    filteredContent.forEach((item) => {
+      if (!map.has(item.date)) {
+        map.set(item.date, {
+          date: item.date,
+          likes: 0,
+          comments: 0,
+          posts: 0,
+          engagement: 0,
+        });
+      }
+      const current = map.get(item.date);
+      current.likes += item.likes;
+      current.comments += item.comments;
+      current.posts += 1;
+      current.engagement += item.likes + item.comments;
+    });
+
+    return Array.from(map.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [filteredContent]);
+
   const accountSummaries = useMemo(() => {
     const summaryMap = new Map();
 
@@ -738,6 +760,56 @@ export default function SatbinmasOfficialPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-8">
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Tren harian</h2>
+                  <p className="text-sm text-slate-600">Distribusi likes, komentar, dan volume posting per tanggal terpilih.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-700">Likes vs Komentar</p>
+                  <div className="h-72">
+                    {dailyContentTrends.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={dailyContentTrends}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="likes" name="Likes" stackId="engagement" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="comments" name="Komentar" stackId="engagement" fill="#10b981" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-slate-500">Belum ada konten pada periode ini.</div>
+                    )}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-700">Jumlah posting harian</p>
+                  <div className="h-72">
+                    {dailyContentTrends.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={dailyContentTrends}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="posts" name="Posting" fill="#111827" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-slate-500">Belum ada konten pada periode ini.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
