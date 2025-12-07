@@ -65,6 +65,22 @@ npm run build
 npm start
 ```
 
+To keep the production server running after you log out, use [PM2](https://pm2.keymetrics.io/):
+
+```bash
+npm install -g pm2
+pm2 start "npm start" --name cicero-web
+pm2 status    # verify the process is online
+pm2 logs      # stream runtime logs
+pm2 save      # persist the process list across reboots
+```
+
+After code updates, redeploy with:
+
+```bash
+pm2 restart cicero-web
+```
+
 ## Environment Variables
 
 Create a `.env.local` file inside `cicero-dashboard` and define the following variable:
