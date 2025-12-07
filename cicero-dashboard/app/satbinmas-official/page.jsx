@@ -13,81 +13,101 @@ import Loader from "@/components/Loader";
 const OFFICIAL_ACCOUNTS = [
   {
     polres: "Polres Surabaya",
+    displayName: "Ditbinmas Surabaya",
     platform: "instagram",
     handle: "@ditbinmas_sby",
     status: "Aktif",
+    verified: true,
     followers: 12800,
     lastActive: "2024-11-05",
   },
   {
     polres: "Polres Surabaya",
+    displayName: "Ditbinmas Surabaya TikTok",
     platform: "tiktok",
     handle: "@ditbinmas_sby_tiktok",
     status: "Aktif",
+    verified: true,
     followers: 18400,
     lastActive: "2024-11-04",
   },
   {
     polres: "Polres Malang",
+    displayName: "Humas Polres Malang",
     platform: "instagram",
     handle: "@polres_malang",
     status: "Aktif",
+    verified: true,
     followers: 9600,
     lastActive: "2024-11-05",
   },
   {
     polres: "Polres Malang",
+    displayName: "Polres Malang Official",
     platform: "tiktok",
     handle: "@polres_malang_official",
     status: "Dormant",
+    verified: false,
     followers: 4200,
     lastActive: "2024-10-30",
   },
   {
     polres: "Polres Sidoarjo",
+    displayName: "Polres Sidoarjo",
     platform: "instagram",
     handle: "@polres_sda",
     status: "Aktif",
+    verified: true,
     followers: 8100,
     lastActive: "2024-11-03",
   },
   {
     polres: "Polres Sidoarjo",
+    displayName: "Polres Sidoarjo TikTok",
     platform: "tiktok",
     handle: "@polres_sda_official",
     status: "Aktif",
+    verified: false,
     followers: 11200,
     lastActive: "2024-11-02",
   },
   {
     polres: "Polres Gresik",
+    displayName: "Polres Gresik",
     platform: "instagram",
     handle: "@polres_gresik",
     status: "Aktif",
+    verified: true,
     followers: 7200,
     lastActive: "2024-11-04",
   },
   {
     polres: "Polres Gresik",
+    displayName: "Satbinmas Gresik",
     platform: "tiktok",
     handle: "@gresik_satbinmas",
     status: "Aktif",
+    verified: false,
     followers: 9300,
     lastActive: "2024-11-05",
   },
   {
     polres: "Polres Kediri",
+    displayName: "Polres Kediri",
     platform: "instagram",
     handle: "@polres_kediri",
     status: "Aktif",
+    verified: true,
     followers: 6400,
     lastActive: "2024-11-04",
   },
   {
     polres: "Polres Kediri",
+    displayName: "Polres Kediri Official",
     platform: "tiktok",
     handle: "@polres_kediri_official",
     status: "Dormant",
+    verified: false,
     followers: 5100,
     lastActive: "2024-10-28",
   },
@@ -394,6 +414,63 @@ export default function SatbinmasOfficialPage() {
     });
   }, [content, platformFilter, polresFilter, dateRange]);
 
+  const accountSummaries = useMemo(() => {
+    const summaryMap = new Map();
+
+    filteredContent.forEach((item) => {
+      const key = `${item.polres}-${item.platform}`;
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          polres: item.polres,
+          platform: item.platform,
+          posts: 0,
+          likes: 0,
+          comments: 0,
+        });
+      }
+      const current = summaryMap.get(key);
+      current.posts += 1;
+      current.likes += item.likes;
+      current.comments += item.comments;
+    });
+
+    filteredAccounts.forEach((account) => {
+      const key = `${account.polres}-${account.platform}`;
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          polres: account.polres,
+          platform: account.platform,
+          posts: 0,
+          likes: 0,
+          comments: 0,
+        });
+      }
+    });
+
+    return Array.from(summaryMap.values())
+      .map((entry) => {
+        const accountMeta = filteredAccounts.find(
+          (acc) => acc.polres === entry.polres && acc.platform === entry.platform,
+        );
+        const engagementTotal = entry.likes + entry.comments;
+        return {
+          ...entry,
+          displayName: accountMeta?.displayName || entry.polres,
+          handle: accountMeta?.handle || "-",
+          verified: accountMeta?.verified ?? false,
+          status: accountMeta?.status || "Tidak diketahui",
+          followers: accountMeta?.followers ?? 0,
+          totalEngagement: engagementTotal,
+          avgEngagement: entry.posts ? engagementTotal / entry.posts : 0,
+        };
+      })
+      .sort((a, b) => {
+        if (b.totalEngagement !== a.totalEngagement) return b.totalEngagement - a.totalEngagement;
+        if (b.posts !== a.posts) return b.posts - a.posts;
+        return a.displayName.localeCompare(b.displayName);
+      });
+  }, [filteredAccounts, filteredContent]);
+
   const coverageStats = useMemo(() => {
     const polresCovered = new Set(filteredAccounts.map((item) => item.polres)).size;
     const activeHandles = filteredAccounts.filter((a) => a.status === "Aktif").length;
@@ -661,6 +738,68 @@ export default function SatbinmasOfficialPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-8">
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Ringkasan cepat akun</h2>
+                  <p className="text-sm text-slate-600">
+                    Akumulasi posting dan engagement per kombinasi Polres serta platform berikut status verifikasi akun.
+                  </p>
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                <div className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">Performa akun per periode</div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-100 text-sm">
+                    <thead className="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Akun</th>
+                        <th className="px-4 py-2 text-left">Platform</th>
+                        <th className="px-4 py-2 text-left">Verifikasi</th>
+                        <th className="px-4 py-2 text-left">Total Posting</th>
+                        <th className="px-4 py-2 text-left">Total Likes & Komentar</th>
+                        <th className="px-4 py-2 text-left">Rata-rata/Posting</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {accountSummaries.map((summary) => (
+                        <tr key={`${summary.polres}-${summary.platform}`} className="hover:bg-slate-50">
+                          <td className="px-4 py-2">
+                            <p className="font-semibold text-slate-800">{summary.displayName}</p>
+                            <p className="text-xs text-slate-500">{summary.handle}</p>
+                          </td>
+                          <td className="px-4 py-2 capitalize text-slate-700">{summary.platform}</td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-2 text-sm font-semibold">
+                              {summary.verified ? (
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 text-amber-500" />
+                              )}
+                              <span className={summary.verified ? "text-emerald-600" : "text-amber-600"}>
+                                {summary.verified ? "Terverifikasi" : "Belum Verifikasi"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500">Status akun: {summary.status}</p>
+                          </td>
+                          <td className="px-4 py-2 font-semibold text-slate-800">{summary.posts}</td>
+                          <td className="px-4 py-2 font-semibold text-slate-800">{formatNumber(summary.totalEngagement)}</td>
+                          <td className="px-4 py-2 text-slate-700">{summary.avgEngagement.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                      {!accountSummaries.length && (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                            Belum ada ringkasan akun untuk filter yang dipilih.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
