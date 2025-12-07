@@ -16,3 +16,8 @@ Halaman `/satbinmas-official` disiapkan khusus untuk pengguna Ditbinmas sebagai 
 - **Pola konten**: leaderboard hashtag dan mention guna memudahkan koordinasi publikasi.
 
 Seluruh data menampilkan state loading, error, serta empty state agar pengalaman pengguna konsisten dengan halaman lain di dashboard.
+
+## Utilitas data
+- Fungsi `getSatbinmasSummary`, `getSatbinmasActivity`, `getSatbinmasEngagement`, `getSatbinmasHashtags`, dan `getSatbinmasAccounts` di `utils/api.ts` menambahkan header Authorization melalui `fetchWithAuth` serta otomatis memanggil `handleTokenExpired` saat backend mengembalikan 401.
+- Setiap fungsi menerima parameter token, filter periode (periode/tanggal/tanggal_mulai/tanggal_selesai), filter platform, serta `client_id` opsional untuk menyamakan query backend Cicero_V2. Semua respon diparsing aman dengan fallback angka `0` atau array kosong ketika field tidak tersedia.
+- Tipe ekspor `SatbinmasSummary`, `SatbinmasAccountCoverage`, `SatbinmasActivityItem`, `SatbinmasEngagementItem`, `SatbinmasHashtagItem`, dan `SatbinmasAccountDetail` tersedia untuk pengetikan komponen yang akan merender data Satbinmas Official.
