@@ -191,15 +191,12 @@ function calculatePeriodDays(dates: string[]) {
   return diff + 1;
 }
 
-type SatbinmasClientDashboardProps = {
-  params: { client_id?: string };
-};
-
 function resolveClientId(params?: { client_id?: string }) {
   return params?.client_id || "";
 }
 
-export default function SatbinmasClientDashboard({ params }: SatbinmasClientDashboardProps) {
+export default function SatbinmasClientDashboard(props: any) {
+  const { params } = (props || {}) as { params?: { client_id?: string } };
   useRequireAuth();
   const router = useRouter();
   const { clientId, role, isHydrating } = useAuth();

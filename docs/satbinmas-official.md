@@ -21,3 +21,6 @@ Seluruh data menampilkan state loading, error, serta empty state agar pengalaman
 - Fungsi `getSatbinmasSummary`, `getSatbinmasActivity`, `getSatbinmasEngagement`, `getSatbinmasHashtags`, dan `getSatbinmasAccounts` di `utils/api.ts` menambahkan header Authorization melalui `fetchWithAuth` serta otomatis memanggil `handleTokenExpired` saat backend mengembalikan 401.
 - Setiap fungsi menerima parameter token, filter periode (periode/tanggal/tanggal_mulai/tanggal_selesai), filter platform, serta `client_id` opsional untuk menyamakan query backend Cicero_V2. Semua respon diparsing aman dengan fallback angka `0` atau array kosong ketika field tidak tersedia.
 - Tipe ekspor `SatbinmasSummary`, `SatbinmasAccountCoverage`, `SatbinmasActivityItem`, `SatbinmasEngagementItem`, `SatbinmasHashtagItem`, dan `SatbinmasAccountDetail` tersedia untuk pengetikan komponen yang akan merender data Satbinmas Official.
+
+## Catatan teknis
+- Halaman `app/satbinmas-official/[client_id]/page.tsx` kini menerima `props` bertipe longgar agar kompatibel dengan `PageProps` bawaan Next.js yang memaksa `params` berbentuk `Promise`. Parameter `client_id` tetap diekstraksi secara aman di awal komponen sebelum digunakan pada logika dashboard.
