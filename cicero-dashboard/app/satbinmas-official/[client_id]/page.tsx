@@ -191,18 +191,26 @@ function calculatePeriodDays(dates: string[]) {
   return diff + 1;
 }
 
-export default function SatbinmasClientDashboard({
-  params,
-}: {
-  params: { client_id: string };
-}) {
+type SatbinmasClientDashboardProps = {
+  params?: { client_id?: string } | Promise<{ client_id?: string }>;
+};
+
+function resolveClientId(params: SatbinmasClientDashboardProps["params"]) {
+  if (!params) return "";
+  if (typeof (params as Promise<unknown>).then === "function") {
+    return "";
+  }
+  return (params as { client_id?: string }).client_id || "";
+}
+
+export default function SatbinmasClientDashboard({ params }: SatbinmasClientDashboardProps) {
   useRequireAuth();
   const router = useRouter();
   const { clientId, role, isHydrating } = useAuth();
   const [forbidden, setForbidden] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
 
-  const clientKey = (params?.client_id || "").toLowerCase();
+  const clientKey = resolveClientId(params).toLowerCase();
   const profile = POLRES_DIRECTORY[clientKey];
   const content = CLIENT_CONTENT[clientKey] || [];
 
