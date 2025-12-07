@@ -11,9 +11,16 @@ Halaman `/satbinmas-official` disiapkan khusus untuk pengguna Ditbinmas sebagai 
 
 ## Struktur insight
 - **Ringkasan coverage akun resmi**: kartu statistik dan tabel Polres berisi status aktif/dormant serta total followers.
+- **Ringkasan cepat akun**: daftar akun Polres yang disorot berisi nama tampilan, handle, platform, status verifikasi, total followers, serta ringkasan engagement per posting untuk membantu validasi profil.
+- **Tren harian**: grafik garis yang memperlihatkan jumlah posting, likes harian, dan komentar harian lintas platform untuk memantau aktivitas rutin.
 - **Aktivitas konten**: bar chart per platform dan heatmap kalender untuk 10 konten dengan interaksi tertinggi.
 - **Kualitas & engagement**: total/rata-rata likes dan komentar, daftar 10 Polres teratas, serta daftar konten terbaik.
 - **Pola konten**: leaderboard hashtag dan mention guna memudahkan koordinasi publikasi.
+
+### Detail metrik dan keterkaitan filter
+- Setiap item di seksi **Ringkasan cepat akun** menampilkan display name, handle, platform, status verifikasi, total engagement per posting, serta rata-rata engagement per posting. Nilai tersebut mengikuti filter platform dan Polres, serta periode yang dipilih (harian/mingguan/bulanan/rentang khusus) sehingga perhitungan engagement konsisten dengan konteks waktu dan kanal yang disaring.
+- Grafik pada **Tren harian** menampilkan jumlah posting harian, likes harian, dan komentar harian. Seluruh seri data dihitung sesuai filter periode untuk menentukan rentang tanggal, dan akan membatasi platform serta Polres berdasarkan pilihan pengguna agar tren yang terlihat hanya berasal dari subset akun yang relevan.
+
 
 Seluruh data menampilkan state loading, error, serta empty state agar pengalaman pengguna konsisten dengan halaman lain di dashboard.
 
