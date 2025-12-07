@@ -34,6 +34,10 @@ Fonts are provided via system-safe fallbacks defined in `app/globals.css` so bui
 
 Proyek ini menyediakan `app/not-found.tsx` sebagai fallback 404 khusus dengan tombol kembali ke dashboard utama. Next.js akan merender komponen ini ketika rute tidak ditemukan sehingga pengguna mendapatkan respons yang konsisten.
 
+## Menu khusus Ditbinmas
+
+Pengguna dengan `clientId` **dan** `role` bernilai `ditbinmas` akan melihat entri navigasi tambahan bertajuk **Satbinmas Official** yang mengarah ke `/satbinmas-official`. Item menu ini mengikuti gaya aktif maupun hover yang sama di sidebar utama dan tampilan sheet ketika sidebar dikompres, sehingga pengalaman navigasi tetap konsisten di semua mode.
+
 ## Alur klaim & validasi email
 
 Klaim data pengguna dilakukan melalui halaman `app/claim/page.jsx` dengan langkah berikut:

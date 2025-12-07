@@ -20,6 +20,7 @@ import {
   Book,
   Workflow,
   Calendar,
+  Shield,
 } from "lucide-react";
 import {
   Sheet,
@@ -52,10 +53,11 @@ export default function Sidebar() {
   const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
   const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
   const isOperator = role?.toLowerCase() === "operator";
-  const canSeeExecutiveSummary =
+  const hasDitbinmasAccess =
     clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
-  const canSeeWeeklyReport =
-    clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
+  const canSeeExecutiveSummary = hasDitbinmasAccess;
+  const canSeeSatbinmasOfficial = hasDitbinmasAccess;
+  const canSeeWeeklyReport = hasDitbinmasAccess;
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -94,6 +96,15 @@ export default function Sidebar() {
       : []),
     ...(canSeeExecutiveSummary
       ? [{ label: "Executive Summary", path: "/executive-summary", icon: FilePieChart }]
+      : []),
+    ...(canSeeSatbinmasOfficial
+      ? [
+          {
+            label: "Satbinmas Official",
+            path: "/satbinmas-official",
+            icon: Shield,
+          },
+        ]
       : []),
     ...(canSeeWeeklyReport
       ? [{ label: "Weekly Report", path: "/weekly-report", icon: Calendar }]
