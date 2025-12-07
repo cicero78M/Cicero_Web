@@ -42,6 +42,96 @@ Halaman Satbinmas Official sendiri memakai `useRequireAuth` plus validasi `clien
 
 Halaman dinamis `/satbinmas-official/[client_id]` menampilkan versi ringkas per Polres untuk Ditbinmas. Rute ini tetap memakai guard Ditbinmas dan menyajikan identitas Polres, status kelengkapan akun (lengkap/kurang/belum), tautan IG/TikTok, ringkasan angka (total posting per platform, engagement total & rata-rata, tanggal posting terakhir), grafik posting harian, serta daftar konten terbaru dengan caption singkat, hashtag, dan tautan eksternal. Insight teks juga dihitung otomatis (hari aktif terhadap total hari periode) lengkap dengan penanda apakah performa berada di atas/bawah rata-rata Polda.
 
+### Halaman Satbinmas Official
+
+- **Tujuan:** Menyediakan dashboard terpusat bagi Ditbinmas untuk memantau coverage akun resmi, aktivitas konten, dan kualitas engagement Polres di platform Instagram/TikTok. Statistik dan tabel dirancang agar pengawas bisa langsung melihat kepatuhan kanal resmi serta performa tiap Polres tanpa harus membuka laporan terpisah.
+- **Persyaratan akses:** Hanya pengguna yang memiliki `client_id` **dan** `role` bernilai `ditbinmas` yang dapat membuka menu Satbinmas Official. Guard `useRequireAuth` memblokir akses lainnya dan menampilkan 403 sebelum mengarahkan kembali ke beranda.
+- **Filter tersedia:**
+  - Periode umum (harian, mingguan, bulanan, atau rentang tanggal) melalui kombinasi `periode`, `tanggal`/`tanggal_mulai`/`tanggal_selesai`.
+  - Platform `All`/`Instagram`/`TikTok`.
+  - Dropdown Polres yang meneruskan `client_id` ke semua permintaan data.
+- **Dependensi API:** Seluruh seksi halaman memanggil endpoint Satbinmas baru yang di-wrap di `utils/api.ts`: `GET /api/satbinmas-official/summary`, `GET /api/satbinmas-official/activity`, `GET /api/satbinmas-official/engagement`, `GET /api/satbinmas-official/hashtags`, serta `GET /api/satbinmas-official/accounts/{client_id}`. Tiap fungsi menggunakan helper `buildSatbinmasQuery` untuk membangun query string konsisten berdasarkan filter.
+
+Contoh konfigurasi lingkungan dan payload minimal yang diharapkan:
+
+```bash
+# .env.local
+NEXT_PUBLIC_API_URL=https://api.cicero.example.com
+```
+
+```json
+// GET /api/satbinmas-official/summary
+{
+  "data": {
+    "totals": { "accounts": 12, "active": 8, "dormant": 4, "followers": 15000 },
+    "coverage": [
+      {
+        "client_id": "POLRES_01",
+        "polres": "Polres Contoh",
+        "platform": "instagram",
+        "handle": "@polres_contoh",
+        "status": "lengkap",
+        "followers": 12000,
+        "last_post_date": "2024-05-10"
+      }
+    ]
+  }
+}
+
+// GET /api/satbinmas-official/activity
+{
+  "data": [
+    { "date": "2024-05-10", "platform": "instagram", "posts": 5, "engagement": 320, "client_id": "POLRES_01", "polres": "Polres Contoh" }
+  ]
+}
+
+// GET /api/satbinmas-official/engagement
+{
+  "data": [
+    {
+      "content_id": "POST_001",
+      "platform": "instagram",
+      "polres": "Polres Contoh",
+      "caption": "Kegiatan patroli",
+      "posted_at": "2024-05-10T07:00:00Z",
+      "likes": 120,
+      "comments": 15,
+      "shares": 3,
+      "views": 900,
+      "hashtags": ["#satbinmas"],
+      "mentions": ["@polres_contoh"]
+    }
+  ]
+}
+
+// GET /api/satbinmas-official/hashtags
+{
+  "data": [
+    { "hashtag": "#satbinmas", "count": 12, "platform": "instagram", "client_id": "POLRES_01" }
+  ]
+}
+
+// GET /api/satbinmas-official/accounts/{client_id}
+{
+  "data": [
+    {
+      "id": "ACC_001",
+      "client_id": "POLRES_01",
+      "platform": "tiktok",
+      "handle": "@polres_contoh_tiktok",
+      "status": "lengkap",
+      "followers": 3000,
+      "last_post_date": "2024-05-09",
+      "polres": "Polres Contoh"
+    }
+  ]
+}
+```
+
+### Catatan onboarding helper
+
+- Helper query Satbinmas (`buildSatbinmasQuery`) dan fungsi fetch terkait berada di `utils/api.ts`. Data filter (periode, platform, `client_id`, rentang tanggal) diteruskan dari komponen filter utama di halaman `app/satbinmas-official/page.jsx` ke helper ini sebelum memukul endpoint terkait, memastikan semua seksi (ringkasan coverage, aktivitas, engagement, hashtag, dan detail akun) memakai parameter yang sama.
+
 ## Alur klaim & validasi email
 
 Klaim data pengguna dilakukan melalui halaman `app/claim/page.jsx` dengan langkah berikut:
