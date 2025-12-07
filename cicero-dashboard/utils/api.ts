@@ -128,6 +128,79 @@ function handleTokenExpired(): void {
   }
 }
 
+export type SatbinmasFilterParams = {
+  periode?: string;
+  tanggal?: string;
+  tanggal_mulai?: string;
+  tanggal_selesai?: string;
+  startDate?: string;
+  endDate?: string;
+  platform?: string;
+  clientId?: string;
+  client_id?: string;
+};
+
+export type SatbinmasAccountCoverage = {
+  clientId: string;
+  polres: string;
+  platform: string;
+  accountHandle: string;
+  status: string;
+  followers: number;
+  lastActive: string | null;
+};
+
+export type SatbinmasActivityItem = {
+  date: string;
+  platform: string;
+  postCount: number;
+  engagementCount: number;
+  clientId?: string;
+  polres?: string;
+};
+
+export type SatbinmasEngagementItem = {
+  contentId: string;
+  platform: string;
+  polres: string;
+  caption: string;
+  postedAt: string | null;
+  likes: number;
+  comments: number;
+  shares: number;
+  views: number;
+  hashtags: string[];
+  mentions: string[];
+};
+
+export type SatbinmasHashtagItem = {
+  hashtag: string;
+  count: number;
+  platform: string;
+  clientId?: string;
+};
+
+export type SatbinmasSummary = {
+  totals: {
+    accounts: number;
+    active: number;
+    dormant: number;
+    followers: number;
+  };
+  coverage: SatbinmasAccountCoverage[];
+};
+
+export type SatbinmasAccountDetail = {
+  id: string;
+  clientId: string;
+  platform: string;
+  handle: string;
+  status: string;
+  followers: number;
+  lastActive: string | null;
+  polres?: string;
+};
+
 // Wrapper around fetch that attaches the Authorization header and
 // automatically logs the user out when the token is rejected by the backend
 async function fetchWithAuth(
@@ -149,6 +222,227 @@ async function fetchWithAuth(
   }
   return res;
 }
+
+function ensureNumber(value: unknown, fallback: number = 0): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function ensureString(value: unknown, fallback: string = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function ensureArray<T>(value: unknown, mapper: (entry: any) => T): T[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => mapper(item));
+}
+
+function buildSatbinmasQuery(filters: SatbinmasFilterParams): string {
+  const params = new URLSearchParams();
+  if (filters.periode) params.append("periode", filters.periode);
+  if (filters.tanggal) params.append("tanggal", filters.tanggal);
+  const startDate = filters.tanggal_mulai || filters.startDate;
+  const endDate = filters.tanggal_selesai || filters.endDate;
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
+  if (filters.platform) params.append("platform", filters.platform);
+  const clientId = filters.clientId || filters.client_id;
+  if (clientId) params.append("client_id", clientId);
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+function normalizeAccountCoverageEntry(entry: any): SatbinmasAccountCoverage {
+  return {
+    clientId:
+      ensureString(entry?.client_id) ||
+      ensureString(entry?.clientId) ||
+      ensureString(entry?.polres_id),
+    polres:
+      ensureString(entry?.polres) ||
+      ensureString(entry?.polres_name) ||
+      ensureString(entry?.client_name),
+    platform: ensureString(entry?.platform),
+    accountHandle:
+      ensureString(entry?.handle) ||
+      ensureString(entry?.account_handle) ||
+      ensureString(entry?.username),
+    status:
+      ensureString(entry?.status) ||
+      ensureString(entry?.account_status) ||
+      ensureString(entry?.kategori) ||
+      "Tidak diketahui",
+    followers: ensureNumber(entry?.followers ?? entry?.follower ?? entry?.total_followers),
+    lastActive:
+      ensureString(entry?.lastActive) ||
+      ensureString(entry?.last_active) ||
+      ensureString(entry?.last_post_date) ||
+      null,
+  };
+}
+
+export async function getSatbinmasSummary(
+  token: string,
+  filters: SatbinmasFilterParams = {},
+  signal?: AbortSignal,
+): Promise<SatbinmasSummary> {
+  const query = buildSatbinmasQuery(filters);
+  const url = `${API_BASE_URL}/api/satbinmas-official/summary${query}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch Satbinmas summary");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? {};
+  const totals = payload?.totals ?? payload?.summary ?? payload ?? {};
+
+  return {
+    totals: {
+      accounts: ensureNumber(
+        totals.accounts ?? totals.total_accounts ?? payload?.total_accounts,
+      ),
+      active: ensureNumber(totals.active ?? totals.active_accounts),
+      dormant: ensureNumber(totals.dormant ?? totals.dormant_accounts),
+      followers: ensureNumber(
+        totals.followers ?? totals.total_followers ?? payload?.followers,
+      ),
+    },
+    coverage: ensureArray(
+      payload.coverage ?? payload.accounts ?? payload.data,
+      normalizeAccountCoverageEntry,
+    ),
+  };
+}
+
+export async function getSatbinmasActivity(
+  token: string,
+  filters: SatbinmasFilterParams = {},
+  signal?: AbortSignal,
+): Promise<SatbinmasActivityItem[]> {
+  const query = buildSatbinmasQuery(filters);
+  const url = `${API_BASE_URL}/api/satbinmas-official/activity${query}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch Satbinmas activity");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? [];
+
+  return ensureArray(payload, (entry) => ({
+    date: ensureString(entry?.date) || ensureString(entry?.tanggal),
+    platform: ensureString(entry?.platform),
+    postCount: ensureNumber(entry?.posts ?? entry?.post_count ?? entry?.count),
+    engagementCount: ensureNumber(
+      entry?.engagement ?? entry?.total_engagement ?? entry?.engagement_count,
+    ),
+    clientId: ensureString(entry?.client_id || entry?.clientId),
+    polres: ensureString(entry?.polres) || ensureString(entry?.polres_name),
+  }));
+}
+
+export async function getSatbinmasEngagement(
+  token: string,
+  filters: SatbinmasFilterParams = {},
+  signal?: AbortSignal,
+): Promise<SatbinmasEngagementItem[]> {
+  const query = buildSatbinmasQuery(filters);
+  const url = `${API_BASE_URL}/api/satbinmas-official/engagement${query}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch Satbinmas engagement");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? [];
+
+  return ensureArray(payload, (entry) => ({
+    contentId:
+      ensureString(entry?.content_id) ||
+      ensureString(entry?.id) ||
+      ensureString(entry?.post_id),
+    platform: ensureString(entry?.platform),
+    polres: ensureString(entry?.polres) || ensureString(entry?.client_name),
+    caption: ensureString(entry?.caption) || ensureString(entry?.title),
+    postedAt:
+      ensureString(entry?.posted_at) ||
+      ensureString(entry?.post_date) ||
+      ensureString(entry?.created_at) ||
+      null,
+    likes: ensureNumber(entry?.likes ?? entry?.like_count),
+    comments: ensureNumber(entry?.comments ?? entry?.comment_count),
+    shares: ensureNumber(entry?.shares ?? entry?.share_count),
+    views: ensureNumber(entry?.views ?? entry?.view_count ?? entry?.impressions),
+    hashtags: Array.isArray(entry?.hashtags) ? entry.hashtags : [],
+    mentions: Array.isArray(entry?.mentions) ? entry.mentions : [],
+  }));
+}
+
+export async function getSatbinmasHashtags(
+  token: string,
+  filters: SatbinmasFilterParams = {},
+  signal?: AbortSignal,
+): Promise<SatbinmasHashtagItem[]> {
+  const query = buildSatbinmasQuery(filters);
+  const url = `${API_BASE_URL}/api/satbinmas-official/hashtags${query}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch Satbinmas hashtags");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? [];
+
+  return ensureArray(payload, (entry) => ({
+    hashtag: ensureString(entry?.hashtag) || ensureString(entry?.tag),
+    count: ensureNumber(entry?.count ?? entry?.usage ?? entry?.total),
+    platform: ensureString(entry?.platform),
+    clientId: ensureString(entry?.client_id || entry?.clientId),
+  }));
+}
+
+export async function getSatbinmasAccounts(
+  token: string,
+  clientId: string,
+  filters: SatbinmasFilterParams = {},
+  signal?: AbortSignal,
+): Promise<SatbinmasAccountDetail[]> {
+  const query = buildSatbinmasQuery({ ...filters, clientId });
+  const url = `${API_BASE_URL}/api/satbinmas-official/accounts/${encodeURIComponent(
+    clientId,
+  )}${query}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch Satbinmas accounts");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? [];
+
+  return ensureArray(payload, (entry) => ({
+    id: ensureString(entry?.id) || ensureString(entry?.account_id),
+    clientId: ensureString(entry?.client_id || entry?.clientId || clientId),
+    platform: ensureString(entry?.platform),
+    handle:
+      ensureString(entry?.handle) ||
+      ensureString(entry?.account_handle) ||
+      ensureString(entry?.username),
+    status:
+      ensureString(entry?.status) ||
+      ensureString(entry?.account_status) ||
+      ensureString(entry?.kategori) ||
+      "Tidak diketahui",
+    followers: ensureNumber(entry?.followers ?? entry?.total_followers),
+    lastActive:
+      ensureString(entry?.lastActive) ||
+      ensureString(entry?.last_active) ||
+      ensureString(entry?.last_post_date) ||
+      null,
+    polres: ensureString(entry?.polres) || ensureString(entry?.polres_name),
+  }));
+}
+
 export async function getDashboardStats(
   token: string,
   periode?: string,
