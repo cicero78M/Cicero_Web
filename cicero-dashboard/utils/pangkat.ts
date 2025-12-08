@@ -37,6 +37,7 @@ export const PANGKAT_ORDER = [
   "BRIPTU",
   "BRIPDA",
   ...EXTRA_RANKS,
+  "PPPK",
   "LAINNYA",
 ];
 

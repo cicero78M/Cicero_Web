@@ -12,6 +12,18 @@ describe("validateNewUser", () => {
     expect(res).toEqual({ nrpNip: "12345678", satfungValue: "SAT LANTAS" });
   });
 
+  it("accepts PPPK as a valid pangkat option", () => {
+    const res = validateNewUser({
+      nama: "Jane",
+      pangkat: "PPPK",
+      nrpNip: "22222",
+      satfung: "SAT LANTAS",
+      polsekName: "",
+    });
+
+    expect(res).toEqual({ nrpNip: "22222", satfungValue: "SAT LANTAS" });
+  });
+
   it("accepts satfung options exposed in the form", () => {
     const satfungValues = [
       "SUBBID MULTIMEDIA",

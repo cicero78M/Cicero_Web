@@ -31,6 +31,7 @@ export const PANGKAT_OPTIONS = [
   "PEMBINA UTAMA MUDA",
   "PEMBINA UTAMA MADYA",
   "PEMBINA UTAMA",
+  "PPPK",
 ];
 
 export const SATFUNG_OPTIONS = [
