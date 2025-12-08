@@ -34,6 +34,10 @@ export const PANGKAT_OPTIONS = [
 ];
 
 export const SATFUNG_OPTIONS = [
+  "SUBBID MULTIMEDIA",
+  "SUBBID PENMAS",
+  "SUBBID PID",
+  "SUB BAG RENMIN",
   "BAG LOG",
   "BAG SDM",
   "BAG REN",
