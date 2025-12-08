@@ -133,9 +133,9 @@ export default function UserDirectoryPage() {
       ? "Kesatuan"
       : "Divisi"
     : isDirectorate
-    ? "Kesatuan"
+    ? "Satfung/Divisi"
     : "Satfung";
-  const showKesatuanColumn = columnLabel === "Kesatuan";
+  const showKesatuanColumn = isDitbinmasClient && showAllDitbinmas;
 
   const { error, isLoading, mutate } = useSWR(
     token && client_id ? ["user-directory", token, client_id] : null,

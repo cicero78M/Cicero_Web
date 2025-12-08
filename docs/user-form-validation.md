@@ -1,6 +1,6 @@
 # Validasi Form Direktori Pengguna
 
-Fungsi `validateNewUser` (`cicero-dashboard/utils/validateUserForm.ts`) membersihkan input NRP/NIP, memverifikasi pangkat, serta memastikan pilihan satfung/divisi sesuai daftar yang ditampilkan di form User Directory. Jika satfung "POLSEK" dipilih, nama polsek wajib diisi dan akan digabung sebagai "POLSEK <Nama>" sebelum dikirim ke API.
+Fungsi `validateNewUser` (`cicero-dashboard/utils/validateUserForm.ts`) membersihkan input NRP/NIP, memverifikasi pangkat, serta memastikan pilihan satfung/divisi sesuai daftar yang ditampilkan di form User Directory. Label dropdown pada klien direktorat juga menampilkan istilah "Satfung/Divisi" agar konsisten dengan judul kolom di tabel. Jika satfung "POLSEK" dipilih, nama polsek wajib diisi dan akan digabung sebagai "POLSEK <Nama>" sebelum dikirim ke API.
 
 ## Daftar satfung/divisi yang valid
 
