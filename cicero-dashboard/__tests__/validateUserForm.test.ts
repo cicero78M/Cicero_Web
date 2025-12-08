@@ -12,6 +12,26 @@ describe("validateNewUser", () => {
     expect(res).toEqual({ nrpNip: "12345678", satfungValue: "SAT LANTAS" });
   });
 
+  it("accepts satfung options exposed in the form", () => {
+    const satfungValues = [
+      "SUBBID MULTIMEDIA",
+      "SUBBID PID",
+      "SUBBID PENMAS",
+      "SUB BAG RENMIN",
+    ];
+
+    satfungValues.forEach((satfung) => {
+      const res = validateNewUser({
+        nama: "John",
+        pangkat: "BRIPDA",
+        nrpNip: "11111",
+        satfung,
+        polsekName: "",
+      });
+      expect(res).toEqual({ nrpNip: "11111", satfungValue: satfung });
+    });
+  });
+
   it("returns error for non numeric nrp", () => {
     const res = validateNewUser({
       nama: "Jane",
