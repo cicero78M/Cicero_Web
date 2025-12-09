@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   getDashboardStats,
   getRekapKomentarTiktok,
@@ -8,6 +8,7 @@ import {
   getUserDirectory,
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
+import { AuthContext } from "@/context/AuthContext";
 
 interface Options {
   viewBy: string;
@@ -31,6 +32,7 @@ export default function useTiktokCommentsData({
   fromDate,
   toDate,
 }: Options) {
+  const auth = useContext(AuthContext);
   const [chartData, setChartData] = useState<any[]>([]);
   const [rekapSummary, setRekapSummary] = useState<RekapSummary>({
     totalUser: 0,
@@ -54,17 +56,21 @@ export default function useTiktokCommentsData({
     setError("");
 
     const token =
-      typeof window !== "undefined"
+      auth?.token ??
+      (typeof window !== "undefined"
         ? localStorage.getItem("cicero_token") ?? ""
-        : "";
+        : "");
     const userClientId =
-      typeof window !== "undefined"
+      auth?.clientId ??
+      (typeof window !== "undefined"
         ? localStorage.getItem("client_id") ?? ""
-        : "";
+        : "");
     const role =
-      typeof window !== "undefined"
+      auth?.effectiveRole ??
+      auth?.role ??
+      (typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
-        : "";
+        : "");
 
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -74,16 +80,13 @@ export default function useTiktokCommentsData({
 
     const roleLower = String(role).trim().toLowerCase();
     const isDitbinmasRoleValue = roleLower === "ditbinmas";
-    setIsDitbinmasRole(isDitbinmasRoleValue);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const normalizedClientIdLower = normalizedClientId.toLowerCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
-    const isScopedDirectorateClient = isDitbinmasRoleValue && !isDitbinmasClient;
-    setIsDitbinmasScopedClient(isScopedDirectorateClient);
     const dashboardClientId = isDitbinmasRoleValue
       ? "DITBINMAS"
-      : userClientId;
+      : normalizedClientId;
 
     async function fetchData() {
       try {
@@ -106,22 +109,58 @@ export default function useTiktokCommentsData({
           controller.signal,
         );
 
+        const statsPayload = (statsData as any)?.data || statsData;
         const profile = await getClientProfile(
           token,
           userClientId,
           controller.signal,
         );
-
+        const profileData =
+          (profile as any)?.client || (profile as any)?.profile || profile || {};
+        const effectiveRoleFromStats =
+          (statsPayload as any)?.effectiveRole ||
+          (statsPayload as any)?.effective_role ||
+          (statsPayload as any)?.roleEffective;
+        const effectiveClientTypeFromStats =
+          (statsPayload as any)?.effectiveClientType ||
+          (statsPayload as any)?.effective_client_type ||
+          (statsPayload as any)?.clientTypeEffective;
+        // Gunakan nilai effective yang telah dinormalisasi (mis. DITSAMAPTA +
+        // BIDHUMAS dipaksa menjadi ORG) agar percabangan direktorat tidak
+        // memakai tipe klien mentah dari profil.
+        const normalizedEffectiveRole = String(
+          effectiveRoleFromStats ||
+            role ||
+            (profileData as any)?.role ||
+            (profileData as any)?.user_role ||
+            "",
+        )
+          .trim()
+          .toLowerCase();
+        const normalizedEffectiveClientType = String(
+          effectiveClientTypeFromStats ||
+            (profileData as any)?.client_type ||
+            (profileData as any)?.clientType ||
+            (profileData as any)?.client_type_code ||
+            (profileData as any)?.clientTypeName ||
+            "",
+        )
+          .trim()
+          .toUpperCase();
+        const derivedDitbinmasRole = normalizedEffectiveRole === "ditbinmas";
+        const isScopedDirectorateClient =
+          derivedDitbinmasRole && !isDitbinmasClient;
         const directorate =
-          isDitbinmasRoleValue ||
-          String(profile.client_type || "").toUpperCase() === "DIREKTORAT";
+          derivedDitbinmasRole || normalizedEffectiveClientType === "DIREKTORAT";
         if (controller.signal.aborted) return;
+        setIsDitbinmasRole(derivedDitbinmasRole);
+        setIsDitbinmasScopedClient(isScopedDirectorateClient);
         setIsDirectorate(directorate);
         setClientName(
-          profile.nama ||
-            profile.nama_client ||
-            profile.client_name ||
-            profile.client ||
+          (profileData as any)?.nama ||
+            (profileData as any)?.nama_client ||
+            (profileData as any)?.client_name ||
+            (profileData as any)?.client ||
             "",
         );
 
@@ -237,7 +276,7 @@ export default function useTiktokCommentsData({
         let filteredUsers = users;
         const shouldFilterByClient =
           Boolean(normalizedClientIdLower) &&
-          (isDitbinmasRoleValue || !directorate || isScopedDirectorateClient);
+          (derivedDitbinmasRole || !directorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
           const normalizeValue = (value: unknown) =>
             String(value || "").trim().toLowerCase();
@@ -309,7 +348,16 @@ export default function useTiktokCommentsData({
     fetchData();
 
     return () => controller.abort();
-  }, [viewBy, customDate, fromDate, toDate]);
+  }, [
+    viewBy,
+    customDate,
+    fromDate,
+    toDate,
+    auth?.token,
+    auth?.clientId,
+    auth?.effectiveRole,
+    auth?.role,
+  ]);
 
   return {
     chartData,
