@@ -71,6 +71,7 @@ export default function useTiktokCommentsData({
       (typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
         : "");
+    const effectiveClientTypeFromAuth = auth?.effectiveClientType;
 
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -129,7 +130,8 @@ export default function useTiktokCommentsData({
         // BIDHUMAS dipaksa menjadi ORG) agar percabangan direktorat tidak
         // memakai tipe klien mentah dari profil.
         const normalizedEffectiveRole = String(
-          effectiveRoleFromStats ||
+          auth?.effectiveRole ||
+            effectiveRoleFromStats ||
             role ||
             (profileData as any)?.role ||
             (profileData as any)?.user_role ||
@@ -138,7 +140,8 @@ export default function useTiktokCommentsData({
           .trim()
           .toLowerCase();
         const normalizedEffectiveClientType = String(
-          effectiveClientTypeFromStats ||
+          effectiveClientTypeFromAuth ||
+            effectiveClientTypeFromStats ||
             (profileData as any)?.client_type ||
             (profileData as any)?.clientType ||
             (profileData as any)?.client_type_code ||
@@ -174,7 +177,9 @@ export default function useTiktokCommentsData({
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
           let clientIds: string[] = [];
-          const expectedRole = String(userClientId).toLowerCase();
+          const expectedRole = isScopedDirectorateClient
+            ? normalizedClientIdLower
+            : normalizedEffectiveRole || normalizedClientIdLower;
           clientIds = Array.from(
             new Set(
               (dirData as any[])
