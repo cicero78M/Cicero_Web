@@ -11,6 +11,7 @@ import Loader from "@/components/Loader";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
 import Link from "next/link";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
 import ViewDataSelector, {
   getPeriodeDateForView,
   VIEW_OPTIONS,
@@ -71,6 +72,14 @@ function formatDisplayRange(start, end) {
 
 export default function RekapKomentarTiktokPage() {
   useRequireAuth();
+  const {
+    token,
+    clientId,
+    role,
+    effectiveRole,
+    effectiveClientType,
+    isHydrating,
+  } = useAuth();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -193,28 +202,31 @@ export default function RekapKomentarTiktokPage() {
   ]);
 
   useEffect(() => {
+    if (isHydrating) return;
+
     const controller = new AbortController();
     setLoading(true);
     setError("");
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("cicero_token")
-        : null;
-    const userClientId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("client_id")
-        : null;
-    const role =
-      typeof window !== "undefined"
-        ? localStorage.getItem("user_role")
-        : null;
-    const roleLower = String(role || "").trim().toLowerCase();
-        const normalizedClientId = String(userClientId || "").trim();
-        const clientIdUpper = normalizedClientId.toUpperCase();
-        const clientIdLower = normalizedClientId.toLowerCase();
-        const isDitbinmasRole = roleLower === "ditbinmas";
-        const ditbinmasClientId = "DITBINMAS";
+
+    const normalizedClientId = String(clientId || "").trim();
+    const clientIdUpper = normalizedClientId.toUpperCase();
+    const clientIdLower = normalizedClientId.toLowerCase();
+    const ditbinmasClientId = "DITBINMAS";
+    const normalizedEffectiveRole = String(effectiveRole || role || "")
+      .trim()
+      .toUpperCase();
+    const normalizedEffectiveClientType = String(effectiveClientType || "")
+      .trim()
+      .toUpperCase();
+    const isDitbinmasRole = normalizedEffectiveRole === "DITBINMAS";
     const isDitbinmasClient = clientIdUpper === ditbinmasClientId;
+    const isDitSamaptaBidhumas =
+      clientIdUpper === "DITSAMAPTA" &&
+      normalizedEffectiveRole === "BIDHUMAS" &&
+      normalizedEffectiveClientType === "ORG";
+    const isDirectorate =
+      !isDitSamaptaBidhumas &&
+      (isDitbinmasRole || normalizedEffectiveClientType === "DIREKTORAT");
     const isScopedDirectorateClient = isDitbinmasRole && !isDitbinmasClient;
     const taskClientId = isDitbinmasRole ? ditbinmasClientId : normalizedClientId;
 
@@ -255,14 +267,6 @@ export default function RekapKomentarTiktokPage() {
         );
         const profileData =
           profileRes?.client || profileRes?.profile || profileRes || {};
-        const profileType = String(
-          profileData?.client_type ||
-            profileRes?.client_type ||
-            profileData?.type ||
-            profileRes?.type ||
-            "",
-        ).toUpperCase();
-        const isDirectorate = isDitbinmasRole || profileType === "DIREKTORAT";
 
         let users = [];
         if (isDirectorate) {
@@ -460,6 +464,12 @@ export default function RekapKomentarTiktokPage() {
     normalizedRangeStart,
     normalizedRangeEnd,
     ditbinmasScope,
+    token,
+    clientId,
+    effectiveRole,
+    effectiveClientType,
+    role,
+    isHydrating,
   ]);
 
   const selectorDateValue =
