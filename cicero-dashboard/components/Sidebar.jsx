@@ -48,12 +48,18 @@ export default function Sidebar() {
     );
   }
 
-  const instagramEnabled = isActive(getStatus(profile, "client_insta_status"));
+  const instagramEnabledRaw = isActive(getStatus(profile, "client_insta_status"));
   const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
-  const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
-  const isOperator = effectiveRole?.toLowerCase() === "operator";
-  const normalizedClientId = clientId?.toLowerCase();
+  const tiktokEnabledRaw = isActive(getStatus(profile, "client_tiktok_status"));
   const normalizedEffectiveRole = effectiveRole?.toLowerCase();
+  const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
+  const isOperator = normalizedEffectiveRole === "operator";
+  const normalizedClientId = clientId?.toLowerCase();
+  const hasEngagementAccessOverride =
+    normalizedEffectiveClientType === "org" &&
+    normalizedEffectiveRole === "bidhumas";
+  const instagramEnabled = instagramEnabledRaw || hasEngagementAccessOverride;
+  const tiktokEnabled = tiktokEnabledRaw || hasEngagementAccessOverride;
   const hasDitbinmasAccess =
     normalizedClientId === "ditbinmas" && normalizedEffectiveRole === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
