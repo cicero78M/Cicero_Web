@@ -7,6 +7,8 @@ type AuthState = {
   clientId: string | null;
   userId: string | null;
   role: string | null;
+  effectiveRole: string | null;
+  effectiveClientType: string | null;
   profile: any | null;
   isHydrating: boolean;
   setAuth: (
@@ -24,6 +26,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [clientId, setClientId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
+  const [effectiveClientType, setEffectiveClientType] = useState<string | null>(
+    null,
+  );
   const [profile, setProfile] = useState<any | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
 
@@ -52,6 +58,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchProfile();
   }, [token, clientId]);
 
+  useEffect(() => {
+    const normalizedClientId = clientId?.toUpperCase();
+    const normalizedRole = role?.toUpperCase();
+    const normalizedClientType = profile?.client_type
+      ? String(profile.client_type).toUpperCase()
+      : null;
+
+    const isDitSamaptaBidhumas =
+      normalizedClientId === "DITSAMAPTA" &&
+      normalizedClientType === "DIREKTORAT" &&
+      normalizedRole === "BIDHUMAS";
+
+    if (isDitSamaptaBidhumas) {
+      setEffectiveRole("BIDHUMAS");
+      setEffectiveClientType("ORG");
+      return;
+    }
+
+    setEffectiveRole(role);
+    setEffectiveClientType(profile?.client_type ?? null);
+  }, [clientId, role, profile]);
+
   const setAuth = (
     newToken: string | null,
     newClient: string | null,
@@ -74,7 +102,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ token, clientId, userId, role, profile, isHydrating, setAuth }}
+      value={{
+        token,
+        clientId,
+        userId,
+        role,
+        effectiveRole,
+        effectiveClientType,
+        profile,
+        isHydrating,
+        setAuth,
+      }}
     >
       {children}
     </AuthContext.Provider>
