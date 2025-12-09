@@ -33,7 +33,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { role, effectiveRole, profile, clientId } = useAuth();
+  const { role, effectiveRole, profile, clientId, effectiveClientType } = useAuth();
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
   }
