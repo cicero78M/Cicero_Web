@@ -150,4 +150,51 @@ describe("useTiktokCommentsData", () => {
     expect(clientIds).toEqual(["DITBINMAS"]);
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
+
+  it("treats DITSAMAPTA BIDHUMAS as an ORG client when effective type is normalized", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "DITSAMAPTA");
+    localStorage.setItem("user_role", "bidhumas");
+
+    mockedGetDashboardStats.mockResolvedValue({
+      ttPosts: 5,
+      effectiveClientType: "ORG",
+      effectiveRole: "BIDHUMAS",
+    } as any);
+    mockedGetClientProfile.mockResolvedValue({ client_type: "DIREKTORAT" } as any);
+    mockedGetUserDirectory.mockResolvedValue({ data: [] } as any);
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        {
+          client_id: "DITSAMAPTA",
+          username: "samapta-user",
+          jumlah_komentar: 3,
+        },
+      ],
+    } as any);
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(mockedGetUserDirectory).not.toHaveBeenCalled();
+    expect(mockedGetRekapKomentarTiktok).toHaveBeenCalledTimes(1);
+    expect(mockedGetRekapKomentarTiktok).toHaveBeenCalledWith(
+      "token",
+      "DITSAMAPTA",
+      "periode",
+      "date",
+      "start",
+      "end",
+      expect.any(AbortSignal),
+    );
+    expect(result.current.isDirectorate).toBe(false);
+    expect(result.current.isDitbinmasRole).toBe(false);
+    expect(result.current.isDitbinmasScopedClient).toBe(false);
+    expect(result.current.chartData).toHaveLength(1);
+    expect(result.current.chartData[0].client_id).toBe("DITSAMAPTA");
+    expect(result.current.rekapSummary.totalUser).toBe(1);
+  });
 });
