@@ -11,6 +11,7 @@ import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
+import useAuth from "@/hooks/useAuth";
 
 interface Options {
   viewBy: string;
@@ -36,6 +37,13 @@ export default function useInstagramLikesData({
   toDate,
   scope = "client",
 }: Options) {
+  const {
+    token: authToken,
+    clientId: authClientId,
+    role: authRole,
+    effectiveRole,
+    effectiveClientType,
+  } = useAuth();
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,25 +65,28 @@ export default function useInstagramLikesData({
     const controller = new AbortController();
     setLoading(true);
     setError("");
-    const token =
+    const fallbackToken =
       typeof window !== "undefined"
         ? localStorage.getItem("cicero_token") ?? ""
         : "";
-    const userClientId =
+    const fallbackClientId =
       typeof window !== "undefined"
         ? localStorage.getItem("client_id") ?? ""
         : "";
-    const role =
+    const fallbackRole =
       typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
         : "";
+    const token = authToken ?? fallbackToken;
+    const userClientId = authClientId ?? fallbackClientId;
+    const role = authRole ?? fallbackRole;
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
       return () => controller.abort();
     }
 
-    const roleLower = String(role).toLowerCase();
+    const roleLower = String(effectiveRole ?? role ?? "").toLowerCase();
     const isDitbinmasRoleValue = roleLower === "ditbinmas";
     setIsDitbinmasRole(isDitbinmasRoleValue);
     const normalizedClientId = String(userClientId || "").trim();
@@ -150,9 +161,15 @@ export default function useInstagramLikesData({
           controller.signal,
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
-        const dir =
-          isDitbinmasRoleValue ||
-          (String(profile.client_type || "").toUpperCase() === "DIREKTORAT");
+        const normalizedEffectiveClientType = String(
+          effectiveClientType ??
+            profile.client_type ??
+            profile.clientType ??
+            profile.client_type_code ??
+            profile.clientTypeName ??
+            "",
+        ).toUpperCase();
+        const dir = normalizedEffectiveClientType === "DIREKTORAT";
         if (controller.signal.aborted) return;
         setIsDirectorate(dir);
         setClientName(
@@ -339,7 +356,18 @@ export default function useInstagramLikesData({
     fetchData();
 
     return () => controller.abort();
-  }, [viewBy, customDate, fromDate, toDate, scope]);
+  }, [
+    viewBy,
+    customDate,
+    fromDate,
+    toDate,
+    scope,
+    authToken,
+    authClientId,
+    authRole,
+    effectiveRole,
+    effectiveClientType,
+  ]);
 
   return {
     chartData,
