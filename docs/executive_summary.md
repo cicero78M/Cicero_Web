@@ -9,6 +9,13 @@ Proyek **Cicero** terdiri dari tiga repositori utama yang saling terintegrasi:
 
 Dokumen ini merangkum arsitektur tinggi dan alur kerja antar komponen.
 
+## Akses
+
+Halaman **Executive Summary** hanya ditampilkan pada sidebar dan dapat diakses apabila
+pengguna memiliki kombinasi `client_id` **DITBINMAS** dengan `role` **ditbinmas**.
+Pengguna lain akan dialihkan kembali ke dashboard utama ketika mencoba membuka
+halaman ini.
+
 ## Cicero_V2 Backend
 
 - Dirancang sebagai sistem otomasi monitoring multi-client, rekap otomatis likes dan komentar.【F:/tmp/Cicero_V2/README.md†L6-L7】

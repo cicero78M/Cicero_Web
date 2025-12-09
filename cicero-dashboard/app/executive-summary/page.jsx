@@ -2160,19 +2160,20 @@ const MAX_SELECTABLE_YEAR = 2035;
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const router = useRouter();
-  const { token, clientId, role } = useAuth();
+  const { token, clientId, role, effectiveRole } = useAuth();
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (clientId === null || role === null) {
+    const normalizedClientId = clientId?.toLowerCase();
+    const normalizedRole = (role ?? effectiveRole)?.toLowerCase();
+
+    if (!normalizedClientId || !normalizedRole) {
       setIsAuthorized(false);
       setIsCheckingAccess(true);
       return;
     }
 
-    const normalizedClientId = clientId?.toLowerCase();
-    const normalizedRole = role?.toLowerCase();
     const allowed =
       normalizedClientId === "ditbinmas" && normalizedRole === "ditbinmas";
 
@@ -2182,7 +2183,7 @@ export default function ExecutiveSummaryPage() {
 
     setIsAuthorized(allowed);
     setIsCheckingAccess(false);
-  }, [clientId, role, router]);
+  }, [clientId, effectiveRole, role, router]);
   const availableYears = useMemo(() => {
     return Object.keys(monthlyData)
       .map((key) => extractYearFromMonthKey(key))
