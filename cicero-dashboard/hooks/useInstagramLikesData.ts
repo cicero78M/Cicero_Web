@@ -92,9 +92,16 @@ export default function useInstagramLikesData({
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
+    const isDitSamaptaBidhumas =
+      normalizedClientIdUpper === "DITSAMAPTA" && roleLower === "bidhumas";
+    const ditbinmasClientId = isDitSamaptaBidhumas
+      ? "BIDHUMAS"
+      : "DITBINMAS";
     setIsDitbinmasScopedClient(isDitbinmasRoleValue && !isDitbinmasClient);
+    const shouldUseDitbinmasFetcher =
+      isDitbinmasRoleValue || isDitSamaptaBidhumas;
     const dashboardClientId = isDitbinmasRoleValue
-      ? "DITBINMAS"
+      ? ditbinmasClientId
       : userClientId;
 
     async function fetchData() {
@@ -107,7 +114,7 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (isDitbinmasRoleValue) {
+        if (shouldUseDitbinmasFetcher) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
@@ -120,6 +127,7 @@ export default function useInstagramLikesData({
               controller.signal,
               userClientId,
               scope,
+              ditbinmasClientId,
             );
           if (controller.signal.aborted) return;
           const sortedUsers = prioritizeUsersForClient(

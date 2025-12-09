@@ -13,8 +13,12 @@ export async function fetchDitbinmasAbsensiLikes(
   signal?: AbortSignal,
   loginClientId?: string,
   scope: "client" | "all" = "client",
+  effectiveClientId: string = "DITBINMAS",
 ) {
-  const clientId = "DITBINMAS";
+  const clientId = effectiveClientId || "DITBINMAS";
+  // effectiveClientId allows alternate Ditbinmas-style coordinators (e.g.
+  // DITSAMAPTA with role BIDHUMAS) to reuse this aggregator without
+  // hard-coding the root Ditbinmas client ID.
 
   const statsData = await getDashboardStats(
     token,
