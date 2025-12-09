@@ -33,7 +33,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { role, profile, clientId } = useAuth();
+  const { role, effectiveRole, effectiveClientType, profile, clientId } = useAuth();
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
   }
@@ -51,9 +51,13 @@ export default function Sidebar() {
   const instagramEnabled = isActive(getStatus(profile, "client_insta_status"));
   const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
   const tiktokEnabled = isActive(getStatus(profile, "client_tiktok_status"));
-  const isOperator = role?.toLowerCase() === "operator";
+  const isOperator = effectiveRole?.toLowerCase() === "operator";
+  const normalizedEffectiveClientType =
+    effectiveClientType?.toLowerCase?.() ?? profile?.client_type?.toLowerCase?.();
   const hasDitbinmasAccess =
-    clientId?.toLowerCase() === "ditbinmas" && role?.toLowerCase() === "ditbinmas";
+    clientId?.toLowerCase() === "ditbinmas" &&
+    effectiveRole?.toLowerCase() === "ditbinmas" &&
+    normalizedEffectiveClientType === "org";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
 

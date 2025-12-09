@@ -106,6 +106,7 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - For Google OAuth verification, `docs/google_auth_policies.md` also includes a short description of the application.
 - Gunakan halaman `/mekanisme-absensi` dan `/panduan-sop` sebagai referensi cepat saat melakukan pelatihan atau audit SOP digital.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
 - Status autentikasi kini memiliki fase hidrasi: `AuthProvider` menandai `isHydrating` saat membaca token dari `localStorage`, sehingga hook seperti `useRequireAuth` menunggu sebelum mengalihkan pengguna. Rute terlindungi terakhir akan disimpan sebagai `last_pathname` (kecuali halaman publik seperti `/`, `/login`, `/claim`) dan dipakai `useAuthRedirect` untuk mengirim pengguna kembali ke halaman sebelumnya setelah login, dengan fallback ke `/dashboard`.
+- Role DITSAMAPTA dengan tipe klien DIREKTORAT dan role BIDHUMAS kini dinormalisasi menjadi `effectiveClientType: "ORG"` dan `effectiveRole: "BIDHUMAS"` di `AuthContext`. Nilai terderivasi ini diekspos lewat `useAuth` dan dipakai navigasi (mis. Sidebar) sehingga menu yang muncul selaras dengan organisasi induk BIDHUMAS tanpa mengubah nilai asli dari backend.【F:cicero-dashboard/context/AuthContext.tsx†L6-L89】【F:cicero-dashboard/components/Sidebar.jsx†L24-L76】
 
 ## Documentation
 
