@@ -32,6 +32,7 @@ describe("validateNewUser", () => {
       "SUBDIT DALMAS",
       "SUBDIT GASUM",
       "SUB BAG RENMIN",
+      "UNIT POLSATWA",
     ];
 
     satfungValues.forEach((satfung) => {
