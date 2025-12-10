@@ -29,6 +29,8 @@ describe("validateNewUser", () => {
       "SUBBID MULTIMEDIA",
       "SUBBID PID",
       "SUBBID PENMAS",
+      "SUBDIT DALMAS",
+      "SUBDIT GASUM",
       "SUB BAG RENMIN",
     ];
 
