@@ -34,6 +34,7 @@ export const PANGKAT_OPTIONS = [
   "PPPK",
 ];
 
+// Keep this list in sync with the dropdown options in app/users/page.jsx
 export const SATFUNG_OPTIONS = [
   "SUBBID MULTIMEDIA",
   "SUBBID PENMAS",

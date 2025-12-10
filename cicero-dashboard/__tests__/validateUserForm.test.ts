@@ -31,6 +31,7 @@ describe("validateNewUser", () => {
       "SUBBID PENMAS",
       "SUBDIT DALMAS",
       "SUBDIT GASUM",
+      "UNIT POLSATWA",
       "SUB BAG RENMIN",
     ];
 
@@ -44,6 +45,18 @@ describe("validateNewUser", () => {
       });
       expect(res).toEqual({ nrpNip: "11111", satfungValue: satfung });
     });
+  });
+
+  it("accepts UNIT POLSATWA without requiring polsek name", () => {
+    const res = validateNewUser({
+      nama: "Jane",
+      pangkat: "BRIPDA",
+      nrpNip: "98765",
+      satfung: "UNIT POLSATWA",
+      polsekName: " ",
+    });
+
+    expect(res).toEqual({ nrpNip: "98765", satfungValue: "UNIT POLSATWA" });
   });
 
   it("returns error for non numeric nrp", () => {
