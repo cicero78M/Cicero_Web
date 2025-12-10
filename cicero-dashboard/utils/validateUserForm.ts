@@ -65,6 +65,7 @@ export const SATFUNG_OPTIONS = [
   "SUBDIT BINTIBSOS",
   "SUBDIT DALMAS",
   "SUBDIT GASUM",
+  "UNIT POLSATWA",
   "POLSEK",
 ];
 

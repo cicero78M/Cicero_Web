@@ -11,6 +11,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Both the user directory export and the `/api/download-amplify` route import `exceljs` from `exceljs/dist/exceljs.min.js` to ensure the browser-safe bundle is used during compilation. A custom declaration file at `types/exceljs.d.ts` keeps TypeScript happy with this path. If `next build` complains about missing `exceljs`, reinstall dependencies from this folder so the package is available to the bundler.
 - The **Tambah User** form on the user directory now includes **PPPK** in the pangkat dropdown and validation rules so tenaga non-PNS dapat dicatat tanpa error.
 - Dropdown **Satfung/Divisi** untuk pengguna baru menambahkan opsi **SUBDIT DALMAS** dan **SUBDIT GASUM** agar unit terkait dapat dipilih langsung tanpa input manual.
+- Pilihan **Satfung/Divisi** juga mencakup **UNIT POLSATWA** sehingga kesatuan tersebut tersedia di dropdown tambah dan edit pengguna tanpa perlu input manual.
 
 ## Getting Started
 
