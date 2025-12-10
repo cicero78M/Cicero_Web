@@ -46,6 +46,18 @@ describe("validateNewUser", () => {
     });
   });
 
+  it("accepts Unit Polsatwa without a polsek name", () => {
+    const res = validateNewUser({
+      nama: "John",
+      pangkat: "BRIPDA",
+      nrpNip: "11111",
+      satfung: "UNIT POLSATWA",
+      polsekName: "",
+    });
+
+    expect(res).toEqual({ nrpNip: "11111", satfungValue: "UNIT POLSATWA" });
+  });
+
   it("returns error for non numeric nrp", () => {
     const res = validateNewUser({
       nama: "Jane",
