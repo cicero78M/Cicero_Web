@@ -122,13 +122,19 @@ export default function UserDirectoryPage() {
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { token, clientId, role: authRole } = useAuth();
+  const {
+    token,
+    clientId,
+    role: authRole,
+    effectiveRole,
+    effectiveClientType,
+  } = useAuth();
   const client_id = clientId;
   const role = authRole;
 
+  const normalizedRole = String(effectiveRole || role || "").toLowerCase();
   const isDitbinmasClient = client_id === "DITBINMAS";
-  const isDitbinmas =
-    isDitbinmasClient && String(role).toLowerCase() === "ditbinmas";
+  const isDitbinmas = isDitbinmasClient && normalizedRole === "ditbinmas";
   const [showAllDitbinmas, setShowAllDitbinmas] = useState(() => !isDitbinmas);
 
   const columnLabel = isDitbinmasClient
@@ -155,7 +161,11 @@ export default function UserDirectoryPage() {
 
         const profileRes = await getClientProfile(token, client_id);
         const profile = profileRes.client || profileRes.profile || profileRes || {};
-        const dir = (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        const rawClientType = (profile.client_type || "").toUpperCase();
+        const normalizedEffectiveClientType = String(
+          effectiveClientType || rawClientType,
+        ).toUpperCase();
+        const dir = normalizedEffectiveClientType === "DIREKTORAT";
         setIsDirectorate(dir && !isDitbinmas);
         setClientName(
           profile.nama_client ||
