@@ -34,6 +34,7 @@ export const PANGKAT_OPTIONS = [
   "PPPK",
 ];
 
+// Keep aligned with the dropdown list in the User Directory form.
 export const SATFUNG_OPTIONS = [
   "SUBBID MULTIMEDIA",
   "SUBBID PENMAS",

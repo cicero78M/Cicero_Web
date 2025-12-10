@@ -4,11 +4,11 @@ Fungsi `validateNewUser` (`cicero-dashboard/utils/validateUserForm.ts`) membersi
 
 ## Daftar satfung/divisi yang valid
 
-Validasi menerima seluruh opsi yang muncul di form, termasuk entri Dit Humas, Ditbinmas, serta penambahan Dit Samapta berikut:
+Validasi menerima seluruh opsi yang muncul di form, termasuk entri Dit Humas, Ditbinmas, serta penambahan Dit Samapta berikut (urutannya mengikuti dropdown di form):
 
 - SUBBID MULTIMEDIA
-- SUBBID PID
 - SUBBID PENMAS
+- SUBBID PID
 - SUB BAG RENMIN
 - BAG LOG
 - BAG SDM
@@ -34,8 +34,9 @@ Validasi menerima seluruh opsi yang muncul di form, termasuk entri Dit Humas, Di
 - SUBDIT SATPAMPOLSUS
 - SUBDIT BHABINKAMTIBMAS
 - SUBDIT BINTIBSOS
-- POLSEK (dengan nama polsek)
 - SUBDIT DALMAS
 - SUBDIT GASUM
+- UNIT POLSATWA
+- POLSEK (dengan nama polsek)
 
 Tambahkan entri baru ke array `SATFUNG_OPTIONS` jika form menampilkan satfung tambahan agar proses penyimpanan pengguna tetap sinkron.
