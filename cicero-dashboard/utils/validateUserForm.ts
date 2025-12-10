@@ -1,3 +1,4 @@
+// Shared between the validation logic and the user dropdown to avoid divergence
 export const PANGKAT_OPTIONS = [
   "BHARADA",
   "BHARATU",
@@ -34,7 +35,7 @@ export const PANGKAT_OPTIONS = [
   "PPPK",
 ];
 
-// Keep this list in sync with the dropdown options in app/users/page.jsx
+// Shared between the validation logic and the user dropdown to avoid divergence
 export const SATFUNG_OPTIONS = [
   "SUBBID MULTIMEDIA",
   "SUBBID PENMAS",
