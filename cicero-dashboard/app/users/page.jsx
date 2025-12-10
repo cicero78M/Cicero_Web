@@ -18,13 +18,80 @@ import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import ExcelJS from "exceljs/dist/exceljs.min.js";
 import { showToast } from "@/utils/showToast";
-import {
-  PANGKAT_OPTIONS,
-  SATFUNG_OPTIONS,
-  validateNewUser,
-} from "@/utils/validateUserForm";
+import { validateNewUser } from "@/utils/validateUserForm";
 
 const PAGE_SIZE = 50;
+
+const PANGKAT_OPTIONS = [
+  "BHARADA",
+  "BHARATU",
+  "BHARAKA",
+  "BRIPDA",
+  "BRIPTU",
+  "BRIGADIR",
+  "BRIPKA",
+  "AIPDA",
+  "AIPTU",
+  "IPDA",
+  "IPTU",
+  "AKP",
+  "KOMPOL",
+  "AKBP",
+  "KOMISARIS BESAR POLISI",
+  "JURU MUDA",
+  "JURU MUDA TINGKAT I",
+  "JURU",
+  "JURU TINGKAT I",
+  "PENGATUR MUDA",
+  "PENGATUR MUDA TINGKAT I",
+  "PENGATUR",
+  "PENGATUR TINGKAT I",
+  "PENATA MUDA",
+  "PENATA MUDA TINGKAT I",
+  "PENATA",
+  "PENATA TINGKAT I",
+  "PEMBINA",
+  "PEMBINA TINGKAT I",
+  "PEMBINA UTAMA MUDA",
+  "PEMBINA UTAMA MADYA",
+  "PEMBINA UTAMA",
+  "PPPK",
+];
+
+const SATFUNG_OPTIONS = [
+  "SUBBID MULTIMEDIA",
+  "SUBBID PENMAS",
+  "SUBBID PID",
+  "SUB BAG RENMIN",
+  "BAG LOG",
+  "BAG SDM",
+  "BAG REN",
+  "BAG OPS",
+  "SAT SAMAPTA",
+  "SAT RESKRIM",
+  "SAT INTEL",
+  "SAT NARKOBA",
+  "SAT BINMAS",
+  "SAT LANTAS",
+  "SI UM",
+  "SI TIK",
+  "SI WAS",
+  "SI PROPAM",
+  "SI DOKES",
+  "SPKT",
+  "SAT TAHTI",
+  "DITBINMAS",
+  "SUBBAGRENMIN",
+  "BAGBINOPSNAL",
+  "SUBDIT BINPOLMAS",
+  "SUBDIT SATPAMPOLSUS",
+  "SUBDIT BHABINKAMTIBMAS",
+  "SUBDIT BINTIBSOS",
+  "SUBDIT DALMAS",
+  "SUBDIT GASUM",
+  "UNIT POLSATWA",
+  "POLSEK",
+];
 
 export default function UserDirectoryPage() {
   useRequireAuth();
