@@ -26,7 +26,7 @@ import { User, Instagram, Music, RefreshCw } from "lucide-react";
 
 export default function UserInsightPage() {
   useRequireAuth();
-  const { token, clientId } = useAuth();
+  const { token, clientId, effectiveClientType } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -106,7 +106,7 @@ export default function UserInsightPage() {
 
   useEffect(() => {
     fetchData();
-  }, [token, clientId]);
+  }, [token, clientId, effectiveClientType]);
 
   async function fetchData() {
       if (!token || !clientId) {
@@ -149,8 +149,11 @@ export default function UserInsightPage() {
         // Cek tipe client
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
-        const dir =
-          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+        const rawClientType = (profile.client_type || "").toUpperCase();
+        const normalizedEffectiveClientType = String(
+          effectiveClientType || rawClientType,
+        ).toUpperCase();
+        const dir = normalizedEffectiveClientType === "DIREKTORAT";
         setIsDirectorate(dir);
 
         let processedUsers = users;
