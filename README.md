@@ -111,6 +111,12 @@ NEXT_PUBLIC_API_URL=<backend base url>
 - Jalur rekap likes Ditbinmas sekarang menerima `effectiveClientId` sehingga kasus khusus DITSAMAPTA BIDHUMAS bisa mengambil direktori, profil, dan rekap melalui klien BIDHUMAS tanpa mengubah perilaku Ditbinmas lain. Hook `useInstagramLikesData` otomatis meneruskan pemetaan ini ketika mendeteksi kombinasi tersebut.【F:cicero-dashboard/utils/absensiLikes.ts†L1-L125】【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L39-L151】
 - Halaman **User Directory** dan **User Insight** kini memprioritaskan `effectiveClientType` dari konteks autentikasi ketika menentukan apakah suatu akun bertipe direktorat. Kombinasi DITSAMAPTA dengan role BIDHUMAS diperlakukan sebagai klien ORG, sehingga daftar user, rekap, dan statistik tetap menggunakan `client_id` DITSAMAPTA tanpa menarik data agregat direktorat.【F:cicero-dashboard/app/users/page.jsx†L120-L189】【F:cicero-dashboard/app/user-insight/page.jsx†L16-L115】
 
+### TikTok Post Insight
+
+- Tab insight/rekap TikTok kini memiliki dropdown **Lingkup** untuk peran Ditbinmas dan direktorat yang memenuhi syarat, membatasi rekap ke klien aktif atau menjangkau seluruh satker jajaran tanpa meninggalkan halaman analitik.【F:cicero-dashboard/app/posts/tiktok/page.jsx†L26-L120】
+- Tombol **Salin Rekap** memanggil utilitas `buildTiktokPostRekap` agar ringkasan performa (frekuensi unggahan, rata-rata views/likes/komentar/share, engagement rate, top 3 post) siap ditempel ke WhatsApp/rapat tanpa menyalin manual.【F:cicero-dashboard/app/posts/tiktok/page.jsx†L250-L329】【F:cicero-dashboard/utils/tiktokPostRekap.ts†L1-L76】
+- Bagian rekap mendapatkan komponen `RekapTiktokPosts` yang menghadirkan tabel caption, tanggal, dan metrik per post dengan pencarian serta pagination ringan, lengkap narasi kontekstual sesuai periode dan cakupan dipilih.【F:cicero-dashboard/app/posts/tiktok/page.jsx†L360-L470】【F:cicero-dashboard/components/likes/tiktok/Rekap/RekapTiktokPosts.jsx†L1-L170】
+
 ## Documentation
 
 Additional documents live under the [`docs/`](docs) directory:

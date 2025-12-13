@@ -28,3 +28,11 @@ Pengguna dengan peran Ditbinmas mendapat opsi **Lingkup Data**:
 
 ## Kompatibilitas rute lama
 Rute lama `/comments/tiktok/rekap` kini mengalihkan ke halaman utama `/comments/tiktok` untuk menjaga tautan eksisting tanpa menggandakan UI.
+
+## Rekap Post TikTok
+
+Halaman `/posts/tiktok` mengikuti pola tab insight/rekap yang sama dengan Instagram dan komentar TikTok:
+
+- Header filter menambahkan dropdown **Lingkup** bagi Ditbinmas/direktorat yang memenuhi syarat, memfilter tampilan antara klien aktif (`client`) atau seluruh satker jajaran (`all`). Tombol **Salin Rekap** berdampingan agar pesan WhatsApp otomatis mengikuti cakupan yang dipilih.【F:cicero-dashboard/app/posts/tiktok/page.jsx†L26-L138】【F:cicero-dashboard/app/posts/tiktok/page.jsx†L250-L329】
+- Utilitas `buildTiktokPostRekap` membangkitkan ringkasan performa (post per hari, rata-rata views/likes/komentar/share, engagement rate, rasio follower/following, top 3 post) dan disalin via clipboard bila tersedia.【F:cicero-dashboard/utils/tiktokPostRekap.ts†L1-L76】
+- Tab rekap menampilkan komponen `RekapTiktokPosts` dengan narasi kontekstual dan tabel metrik per post (pencarian + pagination), sehingga operator dapat menjelajahi konten tanpa meninggalkan dashboard insight.【F:cicero-dashboard/app/posts/tiktok/page.jsx†L360-L470】【F:cicero-dashboard/components/likes/tiktok/Rekap/RekapTiktokPosts.jsx†L1-L170】
