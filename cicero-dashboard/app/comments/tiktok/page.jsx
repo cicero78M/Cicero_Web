@@ -151,7 +151,7 @@ export default function TiktokEngagementInsightPage() {
 
   const ditbinmasScopeOptions = [
     { value: "client", label: clientName },
-    { value: "all", label: "Role Ditbinmas" },
+    { value: "all", label: `Satker Jajaran ${clientName}` },
   ];
 
   const handleTabChange = (value) => {

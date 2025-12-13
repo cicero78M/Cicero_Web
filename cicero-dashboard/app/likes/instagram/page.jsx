@@ -120,8 +120,8 @@ export default function InstagramEngagementInsightPage() {
   };
 
   const ditbinmasScopeOptions = [
-    { value: "client", label: "Client Saya" },
-    { value: "all", label: "Seluruh Client Ditbinmas" },
+    { value: "client", label: clientName },
+    { value: "all", label: `Satker Jajaran ${clientName}` },
   ];
 
   return (
