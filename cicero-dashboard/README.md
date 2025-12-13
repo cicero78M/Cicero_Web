@@ -51,6 +51,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 
 - Hook `hooks/useTiktokCommentsData` kini selalu memfilter data ke `client_id` aktif ketika `scope` bukan "all" sehingga pengguna tetap berada pada cakupan login default, sementara opsi agregasi lintas klien tetap tersedia saat `scope` bernilai "all".
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
+- Tab **Rekap Detail** di halaman `/comments/tiktok` kini memiliki tombol **Kembali ke Dashboard Insight** yang menggulir halaman ke bagian atas sekaligus mengaktifkan tab insight, sehingga pengguna mudah kembali setelah meninjau tabel rekap.
 
 ## Menu khusus Ditbinmas
 
