@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import EngagementLineChart from "@/components/EngagementLineChart";
 import EngagementByTypeChart from "@/components/EngagementByTypeChart";
 import HeatmapTable from "@/components/HeatmapTable";
@@ -11,7 +11,7 @@ import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { Activity, Eye, Heart, PlayCircle, RefreshCw, Users } from "lucide-react";
+import { Activity, Copy, Eye, Heart, PlayCircle, RefreshCw, Users } from "lucide-react";
 import {
   getTiktokProfileViaBackend,
   getTiktokPostsViaBackend,
@@ -23,6 +23,9 @@ import InsightLayout from "@/components/InsightLayout";
 import InsightSectionCard from "@/components/insight/InsightSectionCard";
 import InsightSummaryCard from "@/components/insight/InsightSummaryCard";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
+import RekapTiktokPosts from "@/components/likes/tiktok/Rekap/RekapTiktokPosts";
+import { buildTiktokPostRekap } from "@/utils/tiktokPostRekap";
+import { showToast } from "@/utils/showToast";
 
 export default function TiktokPostAnalysisPage() {
   useRequireAuth();
@@ -37,6 +40,9 @@ export default function TiktokPostAnalysisPage() {
   const [compareError, setCompareError] = useState("");
   const [activeTab, setActiveTab] = useState("insight");
   const rekapSectionRef = useRef(null);
+  const [clientName, setClientName] = useState("");
+  const [canSelectScope, setCanSelectScope] = useState(false);
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
@@ -47,12 +53,19 @@ export default function TiktokPostAnalysisPage() {
   const [startDate, setStartDate] = useState(firstDay);
   const [endDate, setEndDate] = useState(lastDay);
   const [search, setSearch] = useState("");
+  const reportPeriodeLabel = useMemo(() => {
+    if (!startDate || !endDate) return `${startDate || "-"} - ${endDate || "-"}`;
+    if (startDate === endDate) return startDate;
+    return `${startDate} - ${endDate}`;
+  }, [startDate, endDate]);
 
   const fetchData = async () => {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     const clientId =
       typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
+    const role =
+      typeof window !== "undefined" ? localStorage.getItem("user_role") || "" : "";
 
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -63,6 +76,23 @@ export default function TiktokPostAnalysisPage() {
     try {
       setLoading(true);
       const clientProfile = await getClientProfile(token, clientId);
+      setClientName(
+        clientProfile?.client?.client_name ||
+          clientProfile?.client_name ||
+          clientProfile?.nama_client ||
+          "",
+      );
+      const normalizedClientId = String(clientId || "").trim().toUpperCase();
+      const normalizedRole = String(role || "").trim().toLowerCase();
+      const normalizedClientType = String(
+        clientProfile?.client?.client_type || clientProfile?.client_type || "",
+      )
+        .trim()
+        .toUpperCase();
+      const allowedScopeClients = new Set(["DITBINMAS", "DITSAMAPTA", "DITLANTAS", "BIDHUMAS"]);
+      const isDirectorate =
+        normalizedClientType === "DIREKTORAT" || normalizedRole === "ditbinmas";
+      setCanSelectScope(isDirectorate && allowedScopeClients.has(normalizedClientId));
       const username =
         clientProfile.client?.client_tiktok?.replace(/^@/, "") ||
         clientProfile.client_tiktok?.replace(/^@/, "") ||
@@ -94,7 +124,7 @@ export default function TiktokPostAnalysisPage() {
 
   useEffect(() => {
     fetchData();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, ditbinmasScope]);
 
   function extractUsername(url) {
     if (!url) return "";
@@ -176,6 +206,18 @@ export default function TiktokPostAnalysisPage() {
     }
   };
 
+  const handleDitbinmasScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDitbinmasScope(value);
+    }
+  };
+
+  const ditbinmasScopeOptions = [
+    { value: "client", label: clientName || "Client Aktif" },
+    { value: "all", label: `Satker Jajaran ${clientName || "Ditbinmas"}` },
+  ];
+
   if (loading) return <Loader />;
   if (error)
     return (
@@ -239,12 +281,16 @@ export default function TiktokPostAnalysisPage() {
   const avgCommentsAll =
     sortedPosts.reduce((s, p) => s + (p.comment_count || 0), 0) /
     (sortedPosts.length || 1);
+  const avgSharesAll =
+    sortedPosts.reduce((s, p) => s + (p.share_count || 0), 0) /
+    (sortedPosts.length || 1);
   const avgViewsAll =
     sortedPosts.reduce((s, p) => s + (p.view_count || 0), 0) /
     (sortedPosts.length || 1);
-  const engagementRate = profile.followers
-    ? (((avgLikesAll + avgCommentsAll) / profile.followers) * 100).toFixed(2)
-    : "0";
+  const engagementRateValue = profile.followers
+    ? ((avgLikesAll + avgCommentsAll) / profile.followers) * 100
+    : 0;
+  const engagementRate = engagementRateValue.toFixed(2);
 
   const totalPosts = info?.video_count ?? info?.post_count ?? info?.media_count;
   const totalLikes = info?.heart_count ?? info?.total_likes;
@@ -351,6 +397,35 @@ export default function TiktokPostAnalysisPage() {
     return Number(value).toLocaleString("id-ID");
   };
 
+  const scopeLabel = ditbinmasScope === "all" ? " (Satker Jajaran)" : "";
+
+  const rekapSummary = {
+    totalPosts: sortedPosts.length,
+    postingFrequency: Number(postingFreq),
+    avgLikes: avgLikesAll,
+    avgComments: avgCommentsAll,
+    avgShares: avgSharesAll,
+    avgViews: avgViewsAll,
+    engagementRate: engagementRateValue,
+    followerRatio: Number(followerRatio) || 0,
+  };
+
+  function handleCopyRekap() {
+    const message = buildTiktokPostRekap(rekapSummary, sortedPosts, {
+      clientName: clientName || profile?.full_name || profile?.username,
+      periodeLabel: reportPeriodeLabel,
+      scope: ditbinmasScope,
+    });
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(message).then(() => {
+        showToast("Rekap disalin ke clipboard", "success");
+      });
+    } else {
+      showToast(message, "info");
+    }
+  }
+
   const heroContent = (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-sky-100/70 bg-white/60 p-4 shadow-inner backdrop-blur">
@@ -381,6 +456,32 @@ export default function TiktokPostAnalysisPage() {
             setEndDate={setEndDate}
             setSearch={setSearch}
           />
+        </div>
+        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          {canSelectScope && (
+            <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
+              <span className="font-semibold text-slate-800">Lingkup:</span>
+              <select
+                value={ditbinmasScope}
+                onChange={handleDitbinmasScopeChange}
+                className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
+              >
+                {ditbinmasScopeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleCopyRekap}
+            className="inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
+          >
+            <Copy className="h-4 w-4 text-teal-600" />
+            Salin Rekap
+          </button>
         </div>
       </div>
 
@@ -574,6 +675,20 @@ export default function TiktokPostAnalysisPage() {
           </div>
           {activeTab === "rekap" && (
             <div className="pt-4 flex flex-col gap-6">
+              <InsightSectionCard title="Ringkasan Rekap Post" className="h-full">
+                <div className="flex flex-col gap-4">
+                  <Narrative>
+                    {`Periode ${reportPeriodeLabel}${scopeLabel} mencatat ${rekapSummary.totalPosts} postingan untuk ${clientName || profile.username}. Frekuensi unggahan ${postingFreq} post/hari dengan rata-rata ${rekapSummary.avgViews.toFixed(1)} views, ${rekapSummary.avgLikes.toFixed(1)} likes, ${rekapSummary.avgComments.toFixed(1)} komentar, dan ${rekapSummary.avgShares.toFixed(1)} share.`}
+                    {` Engagement rate berada di ${engagementRate}% dan rasio follower/following ${Number(followerRatio).toFixed(2)}, memberikan konteks cepat sebelum menelusuri tabel detail.`}
+                  </Narrative>
+                  <RekapTiktokPosts
+                    posts={sortedPosts}
+                    summary={rekapSummary}
+                    clientName={(clientName || profile.username) + scopeLabel}
+                    reportContext={{ periodeLabel: reportPeriodeLabel }}
+                  />
+                </div>
+              </InsightSectionCard>
               <div className="grid gap-6 lg:grid-cols-2">
                 <InsightSectionCard title="Profil & Bio" className="h-full">
                   {biography ? (
