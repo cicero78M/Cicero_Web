@@ -15,9 +15,10 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 ## Dashboard Likes Instagram
 
-- Rute `/likes/instagram` kini menyatukan dashboard insight dan rekap detail dalam satu halaman bertab sehingga pengguna tidak perlu pindah ke `/likes/instagram/rekap`. Rute lama otomatis diarahkan ke halaman gabungan agar tautan sidebar tetap valid.
+- Rute `/likes/instagram` kini menyatukan dashboard insight dan rekap detail dalam satu halaman bertab sehingga pengguna tidak perlu pindah ke `/likes/instagram/rekap`. Rute lama otomatis diarahkan ke halaman gabungan agar tautan sidebar tetap valid dan breadcrumb selalu kembali ke tab insight.
 - Selektor periode untuk insight dan rekap dibangun ulang memakai hook bersama `hooks/useLikesDateSelector.ts` yang membungkus `ViewDataSelector` serta normalisasi tanggal (today/date/month/custom range). Hook ini mencegah duplikasi state pemilihan tanggal dan menyediakan label periode siap pakai untuk laporan.
-- Tab rekap langsung merender komponen `components/RekapLikesIG` di halaman utama beserta opsi salin rekap sehingga pengujian manual (copy rekap dan chart) bisa dilakukan pada seluruh variasi view tanpa navigasi tambahan.
+- Tab insight dan rekap menggunakan komponen terspesialisasi di `components/likes/instagram/Insight` dan `components/likes/instagram/Rekap` sehingga blok chart (ChartBox, SummaryItem) dan tampilan daftar rekap berada dalam satu namespace halaman gabungan.
+- Tombol **Salin Rekap** kini tampil berdampingan dengan selektor periode di header halaman dan langsung memanggil utilitas `utils/instagramEngagement.ts` untuk membangkitkan teks WA. Pengguna Ditbinmas dapat men-switch cakupan data (client/all) tanpa berpindah halaman sebelum menyalin.
 
 ## Getting Started
 
@@ -179,4 +180,4 @@ Untuk memastikan pejabat tertentu selalu tampil teratas pada halaman rekap engag
 
 ## Header laporan rekap likes Instagram
 
-Teks laporan yang disalin dari tombol **Salin Teks Rekap** pada halaman `/likes/instagram/rekap` kini menyesuaikan nama direktorat pengguna. Header akan menampilkan nama client dengan tipe **Direktorat** yang sesuai dengan peran pengguna (misalnya "Ditbinmas"), dan akan kembali ke fallback "Ditbinmas" jika nama tidak tersedia. Dengan demikian, laporan siap kirim WhatsApp langsung menggunakan identitas instansi yang tepat tanpa perlu penyuntingan manual.
+Teks laporan yang disalin dari tombol **Salin Teks Rekap** pada tab rekap halaman `/likes/instagram` menyesuaikan nama direktorat pengguna. Header akan menampilkan nama client dengan tipe **Direktorat** yang sesuai dengan peran pengguna (misalnya "Ditbinmas"), dan akan kembali ke fallback "Ditbinmas" jika nama tidak tersedia. Dengan demikian, laporan siap kirim WhatsApp langsung menggunakan identitas instansi yang tepat tanpa perlu penyuntingan manual.

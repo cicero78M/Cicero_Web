@@ -2,9 +2,9 @@
 import { useState } from "react";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import ChartBox from "@/components/likes/instagram/ChartBox";
-import SummaryItem from "@/components/likes/instagram/SummaryItem";
-import { groupUsersByKelompok } from "@/utils/grouping";
+import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
+import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
+import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
 import Link from "next/link";
 import Narrative from "@/components/Narrative";

@@ -2,16 +2,15 @@
 
 import { useRef, useState } from "react";
 import Loader from "@/components/Loader";
-import ChartBox from "@/components/likes/instagram/ChartBox";
-import SummaryItem from "@/components/likes/instagram/SummaryItem";
+import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
+import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import { groupUsersByKelompok } from "@/utils/grouping";
+import { groupUsersByKelompok, buildInstagramRekap } from "@/utils/instagramEngagement";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import ViewDataSelector from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
-import { buildInstagramRekap } from "@/utils/buildInstagramRekap";
 import {
   Camera,
   User,
@@ -22,7 +21,7 @@ import {
   BarChart3,
   ClipboardList,
 } from "lucide-react";
-import RekapLikesIG from "@/components/RekapLikesIG";
+import RekapLikesIG from "@/components/likes/instagram/Rekap/RekapLikesIG";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 
 const TABS = [
