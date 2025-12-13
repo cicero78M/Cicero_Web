@@ -15,9 +15,10 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 ## Dashboard Likes Instagram
 
-- Rute `/likes/instagram` kini menyatukan dashboard insight dan rekap detail dalam satu halaman bertab sehingga pengguna tidak perlu pindah ke `/likes/instagram/rekap`. Rute lama otomatis diarahkan ke halaman gabungan agar tautan sidebar tetap valid.
+- Rute `/likes/instagram` menyatukan dashboard insight dan rekap detail dalam satu halaman bertab lengkap dengan tombol **Salin Rekap** di header filter/tab, sehingga pengguna tidak perlu pindah ke `/likes/instagram/rekap` untuk menyalin laporan.
+- Komponen insight (`InstagramInsightChartBox`, `InstagramInsightSummaryItem`) kini berada di `components/likes/instagram/Insight`, sedangkan panel rekap `InstagramRekapLikes` dipindah ke `components/likes/instagram/Rekap` agar struktur folder mencerminkan alur satu halaman.
 - Selektor periode untuk insight dan rekap dibangun ulang memakai hook bersama `hooks/useLikesDateSelector.ts` yang membungkus `ViewDataSelector` serta normalisasi tanggal (today/date/month/custom range). Hook ini mencegah duplikasi state pemilihan tanggal dan menyediakan label periode siap pakai untuk laporan.
-- Tab rekap langsung merender komponen `components/RekapLikesIG` di halaman utama beserta opsi salin rekap sehingga pengujian manual (copy rekap dan chart) bisa dilakukan pada seluruh variasi view tanpa navigasi tambahan.
+- Tab rekap memanfaatkan panel `InstagramRekapLikes` di halaman utama, lengkap dengan toggle cakupan Ditbinmas (client saja vs seluruh Ditbinmas) sehingga pengujian manual untuk copy rekap dan chart bisa dilakukan pada seluruh variasi view tanpa navigasi tambahan.
 
 ## Getting Started
 

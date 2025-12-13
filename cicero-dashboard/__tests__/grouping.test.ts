@@ -1,4 +1,4 @@
-import { groupUsersByKelompok } from '../utils/grouping';
+import { groupUsersByKelompok } from "../utils/instagramEngagement";
 
 describe('groupUsersByKelompok', () => {
   it('groups users by division prefix', () => {

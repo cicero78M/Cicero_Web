@@ -1,4 +1,17 @@
-interface RekapSummary {
+export interface InstagramUser {
+  divisi?: string;
+  [key: string]: any;
+}
+
+export interface KelompokGroups {
+  BAG: InstagramUser[];
+  SAT: InstagramUser[];
+  "SI & SPKT": InstagramUser[];
+  POLSEK: InstagramUser[];
+  LAINNYA: InstagramUser[];
+}
+
+export interface InstagramRekapSummary {
   totalIGPost: number;
   totalUser: number;
   totalSudahLike: number;
@@ -7,8 +20,27 @@ interface RekapSummary {
   totalTanpaUsername: number;
 }
 
+export function groupUsersByKelompok(users: InstagramUser[]): KelompokGroups {
+  const group: KelompokGroups = {
+    BAG: [],
+    SAT: [],
+    "SI & SPKT": [],
+    POLSEK: [],
+    LAINNYA: [],
+  };
+  users.forEach((user) => {
+    const div = (user.divisi || "").toUpperCase();
+    if (div.startsWith("BAG")) group.BAG.push(user);
+    else if (div.startsWith("SAT")) group.SAT.push(user);
+    else if (div.startsWith("SI") || div.startsWith("SPKT")) group["SI & SPKT"].push(user);
+    else if (div.startsWith("POLSEK")) group.POLSEK.push(user);
+    else group.LAINNYA.push(user);
+  });
+  return group;
+}
+
 export function buildInstagramRekap(
-  rekapSummary: RekapSummary,
+  rekapSummary: InstagramRekapSummary,
   chartData: any[],
   clientName?: string,
 ) {
@@ -72,4 +104,7 @@ export function buildInstagramRekap(
   return `${greeting},\n\nRekap Akumulasi Likes Instagram:\n${hari}, ${tanggal}\nJam: ${jam}\n\nJumlah IG Post: ${totalIGPost}\nJumlah User: ${totalUser}\n✅ Sudah Likes: ${totalSudahLike} user\n⚠️ Kurang Likes: ${totalKurangLike} user\n❌ Belum Likes: ${totalBelumLike} user\n⁉️ Tanpa Username IG: ${totalTanpaUsername} user\n\nRekap per Client:\n${groupLines}`;
 }
 
-export default buildInstagramRekap;
+export default {
+  buildInstagramRekap,
+  groupUsersByKelompok,
+};

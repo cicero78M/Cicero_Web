@@ -10,7 +10,7 @@ const defaultDecorations = (
   </>
 );
 
-export default function ChartBox({
+export default function InstagramInsightChartBox({
   title,
   users,
   orientation = "vertical",

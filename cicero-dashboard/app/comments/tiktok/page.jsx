@@ -2,9 +2,9 @@
 import { useState } from "react";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import ChartBox from "@/components/likes/instagram/ChartBox";
-import SummaryItem from "@/components/likes/instagram/SummaryItem";
-import { groupUsersByKelompok } from "@/utils/grouping";
+import InstagramInsightChartBox from "@/components/likes/instagram/Insight/InstagramInsightChartBox";
+import InstagramInsightSummaryItem from "@/components/likes/instagram/Insight/InstagramInsightSummaryItem";
+import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
 import Link from "next/link";
 import Narrative from "@/components/Narrative";
@@ -194,21 +194,21 @@ export default function TiktokEngagementInsightPage() {
             />
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <SummaryItem
+              <InstagramInsightSummaryItem
                 {...summaryItemCommonProps}
                 label="Jumlah TikTok Post"
                 value={rekapSummary.totalTiktokPost}
                 color="fuchsia"
                 icon={<Music className="h-5 w-5" />}
               />
-              <SummaryItem
+              <InstagramInsightSummaryItem
                 {...summaryItemCommonProps}
                 label="Total User"
                 value={rekapSummary.totalUser}
                 color="slate"
                 icon={<User className="h-5 w-5" />}
               />
-              <SummaryItem
+              <InstagramInsightSummaryItem
                 {...summaryItemCommonProps}
                 label="Sudah Komentar"
                 value={rekapSummary.totalSudahKomentar}
@@ -216,7 +216,7 @@ export default function TiktokEngagementInsightPage() {
                 icon={<MessageCircle className="h-5 w-5" />}
                 percentage={getPercentage(rekapSummary.totalSudahKomentar)}
               />
-              <SummaryItem
+              <InstagramInsightSummaryItem
                 {...summaryItemCommonProps}
                 label="Kurang Komentar"
                 value={rekapSummary.totalKurangKomentar}
@@ -224,7 +224,7 @@ export default function TiktokEngagementInsightPage() {
                 icon={<MessageCircle className="h-5 w-5" />}
                 percentage={getPercentage(rekapSummary.totalKurangKomentar)}
               />
-              <SummaryItem
+              <InstagramInsightSummaryItem
                 {...summaryItemCommonProps}
                 label="Belum Komentar"
                 value={rekapSummary.totalBelumKomentar}
@@ -232,7 +232,7 @@ export default function TiktokEngagementInsightPage() {
                 icon={<X className="h-5 w-5" />}
                 percentage={getPercentage(rekapSummary.totalBelumKomentar)}
               />
-              <SummaryItem
+              <InstagramInsightSummaryItem
                 {...summaryItemCommonProps}
                 label="Tanpa Username"
                 value={rekapSummary.totalTanpaUsername}
@@ -247,7 +247,7 @@ export default function TiktokEngagementInsightPage() {
           </div>
 
           {isDirectorate ? (
-            <ChartBox
+            <InstagramInsightChartBox
               {...chartBoxCommonProps}
               title={directorateTitle}
               users={chartData}
@@ -263,7 +263,7 @@ export default function TiktokEngagementInsightPage() {
             />
           ) : (
             <div className="flex flex-col gap-6">
-              <ChartBox
+              <InstagramInsightChartBox
                 {...chartBoxCommonProps}
                 title="BAG"
                 users={kelompok.BAG}
@@ -271,7 +271,7 @@ export default function TiktokEngagementInsightPage() {
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
                 sortBy="percentage"
               />
-              <ChartBox
+              <InstagramInsightChartBox
                 {...chartBoxCommonProps}
                 title="SAT"
                 users={kelompok.SAT}
@@ -279,7 +279,7 @@ export default function TiktokEngagementInsightPage() {
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
                 sortBy="percentage"
               />
-              <ChartBox
+              <InstagramInsightChartBox
                 {...chartBoxCommonProps}
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
@@ -287,7 +287,7 @@ export default function TiktokEngagementInsightPage() {
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
                 sortBy="percentage"
               />
-              <ChartBox
+              <InstagramInsightChartBox
                 {...chartBoxCommonProps}
                 title="LAINNYA"
                 users={kelompok.LAINNYA}

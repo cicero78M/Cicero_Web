@@ -32,7 +32,7 @@ halaman ini.
   diatur lewat variabel `NEXT_PUBLIC_API_URL`.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L39】
 - Menyajikan halaman analitik Instagram dan TikTok, direktori pengguna,
   serta informasi client melalui folder `app/` di dalam proyek.【F:/tmp/Cicero_V2/docs/enterprise_architecture.md†L32-L38】
-- Hook `useInstagramLikesData` dan utilitas `fetchDitbinmasAbsensiLikes` membangun rekap absensi likes lintas Polres sekaligus mendukung mode tampilan per satker, lalu menyajikan tombol "Copy Rekap" untuk distribusi cepat via WA.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L42-L204】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L188】【F:cicero-dashboard/utils/buildInstagramRekap.ts†L1-L56】
+- Hook `useInstagramLikesData` dan utilitas `fetchDitbinmasAbsensiLikes` membangun rekap absensi likes lintas Polres sekaligus mendukung mode tampilan per satker, lalu menyajikan tombol "Copy Rekap" untuk distribusi cepat via WA.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L42-L204】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L188】【F:cicero-dashboard/utils/instagramEngagement.ts†L42-L105】
 - Segmen "Rincian Kinerja Platform" menampilkan kontribusi likes dan komentar per konten (jumlah konten bulanan menjadi pembagi) sehingga persentase keterlibatan satker lebih representatif pada chart bar.
 - Knowledge base `/mekanisme-absensi` dan `/panduan-sop` menyediakan konteks SOP, matriks RACI, panduan WA bot, dan FAQ shadowban yang mempercepat onboarding pengguna baru.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
 

@@ -61,7 +61,7 @@ const defaultPalettes = {
   },
 };
 
-export default function SummaryItem({
+export default function InstagramInsightSummaryItem({
   label,
   value,
   color = "gray",

@@ -12,16 +12,16 @@ Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bag
 ## Perhitungan Ringkasan Absensi
 
 - Baik pada mode Ditbinmas maupun klien biasa, sistem menghitung ulang jumlah **Sudah Like**, **Kurang Like**, **Belum Like**, serta **Tanpa Username** dengan membandingkan `jumlah_like` terhadap total posting yang dirilis pada hari tersebut. Apabila belum ada posting, seluruh user dianggap belum melakukan likes agar status tetap mudah dipantau.【F:cicero-dashboard/utils/absensiLikes.ts†L121-L188】【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L188-L212】
-- Ringkasan tersebut ditampilkan di komponen `SummaryItem` bersama persentase yang dihitung dari total user valid (total user dikurangi akun tanpa username).【F:cicero-dashboard/app/likes/instagram/page.jsx†L41-L120】
+- Ringkasan tersebut ditampilkan di komponen `InstagramInsightSummaryItem` bersama persentase yang dihitung dari total user valid (total user dikurangi akun tanpa username).【F:cicero-dashboard/app/likes/instagram/page.jsx†L218-L274】【F:cicero-dashboard/components/likes/instagram/Insight/InstagramInsightSummaryItem.jsx†L1-L140】
 
 ## Pengelompokan dan Visualisasi
 
-- Hook mengembalikan flag `isDirectorate`, `isDitbinmasScopedClient`, dan `clientName`. Informasi ini menentukan apakah chart akan digrup berdasarkan divisi, kelompok (menggunakan `groupUsersByKelompok`), atau langsung per Polres saat memvisualisasikan data.【F:cicero-dashboard/app/likes/instagram/page.jsx†L21-L84】
-- Data yang sudah difilter dikirim ke komponen `ChartBox` dan `ChartHorizontal` untuk menampilkan ranking likes dan tabel pendukung, sehingga operator mendapatkan gambaran kinerja secara cepat.【F:cicero-dashboard/app/likes/instagram/page.jsx†L85-L200】
+- Hook mengembalikan flag `isDirectorate`, `isDitbinmasScopedClient`, dan `clientName`. Informasi ini menentukan apakah chart akan digrup berdasarkan divisi, kelompok (menggunakan `groupUsersByKelompok`), atau langsung per Polres saat memvisualisasikan data.【F:cicero-dashboard/app/likes/instagram/page.jsx†L77-L146】【F:cicero-dashboard/utils/instagramEngagement.ts†L1-L68】
+- Data yang sudah difilter dikirim ke komponen `InstagramInsightChartBox` dan `ChartHorizontal` untuk menampilkan ranking likes dan tabel pendukung, sehingga operator mendapatkan gambaran kinerja secara cepat.【F:cicero-dashboard/app/likes/instagram/page.jsx†L277-L334】【F:cicero-dashboard/components/likes/instagram/Insight/InstagramInsightChartBox.jsx†L1-L80】
 
 ## Rekap Otomatis via WA
 
-- Tombol **Copy Rekap** memanggil utilitas `buildInstagramRekap`. Fungsi ini membangkitkan pesan sapaan otomatis berisi ringkasan global serta daftar per klien dengan ikon ✅/⚠️/❌/⁉️. Pesan langsung ditempel ke clipboard sehingga siap dikirim ke WAG Ditbinmas.【F:cicero-dashboard/app/likes/instagram/page.jsx†L121-L200】【F:cicero-dashboard/utils/buildInstagramRekap.ts†L1-L56】
+- Tombol **Copy Rekap** di header filter/tab memanggil utilitas `buildInstagramRekap`. Fungsi ini membangkitkan pesan sapaan otomatis berisi ringkasan global serta daftar per klien dengan ikon ✅/⚠️/❌/⁉️. Pesan langsung ditempel ke clipboard sehingga siap dikirim ke WAG Ditbinmas atau cakupan Ditbinmas lain yang dipilih melalui toggle lingkup di halaman.【F:cicero-dashboard/app/likes/instagram/page.jsx†L96-L211】【F:cicero-dashboard/utils/instagramEngagement.ts†L42-L105】
 
 ## Knowledge Base Pendukung
 

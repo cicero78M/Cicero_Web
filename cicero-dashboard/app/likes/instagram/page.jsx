@@ -2,16 +2,15 @@
 
 import { useRef, useState } from "react";
 import Loader from "@/components/Loader";
-import ChartBox from "@/components/likes/instagram/ChartBox";
-import SummaryItem from "@/components/likes/instagram/SummaryItem";
+import InstagramInsightChartBox from "@/components/likes/instagram/Insight/InstagramInsightChartBox";
+import InstagramInsightSummaryItem from "@/components/likes/instagram/Insight/InstagramInsightSummaryItem";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import { groupUsersByKelompok } from "@/utils/grouping";
+import { buildInstagramRekap, groupUsersByKelompok } from "@/utils/instagramEngagement";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import ViewDataSelector from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
-import { buildInstagramRekap } from "@/utils/buildInstagramRekap";
 import {
   Camera,
   User,
@@ -22,7 +21,7 @@ import {
   BarChart3,
   ClipboardList,
 } from "lucide-react";
-import RekapLikesIG from "@/components/RekapLikesIG";
+import InstagramRekapLikes from "@/components/likes/instagram/Rekap/InstagramRekapLikes";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 
 const TABS = [
@@ -218,7 +217,7 @@ export default function InstagramEngagementInsightPage() {
             {activeTab === "insight" && (
               <div className="flex flex-col gap-10">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  <SummaryItem
+                  <InstagramInsightSummaryItem
                     label="Jumlah IG Post"
                     value={rekapSummary.totalIGPost}
                     color="blue"
@@ -226,7 +225,7 @@ export default function InstagramEngagementInsightPage() {
                       <Camera className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
                     }
                   />
-                  <SummaryItem
+                  <InstagramInsightSummaryItem
                     label="Total User"
                     value={rekapSummary.totalUser}
                     color="gray"
@@ -234,7 +233,7 @@ export default function InstagramEngagementInsightPage() {
                       <User className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
                     }
                   />
-                  <SummaryItem
+                  <InstagramInsightSummaryItem
                     label="Sudah Likes"
                     value={rekapSummary.totalSudahLike}
                     color="green"
@@ -243,7 +242,7 @@ export default function InstagramEngagementInsightPage() {
                     }
                     percentage={getPercentage(rekapSummary.totalSudahLike)}
                   />
-                  <SummaryItem
+                  <InstagramInsightSummaryItem
                     label="Kurang Likes"
                     value={rekapSummary.totalKurangLike}
                     color="orange"
@@ -252,7 +251,7 @@ export default function InstagramEngagementInsightPage() {
                     }
                     percentage={getPercentage(rekapSummary.totalKurangLike)}
                   />
-                  <SummaryItem
+                  <InstagramInsightSummaryItem
                     label="Belum Likes"
                     value={rekapSummary.totalBelumLike}
                     color="red"
@@ -261,7 +260,7 @@ export default function InstagramEngagementInsightPage() {
                     }
                     percentage={getPercentage(rekapSummary.totalBelumLike)}
                   />
-                  <SummaryItem
+                  <InstagramInsightSummaryItem
                     label="Tanpa Username"
                     value={rekapSummary.totalTanpaUsername}
                     color="gray"
@@ -276,7 +275,7 @@ export default function InstagramEngagementInsightPage() {
                 </div>
 
                 {isDirectorate ? (
-                  <ChartBox
+                  <InstagramInsightChartBox
                     title={directorateTitle}
                     users={chartData}
                     totalPost={rekapSummary.totalIGPost}
@@ -290,28 +289,28 @@ export default function InstagramEngagementInsightPage() {
                   />
                 ) : (
                   <div className="flex flex-col gap-6">
-                    <ChartBox
+                    <InstagramInsightChartBox
                       title="BAG"
                       users={kelompok.BAG}
                       totalPost={rekapSummary.totalIGPost}
                       narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
                       sortBy="percentage"
                     />
-                    <ChartBox
+                    <InstagramInsightChartBox
                       title="SAT"
                       users={kelompok.SAT}
                       totalPost={rekapSummary.totalIGPost}
                       narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
                       sortBy="percentage"
                     />
-                    <ChartBox
+                    <InstagramInsightChartBox
                       title="SI & SPKT"
                       users={kelompok["SI & SPKT"]}
                       totalPost={rekapSummary.totalIGPost}
                       narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
                       sortBy="percentage"
                     />
-                    <ChartBox
+                    <InstagramInsightChartBox
                       title="LAINNYA"
                       users={kelompok.LAINNYA}
                       totalPost={rekapSummary.totalIGPost}
@@ -346,7 +345,7 @@ export default function InstagramEngagementInsightPage() {
                 </div>
                 {activeTab === "rekap" && (
                   <div className="pt-4">
-                    <RekapLikesIG
+                    <InstagramRekapLikes
                       users={chartData}
                       totalIGPost={rekapSummary.totalIGPost}
                       posts={igPosts}

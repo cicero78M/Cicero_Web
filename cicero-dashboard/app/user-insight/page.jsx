@@ -16,7 +16,7 @@ import {
   getClientProfile,
   getClientNames,
 } from "@/utils/api";
-import { groupUsersByKelompok } from "@/utils/grouping";
+import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { accumulateContactStats } from "@/utils/contactStats";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";

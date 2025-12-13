@@ -15,7 +15,7 @@ import { prioritizeUsersForClient } from "@/utils/userOrdering";
 const PAGE_SIZE = 25;
 
 /**
- * Komponen RekapLikesIG
+ * Komponen InstagramRekapLikes
  * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
  * @param {number} totalIGPost - jumlah IG Post hari ini (atau sesuai periode, dari parent)
  * @param {Array} posts - daftar posting IG untuk rekap ORG
@@ -24,7 +24,7 @@ const PAGE_SIZE = 25;
  * @param {string} clientName - nama client ORG
  * @param {{ periodeLabel?: string, viewLabel?: string }} reportContext - konteks laporan untuk header rekap
  */
-const RekapLikesIG = forwardRef(function RekapLikesIG(
+const InstagramRekapLikes = forwardRef(function InstagramRekapLikes(
   {
     users = [],
     totalIGPost = 0,
@@ -689,7 +689,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   );
 });
 
-export default RekapLikesIG;
+export default InstagramRekapLikes;
 
 // Semua card mengikuti style IG Post Hari Ini
 function SummaryCard({ title, value, icon, percentage, accent = "sky" }) {
