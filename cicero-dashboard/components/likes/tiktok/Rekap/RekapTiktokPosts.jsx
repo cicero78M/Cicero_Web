@@ -96,6 +96,14 @@ const RekapTiktokPosts = forwardRef(function RekapTiktokPosts(
       </div>
 
       <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-inner backdrop-blur">
+        <div className="mb-4 flex flex-col gap-1">
+          <h2 className="text-lg font-semibold text-blue-900">Rekap Postingan TikTok</h2>
+          <p className="text-sm text-blue-700">
+            Narasi singkat performa unggahan TikTok, memudahkan operator meninjau engagement
+            per post sebelum menyalin rekap.
+          </p>
+        </div>
+
         <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm text-slate-600">{`Menampilkan ${filtered.length} post`}</div>
           <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 shadow-inner">
