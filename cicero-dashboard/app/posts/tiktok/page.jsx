@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
-import CardStat from "@/components/CardStat";
+import { useEffect, useRef, useState } from "react";
 import EngagementLineChart from "@/components/EngagementLineChart";
 import EngagementByTypeChart from "@/components/EngagementByTypeChart";
 import HeatmapTable from "@/components/HeatmapTable";
@@ -12,7 +11,7 @@ import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { RefreshCw } from "lucide-react";
+import { Activity, Eye, Heart, PlayCircle, RefreshCw, Users } from "lucide-react";
 import {
   getTiktokProfileViaBackend,
   getTiktokPostsViaBackend,
@@ -20,6 +19,10 @@ import {
   getTiktokPostsByUsernameViaBackend,
   getClientProfile,
 } from "@/utils/api";
+import InsightLayout from "@/components/InsightLayout";
+import InsightSectionCard from "@/components/insight/InsightSectionCard";
+import InsightSummaryCard from "@/components/insight/InsightSummaryCard";
+import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 
 export default function TiktokPostAnalysisPage() {
   useRequireAuth();
@@ -32,6 +35,8 @@ export default function TiktokPostAnalysisPage() {
   const [compareStats, setCompareStats] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
+  const [activeTab, setActiveTab] = useState("insight");
+  const rekapSectionRef = useRef(null);
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
@@ -164,11 +169,18 @@ export default function TiktokPostAnalysisPage() {
     }
   }
 
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    if (value === "rekap" && rekapSectionRef.current) {
+      rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   if (loading) return <Loader />;
   if (error)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white rounded-lg shadow-md p-6 text-red-500 font-bold">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6 text-slate-700">
+        <div className="rounded-3xl border border-rose-300/60 bg-white/80 px-8 py-6 text-center text-rose-600 shadow-[0_0_35px_rgba(248,113,113,0.18)] backdrop-blur">
           {error}
         </div>
       </div>
@@ -332,213 +344,313 @@ export default function TiktokPostAnalysisPage() {
     .slice(0, 50)
     .map(([text, value]) => ({ text, value }));
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
-      <div className="w-full max-w-5xl flex flex-col gap-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-700">
-            TikTok Post Analysis
-          </h1>
+  const formatNumber = (value) => {
+    if (value === undefined || value === null || Number.isNaN(Number(value))) {
+      return "-";
+    }
+    return Number(value).toLocaleString("id-ID");
+  };
+
+  const heroContent = (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-2xl border border-sky-100/70 bg-white/60 p-4 shadow-inner backdrop-blur">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Periode data
+            </span>
+            <div className="text-lg font-semibold text-slate-800">
+              {startDate} - {endDate}
+            </div>
+          </div>
           <button
+            type="button"
             onClick={fetchData}
-            className="p-2 text-gray-500 hover:text-gray-700"
-            aria-label="Refresh"
+            className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-100"
           >
-            <RefreshCw className="w-5 h-5" />
+            <RefreshCw className="h-4 w-4" />
+            Muat ulang data
           </button>
         </div>
-        <p className="text-gray-600">Analisis performa postingan TikTok.</p>
+        <div className="mt-3">
+          <FilterBar
+            startDate={startDate}
+            endDate={endDate}
+            search={search}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            setSearch={setSearch}
+          />
+        </div>
+      </div>
 
-        <div className="bg-white p-4 rounded-xl shadow flex gap-4 items-start">
+      <div className="rounded-2xl border border-sky-100/80 bg-white/70 p-4 shadow-inner backdrop-blur">
+        <div className="flex items-start gap-4">
           {profilePic && (
             <img
               src={getProfilePicSrc(profilePic)}
               alt="profile"
               loading="lazy"
-              className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+              className="h-20 w-20 flex-shrink-0 rounded-full object-cover shadow"
               onError={(e) => {
                 e.currentTarget.src = "/file.svg";
               }}
             />
           )}
-          <div className="flex-1">
-            <div className="text-lg font-semibold">
+          <div className="flex flex-col gap-1">
+            <div className="text-lg font-semibold text-slate-800">
               {profile.full_name || profile.username}
             </div>
-            <div className="text-gray-500">@{profile.username}</div>
+            <div className="text-sm text-slate-600">@{profile.username}</div>
             {profile.category && (
-              <div className="text-gray-500 text-sm">{profile.category}</div>
+              <div className="text-xs text-slate-500">{profile.category}</div>
             )}
+            <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
+              <span className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1">{accountType}</span>
+              <span className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1">{privacyStatus}</span>
+              {totalPosts !== undefined ? (
+                <span className="rounded-full border border-teal-100 bg-teal-50 px-3 py-1">
+                  Total Posts: {formatNumber(totalPosts)}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
-
-        <form onSubmit={handleCompare} className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Link akun pembanding"
-            value={compareLink}
-            onChange={(e) => setCompareLink(e.target.value)}
-            className="flex-1 px-3 py-2 border rounded-lg text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-          >
-            Bandingkan
-          </button>
-        </form>
-        {compareError && (
-          <div className="text-red-500 text-sm">{compareError}</div>
-        )}
-
-        
-        {compareLoading && <Loader />}
-        {compareStats && (
-          <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4">
-            <h3 className="font-semibold">Perbandingan dengan {compareStats.username}</h3>
-            <PostCompareChart
-              client={{
-                username: profile.username,
-                followers: profile.followers,
-                following: profile.following,
-                followerRatio: parseFloat(followerRatio),
-                postRate: parseFloat(latestPostRate),
-                avgLikes: avgLikesClient,
-                avgComments: avgCommentsClient,
-                avgShares: avgSharesClient,
-                avgViews: avgViewsClient,
-              }}
-              competitor={compareStats}
-            />
-            <Narrative>
-              {`Dalam 12 posting terakhir, ${profile.username} rata-rata memperoleh ${avgLikesClient.toFixed(1)} likes, ${avgCommentsClient.toFixed(1)} komentar, ${avgSharesClient.toFixed(1)} share, dan ${avgViewsClient.toFixed(1)} views dengan frekuensi ${latestPostRate} posting per hari serta rasio follower/following ${followerRatio}. `}
-              {`Sementara ${compareStats.username} rata-rata ${compareStats.avgLikes.toFixed(1)} likes, ${compareStats.avgComments.toFixed(1)} komentar, ${compareStats.avgShares.toFixed(1)} share, dan ${compareStats.avgViews.toFixed(1)} views dengan frekuensi ${compareStats.postRate} posting per hari serta rasio ${compareStats.followerRatio}.`}
-            </Narrative>
-          </div>
-        )}
-
-        <FilterBar
-          startDate={startDate}
-          endDate={endDate}
-          search={search}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          setSearch={setSearch}
-        />
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <CardStat title="Followers" value={profile.followers} />
-          <CardStat title="Following" value={profile.following} />
-          <CardStat title="Follower/Following" value={followerRatio} />
-          <CardStat title="Posts / Day" value={postingFreq} />
-          {totalPosts !== undefined && (
-            <CardStat title="Total Posts" value={totalPosts} />
-          )}
-          {totalLikes !== undefined && (
-            <CardStat title="Total Likes" value={totalLikes} />
-          )}
-        </div>
-
-        {biography && (
-          <div className="bg-white p-4 rounded-xl shadow text-sm whitespace-pre-line">
-            {biography}
-            {bioLink && (
-              <div className="mt-2">
-                <a
-                  href={bioLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline break-all"
-                >
-                  {bioLink}
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {(info?.address || info?.public_phone_number || info?.public_email) && (
-          <div className="bg-white p-4 rounded-xl shadow text-sm">
-            {info?.address && <div>{info.address}</div>}
-            {info?.public_phone_number && <div>WA: {info.public_phone_number}</div>}
-            {info?.public_email && <div>Email: {info.public_email}</div>}
-          </div>
-        )}
-
-        {posts.length > 0 && (
-          <div className="bg-white p-4 rounded-xl shadow text-sm">
-            <h2 className="font-semibold mb-2">Summary Engagement</h2>
-            <ul className="list-disc ml-5">
-              <li>Avg Likes: {avgLikesAll.toFixed(1)}</li>
-              <li>Avg Comments: {avgCommentsAll.toFixed(1)}</li>
-              <li>Avg Views: {avgViewsAll.toFixed(1)}</li>
-              <li>Engagement Rate: {engagementRate}%</li>
-            </ul>
-          </div>
-        )}
-
-        <div className="bg-white p-4 rounded-xl shadow text-sm">
-          <h2 className="font-semibold mb-2">Fitur dan Status Akun</h2>
-          <ul className="list-disc ml-5">
-            <li>{accountType}</li>
-            <li>{privacyStatus}</li>
-          </ul>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow">
-          <h2 className="font-semibold mb-2">Engagement Trend</h2>
-          <EngagementLineChart data={lineData} />
-        </div>
-
-                <div className="bg-white p-4 rounded-xl shadow">
-          <h3 className="font-semibold mb-2">Post Metrics Comparison</h3>
-          <PostMetricsChart posts={sortedPosts} />
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow">
-          <h2 className="font-semibold mb-2">Engagement by Content Type</h2>
-          <EngagementByTypeChart data={typeData} />
-        </div>
-
-        {cloudWords.length > 0 && (
-          <div className="bg-white p-4 rounded-xl shadow">
-            <h3 className="font-semibold mb-2">Word Cloud</h3>
-            <WordCloudChart words={cloudWords} />
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-xl shadow">
-            <h3 className="font-semibold mb-2">Top Hashtags</h3>
-            <ul className="list-disc ml-5 text-sm">
-              {topHashtags.map(([t, c]) => (
-                <li key={t}>{t} - {c}x</li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow">
-            <h3 className="font-semibold mb-2">Top Mentions</h3>
-            <ul className="list-disc ml-5 text-sm">
-              {topMentions.map(([m, c]) => (
-                <li key={m}>{m} - {c}x</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow">
-          <h3 className="font-semibold mb-2">Posting Time Heatmap</h3>
-          <HeatmapTable data={heatmap} days={dayNames} buckets={buckets} />
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow">
-          <h3 className="font-semibold mb-2">Posts Overview</h3>
-          <TiktokPostsGrid posts={sortedPosts} />
-        </div>
-
-
-
       </div>
     </div>
+  );
+
+  return (
+    <InsightLayout
+      title="TikTok Post Insight"
+      description="Analisis performa postingan TikTok dengan tampilan seragam insight/rekap."
+      tabs={DEFAULT_INSIGHT_TABS}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      heroContent={heroContent}
+    >
+      {activeTab === "insight" && (
+        <div className="flex flex-col gap-10">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <InsightSummaryCard
+              title="Followers"
+              value={formatNumber(profile.followers)}
+              helper="Total pengikut akun klien"
+              icon={<Users className="h-5 w-5" />}
+              tone="blue"
+            />
+            <InsightSummaryCard
+              title="Follower/Following"
+              value={followerRatio}
+              helper="Rasio audience terhadap akun diikuti"
+              icon={<Activity className="h-5 w-5" />}
+              tone="purple"
+            />
+            <InsightSummaryCard
+              title="Post / Hari (periode)"
+              value={postingFreq}
+              helper="Frekuensi unggahan selama rentang terpilih"
+              icon={<PlayCircle className="h-5 w-5" />}
+              tone="teal"
+            />
+            <InsightSummaryCard
+              title="Engagement Rate"
+              value={`${engagementRate}%`}
+              helper="Rata-rata likes + komentar dibanding followers"
+              icon={<Heart className="h-5 w-5" />}
+              tone="blue"
+            />
+            <InsightSummaryCard
+              title="Rata-rata Likes (12 post)"
+              value={avgLikesClient.toFixed(1)}
+              helper="Dari 12 posting terakhir"
+              icon={<Heart className="h-5 w-5" />}
+              tone="purple"
+            />
+            <InsightSummaryCard
+              title="Rata-rata Views (12 post)"
+              value={avgViewsClient.toFixed(1)}
+              helper="Dari 12 posting terakhir"
+              icon={<Eye className="h-5 w-5" />}
+              tone="teal"
+            />
+          </div>
+
+          <InsightSectionCard
+            title="Perbandingan Akun"
+            description="Bandingkan 12 posting terakhir klien dengan akun pembanding."
+          >
+            <form onSubmit={handleCompare} className="flex flex-col gap-3 md:flex-row md:items-center">
+              <input
+                type="text"
+                placeholder="Link akun pembanding"
+                value={compareLink}
+                onChange={(e) => setCompareLink(e.target.value)}
+                className="flex-1 rounded-xl border border-sky-100 bg-white px-3 py-2 text-sm shadow focus:border-sky-300 focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-sky-700"
+              >
+                Bandingkan
+              </button>
+            </form>
+            {compareError && <div className="text-sm font-semibold text-rose-600">{compareError}</div>}
+            {compareLoading && <Loader />}
+            {compareStats && (
+              <div className="flex flex-col gap-4">
+                <PostCompareChart
+                  client={{
+                    username: profile.username,
+                    followers: profile.followers,
+                    following: profile.following,
+                    followerRatio: parseFloat(followerRatio),
+                    postRate: parseFloat(latestPostRate),
+                    avgLikes: avgLikesClient,
+                    avgComments: avgCommentsClient,
+                    avgShares: avgSharesClient,
+                    avgViews: avgViewsClient,
+                  }}
+                  competitor={compareStats}
+                />
+                <Narrative>
+                  {`Dalam 12 posting terakhir, ${profile.username} rata-rata memperoleh ${avgLikesClient.toFixed(1)} likes, ${avgCommentsClient.toFixed(1)} komentar, ${avgSharesClient.toFixed(1)} share, dan ${avgViewsClient.toFixed(1)} views dengan frekuensi ${latestPostRate} posting per hari serta rasio follower/following ${followerRatio}. `}
+                  {`Sementara ${compareStats.username} rata-rata ${compareStats.avgLikes.toFixed(1)} likes, ${compareStats.avgComments.toFixed(1)} komentar, ${compareStats.avgShares.toFixed(1)} share, dan ${compareStats.avgViews.toFixed(1)} views dengan frekuensi ${compareStats.postRate} posting per hari serta rasio ${compareStats.followerRatio}.`}
+                </Narrative>
+              </div>
+            )}
+          </InsightSectionCard>
+
+          <InsightSectionCard
+            title="Tren Engagement"
+            description="Pergerakan engagement rate per posting yang dinormalisasi dengan jumlah followers."
+          >
+            <EngagementLineChart data={lineData} />
+            <Narrative>
+              {`Rata-rata engagement keseluruhan ${engagementRate}% dengan konten terbaru memproduksi ${avgLikesClient.toFixed(1)} likes dan ${avgCommentsClient.toFixed(1)} komentar per posting.`}
+            </Narrative>
+          </InsightSectionCard>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <InsightSectionCard title="Post Metrics Comparison">
+              <PostMetricsChart posts={sortedPosts} />
+            </InsightSectionCard>
+            <InsightSectionCard title="Engagement by Content Type">
+              <EngagementByTypeChart data={typeData} />
+            </InsightSectionCard>
+          </div>
+
+          {cloudWords.length > 0 && (
+            <InsightSectionCard
+              title="Word Cloud"
+              description="Kata yang paling sering muncul dalam caption postingan terfilter."
+            >
+              <WordCloudChart words={cloudWords} />
+            </InsightSectionCard>
+          )}
+
+          <InsightSectionCard
+            title="Posting Time Heatmap"
+            description="Jam tayang yang paling sering menghasilkan engagement."
+          >
+            <HeatmapTable data={heatmap} days={dayNames} buckets={buckets} />
+          </InsightSectionCard>
+        </div>
+      )}
+
+      <section
+        ref={rekapSectionRef}
+        id="rekap-detail"
+        className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/90 p-4 shadow-[0_24px_60px_rgba(59,130,246,0.12)] backdrop-blur"
+      >
+        <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 right-6 h-44 w-44 rounded-full bg-sky-200/45 blur-3xl" />
+        <div className="relative">
+          <div className="flex flex-col gap-2 border-b border-blue-100/80 pb-4">
+            <h2 className="text-2xl font-semibold text-blue-900">Rekap Detail TikTok</h2>
+            <p className="text-sm text-blue-700/80">
+              Bio, kontak, dan daftar postingan tampil dalam satu tab tanpa meninggalkan dashboard insight.
+            </p>
+          </div>
+          {activeTab === "rekap" && (
+            <div className="pt-4 flex flex-col gap-6">
+              <div className="grid gap-6 lg:grid-cols-2">
+                <InsightSectionCard title="Profil & Bio" className="h-full">
+                  {biography ? (
+                    <p className="whitespace-pre-line text-sm text-slate-700">{biography}</p>
+                  ) : (
+                    <p className="text-sm text-slate-500">Tidak ada bio yang ditulis.</p>
+                  )}
+                  {bioLink && (
+                    <a
+                      href={bioLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-sky-700 underline"
+                    >
+                      {bioLink}
+                    </a>
+                  )}
+                  {posts.length > 0 && (
+                    <ul className="list-disc pl-5 text-sm text-slate-700">
+                      <li>Avg Likes: {avgLikesAll.toFixed(1)}</li>
+                      <li>Avg Comments: {avgCommentsAll.toFixed(1)}</li>
+                      <li>Avg Views: {avgViewsAll.toFixed(1)}</li>
+                      {totalLikes !== undefined ? (
+                        <li>Total Likes: {formatNumber(totalLikes)}</li>
+                      ) : null}
+                      <li>Engagement Rate: {engagementRate}%</li>
+                    </ul>
+                  )}
+                </InsightSectionCard>
+
+                <InsightSectionCard title="Kontak & Status Akun" className="h-full">
+                  <ul className="list-disc pl-5 text-sm text-slate-700">
+                    <li>{accountType}</li>
+                    <li>{privacyStatus}</li>
+                  </ul>
+                  {(info?.address || info?.public_phone_number || info?.public_email) && (
+                    <div className="text-sm text-slate-700">
+                      {info?.address && <div>{info.address}</div>}
+                      {info?.public_phone_number && <div>WA: {info.public_phone_number}</div>}
+                      {info?.public_email && <div>Email: {info.public_email}</div>}
+                    </div>
+                  )}
+                </InsightSectionCard>
+              </div>
+
+              <InsightSectionCard title="Top Hashtags & Mentions">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-800">Top Hashtags</h4>
+                    <ul className="list-disc pl-5 text-sm text-slate-700">
+                      {topHashtags.map(([t, c]) => (
+                        <li key={t}>
+                          {t} - {c}x
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-800">Top Mentions</h4>
+                    <ul className="list-disc pl-5 text-sm text-slate-700">
+                      {topMentions.map(([m, c]) => (
+                        <li key={m}>
+                          {m} - {c}x
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </InsightSectionCard>
+
+              <InsightSectionCard title="Posts Overview" className="lg:col-span-2">
+                <TiktokPostsGrid posts={sortedPosts} />
+              </InsightSectionCard>
+            </div>
+          )}
+        </div>
+      </section>
+    </InsightLayout>
   );
 }
