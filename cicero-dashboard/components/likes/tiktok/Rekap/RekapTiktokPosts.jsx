@@ -36,9 +36,13 @@ const RekapTiktokPosts = forwardRef(function RekapTiktokPosts(
   const scrollContainerRef = useRef(null);
 
   const filtered = useMemo(() => {
-    const term = search.toLowerCase();
+    const term = search.toLowerCase().trim();
     if (!term) return posts;
-    return posts.filter((post) => (post.caption || "").toLowerCase().includes(term));
+    return posts.filter((post) => {
+      const caption = (post.caption || "").toLowerCase();
+      const dateLabel = formatDate(post.created_at).toLowerCase();
+      return caption.includes(term) || dateLabel.includes(term);
+    });
   }, [posts, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -106,16 +110,23 @@ const RekapTiktokPosts = forwardRef(function RekapTiktokPosts(
 
         <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm text-slate-600">{`Menampilkan ${filtered.length} post`}</div>
-          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 shadow-inner">
-            <Search className="h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Cari caption"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-48 bg-transparent text-sm text-slate-700 outline-none"
-            />
-          </div>
+          <label
+            className="flex w-full max-w-md flex-col gap-2 text-slate-800 md:max-w-sm"
+            htmlFor="rekap-tiktok-posts-search"
+          >
+            <span className="text-[11px] uppercase tracking-[0.35em] text-slate-500">Cari konten TikTok</span>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-inner focus-within:border-slate-300 focus-within:ring-2 focus-within:ring-slate-100">
+              <Search className="h-4 w-4 text-slate-500" />
+              <input
+                id="rekap-tiktok-posts-search"
+                type="text"
+                placeholder="Cari caption atau tanggal publikasi"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none"
+              />
+            </div>
+          </label>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-slate-100">
