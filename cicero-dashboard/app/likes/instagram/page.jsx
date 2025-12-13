@@ -282,10 +282,11 @@ export default function InstagramEngagementInsightPage() {
                     groupBy={directorateGroupBy}
                     orientation={directorateOrientation}
                     sortBy="percentage"
-                    narrative=
+                    narrative={
                       shouldGroupByClient
                         ? undefined
                         : "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
+                    }
                   />
                 ) : (
                   <div className="flex flex-col gap-6">
