@@ -13,6 +13,12 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Dropdown **Satfung/Divisi** untuk pengguna baru menambahkan opsi **SUBDIT DALMAS** dan **SUBDIT GASUM** agar unit terkait dapat dipilih langsung tanpa input manual.
 - Pilihan **Satfung/Divisi** juga mencakup **UNIT POLSATWA** sehingga kesatuan tersebut tersedia di dropdown tambah dan edit pengguna tanpa perlu input manual, kini dibaca langsung dari daftar opsi terpusat `utils/validateUserForm` agar validasi dan tampilan selalu selaras.
 
+## Dashboard Likes Instagram
+
+- Rute `/likes/instagram` kini menyatukan dashboard insight dan rekap detail dalam satu halaman bertab sehingga pengguna tidak perlu pindah ke `/likes/instagram/rekap`. Rute lama otomatis diarahkan ke halaman gabungan agar tautan sidebar tetap valid.
+- Selektor periode untuk insight dan rekap dibangun ulang memakai hook bersama `hooks/useLikesDateSelector.ts` yang membungkus `ViewDataSelector` serta normalisasi tanggal (today/date/month/custom range). Hook ini mencegah duplikasi state pemilihan tanggal dan menyediakan label periode siap pakai untuk laporan.
+- Tab rekap langsung merender komponen `components/RekapLikesIG` di halaman utama beserta opsi salin rekap sehingga pengujian manual (copy rekap dan chart) bisa dilakukan pada seluruh variasi view tanpa navigasi tambahan.
+
 ## Getting Started
 
 First, run the development server:

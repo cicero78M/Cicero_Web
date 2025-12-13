@@ -1,15 +1,15 @@
 "use client";
-import { useState } from "react";
+
+import { useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartBox from "@/components/likes/instagram/ChartBox";
 import SummaryItem from "@/components/likes/instagram/SummaryItem";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import { groupUsersByKelompok } from "@/utils/grouping"; // pastikan path benar
-import Link from "next/link";
+import { groupUsersByKelompok } from "@/utils/grouping";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
-import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
+import ViewDataSelector from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
 import { buildInstagramRekap } from "@/utils/buildInstagramRekap";
 import {
@@ -17,18 +17,35 @@ import {
   User,
   ThumbsUp,
   ThumbsDown,
-  ArrowRight,
   UserX,
   Copy,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
+import RekapLikesIG from "@/components/RekapLikesIG";
+import useLikesDateSelector from "@/hooks/useLikesDateSelector";
+
+const TABS = [
+  { value: "insight", label: "Dashboard Insight", icon: BarChart3 },
+  { value: "rekap", label: "Rekap Detail", icon: ClipboardList },
+];
 
 export default function InstagramEngagementInsightPage() {
   useRequireAuth();
-  const [viewBy, setViewBy] = useState("today");
-  const today = new Date().toISOString().split("T")[0];
-  const [customDate, setCustomDate] = useState(today);
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
+  const [activeTab, setActiveTab] = useState("insight");
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const rekapSectionRef = useRef(null);
+
+  const {
+    viewBy,
+    viewOptions,
+    selectorDateValue,
+    handleViewChange,
+    handleDateChange,
+    normalizedCustomDate,
+    normalizedRange,
+    reportPeriodeLabel,
+  } = useLikesDateSelector();
 
   const {
     chartData,
@@ -39,9 +56,15 @@ export default function InstagramEngagementInsightPage() {
     clientName,
     isDitbinmasScopedClient,
     isDitbinmasRole,
-  } = useInstagramLikesData({ viewBy, customDate, fromDate, toDate });
+    igPosts,
+  } = useInstagramLikesData({
+    viewBy,
+    customDate: normalizedCustomDate,
+    fromDate: normalizedRange.startDate,
+    toDate: normalizedRange.endDate,
+    scope: ditbinmasScope,
+  });
 
-  const viewOptions = VIEW_OPTIONS;
   if (loading) return <Loader />;
   if (error)
     return (
@@ -52,7 +75,6 @@ export default function InstagramEngagementInsightPage() {
       </div>
     );
 
-  // Group chartData by kelompok jika bukan direktorat
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
   const shouldGroupByClient =
     isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
@@ -84,6 +106,25 @@ export default function InstagramEngagementInsightPage() {
     }
   }
 
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    if (value === "rekap" && rekapSectionRef.current) {
+      rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleDitbinmasScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDitbinmasScope(value);
+    }
+  };
+
+  const ditbinmasScopeOptions = [
+    { value: "client", label: "Client Saya" },
+    { value: "all", label: "Seluruh Client Ditbinmas" },
+  ];
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-700">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.3),_transparent_65%)]" />
@@ -104,26 +145,78 @@ export default function InstagramEngagementInsightPage() {
                       Pantau performa likes dan komentar harian dengan visualisasi chart bar.
                     </p>
                   </div>
+                  <div className="flex flex-wrap gap-2 rounded-2xl border border-sky-100/80 bg-white/70 p-2 shadow-inner">
+                    {TABS.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = tab.value === activeTab;
+                      return (
+                        <button
+                          key={tab.value}
+                          onClick={() => handleTabChange(tab.value)}
+                          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 ${
+                            isActive
+                              ? "bg-sky-100 text-sky-800 shadow-[0_8px_20px_rgba(96,165,250,0.25)]"
+                              : "text-slate-600 hover:bg-sky-50"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </header>
-                <div className="rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
-                  <ViewDataSelector
-                    value={viewBy}
-                    onChange={setViewBy}
-                    options={viewOptions}
-                    date=
-                      {viewBy === "custom_range"
-                        ? { startDate: fromDate, endDate: toDate }
-                        : customDate}
-                    onDateChange={(val) => {
-                      if (viewBy === "custom_range") {
-                        setFromDate(val.startDate || "");
-                        setToDate(val.endDate || "");
-                      } else {
-                        setCustomDate(val);
-                      }
-                    }}
-                  />
+
+                <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <ViewDataSelector
+                      value={viewBy}
+                      onChange={handleViewChange}
+                      options={viewOptions}
+                      date={selectorDateValue}
+                      onDateChange={handleDateChange}
+                    />
+                    <div className="flex flex-wrap gap-3 md:justify-end">
+                      {isDitbinmasRole && (
+                        <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
+                          <span className="font-semibold text-slate-800">Lingkup:</span>
+                          <select
+                            value={ditbinmasScope}
+                            onChange={handleDitbinmasScopeChange}
+                            className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
+                          >
+                            {ditbinmasScopeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <button
+                        onClick={handleCopyRekap}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
+                      >
+                        <Copy className="h-4 w-4 text-teal-600" />
+                        Salin Rekap
+                      </button>
+                      {activeTab === "insight" && (
+                        <button
+                          onClick={() => handleTabChange("rekap")}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/60 bg-sky-200/50 px-4 py-2 text-sm font-semibold text-sky-700 shadow-[0_0_25px_rgba(96,165,250,0.35)] transition-colors hover:border-sky-400/70 hover:bg-sky-200/70"
+                        >
+                          <ClipboardList className="h-4 w-4 text-sky-600" />
+                          Buka Rekap Detail
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            {activeTab === "insight" && (
+              <div className="flex flex-col gap-10">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <SummaryItem
                     label="Jumlah IG Post"
@@ -181,88 +274,98 @@ export default function InstagramEngagementInsightPage() {
                     )}
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Chart per kelompok / polres */}
-            {isDirectorate ? (
-              <ChartBox
-                title={directorateTitle}
-                users={chartData}
-                totalPost={rekapSummary.totalIGPost}
-                groupBy={directorateGroupBy}
-                orientation={directorateOrientation}
-                sortBy="percentage"
-                narrative={
-                  shouldGroupByClient
-                    ? undefined
-                    : "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
-                }
-              />
-            ) : (
-              <div className="flex flex-col gap-6">
-                <ChartBox
-                  title="BAG"
-                  users={kelompok.BAG}
-                  totalPost={rekapSummary.totalIGPost}
-                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
-                  sortBy="percentage"
-                />
-                <ChartBox
-                  title="SAT"
-                  users={kelompok.SAT}
-                  totalPost={rekapSummary.totalIGPost}
-                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
-                  sortBy="percentage"
-                />
-                <ChartBox
-                  title="SI & SPKT"
-                  users={kelompok["SI & SPKT"]}
-                  totalPost={rekapSummary.totalIGPost}
-                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
-                  sortBy="percentage"
-                />
-                <ChartBox
-                  title="LAINNYA"
-                  users={kelompok.LAINNYA}
-                  totalPost={rekapSummary.totalIGPost}
-                  narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi lainnya."
-                  sortBy="percentage"
-                />
-                <ChartHorizontal
-                  title="POLSEK"
-                  users={kelompok.POLSEK}
-                  totalPost={rekapSummary.totalIGPost}
-                  showTotalUser
-                  sortBy="percentage"
-                />
-                <Narrative>
-                  Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
-                  polsek dan membandingkan partisipasi pengguna.
-                </Narrative>
+                {isDirectorate ? (
+                  <ChartBox
+                    title={directorateTitle}
+                    users={chartData}
+                    totalPost={rekapSummary.totalIGPost}
+                    groupBy={directorateGroupBy}
+                    orientation={directorateOrientation}
+                    sortBy="percentage"
+                    narrative=
+                      shouldGroupByClient
+                        ? undefined
+                        : "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
+                  />
+                ) : (
+                  <div className="flex flex-col gap-6">
+                    <ChartBox
+                      title="BAG"
+                      users={kelompok.BAG}
+                      totalPost={rekapSummary.totalIGPost}
+                      narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
+                      sortBy="percentage"
+                    />
+                    <ChartBox
+                      title="SAT"
+                      users={kelompok.SAT}
+                      totalPost={rekapSummary.totalIGPost}
+                      narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
+                      sortBy="percentage"
+                    />
+                    <ChartBox
+                      title="SI & SPKT"
+                      users={kelompok["SI & SPKT"]}
+                      totalPost={rekapSummary.totalIGPost}
+                      narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
+                      sortBy="percentage"
+                    />
+                    <ChartBox
+                      title="LAINNYA"
+                      users={kelompok.LAINNYA}
+                      totalPost={rekapSummary.totalIGPost}
+                      narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi lainnya."
+                      sortBy="percentage"
+                    />
+                    <ChartHorizontal
+                      title="POLSEK"
+                      users={kelompok.POLSEK}
+                      totalPost={rekapSummary.totalIGPost}
+                      showTotalUser
+                      sortBy="percentage"
+                    />
+                    <Narrative>
+                      Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
+                      polsek dan membandingkan partisipasi pengguna.
+                    </Narrative>
+                  </div>
+                )}
               </div>
             )}
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={handleCopyRekap}
-                className="group inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-6 py-3 text-lg font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
-              >
-                <Copy className="h-5 w-5 text-teal-600" />
-                Salin Rekap
-              </button>
-              <Link
-                href="/likes/instagram/rekap"
-                className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/60 bg-sky-200/50 px-6 py-3 text-lg font-semibold text-sky-700 shadow-[0_0_25px_rgba(96,165,250,0.35)] transition-colors hover:border-sky-400/70 hover:bg-sky-200/70"
-              >
-                <ArrowRight className="h-5 w-5 text-sky-600" />
-                Lihat Rekap Detail
-              </Link>
-            </div>
+            <section ref={rekapSectionRef} id="rekap-detail" className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/90 p-4 shadow-[0_24px_60px_rgba(59,130,246,0.12)] backdrop-blur">
+              <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-blue-200/40 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 right-6 h-44 w-44 rounded-full bg-sky-200/45 blur-3xl" />
+              <div className="relative">
+                <div className="flex flex-col gap-2 border-b border-blue-100/80 pb-4">
+                  <h2 className="text-2xl font-semibold text-blue-900">Rekapitulasi Engagement Instagram</h2>
+                  <p className="text-sm text-blue-700/80">
+                    Rekap detail keterlibatan likes dan komentar tersedia tanpa perlu pindah halaman.
+                  </p>
+                </div>
+                {activeTab === "rekap" && (
+                  <div className="pt-4">
+                    <RekapLikesIG
+                      users={chartData}
+                      totalIGPost={rekapSummary.totalIGPost}
+                      posts={igPosts}
+                      showRekapButton
+                      showCopyButton={false}
+                      clientName={clientName}
+                      reportContext={{
+                        periodeLabel: reportPeriodeLabel,
+                        viewLabel:
+                          viewOptions.find((option) => option.value === viewBy)?.label,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
