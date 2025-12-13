@@ -2,6 +2,10 @@
 
 Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komentar ke dalam satu tampilan dengan pola yang sama seperti **/likes/instagram**: tab dan header ditangani oleh `InsightLayout` sehingga tampilan tidak lagi memakai layout khusus. Pengguna dapat memilih periode data (harian, bulanan, atau rentang kustom) sekaligus melihat tabel detail personel tanpa berpindah halaman.
 
+## Rekap detail selaras dengan Instagram
+- Section **Rekapitulasi Engagement TikTok** memakai kerangka UI yang sama dengan segment rekap Instagram (pola kartu putih dengan border biru, judul tebal, dan deskripsi biru lembut) sehingga perpindahan antar platform terasa konsisten.
+- Copy scroll-into-view tetap memanfaatkan tab **Rekap Detail** pada `InsightLayout`, jadi tombol rekap bawaan tetap menggulir ke section ini tanpa perubahan perilaku.
+
 ## Pola tab dan CTA konsisten
 - Header memakai tab **Dashboard Insight** dan **Rekap Detail** via `DEFAULT_INSIGHT_TABS` pada `InsightLayout` dengan `activeTab` dan `handleTabChange`, menyamakan pola dengan halaman Instagram.
 - Tombol **Buka Rekap Detail** otomatis menggulir ke section rekap ketika tab rekap dipilih, menjaga konteks halaman.
