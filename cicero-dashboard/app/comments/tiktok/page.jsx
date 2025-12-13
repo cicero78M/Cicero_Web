@@ -26,6 +26,7 @@ import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
 import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
+import DetailRekapSection from "@/components/insight/DetailRekapSection";
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
@@ -427,33 +428,19 @@ export default function TiktokEngagementInsightPage() {
         </div>
       )}
 
-      <section
-        ref={rekapSectionRef}
-        id="rekap-detail"
-        className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-white/90 p-4 shadow-[0_24px_60px_rgba(59,130,246,0.12)] backdrop-blur"
+      <DetailRekapSection
+        sectionRef={rekapSectionRef}
+        title="Rekapitulasi Engagement TikTok"
+        description="Rekap detail keterlibatan komentar TikTok tersedia tanpa perlu pindah halaman."
+        showContent={activeTab === "rekap"}
       >
-        <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-blue-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 right-6 h-44 w-44 rounded-full bg-sky-200/45 blur-3xl" />
-        <div className="relative">
-          <div className="flex flex-col gap-2 border-b border-blue-100/80 pb-4">
-            <h2 className="text-2xl font-semibold text-blue-900">Rekapitulasi Engagement TikTok</h2>
-            <p className="text-sm text-blue-700/80">
-              Rekap detail keterlibatan komentar TikTok tersedia tanpa perlu pindah halaman.
-            </p>
-          </div>
-
-          {activeTab === "rekap" && (
-            <div className="pt-4">
-              <RekapKomentarTiktok
-                users={chartData}
-                totalTiktokPost={rekapSummary.totalTiktokPost}
-                showCopyButton={false}
-                reportContext={reportContext}
-              />
-            </div>
-          )}
-        </div>
-      </section>
+        <RekapKomentarTiktok
+          users={chartData}
+          totalTiktokPost={rekapSummary.totalTiktokPost}
+          showCopyButton={false}
+          reportContext={reportContext}
+        />
+      </DetailRekapSection>
     </InsightLayout>
   );
 }
