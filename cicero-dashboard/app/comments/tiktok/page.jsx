@@ -119,6 +119,7 @@ export default function TiktokEngagementInsightPage() {
     clientName,
     isDitbinmasRole,
     isDitbinmasScopedClient,
+    canSelectScope,
     loading,
     error,
   } = useTiktokCommentsData({
@@ -475,8 +476,8 @@ export default function TiktokEngagementInsightPage() {
                     labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
                     controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
                   />
-                  <div className="flex flex-wrap gap-3 md:justify-end">
-                    {isDirectorate && !isOrgClient && (
+                <div className="flex flex-wrap gap-3 md:justify-end">
+                    {canSelectScope && (
                       <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
                         <span className="font-semibold text-slate-800">Lingkup:</span>
                         <select
