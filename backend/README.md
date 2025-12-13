@@ -8,6 +8,7 @@ Modul di folder `backend/src` fokus pada integrasi Google Contacts dengan kreden
 - `services/googleContactsService.js` – memuat kredensial dan menyiapkan fondasi penyimpanan kontak, termasuk validasi payload kontak.
 - `startup/healthChecks.js` – jalankan health check pada saat start untuk mencegah sinkronisasi kontak dilewati diam-diam.
 - `services/whatsappContactHelper.js` – lookup kontak WhatsApp melalui `store.Contact.get(contactId)` dan membaca flag `isMyContact`/`isBlocked` tanpa memanggil helper legacy yang sudah dihapus dari WhatsApp Web Store.
+- `services/cronWaNotificationReminder.js` – membuat jadwal pengingat WhatsApp dengan validasi ekspresi cron, normalisasi ID penerima (mis. menambahkan sufiks `@c.us`), serta penanganan error pengiriman agar task terjadwal tidak berhenti ketika satu pesan gagal terkirim.
 
 ## Pengujian
 
