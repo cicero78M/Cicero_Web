@@ -15,6 +15,7 @@ interface Options {
   customDate: string;
   fromDate: string;
   toDate: string;
+  scope?: "client" | "all";
 }
 
 interface RekapSummary {
@@ -31,6 +32,7 @@ export default function useTiktokCommentsData({
   customDate,
   fromDate,
   toDate,
+  scope = "client",
 }: Options) {
   const auth = useContext(AuthContext);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -280,6 +282,7 @@ export default function useTiktokCommentsData({
 
         let filteredUsers = users;
         const shouldFilterByClient =
+          scope !== "all" &&
           Boolean(normalizedClientIdLower) &&
           (derivedDitbinmasRole || !directorate || isScopedDirectorateClient);
         if (shouldFilterByClient) {
@@ -362,6 +365,7 @@ export default function useTiktokCommentsData({
     auth?.clientId,
     auth?.effectiveRole,
     auth?.role,
+    scope,
   ]);
 
   return {
