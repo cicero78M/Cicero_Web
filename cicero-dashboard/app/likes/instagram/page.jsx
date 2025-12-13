@@ -52,6 +52,7 @@ export default function InstagramEngagementInsightPage() {
     error,
     rekapSummary,
     isDirectorate,
+    isOrgClient,
     clientName,
     isDitbinmasScopedClient,
     isDitbinmasRole,
@@ -176,7 +177,7 @@ export default function InstagramEngagementInsightPage() {
                       onDateChange={handleDateChange}
                     />
                     <div className="flex flex-wrap gap-3 md:justify-end">
-                      {isDitbinmasRole && (
+                      {isDirectorate && !isOrgClient && (
                         <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
                           <span className="font-semibold text-slate-800">Lingkup:</span>
                           <select
