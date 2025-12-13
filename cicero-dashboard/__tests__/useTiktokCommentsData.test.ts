@@ -94,6 +94,65 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 
+  it("allows Ditbinmas users to broaden the recap scope when requested", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "DITBINMAS");
+    localStorage.setItem("user_role", "ditbinmas");
+
+    mockedGetClientProfile.mockResolvedValue({ client_type: "DIREKTORAT" } as any);
+    mockedGetUserDirectory.mockResolvedValue({
+      data: [
+        { role: "ditbinmas", client_id: "CLIENT_A" },
+        { role: "ditbinmas", client_id: "CLIENT_B" },
+      ],
+    } as any);
+    mockedGetClientNames.mockResolvedValue({
+      CLIENT_A: "Client A",
+      CLIENT_B: "Client B",
+      DITBINMAS: "Ditbinmas",
+    } as any);
+
+    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
+      if (clientId === "CLIENT_A") {
+        return {
+          data: [
+            { client_id: "CLIENT_A", username: "user-a", jumlah_komentar: 4 },
+          ],
+        } as any;
+      }
+      if (clientId === "CLIENT_B") {
+        return {
+          data: [
+            { client_id: "CLIENT_B", username: "user-b", jumlah_komentar: 3 },
+          ],
+        } as any;
+      }
+      if (clientId === "DITBINMAS") {
+        return {
+          data: [
+            { client_id: "DITBINMAS", username: "root", jumlah_komentar: 2 },
+          ],
+        } as any;
+      }
+      return { data: [] } as any;
+    });
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({
+        viewBy: "monthly",
+        customDate: "",
+        fromDate: "",
+        toDate: "",
+        scope: "all",
+      }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.chartData).toHaveLength(3);
+    expect(result.current.rekapSummary.totalUser).toBe(3);
+  });
+
   it("filters directorate data for the root Ditbinmas account to match recap", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITBINMAS");

@@ -1,12 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
-import Link from "next/link";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
@@ -15,21 +14,92 @@ import {
   User,
   MessageCircle,
   X,
-  ArrowRight,
   UserX,
   Copy,
 } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 import { buildTiktokRekap } from "@/utils/buildTiktokRekap";
+import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
+
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getLocalMonthString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
+const fullDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const monthFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "long",
+  year: "numeric",
+});
+
+function formatDisplayDate(value) {
+  if (!value || typeof value !== "string") return "-";
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+  if (!year || !month || !day) return value;
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return value;
+  return fullDateFormatter.format(date);
+}
+
+function formatDisplayMonth(value) {
+  if (!value || typeof value !== "string") return "-";
+  const [year, month] = value.split("-").map((part) => Number(part));
+  if (!year || !month) return value;
+  const date = new Date(year, month - 1, 1);
+  if (Number.isNaN(date.getTime())) return value;
+  return monthFormatter.format(date);
+}
+
+function formatDisplayRange(start, end) {
+  if (!start) return "-";
+  if (!end || start === end) {
+    return formatDisplayDate(start);
+  }
+  return `${formatDisplayDate(start)} s.d. ${formatDisplayDate(end)}`;
+}
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
-  const [viewBy, setViewBy] = useState("today");
-  const today = new Date().toISOString().split("T")[0];
-  const [customDate, setCustomDate] = useState(today);
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
   const viewOptions = VIEW_OPTIONS;
+  const today = getLocalDateString();
+  const currentMonth = getLocalMonthString();
+
+  const [viewBy, setViewBy] = useState("today");
+  const [dailyDate, setDailyDate] = useState(today);
+  const [monthlyDate, setMonthlyDate] = useState(currentMonth);
+  const [dateRange, setDateRange] = useState({ startDate: today, endDate: today });
+  const [ditbinmasScope, setDitbinmasScope] = useState("client");
+
+  const normalizedDailyDate = dailyDate || today;
+  const normalizedMonthlyDate = monthlyDate || currentMonth;
+  const normalizedRangeStart = dateRange.startDate || today;
+  const normalizedRangeEnd = dateRange.endDate || normalizedRangeStart;
+  const normalizedRange = {
+    startDate: normalizedRangeStart,
+    endDate: normalizedRangeEnd,
+  };
+
+  const selectorDateValue =
+    viewBy === "custom_range"
+      ? normalizedRange
+      : viewBy === "month"
+        ? normalizedMonthlyDate
+        : normalizedDailyDate;
+
+  const customDate = viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
 
   const {
     chartData,
@@ -40,7 +110,105 @@ export default function TiktokEngagementInsightPage() {
     isDitbinmasScopedClient,
     loading,
     error,
-  } = useTiktokCommentsData({ viewBy, customDate, fromDate, toDate });
+  } = useTiktokCommentsData({
+    viewBy,
+    customDate,
+    fromDate: normalizedRange.startDate,
+    toDate: normalizedRange.endDate,
+    scope: ditbinmasScope,
+  });
+
+  const reportPeriodeLabel = useMemo(() => {
+    if (viewBy === "custom_range") {
+      return formatDisplayRange(normalizedRangeStart, normalizedRangeEnd);
+    }
+    if (viewBy === "month") {
+      return formatDisplayMonth(normalizedMonthlyDate);
+    }
+    return formatDisplayDate(normalizedDailyDate);
+  }, [
+    viewBy,
+    normalizedRangeStart,
+    normalizedRangeEnd,
+    normalizedMonthlyDate,
+    normalizedDailyDate,
+  ]);
+
+  const viewLabel = useMemo(
+    () => viewOptions.find((option) => option.value === viewBy)?.label,
+    [viewOptions, viewBy],
+  );
+
+  const ditbinmasScopeOptions = [
+    { value: "client", label: "Client Saya" },
+    { value: "all", label: "Seluruh Client Ditbinmas" },
+  ];
+
+  const handleViewChange = (nextView) => {
+    setViewBy((prevView) => {
+      if (nextView === "today") {
+        setDailyDate(today);
+      }
+      if (nextView === "date" && prevView !== "date") {
+        setDailyDate(today);
+      }
+      if (nextView === "month" && prevView !== "month") {
+        setMonthlyDate(currentMonth);
+      }
+      if (nextView === "custom_range" && prevView !== "custom_range") {
+        setDateRange({
+          startDate: today,
+          endDate: today,
+        });
+      }
+      return nextView;
+    });
+  };
+
+  const handleDateChange = (val) => {
+    if (viewBy === "custom_range") {
+      if (!val || typeof val !== "object") {
+        return;
+      }
+      setDateRange((prev) => {
+        const nextRange = {
+          startDate: val.startDate ?? prev.startDate ?? today,
+          endDate: val.endDate ?? prev.endDate ?? prev.startDate ?? today,
+        };
+        if (!nextRange.startDate) {
+          nextRange.startDate = today;
+        }
+        if (!nextRange.endDate) {
+          nextRange.endDate = nextRange.startDate;
+        }
+        if (nextRange.startDate && nextRange.endDate) {
+          const start = new Date(nextRange.startDate);
+          const end = new Date(nextRange.endDate);
+          if (start > end) {
+            return {
+              startDate: nextRange.endDate,
+              endDate: nextRange.startDate,
+            };
+          }
+        }
+        return nextRange;
+      });
+      return;
+    }
+    if (viewBy === "month") {
+      const nextMonth = typeof val === "string" && val ? val.slice(0, 7) : currentMonth;
+      setMonthlyDate(nextMonth || currentMonth);
+      return;
+    }
+    setDailyDate(val || today);
+  };
+
+  const handleDitbinmasScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDitbinmasScope(value);
+    }
+  };
 
   if (loading) return <Loader />;
   if (error)
@@ -143,6 +311,13 @@ export default function TiktokEngagementInsightPage() {
     }
   }
 
+  const reportContext = {
+    periodeLabel: reportPeriodeLabel,
+    viewLabel,
+    directorateName: clientName || "Satker",
+    directorateOfficialName: clientName || "Satker",
+  };
+
   return (
     <div
       className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-slate-900"
@@ -160,7 +335,7 @@ export default function TiktokEngagementInsightPage() {
               TikTok Engagement Insight
             </h1>
             <p className="max-w-3xl text-sm text-slate-600 md:text-base">
-              Pantau performa enggagement personel TikTok untuk{" "}
+              Pantau performa enggagement personel TikTok untuk{" "}
               <span className="font-semibold text-sky-700">
                 {clientName || "satuan Anda"}
               </span>
@@ -170,28 +345,38 @@ export default function TiktokEngagementInsightPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-6">
-            <ViewDataSelector
-              value={viewBy}
-              onChange={setViewBy}
-              options={viewOptions}
-              date={
-                viewBy === "custom_range"
-                  ? { startDate: fromDate, endDate: toDate }
-                  : customDate
-              }
-              onDateChange={(val) => {
-                if (viewBy === "custom_range") {
-                  setFromDate(val.startDate || "");
-                  setToDate(val.endDate || "");
-                } else {
-                  setCustomDate(val);
-                }
-              }}
-              className="justify-start gap-3 rounded-3xl border border-sky-200/70 bg-white/80 px-4 py-4 text-slate-800 shadow-[0_22px_50px_-28px_rgba(14,116,144,0.35)] backdrop-blur"
-              labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
-              controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-            />
+          <div className="flex flex-col gap-6 rounded-3xl border border-sky-200/70 bg-white/80 p-4 shadow-[0_22px_50px_-28px_rgba(14,116,144,0.35)] backdrop-blur">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <ViewDataSelector
+                value={viewBy}
+                onChange={handleViewChange}
+                options={viewOptions}
+                date={selectorDateValue}
+                onDateChange={handleDateChange}
+                className="justify-start gap-3"
+                labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
+                controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+              {isDitbinmasRole && (
+                <div className="flex w-full flex-col gap-2 md:w-64">
+                  <label className="text-sm font-semibold text-slate-800">Lingkup Data</label>
+                  <select
+                    value={ditbinmasScope}
+                    onChange={handleDitbinmasScopeChange}
+                    className="w-full rounded-xl border border-sky-200/70 bg-white/90 px-3 py-2 text-sm text-slate-700 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200/60 hover:border-indigo-200"
+                  >
+                    {ditbinmasScopeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500">
+                    Atur apakah rekap menampilkan seluruh client Ditbinmas atau hanya client aktif Anda.
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <SummaryItem
@@ -313,25 +498,33 @@ export default function TiktokEngagementInsightPage() {
             </div>
           )}
 
-          <div className="flex flex-wrap justify-end gap-3">
-            <button
-              onClick={handleCopyRekap}
-              className="group flex items-center gap-2 rounded-2xl border border-sky-300/70 bg-sky-500/20 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-sky-700 shadow-[0_18px_45px_-28px_rgba(14,165,233,0.45)] transition hover:border-sky-400/80 hover:bg-sky-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50"
-            >
-              <Copy className="h-4 w-4" />
-              Rekap Komentar
-            </button>
-            <Link
-              href="/comments/tiktok/rekap"
-              className="group flex items-center gap-2 rounded-2xl border border-indigo-300/70 bg-indigo-500/20 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-indigo-700 shadow-[0_18px_45px_-28px_rgba(129,140,248,0.45)] transition hover:border-indigo-400/80 hover:bg-indigo-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
-            >
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              Lihat Rekap Detail
-            </Link>
+          <div className="flex flex-col gap-4 rounded-3xl border border-indigo-200/70 bg-white/85 p-5 shadow-[0_22px_55px_-32px_rgba(99,102,241,0.35)] backdrop-blur">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Rekapitulasi Komentar TikTok
+                </h2>
+                <p className="text-sm text-slate-600">
+                  Lihat tabel detil personel yang sudah, kurang, atau belum berkomentar sesuai periode yang Anda pilih.
+                </p>
+              </div>
+              <button
+                onClick={handleCopyRekap}
+                className="group flex items-center gap-2 rounded-2xl border border-indigo-300/70 bg-indigo-500/20 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-indigo-700 shadow-[0_18px_45px_-28px_rgba(129,140,248,0.45)] transition hover:border-indigo-400/80 hover:bg-indigo-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
+              >
+                <Copy className="h-4 w-4" />
+                Rekap Komentar
+              </button>
+            </div>
+            <RekapKomentarTiktok
+              users={chartData}
+              totalTiktokPost={rekapSummary.totalTiktokPost}
+              showCopyButton={false}
+              reportContext={reportContext}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 }
-
