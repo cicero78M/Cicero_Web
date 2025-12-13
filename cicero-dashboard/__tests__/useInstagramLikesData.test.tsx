@@ -150,4 +150,88 @@ describe("useInstagramLikesData", () => {
     expect(result.current.chartData).toHaveLength(2);
     expect(result.current.rekapSummary.totalUser).toBe(2);
   });
+
+  it("filters directorate data to the active client when scope is client", async () => {
+    const authValue = {
+      token: "token",
+      clientId: "DIR_A",
+      userId: "user-id",
+      role: "operator",
+      effectiveRole: "operator",
+      effectiveClientType: undefined,
+      profile: null,
+      isHydrating: false,
+      setAuth: jest.fn(),
+    } as any;
+
+    mockedGetDashboardStats.mockResolvedValue({ instagramPosts: 2 });
+    mockedGetClientProfile.mockResolvedValue({
+      client: { nama: "Ditres", client_type: "DIREKTORAT" },
+    });
+    mockedGetUserDirectory.mockResolvedValue({
+      data: [
+        { role: "dir_a", client_id: "DIR_A", username: "root-a" },
+        { role: "dir_a", client_id: "DIR_B", username: "root-b" },
+      ],
+    });
+    mockedGetClientNames.mockResolvedValue({ DIR_A: "Ditres", DIR_B: "Dir B" });
+    mockedGetRekapLikesIG.mockImplementation(async (_, clientId) => {
+      if (clientId === "DIR_A") {
+        return {
+          data: [
+            { client_id: "DIR_A", username: "user-a", jumlah_like: 2 },
+          ],
+        } as any;
+      }
+      if (clientId === "DIR_B") {
+        return {
+          data: [
+            { client_id: "DIR_B", username: "user-b", jumlah_like: 0 },
+          ],
+        } as any;
+      }
+      return { data: [] } as any;
+    });
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
+    );
+
+    const { result } = renderHook(
+      () =>
+        useInstagramLikesData({
+          viewBy: "monthly",
+          customDate: "",
+          fromDate: "",
+          toDate: "",
+          scope: "client",
+        }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
+      "token",
+      "DIR_A",
+      "periode",
+      "date",
+      "start",
+      "end",
+      expect.any(AbortSignal),
+    );
+    expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
+      "token",
+      "DIR_B",
+      "periode",
+      "date",
+      "start",
+      "end",
+      expect.any(AbortSignal),
+    );
+    expect(result.current.isDirectorate).toBe(true);
+    expect(result.current.isOrgClient).toBe(false);
+    expect(result.current.chartData).toHaveLength(1);
+    expect(result.current.rekapSummary.totalUser).toBe(1);
+  });
 });

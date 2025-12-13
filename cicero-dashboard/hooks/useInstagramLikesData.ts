@@ -57,6 +57,7 @@ export default function useInstagramLikesData({
     totalIGPost: 0,
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [isOrgClient, setIsOrgClient] = useState(false);
   const [clientName, setClientName] = useState("");
   const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] = useState(false);
   const [isDitbinmasRole, setIsDitbinmasRole] = useState(false);
@@ -103,6 +104,9 @@ export default function useInstagramLikesData({
     const dashboardClientId = isDitbinmasRoleValue
       ? ditbinmasClientId
       : userClientId;
+    const normalizedLoginClientId = String(userClientId || "")
+      .trim()
+      .toLowerCase();
 
     async function fetchData() {
       try {
@@ -178,8 +182,10 @@ export default function useInstagramLikesData({
             "",
         ).toUpperCase();
         const dir = normalizedEffectiveClientType === "DIREKTORAT";
+        const isOrg = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorate(dir);
+        setIsOrgClient(isOrg);
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -251,6 +257,18 @@ export default function useInstagramLikesData({
               ? res
               : [],
           );
+          if (scope === "client" && normalizedLoginClientId) {
+            const normalizeValue = (value: unknown) =>
+              String(value || "")
+                .trim()
+                .toLowerCase();
+            users = users.filter((u: any) => {
+              const userClientId = normalizeValue(
+                u.client_id || u.clientId || u.clientID || u.client || "",
+              );
+              return userClientId === normalizedLoginClientId;
+            });
+          }
           const nameMap = await getClientNames(
             token,
             users.map((u: any) =>
@@ -382,6 +400,7 @@ export default function useInstagramLikesData({
     igPosts,
     rekapSummary,
     isDirectorate,
+    isOrgClient,
     isDitbinmasScopedClient,
     isDitbinmasRole,
     clientName,
