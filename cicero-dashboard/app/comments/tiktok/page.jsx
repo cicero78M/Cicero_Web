@@ -10,12 +10,13 @@ import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import ViewDataSelector, { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 import {
+  AlertTriangle,
   Music,
   User,
   MessageCircle,
-  X,
   UserX,
   Copy,
+  Sparkles,
 } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 import { buildTiktokRekap } from "@/utils/buildTiktokRekap";
@@ -230,6 +231,83 @@ export default function TiktokEngagementInsightPage() {
     return (numerator / denominator) * 100;
   };
 
+  const complianceRate = getPercentage(rekapSummary.totalSudahKomentar);
+  const actionNeededCount =
+    (Number(rekapSummary.totalKurangKomentar) || 0) +
+    (Number(rekapSummary.totalBelumKomentar) || 0);
+  const actionNeededRate = getPercentage(actionNeededCount);
+  const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
+
+  const summaryCards = [
+    {
+      key: "posts",
+      label: "Jumlah TikTok Post",
+      value: rekapSummary.totalTiktokPost,
+      color: "fuchsia",
+      icon: <Music className="h-5 w-5" />,
+    },
+    {
+      key: "username",
+      label: "Username Lengkap",
+      value: validUserCount,
+      color: "slate",
+      icon: <User className="h-5 w-5" />,
+      percentage: usernameCompletionPercent,
+    },
+    {
+      key: "sudah",
+      label: "Sudah Komentar",
+      value: rekapSummary.totalSudahKomentar,
+      color: "green",
+      icon: <MessageCircle className="h-5 w-5" />,
+      percentage: complianceRate,
+    },
+    {
+      key: "aksi",
+      label: "Perlu Aksi",
+      value: actionNeededCount,
+      color: "amber",
+      icon: <AlertTriangle className="h-5 w-5" />,
+      percentage: actionNeededRate,
+    },
+    {
+      key: "tanpa",
+      label: "Tanpa Username",
+      value: rekapSummary.totalTanpaUsername,
+      color: "violet",
+      icon: <UserX className="h-5 w-5" />,
+      percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
+    },
+  ];
+
+  const uniqueSummaryCards = summaryCards.filter((card, index, cards) =>
+    cards.findIndex((candidate) => candidate.key === card.key) === index,
+  );
+
+  const quickInsights = [
+    {
+      title: "Fokus kepatuhan",
+      detail:
+        complianceRate !== undefined
+          ? `${Math.round(complianceRate)}% user aktif sudah memenuhi target komentar.`
+          : "Menunggu data kepatuhan komentar terkini.",
+    },
+    {
+      title: "Prioritas perbaikan",
+      detail:
+        actionNeededCount > 0
+          ? `${actionNeededCount} akun masih membutuhkan aksi, termasuk ${rekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
+          : "Seluruh akun aktif sudah memenuhi target komentar.",
+    },
+    {
+      title: "Kebersihan data",
+      detail:
+        totalTanpaUsername > 0
+          ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan.`
+          : "Seluruh akun sudah memiliki username yang valid.",
+    },
+  ];
+
   const shouldGroupByClient =
     isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
@@ -379,55 +457,33 @@ export default function TiktokEngagementInsightPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <SummaryItem
-                {...summaryItemCommonProps}
-                label="Jumlah TikTok Post"
-                value={rekapSummary.totalTiktokPost}
-                color="fuchsia"
-                icon={<Music className="h-5 w-5" />}
-              />
-              <SummaryItem
-                {...summaryItemCommonProps}
-                label="Total User"
-                value={rekapSummary.totalUser}
-                color="slate"
-                icon={<User className="h-5 w-5" />}
-              />
-              <SummaryItem
-                {...summaryItemCommonProps}
-                label="Sudah Komentar"
-                value={rekapSummary.totalSudahKomentar}
-                color="green"
-                icon={<MessageCircle className="h-5 w-5" />}
-                percentage={getPercentage(rekapSummary.totalSudahKomentar)}
-              />
-              <SummaryItem
-                {...summaryItemCommonProps}
-                label="Kurang Komentar"
-                value={rekapSummary.totalKurangKomentar}
-                color="amber"
-                icon={<MessageCircle className="h-5 w-5" />}
-                percentage={getPercentage(rekapSummary.totalKurangKomentar)}
-              />
-              <SummaryItem
-                {...summaryItemCommonProps}
-                label="Belum Komentar"
-                value={rekapSummary.totalBelumKomentar}
-                color="red"
-                icon={<X className="h-5 w-5" />}
-                percentage={getPercentage(rekapSummary.totalBelumKomentar)}
-              />
-              <SummaryItem
-                {...summaryItemCommonProps}
-                label="Tanpa Username"
-                value={rekapSummary.totalTanpaUsername}
-                color="violet"
-                icon={<UserX className="h-5 w-5" />}
-                percentage={getPercentage(
-                  rekapSummary.totalTanpaUsername,
-                  totalUser,
-                )}
-              />
+              {uniqueSummaryCards.map((card) => (
+                <SummaryItem
+                  key={card.key}
+                  {...summaryItemCommonProps}
+                  label={card.label}
+                  value={card.value}
+                  color={card.color}
+                  icon={card.icon}
+                  percentage={card.percentage}
+                />
+              ))}
+            </div>
+
+            <div className="grid gap-3 rounded-2xl border border-indigo-100 bg-white/75 p-4 shadow-inner shadow-indigo-50/70 sm:grid-cols-3">
+              {quickInsights.map((insight) => (
+                <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-indigo-50/60 p-3">
+                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm shadow-indigo-100">
+                    <Sparkles className="h-4 w-4" aria-hidden />
+                  </span>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
+                      {insight.title}
+                    </p>
+                    <p className="text-sm text-slate-700">{insight.detail}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

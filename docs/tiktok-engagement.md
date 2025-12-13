@@ -2,6 +2,11 @@
 
 Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komentar ke dalam satu tampilan. Pengguna dapat memilih periode data (harian, bulanan, atau rentang kustom) sekaligus melihat tabel detail personel tanpa berpindah halaman.
 
+## Ringkasan tanpa duplikasi kartu
+- Deretan kartu ringkasan disusun lewat daftar unik agar tidak ada label yang tampil ganda ketika data berganti.
+- Status negatif disatukan dalam kartu **Perlu Aksi** sehingga fokus langsung pada akun yang belum memenuhi target komentar.
+- Tiga kartu insight singkat di bawah ringkasan memberi konteks cerdas tentang kepatuhan, prioritas perbaikan, dan kebersihan data username.
+
 ## Pengaturan periode
 - Komponen `ViewDataSelector` dipakai untuk memilih periode dan tanggal terkait.
 - Untuk mode `custom_range`, tanggal awal dan akhir akan otomatis ditukar jika pengguna memilih rentang terbalik.
