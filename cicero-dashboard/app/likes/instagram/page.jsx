@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
@@ -26,11 +26,19 @@ import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 
-export default function InstagramEngagementInsightPage() {
+export function InstagramEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const [activeTab, setActiveTab] = useState("insight");
+  const [activeTab, setActiveTab] = useState(
+    initialTab === "rekap" ? "rekap" : "insight",
+  );
   const [ditbinmasScope, setDitbinmasScope] = useState("client");
   const rekapSectionRef = useRef(null);
+
+  useEffect(() => {
+    if (initialTab === "rekap" && rekapSectionRef.current) {
+      rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [initialTab]);
 
   const {
     viewBy,
@@ -365,4 +373,8 @@ export default function InstagramEngagementInsightPage() {
       </DetailRekapSection>
     </InsightLayout>
   );
+}
+
+export default function InstagramEngagementInsightPage() {
+  return <InstagramEngagementInsightView initialTab="insight" />;
 }
