@@ -30,8 +30,8 @@ Inside `cicero-dashboard` you will find the typical Next.js project layout:
 
 - `useInstagramLikesData` mengorkestrasi pengambilan data likes Instagram berdasarkan rentang waktu yang dipilih. Hook ini mengeksekusi `getDashboardStats`, `getRekapLikesIG`, `getClientProfile`, `getClientNames`, dan `getUserDirectory` untuk menyusun data chart dan ringkasan absensi.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L1-L204】
 - Jika role pengguna adalah Ditbinmas, hook akan memanggil `fetchDitbinmasAbsensiLikes` untuk menggabungkan rekap lintas Polres sehingga satu tampilan menggambarkan kepatuhan seluruh jaringan.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L42-L113】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L120】
-- Untuk role lain, data dibatasi sesuai `client_id` login, digrup berdasarkan divisi atau kelompok memakai `groupUsersByKelompok`, dan dihitung ulang status Sudah/Kurang/Belum Likes serta Tanpa Username.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L114-L212】【F:cicero-dashboard/app/likes/instagram/page.jsx†L1-L120】
-- Tombol "Copy Rekap" menggunakan `buildInstagramRekap` untuk membangkitkan pesan WA siap kirim yang berisi rekapitulasi per klien.【F:cicero-dashboard/app/likes/instagram/page.jsx†L121-L200】【F:cicero-dashboard/utils/buildInstagramRekap.ts†L1-L56】
+- Untuk role lain, data dibatasi sesuai `client_id` login, digrup berdasarkan divisi atau kelompok memakai `groupUsersByKelompok`, dan dihitung ulang status Sudah/Kurang/Belum Likes serta Tanpa Username.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L114-L212】【F:cicero-dashboard/app/likes/instagram/page.jsx†L1-L120】【F:cicero-dashboard/utils/instagramEngagement.ts†L1-L69】
+- Tombol "Copy Rekap" menggunakan `buildInstagramRekap` dari modul `utils/instagramEngagement.ts` untuk membangkitkan pesan WA siap kirim yang berisi rekapitulasi per klien dan cakupan Ditbinmas terpilih.【F:cicero-dashboard/app/likes/instagram/page.jsx†L121-L200】【F:cicero-dashboard/utils/instagramEngagement.ts†L71-L120】
 
 ### Knowledge Base Pages
 

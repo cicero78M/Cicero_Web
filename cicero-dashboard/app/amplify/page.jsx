@@ -9,7 +9,7 @@ import ViewDataSelector, {
 import Loader from "@/components/Loader";
 import ChartDivisiAbsensi from "@/components/ChartDivisiAbsensi";
 import ChartHorizontal from "@/components/ChartHorizontal";
-import { groupUsersByKelompok } from "@/utils/grouping";
+import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { Link as LinkIcon, User, Check, X, ArrowRight } from "lucide-react";
