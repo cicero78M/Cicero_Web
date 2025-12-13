@@ -21,7 +21,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 Pengguna dengan peran Ditbinmas mendapat opsi **Lingkup Data**:
 - `client` menampilkan rekap hanya untuk client aktif pengguna (default).
 - `all` menampilkan gabungan seluruh client Ditbinmas. Opsi ini diteruskan ke `useTiktokCommentsData` melalui parameter `scope`.
-- Kontrol lingkup kini hanya muncul untuk pengguna direktorat non-ORG agar satker ORG tidak melihat filter yang tidak relevan.
+- Kontrol lingkup kini hanya muncul untuk pengguna direktorat non-ORG dengan `client_id` **DITBINMAS**, **DITSAMAPTA**, **DITLANTAS**, atau **BIDHUMAS** agar satker lain tidak melihat filter yang tidak relevan.
 
 ## Perubahan hook
 `useTiktokCommentsData` sekarang menerima parameter opsional `scope` (`"client" | "all"`). Nilai `"all"` menonaktifkan filter client sehingga data rekap dapat meliputi seluruh satker Ditbinmas. Hook ini juga mengembalikan `isOrgClient` yang diambil dari `effectiveClientType` ter-normalisasi agar komponen pemanggil dapat menyembunyikan kontrol lingkup ketika pengguna berasal dari klien bertipe ORG.

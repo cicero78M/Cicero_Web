@@ -52,6 +52,7 @@ export default function useTiktokCommentsData({
   const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] =
     useState(false);
   const [isDitbinmasRole, setIsDitbinmasRole] = useState(false);
+  const [canSelectScope, setCanSelectScope] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -170,6 +171,15 @@ export default function useTiktokCommentsData({
             (profileData as any)?.client_name ||
             (profileData as any)?.client ||
             "",
+        );
+        const allowedScopeClients = new Set([
+          "DITBINMAS",
+          "DITSAMAPTA",
+          "DITLANTAS",
+          "BIDHUMAS",
+        ]);
+        setCanSelectScope(
+          directorate && !orgClient && allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         let users: any[] = [];
@@ -378,6 +388,7 @@ export default function useTiktokCommentsData({
     clientName,
     isDitbinmasRole,
     isDitbinmasScopedClient,
+    canSelectScope,
     loading,
     error,
   };
