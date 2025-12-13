@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export default function TiktokRekapRedirectPage() {
-  return redirect("/comments/tiktok");
+import { TiktokEngagementInsightView } from "../page";
+
+export default function TiktokRekapPage() {
+  return <TiktokEngagementInsightView initialTab="rekap" />;
 }

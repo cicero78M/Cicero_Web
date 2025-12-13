@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
@@ -28,11 +28,19 @@ import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 
-export default function TiktokEngagementInsightPage() {
+export function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const [activeTab, setActiveTab] = useState("insight");
+  const [activeTab, setActiveTab] = useState(
+    initialTab === "rekap" ? "rekap" : "insight",
+  );
   const rekapSectionRef = useRef(null);
   const [ditbinmasScope, setDitbinmasScope] = useState("client");
+
+  useEffect(() => {
+    if (initialTab === "rekap" && rekapSectionRef.current) {
+      rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [initialTab]);
 
   const {
     viewBy,
@@ -443,4 +451,8 @@ export default function TiktokEngagementInsightPage() {
       </DetailRekapSection>
     </InsightLayout>
   );
+}
+
+export default function TiktokEngagementInsightPage() {
+  return <TiktokEngagementInsightView initialTab="insight" />;
 }

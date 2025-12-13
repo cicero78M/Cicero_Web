@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export default function InstagramRekapRedirectPage() {
-  redirect("/likes/instagram");
+import { InstagramEngagementInsightView } from "../page";
+
+export default function InstagramRekapPage() {
+  return <InstagramEngagementInsightView initialTab="rekap" />;
 }
