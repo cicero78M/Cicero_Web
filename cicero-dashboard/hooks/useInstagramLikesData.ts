@@ -61,6 +61,7 @@ export default function useInstagramLikesData({
   const [clientName, setClientName] = useState("");
   const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] = useState(false);
   const [isDitbinmasRole, setIsDitbinmasRole] = useState(false);
+  const [canSelectScope, setCanSelectScope] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -192,6 +193,15 @@ export default function useInstagramLikesData({
             profile.client_name ||
             profile.client ||
             "",
+        );
+                const allowedScopeClients = new Set([
+          "DITBINMAS",
+          "DITSAMAPTA",
+          "DITLANTAS",
+          "BIDHUMAS",
+        ]);
+        setCanSelectScope(
+          directorate && !orgClient && allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         let users: any[] = [];
@@ -404,6 +414,7 @@ export default function useInstagramLikesData({
     isDitbinmasScopedClient,
     isDitbinmasRole,
     clientName,
+    canSelectScope,
     loading,
     error,
   };
