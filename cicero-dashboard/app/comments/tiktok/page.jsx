@@ -620,7 +620,8 @@ export default function TiktokEngagementInsightPage() {
                 </p>
               </div>
               {activeTab === "rekap" && (
-                <div className="pt-4">
+              <div className="flex flex-col gap-10">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <RekapKomentarTiktok
                     users={chartData}
                     totalTiktokPost={rekapSummary.totalTiktokPost}
@@ -628,6 +629,7 @@ export default function TiktokEngagementInsightPage() {
                     reportContext={reportContext}
                   />
                 </div>
+              </div>
               )}
             </div>
           </section>
