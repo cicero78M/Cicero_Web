@@ -12,11 +12,10 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Tombol **Salin Rekap** dipindahkan ke header bersama filter agar saluran tindakan utama konsisten dengan halaman Instagram Engagement Insight.
 - Header, filter tanggal, dan kontrol lingkup kini dibungkus `heroContent` yang diberikan ke `InsightLayout` sehingga struktur halaman TikTok dan Instagram identik dan tidak lagi memakai layout khusus untuk TikTok.
 
-## Ringkasan tanpa duplikasi kartu
-- Deretan kartu ringkasan disusun lewat daftar unik agar tidak ada label yang tampil ganda ketika data berganti.
-- Kartu **Total User** ditambahkan berdampingan dengan jumlah posting agar informasi baseline pengguna konsisten dengan tampilan di halaman Instagram Engagement Insight.
-- Status negatif disatukan dalam kartu **Perlu Aksi** sehingga fokus langsung pada akun yang belum memenuhi target komentar.
-- Tiga kartu insight singkat di bawah ringkasan memberi konteks cerdas tentang kepatuhan, prioritas perbaikan, dan kebersihan data username.
+## Ringkasan mengikuti standar rekap likes
+- Kartu ringkasan memakai gaya bawaan `SummaryItem` (border biru lembut, glow gradasi) seperti halaman **Rekap Likes IG**, dengan enam metrik tetap: jumlah post TikTok, total user, sudah/kurang/belum komentar, dan tanpa username.
+- Ikon dan warna mengikuti palet likes Instagram agar navigasi lintas halaman terasa mulus, sekaligus menampilkan persentase kepatuhan untuk status sudah/kurang/belum komentar serta kualitas data username.
+- Tiga kartu insight singkat tetap hadir, kini memakai aksen biru standar dan menyertakan persentase aksi yang dibutuhkan maupun kelengkapan username agar narasi selaras dengan halaman rekap likes.
 
 ## Pengaturan periode
 - Komponen `ViewDataSelector` dipakai untuk memilih periode dan tanggal terkait dan kini dikelola oleh hook bersama `useLikesDateSelector` agar logika pemilihan tanggal tetap konsisten dengan halaman Instagram.
