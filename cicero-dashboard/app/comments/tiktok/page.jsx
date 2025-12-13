@@ -127,53 +127,61 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
       key: "posts",
       label: "Jumlah TikTok Post",
       value: rekapSummary.totalTiktokPost,
-      color: "fuchsia",
-      icon: <Music className="h-5 w-5" />,
+      color: "blue",
+      icon: (
+        <Music className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
+      ),
     },
     {
       key: "totalUser",
       label: "Total User",
       value: totalUser,
       color: "gray",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      key: "username",
-      label: "Username Lengkap",
-      value: validUserCount,
-      color: "slate",
-      icon: <User className="h-5 w-5" />,
-      percentage: usernameCompletionPercent,
+      icon: (
+        <Users className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
+      ),
     },
     {
       key: "sudah",
       label: "Sudah Komentar",
       value: rekapSummary.totalSudahKomentar,
       color: "green",
-      icon: <MessageCircle className="h-5 w-5" />,
+      icon: (
+        <MessageCircle className="h-7 w-7 text-teal-500 drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]" />
+      ),
       percentage: complianceRate,
     },
     {
-      key: "aksi",
-      label: "Perlu Aksi",
-      value: actionNeededCount,
-      color: "amber",
-      icon: <AlertTriangle className="h-5 w-5" />,
-      percentage: actionNeededRate,
+      key: "kurang",
+      label: "Kurang Komentar",
+      value: rekapSummary.totalKurangKomentar,
+      color: "orange",
+      icon: (
+        <AlertTriangle className="h-7 w-7 text-amber-500 drop-shadow-[0_0_12px_rgba(251,191,36,0.4)]" />
+      ),
+      percentage: getPercentage(rekapSummary.totalKurangKomentar),
+    },
+    {
+      key: "belum",
+      label: "Belum Komentar",
+      value: rekapSummary.totalBelumKomentar,
+      color: "red",
+      icon: (
+        <MessageCircle className="h-7 w-7 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
+      ),
+      percentage: getPercentage(rekapSummary.totalBelumKomentar),
     },
     {
       key: "tanpa",
       label: "Tanpa Username",
       value: rekapSummary.totalTanpaUsername,
-      color: "violet",
-      icon: <UserX className="h-5 w-5" />,
+      color: "gray",
+      icon: (
+        <UserX className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
+      ),
       percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
     },
   ];
-
-  const uniqueSummaryCards = summaryCards.filter((card, index, cards) =>
-    cards.findIndex((candidate) => candidate.key === card.key) === index,
-  );
 
   const quickInsights = [
     {
@@ -187,14 +195,18 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
       title: "Prioritas perbaikan",
       detail:
         actionNeededCount > 0
-          ? `${actionNeededCount} akun masih membutuhkan aksi, termasuk ${rekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
+          ? `${actionNeededCount} akun masih membutuhkan aksi${
+              actionNeededRate !== undefined
+                ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
+                : ""
+            }, termasuk ${rekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
           : "Seluruh akun aktif sudah memenuhi target komentar.",
     },
     {
       title: "Kebersihan data",
       detail:
         totalTanpaUsername > 0
-          ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan.`
+          ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan (${usernameCompletionPercent !== undefined ? `${Math.round(usernameCompletionPercent)}%` : "sedang diproses"}).`
           : "Seluruh akun sudah memiliki username yang valid.",
     },
   ];
@@ -218,38 +230,6 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
     }
     const nextChar = normalized.charAt(DIRECTORATE_NAME.length);
     return nextChar === "" || /[^a-z0-9]/.test(nextChar);
-  };
-
-  const summaryItemContainerClassName =
-    "border border-sky-200/70 bg-white/80 shadow-[0_20px_55px_-28px_rgba(79,70,229,0.35)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_26px_65px_-30px_rgba(56,189,248,0.45)]";
-
-  const summaryItemCommonProps = {
-    useDefaultContainerStyle: false,
-    containerClassName: summaryItemContainerClassName,
-  };
-
-  const chartBoxContainerClassName =
-    "p-5 border border-sky-200/70 bg-white/80 shadow-[0_28px_65px_-32px_rgba(79,70,229,0.35)] backdrop-blur";
-
-  const chartBoxEmptyStateClassName =
-    "rounded-2xl border border-sky-200/70 bg-white/75 px-4 py-6 text-slate-600";
-
-  const chartBoxDecorations = (
-    <div className="absolute inset-x-6 top-0 h-20 rounded-full bg-gradient-to-b from-sky-200/50 via-indigo-200/20 to-transparent blur-2xl" />
-  );
-
-  const chartBoxCommonProps = {
-    fieldJumlah: "jumlah_komentar",
-    labelSudah: "User Sudah Komentar",
-    labelKurang: "User Kurang Komentar",
-    labelBelum: "User Belum Komentar",
-    labelTotal: "Total Komentar",
-    showTotalUser: true,
-    useDefaultContainerStyle: false,
-    containerClassName: chartBoxContainerClassName,
-    emptyStateClassName: chartBoxEmptyStateClassName,
-    decorations: chartBoxDecorations,
-    titleClassName: "text-slate-700",
   };
 
   async function handleCopyRekap() {
@@ -296,9 +276,6 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
           options={viewOptions}
           date={selectorDateValue}
           onDateChange={handleDateChange}
-          className="justify-start gap-3"
-          labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
-          controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
         />
         <div className="flex flex-wrap gap-3 md:justify-end">
           {canSelectScope && (
@@ -354,14 +331,14 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
             ))}
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-indigo-100 bg-white/75 p-4 shadow-inner shadow-indigo-50/70 sm:grid-cols-3">
+          <div className="grid gap-3 rounded-2xl border border-blue-100 bg-white/75 p-4 shadow-inner shadow-blue-50/80 sm:grid-cols-3">
             {quickInsights.map((insight) => (
-              <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-indigo-50/60 p-3">
-                <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm shadow-indigo-100">
+              <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-blue-50/70 p-3">
+                <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm shadow-blue-100">
                   <Sparkles className="h-4 w-4" aria-hidden />
                 </span>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">{insight.title}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{insight.title}</p>
                   <p className="text-sm text-slate-700">{insight.detail}</p>
                 </div>
               </div>
@@ -370,13 +347,17 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
 
           {isDirectorate ? (
             <ChartBox
-              {...chartBoxCommonProps}
               title={directorateTitle}
               users={chartData}
               totalPost={rekapSummary.totalTiktokPost}
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
               sortBy="percentage"
+              fieldJumlah="jumlah_komentar"
+              labelSudah="User Sudah Komentar"
+              labelKurang="User Kurang Komentar"
+              labelBelum="User Belum Komentar"
+              labelTotal="Total Komentar"
               narrative={
                 shouldGroupByClient
                   ? undefined
@@ -386,36 +367,52 @@ export function TiktokEngagementInsightView({ initialTab = "insight" }) {
           ) : (
             <div className="flex flex-col gap-6">
               <ChartBox
-                {...chartBoxCommonProps}
                 title="BAG"
                 users={kelompok.BAG}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
                 sortBy="percentage"
+                fieldJumlah="jumlah_komentar"
+                labelSudah="User Sudah Komentar"
+                labelKurang="User Kurang Komentar"
+                labelBelum="User Belum Komentar"
+                labelTotal="Total Komentar"
               />
               <ChartBox
-                {...chartBoxCommonProps}
                 title="SAT"
                 users={kelompok.SAT}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
                 sortBy="percentage"
+                fieldJumlah="jumlah_komentar"
+                labelSudah="User Sudah Komentar"
+                labelKurang="User Kurang Komentar"
+                labelBelum="User Belum Komentar"
+                labelTotal="Total Komentar"
               />
               <ChartBox
-                {...chartBoxCommonProps}
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
                 sortBy="percentage"
+                fieldJumlah="jumlah_komentar"
+                labelSudah="User Sudah Komentar"
+                labelKurang="User Kurang Komentar"
+                labelBelum="User Belum Komentar"
+                labelTotal="Total Komentar"
               />
               <ChartBox
-                {...chartBoxCommonProps}
                 title="LAINNYA"
                 users={kelompok.LAINNYA}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
                 sortBy="percentage"
+                fieldJumlah="jumlah_komentar"
+                labelSudah="User Sudah Komentar"
+                labelKurang="User Kurang Komentar"
+                labelBelum="User Belum Komentar"
+                labelTotal="Total Komentar"
               />
               <ChartHorizontal
                 title="POLSEK"
