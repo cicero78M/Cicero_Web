@@ -498,15 +498,6 @@ export default function TiktokEngagementInsightPage() {
                       <Copy className="h-4 w-4 text-teal-600" />
                       Salin Rekap
                     </button>
-                    {activeTab === "insight" && (
-                      <button
-                        onClick={() => handleTabChange("rekap")}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/60 bg-sky-200/50 px-4 py-2 text-sm font-semibold text-sky-700 shadow-[0_0_25px_rgba(96,165,250,0.35)] transition-colors hover:border-sky-400/70 hover:bg-sky-200/70"
-                      >
-                        <ClipboardList className="h-4 w-4 text-sky-600" />
-                        Buka Rekap Detail
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
