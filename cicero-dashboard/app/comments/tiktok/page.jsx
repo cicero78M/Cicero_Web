@@ -81,7 +81,6 @@ function formatDisplayRange(start, end) {
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
-  const pageTopRef = useRef(null);
   const [activeTab, setActiveTab] = useState("insight");
   const viewOptions = VIEW_OPTIONS;
   const today = getLocalDateString();
@@ -161,11 +160,6 @@ export default function TiktokEngagementInsightPage() {
     setActiveTab(value);
     if (value === "rekap" && rekapSectionRef.current) {
       rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-
-    if (value === "insight" && pageTopRef.current) {
-      pageTopRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -422,7 +416,6 @@ export default function TiktokEngagementInsightPage() {
 
   return (
     <div
-      ref={pageTopRef}
       className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-indigo-50 to-white text-slate-900"
       aria-busy={loading}
     >
@@ -625,18 +618,6 @@ export default function TiktokEngagementInsightPage() {
                 <p className="text-sm text-slate-600">
                   Lihat tabel detil personel yang sudah, kurang, atau belum berkomentar sesuai periode yang Anda pilih.
                 </p>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleTabChange("insight")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-sky-200/70 bg-white/70 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
-                >
-                  Kembali ke Dashboard Insight
-                </button>
-                <span className="text-xs text-slate-500">
-                  Gunakan tombol ini jika Anda ingin kembali ke panel insight setelah membuka rekap detail.
-                </span>
               </div>
               {activeTab === "rekap" && (
                 <div className="pt-4">
