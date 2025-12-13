@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
@@ -17,10 +17,17 @@ import {
   UserX,
   Copy,
   Sparkles,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 import { buildTiktokRekap } from "@/utils/buildTiktokRekap";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
+
+const TABS = [
+  { value: "insight", label: "Dashboard Insight", icon: BarChart3 },
+  { value: "rekap", label: "Rekap Detail", icon: ClipboardList },
+];
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear();
@@ -74,9 +81,11 @@ function formatDisplayRange(start, end) {
 
 export default function TiktokEngagementInsightPage() {
   useRequireAuth();
+  const [activeTab, setActiveTab] = useState("insight");
   const viewOptions = VIEW_OPTIONS;
   const today = getLocalDateString();
   const currentMonth = getLocalMonthString();
+  const rekapSectionRef = useRef(null);
 
   const [viewBy, setViewBy] = useState("today");
   const [dailyDate, setDailyDate] = useState(today);
@@ -144,6 +153,13 @@ export default function TiktokEngagementInsightPage() {
     { value: "client", label: "Client Saya" },
     { value: "all", label: "Seluruh Client Ditbinmas" },
   ];
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    if (value === "rekap" && rekapSectionRef.current) {
+      rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleViewChange = (nextView) => {
     setViewBy((prevView) => {
@@ -408,177 +424,220 @@ export default function TiktokEngagementInsightPage() {
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-10">
         <div className="flex flex-1 flex-col gap-10">
-          <div className="space-y-3">
-            <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-              TikTok Engagement Insight
-            </h1>
-            <p className="max-w-3xl text-sm text-slate-600 md:text-base">
-              Pantau performa enggagement personel TikTok untuk{" "}
-              <span className="font-semibold text-sky-700">
-                {clientName || "satuan Anda"}
-              </span>
-              . Gunakan panel ini untuk melihat kepatuhan komentar, memantau
-              Satker yang aktif / kurang aktif / belum aktif dan mengambil tindakan cepat ketika komentar
-              belum terpenuhi.
-            </p>
+          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-5 shadow-[0_22px_50px_-28px_rgba(14,116,144,0.35)] backdrop-blur">
+            <div className="pointer-events-none absolute -left-10 top-8 h-32 w-32 rounded-full bg-sky-200/50 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 right-4 h-36 w-36 rounded-full bg-indigo-200/50 blur-3xl" />
+            <div className="relative flex flex-col gap-6">
+              <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
+                    TikTok Engagement Insight
+                  </h1>
+                  <p className="mt-1 max-w-3xl text-sm text-slate-600 md:text-base">
+                    Pantau performa enggagement personel TikTok untuk {" "}
+                    <span className="font-semibold text-sky-700">{clientName || "satuan Anda"}</span>. Gunakan panel ini untuk
+                    melihat kepatuhan komentar, memantau Satker yang aktif / kurang aktif / belum aktif dan mengambil tindakan
+                    cepat ketika komentar belum terpenuhi.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 rounded-2xl border border-sky-100/80 bg-white/70 p-2 shadow-inner">
+                  {TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.value;
+                    return (
+                      <button
+                        key={tab.value}
+                        onClick={() => handleTabChange(tab.value)}
+                        className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 ${
+                          isActive
+                            ? "bg-sky-100 text-sky-800 shadow-[0_8px_20px_rgba(96,165,250,0.25)]"
+                            : "text-slate-600 hover:bg-sky-50"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </header>
+
+              <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <ViewDataSelector
+                    value={viewBy}
+                    onChange={handleViewChange}
+                    options={viewOptions}
+                    date={selectorDateValue}
+                    onDateChange={handleDateChange}
+                    className="justify-start gap-3"
+                    labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
+                    controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                  />
+                  <div className="flex flex-wrap gap-3 md:justify-end">
+                    {isDitbinmasRole && (
+                      <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
+                        <span className="font-semibold text-slate-800">Lingkup:</span>
+                        <select
+                          value={ditbinmasScope}
+                          onChange={handleDitbinmasScopeChange}
+                          className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
+                        >
+                          {ditbinmasScopeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <button
+                      onClick={handleCopyRekap}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
+                    >
+                      <Copy className="h-4 w-4 text-teal-600" />
+                      Salin Rekap
+                    </button>
+                    {activeTab === "insight" && (
+                      <button
+                        onClick={() => handleTabChange("rekap")}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/60 bg-sky-200/50 px-4 py-2 text-sm font-semibold text-sky-700 shadow-[0_0_25px_rgba(96,165,250,0.35)] transition-colors hover:border-sky-400/70 hover:bg-sky-200/70"
+                      >
+                        <ClipboardList className="h-4 w-4 text-sky-600" />
+                        Buka Rekap Detail
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-6 rounded-3xl border border-sky-200/70 bg-white/80 p-4 shadow-[0_22px_50px_-28px_rgba(14,116,144,0.35)] backdrop-blur">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <ViewDataSelector
-                value={viewBy}
-                onChange={handleViewChange}
-                options={viewOptions}
-                date={selectorDateValue}
-                onDateChange={handleDateChange}
-                className="justify-start gap-3"
-                labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
-                controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-              />
-              {isDitbinmasRole && (
-                <div className="flex w-full flex-col gap-2 md:w-64">
-                  <label className="text-sm font-semibold text-slate-800">Lingkup Data</label>
-                  <select
-                    value={ditbinmasScope}
-                    onChange={handleDitbinmasScopeChange}
-                    className="w-full rounded-xl border border-sky-200/70 bg-white/90 px-3 py-2 text-sm text-slate-700 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200/60 hover:border-indigo-200"
-                  >
-                    {ditbinmasScopeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-slate-500">
-                    Atur apakah rekap menampilkan seluruh client Ditbinmas atau hanya client aktif Anda.
-                  </p>
+          {activeTab === "insight" && (
+            <div className="flex flex-col gap-10">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {uniqueSummaryCards.map((card) => (
+                  <SummaryItem
+                    key={card.key}
+                    {...summaryItemCommonProps}
+                    label={card.label}
+                    value={card.value}
+                    color={card.color}
+                    icon={card.icon}
+                    percentage={card.percentage}
+                  />
+                ))}
+              </div>
+
+              <div className="grid gap-3 rounded-2xl border border-indigo-100 bg-white/75 p-4 shadow-inner shadow-indigo-50/70 sm:grid-cols-3">
+                {quickInsights.map((insight) => (
+                  <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-indigo-50/60 p-3">
+                    <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm shadow-indigo-100">
+                      <Sparkles className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">{insight.title}</p>
+                      <p className="text-sm text-slate-700">{insight.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {isDirectorate ? (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title={directorateTitle}
+                  users={chartData}
+                  totalPost={rekapSummary.totalTiktokPost}
+                  groupBy={directorateGroupBy}
+                  orientation={directorateOrientation}
+                  sortBy="percentage"
+                  narrative={
+                    shouldGroupByClient
+                      ? undefined
+                      : "Grafik ini menampilkan perbandingan capaian komentar berdasarkan divisi/satfung."
+                  }
+                />
+              ) : (
+                <div className="flex flex-col gap-6">
+                  <ChartBox
+                    {...chartBoxCommonProps}
+                    title="BAG"
+                    users={kelompok.BAG}
+                    totalPost={rekapSummary.totalTiktokPost}
+                    narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
+                    sortBy="percentage"
+                  />
+                  <ChartBox
+                    {...chartBoxCommonProps}
+                    title="SAT"
+                    users={kelompok.SAT}
+                    totalPost={rekapSummary.totalTiktokPost}
+                    narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
+                    sortBy="percentage"
+                  />
+                  <ChartBox
+                    {...chartBoxCommonProps}
+                    title="SI & SPKT"
+                    users={kelompok["SI & SPKT"]}
+                    totalPost={rekapSummary.totalTiktokPost}
+                    narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
+                    sortBy="percentage"
+                  />
+                  <ChartBox
+                    {...chartBoxCommonProps}
+                    title="LAINNYA"
+                    users={kelompok.LAINNYA}
+                    totalPost={rekapSummary.totalTiktokPost}
+                    narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
+                    sortBy="percentage"
+                  />
+                  <ChartHorizontal
+                    title="POLSEK"
+                    users={kelompok.POLSEK}
+                    totalPost={rekapSummary.totalTiktokPost}
+                    fieldJumlah="jumlah_komentar"
+                    labelSudah="User Sudah Komentar"
+                    labelBelum="User Belum Komentar"
+                    labelTotal="Total Komentar"
+                    showTotalUser
+                    sortBy="percentage"
+                  />
+                  <Narrative>
+                    Grafik POLSEK menggambarkan distribusi komentar antar user dari setiap polsek serta total komentar yang
+                    berhasil dikumpulkan.
+                  </Narrative>
                 </div>
               )}
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {uniqueSummaryCards.map((card) => (
-                <SummaryItem
-                  key={card.key}
-                  {...summaryItemCommonProps}
-                  label={card.label}
-                  value={card.value}
-                  color={card.color}
-                  icon={card.icon}
-                  percentage={card.percentage}
-                />
-              ))}
-            </div>
-
-            <div className="grid gap-3 rounded-2xl border border-indigo-100 bg-white/75 p-4 shadow-inner shadow-indigo-50/70 sm:grid-cols-3">
-              {quickInsights.map((insight) => (
-                <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-indigo-50/60 p-3">
-                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm shadow-indigo-100">
-                    <Sparkles className="h-4 w-4" aria-hidden />
-                  </span>
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
-                      {insight.title}
-                    </p>
-                    <p className="text-sm text-slate-700">{insight.detail}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {isDirectorate ? (
-            <ChartBox
-              {...chartBoxCommonProps}
-              title={directorateTitle}
-              users={chartData}
-              totalPost={rekapSummary.totalTiktokPost}
-              groupBy={directorateGroupBy}
-              orientation={directorateOrientation}
-              sortBy="percentage"
-              narrative={
-                shouldGroupByClient
-                  ? undefined
-                  : "Grafik ini menampilkan perbandingan capaian komentar berdasarkan divisi/satfung."
-              }
-            />
-          ) : (
-            <div className="flex flex-col gap-6">
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="BAG"
-                users={kelompok.BAG}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="SAT"
-                users={kelompok.SAT}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="SI & SPKT"
-                users={kelompok["SI & SPKT"]}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="LAINNYA"
-                users={kelompok.LAINNYA}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
-                sortBy="percentage"
-              />
-              <ChartHorizontal
-                title="POLSEK"
-                users={kelompok.POLSEK}
-                totalPost={rekapSummary.totalTiktokPost}
-                fieldJumlah="jumlah_komentar"
-                labelSudah="User Sudah Komentar"
-                labelBelum="User Belum Komentar"
-                labelTotal="Total Komentar"
-                showTotalUser
-                sortBy="percentage"
-              />
-              <Narrative>
-                Grafik POLSEK menggambarkan distribusi komentar antar user dari
-                setiap polsek serta total komentar yang berhasil dikumpulkan.
-              </Narrative>
-            </div>
           )}
 
-          <div className="flex flex-col gap-4 rounded-3xl border border-indigo-200/70 bg-white/85 p-5 shadow-[0_22px_55px_-32px_rgba(99,102,241,0.35)] backdrop-blur">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Rekapitulasi Komentar TikTok
-                </h2>
+          <section
+            ref={rekapSectionRef}
+            id="rekap-detail"
+            className="relative overflow-hidden rounded-3xl border border-indigo-200/70 bg-white/85 p-5 shadow-[0_22px_55px_-32px_rgba(99,102,241,0.35)] backdrop-blur"
+          >
+            <div className="pointer-events-none absolute -top-16 left-0 h-40 w-40 rounded-full bg-blue-200/40 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 right-6 h-44 w-44 rounded-full bg-sky-200/45 blur-3xl" />
+            <div className="relative">
+              <div className="flex flex-col gap-2 border-b border-indigo-100/80 pb-4">
+                <h2 className="text-xl font-semibold text-slate-900">Rekapitulasi Komentar TikTok</h2>
                 <p className="text-sm text-slate-600">
                   Lihat tabel detil personel yang sudah, kurang, atau belum berkomentar sesuai periode yang Anda pilih.
                 </p>
               </div>
-              <button
-                onClick={handleCopyRekap}
-                className="group flex items-center gap-2 rounded-2xl border border-indigo-300/70 bg-indigo-500/20 px-6 py-3 text-sm font-semibold uppercase tracking-widest text-indigo-700 shadow-[0_18px_45px_-28px_rgba(129,140,248,0.45)] transition hover:border-indigo-400/80 hover:bg-indigo-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
-              >
-                <Copy className="h-4 w-4" />
-                Rekap Komentar
-              </button>
+              {activeTab === "rekap" && (
+                <div className="pt-4">
+                  <RekapKomentarTiktok
+                    users={chartData}
+                    totalTiktokPost={rekapSummary.totalTiktokPost}
+                    showCopyButton={false}
+                    reportContext={reportContext}
+                  />
+                </div>
+              )}
             </div>
-            <RekapKomentarTiktok
-              users={chartData}
-              totalTiktokPost={rekapSummary.totalTiktokPost}
-              showCopyButton={false}
-              reportContext={reportContext}
-            />
-          </div>
+          </section>
         </div>
       </div>
     </div>
