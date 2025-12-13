@@ -201,7 +201,7 @@ export default function useInstagramLikesData({
           "BIDHUMAS",
         ]);
         setCanSelectScope(
-          isDirectorate && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
+          dir && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         let users: any[] = [];
