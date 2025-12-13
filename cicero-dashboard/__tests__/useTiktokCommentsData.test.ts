@@ -94,6 +94,54 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 
+  it("keeps scope locked to the active client for directorate users when scope is not 'all'", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "CLIENT_ROOT");
+    localStorage.setItem("user_role", "bidhumas");
+
+    mockedGetClientProfile.mockResolvedValue({ client_type: "DIREKTORAT" } as any);
+    mockedGetUserDirectory.mockResolvedValue({
+      data: [
+        { role: "bidhumas", client_id: "CLIENT_ROOT" },
+        { role: "bidhumas", client_id: "CLIENT_OTHER" },
+      ],
+    } as any);
+    mockedGetClientNames.mockResolvedValue({
+      CLIENT_ROOT: "Client Root",
+      CLIENT_OTHER: "Client Other",
+    } as any);
+
+    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
+      if (clientId === "CLIENT_ROOT") {
+        return {
+          data: [
+            { client_id: "CLIENT_ROOT", username: "root-user", jumlah_komentar: 4 },
+          ],
+        } as any;
+      }
+      if (clientId === "CLIENT_OTHER") {
+        return {
+          data: [
+            { client_id: "CLIENT_OTHER", username: "other-user", jumlah_komentar: 1 },
+          ],
+        } as any;
+      }
+      return { data: [] } as any;
+    });
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.isDirectorate).toBe(true);
+    expect(result.current.chartData).toHaveLength(1);
+    expect(result.current.chartData[0].client_id).toBe("CLIENT_ROOT");
+    expect(result.current.rekapSummary.totalUser).toBe(1);
+    expect(result.current.isOrgClient).toBe(false);
+  });
+
   it("allows Ditbinmas users to broaden the recap scope when requested", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITBINMAS");
