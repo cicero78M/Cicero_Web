@@ -3,9 +3,10 @@
 Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komentar ke dalam satu tampilan. Pengguna dapat memilih periode data (harian, bulanan, atau rentang kustom) sekaligus melihat tabel detail personel tanpa berpindah halaman.
 
 ## Pola tab dan CTA konsisten
-- Header memakai tab **Dashboard Insight** dan **Rekap Detail** (dengan `activeTab` dan `handleTabChange`) untuk memisahkan chart-ringkasan dan tabel rekap.
+- Header memakai tab **Dashboard Insight** dan **Rekap Detail** (via `DEFAULT_INSIGHT_TABS` pada `InsightLayout` dengan `activeTab` dan `handleTabChange`) untuk memisahkan chart-ringkasan dan tabel rekap.
 - Tombol **Buka Rekap Detail** otomatis menggulir ke section rekap ketika tab rekap dipilih, menjaga konteks halaman.
 - Tombol **Salin Rekap** dipindahkan ke header bersama filter agar saluran tindakan utama konsisten dengan halaman Instagram Engagement Insight.
+- Header, filter tanggal, dan kontrol lingkup kini dibungkus `heroContent` yang diberikan ke `InsightLayout` sehingga struktur halaman TikTok dan Instagram identik.
 
 ## Ringkasan tanpa duplikasi kartu
 - Deretan kartu ringkasan disusun lewat daftar unik agar tidak ada label yang tampil ganda ketika data berganti.
@@ -13,7 +14,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Tiga kartu insight singkat di bawah ringkasan memberi konteks cerdas tentang kepatuhan, prioritas perbaikan, dan kebersihan data username.
 
 ## Pengaturan periode
-- Komponen `ViewDataSelector` dipakai untuk memilih periode dan tanggal terkait.
+- Komponen `ViewDataSelector` dipakai untuk memilih periode dan tanggal terkait dan kini dikelola oleh hook bersama `useLikesDateSelector` agar logika pemilihan tanggal tetap konsisten dengan halaman Instagram.
 - Untuk mode `custom_range`, tanggal awal dan akhir akan otomatis ditukar jika pengguna memilih rentang terbalik.
 - Mode `month` menggunakan format `YYYY-MM` agar konsisten dengan API.
 
