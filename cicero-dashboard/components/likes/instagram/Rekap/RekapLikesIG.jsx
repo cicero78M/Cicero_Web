@@ -530,111 +530,154 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             </label>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-blue-200/70 bg-white">
-            <table className="w-full border-collapse text-left text-sm text-blue-900">
-              <thead className="sticky top-0 z-10 bg-blue-50 text-xs uppercase tracking-[0.3em] text-blue-600">
-                <tr>
-                  <th className="px-3 py-3">No</th>
-                  {hasClient && <th className="px-3 py-3">Client</th>}
-                  <th className="px-3 py-3">Nama</th>
-                  <th className="px-3 py-3">Username IG</th>
-                  <th className="px-3 py-3">Divisi/Satfung</th>
-                  <th className="px-3 py-3 text-center">Status</th>
-                  <th className="px-3 py-3 text-center">Jumlah Like</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-blue-100 bg-white">
-                {currentRows.length === 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95 shadow-inner">
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0 text-left text-sm text-slate-800">
+                <thead className="sticky top-0 z-10 bg-blue-50/90 backdrop-blur">
                   <tr>
-                    <td
-                      colSpan={hasClient ? 7 : 6}
-                      className="h-48 px-4 text-center text-sm text-blue-700"
-                    >
-                      <div className="flex flex-col items-center gap-3">
-                        <p className="font-semibold text-blue-900">
-                          Data tidak ditemukan untuk filter saat ini.
-                        </p>
-                        {search && (
-                          <button
-                            type="button"
-                            onClick={() => setSearch("")}
-                            className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
-                          >
-                            Reset pencarian
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      No
+                    </th>
+                    {hasClient && (
+                      <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                        Client
+                      </th>
+                    )}
+                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Nama
+                    </th>
+                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Username IG
+                    </th>
+                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Divisi/Satfung
+                    </th>
+                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Status
+                    </th>
+                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Jumlah Like
+                    </th>
                   </tr>
-                ) : (
-                  currentRows.map((u, i) => {
-                    const username = String(u.username || "").trim();
-                    let rowClass = "bg-rose-50";
-                    let statusEl = (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 shadow-sm">
-                        <X className="h-3 w-3" /> Belum
-                      </span>
-                    );
-                    let jumlahDisplay = u.jumlah_like;
-                    if (!username) {
-                      rowClass = "bg-blue-50";
-                      statusEl = (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 shadow-sm">
-                          <UserX className="h-3 w-3" /> Tanpa Username
-                        </span>
-                      );
-                      jumlahDisplay = 0;
-                    } else if (totalIGPost !== 0) {
-                      const likes = Number(u.jumlah_like) || 0;
-                      if (likes >= totalIGPost) {
-                        rowClass = "bg-emerald-50";
-                        statusEl = (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 shadow-sm">
-                            <Check className="h-3 w-3" /> Sudah
-                          </span>
-                        );
-                      } else if (likes > 0) {
-                        rowClass = "bg-amber-50";
-                        statusEl = (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 shadow-sm">
-                            <AlertTriangle className="h-3 w-3" /> Kurang
-                          </span>
-                        );
-                      }
-                    }
-
-                    return (
-                      <tr
-                        key={u.user_id}
-                        className={`${rowClass} text-blue-900 transition-colors`}
+                </thead>
+                <tbody className="divide-y divide-blue-50">
+                  {currentRows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={hasClient ? 7 : 6}
+                        className="h-48 px-4 text-center text-sm text-blue-700"
                       >
-                        <td className="px-3 py-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                        {hasClient && (
-                          <td className="px-3 py-2">
-                            {u.nama_client || u.client_name || u.client || "-"}
+                        <div className="flex flex-col items-center gap-3">
+                          <p className="font-semibold text-blue-900">
+                            Data tidak ditemukan untuk filter saat ini.
+                          </p>
+                          {search && (
+                            <button
+                              type="button"
+                              onClick={() => setSearch("")}
+                              className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
+                            >
+                              Reset pencarian
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    currentRows.map((u, i) => {
+                      const username = String(u.username || "").trim();
+                      const likes = Number(u.jumlah_like) || 0;
+
+                      const baseCellClass = "px-4 py-3 align-top";
+                      const statusStyles = {
+                        belum: {
+                          row: "bg-rose-50",
+                          badge: "border border-rose-200 bg-rose-50 text-rose-700",
+                          icon: <X className="h-3 w-3" />,
+                          label: "Belum",
+                        },
+                        kurang: {
+                          row: "bg-amber-50",
+                          badge: "border border-amber-200 bg-amber-50 text-amber-700",
+                          icon: <AlertTriangle className="h-3 w-3" />,
+                          label: "Kurang",
+                        },
+                        sudah: {
+                          row: "bg-emerald-50",
+                          badge: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+                          icon: <Check className="h-3 w-3" />,
+                          label: "Sudah",
+                        },
+                        tanpaUsername: {
+                          row: "bg-slate-50",
+                          badge: "border border-slate-200 bg-slate-50 text-slate-700",
+                          icon: <UserX className="h-3 w-3" />,
+                          label: "Tanpa Username",
+                        },
+                      };
+
+                      let statusKey = "belum";
+                      let jumlahDisplay = u.jumlah_like;
+
+                      if (!username) {
+                        statusKey = "tanpaUsername";
+                        jumlahDisplay = 0;
+                      } else if (totalIGPost !== 0) {
+                        if (likes >= totalIGPost) statusKey = "sudah";
+                        else if (likes > 0) statusKey = "kurang";
+                      }
+
+                      const status = statusStyles[statusKey];
+
+                      return (
+                        <tr
+                          key={u.user_id}
+                          className={`${status.row} text-blue-900 transition-colors hover:bg-blue-50`}
+                        >
+                          <td className={`${baseCellClass} text-sm text-slate-600`}>
+                            {(page - 1) * PAGE_SIZE + i + 1}
                           </td>
-                        )}
-                        <td className="px-3 py-2">
-                          {u.title ? `${u.title} ${u.nama}` : u.nama}
-                        </td>
-                        <td className="px-3 py-2 font-mono text-sky-700">
-                          @{u.username}
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className="inline-block rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700">
-                            {u.divisi || "-"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-center">{statusEl}</td>
-                        <td className="px-3 py-2 text-center font-semibold text-blue-900">
-                          {jumlahDisplay}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                          {hasClient && (
+                            <td className={baseCellClass}>
+                              <span className="font-medium text-slate-800">
+                                {u.nama_client || u.client_name || u.client || "-"}
+                              </span>
+                            </td>
+                          )}
+                          <td className={baseCellClass}>
+                            <div className="flex flex-col gap-0.5 text-sm">
+                              <span className="font-semibold text-blue-950">
+                                {u.title ? `${u.title} ${u.nama}` : u.nama}
+                              </span>
+                              <span className="text-[11px] uppercase tracking-[0.25em] text-blue-500">
+                                Personel
+                              </span>
+                            </div>
+                          </td>
+                          <td className={`${baseCellClass} font-mono text-sky-700`}>
+                            @{u.username || "-"}
+                          </td>
+                          <td className={baseCellClass}>
+                            <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">
+                              {u.divisi || "-"}
+                            </span>
+                          </td>
+                          <td className={`${baseCellClass} text-center`}>
+                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] shadow-sm ${status.badge}`}>
+                              {status.icon}
+                              {status.label}
+                            </span>
+                          </td>
+                          <td className={`${baseCellClass} text-center font-semibold text-blue-900`}>
+                            {jumlahDisplay}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
           <p className="text-sm italic text-blue-700">
             Tabel ini menampilkan status like Instagram setiap user serta jumlah like yang berhasil dihimpun.

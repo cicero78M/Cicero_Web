@@ -538,127 +538,163 @@ export default function RekapKomentarTiktok({
         </div>
       )}
 
-      <div className="relative overflow-x-auto rounded-3xl border border-indigo-100 bg-white/90 shadow-xl">
-        <table className="w-full text-left text-sm text-slate-700">
-          <thead className="sticky top-0 z-10 bg-indigo-50/80 backdrop-blur">
-            <tr>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">No</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Satker</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Nama</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Username TikTok</th>
-              <th className="py-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Divisi/Satfung</th>
-              <th className="py-3 px-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Status
-              </th>
-              <th className="py-3 px-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
-                Jumlah Komentar
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentRows.length === 0 && emptyState ? (
+      <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-white/95 shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-0 text-left text-sm text-slate-800">
+            <thead className="sticky top-0 z-10 bg-indigo-50/90 backdrop-blur">
               <tr>
-                <td colSpan={7} className="py-10 px-4">
-                  <div
-                    className={`mx-auto flex max-w-xl flex-col items-center gap-3 rounded-3xl px-6 py-6 text-center text-sm shadow-inner ${emptyState.containerClass}`}
-                  >
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] ${emptyState.badgeClass}`}
-                    >
-                      {emptyState.badge}
-                    </span>
-                    <p className="text-base font-semibold">{emptyState.message}</p>
-                    <p className="text-xs font-medium opacity-80">
-                      {emptyState.description}
-                    </p>
-                  </div>
-                </td>
+                <th className="border-b border-indigo-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">No</th>
+                <th className="border-b border-indigo-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">Satker</th>
+                <th className="border-b border-indigo-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">Nama</th>
+                <th className="border-b border-indigo-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">Username TikTok</th>
+                <th className="border-b border-indigo-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">Divisi/Satfung</th>
+                <th className="border-b border-indigo-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">
+                  Status
+                </th>
+                <th className="border-b border-indigo-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600">
+                  Jumlah Komentar
+                </th>
               </tr>
-            ) : currentRows.map((u, i) => {
-                const sudahKomentar =
-                  tidakAdaPost ? false : Number(u.jumlah_komentar) > 0;
-                const baseRowClass =
-                  "border-b border-slate-100 transition duration-150 hover:bg-sky-50/60";
-                const rowClass = tidakAdaPost
-                  ? `bg-white ${baseRowClass}`
-                  : sudahKomentar
-                  ? `bg-emerald-50 ${baseRowClass}`
-                  : `bg-rose-50 ${baseRowClass}`;
-                const statusClass = tidakAdaPost
-                  ? "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600"
-                  : sudahKomentar
-                  ? "inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700"
-                  : "inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-600";
-                return (
-                  <tr
-                    key={u.user_id}
-                    className={rowClass}
-                  >
-                    <td className="py-3 px-3 text-slate-500">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                    <td className="py-3 px-3">
-                      {u.nama_client || u.client_name || u.client || u.client_id || "-"}
-                    </td>
-                    <td className="py-3 px-3">
-                      {u.title ? `${u.title} ${u.nama}` : u.nama}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-indigo-600">
-                      {u.username}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-600">
-                        {bersihkanSatfung(u.divisi || "-")}
+            </thead>
+            <tbody className="divide-y divide-indigo-50">
+              {currentRows.length === 0 && emptyState ? (
+                <tr>
+                  <td colSpan={7} className="py-10 px-4">
+                    <div
+                      className={`mx-auto flex max-w-xl flex-col items-center gap-3 rounded-3xl px-6 py-6 text-center text-sm shadow-inner ${emptyState.containerClass}`}
+                    >
+                      <span
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] ${emptyState.badgeClass}`}
+                      >
+                        {emptyState.badge}
                       </span>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className={statusClass}>
-                        {tidakAdaPost ? (
-                          <>
-                            <Minus className="w-3 h-3" />
-                            Tidak ada posting hari ini
-                          </>
-                        ) : sudahKomentar ? (
-                          <>
-                            <Check className="w-3 h-3" />
-                            Sudah
-                          </>
-                        ) : (
-                          <>
-                            <X className="w-3 h-3" />
-                            Belum
-                          </>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-center text-lg font-semibold text-slate-900">
-                      {tidakAdaPost ? "-" : u.jumlah_komentar}
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
+                      <p className="text-base font-semibold">{emptyState.message}</p>
+                      <p className="text-xs font-medium opacity-80">
+                        {emptyState.description}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                currentRows.map((u, i) => {
+                  const username = String(u.username || "").trim();
+                  const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+                  const baseCellClass = "px-4 py-3 align-top";
+
+                  const statusStyles = {
+                    tidakAdaPost: {
+                      row: "bg-slate-50",
+                      badge: "border border-slate-200 bg-slate-50 text-slate-700",
+                      icon: <Minus className="h-3 w-3" />,
+                      label: "Tidak ada posting",
+                    },
+                    sudah: {
+                      row: "bg-emerald-50",
+                      badge: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+                      icon: <Check className="h-3 w-3" />,
+                      label: "Sudah",
+                    },
+                    kurang: {
+                      row: "bg-amber-50",
+                      badge: "border border-amber-200 bg-amber-50 text-amber-700",
+                      icon: <AlertTriangle className="h-3 w-3" />,
+                      label: "Kurang",
+                    },
+                    belum: {
+                      row: "bg-rose-50",
+                      badge: "border border-rose-200 bg-rose-50 text-rose-700",
+                      icon: <X className="h-3 w-3" />,
+                      label: "Belum",
+                    },
+                    tanpaUsername: {
+                      row: "bg-indigo-50",
+                      badge: "border border-indigo-200 bg-indigo-50 text-indigo-700",
+                      icon: <UserX className="h-3 w-3" />,
+                      label: "Tanpa Username",
+                    },
+                  };
+
+                  let statusKey = "belum";
+
+                  if (tidakAdaPost) {
+                    statusKey = "tidakAdaPost";
+                  } else if (!username) {
+                    statusKey = "tanpaUsername";
+                  } else if (jumlahKomentar >= totalTiktokPostCount * 0.5) {
+                    statusKey = "sudah";
+                  } else if (jumlahKomentar > 0) {
+                    statusKey = "kurang";
+                  }
+
+                  const status = statusStyles[statusKey];
+
+                  return (
+                    <tr
+                      key={u.user_id}
+                      className={`${status.row} text-slate-800 transition-colors hover:bg-indigo-50`}
+                    >
+                      <td className={`${baseCellClass} text-sm text-slate-600`}>
+                        {(page - 1) * PAGE_SIZE + i + 1}
+                      </td>
+                      <td className={baseCellClass}>
+                        <span className="font-medium text-slate-900">
+                          {u.nama_client || u.client_name || u.client || u.client_id || "-"}
+                        </span>
+                      </td>
+                      <td className={baseCellClass}>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold text-slate-900">
+                            {u.title ? `${u.title} ${u.nama}` : u.nama}
+                          </span>
+                          <span className="text-[11px] uppercase tracking-[0.2em] text-indigo-500">Personel</span>
+                        </div>
+                      </td>
+                      <td className={`${baseCellClass} font-mono text-indigo-700`}>
+                        @{username || "-"}
+                      </td>
+                      <td className={baseCellClass}>
+                        <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">
+                          {bersihkanSatfung(u.divisi || "-")}
+                        </span>
+                      </td>
+                      <td className={`${baseCellClass} text-center`}>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] shadow-sm ${status.badge}`}>
+                          {status.icon}
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className={`${baseCellClass} text-center text-lg font-semibold text-slate-900`}>
+                        {tidakAdaPost ? "-" : jumlahKomentar}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       <p className="mt-2 text-sm text-slate-500">
-        Tabel ini merangkum status komentar TikTok setiap user dan total jumlah
-        komentar yang diberikan.
+        Tabel ini merangkum status komentar TikTok setiap user dan total jumlah komentar yang diberikan.
       </p>
 
       {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between">
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-indigo-100 bg-white/95 p-4 text-indigo-900 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <button
-            className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+            className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-indigo-200 disabled:hover:bg-indigo-50"
             disabled={page === 1}
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
             Prev
           </button>
-          <span className="text-sm text-slate-600">
-            Halaman <b>{page}</b> dari <b>{totalPages}</b>
+          <span className="text-sm text-indigo-700">
+            Halaman <b className="text-indigo-900">{page}</b> dari {" "}
+            <b className="text-indigo-900">{totalPages}</b>
           </span>
           <button
-            className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+            className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-indigo-200 disabled:hover:bg-indigo-50"
             disabled={page === totalPages}
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           >
             Next
           </button>

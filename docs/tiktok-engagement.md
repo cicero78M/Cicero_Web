@@ -5,6 +5,8 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 ## Rekap detail selaras dengan Instagram
 - Section **Rekapitulasi Engagement TikTok** memakai kerangka UI yang sama dengan segment rekap Instagram (pola kartu putih dengan border biru, judul tebal, dan deskripsi biru lembut) sehingga perpindahan antar platform terasa konsisten.
 - Copy scroll-into-view tetap memanfaatkan tab **Rekap Detail** pada `InsightLayout`, jadi tombol rekap bawaan tetap menggulir ke section ini tanpa perubahan perilaku.
+- Tabel rekap personel memakai layout standar: header lengket beraksen biru/indigo, pencarian di kanan atas, baris bergaya zebra dengan badge status (Sudah/Kurang/Belum/Tanpa Username/Tidak ada posting), serta pagination kompak yang konsisten di Instagram maupun TikTok.
+- Status baris TikTok kini mengikuti logika ringkasan (>=50% komentar dianggap **Sudah**, 0 dianggap **Belum**, nilai di antaranya **Kurang**), sedangkan baris tanpa username dibedakan warna khusus agar operator langsung tahu akun yang perlu dibersihkan.
 
 ## Pola tab dan CTA konsisten
 - Header memakai tab **Dashboard Insight** dan **Rekap Detail** via `DEFAULT_INSIGHT_TABS` pada `InsightLayout` dengan `activeTab` dan `handleTabChange`, menyamakan pola dengan halaman Instagram.
