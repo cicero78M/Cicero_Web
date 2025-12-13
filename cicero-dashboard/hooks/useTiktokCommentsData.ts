@@ -47,6 +47,7 @@ export default function useTiktokCommentsData({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [isOrgClient, setIsOrgClient] = useState(false);
   const [clientName, setClientName] = useState("");
   const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] =
     useState(false);
@@ -157,10 +158,12 @@ export default function useTiktokCommentsData({
           derivedDitbinmasRole && !isDitbinmasClient;
         const directorate =
           derivedDitbinmasRole || normalizedEffectiveClientType === "DIREKTORAT";
+        const orgClient = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDitbinmasRole(derivedDitbinmasRole);
         setIsDitbinmasScopedClient(isScopedDirectorateClient);
         setIsDirectorate(directorate);
+        setIsOrgClient(orgClient);
         setClientName(
           (profileData as any)?.nama ||
             (profileData as any)?.nama_client ||
@@ -365,6 +368,7 @@ export default function useTiktokCommentsData({
     auth?.clientId,
     auth?.effectiveRole,
     auth?.role,
+    auth?.effectiveClientType,
     scope,
   ]);
 
@@ -372,6 +376,7 @@ export default function useTiktokCommentsData({
     chartData,
     rekapSummary,
     isDirectorate,
+    isOrgClient,
     clientName,
     isDitbinmasRole,
     isDitbinmasScopedClient,

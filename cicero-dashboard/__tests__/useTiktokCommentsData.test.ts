@@ -250,6 +250,7 @@ describe("useTiktokCommentsData", () => {
       expect.any(AbortSignal),
     );
     expect(result.current.isDirectorate).toBe(false);
+    expect(result.current.isOrgClient).toBe(true);
     expect(result.current.isDitbinmasRole).toBe(false);
     expect(result.current.isDitbinmasScopedClient).toBe(false);
     expect(result.current.chartData).toHaveLength(1);
