@@ -2,6 +2,11 @@
 
 Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komentar ke dalam satu tampilan. Pengguna dapat memilih periode data (harian, bulanan, atau rentang kustom) sekaligus melihat tabel detail personel tanpa berpindah halaman.
 
+## Pola tab dan CTA konsisten
+- Header memakai tab **Dashboard Insight** dan **Rekap Detail** (dengan `activeTab` dan `handleTabChange`) untuk memisahkan chart-ringkasan dan tabel rekap.
+- Tombol **Buka Rekap Detail** otomatis menggulir ke section rekap ketika tab rekap dipilih, menjaga konteks halaman.
+- Tombol **Salin Rekap** dipindahkan ke header bersama filter agar saluran tindakan utama konsisten dengan halaman Instagram Engagement Insight.
+
 ## Ringkasan tanpa duplikasi kartu
 - Deretan kartu ringkasan disusun lewat daftar unik agar tidak ada label yang tampil ganda ketika data berganti.
 - Status negatif disatukan dalam kartu **Perlu Aksi** sehingga fokus langsung pada akun yang belum memenuhi target komentar.
