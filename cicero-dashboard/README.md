@@ -47,6 +47,11 @@ Proyek ini menyediakan `app/not-found.tsx` sebagai fallback 404 khusus dengan to
 
 Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks autentikasi ketika menghitung hak akses menu. Pendekatan ini mencegah ReferenceError selama proses prerendering halaman 404/_not-found dan memastikan logika akses Ditbinmas tetap aktif di mode statis maupun dinamis.
 
+## Dashboard Komentar TikTok
+
+- Hook `hooks/useTiktokCommentsData` kini selalu memfilter data ke `client_id` aktif ketika `scope` bukan "all" sehingga pengguna tetap berada pada cakupan login default, sementara opsi agregasi lintas klien tetap tersedia saat `scope` bernilai "all".
+- Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
+
 ## Menu khusus Ditbinmas
 
 Pengguna dengan `clientId` **dan** `role` bernilai `ditbinmas` akan melihat entri navigasi tambahan bertajuk **Satbinmas Official** yang mengarah ke `/satbinmas-official`. Item menu ini mengikuti gaya aktif maupun hover yang sama di sidebar utama dan tampilan sheet ketika sidebar dikompres, sehingga pengalaman navigasi tetap konsisten di semua mode.
