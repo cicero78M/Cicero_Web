@@ -61,6 +61,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
 - Rute `/comments/tiktok/rekap` kini membuka tab rekap pada halaman insight yang sama dengan `/comments/tiktok` sehingga pengalaman rekap mengikuti standar layout insight tanpa redirect tambahan.
 - Komponen berbagi `TiktokEngagementInsightView` diekstrak ke berkas terpisah di `app/comments/tiktok/TiktokEngagementInsightView.jsx` sehingga halaman `page.jsx` dan `rekap/page.jsx` hanya mengekspor Page component default sesuai aturan Next.js.
+- Halaman utama `/comments/tiktok` sekarang cukup merender `TiktokEngagementInsightView` dari berkas terpisah tanpa named export lain sehingga lint Next.js mengenali Page component default dengan benar.
 
 ## Menu khusus Ditbinmas
 
