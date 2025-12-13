@@ -27,6 +27,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - `components/InsightLayout` menyediakan latar gradasi, shell kartu hero, dan switch tab standar "Dashboard Insight"/"Rekap Detail" lewat konstanta bersama `DEFAULT_INSIGHT_TABS`. Halaman `/likes/instagram` serta `/posts/tiktok` kini berbagi wrapper ini agar pengalaman insight dan rekap terasa seragam.
 - Ringkasan dan seksi konten insight memakai helper baru `components/insight/InsightSummaryCard.jsx` dan `components/insight/InsightSectionCard.jsx` untuk menjaga radius, bayangan, dan jarak yang konsisten antar kartu.
 - Tab rekap detail di halaman TikTok menampilkan bio, kontak, daftar hashtag/mention teratas, dan grid posting di dalam kontainer bercahaya yang sama seperti rekap Instagram sehingga pengguna tidak perlu meninggalkan halaman insight.
+- Segmen rekap detail kini dibungkus komponen standar `components/insight/DetailRekapSection.jsx` yang menyamakan judul, deskripsi, dan dekorasi latar antara tab rekap Instagram serta TikTok, sekaligus mendukung scroll otomatis lewat `sectionRef`.
 
 ## Getting Started
 
