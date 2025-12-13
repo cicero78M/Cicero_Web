@@ -10,6 +10,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 
 ## Ringkasan tanpa duplikasi kartu
 - Deretan kartu ringkasan disusun lewat daftar unik agar tidak ada label yang tampil ganda ketika data berganti.
+- Kartu **Total User** ditambahkan berdampingan dengan jumlah posting agar informasi baseline pengguna konsisten dengan tampilan di halaman Instagram Engagement Insight.
 - Status negatif disatukan dalam kartu **Perlu Aksi** sehingga fokus langsung pada akun yang belum memenuhi target komentar.
 - Tiga kartu insight singkat di bawah ringkasan memberi konteks cerdas tentang kepatuhan, prioritas perbaikan, dan kebersihan data username.
 

@@ -10,7 +10,16 @@ import { showToast } from "@/utils/showToast";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import ViewDataSelector from "@/components/ViewDataSelector";
-import { AlertTriangle, Music, User, MessageCircle, UserX, Copy, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Music,
+  User,
+  MessageCircle,
+  UserX,
+  Copy,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 import { buildTiktokRekap } from "@/utils/buildTiktokRekap";
 import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
@@ -111,6 +120,13 @@ export default function TiktokEngagementInsightPage() {
       value: rekapSummary.totalTiktokPost,
       color: "fuchsia",
       icon: <Music className="h-5 w-5" />,
+    },
+    {
+      key: "totalUser",
+      label: "Total User",
+      value: totalUser,
+      color: "gray",
+      icon: <Users className="h-5 w-5" />,
     },
     {
       key: "username",
