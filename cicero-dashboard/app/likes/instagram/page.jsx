@@ -11,7 +11,15 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import ViewDataSelector from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
-import { Camera, User, ThumbsUp, ThumbsDown, UserX, Copy } from "lucide-react";
+import {
+  Camera,
+  User,
+  ThumbsUp,
+  ThumbsDown,
+  UserX,
+  Copy,
+  Sparkles,
+} from "lucide-react";
 import RekapLikesIG from "@/components/likes/instagram/Rekap/RekapLikesIG";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import InsightLayout from "@/components/InsightLayout";
@@ -83,6 +91,13 @@ export default function InstagramEngagementInsightPage() {
     return (numerator / denominator) * 100;
   };
 
+  const complianceRate = getPercentage(rekapSummary.totalSudahLike);
+  const actionNeededCount =
+    (Number(rekapSummary.totalKurangLike) || 0) +
+    (Number(rekapSummary.totalBelumLike) || 0);
+  const actionNeededRate = getPercentage(actionNeededCount);
+  const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
+
   function handleCopyRekap() {
     const message = buildInstagramRekap(rekapSummary, chartData, clientName);
 
@@ -153,6 +168,38 @@ export default function InstagramEngagementInsightPage() {
     </div>
   );
 
+  const quickInsights = [
+    {
+      title: "Fokus kepatuhan",
+      detail:
+        complianceRate !== undefined
+          ? `${Math.round(complianceRate)}% user aktif sudah memenuhi target likes.`
+          : "Menunggu data kepatuhan likes terkini.",
+    },
+    {
+      title: "Prioritas perbaikan",
+      detail:
+        actionNeededCount > 0
+          ? `${actionNeededCount} akun masih perlu aksi likes${
+              actionNeededRate !== undefined
+                ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
+                : ""
+            }, termasuk ${rekapSummary.totalBelumLike} yang belum memberi likes sama sekali.`
+          : "Seluruh akun aktif sudah memenuhi target likes.",
+    },
+    {
+      title: "Kebersihan data",
+      detail:
+        totalTanpaUsername > 0
+          ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan (kelengkapan ${
+              usernameCompletionPercent !== undefined
+                ? `${Math.round(usernameCompletionPercent)}%`
+                : "sedang diproses"
+            }).`
+          : "Seluruh akun sudah memiliki username yang valid.",
+    },
+  ];
+
   return (
     <InsightLayout
       title="Instagram Engagement Insight"
@@ -220,6 +267,20 @@ export default function InstagramEngagementInsightPage() {
                 totalUser,
               )}
             />
+          </div>
+
+          <div className="grid gap-3 rounded-2xl border border-blue-100 bg-white/75 p-4 shadow-inner shadow-blue-50/80 sm:grid-cols-3">
+            {quickInsights.map((insight) => (
+              <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-blue-50/70 p-3">
+                <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm shadow-blue-100">
+                  <Sparkles className="h-4 w-4" aria-hidden />
+                </span>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{insight.title}</p>
+                  <p className="text-sm text-slate-700">{insight.detail}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {isDirectorate ? (

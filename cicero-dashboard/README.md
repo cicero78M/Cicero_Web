@@ -20,6 +20,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Tab insight dan rekap menggunakan komponen terspesialisasi di `components/likes/instagram/Insight` dan `components/likes/instagram/Rekap` sehingga blok chart (ChartBox, SummaryItem) dan tampilan daftar rekap berada dalam satu namespace halaman gabungan.
 - Tombol **Salin Rekap** kini tampil berdampingan dengan selektor periode di header halaman dan langsung memanggil utilitas `utils/instagramEngagement.ts` untuk membangkitkan teks WA. Pengguna Ditbinmas dapat men-switch cakupan data (client/all) tanpa berpindah halaman sebelum menyalin.
 - Narasi pada ChartBox utama kini hanya muncul ketika data tidak lagi digrup per client, sehingga build Next.js tidak gagal karena prop JSX yang belum dibungkus ekspresi.
+- Tab insight menambahkan blok **Quick Insight** tiga poin untuk menyoroti kepatuhan likes, prioritas perbaikan, dan kebersihan data username secara ringkas tanpa menggulir ke grafik.
 
 ## Layout Insight TikTok & Instagram
 
