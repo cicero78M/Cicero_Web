@@ -59,8 +59,9 @@ export default function useInstagramLikesData({
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [isOrgClient, setIsOrgClient] = useState(false);
   const [clientName, setClientName] = useState("");
-  const [isDitbinmasScopedClient, setIsDitbinmasScopedClient] = useState(false);
-  const [isDitbinmasRole, setIsDitbinmasRole] = useState(false);
+  const [isDirectorateScopedClient, setIsDirectorateScopedClient] =
+    useState(false);
+  const [isDirectorateRole, setIsDirectorateRole] = useState(false);
   const [canSelectScope, setCanSelectScope] = useState(false);
 
   useEffect(() => {
@@ -89,8 +90,13 @@ export default function useInstagramLikesData({
     }
 
     const roleLower = String(effectiveRole ?? role ?? "").toLowerCase();
-    const isDitbinmasRoleValue = roleLower === "ditbinmas";
-    setIsDitbinmasRole(isDitbinmasRoleValue);
+    const normalizedEffectiveRoleUpper = String(
+      effectiveRole ?? role ?? "",
+    )
+      .trim()
+      .toUpperCase();
+    const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
+    setIsDirectorateRole(isDirectorateRoleValue);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
@@ -99,10 +105,12 @@ export default function useInstagramLikesData({
     const ditbinmasClientId = isDitSamaptaBidhumas
       ? "BIDHUMAS"
       : "DITBINMAS";
-    setIsDitbinmasScopedClient(isDitbinmasRoleValue && !isDitbinmasClient);
-    const shouldUseDitbinmasFetcher =
-      isDitbinmasRoleValue || isDitSamaptaBidhumas;
-    const dashboardClientId = isDitbinmasRoleValue
+    const directorateScopedClient =
+      isDirectorateRoleValue && !isDitbinmasClient;
+    setIsDirectorateScopedClient(directorateScopedClient);
+    const shouldUseDirectorateFetcher =
+      isDirectorateRoleValue || isDitSamaptaBidhumas;
+    const dashboardClientId = isDirectorateRoleValue
       ? ditbinmasClientId
       : userClientId;
     const normalizedLoginClientId = String(userClientId || "")
@@ -119,7 +127,7 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (shouldUseDitbinmasFetcher) {
+        if (shouldUseDirectorateFetcher) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
@@ -194,7 +202,7 @@ export default function useInstagramLikesData({
             profile.client ||
             "",
         );
-                const allowedScopeClients = new Set([
+        const allowedScopeClients = new Set([
           "DITBINMAS",
           "DITSAMAPTA",
           "DITLANTAS",
@@ -203,6 +211,11 @@ export default function useInstagramLikesData({
         setCanSelectScope(
           dir && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
         );
+
+        const hasDifferentRoleClient =
+          dir && normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
+        setIsDirectorateScopedClient(hasDifferentRoleClient);
+        setIsDirectorateRole(dir || isDirectorateRoleValue);
 
         let users: any[] = [];
         if (dir) {
@@ -411,8 +424,8 @@ export default function useInstagramLikesData({
     rekapSummary,
     isDirectorate,
     isOrgClient,
-    isDitbinmasScopedClient,
-    isDitbinmasRole,
+    isDirectorateScopedClient,
+    isDirectorateRole,
     clientName,
     canSelectScope,
     loading,

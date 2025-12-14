@@ -31,7 +31,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
-  const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const [directorateScope, setDirectorateScope] = useState("client");
   const rekapSectionRef = useRef(null);
 
   useEffect(() => {
@@ -59,8 +59,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     isDirectorate,
     isOrgClient,
     clientName,
-    isDitbinmasScopedClient,
-    isDitbinmasRole,
+    isDirectorateScopedClient,
+    isDirectorateRole,
     canSelectScope,
     igPosts,
   } = useInstagramLikesData({
@@ -68,7 +68,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
-    scope: ditbinmasScope,
+    scope: directorateScope,
   });
 
   if (loading) return <Loader />;
@@ -83,7 +83,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
 
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
   const shouldGroupByClient =
-    isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
+    isDirectorate && !isDirectorateScopedClient && !isDirectorateRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
@@ -139,14 +139,14 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     }
   };
 
-  const handleDitbinmasScopeChange = (event) => {
+  const handleDirectorateScopeChange = (event) => {
     const { value } = event.target || {};
     if (value === "client" || value === "all") {
-      setDitbinmasScope(value);
+      setDirectorateScope(value);
     }
   };
 
-  const ditbinmasScopeOptions = [
+  const directorateScopeOptions = [
     { value: "client", label: clientName },
     { value: "all", label: `Satker Jajaran ${clientName}` },
   ];
@@ -169,11 +169,11 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
               <span className="font-semibold text-slate-800">Lingkup:</span>
               <select
-                value={ditbinmasScope}
-                onChange={handleDitbinmasScopeChange}
+                value={directorateScope}
+                onChange={handleDirectorateScopeChange}
                 className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
               >
-                {ditbinmasScopeOptions.map((option) => (
+                {directorateScopeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
