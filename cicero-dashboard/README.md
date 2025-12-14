@@ -65,6 +65,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Dashboard Komentar TikTok
 
 - Hook `hooks/useTiktokCommentsData` kini selalu memfilter data ke `client_id` aktif ketika `scope` bukan "all" sehingga pengguna tetap berada pada cakupan login default, sementara opsi agregasi lintas klien tetap tersedia saat `scope` bernilai "all".
+- Deteksi direktorat pada `useTiktokCommentsData` kini mengenali role DITSAMAPTA, DITLANTAS, BIDHUMAS, maupun DIREKTORAT sebagai direktorat walaupun `effectiveClientType` sudah dinormalisasi menjadi ORG; jalur pengambilan data direktorat tetap aktif dan penanganan khusus Ditbinmas tidak berubah.
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
 - Rute `/comments/tiktok/rekap` kini membuka tab rekap pada halaman insight yang sama dengan `/comments/tiktok` sehingga pengalaman rekap mengikuti standar layout insight tanpa redirect tambahan.
 - Komponen berbagi `TiktokEngagementInsightView` diekstrak ke berkas terpisah di `app/comments/tiktok/TiktokEngagementInsightView.jsx` sehingga halaman `page.jsx` dan `rekap/page.jsx` hanya mengekspor Page component default sesuai aturan Next.js.
