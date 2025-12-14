@@ -258,6 +258,53 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 
+  it("uses client_id to collect tasks and recap for directorate client type", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "DIRECT_A");
+    localStorage.setItem("user_role", "random_role");
+
+    mockedGetClientProfile.mockResolvedValue({ client_type: "DIREKTORAT" } as any);
+    mockedGetUserDirectory.mockResolvedValue({
+      data: [
+        { role: "different", client_id: "DIRECT_A" },
+        { role: "different", client_id: "DIRECT_B" },
+      ],
+    } as any);
+    mockedGetClientNames.mockResolvedValue({
+      DIRECT_A: "Direktorat A",
+      DIRECT_B: "Direktorat B",
+    } as any);
+
+    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
+      if (clientId === "DIRECT_A") {
+        return {
+          data: [
+            { client_id: "DIRECT_A", username: "alpha", jumlah_komentar: 5 },
+          ],
+        } as any;
+      }
+      if (clientId === "DIRECT_B") {
+        return {
+          data: [
+            { client_id: "DIRECT_B", username: "beta", jumlah_komentar: 3 },
+          ],
+        } as any;
+      }
+      return { data: [] } as any;
+    });
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.isDirectorate).toBe(true);
+    expect(result.current.chartData).toHaveLength(1);
+    expect(result.current.chartData[0].client_id).toBe("DIRECT_A");
+    expect(result.current.rekapSummary.totalUser).toBe(1);
+  });
+
   it("uses Ditbinmas metrics for Ditbinmas-role ORG clients so engagement thresholds apply", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "ORG_CLIENT");
