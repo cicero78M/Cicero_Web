@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   getDashboardStats,
   getRekapKomentarTiktok,
@@ -9,6 +9,8 @@ import {
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { AuthContext } from "@/context/AuthContext";
+import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
+import { prioritizeUsersForClient } from "@/utils/userOrdering";
 
 interface Options {
   viewBy: string;
@@ -27,6 +29,11 @@ interface RekapSummary {
   totalTiktokPost: number;
 }
 
+/**
+ * Ambil data komentar TikTok dengan logika direktorat yang diselaraskan
+ * dengan Instagram Engagement Insight (prioritas role dan urutan personel
+ * mengikuti pangkat/NRP serta client aktif).
+ */
 export default function useTiktokCommentsData({
   viewBy,
   customDate,
@@ -35,6 +42,10 @@ export default function useTiktokCommentsData({
   scope = "client",
 }: Options) {
   const auth = useContext(AuthContext);
+  const normalizedLoginClientId = useMemo(
+    () => String(auth?.clientId || "").trim().toLowerCase(),
+    [auth?.clientId],
+  );
   const [chartData, setChartData] = useState<any[]>([]);
   const [rekapSummary, setRekapSummary] = useState<RekapSummary>({
     totalUser: 0,
@@ -323,7 +334,11 @@ export default function useTiktokCommentsData({
           });
         }
 
-        const totalUser = filteredUsers.length;
+        const sortedUsers = prioritizeUsersForClient(
+          [...filteredUsers].sort(compareUsersByPangkatAndNrp),
+          normalizedLoginClientId || normalizedClientIdLower,
+        );
+        const totalUser = sortedUsers.length;
         const totalTiktokPostRaw =
           (statsData as any)?.ttPosts ??
           (statsData as any)?.tiktokPosts ??
@@ -339,7 +354,7 @@ export default function useTiktokCommentsData({
         let totalBelumKomentar = 0;
         let totalTanpaUsername = 0;
 
-        filteredUsers.forEach((u: any) => {
+        sortedUsers.forEach((u: any) => {
           const username = String(u.username || "").trim();
           if (!username) {
             totalTanpaUsername += 1;
@@ -368,7 +383,7 @@ export default function useTiktokCommentsData({
           totalTanpaUsername,
           totalTiktokPost,
         });
-        setChartData(filteredUsers);
+        setChartData(sortedUsers);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err?.message || err));

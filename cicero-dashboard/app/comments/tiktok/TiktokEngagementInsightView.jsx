@@ -394,6 +394,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           users={chartData}
           totalTiktokPost={rekapSummary.totalTiktokPost}
           showCopyButton={false}
+          clientName={clientName}
           reportContext={reportContext}
         />
       </DetailRekapSection>
