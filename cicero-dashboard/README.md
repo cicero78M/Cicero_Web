@@ -32,6 +32,8 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Ringkasan dan seksi konten insight memakai helper baru `components/insight/InsightSummaryCard.jsx` dan `components/insight/InsightSectionCard.jsx` untuk menjaga radius, bayangan, dan jarak yang konsisten antar kartu.
 - Tab rekap detail di halaman TikTok menampilkan bio, kontak, daftar hashtag/mention teratas, dan grid posting di dalam kontainer bercahaya yang sama seperti rekap Instagram sehingga pengguna tidak perlu meninggalkan halaman insight.
 - Segmen rekap detail kini dibungkus komponen standar `components/insight/DetailRekapSection.jsx` yang menyamakan judul, deskripsi, dan dekorasi latar antara tab rekap Instagram serta TikTok, sekaligus mendukung scroll otomatis lewat `sectionRef`.
+- Hero, ringkasan, dan kartu quick insight pada Instagram/TikTok sekarang dirender lewat scaffold bersama `components/insight/EngagementInsightMobileScaffold.jsx` sehingga padding, tipografi, dan jarak kontrol di layar sempit seragam tanpa duplikasi markup.
+- ChartBox bawaan mendapat padding responsif (p-4 → p-6) plus judul bertacking normal di mobile dan border empty state agar ruang baca tetap lega pada perangkat kecil.
 
 ## Getting Started
 

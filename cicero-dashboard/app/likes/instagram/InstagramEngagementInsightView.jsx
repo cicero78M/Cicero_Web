@@ -3,13 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
-import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok, buildInstagramRekap } from "@/utils/instagramEngagement";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
-import ViewDataSelector from "@/components/ViewDataSelector";
 import { showToast } from "@/utils/showToast";
 import {
   Camera,
@@ -17,14 +15,13 @@ import {
   ThumbsUp,
   ThumbsDown,
   UserX,
-  Copy,
-  Sparkles,
 } from "lucide-react";
 import RekapLikesIG from "@/components/likes/instagram/Rekap/RekapLikesIG";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
+import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
 
 export default function InstagramEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
@@ -151,48 +148,6 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     { value: "all", label: `Satker Jajaran ${clientName}` },
   ];
 
-  const heroContent = (
-    <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <ViewDataSelector
-          value={viewBy}
-          onChange={handleViewChange}
-          options={viewOptions}
-          date={selectorDateValue}
-          onDateChange={handleDateChange}
-          className="justify-start gap-3"
-          labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
-          controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-        />
-        <div className="flex flex-wrap gap-3 md:justify-end">
-          {canSelectScope && (
-            <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
-              <span className="font-semibold text-slate-800">Lingkup:</span>
-              <select
-                value={directorateScope}
-                onChange={handleDirectorateScopeChange}
-                className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
-              >
-                {directorateScopeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <button
-            onClick={handleCopyRekap}
-            className="inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
-          >
-            <Copy className="h-4 w-4 text-teal-600" />
-            Salin Rekap
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   const quickInsights = [
     {
       title: "Fokus kepatuhan",
@@ -225,6 +180,74 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     },
   ];
 
+  const summaryCards = [
+    {
+      key: "ig-post",
+      label: "Jumlah IG Post",
+      value: rekapSummary.totalIGPost,
+      color: "blue",
+      icon: (
+        <Camera className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
+      ),
+    },
+    {
+      key: "total-user",
+      label: "Total User",
+      value: rekapSummary.totalUser,
+      color: "gray",
+      icon: (
+        <User className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
+      ),
+    },
+    {
+      key: "sudah",
+      label: "Sudah Likes",
+      value: rekapSummary.totalSudahLike,
+      color: "green",
+      icon: (
+        <ThumbsUp className="h-7 w-7 text-teal-500 drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]" />
+      ),
+      percentage: getPercentage(rekapSummary.totalSudahLike),
+    },
+    {
+      key: "kurang",
+      label: "Kurang Likes",
+      value: rekapSummary.totalKurangLike,
+      color: "orange",
+      icon: (
+        <ThumbsDown className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.4)]" />
+      ),
+      percentage: getPercentage(rekapSummary.totalKurangLike),
+    },
+    {
+      key: "belum",
+      label: "Belum Likes",
+      value: rekapSummary.totalBelumLike,
+      color: "red",
+      icon: (
+        <ThumbsDown className="h-7 w-7 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
+      ),
+      percentage: getPercentage(rekapSummary.totalBelumLike),
+    },
+    {
+      key: "tanpa",
+      label: "Tanpa Username",
+      value: rekapSummary.totalTanpaUsername,
+      color: "gray",
+      icon: (
+        <UserX className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
+      ),
+      percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
+    },
+  ];
+
+  const scopeSelectorProps = {
+    value: directorateScope,
+    onChange: handleDirectorateScopeChange,
+    options: directorateScopeOptions,
+    canSelectScope,
+  };
+
   return (
     <InsightLayout
       title="Instagram Engagement Insight"
@@ -232,82 +255,23 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
-      heroContent={heroContent}
+      heroContent={null}
     >
       {activeTab === "insight" && (
-        <div className="flex flex-col gap-10">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <SummaryItem
-              label="Jumlah IG Post"
-              value={rekapSummary.totalIGPost}
-              color="blue"
-              icon={
-                <Camera className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
-              }
-            />
-            <SummaryItem
-              label="Total User"
-              value={rekapSummary.totalUser}
-              color="gray"
-              icon={
-                <User className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
-              }
-            />
-            <SummaryItem
-              label="Sudah Likes"
-              value={rekapSummary.totalSudahLike}
-              color="green"
-              icon={
-                <ThumbsUp className="h-7 w-7 text-teal-500 drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]" />
-              }
-              percentage={getPercentage(rekapSummary.totalSudahLike)}
-            />
-            <SummaryItem
-              label="Kurang Likes"
-              value={rekapSummary.totalKurangLike}
-              color="orange"
-              icon={
-                <ThumbsDown className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.4)]" />
-              }
-              percentage={getPercentage(rekapSummary.totalKurangLike)}
-            />
-            <SummaryItem
-              label="Belum Likes"
-              value={rekapSummary.totalBelumLike}
-              color="red"
-              icon={
-                <ThumbsDown className="h-7 w-7 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
-              }
-              percentage={getPercentage(rekapSummary.totalBelumLike)}
-            />
-            <SummaryItem
-              label="Tanpa Username"
-              value={rekapSummary.totalTanpaUsername}
-              color="gray"
-              icon={
-                <UserX className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
-              }
-              percentage={getPercentage(
-                rekapSummary.totalTanpaUsername,
-                totalUser,
-              )}
-            />
-          </div>
-
-          <div className="grid gap-3 rounded-2xl border border-blue-100 bg-white/75 p-4 shadow-inner shadow-blue-50/80 sm:grid-cols-3">
-            {quickInsights.map((insight) => (
-              <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-blue-50/70 p-3">
-                <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm shadow-blue-100">
-                  <Sparkles className="h-4 w-4" aria-hidden />
-                </span>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">{insight.title}</p>
-                  <p className="text-sm text-slate-700">{insight.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
+        <EngagementInsightMobileScaffold
+          viewSelectorProps={{
+            value: viewBy,
+            onChange: handleViewChange,
+            options: viewOptions,
+            date: selectorDateValue,
+            onDateChange: handleDateChange,
+          }}
+          scopeSelectorProps={scopeSelectorProps}
+          onCopyRekap={handleCopyRekap}
+          summaryCards={summaryCards}
+          quickInsights={quickInsights}
+          quickInsightTone="blue"
+        >
           {isDirectorate ? (
             <ChartBox
               title={directorateTitle}
@@ -316,11 +280,10 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
               sortBy="percentage"
-              narrative={
+              narrative=
                 shouldGroupByClient
                   ? undefined
                   : "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
-              }
             />
           ) : (
             <div className="flex flex-col gap-6">
@@ -365,7 +328,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               </Narrative>
             </div>
           )}
-        </div>
+        </EngagementInsightMobileScaffold>
       )}
 
       <DetailRekapSection

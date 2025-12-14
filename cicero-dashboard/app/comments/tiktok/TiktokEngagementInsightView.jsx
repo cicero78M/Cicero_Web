@@ -4,20 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
-import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import ViewDataSelector from "@/components/ViewDataSelector";
 import {
   AlertTriangle,
   Music,
   User,
   MessageCircle,
   UserX,
-  Copy,
-  Sparkles,
   Users,
 } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
@@ -27,6 +23,7 @@ import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
+import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
 
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
@@ -199,6 +196,13 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     },
   ];
 
+  const scopeSelectorProps = {
+    value: directorateScope,
+    onChange: handleDirectorateScopeChange,
+    options: directorateScopeOptions,
+    canSelectScope,
+  };
+
   const shouldGroupByClient =
     isDirectorate && !isDirectorateScopedClient && !isDirectorateRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
@@ -229,7 +233,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   };
 
   const chartBoxContainerClassName =
-    "p-5 border border-sky-200/70 bg-white/80 shadow-[0_28px_65px_-32px_rgba(79,70,229,0.35)] backdrop-blur";
+    "border border-sky-200/70 bg-white/80 p-4 shadow-[0_28px_65px_-32px_rgba(79,70,229,0.35)] backdrop-blur sm:p-5";
 
   const chartBoxEmptyStateClassName =
     "rounded-2xl border border-sky-200/70 bg-white/75 px-4 py-6 text-slate-600";
@@ -287,48 +291,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     directorateOfficialName: clientName || "Satker",
   };
 
-  const heroContent = (
-    <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <ViewDataSelector
-          value={viewBy}
-          onChange={handleViewChange}
-          options={viewOptions}
-          date={selectorDateValue}
-          onDateChange={handleDateChange}
-          className="justify-start gap-3"
-          labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
-          controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-        />
-        <div className="flex flex-wrap gap-3 md:justify-end">
-          {canSelectScope && (
-            <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
-              <span className="font-semibold text-slate-800">Lingkup:</span>
-              <select
-                value={directorateScope}
-                onChange={handleDirectorateScopeChange}
-                className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
-              >
-                {directorateScopeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <button
-            onClick={handleCopyRekap}
-            className="inline-flex items-center gap-2 rounded-2xl border border-teal-300/60 bg-teal-200/50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_25px_rgba(45,212,191,0.35)] transition-colors hover:border-teal-400/70 hover:bg-teal-200/70"
-          >
-            <Copy className="h-4 w-4 text-teal-600" />
-            Salin Rekap
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <InsightLayout
       title="TikTok Engagement Insight"
@@ -336,38 +298,24 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
-      heroContent={heroContent}
+      heroContent={null}
     >
       {activeTab === "insight" && (
-        <div className="flex flex-col gap-10">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {uniqueSummaryCards.map((card) => (
-              <SummaryItem
-                key={card.key}
-                {...summaryItemCommonProps}
-                label={card.label}
-                value={card.value}
-                color={card.color}
-                icon={card.icon}
-                percentage={card.percentage}
-              />
-            ))}
-          </div>
-
-          <div className="grid gap-3 rounded-2xl border border-indigo-100 bg-white/75 p-4 shadow-inner shadow-indigo-50/70 sm:grid-cols-3">
-            {quickInsights.map((insight) => (
-              <div key={insight.title} className="flex items-start gap-3 rounded-xl bg-indigo-50/60 p-3">
-                <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm shadow-indigo-100">
-                  <Sparkles className="h-4 w-4" aria-hidden />
-                </span>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">{insight.title}</p>
-                  <p className="text-sm text-slate-700">{insight.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
+        <EngagementInsightMobileScaffold
+          viewSelectorProps={{
+            value: viewBy,
+            onChange: handleViewChange,
+            options: viewOptions,
+            date: selectorDateValue,
+            onDateChange: handleDateChange,
+          }}
+          scopeSelectorProps={scopeSelectorProps}
+          onCopyRekap={handleCopyRekap}
+          summaryCards={uniqueSummaryCards}
+          summaryItemProps={summaryItemCommonProps}
+          quickInsights={quickInsights}
+          quickInsightTone="indigo"
+        >
           {isDirectorate ? (
             <ChartBox
               {...chartBoxCommonProps}
@@ -433,7 +381,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
               </Narrative>
             </div>
           )}
-        </div>
+        </EngagementInsightMobileScaffold>
       )}
 
       <DetailRekapSection

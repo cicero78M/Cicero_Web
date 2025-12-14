@@ -36,14 +36,14 @@ export default function ChartBox({
       className={cn(
         "relative overflow-hidden rounded-3xl",
         useDefaultContainerStyle &&
-          "p-6 border border-sky-100/60 bg-white/70 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur",
+          "border border-sky-100/60 bg-white/70 p-4 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur sm:p-5 md:p-6",
         containerClassName,
       )}
     >
       {decorations}
       <div
         className={cn(
-          "relative mb-4 text-center text-sm font-semibold uppercase tracking-[0.4em]",
+          "relative mb-3 text-center text-xs font-semibold uppercase tracking-normal md:mb-4 md:text-sm md:tracking-[0.4em]",
           titleClassName,
         )}
       >
@@ -68,7 +68,7 @@ export default function ChartBox({
       ) : (
         <div
           className={cn(
-            "relative text-center text-sm text-slate-500",
+            "relative rounded-2xl border border-sky-50/70 bg-white/60 px-3 py-5 text-center text-sm text-slate-500 sm:px-4 sm:py-6",
             emptyStateClassName,
           )}
         >
