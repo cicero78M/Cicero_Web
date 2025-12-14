@@ -88,7 +88,7 @@ describe("useTiktokCommentsData", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.isDirectorate).toBe(true);
-    expect(result.current.isDitbinmasScopedClient).toBe(true);
+    expect(result.current.isDirectorateScopedClient).toBe(true);
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.chartData[0].client_id).toBe("CLIENT_A");
     expect(result.current.rekapSummary.totalUser).toBe(1);
@@ -142,7 +142,7 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.isOrgClient).toBe(false);
   });
 
-  it("allows Ditbinmas users to broaden the recap scope when requested", async () => {
+  it("allows directorate users to broaden the recap scope when requested", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITBINMAS");
     localStorage.setItem("user_role", "ditbinmas");
@@ -251,7 +251,7 @@ describe("useTiktokCommentsData", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.isDirectorate).toBe(true);
-    expect(result.current.isDitbinmasScopedClient).toBe(false);
+    expect(result.current.isDirectorateScopedClient).toBe(false);
     expect(result.current.chartData).toHaveLength(1);
     const clientIds = result.current.chartData.map((item: any) => item.client_id);
     expect(clientIds).toEqual(["DITBINMAS"]);
@@ -299,8 +299,8 @@ describe("useTiktokCommentsData", () => {
     );
     expect(result.current.isDirectorate).toBe(false);
     expect(result.current.isOrgClient).toBe(true);
-    expect(result.current.isDitbinmasRole).toBe(false);
-    expect(result.current.isDitbinmasScopedClient).toBe(false);
+    expect(result.current.isDirectorateRole).toBe(false);
+    expect(result.current.isDirectorateScopedClient).toBe(false);
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.chartData[0].client_id).toBe("DITSAMAPTA");
     expect(result.current.rekapSummary.totalUser).toBe(1);

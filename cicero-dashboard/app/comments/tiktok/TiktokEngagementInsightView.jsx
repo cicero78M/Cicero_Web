@@ -34,7 +34,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     initialTab === "rekap" ? "rekap" : "insight",
   );
   const rekapSectionRef = useRef(null);
-  const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const [directorateScope, setDirectorateScope] = useState("client");
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
@@ -58,8 +58,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     rekapSummary,
     isDirectorate,
     clientName,
-    isDitbinmasRole,
-    isDitbinmasScopedClient,
+    isDirectorateRole,
+    isDirectorateScopedClient,
     canSelectScope,
     loading,
     error,
@@ -68,7 +68,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
-    scope: ditbinmasScope,
+    scope: directorateScope,
   });
 
   const viewLabel = useMemo(
@@ -76,7 +76,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     [viewOptions, viewBy],
   );
 
-  const ditbinmasScopeOptions = [
+  const directorateScopeOptions = [
     { value: "client", label: clientName },
     { value: "all", label: `Satker Jajaran ${clientName}` },
   ];
@@ -88,10 +88,10 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
   };
 
-  const handleDitbinmasScopeChange = (event) => {
+  const handleDirectorateScopeChange = (event) => {
     const { value } = event.target || {};
     if (value === "client" || value === "all") {
-      setDitbinmasScope(value);
+      setDirectorateScope(value);
     }
   };
 
@@ -200,7 +200,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   ];
 
   const shouldGroupByClient =
-    isDirectorate && !isDitbinmasScopedClient && !isDitbinmasRole;
+    isDirectorate && !isDirectorateScopedClient && !isDirectorateRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
@@ -305,11 +305,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
             <div className="flex items-center gap-2 rounded-xl border border-sky-100/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-inner">
               <span className="font-semibold text-slate-800">Lingkup:</span>
               <select
-                value={ditbinmasScope}
-                onChange={handleDitbinmasScopeChange}
+                value={directorateScope}
+                onChange={handleDirectorateScopeChange}
                 className="rounded-lg border border-sky-100 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
               >
-                {ditbinmasScopeOptions.map((option) => (
+                {directorateScopeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
