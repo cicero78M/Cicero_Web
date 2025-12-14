@@ -165,13 +165,17 @@ export default function useTiktokCommentsData({
           isDitbinmasRoleFromAuth)) ||
         normalizedEffectiveClientTypeFromAuth === "DIREKTORAT") &&
       normalizedEffectiveRoleFromAuth !== "";
+    const isDirectorateClientTypeFromAuth =
+      normalizedEffectiveClientTypeFromAuth === "DIREKTORAT";
     // Saat role direktorat terdeteksi (termasuk kasus role Ditbinmas yang
     // dinormalisasi menjadi ORG), paksa pengambilan metrik memakai client
     // Ditbinmas agar total postingan/engagement tidak nol pada akun ORG.
     const effectiveDirectorateClientIdFromAuth = derivedDirectorateRoleFromAuth
-      ? isDitbinmasClient
+      ? isDirectorateClientTypeFromAuth
         ? normalizedClientId
-        : "DITBINMAS"
+        : isDitbinmasClient
+          ? normalizedClientId
+          : "DITBINMAS"
       : normalizedClientId;
     const dashboardClientId = derivedDirectorateRoleFromAuth
       ? effectiveDirectorateClientIdFromAuth
@@ -254,9 +258,11 @@ export default function useTiktokCommentsData({
         const isScopedDirectorateClient =
           derivedDirectorateRole && !isDitbinmasClient;
         const effectiveDirectorateClientId = derivedDirectorateRole
-          ? isDitbinmasClient
+          ? isDirectorateClientType
             ? normalizedClientId
-            : "DITBINMAS"
+            : isDitbinmasClient
+              ? normalizedClientId
+              : "DITBINMAS"
           : normalizedClientId;
         const directorate = derivedDirectorateRole || isDirectorateClientType;
         const orgClient = normalizedEffectiveClientType === "ORG";

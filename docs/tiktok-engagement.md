@@ -37,6 +37,8 @@ Pengguna dengan peran Ditbinmas mendapat opsi **Lingkup Data**:
 
 Mulai Oktober 2024, hook ini memaksa pengambilan direktori user memakai `client_id` Ditbinmas ketika peran efektif terdeteksi sebagai direktorat (termasuk kasus role Ditbinmas yang dipetakan ke klien ORG). Daftar `clientIds` yang dipakai untuk rekap selalu memasukkan client Ditbinmas selain client login, dengan pencocokan role berbasis `effectiveRole` agar personel Ditbinmas tetap terbaca pada akun ORG. Filter `scope=client` tetap membatasi hasil pada client login, sedangkan `scope=all` menyertakan seluruh satker Ditbinmas.
 
+Per November 2024, jalur bertipe klien **DIREKTORAT** tidak lagi memaksa `client_id` Ditbinmas untuk mengambil data statistik atau tugas. Untuk tipe klien ini, hook mempertahankan `client_id` login ketika menghitung metrik dashboard maupun daftar tugas sehingga satker direktorat non-Ditbinmas tidak lagi melihat data dari Ditbinmas.
+
 ## Kompatibilitas rute lama
 Rute lama `/comments/tiktok/rekap` kini mengalihkan ke halaman utama `/comments/tiktok` untuk menjaga tautan eksisting tanpa menggandakan UI.
 
