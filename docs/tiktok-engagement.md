@@ -35,6 +35,8 @@ Pengguna dengan peran Ditbinmas mendapat opsi **Lingkup Data**:
 ## Perubahan hook
 `useTiktokCommentsData` sekarang menerima parameter opsional `scope` (`"client" | "all"`). Nilai `"all"` menonaktifkan filter client sehingga data rekap dapat meliputi seluruh satker Ditbinmas. Hook ini juga mengembalikan `isOrgClient` yang diambil dari `effectiveClientType` ter-normalisasi agar komponen pemanggil dapat menyembunyikan kontrol lingkup ketika pengguna berasal dari klien bertipe ORG. Penggunaan `DEFAULT_INSIGHT_TABS` tidak mengubah kontrol lingkup atau alur salin rekap; keduanya tetap dijaga untuk keselarasan lintas halaman.
 
+Mulai Oktober 2024, hook ini memaksa pengambilan direktori user memakai `client_id` Ditbinmas ketika peran efektif terdeteksi sebagai direktorat (termasuk kasus role Ditbinmas yang dipetakan ke klien ORG). Daftar `clientIds` yang dipakai untuk rekap selalu memasukkan client Ditbinmas selain client login, dengan pencocokan role berbasis `effectiveRole` agar personel Ditbinmas tetap terbaca pada akun ORG. Filter `scope=client` tetap membatasi hasil pada client login, sedangkan `scope=all` menyertakan seluruh satker Ditbinmas.
+
 ## Kompatibilitas rute lama
 Rute lama `/comments/tiktok/rekap` kini mengalihkan ke halaman utama `/comments/tiktok` untuk menjaga tautan eksisting tanpa menggandakan UI.
 

@@ -126,13 +126,13 @@ export default function useTiktokCommentsData({
     // Saat role direktorat terdeteksi (termasuk kasus role Ditbinmas yang
     // dinormalisasi menjadi ORG), paksa pengambilan metrik memakai client
     // Ditbinmas agar total postingan/engagement tidak nol pada akun ORG.
-    const effectiveDirectorateClientId = derivedDirectorateRoleFromAuth
+    const effectiveDirectorateClientIdFromAuth = derivedDirectorateRoleFromAuth
       ? isDitbinmasClient
         ? normalizedClientId
         : "DITBINMAS"
       : normalizedClientId;
     const dashboardClientId = derivedDirectorateRoleFromAuth
-      ? effectiveDirectorateClientId
+      ? effectiveDirectorateClientIdFromAuth
       : normalizedClientId;
 
     async function fetchData() {
@@ -209,6 +209,11 @@ export default function useTiktokCommentsData({
           normalizedEffectiveRole !== "";
         const isScopedDirectorateClient =
           derivedDirectorateRole && !isDitbinmasClient;
+        const effectiveDirectorateClientId = derivedDirectorateRole
+          ? isDitbinmasClient
+            ? normalizedClientId
+            : "DITBINMAS"
+          : normalizedClientId;
         const directorate = derivedDirectorateRole;
         const orgClient = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
@@ -237,15 +242,13 @@ export default function useTiktokCommentsData({
         if (directorate) {
           const directoryRes = await getUserDirectory(
             token,
-            userClientId,
+            effectiveDirectorateClientId,
             controller.signal,
           );
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
           let clientIds: string[] = [];
-          const expectedRole = isScopedDirectorateClient
-            ? normalizedClientIdLower
-            : normalizedEffectiveRole || normalizedClientIdLower;
+          const expectedRole = normalizedEffectiveRole || normalizedClientIdLower;
           clientIds = Array.from(
             new Set(
               (dirData as any[])
@@ -273,9 +276,12 @@ export default function useTiktokCommentsData({
           ) as string[];
 
           const fallbackClientId = userClientId;
-          if (!clientIds.includes(String(fallbackClientId))) {
-            clientIds.push(String(fallbackClientId));
-          }
+          [fallbackClientId, effectiveDirectorateClientId].forEach((cid) => {
+            const normalizedCid = String(cid || "");
+            if (normalizedCid && !clientIds.includes(normalizedCid)) {
+              clientIds.push(normalizedCid);
+            }
+          });
 
           const rekapAll = await Promise.all(
             clientIds.map((cid: string) =>
