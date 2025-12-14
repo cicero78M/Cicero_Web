@@ -151,7 +151,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     { value: "all", label: `Satker Jajaran ${clientName}` },
   ];
 
-  const headerContent = (
+  const heroContent = (
     <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/60 p-4 shadow-inner backdrop-blur">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <ViewDataSelector
@@ -232,7 +232,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
-      heroContent={headerContent}
+      heroContent={heroContent}
     >
       {activeTab === "insight" && (
         <div className="flex flex-col gap-10">
