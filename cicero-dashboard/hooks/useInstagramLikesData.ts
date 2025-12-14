@@ -120,6 +120,13 @@ export default function useInstagramLikesData({
       .trim()
       .toLowerCase();
 
+    const allowedScopeClients = new Set([
+      "DITBINMAS",
+      "DITSAMAPTA",
+      "DITLANTAS",
+      "BIDHUMAS",
+    ]);
+
     async function fetchData() {
       try {
         const selectedDate =
@@ -130,12 +137,6 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        const allowedScopeClients = new Set([
-          "DITBINMAS",
-          "DITSAMAPTA",
-          "DITLANTAS",
-          "BIDHUMAS",
-        ]);
         if (shouldUseDirectorateFetcher) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
@@ -216,12 +217,6 @@ export default function useInstagramLikesData({
             profile.client ||
             "",
         );
-        const allowedScopeClients = new Set([
-          "DITBINMAS",
-          "DITSAMAPTA",
-          "DITLANTAS",
-          "BIDHUMAS",
-        ]);
         setCanSelectScope(
           directorate && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
         );
