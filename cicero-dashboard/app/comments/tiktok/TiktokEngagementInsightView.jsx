@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 import { buildTiktokRekap } from "@/utils/buildTiktokRekap";
-import RekapKomentarTiktok from "@/components/RekapKomentarTiktok";
+import RekapKomentarTiktok from "@/components/comments/tiktok/Rekap/RekapKomentarTiktok";
 import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
