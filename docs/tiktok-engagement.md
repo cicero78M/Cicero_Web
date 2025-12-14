@@ -14,6 +14,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Tombol **Buka Rekap Detail** otomatis menggulir ke section rekap ketika tab rekap dipilih, menjaga konteks halaman.
 - Tombol **Salin Rekap** dipindahkan ke header bersama filter agar saluran tindakan utama konsisten dengan halaman Instagram Engagement Insight.
 - Header, filter tanggal, dan kontrol lingkup kini dibungkus `heroContent` yang diberikan ke `InsightLayout` sehingga struktur halaman TikTok dan Instagram identik dan tidak lagi memakai layout khusus untuk TikTok.
+- Segmen `heroContent` (selector periode dengan label uppercase, kontrol lingkup Ditbinmas, tombol **Salin Rekap** berwarna teal, serta fallback prompt ketika clipboard diblokir) menjadi standar konsesi: pola dari TikTok Engagement Insight kini dipakai ulang pada halaman Instagram Engagement Insight agar alur filter dan penyalinan rekap benar-benar seragam di kedua platform.
 
 ## Ringkasan mengikuti standar rekap likes
 - Kartu ringkasan memakai gaya bawaan `SummaryItem` (border biru lembut, glow gradasi) seperti halaman **Rekap Likes IG**, dengan enam metrik tetap: jumlah post TikTok, total user, sudah/kurang/belum komentar, dan tanpa username.
