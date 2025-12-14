@@ -249,6 +249,8 @@ export default function useTiktokCommentsData({
             (normalizedEffectiveClientType !== "ORG" || isDitbinmasRole)) ||
             normalizedEffectiveClientType === "DIREKTORAT") &&
           normalizedEffectiveRole !== "";
+        const isDirectorateClientType =
+          normalizedEffectiveClientType === "DIREKTORAT";
         const isScopedDirectorateClient =
           derivedDirectorateRole && !isDitbinmasClient;
         const effectiveDirectorateClientId = derivedDirectorateRole
@@ -256,7 +258,7 @@ export default function useTiktokCommentsData({
             ? normalizedClientId
             : "DITBINMAS"
           : normalizedClientId;
-        const directorate = derivedDirectorateRole;
+        const directorate = derivedDirectorateRole || isDirectorateClientType;
         const orgClient = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorateRole(derivedDirectorateRole);
@@ -282,42 +284,82 @@ export default function useTiktokCommentsData({
 
         let users: any[] = [];
         if (directorate) {
+          const directoryClientId = isDirectorateClientType
+            ? normalizedClientId
+            : effectiveDirectorateClientId;
           const directoryRes = await getUserDirectory(
             token,
-            effectiveDirectorateClientId,
+            directoryClientId,
             controller.signal,
           );
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
           let clientIds: string[] = [];
           const expectedRole = normalizedEffectiveRole || normalizedClientIdLower;
-          clientIds = Array.from(
-            new Set(
-              (dirData as any[])
-                .filter(
-                  (u: any) =>
+          const normalizeClientId = (value: unknown) =>
+            String(value || "").trim().toLowerCase();
+          if (isDirectorateClientType) {
+            const lockToClient = scope !== "all" && Boolean(normalizedClientId);
+            const scopedClientId = lockToClient
+              ? normalizeClientId(normalizedClientId)
+              : "";
+            clientIds = Array.from(
+              new Set(
+                (dirData as any[])
+                  .filter((u: any) => {
+                    if (!lockToClient) return true;
+                    return (
+                      scopedClientId ===
+                      normalizeClientId(
+                        u.client_id ||
+                          u.clientId ||
+                          u.clientID ||
+                          u.client ||
+                          "",
+                      )
+                    );
+                  })
+                  .map((u: any) =>
                     String(
-                      u.role ||
-                        u.user_role ||
-                        u.userRole ||
-                        u.roleName ||
+                      u.client_id ||
+                        u.clientId ||
+                        u.clientID ||
+                        u.client ||
                         "",
-                    ).toLowerCase() === expectedRole,
-                )
-                .map((u: any) =>
-                  String(
-                    u.client_id ||
-                      u.clientId ||
-                      u.clientID ||
-                      u.client ||
-                      "",
-                  ),
-                )
-                .filter(Boolean) as string[],
-            ),
-          ) as string[];
+                    ),
+                  )
+                  .filter(Boolean) as string[],
+              ),
+            ) as string[];
+          } else {
+            clientIds = Array.from(
+              new Set(
+                (dirData as any[])
+                  .filter(
+                    (u: any) =>
+                      String(
+                        u.role ||
+                          u.user_role ||
+                          u.userRole ||
+                          u.roleName ||
+                          "",
+                      ).toLowerCase() === expectedRole,
+                  )
+                  .map((u: any) =>
+                    String(
+                      u.client_id ||
+                        u.clientId ||
+                        u.clientID ||
+                        u.client ||
+                        "",
+                    ),
+                  )
+                  .filter(Boolean) as string[],
+              ),
+            ) as string[];
+          }
 
-          const fallbackClientId = userClientId;
+          const fallbackClientId = directoryClientId;
           [fallbackClientId, effectiveDirectorateClientId].forEach((cid) => {
             const normalizedCid = String(cid || "");
             if (normalizedCid && !clientIds.includes(normalizedCid)) {

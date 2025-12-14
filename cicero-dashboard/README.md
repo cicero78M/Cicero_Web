@@ -65,6 +65,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Dashboard Komentar TikTok
 
 - Hook `hooks/useTiktokCommentsData` kini selalu memfilter data ke `client_id` aktif ketika `scope` bukan "all" sehingga pengguna tetap berada pada cakupan login default, sementara opsi agregasi lintas klien tetap tersedia saat `scope` bernilai "all".
+- Untuk klien bertipe **DIREKTORAT**, hook `hooks/useTiktokCommentsData` sekarang mengumpulkan task dan rekap berdasarkan `client_id` yang diberikan, bukan lagi bergantung pada kecocokan `role` di direktori pengguna. Pendekatan ini memastikan satker direktorat non-ORG menampilkan data sesuai akun login tanpa mengubah perilaku klien ORG.
 - Deteksi direktorat pada `useTiktokCommentsData` kini mengenali role DITSAMAPTA, DITLANTAS, BIDHUMAS, maupun DIREKTORAT sebagai direktorat walaupun `effectiveClientType` sudah dinormalisasi menjadi ORG; jalur pengambilan data direktorat tetap aktif dan penanganan khusus Ditbinmas tidak berubah.
 - Data komentar TikTok untuk klien bertipe **ORG** kini dideduplikasi berdasarkan kombinasi `client_id`, identifier (NRP/NIP/user id), maupun username/nama sehingga total user serta grafik kepatuhan tidak berlipat ganda.
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
