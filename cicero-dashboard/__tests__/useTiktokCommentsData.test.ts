@@ -258,6 +258,55 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 
+  it("uses Ditbinmas metrics for Ditbinmas-role ORG clients so engagement thresholds apply", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "ORG_CLIENT");
+    localStorage.setItem("user_role", "ditbinmas");
+
+    mockedGetDashboardStats.mockResolvedValue({
+      ttPosts: 8,
+      effectiveClientType: "ORG",
+      effectiveRole: "DITBINMAS",
+    } as any);
+    mockedGetClientProfile.mockResolvedValue({ client_type: "ORG" } as any);
+    mockedGetUserDirectory.mockResolvedValue({
+      data: [{ role: "org_client", client_id: "ORG_CLIENT" }],
+    } as any);
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        {
+          client_id: "ORG_CLIENT",
+          username: "org-user",
+          jumlah_komentar: 5,
+        },
+      ],
+    } as any);
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(mockedGetDashboardStats).toHaveBeenCalledWith(
+      "token",
+      "periode",
+      "date",
+      "start",
+      "end",
+      "DITBINMAS",
+      expect.any(AbortSignal),
+    );
+    expect(mockedGetClientProfile).toHaveBeenCalledWith(
+      "token",
+      "DITBINMAS",
+      expect.any(AbortSignal),
+    );
+    expect(result.current.rekapSummary.totalTiktokPost).toBe(8);
+    expect(result.current.rekapSummary.totalSudahKomentar).toBe(1);
+    expect(result.current.rekapSummary.totalBelumKomentar).toBe(0);
+  });
+
   it("treats DITSAMAPTA BIDHUMAS as an ORG client when effective type is normalized", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITSAMAPTA");
