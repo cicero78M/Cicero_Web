@@ -90,13 +90,16 @@ export default function useInstagramLikesData({
     }
 
     const roleLower = String(effectiveRole ?? role ?? "").toLowerCase();
-    const normalizedEffectiveRoleUpper = String(
+    const normalizedEffectiveRoleLower = String(
       effectiveRole ?? role ?? "",
     )
       .trim()
-      .toUpperCase();
+      .toLowerCase();
+    const normalizedEffectiveRoleUpper = normalizedEffectiveRoleLower.toUpperCase();
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
-    setIsDirectorateRole(isDirectorateRoleValue);
+    const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
+    const derivedDirectorateRole = isDirectorateRoleValue || isDitbinmasRole;
+    setIsDirectorateRole(derivedDirectorateRole);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
@@ -109,8 +112,8 @@ export default function useInstagramLikesData({
       isDirectorateRoleValue && !isDitbinmasClient;
     setIsDirectorateScopedClient(directorateScopedClient);
     const shouldUseDirectorateFetcher =
-      isDirectorateRoleValue || isDitSamaptaBidhumas;
-    const dashboardClientId = isDirectorateRoleValue
+      derivedDirectorateRole || isDitSamaptaBidhumas;
+    const dashboardClientId = derivedDirectorateRole
       ? ditbinmasClientId
       : userClientId;
     const normalizedLoginClientId = String(userClientId || "")
@@ -127,6 +130,12 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
+        const allowedScopeClients = new Set([
+          "DITBINMAS",
+          "DITSAMAPTA",
+          "DITLANTAS",
+          "BIDHUMAS",
+        ]);
         if (shouldUseDirectorateFetcher) {
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
@@ -152,6 +161,10 @@ export default function useInstagramLikesData({
           setIgPosts(posts || []);
           setClientName(clientName || "");
           setIsDirectorate(true);
+          setIsDirectorateRole(true);
+          setCanSelectScope(
+            !isOrgClient && allowedScopeClients.has(normalizedClientIdUpper),
+          );
           return;
         }
 
@@ -191,9 +204,10 @@ export default function useInstagramLikesData({
             "",
         ).toUpperCase();
         const dir = normalizedEffectiveClientType === "DIREKTORAT";
+        const directorate = dir || derivedDirectorateRole;
         const isOrg = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
-        setIsDirectorate(dir);
+        setIsDirectorate(directorate);
         setIsOrgClient(isOrg);
         setClientName(
           profile.nama ||
@@ -209,16 +223,16 @@ export default function useInstagramLikesData({
           "BIDHUMAS",
         ]);
         setCanSelectScope(
-          dir && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
+          directorate && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         const hasDifferentRoleClient =
-          dir && normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
+          directorate && normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
         setIsDirectorateScopedClient(hasDifferentRoleClient);
-        setIsDirectorateRole(dir || isDirectorateRoleValue);
+        setIsDirectorateRole(directorate || isDirectorateRoleValue);
 
         let users: any[] = [];
-        if (dir) {
+        if (directorate) {
           const directoryClientId = client_id;
           const directoryRes = await getUserDirectory(
             token,
@@ -229,7 +243,9 @@ export default function useInstagramLikesData({
             directoryRes.data || directoryRes.users || directoryRes || [];
           let clientIds: string[] = [];
 
-          const expectedRole = String(directoryClientId).toLowerCase();
+          const expectedRole = directorateScopedClient
+            ? normalizedLoginClientId
+            : normalizedEffectiveRoleLower || normalizedLoginClientId;
           clientIds = Array.from(
             new Set(
               dirData
