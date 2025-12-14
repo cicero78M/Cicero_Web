@@ -107,15 +107,28 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const actionNeededRate = getPercentage(actionNeededCount);
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
-  function handleCopyRekap() {
+  async function handleCopyRekap() {
     const message = buildInstagramRekap(rekapSummary, chartData, clientName);
 
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(message).then(() => {
-        showToast("Rekap disalin ke clipboard", "success");
-      });
-    } else {
-      showToast(message, "info");
+      try {
+        await navigator.clipboard.writeText(message);
+        showToast("Rekap disalin ke clipboard.", "success");
+        return;
+      } catch (error) {
+        showToast(
+          "Gagal menyalin rekap. Izinkan akses clipboard di browser Anda.",
+          "error",
+        );
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.prompt("Salin rekap likes secara manual:", message);
+      showToast(
+        "Clipboard tidak tersedia. Silakan salin rekap secara manual.",
+        "info",
+      );
     }
   }
 
@@ -147,6 +160,9 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           options={viewOptions}
           date={selectorDateValue}
           onDateChange={handleDateChange}
+          className="justify-start gap-3"
+          labelClassName="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
+          controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
         />
         <div className="flex flex-wrap gap-3 md:justify-end">
           {canSelectScope && (
