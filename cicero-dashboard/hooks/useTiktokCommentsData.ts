@@ -157,8 +157,20 @@ export default function useTiktokCommentsData({
         )
           .trim()
           .toUpperCase();
+        const directorateRoles = new Set([
+          "ditbinmas",
+          "ditsamapta",
+          "ditlantas",
+          "bidhumas",
+          "direktorat",
+        ]);
+        // Per 2024-09, beberapa role direktorat dikonversi menjadi ORG pada
+        // `effectiveClientType` (mis. DITSAMAPTA/BIDHUMAS). Gunakan daftar
+        // role direktorat yang diketahui agar jalur pengambilan data
+        // direktorat tetap dipakai walaupun normalizedEffectiveClientType
+        // sudah menjadi ORG.
         const derivedDirectorateRole =
-          normalizedEffectiveRole === "ditbinmas" ||
+          directorateRoles.has(normalizedEffectiveRole) ||
           normalizedEffectiveClientType === "DIREKTORAT";
         const isScopedDirectorateClient =
           derivedDirectorateRole && !isDitbinmasClient;
