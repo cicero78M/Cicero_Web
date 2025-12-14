@@ -94,17 +94,45 @@ export default function useTiktokCommentsData({
       return () => controller.abort();
     }
 
-    const roleLower = String(role).trim().toLowerCase();
-    const normalizedEffectiveRoleUpper = String(role)
-      .trim()
-      .toUpperCase();
-    const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const normalizedClientIdLower = normalizedClientId.toLowerCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
-    const dashboardClientId = isDirectorateRoleValue
-      ? "DITBINMAS"
+    const normalizedEffectiveRoleFromAuth = String(
+      auth?.effectiveRole || role || "",
+    )
+      .trim()
+      .toLowerCase();
+    const normalizedEffectiveClientTypeFromAuth = String(
+      effectiveClientTypeFromAuth || "",
+    )
+      .trim()
+      .toUpperCase();
+    const directorateRoles = new Set([
+      "ditbinmas",
+      "ditsamapta",
+      "ditlantas",
+      "bidhumas",
+      "direktorat",
+    ]);
+    const isDitbinmasRoleFromAuth =
+      normalizedEffectiveRoleFromAuth === "ditbinmas";
+    const derivedDirectorateRoleFromAuth =
+      ((directorateRoles.has(normalizedEffectiveRoleFromAuth) &&
+        (normalizedEffectiveClientTypeFromAuth !== "ORG" ||
+          isDitbinmasRoleFromAuth)) ||
+        normalizedEffectiveClientTypeFromAuth === "DIREKTORAT") &&
+      normalizedEffectiveRoleFromAuth !== "";
+    // Saat role direktorat terdeteksi (termasuk kasus role Ditbinmas yang
+    // dinormalisasi menjadi ORG), paksa pengambilan metrik memakai client
+    // Ditbinmas agar total postingan/engagement tidak nol pada akun ORG.
+    const effectiveDirectorateClientId = derivedDirectorateRoleFromAuth
+      ? isDitbinmasClient
+        ? normalizedClientId
+        : "DITBINMAS"
+      : normalizedClientId;
+    const dashboardClientId = derivedDirectorateRoleFromAuth
+      ? effectiveDirectorateClientId
       : normalizedClientId;
 
     async function fetchData() {
@@ -131,7 +159,7 @@ export default function useTiktokCommentsData({
         const statsPayload = (statsData as any)?.data || statsData;
         const profile = await getClientProfile(
           token,
-          userClientId,
+          dashboardClientId,
           controller.signal,
         );
         const profileData =
@@ -168,21 +196,17 @@ export default function useTiktokCommentsData({
         )
           .trim()
           .toUpperCase();
-        const directorateRoles = new Set([
-          "ditbinmas",
-          "ditsamapta",
-          "ditlantas",
-          "bidhumas",
-          "direktorat",
-        ]);
         // Per 2024-09, beberapa role direktorat dikonversi menjadi ORG pada
         // `effectiveClientType` (mis. DITSAMAPTA/BIDHUMAS). Gunakan daftar
         // role direktorat yang diketahui agar jalur pengambilan data
         // direktorat tetap dipakai walaupun normalizedEffectiveClientType
         // sudah menjadi ORG.
+        const isDitbinmasRole = normalizedEffectiveRole === "ditbinmas";
         const derivedDirectorateRole =
-          directorateRoles.has(normalizedEffectiveRole) ||
-          normalizedEffectiveClientType === "DIREKTORAT";
+          ((directorateRoles.has(normalizedEffectiveRole) &&
+            (normalizedEffectiveClientType !== "ORG" || isDitbinmasRole)) ||
+            normalizedEffectiveClientType === "DIREKTORAT") &&
+          normalizedEffectiveRole !== "";
         const isScopedDirectorateClient =
           derivedDirectorateRole && !isDitbinmasClient;
         const directorate = derivedDirectorateRole;
