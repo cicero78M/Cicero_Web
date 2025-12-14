@@ -354,4 +354,43 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.chartData[0].client_id).toBe("DITSAMAPTA");
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
+
+  it("deduplicates personnel records for ORG clients", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "ORG_CLIENT");
+    localStorage.setItem("user_role", "operator");
+
+    mockedGetDashboardStats.mockResolvedValue({
+      ttPosts: 4,
+      effectiveClientType: "ORG",
+    } as any);
+    mockedGetClientProfile.mockResolvedValue({ client_type: "ORG" } as any);
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        {
+          client_id: "ORG_CLIENT",
+          user_id: "42",
+          username: "duplicated-user",
+          jumlah_komentar: 2,
+        },
+        {
+          client_id: "ORG_CLIENT",
+          user_id: "42",
+          username: "duplicated-user",
+          jumlah_komentar: 2,
+        },
+      ],
+    } as any);
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.chartData).toHaveLength(1);
+    expect(result.current.rekapSummary.totalUser).toBe(1);
+    expect(result.current.rekapSummary.totalSudahKomentar).toBe(1);
+    expect(result.current.rekapSummary.totalBelumKomentar).toBe(0);
+  });
 });

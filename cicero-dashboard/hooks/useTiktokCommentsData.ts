@@ -12,6 +12,48 @@ import { AuthContext } from "@/context/AuthContext";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 
+const USER_IDENTIFIER_FIELDS = [
+  "nrp",
+  "nip",
+  "nrp_nip",
+  "nrpNip",
+  "user_id",
+  "userId",
+  "userID",
+  "NRP",
+  "NIP",
+  "NRP_NIP",
+];
+
+function normalizeString(value?: unknown): string {
+  return String(value || "").trim().toLowerCase();
+}
+
+function deduplicateUsers(users: any[]) {
+  const seen = new Set<string>();
+
+  return users.filter((user) => {
+    const clientId = normalizeString(
+      user?.client_id || user?.clientId || user?.clientID || user?.client,
+    );
+    const identifier = USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
+      if (acc) return acc;
+      const value = normalizeString(user?.[field]);
+      return value || acc;
+    }, "");
+    const username = normalizeString(user?.username);
+    const name = normalizeString(user?.nama || user?.name);
+    const key = [clientId, identifier || username || name]
+      .filter(Boolean)
+      .join("::");
+
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 interface Options {
   viewBy: string;
   customDate: string;
@@ -354,18 +396,18 @@ export default function useTiktokCommentsData({
         const shouldFilterByClient =
           scope !== "all" && Boolean(normalizedClientIdLower);
         if (shouldFilterByClient) {
-          const normalizeValue = (value: unknown) =>
-            String(value || "").trim().toLowerCase();
           filteredUsers = users.filter((u: any) => {
-            const userClient = normalizeValue(
+            const userClient = normalizeString(
               u.client_id || u.clientId || u.clientID || u.client || "",
             );
             return userClient === normalizedClientIdLower;
           });
         }
 
+        const uniqueUsers = deduplicateUsers(filteredUsers);
+
         const sortedUsers = prioritizeUsersForClient(
-          [...filteredUsers].sort(compareUsersByPangkatAndNrp),
+          [...uniqueUsers].sort(compareUsersByPangkatAndNrp),
           normalizedLoginClientId || normalizedClientIdLower,
         );
         const totalUser = sortedUsers.length;
