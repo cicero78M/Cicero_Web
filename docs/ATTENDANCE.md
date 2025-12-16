@@ -13,6 +13,7 @@ Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bag
 
 - Baik pada mode Ditbinmas maupun klien biasa, sistem menghitung ulang jumlah **Sudah Like**, **Kurang Like**, **Belum Like**, serta **Tanpa Username** dengan membandingkan `jumlah_like` terhadap total posting yang dirilis pada hari tersebut. Apabila belum ada posting, seluruh user dianggap belum melakukan likes agar status tetap mudah dipantau.【F:cicero-dashboard/utils/absensiLikes.ts†L121-L188】【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L188-L212】
 - Ringkasan tersebut ditampilkan di komponen `SummaryItem` bersama persentase yang dihitung dari total user valid (total user dikurangi akun tanpa username). Komponen berada di namespace gabungan `components/likes/instagram/Insight` agar berbagi gaya dengan chart utama.【F:cicero-dashboard/app/likes/instagram/page.jsx†L41-L120】【F:cicero-dashboard/components/likes/instagram/Insight/SummaryItem.jsx†L1-L160】
+- Kartu ringkasan di halaman Instagram Engagement Insight kini memakai templat standar (label, nilai, warna palet, ikon) yang sama dengan TikTok Engagement Insight: enam metrik tetap (jumlah IG post, total user, sudah/kurang/belum like, dan tanpa username) menggunakan komponen `SummaryItem` bawaan agar operator melihat pola seragam lintas platform.【F:cicero-dashboard/app/likes/instagram/InstagramEngagementInsightView.jsx†L101-L168】【F:cicero-dashboard/app/comments/tiktok/TiktokEngagementInsightView.jsx†L74-L155】
 
 ## Pengelompokan dan Visualisasi
 
