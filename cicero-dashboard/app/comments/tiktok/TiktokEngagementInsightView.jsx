@@ -8,14 +8,7 @@ import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import {
-  AlertTriangle,
-  Music,
-  User,
-  MessageCircle,
-  UserX,
-  Users,
-} from "lucide-react";
+import { Music, MessageCircle, UserX, Users } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
 import { buildTiktokRekap } from "@/utils/buildTiktokRekap";
 import RekapKomentarTiktok from "@/components/comments/tiktok/Rekap/RekapKomentarTiktok";
@@ -116,8 +109,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const actionNeededCount =
     (Number(rekapSummary.totalKurangKomentar) || 0) +
     (Number(rekapSummary.totalBelumKomentar) || 0);
-  const actionNeededRate = getPercentage(actionNeededCount);
-  const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
   const summaryCards = [
     {
@@ -125,45 +116,45 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       label: "Jumlah TikTok Post",
       value: rekapSummary.totalTiktokPost,
       color: "fuchsia",
-      icon: <Music className="h-5 w-5" />,
+      icon: <Music className="h-6 w-6" />,
     },
     {
       key: "totalUser",
       label: "Total User",
       value: totalUser,
       color: "gray",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      key: "username",
-      label: "Username Lengkap",
-      value: validUserCount,
-      color: "slate",
-      icon: <User className="h-5 w-5" />,
-      percentage: usernameCompletionPercent,
+      icon: <Users className="h-6 w-6" />,
     },
     {
       key: "sudah",
       label: "Sudah Komentar",
       value: rekapSummary.totalSudahKomentar,
       color: "green",
-      icon: <MessageCircle className="h-5 w-5" />,
+      icon: <MessageCircle className="h-6 w-6" />,
       percentage: complianceRate,
     },
     {
-      key: "aksi",
-      label: "Perlu Aksi",
-      value: actionNeededCount,
+      key: "kurang",
+      label: "Kurang Komentar",
+      value: rekapSummary.totalKurangKomentar,
       color: "amber",
-      icon: <AlertTriangle className="h-5 w-5" />,
-      percentage: actionNeededRate,
+      icon: <MessageCircle className="h-6 w-6" />,
+      percentage: getPercentage(rekapSummary.totalKurangKomentar),
+    },
+    {
+      key: "belum",
+      label: "Belum Komentar",
+      value: rekapSummary.totalBelumKomentar,
+      color: "red",
+      icon: <MessageCircle className="h-6 w-6" />,
+      percentage: getPercentage(rekapSummary.totalBelumKomentar),
     },
     {
       key: "tanpa",
       label: "Tanpa Username",
       value: rekapSummary.totalTanpaUsername,
       color: "violet",
-      icon: <UserX className="h-5 w-5" />,
+      icon: <UserX className="h-6 w-6" />,
       percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
     },
   ];
@@ -222,14 +213,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
     const nextChar = normalized.charAt(DIRECTORATE_NAME.length);
     return nextChar === "" || /[^a-z0-9]/.test(nextChar);
-  };
-
-  const summaryItemContainerClassName =
-    "border border-sky-200/70 bg-white/80 shadow-[0_20px_55px_-28px_rgba(79,70,229,0.35)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_26px_65px_-30px_rgba(56,189,248,0.45)]";
-
-  const summaryItemCommonProps = {
-    useDefaultContainerStyle: false,
-    containerClassName: summaryItemContainerClassName,
   };
 
   const chartBoxContainerClassName =
@@ -312,7 +295,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           scopeSelectorProps={scopeSelectorProps}
           onCopyRekap={handleCopyRekap}
           summaryCards={uniqueSummaryCards}
-          summaryItemProps={summaryItemCommonProps}
           quickInsights={quickInsights}
           quickInsightTone="indigo"
         >

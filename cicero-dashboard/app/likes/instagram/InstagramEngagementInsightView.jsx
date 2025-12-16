@@ -186,27 +186,21 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       label: "Jumlah IG Post",
       value: rekapSummary.totalIGPost,
       color: "blue",
-      icon: (
-        <Camera className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
-      ),
+      icon: <Camera className="h-6 w-6" />, 
     },
     {
       key: "total-user",
       label: "Total User",
       value: rekapSummary.totalUser,
       color: "gray",
-      icon: (
-        <User className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
-      ),
+      icon: <User className="h-6 w-6" />, 
     },
     {
       key: "sudah",
       label: "Sudah Likes",
       value: rekapSummary.totalSudahLike,
       color: "green",
-      icon: (
-        <ThumbsUp className="h-7 w-7 text-teal-500 drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]" />
-      ),
+      icon: <ThumbsUp className="h-6 w-6" />, 
       percentage: getPercentage(rekapSummary.totalSudahLike),
     },
     {
@@ -214,9 +208,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       label: "Kurang Likes",
       value: rekapSummary.totalKurangLike,
       color: "orange",
-      icon: (
-        <ThumbsDown className="h-7 w-7 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.4)]" />
-      ),
+      icon: <ThumbsDown className="h-6 w-6" />, 
       percentage: getPercentage(rekapSummary.totalKurangLike),
     },
     {
@@ -224,9 +216,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       label: "Belum Likes",
       value: rekapSummary.totalBelumLike,
       color: "red",
-      icon: (
-        <ThumbsDown className="h-7 w-7 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
-      ),
+      icon: <ThumbsDown className="h-6 w-6" />, 
       percentage: getPercentage(rekapSummary.totalBelumLike),
     },
     {
@@ -234,9 +224,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       label: "Tanpa Username",
       value: rekapSummary.totalTanpaUsername,
       color: "gray",
-      icon: (
-        <UserX className="h-7 w-7 text-slate-500 drop-shadow-[0_0_12px_rgba(148,163,184,0.35)]" />
-      ),
+      icon: <UserX className="h-6 w-6" />, 
       percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
     },
   ];
