@@ -11,8 +11,31 @@ import { Camera, Users, Check, X, AlertTriangle, UserX } from "lucide-react";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
+import { clampEngagementCompleted } from "@/utils/engagementStatus";
 
 const PAGE_SIZE = 25;
+
+function bersihkanSatfung(divisi = "") {
+  return divisi
+    .replace(/polsek\s*/i, "")
+    .replace(/^[0-9.\-\s]+/, "")
+    .trim();
+}
+
+function getLikesStatus({ jumlahLike = 0, totalPostCount = 0, hasUsername }) {
+  if (!hasUsername) return "tanpaUsername";
+
+  const safeTotalPost = Math.max(0, Number(totalPostCount) || 0);
+  const safeJumlahLike = clampEngagementCompleted({
+    completed: jumlahLike,
+    totalTarget: safeTotalPost,
+  });
+
+  if (safeTotalPost === 0) return "belum";
+  if (safeJumlahLike >= safeTotalPost) return "sudah";
+  if (safeJumlahLike > 0) return "kurang";
+  return "belum";
+}
 
 /**
  * Komponen RekapLikesIG
@@ -40,7 +63,13 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const { periodeLabel, viewLabel } = reportContext || {};
   const getClientIdentifier = (user) => {
     const rawClientId =
-      user.client_id ?? user.clientId ?? user.clientID ?? user.client ?? "";
+      user.client_id ??
+      user.clientId ??
+      user.clientID ??
+      user.client ??
+      user.nama_client ??
+      user.client_name ??
+      "";
     const clientString = String(rawClientId).trim();
     if (!clientString) {
       return { hasValue: false, stringValue: "", numericValue: NaN };
@@ -117,7 +146,14 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const totalUser = sortedUsers.length;
   const hasClient = useMemo(
     () =>
-      sortedUsers.some((u) => u.nama_client || u.client_name || u.client),
+      sortedUsers.some(
+        (u) =>
+          u.nama_client ||
+          u.client_name ||
+          u.client ||
+          u.client_id ||
+          u.clientId,
+      ),
     [sortedUsers],
   );
 
@@ -132,22 +168,20 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     [sortedUsers],
   );
 
-  // Klasifikasi pengguna
-  const totalSudahLike =
-    totalIGPost === 0
-      ? 0
-      : validUsers.filter((u) => Number(u.jumlah_like) >= totalIGPost).length;
-  const totalKurangLike =
-    totalIGPost === 0
-      ? 0
-      : validUsers.filter((u) => {
-          const likes = Number(u.jumlah_like) || 0;
-          return likes > 0 && likes < totalIGPost;
-        }).length;
-  const totalBelumLike =
-    totalIGPost === 0
-      ? validUsers.length
-      : validUsers.filter((u) => Number(u.jumlah_like) === 0).length;
+  const totalIGPostCount = Number(totalIGPost) || 0;
+  const clampLikesToTask = (jumlahLike = 0) =>
+    clampEngagementCompleted({ completed: jumlahLike, totalTarget: totalIGPostCount });
+
+  const classifyStatus = (user) =>
+    getLikesStatus({
+      jumlahLike: clampLikesToTask(user.jumlah_like),
+      totalPostCount: totalIGPostCount,
+      hasUsername: Boolean(String(user.username || "").trim()),
+    });
+
+  const totalSudahLike = validUsers.filter((u) => classifyStatus(u) === "sudah").length;
+  const totalKurangLike = validUsers.filter((u) => classifyStatus(u) === "kurang").length;
+  const totalBelumLike = validUsers.filter((u) => classifyStatus(u) === "belum").length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
   const validUserCount = validUsers.length;
 
@@ -167,8 +201,11 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
         return (
           (u.nama || "").toLowerCase().includes(term) ||
           (u.username || "").toLowerCase().includes(term) ||
-          (u.divisi || "").toLowerCase().includes(term) ||
-          (u.nama_client || u.client_name || u.client || "").toLowerCase().includes(term)
+          bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
+          (u.nama_client || u.client_name || u.client || u.client_id || "")
+            .toString()
+            .toLowerCase()
+            .includes(term)
         );
       }),
     [sortedUsers, search],
@@ -447,7 +484,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <SummaryCard
           title="IG Post Hari Ini"
-          value={totalIGPost}
+          value={totalIGPostCount}
           accent="sky"
           icon={
             <Camera className="h-6 w-6 text-sky-600 drop-shadow-[0_0_12px_rgba(56,189,248,0.25)]" />
@@ -586,7 +623,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                   ) : (
                     currentRows.map((u, i) => {
                       const username = String(u.username || "").trim();
-                      const likes = Number(u.jumlah_like) || 0;
+                      const jumlahLike = clampLikesToTask(u.jumlah_like);
 
                       const baseCellClass = "px-4 py-3 align-top";
                       const statusStyles = {
@@ -616,59 +653,60 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                         },
                       };
 
-                      let statusKey = "belum";
-                      let jumlahDisplay = u.jumlah_like;
-
-                      if (!username) {
-                        statusKey = "tanpaUsername";
-                        jumlahDisplay = 0;
-                      } else if (totalIGPost !== 0) {
-                        if (likes >= totalIGPost) statusKey = "sudah";
-                        else if (likes > 0) statusKey = "kurang";
-                      }
-
+                      const statusKey = classifyStatus(u);
+                      const jumlahDisplay = statusKey === "tanpaUsername" ? 0 : jumlahLike;
                       const status = statusStyles[statusKey];
 
                       return (
                         <tr
-                          key={u.user_id}
-                          className={`${status.row} text-blue-900 transition-colors hover:bg-blue-50`}
+                          key={`${u.user_id || u.username || u.nama || i}-${i}`}
+                          className={`transition hover:bg-blue-50/60 ${status.row}`}
                         >
-                          <td className={`${baseCellClass} text-sm text-slate-600`}>
+                          <td className={`${baseCellClass} text-xs font-semibold uppercase tracking-[0.2em] text-blue-500`}>
                             {(page - 1) * PAGE_SIZE + i + 1}
                           </td>
                           {hasClient && (
-                            <td className={baseCellClass}>
-                              <span className="font-medium text-slate-800">
-                                {u.nama_client || u.client_name || u.client || "-"}
-                              </span>
+                            <td className={`${baseCellClass} text-sm text-blue-900`}>
+                              <div className="flex flex-col">
+                                <span className="font-semibold">
+                                  {u.nama_client || u.client_name || u.client || "-"}
+                                </span>
+                                <span className="text-xs text-blue-600">
+                                  {u.client_id || u.clientId || ""}
+                                </span>
+                              </div>
                             </td>
                           )}
-                          <td className={baseCellClass}>
-                            <div className="flex flex-col gap-0.5 text-sm">
-                              <span className="font-semibold text-blue-950">
-                                {u.title ? `${u.title} ${u.nama}` : u.nama}
-                              </span>
-                              <span className="text-[11px] uppercase tracking-[0.25em] text-blue-500">
-                                Personel
-                              </span>
+                          <td className={`${baseCellClass} text-sm text-blue-900`}>
+                            <div className="flex flex-col">
+                              <span className="font-semibold">{u.nama || "-"}</span>
+                              {u.title && (
+                                <span className="text-xs text-blue-600">{u.title}</span>
+                              )}
                             </div>
                           </td>
-                          <td className={`${baseCellClass} font-mono text-sky-700`}>
-                            @{u.username || "-"}
+                          <td className={`${baseCellClass} text-sm font-mono text-blue-900`}>
+                            {username || "-"}
                           </td>
-                          <td className={baseCellClass}>
-                            <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">
-                              {u.divisi || "-"}
-                            </span>
+                          <td className={`${baseCellClass} text-sm text-blue-900`}>
+                            <div className="flex flex-col">
+                              <span className="font-semibold">
+                                {bersihkanSatfung(u.divisi || "-")}
+                              </span>
+                              {u.divisi && (
+                                <span className="text-xs text-blue-600">{u.divisi}</span>
+                              )}
+                            </div>
                           </td>
                           <td className={`${baseCellClass} text-center`}>
-                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] shadow-sm ${status.badge}`}>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${status.badge}`}
+                            >
                               {status.icon}
                               {status.label}
                             </span>
                           </td>
-                          <td className={`${baseCellClass} text-center font-semibold text-blue-900`}>
+                          <td className={`${baseCellClass} text-center text-sm font-semibold text-blue-900`}>
                             {jumlahDisplay}
                           </td>
                         </tr>
@@ -678,33 +716,40 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                 </tbody>
               </table>
             </div>
-          </div>
-          <p className="text-sm italic text-blue-700">
-            Tabel ini menampilkan status like Instagram setiap user serta jumlah like yang berhasil dihimpun.
-          </p>
 
-          {totalPages > 1 && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-blue-200/70 bg-white/95 p-4 text-blue-900 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-              <button
-                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-blue-50"
-                disabled={page === 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Prev
-              </button>
-              <span className="text-sm text-blue-700">
-                Halaman <b className="text-blue-900">{page}</b> dari {" "}
-                <b className="text-blue-900">{totalPages}</b>
-              </span>
-              <button
-                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-blue-50"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              >
-                Next
-              </button>
-            </div>
-          )}
+            {totalPages > 1 && (
+              <div className="flex flex-col items-center gap-3 border-t border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-800 md:flex-row md:justify-between">
+                <div className="text-[13px] font-semibold uppercase tracking-[0.28em] text-blue-500">
+                  Halaman {page} dari {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="rounded-xl border border-blue-200 bg-white px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-white"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-blue-200 bg-white px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-white"
+                    onClick={() => setPage(1)}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-blue-200 bg-white px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-white"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

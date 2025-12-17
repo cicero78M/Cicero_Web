@@ -15,6 +15,10 @@ Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bag
 - Ringkasan tersebut ditampilkan di komponen `SummaryItem` bersama persentase yang dihitung dari total user valid (total user dikurangi akun tanpa username). Komponen berada di namespace gabungan `components/likes/instagram/Insight` agar berbagi gaya dengan chart utama.【F:cicero-dashboard/app/likes/instagram/page.jsx†L41-L120】【F:cicero-dashboard/components/likes/instagram/Insight/SummaryItem.jsx†L1-L160】
 - Kartu ringkasan di halaman Instagram Engagement Insight kini memakai templat standar (label, nilai, warna palet, ikon) yang sama dengan TikTok Engagement Insight: enam metrik tetap (jumlah IG post, total user, sudah/kurang/belum like, dan tanpa username) menggunakan komponen `SummaryItem` bawaan agar operator melihat pola seragam lintas platform.【F:cicero-dashboard/app/likes/instagram/InstagramEngagementInsightView.jsx†L101-L168】【F:cicero-dashboard/app/comments/tiktok/TiktokEngagementInsightView.jsx†L74-L155】
 
+## Standarisasi Rekap Personel
+
+- Segment **Rekap Personel Instagram** menyamakan desain dengan halaman TikTok: status baris memakai `clampEngagementCompleted` agar jumlah like tidak melampaui target posting, pencarian ikut membersihkan label satfung/polsek serta `client_id`, dan tabel zebra menampilkan badge status, detail client + ID, serta footer pagination Prev/Reset/Next yang menyatu dengan tabel seperti standar TikTok Engagement Insight.【F:cicero-dashboard/components/likes/instagram/Rekap/RekapLikesIG.jsx†L1-L360】
+
 ## Pengelompokan dan Visualisasi
 
 - Hook mengembalikan flag `isDirectorate`, `isOrgClient`, `isDitbinmasScopedClient`, dan `clientName`. Informasi ini menentukan apakah chart akan digrup berdasarkan divisi, kelompok (menggunakan `groupUsersByKelompok` dari `utils/instagramEngagement.ts`), atau langsung per Polres saat memvisualisasikan data.【F:cicero-dashboard/app/likes/instagram/page.jsx†L21-L160】【F:cicero-dashboard/utils/instagramEngagement.ts†L1-L69】
