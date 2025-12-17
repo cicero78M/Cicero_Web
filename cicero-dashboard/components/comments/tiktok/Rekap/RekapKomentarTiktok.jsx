@@ -28,6 +28,18 @@ function bersihkanSatfung(divisi = "") {
     .trim();
 }
 
+function getKomentarStatus({ jumlahKomentar = 0, totalPostCount = 0, hasUsername }) {
+  if (!hasUsername) return "tanpaUsername";
+
+  const safeTotalPost = Number(totalPostCount) || 0;
+  const safeJumlahKomentar = Number(jumlahKomentar) || 0;
+
+  if (safeTotalPost === 0) return "belum";
+  if (safeJumlahKomentar >= safeTotalPost) return "sudah";
+  if (safeJumlahKomentar > 0) return "kurang";
+  return "belum";
+}
+
 /**
  * Rekap komentar TikTok dengan workflow dan struktur selaras RekapLikesIG.
  * @param {Array} users daftar pengguna hasil filter periode yang valid
@@ -150,22 +162,16 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     [sortedUsers],
   );
 
-  const totalSudahKomentar =
-    totalTiktokPostCount === 0
-      ? 0
-      : validUsers.filter((u) => Number(u.jumlah_komentar) >= totalTiktokPostCount * 0.5)
-          .length;
-  const totalKurangKomentar =
-    totalTiktokPostCount === 0
-      ? 0
-      : validUsers.filter((u) => {
-          const jumlahKomentar = Number(u.jumlah_komentar) || 0;
-          return jumlahKomentar > 0 && jumlahKomentar < totalTiktokPostCount * 0.5;
-        }).length;
-  const totalBelumKomentar =
-    totalTiktokPostCount === 0
-      ? validUsers.length
-      : validUsers.filter((u) => Number(u.jumlah_komentar) === 0).length;
+  const classifyStatus = (user) =>
+    getKomentarStatus({
+      jumlahKomentar: user.jumlah_komentar,
+      totalPostCount: totalTiktokPostCount,
+      hasUsername: true,
+    });
+
+  const totalSudahKomentar = validUsers.filter((u) => classifyStatus(u) === "sudah").length;
+  const totalKurangKomentar = validUsers.filter((u) => classifyStatus(u) === "kurang").length;
+  const totalBelumKomentar = validUsers.filter((u) => classifyStatus(u) === "belum").length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
   const validUserCount = validUsers.length;
 
@@ -250,20 +256,29 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       }
       satkerMap[client].total += 1;
       const username = String(u.username || "").trim();
-      if (!username) {
+      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+      const statusKey = getKomentarStatus({
+        jumlahKomentar,
+        totalPostCount: totalTiktokPostCount,
+        hasUsername: Boolean(username),
+      });
+
+      if (statusKey === "tanpaUsername") {
         satkerMap[client].tanpaUsername += 1;
         return;
       }
-      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
-      if (totalTiktokPostCount === 0) {
-        satkerMap[client].belum += 1;
-      } else if (jumlahKomentar >= totalTiktokPostCount * 0.5) {
+
+      if (statusKey === "sudah") {
         satkerMap[client].sudah += 1;
-      } else if (jumlahKomentar > 0) {
-        satkerMap[client].kurang += 1;
-      } else {
-        satkerMap[client].belum += 1;
+        return;
       }
+
+      if (statusKey === "kurang") {
+        satkerMap[client].kurang += 1;
+        return;
+      }
+
+      satkerMap[client].belum += 1;
     });
 
     const lines = [
@@ -326,17 +341,29 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       if (!clients[client])
         clients[client] = { Sudah: [], Kurang: [], Belum: [], UsernameKosong: [] };
       const username = String(u.username || "").trim();
-      if (!username) {
+      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+      const statusKey = getKomentarStatus({
+        jumlahKomentar,
+        totalPostCount: totalTiktokPostCount,
+        hasUsername: Boolean(username),
+      });
+
+      if (statusKey === "tanpaUsername") {
         clients[client].UsernameKosong.push(u);
         return;
       }
-      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
-      let status = "Belum";
-      if (totalTiktokPostCount !== 0) {
-        if (jumlahKomentar >= totalTiktokPostCount * 0.5) status = "Sudah";
-        else if (jumlahKomentar > 0) status = "Kurang";
+
+      if (statusKey === "sudah") {
+        clients[client].Sudah.push(u);
+        return;
       }
-      clients[client][status].push(u);
+
+      if (statusKey === "kurang") {
+        clients[client].Kurang.push(u);
+        return;
+      }
+
+      clients[client].Belum.push(u);
     });
 
     const sortByRank = (arr) => [...arr].sort(compareUsers);
@@ -612,16 +639,12 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                         },
                       };
 
-                      let statusKey = "belum";
-                      let jumlahDisplay = u.jumlah_komentar;
-
-                      if (!username) {
-                        statusKey = "tanpaUsername";
-                        jumlahDisplay = 0;
-                      } else if (totalTiktokPostCount !== 0) {
-                        if (jumlahKomentar >= totalTiktokPostCount * 0.5) statusKey = "sudah";
-                        else if (jumlahKomentar > 0) statusKey = "kurang";
-                      }
+                      const statusKey = getKomentarStatus({
+                        jumlahKomentar,
+                        totalPostCount: totalTiktokPostCount,
+                        hasUsername: Boolean(username),
+                      });
+                      const jumlahDisplay = statusKey === "tanpaUsername" ? 0 : jumlahKomentar;
 
                       const status = statusStyles[statusKey];
 
