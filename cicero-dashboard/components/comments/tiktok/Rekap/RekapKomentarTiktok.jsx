@@ -18,6 +18,7 @@ import usePersistentState from "@/hooks/usePersistentState";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import { showToast } from "@/utils/showToast";
+import { clampEngagementCompleted } from "@/utils/engagementStatus";
 
 const PAGE_SIZE = 25;
 
@@ -31,8 +32,11 @@ function bersihkanSatfung(divisi = "") {
 function getKomentarStatus({ jumlahKomentar = 0, totalPostCount = 0, hasUsername }) {
   if (!hasUsername) return "tanpaUsername";
 
-  const safeTotalPost = Number(totalPostCount) || 0;
-  const safeJumlahKomentar = Number(jumlahKomentar) || 0;
+  const safeTotalPost = Math.max(0, Number(totalPostCount) || 0);
+  const safeJumlahKomentar = clampEngagementCompleted({
+    completed: jumlahKomentar,
+    totalTarget: safeTotalPost,
+  });
 
   if (safeTotalPost === 0) return "belum";
   if (safeJumlahKomentar >= safeTotalPost) return "sudah";
@@ -62,6 +66,8 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
 ) {
   const { periodeLabel, viewLabel, directorateName } = reportContext || {};
   const totalTiktokPostCount = Number(totalTiktokPost) || 0;
+  const clampKomentarToTask = (jumlahKomentar = 0) =>
+    clampEngagementCompleted({ completed: jumlahKomentar, totalTarget: totalTiktokPostCount });
 
   const getClientIdentifier = (user) => {
     const rawClientId =
@@ -256,7 +262,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       }
       satkerMap[client].total += 1;
       const username = String(u.username || "").trim();
-      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+      const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
       const statusKey = getKomentarStatus({
         jumlahKomentar,
         totalPostCount: totalTiktokPostCount,
@@ -341,7 +347,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       if (!clients[client])
         clients[client] = { Sudah: [], Kurang: [], Belum: [], UsernameKosong: [] };
       const username = String(u.username || "").trim();
-      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+      const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
       const statusKey = getKomentarStatus({
         jumlahKomentar,
         totalPostCount: totalTiktokPostCount,
@@ -412,12 +418,12 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       lines.push(`Sudah : ${Sudah.length}`);
       sortByRank(Sudah).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        lines.push(`- ${name}, ${u.jumlah_komentar}`);
+        lines.push(`- ${name}, ${clampKomentarToTask(u.jumlah_komentar)}`);
       });
       lines.push(`Kurang : ${Kurang.length}`);
       sortByRank(Kurang).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
-        lines.push(`- ${name}, ${u.jumlah_komentar}`);
+        lines.push(`- ${name}, ${clampKomentarToTask(u.jumlah_komentar)}`);
       });
       lines.push(`Belum : ${Belum.length}`);
       sortByRank(Belum).forEach((u) => {
@@ -609,7 +615,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                   ) : (
                     currentRows.map((u, i) => {
                       const username = String(u.username || "").trim();
-                      const jumlahKomentar = Number(u.jumlah_komentar) || 0;
+                      const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
 
                       const baseCellClass = "px-4 py-3 align-top";
                       const statusStyles = {
