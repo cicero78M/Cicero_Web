@@ -12,6 +12,7 @@ import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
+import { getEngagementStatus } from "@/utils/engagementStatus";
 
 interface Options {
   viewBy: string;
@@ -369,7 +370,6 @@ export default function useInstagramLikesData({
         );
         const totalUser = sortedUsers.length;
         const totalIGPost = Number((statsData as any).instagramPosts) || 0;
-        const isZeroPost = (totalIGPost || 0) === 0;
         let totalSudahLike = 0;
         let totalKurangLike = 0;
         let totalBelumLike = 0;
@@ -381,17 +381,13 @@ export default function useInstagramLikesData({
             return;
           }
           const jumlah = Number(u.jumlah_like) || 0;
-          if (isZeroPost) {
-            totalBelumLike += 1;
-            return;
-          }
-          if (jumlah >= totalIGPost) {
-            totalSudahLike += 1;
-          } else if (jumlah > 0) {
-            totalKurangLike += 1;
-          } else {
-            totalBelumLike += 1;
-          }
+          const status = getEngagementStatus({
+            completed: jumlah,
+            totalTarget: totalIGPost,
+          });
+          if (status === "sudah") totalSudahLike += 1;
+          else if (status === "kurang") totalKurangLike += 1;
+          else totalBelumLike += 1;
         });
 
         if (controller.signal.aborted) return;

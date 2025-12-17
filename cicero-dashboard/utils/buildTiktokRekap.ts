@@ -1,3 +1,5 @@
+import { getEngagementStatus } from "@/utils/engagementStatus";
+
 interface TiktokRekapSummary {
   totalTiktokPost: number;
   totalUser: number;
@@ -81,15 +83,17 @@ export function buildTiktokRekap(
           const jumlah = Number(u.jumlah_komentar) || 0;
           if (!username) {
             acc.tanpaUsername += 1;
-          } else if (totalTiktokPost === 0) {
-            acc.belum += 1;
-          } else if (jumlah >= totalTiktokPost * 0.5) {
-            acc.sudah += 1;
-          } else if (jumlah > 0) {
-            acc.kurang += 1;
-          } else {
-            acc.belum += 1;
+            return acc;
           }
+
+          const status = getEngagementStatus({
+            completed: jumlah,
+            totalTarget: totalTiktokPost,
+          });
+
+          if (status === "sudah") acc.sudah += 1;
+          else if (status === "kurang") acc.kurang += 1;
+          else acc.belum += 1;
           return acc;
         },
         { total: users.length, sudah: 0, kurang: 0, belum: 0, tanpaUsername: 0 },
