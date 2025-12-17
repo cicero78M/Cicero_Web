@@ -11,6 +11,7 @@ import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { AuthContext } from "@/context/AuthContext";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
+import { getEngagementStatus } from "@/utils/engagementStatus";
 
 const USER_IDENTIFIER_FIELDS = [
   "nrp",
@@ -468,7 +469,6 @@ export default function useTiktokCommentsData({
           (statsData as any)?.tiktok_posts ??
           0;
         const totalTiktokPost = Number(totalTiktokPostRaw) || 0;
-        const isZeroPost = totalTiktokPost === 0;
         let totalSudahKomentar = 0;
         let totalKurangKomentar = 0;
         let totalBelumKomentar = 0;
@@ -481,17 +481,14 @@ export default function useTiktokCommentsData({
             return;
           }
           const jumlah = Number(u.jumlah_komentar) || 0;
-          if (isZeroPost) {
-            totalBelumKomentar += 1;
-            return;
-          }
-          if (jumlah >= totalTiktokPost * 0.5) {
-            totalSudahKomentar += 1;
-          } else if (jumlah > 0) {
-            totalKurangKomentar += 1;
-          } else {
-            totalBelumKomentar += 1;
-          }
+          const status = getEngagementStatus({
+            completed: jumlah,
+            totalTarget: totalTiktokPost,
+          });
+
+          if (status === "sudah") totalSudahKomentar += 1;
+          else if (status === "kurang") totalKurangKomentar += 1;
+          else totalBelumKomentar += 1;
         });
 
         if (controller.signal.aborted) return;

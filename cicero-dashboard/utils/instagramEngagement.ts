@@ -1,3 +1,5 @@
+import { getEngagementStatus } from "@/utils/engagementStatus";
+
 export interface User {
   divisi?: string;
   [key: string]: any;
@@ -87,15 +89,17 @@ export function buildInstagramRekap(
 
           if (!username) {
             acc.tanpaUsername++;
-          } else if (totalIGPost === 0) {
-            acc.belum++;
-          } else if (jumlah >= totalIGPost) {
-            acc.sudah++;
-          } else if (jumlah > 0) {
-            acc.kurang++;
-          } else {
-            acc.belum++;
+            return acc;
           }
+
+          const status = getEngagementStatus({
+            completed: jumlah,
+            totalTarget: totalIGPost,
+          });
+
+          if (status === "sudah") acc.sudah++;
+          else if (status === "kurang") acc.kurang++;
+          else acc.belum++;
 
           return acc;
         },
