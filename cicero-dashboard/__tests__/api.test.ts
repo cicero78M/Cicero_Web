@@ -6,6 +6,17 @@ import {
   updateUserViaClaim,
 } from "../utils/api";
 
+const ORIGINAL_API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+beforeAll(() => {
+  process.env.NEXT_PUBLIC_API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://api.example.com";
+});
+
+afterAll(() => {
+  process.env.NEXT_PUBLIC_API_URL = ORIGINAL_API_URL;
+});
+
 beforeEach(() => {
   global.fetch = jest.fn(() =>
     Promise.resolve({ ok: true, json: () => Promise.resolve({ data: {} }) })
@@ -116,4 +127,3 @@ test("updateUserViaClaim throws backend validation messages", async () => {
     updateUserViaClaim({ nrp: "1", email: "user@example.com", insta: "bad" }),
   ).rejects.toThrow("Link Instagram tidak valid");
 });
-

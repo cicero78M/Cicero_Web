@@ -89,8 +89,14 @@ export default function ResetPasswordClient({ token }) {
         );
       }
     } catch (err) {
-      setError(networkErrorMessage);
-      handleNetworkFailure();
+      const message =
+        err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL")
+          ? err.message
+          : networkErrorMessage;
+      setError(message);
+      if (!(err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL"))) {
+        handleNetworkFailure();
+      }
     }
 
     setLoading(false);

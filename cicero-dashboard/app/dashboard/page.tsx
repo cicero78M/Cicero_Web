@@ -5,8 +5,7 @@ import DashboardStats from "@/components/DashboardStats";
 import SocialCardsClient from "@/components/SocialCardsClient";
 import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+import { getApiBaseUrl } from "@/utils/api";
 
 type PlatformKey = "instagram" | "tiktok";
 type PostType = "video" | "carousel" | "image";
@@ -116,6 +115,7 @@ export default function DashboardPage() {
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [tiktokProfile, setTiktokProfile] = useState<any>(null);
   const [tiktokPosts, setTiktokPosts] = useState<any[]>([]);
+  const [apiBaseError, setApiBaseError] = useState<string | null>(null);
 
   const clientUsernames = useMemo(() => {
     const sanitizeUsername = (value: unknown) =>
@@ -158,7 +158,8 @@ export default function DashboardPage() {
 
     async function fetchData() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/aggregator?periode=harian`, {
+        const apiBaseUrl = getApiBaseUrl();
+        const res = await fetch(`${apiBaseUrl}/api/aggregator?periode=harian`, {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
@@ -169,8 +170,14 @@ export default function DashboardPage() {
         setIgPosts(Array.isArray(data.igPosts) ? data.igPosts : []);
         setTiktokProfile(data.tiktokProfile ?? null);
         setTiktokPosts(Array.isArray(data.tiktokPosts) ? data.tiktokPosts : []);
+        setApiBaseError(null);
       } catch (err) {
         console.error("Failed to fetch aggregator data", err);
+        setApiBaseError(
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch aggregator data. Pastikan NEXT_PUBLIC_API_URL sudah disetel.",
+        );
       }
     }
     fetchData();
@@ -559,6 +566,11 @@ export default function DashboardPage() {
         <div className="absolute bottom-10 right-[18%] h-40 w-40 rounded-full bg-emerald-200/40 blur-2xl dark:bg-emerald-500/20" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 py-14">
+        {apiBaseError && (
+          <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 p-4 text-sm text-amber-900 shadow-[0_14px_35px_rgba(251,191,36,0.25)] backdrop-blur dark:border-amber-500/40 dark:bg-amber-950/50 dark:text-amber-50">
+            {apiBaseError}
+          </div>
+        )}
         <section className="space-y-10">
           <div className="space-y-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/80 px-4 py-1 text-xs uppercase tracking-[0.35em] text-sky-700 shadow-[0_14px_35px_rgba(56,189,248,0.18)] dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-300">

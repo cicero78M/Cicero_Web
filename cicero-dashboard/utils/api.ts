@@ -1,10 +1,28 @@
 // utils/api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+let cachedApiBaseUrl: string | null = null;
+let hasLoggedMissingApiBase = false;
 
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  console.warn(
-    "NEXT_PUBLIC_API_URL is not defined; defaulting to relative '/api' paths"
-  );
+export function getApiBaseUrl(): string {
+  if (cachedApiBaseUrl) return cachedApiBaseUrl;
+
+  const rawValue = (process.env.NEXT_PUBLIC_API_URL || "").trim();
+  if (!rawValue) {
+    const message =
+      "NEXT_PUBLIC_API_URL belum disetel. Tambahkan ke .env.local agar dashboard terhubung ke backend Cicero (mis. https://api.cicero.example.com).";
+    if (!hasLoggedMissingApiBase) {
+      console.error(message);
+      hasLoggedMissingApiBase = true;
+    }
+    throw new Error(message);
+  }
+
+  cachedApiBaseUrl = rawValue.replace(/\/$/, "");
+  return cachedApiBaseUrl;
+}
+
+function buildApiUrl(path: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${getApiBaseUrl()}${normalizedPath}`;
 }
 
 export function normalizeWhatsapp(whatsapp: string): string {
@@ -94,7 +112,7 @@ export async function requestDashboardPasswordReset(
   signal?: AbortSignal,
 ): Promise<ApiMessageResponse> {
   return postMessagePayload(
-    `${API_BASE_URL}/api/auth/dashboard-password-reset/request`,
+    buildApiUrl("/api/auth/dashboard-password-reset/request"),
     { username: payload.username, contact: payload.contact },
     signal,
   );
@@ -113,7 +131,7 @@ export async function confirmDashboardPasswordReset(
     password_confirmation: confirmation,
   };
   return postMessagePayload(
-    `${API_BASE_URL}/api/auth/dashboard-password-reset/confirm`,
+    buildApiUrl("/api/auth/dashboard-password-reset/confirm"),
     body,
     signal,
   );
@@ -287,7 +305,7 @@ export async function getSatbinmasSummary(
   signal?: AbortSignal,
 ): Promise<SatbinmasSummary> {
   const query = buildSatbinmasQuery(filters);
-  const url = `${API_BASE_URL}/api/satbinmas-official/summary${query}`;
+  const url = `${buildApiUrl("/api/satbinmas-official/summary")}${query}`;
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();
@@ -321,7 +339,7 @@ export async function getSatbinmasActivity(
   signal?: AbortSignal,
 ): Promise<SatbinmasActivityItem[]> {
   const query = buildSatbinmasQuery(filters);
-  const url = `${API_BASE_URL}/api/satbinmas-official/activity${query}`;
+  const url = `${buildApiUrl("/api/satbinmas-official/activity")}${query}`;
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();
@@ -348,7 +366,7 @@ export async function getSatbinmasEngagement(
   signal?: AbortSignal,
 ): Promise<SatbinmasEngagementItem[]> {
   const query = buildSatbinmasQuery(filters);
-  const url = `${API_BASE_URL}/api/satbinmas-official/engagement${query}`;
+  const url = `${buildApiUrl("/api/satbinmas-official/engagement")}${query}`;
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();
@@ -385,7 +403,7 @@ export async function getSatbinmasHashtags(
   signal?: AbortSignal,
 ): Promise<SatbinmasHashtagItem[]> {
   const query = buildSatbinmasQuery(filters);
-  const url = `${API_BASE_URL}/api/satbinmas-official/hashtags${query}`;
+  const url = `${buildApiUrl("/api/satbinmas-official/hashtags")}${query}`;
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();
@@ -409,8 +427,8 @@ export async function getSatbinmasAccounts(
   signal?: AbortSignal,
 ): Promise<SatbinmasAccountDetail[]> {
   const query = buildSatbinmasQuery({ ...filters, clientId });
-  const url = `${API_BASE_URL}/api/satbinmas-official/accounts/${encodeURIComponent(
-    clientId,
+  const url = `${buildApiUrl(
+    `/api/satbinmas-official/accounts/${encodeURIComponent(clientId)}`,
   )}${query}`;
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
@@ -458,7 +476,7 @@ export async function getDashboardStats(
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);
   if (client_id) params.append("client_id", client_id);
-  const url = `${API_BASE_URL}/api/dashboard/stats${
+  const url = `${buildApiUrl("/api/dashboard/stats")}${
     params.toString() ? `?${params.toString()}` : ""
   }`;
   const res = await fetchWithAuth(url, token, { signal });
@@ -492,7 +510,7 @@ export async function getRekapLikesIG(
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);
-  const url = `${API_BASE_URL}/api/insta/rekap-likes?${params.toString()}`;
+  const url = `${buildApiUrl("/api/insta/rekap-likes")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Failed to fetch rekap");
@@ -506,7 +524,7 @@ export async function getClientProfile(
   signal?: AbortSignal,
 ): Promise<any> {
   const params = new URLSearchParams({ client_id });
-  const url = `${API_BASE_URL}/api/clients/profile?${params.toString()}`;
+  const url = `${buildApiUrl("/api/clients/profile")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Gagal fetch profile client");
@@ -553,7 +571,7 @@ export async function getUserDirectory(
   client_id: string,
   signal?: AbortSignal,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/users/list?client_id=${encodeURIComponent(client_id)}`;
+  const url = `${buildApiUrl("/api/users/list")}?client_id=${encodeURIComponent(client_id)}`;
 
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) throw new Error("Gagal fetch daftar user");
@@ -571,7 +589,7 @@ export async function createUser(
     divisi: string;
   },
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/users/create`;
+  const url = buildApiUrl("/api/users/create");
   const res = await fetchWithAuth(url, token, {
     method: "POST",
     body: JSON.stringify(data),
@@ -589,7 +607,7 @@ export async function updateUser(
   userId: string,
   data: Record<string, any>,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}`;
+  const url = buildApiUrl(`/api/users/${encodeURIComponent(userId)}`);
   const res = await fetchWithAuth(url, token, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -607,7 +625,7 @@ export async function updateUserRoles(
   oldUserId: string,
   newUserId: string,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/user_roles/update`;
+  const url = buildApiUrl("/api/user_roles/update");
   const res = await fetchWithAuth(url, token, {
     method: "PUT",
     body: JSON.stringify({ old_user_id: oldUserId, new_user_id: newUserId }),
@@ -621,7 +639,7 @@ export async function updateUserRoles(
 
 // Ambil komentar TikTok
 export async function getTikTokComments(token: string): Promise<any> {
-  const url = `${API_BASE_URL}/api/tiktok/comments`;
+  const url = buildApiUrl("/api/tiktok/comments");
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch comments");
   return res.json();
@@ -640,7 +658,7 @@ export async function getRekapKomentarTiktok(
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
-  const url = `${API_BASE_URL}/api/tiktok/rekap-komentar?${params.toString()}`;
+  const url = `${buildApiUrl("/api/tiktok/rekap-komentar")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
@@ -663,7 +681,7 @@ export async function getRekapAmplify(
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
-  const url = `${API_BASE_URL}/api/amplify/rekap?${params.toString()}`;
+  const url = `${buildApiUrl("/api/amplify/rekap")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token);
   if (!res.ok) throw new Error("Failed to fetch rekap amplifikasi");
@@ -691,7 +709,7 @@ export async function getInstagramPosts(
     params.append("limit", String(options.limit));
   }
   const query = params.toString();
-  const url = `${API_BASE_URL}/api/insta/posts${query ? `?${query}` : ""}`;
+  const url = `${buildApiUrl("/api/insta/posts")}${query ? `?${query}` : ""}`;
   const res = await fetchWithAuth(url, token, { signal: options.signal });
   if (!res.ok) throw new Error("Failed to fetch instagram posts");
   return res.json();
@@ -708,7 +726,7 @@ export async function getInstagramPostsViaBackend(
   const params = new URLSearchParams({ username, limit: String(limit) });
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
-  const url = `${API_BASE_URL}/api/insta/rapid-posts?${params.toString()}`;
+  const url = `${buildApiUrl("/api/insta/rapid-posts")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -723,7 +741,7 @@ export async function getInstagramPostsThisMonthViaBackend(
   username: string
 ): Promise<any> {
   const params = new URLSearchParams({ username });
-  const url = `${API_BASE_URL}/api/insta/rapid-posts-month?${params.toString()}`;
+  const url = `${buildApiUrl("/api/insta/rapid-posts-month")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -735,7 +753,7 @@ export async function getInstagramPostsThisMonthViaBackend(
 // Fetch Instagram profile via backend using username
 export async function getInstagramProfileViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
-  const url = `${API_BASE_URL}/api/insta/rapid-profile?${params.toString()}`;
+  const url = `${buildApiUrl("/api/insta/rapid-profile")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -757,7 +775,7 @@ export async function getInstagramProfileViaBackend(token: string, username: str
 // Fetch additional Instagram info via backend using username
 export async function getInstagramInfoViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
-  const url = `${API_BASE_URL}/api/insta/rapid-info?${params.toString()}`;
+  const url = `${buildApiUrl("/api/insta/rapid-info")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -770,7 +788,7 @@ export async function getInstagramInfoViaBackend(token: string, username: string
 // Fetch TikTok profile via backend using username
 export async function getTiktokProfileViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
-  const url = `${API_BASE_URL}/api/tiktok/rapid-profile?${params.toString()}`;
+  const url = `${buildApiUrl("/api/tiktok/rapid-profile")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -816,7 +834,7 @@ export async function getTiktokProfileViaBackend(token: string, username: string
 // Fetch additional TikTok info via backend using username
 export async function getTiktokInfoViaBackend(token: string, username: string): Promise<any> {
   const params = new URLSearchParams({ username });
-  const url = `${API_BASE_URL}/api/tiktok/rapid-info?${params.toString()}`;
+  const url = `${buildApiUrl("/api/tiktok/rapid-info")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -856,7 +874,7 @@ export async function getTiktokPostsViaBackend(
   const params = new URLSearchParams({ client_id, limit: String(limit) });
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
-  const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
+  const url = `${buildApiUrl("/api/tiktok/rapid-posts")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -895,7 +913,7 @@ export async function getTiktokPostsByUsernameViaBackend(
   limit: number = 10
 ): Promise<any> {
   const params = new URLSearchParams({ username, limit: String(limit) });
-  const url = `${API_BASE_URL}/api/tiktok/rapid-posts?${params.toString()}`;
+  const url = `${buildApiUrl("/api/tiktok/rapid-posts")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token);
   if (!res.ok) {
     const text = await res.text();
@@ -948,7 +966,7 @@ export async function getTiktokPosts(
     params.append("limit", String(options.limit));
   }
   const query = params.toString();
-  const url = `${API_BASE_URL}/api/tiktok/posts${query ? `?${query}` : ""}`;
+  const url = `${buildApiUrl("/api/tiktok/posts")}${query ? `?${query}` : ""}`;
   const res = await fetchWithAuth(url, token, { signal: options.signal });
   if (!res.ok) throw new Error("Failed to fetch tiktok posts");
   return res.json();
@@ -958,7 +976,7 @@ export async function getTiktokPosts(
 
 // Fetch user data by NRP without requiring auth
 export async function getUserById(nrp: string): Promise<any> {
-  const url = `${API_BASE_URL}/api/users/${encodeURIComponent(nrp)}`;
+  const url = buildApiUrl(`/api/users/${encodeURIComponent(nrp)}`);
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch user");
   return res.json();
@@ -969,7 +987,7 @@ export async function getClaimUserData(
   nrp: string,
   email: string,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/claim/user-data`;
+  const url = buildApiUrl("/api/claim/user-data");
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -990,7 +1008,7 @@ export type ClaimEmailValidationResponse = {
 export async function checkClaimEmailStatus(
   email: string,
 ): Promise<ClaimEmailValidationResponse> {
-  const url = `${API_BASE_URL}/api/claim/validate-email`;
+  const url = buildApiUrl("/api/claim/validate-email");
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1030,7 +1048,7 @@ export async function requestClaimOtp(
   nrp: string,
   email: string,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/claim/request-otp`;
+  const url = buildApiUrl("/api/claim/request-otp");
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1064,7 +1082,7 @@ export async function verifyClaimOtp(
   email: string,
   otp: string,
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/claim/verify-otp`;
+  const url = buildApiUrl("/api/claim/verify-otp");
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1090,7 +1108,7 @@ export async function updateUserViaClaim(
     tiktok?: string;
   },
 ): Promise<any> {
-  const url = `${API_BASE_URL}/api/claim/update`;
+  const url = buildApiUrl("/api/claim/update");
   const res = await fetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -1139,4 +1157,3 @@ export async function updateUserViaClaim(
   }
   return res.json();
 }
-
