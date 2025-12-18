@@ -111,6 +111,8 @@ Contoh konfigurasi lingkungan dan payload minimal yang diharapkan:
 NEXT_PUBLIC_API_URL=https://api.cicero.example.com
 ```
 
+Nilai `NEXT_PUBLIC_API_URL` wajib diisi. Jika kosong, dashboard akan menghentikan permintaan lebih awal dan menampilkan pesan kesalahan agar tidak lagi jatuh ke rute Next.js bawaan yang memicu error "failed to find server action".
+
 ```json
 // GET /api/satbinmas-official/summary
 {

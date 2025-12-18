@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import useAuth from "@/hooks/useAuth";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
-import { normalizeWhatsapp, requestDashboardPasswordReset } from "@/utils/api";
+import { getApiBaseUrl, normalizeWhatsapp, requestDashboardPasswordReset } from "@/utils/api";
 
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
@@ -84,12 +84,7 @@ export default function LoginPage() {
     }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || ""; // fall back to relative '/api'
-      if (!process.env.NEXT_PUBLIC_API_URL) {
-        console.warn(
-          "NEXT_PUBLIC_API_URL is not defined; defaulting to relative '/api'"
-        );
-      }
+      const apiUrl = getApiBaseUrl();
       const res = await fetch(`${apiUrl}/api/auth/dashboard-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,8 +107,14 @@ export default function LoginPage() {
         setError(data.message || "Login gagal");
       }
     } catch (err) {
-      setError(networkErrorMessage);
-      handleNetworkFailure();
+      const message =
+        err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL")
+          ? err.message
+          : networkErrorMessage;
+      setError(message);
+      if (!(err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL"))) {
+        handleNetworkFailure();
+      }
     }
     setLoading(false);
   };
@@ -140,7 +141,7 @@ export default function LoginPage() {
     }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const apiUrl = getApiBaseUrl();
       const trimmedRole = role.trim();
       const trimmedClientId = client_id.trim();
       const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
@@ -173,8 +174,14 @@ export default function LoginPage() {
         setError(data.message || "Registrasi gagal");
       }
     } catch (err) {
-      setError(networkErrorMessage);
-      handleNetworkFailure();
+      const message =
+        err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL")
+          ? err.message
+          : networkErrorMessage;
+      setError(message);
+      if (!(err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL"))) {
+        handleNetworkFailure();
+      }
     }
     setLoading(false);
   };
@@ -221,8 +228,14 @@ export default function LoginPage() {
         );
       }
     } catch (err) {
-      setError(networkErrorMessage);
-      handleNetworkFailure();
+      const message =
+        err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL")
+          ? err.message
+          : networkErrorMessage;
+      setError(message);
+      if (!(err instanceof Error && err.message.includes("NEXT_PUBLIC_API_URL"))) {
+        handleNetworkFailure();
+      }
     }
 
     setLoading(false);

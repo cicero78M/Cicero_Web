@@ -94,6 +94,7 @@ NEXT_PUBLIC_API_URL=<backend base url>
 ```
 
 `NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use.
+If the variable is missing, the dashboard will refuse to send requests and surface a clear error instead of falling back to the Next.js server (which can trigger "failed to find server action" messages).
 
 ## Usage Notes
 
