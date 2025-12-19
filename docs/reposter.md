@@ -60,6 +60,15 @@ yang sama.
    `reposter_session` dengan scope path `/reposter`.
 4. Pengguna diarahkan kembali ke path tujuan (default `/reposter`).
 
+## Halaman Login Update (Aggregator)
+
+- `/login-update` berfungsi sebagai agregator yang menawarkan dua jalur login:
+  - Login claim ke `/claim` untuk memproses permintaan update.
+  - Login reposter ke `/reposter/login` untuk pengelolaan repost konten.
+- Rute ini adalah halaman publik dan tidak menyimpan `last_pathname`, sehingga
+  redirect autentikasi tidak akan mendorong pengguna kembali ke halaman ini
+  setelah login.
+
 ## Perbedaan Autentikasi Reposter vs Dashboard Utama
 
 - Reposter memakai context terpisah (`ReposterAuthContext`) dan storage key
