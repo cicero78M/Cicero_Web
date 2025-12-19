@@ -79,7 +79,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   sehingga konten terbaru tampil lebih dulu. Setiap kartu tugas official kini
   memiliki action bar untuk download media (termasuk carousel), share via Web
   Share API, copy caption dengan feedback, serta tombol buka aplikasi
-  TikTok/Instagram yang menampilkan instruksi pasca-klik.
+  TikTok/Instagram yang menampilkan instruksi pasca-klik. Aksi download/share/
+  copy kini dibungkus helper `utils/reposterTaskActions.ts` agar handler UI lebih
+  ringkas dan tetap menyediakan status feedback untuk pengguna.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
   endpoint backend.
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh

@@ -15,6 +15,11 @@ import {
   normalizeReposterProfile,
   ReposterProfile,
 } from "@/utils/reposterProfile";
+import {
+  copyCaption,
+  downloadMedia,
+  sharePost,
+} from "@/utils/reposterTaskActions";
 
 type ReposterTaskListProps = {
   taskType: "official" | "special";
@@ -44,7 +49,9 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   const [remoteProfile, setRemoteProfile] = useState<ReposterProfile | null>(
     null,
   );
-  const [copyFeedback, setCopyFeedback] = useState<Record<string, string>>({});
+  const [actionFeedback, setActionFeedback] = useState<
+    Record<string, string>
+  >({});
   const [carouselSelection, setCarouselSelection] = useState<
     Record<string, number>
   >({});
@@ -142,10 +149,10 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     };
   }, [isHydrating, token, taskType, clientId]);
 
-  const showCopyFeedback = (postId: string, message: string) => {
-    setCopyFeedback((prev) => ({ ...prev, [postId]: message }));
+  const showActionFeedback = (postId: string, message: string) => {
+    setActionFeedback((prev) => ({ ...prev, [postId]: message }));
     window.setTimeout(() => {
-      setCopyFeedback((prev) => {
+      setActionFeedback((prev) => {
         if (!prev[postId]) return prev;
         const next = { ...prev };
         delete next[postId];
@@ -154,84 +161,66 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     }, 2400);
   };
 
-  const triggerDownload = async (url: string, filename: string) => {
-    if (!url) return;
-    const anchor = document.createElement("a");
-    anchor.download = filename;
-    anchor.rel = "noreferrer";
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Download failed");
-      }
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      anchor.href = objectUrl;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(objectUrl);
-    } catch (error) {
-      anchor.href = url;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-    }
-  };
-
   const downloadPostMedia = async (post: InstaPost) => {
     const baseName = `reposter-task-${post.taskNumber}-${post.id}`;
     if (post.isCarousel && post.carouselImages.length > 0) {
+      let hasFailure = false;
       for (const [index, imageUrl] of post.carouselImages.entries()) {
-        await triggerDownload(imageUrl, `${baseName}-slide-${index + 1}.jpg`);
+        const result = await downloadMedia({
+          url: imageUrl,
+          filename: `${baseName}-slide-${index + 1}.jpg`,
+        });
+        if (!result.ok) {
+          hasFailure = true;
+        }
       }
+      showActionFeedback(
+        post.id,
+        hasFailure ? "Sebagian media gagal diunduh." : "Media diunduh.",
+      );
       return;
     }
     if (post.isVideo && post.videoUrl) {
-      await triggerDownload(post.videoUrl, `${baseName}.mp4`);
+      const result = await downloadMedia({
+        url: post.videoUrl,
+        filename: `${baseName}.mp4`,
+      });
+      showActionFeedback(post.id, result.message);
       return;
     }
     if (post.imageUrl) {
-      await triggerDownload(post.imageUrl, `${baseName}.jpg`);
+      const result = await downloadMedia({
+        url: post.imageUrl,
+        filename: `${baseName}.jpg`,
+      });
+      showActionFeedback(post.id, result.message);
+    } else {
+      showActionFeedback(post.id, "Media tidak tersedia.");
     }
   };
 
   const downloadCarouselSlide = async (post: InstaPost, index: number) => {
     if (!post.carouselImages[index]) return;
     const baseName = `reposter-task-${post.taskNumber}-${post.id}`;
-    await triggerDownload(
-      post.carouselImages[index],
-      `${baseName}-slide-${index + 1}.jpg`,
-    );
+    const result = await downloadMedia({
+      url: post.carouselImages[index],
+      filename: `${baseName}-slide-${index + 1}.jpg`,
+    });
+    showActionFeedback(post.id, result.message);
   };
 
   const handleCopyCaption = async (post: InstaPost) => {
-    if (!post.caption) {
-      showCopyFeedback(post.id, "Caption kosong.");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(post.caption || "");
-      showCopyFeedback(post.id, "Caption disalin.");
-    } catch (error) {
-      showCopyFeedback(post.id, "Gagal menyalin caption.");
-    }
+    const result = await copyCaption(post.caption || "");
+    showActionFeedback(post.id, result.message);
   };
 
   const handleShare = async (post: InstaPost) => {
-    if (!canShare) return;
-    const shareData: ShareData = {
+    const result = await sharePost({
       title: `Tugas #${post.taskNumber}`,
       text: post.caption || "",
-    };
-    if (post.sourceUrl) {
-      shareData.url = post.sourceUrl;
-    }
-    try {
-      await navigator.share(shareData);
-    } catch (error) {
-      // ignore aborts
-    }
+      url: post.sourceUrl,
+    });
+    showActionFeedback(post.id, result.message);
   };
 
   const handleOpenApp = (post: InstaPost) => {
@@ -520,9 +509,9 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                               </span>
                             </div>
                           ) : null}
-                          {copyFeedback[post.id] ? (
+                          {actionFeedback[post.id] ? (
                             <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-                              {copyFeedback[post.id]}
+                              {actionFeedback[post.id]}
                             </p>
                           ) : null}
                           {canOpenApp ? (
