@@ -7,13 +7,17 @@ serta cara memanggilnya dari dashboard/reposter.
 
 | Endpoint | Deskripsi | Token |
 | --- | --- | --- |
-| `GET /api/tasks/official` | Daftar tugas official | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/tasks/special` | Daftar tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/insta/posts` | Daftar postingan official (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 
 Backend menyediakan helper `registerTaskEndpoints` di
-`backend/src/services/tasksEndpoints.js` untuk mendaftarkan dua route tersebut ke
+`backend/src/services/tasksEndpoints.js` untuk mendaftarkan route tugas khusus ke
 server (Express/Koa/Fastify yang mendukung `app.get`).
+
+> Catatan: tugas official reposter tidak lagi memakai `GET /api/tasks/official`.
+> Halaman `/reposter/tasks/official` kini menarik posting Instagram per
+> `client_id` dari `GET /api/insta/posts`, memfilter konten "hari ini" dan
+> mengurutkannya berdasarkan `created_at`.
 
 ## Query Params (Filter)
 
@@ -93,9 +97,8 @@ diakses oleh aplikasi reposter.
 Helper front-end tersedia di `cicero-dashboard/utils/api.ts`:
 
 ```ts
-import { fetchPosts, getOfficialTasks, getSpecialTasks } from "@/utils/api";
+import { fetchPosts, getSpecialTasks } from "@/utils/api";
 
-const official = await getOfficialTasks(token, { periode: "monthly" });
 const special = await getSpecialTasks(token, { status: "pending" });
 const officialPosts = await fetchPosts(token, clientId);
 ```
