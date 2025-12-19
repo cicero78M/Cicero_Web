@@ -68,6 +68,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 Fonts are provided via system-safe fallbacks defined in `app/globals.css` so builds remain self-contained without downloading assets from Google Fonts.
 
+### Build cleanup
+
+Jika build Next.js menemui error chunk hilang seperti `Cannot find module './5611.js'`, jalankan build dari folder `cicero-dashboard` dengan script `npm run build` yang kini otomatis membersihkan folder `.next` terlebih dahulu. Anda juga bisa menjalankan `npm run clean` secara manual untuk menghapus artifact build sebelum mencoba ulang.
+
 ## Halaman 404
 
 Proyek ini menyediakan `app/not-found.tsx` sebagai fallback 404 khusus dengan tombol kembali ke dashboard utama. Next.js akan merender komponen ini ketika rute tidak ditemukan sehingga pengguna mendapatkan respons yang konsisten.
