@@ -13,6 +13,7 @@ export default function LoginForm() {
   const { setAuth } = useReposterAuth();
 
   const [username, setUsername] = useState("");
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,17 +31,19 @@ export default function LoginForm() {
 
     try {
       const apiUrl = getApiBaseUrl();
-      const res = await fetch(`${apiUrl}/api/auth/reposter-login`, {
+      const res = await fetch(`${apiUrl}/api/auth/user-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: username.trim(),
+          nrp: username.trim(),
+          whatsapp: whatsAppNumber.trim(),
           password: password.trim(),
         }),
       });
 
       const data = await res.json();
-      const sessionToken = data?.session || data?.token || null;
+      const sessionToken =
+        data?.session || data?.token || data?.data?.token || data?.data?.session || null;
 
       if (data?.success && sessionToken) {
         setAuth(sessionToken);
@@ -79,7 +82,7 @@ export default function LoginForm() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1">
             <label className="text-sm font-medium" htmlFor="reposter-username">
-              Username
+              NRP
             </label>
             <input
               id="reposter-username"
@@ -88,6 +91,20 @@ export default function LoginForm() {
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium" htmlFor="reposter-whatsapp">
+              Nomor WhatsApp
+            </label>
+            <input
+              id="reposter-whatsapp"
+              type="tel"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
+              value={whatsAppNumber}
+              onChange={(event) => setWhatsAppNumber(event.target.value)}
+              autoComplete="tel"
               required
             />
           </div>
