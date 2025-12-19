@@ -7,13 +7,19 @@ import Header from "./Header";
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isStandalone =
-    pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/claim");
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/claim") ||
+    pathname.startsWith("/reposter/login");
 
   useEffect(() => {
     if (!pathname) return;
 
     const isPublicPath =
-      pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/claim");
+      pathname === "/" ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/claim") ||
+      pathname.startsWith("/reposter/login");
 
     if (!isPublicPath) {
       localStorage.setItem("last_pathname", pathname);
