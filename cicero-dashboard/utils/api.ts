@@ -779,6 +779,18 @@ export async function updateUser(
   return res.json();
 }
 
+// Ambil profil user by NRP/NIP untuk modul reposter
+export async function getReposterUserProfile(
+  token: string,
+  userId: string,
+  signal?: AbortSignal,
+): Promise<any> {
+  const url = buildApiUrl(`/api/users/${encodeURIComponent(userId)}`);
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) throw new Error("Gagal mengambil profil user");
+  return res.json();
+}
+
 // Perbarui relasi user_roles ketika NRP/NIP berubah
 export async function updateUserRoles(
   token: string,

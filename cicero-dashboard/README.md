@@ -44,6 +44,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar pengalaman login reposter terasa lebih fokus dan tidak tercampur dengan UI modul utama.
 - Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
 - Rute `/reposter/profile`, `/reposter/tasks/official`, dan `/reposter/tasks/special` menampilkan halaman native dashboard yang menampilkan data profil, daftar tugas official, dan daftar tugas khusus berdasarkan token reposter.
+- `/reposter/profile` kini mengambil detail user dari tabel `user` melalui endpoint Cicero_V2 (`GET /api/users/{nrp}`) dan menyediakan form edit untuk Nama, Pangkat, Satfung, Jabatan, username Instagram/TikTok, serta email dengan tombol simpan yang memanggil `PUT /api/users/{nrp}`.
 - Helper `utils/reposterProfile.ts` membantu menormalkan payload login + JWT untuk menampilkan data profil sesuai pengguna yang sedang login.
 
 ## Getting Started
