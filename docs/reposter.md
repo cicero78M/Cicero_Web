@@ -82,7 +82,16 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 ## Integrasi Endpoint Tugas
 
 Halaman tugas reposter memakai endpoint backend yang sama dengan dashboard
-untuk memuat data tugas. Helper `getOfficialTasks` dan `getSpecialTasks` di
+untuk memuat data tugas. Untuk tugas khusus, helper `getSpecialTasks` di
 `cicero-dashboard/utils/api.ts` menerima token reposter (`reposter_token`)
-dan meneruskannya melalui header Authorization. Detail parameter filter dan
-skema response dijelaskan di `docs/tasks_api.md`.
+dan meneruskannya melalui header Authorization. Daftar tugas official kini
+memakai helper `fetchPosts` yang memanggil `GET /api/insta/posts` dengan
+`client_id` dari profil reposter, lalu menyaring postingan yang dibuat pada
+hari berjalan (lokal).
+
+Status lokal untuk tugas official disimpan melalui localStorage:
+
+- `reposter_downloaded_posts`: daftar ID post yang sudah diunduh.
+- `reposter_reported_posts`: daftar ID post yang sudah dilaporkan.
+
+Detail parameter filter dan skema response dijelaskan di `docs/tasks_api.md`.

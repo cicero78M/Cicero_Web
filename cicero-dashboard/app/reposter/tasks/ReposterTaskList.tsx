@@ -3,17 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import {
-  getOfficialTasks,
+  fetchPosts,
   getSpecialTasks,
+  InstaPost,
   TaskItem,
 } from "@/utils/api";
+import { normalizeReposterProfile } from "@/utils/reposterProfile";
 
 type ReposterTaskListProps = {
   taskType: "official" | "special";
 };
 
 type TaskState = {
-  tasks: TaskItem[];
+  tasks: Array<TaskItem | InstaPost>;
   loading: boolean;
   error: string;
 };
@@ -27,12 +29,24 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
-  const { token, isHydrating } = useReposterAuth();
+  const { token, isHydrating, profile } = useReposterAuth();
   const [state, setState] = useState<TaskState>({
     tasks: [],
     loading: true,
     error: "",
   });
+
+  const clientId = useMemo(() => {
+    if (!profile) return "";
+    const direct =
+      profile.clientId ||
+      profile.client_id ||
+      profile.clientID ||
+      profile.client ||
+      profile.nama_client;
+    if (typeof direct === "string" && direct.trim()) return direct.trim();
+    return normalizeReposterProfile([profile])?.clientId ?? "";
+  }, [profile]);
 
   useEffect(() => {
     if (isHydrating || !token) return;
@@ -42,11 +56,18 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     const load = async () => {
       setState((prev) => ({ ...prev, loading: true, error: "" }));
       try {
-        const res =
-          taskType === "official"
-            ? await getOfficialTasks(token, {}, controller.signal)
-            : await getSpecialTasks(token, {}, controller.signal);
-        setState({ tasks: res.tasks, loading: false, error: "" });
+        if (taskType === "official") {
+          if (!clientId) {
+            throw new Error("Client ID belum tersedia.");
+          }
+          const posts = await fetchPosts(token, clientId, {
+            signal: controller.signal,
+          });
+          setState({ tasks: posts, loading: false, error: "" });
+        } else {
+          const res = await getSpecialTasks(token, {}, controller.signal);
+          setState({ tasks: res.tasks, loading: false, error: "" });
+        }
       } catch (error) {
         setState({
           tasks: [],
@@ -64,9 +85,22 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     return () => {
       controller.abort();
     };
-  }, [isHydrating, token, taskType]);
+  }, [isHydrating, token, taskType, clientId]);
 
   const summary = useMemo(() => {
+    if (taskType === "official") {
+      const posts = state.tasks as InstaPost[];
+      return posts.reduce(
+        (totals, post) => {
+          totals.total += 1;
+          if (post.reported) totals.done += 1;
+          else if (post.downloaded) totals.in_progress += 1;
+          else totals.pending += 1;
+          return totals;
+        },
+        { total: 0, pending: 0, in_progress: 0, done: 0 },
+      );
+    }
     const totals = {
       total: state.tasks.length,
       pending: 0,
@@ -83,7 +117,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
       }
     });
     return totals;
-  }, [state.tasks]);
+  }, [state.tasks, taskType]);
 
   if (state.loading) {
     return (
@@ -105,12 +139,21 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
-        {[
-          { label: "Total tugas", value: summary.total },
-          { label: "Menunggu", value: summary.pending },
-          { label: "Berjalan", value: summary.in_progress },
-          { label: "Selesai", value: summary.done },
-        ].map((item) => (
+        {(
+          taskType === "official"
+            ? [
+                { label: "Total postingan", value: summary.total },
+                { label: "Belum diunduh", value: summary.pending },
+                { label: "Sudah diunduh", value: summary.in_progress },
+                { label: "Sudah dilaporkan", value: summary.done },
+              ]
+            : [
+                { label: "Total tugas", value: summary.total },
+                { label: "Menunggu", value: summary.pending },
+                { label: "Berjalan", value: summary.in_progress },
+                { label: "Selesai", value: summary.done },
+              ]
+        ).map((item) => (
           <div
             key={item.label}
             className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
@@ -132,36 +175,130 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {state.tasks.map((task) => {
-            const statusKey = (task.status || "").toLowerCase();
-            const statusLabel =
-              statusLabels[statusKey] || task.status || "Tidak diketahui";
-            return (
-              <div
-                key={task.id}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
-              >
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
-                      {task.title}
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">
-                      {task.description || "Tidak ada deskripsi."}
-                    </p>
-                    <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-300">
-                      <span>Client: {task.clientName || "-"}</span>
-                      <span>Assignee: {task.assignedTo || "-"}</span>
-                      <span>Due: {task.dueDate || "-"}</span>
+          {taskType === "official"
+            ? (state.tasks as InstaPost[]).map((post) => {
+                const statusBadge = (label: string, active: boolean) => (
+                  <span
+                    className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
+                      active
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
+                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                );
+
+                return (
+                  <div
+                    key={post.id}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row">
+                      <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 md:max-w-[220px]">
+                        {post.isVideo && post.videoUrl ? (
+                          <video
+                            controls
+                            className="h-full w-full object-cover"
+                            src={post.videoUrl}
+                          />
+                        ) : post.imageUrl ? (
+                          <img
+                            src={post.imageUrl}
+                            alt={post.caption || "Postingan official"}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-40 items-center justify-center text-xs text-slate-400">
+                            Tidak ada media
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col justify-between gap-3">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                            <span>Tugas #{post.taskNumber}</span>
+                            <span>•</span>
+                            <span>
+                              {post.createdAt.toLocaleString("id-ID", {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </span>
+                            {post.isCarousel ? (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  Carousel ({post.carouselImages.length})
+                                </span>
+                              </>
+                            ) : null}
+                            {post.isVideo ? (
+                              <>
+                                <span>•</span>
+                                <span>Video</span>
+                              </>
+                            ) : null}
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-200">
+                            {post.caption || "Tidak ada caption."}
+                          </p>
+                          {post.sourceUrl ? (
+                            <a
+                              href={post.sourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
+                            >
+                              Lihat sumber
+                            </a>
+                          ) : null}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {statusBadge(
+                            post.downloaded ? "Sudah diunduh" : "Belum diunduh",
+                            post.downloaded,
+                          )}
+                          {statusBadge(
+                            post.reported ? "Sudah dilaporkan" : "Belum dilaporkan",
+                            post.reported,
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-cyan-900/40 dark:text-cyan-200">
-                    {statusLabel}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })
+            : (state.tasks as TaskItem[]).map((task) => {
+                const statusKey = (task.status || "").toLowerCase();
+                const statusLabel =
+                  statusLabels[statusKey] || task.status || "Tidak diketahui";
+                return (
+                  <div
+                    key={task.id}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
+                  >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
+                          {task.title}
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-300">
+                          {task.description || "Tidak ada deskripsi."}
+                        </p>
+                        <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-300">
+                          <span>Client: {task.clientName || "-"}</span>
+                          <span>Assignee: {task.assignedTo || "-"}</span>
+                          <span>Due: {task.dueDate || "-"}</span>
+                        </div>
+                      </div>
+                      <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-cyan-900/40 dark:text-cyan-200">
+                        {statusLabel}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
         </div>
       )}
     </div>

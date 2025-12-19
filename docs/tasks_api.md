@@ -9,6 +9,7 @@ serta cara memanggilnya dari dashboard/reposter.
 | --- | --- | --- |
 | `GET /api/tasks/official` | Daftar tugas official | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/tasks/special` | Daftar tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `GET /api/insta/posts` | Daftar postingan official (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 
 Backend menyediakan helper `registerTaskEndpoints` di
 `backend/src/services/tasksEndpoints.js` untuk mendaftarkan dua route tersebut ke
@@ -24,6 +25,7 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 - `end_date` (string, opsional): tanggal selesai (ISO `YYYY-MM-DD`).
 - `limit` (number, opsional): jumlah item per halaman (default 50, max 200).
 - `offset` (number, opsional): offset pagination.
+- `client_id` (string, opsional): ID client untuk `GET /api/insta/posts`.
 
 > Backend juga menerima alias `tanggal_mulai` / `tanggal_selesai` untuk
 > kompatibilitas dengan API lama.
@@ -91,10 +93,11 @@ diakses oleh aplikasi reposter.
 Helper front-end tersedia di `cicero-dashboard/utils/api.ts`:
 
 ```ts
-import { getOfficialTasks, getSpecialTasks } from "@/utils/api";
+import { fetchPosts, getOfficialTasks, getSpecialTasks } from "@/utils/api";
 
 const official = await getOfficialTasks(token, { periode: "monthly" });
 const special = await getSpecialTasks(token, { status: "pending" });
+const officialPosts = await fetchPosts(token, clientId);
 ```
 
 Pastikan token yang dipakai sesuai konteks:
