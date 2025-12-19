@@ -8,7 +8,10 @@ import {
   InstaPost,
   TaskItem,
 } from "@/utils/api";
-import { normalizeReposterProfile } from "@/utils/reposterProfile";
+import {
+  decodeJwtPayload,
+  mergeReposterProfiles,
+} from "@/utils/reposterProfile";
 
 type ReposterTaskListProps = {
   taskType: "official" | "special";
@@ -37,16 +40,9 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   });
 
   const clientId = useMemo(() => {
-    if (!profile) return "";
-    const direct =
-      profile.clientId ||
-      profile.client_id ||
-      profile.clientID ||
-      profile.client ||
-      profile.nama_client;
-    if (typeof direct === "string" && direct.trim()) return direct.trim();
-    return normalizeReposterProfile([profile])?.clientId ?? "";
-  }, [profile]);
+    const tokenProfile = token ? decodeJwtPayload(token) : null;
+    return mergeReposterProfiles([profile, tokenProfile])?.clientId ?? "";
+  }, [profile, token]);
 
   useEffect(() => {
     if (isHydrating || !token) return;

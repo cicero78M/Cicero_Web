@@ -30,6 +30,24 @@ const pickString = (sources: ProfileSource[], keys: string[]): string => {
   return "";
 };
 
+const pickClientId = (sources: ProfileSource[]): string => {
+  const normalizedSources = normalizeSources(sources);
+  const idKeys = ["client_id", "clientId", "clientID"];
+  const labelKeys = [
+    "nama_client",
+    "client_name",
+    "client",
+    "nama_polres",
+    "polres_name",
+    "polres",
+  ];
+
+  const direct = pickString(normalizedSources, idKeys);
+  if (direct) return direct;
+
+  return pickString(normalizedSources, labelKeys);
+};
+
 const normalizeSources = (sources: ProfileSource[]): ProfileSource[] =>
   sources.filter((source) => source && typeof source === "object");
 
@@ -132,17 +150,7 @@ export function normalizeReposterProfile(
       "nama_user",
       "user_name",
     ]),
-    clientId: pickString(normalizedSources, [
-      "client_id",
-      "clientId",
-      "clientID",
-      "nama_client",
-      "client_name",
-      "client",
-      "nama_polres",
-      "polres_name",
-      "polres",
-    ]),
+    clientId: pickClientId(normalizedSources),
     whatsapp: pickString(normalizedSources, [
       "whatsapp",
       "no_wa",
