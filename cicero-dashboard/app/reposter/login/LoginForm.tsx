@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import { getApiBaseUrl } from "@/utils/api";
+import {
+  decodeJwtPayload,
+  extractReposterProfileFromLoginResponse,
+  mergeReposterProfiles,
+} from "@/utils/reposterProfile";
 
 const SESSION_COOKIE = "reposter_session";
 
@@ -46,7 +51,13 @@ export default function LoginForm() {
         data?.session || data?.token || data?.data?.token || data?.data?.session || null;
 
       if (data?.success && sessionToken) {
-        setAuth(sessionToken);
+        const tokenPayload = decodeJwtPayload(sessionToken);
+        const profileSnapshot = extractReposterProfileFromLoginResponse(data);
+        const mergedProfile = mergeReposterProfiles([
+          profileSnapshot,
+          tokenPayload,
+        ]);
+        setAuth(sessionToken, mergedProfile ?? profileSnapshot ?? tokenPayload);
         const encoded = encodeURIComponent(sessionToken);
         document.cookie = `${SESSION_COOKIE}=${encoded}; Path=/reposter; SameSite=Lax; Max-Age=86400`;
         router.push(nextPath);

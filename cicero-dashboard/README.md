@@ -38,14 +38,13 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 ## Modul Reposter
 
-- Rute `/reposter` menampilkan aplikasi reposter sebagai micro-frontend yang berjalan terpisah melalui iframe di `app/reposter/page.tsx`.
-- Halaman `/reposter/login` menangani autentikasi reposter secara terpisah, mengirim POST ke `/api/auth/user-login` dengan payload `nrp`, `whatsapp`, dan `password`, menyimpan token di localStorage (`reposter_token`) dan cookie `reposter_session` untuk kebutuhan guard server, serta membungkus form login dalam Suspense karena memakai `useSearchParams`.
+- Rute `/reposter` kini menampilkan menu modul reposter dengan kartu ringkas untuk menuju profil pengguna, tugas official, dan tugas khusus (lihat `app/reposter/page.tsx`).
+- Halaman `/reposter/login` menangani autentikasi reposter secara terpisah, mengirim POST ke `/api/auth/user-login` dengan payload `nrp`, `whatsapp`, dan `password`, menyimpan token di localStorage (`reposter_token`), menyimpan ringkasan profil ke localStorage (`reposter_profile`), dan cookie `reposter_session` untuk kebutuhan guard server, serta membungkus form login dalam Suspense karena memakai `useSearchParams`.
 - Context `ReposterAuthContext` dan hook `useRequireReposterAuth` menjaga halaman reposter tetap terlindungi tanpa bercampur dengan sesi login dashboard utama.
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar pengalaman login reposter terasa lebih fokus dan tidak tercampur dengan UI modul utama.
 - Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
-- URL layanan reposter diatur lewat variabel `NEXT_PUBLIC_REPOSTER_URL` agar lingkungan staging/production dapat menunjuk ke host yang berbeda.
-- Rute `/reposter/profile`, `/reposter/tasks/official`, dan `/reposter/tasks/special` memuat iframe ke halaman profil pengguna, tugas official, dan tugas khusus di reposter (selaras dengan fitur profil serta daftar tugas pada pegiat_medsos_app).
-- Halaman `/reposter` menyediakan CTA deep-link menuju `${NEXT_PUBLIC_REPOSTER_URL}/profile`, `/tasks/official`, dan `/tasks/special` agar pengguna dapat membuka halaman reposter terkait langsung di tab baru.
+- Rute `/reposter/profile`, `/reposter/tasks/official`, dan `/reposter/tasks/special` menampilkan halaman native dashboard yang menampilkan data profil, daftar tugas official, dan daftar tugas khusus berdasarkan token reposter.
+- Helper `utils/reposterProfile.ts` membantu menormalkan payload login + JWT untuk menampilkan data profil sesuai pengguna yang sedang login.
 
 ## Getting Started
 
