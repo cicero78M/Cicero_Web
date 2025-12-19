@@ -16,7 +16,7 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 
 1. Pastikan backend Cicero tersedia dan `NEXT_PUBLIC_API_URL` di dashboard
    menunjuk ke base URL yang benar karena login reposter memanggil
-   `/api/auth/user-login` dengan payload `nrp`, `whatsapp`, dan `password`.
+   `/api/auth/user-login` dengan payload `nrp` dan `password`.
 2. Jalankan dashboard seperti biasa (Next.js). Modul reposter akan tersedia di
    `/reposter` dan dilindungi oleh autentikasi reposter.
 
@@ -41,7 +41,7 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 
 1. Pengguna mengakses `/reposter/login` langsung, atau memilihnya dari halaman agregator login update di `/login-update`.
 2. Dashboard mengirim POST ke `/api/auth/user-login` di backend Cicero dengan
-   payload `nrp`, `whatsapp`, dan `password`.
+   payload `nrp` dan `password`.
 3. Jika berhasil, token disimpan ke localStorage (`reposter_token`), ringkasan
    profil ke `reposter_profile`, dan cookie `reposter_session` dengan scope path
    `/reposter`.
