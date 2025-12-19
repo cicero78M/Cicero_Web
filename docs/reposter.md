@@ -41,6 +41,10 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   menyediakan form edit untuk Nama, Pangkat, Satfung, Jabatan, username
   Instagram, username TikTok, serta email. Pembaruan disimpan lewat
   `PUT /api/users/{nrp}`.
+- Fetch profil reposter dilakukan sekali per sesi login/NRP. Setelah profil
+  remote diterima, datanya disimpan ke `ReposterAuthContext` (localStorage) dan
+  akan dipakai kembali sampai NRP berganti agar permintaan ulang tidak terjadi
+  pada render berikutnya.
 
 ## Alur Login Reposter
 
