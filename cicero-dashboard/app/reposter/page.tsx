@@ -1,41 +1,46 @@
 import Link from "next/link";
-import ReposterFrame from "./ReposterFrame";
-import { buildReposterUrl } from "./reposterUrl";
+import ReposterShell from "./ReposterShell";
 
 export default function ReposterPage() {
-  const deepLinks = [
+  const quickLinks = [
     {
       label: "Profil pengguna",
-      href: buildReposterUrl("/profile"),
+      href: "/reposter/profile",
+      description: "Ringkasan data akun reposter yang sedang login.",
     },
     {
       label: "Tugas official",
-      href: buildReposterUrl("/tasks/official"),
+      href: "/reposter/tasks/official",
+      description: "Pantau tugas resmi yang perlu ditindaklanjuti.",
     },
     {
       label: "Tugas khusus",
-      href: buildReposterUrl("/tasks/special"),
+      href: "/reposter/tasks/special",
+      description: "Kelola kampanye tematik dan tugas khusus.",
     },
   ];
 
   return (
-    <ReposterFrame
+    <ReposterShell
       title="Kelola konten ulang (Reposter)"
-      description="Modul reposter dijalankan sebagai layanan terpisah dan ditampilkan di dashboard melalui iframe. Atur URL layanan dengan variabel lingkungan NEXT_PUBLIC_REPOSTER_URL."
+      description="Pilih modul yang ingin dikelola untuk memastikan tugas reposter berjalan konsisten."
     >
-      <div className="mt-2 flex flex-wrap gap-3 text-sm">
-        {deepLinks.map((link) => (
+      <div className="grid gap-4 md:grid-cols-3">
+        {quickLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-full border border-slate-200 bg-white px-3 py-1 font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-cyan-400 dark:hover:text-cyan-200"
+            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-300 hover:text-sky-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100 dark:hover:border-cyan-400"
           >
-            {link.label}
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
+              {link.label}
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
+              {link.description}
+            </p>
           </Link>
         ))}
       </div>
-    </ReposterFrame>
+    </ReposterShell>
   );
 }

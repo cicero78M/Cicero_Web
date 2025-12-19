@@ -1,12 +1,13 @@
-import ReposterFrame from "../ReposterFrame";
+import ReposterShell from "../ReposterShell";
+import ProfileClient from "./ProfileClient";
 
 export default function ReposterProfilePage() {
   return (
-    <ReposterFrame
+    <ReposterShell
       title="Profil pengguna Reposter"
-      description="Halaman ini menampilkan profil pengguna reposter dengan endpoint yang kompatibel dengan pegiat_medsos_app agar data akun konsisten di mobile dan web."
-      path="/profile"
-      iframeTitle="Reposter - Profil"
-    />
+      description="Halaman ini menampilkan profil pengguna reposter agar data akun selalu sesuai dengan sesi login yang aktif."
+    >
+      <ProfileClient />
+    </ReposterShell>
   );
 }

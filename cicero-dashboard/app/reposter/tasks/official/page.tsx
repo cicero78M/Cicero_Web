@@ -1,12 +1,13 @@
-import ReposterFrame from "../../ReposterFrame";
+import ReposterShell from "../../ReposterShell";
+import ReposterTaskList from "../ReposterTaskList";
 
 export default function ReposterOfficialTasksPage() {
   return (
-    <ReposterFrame
+    <ReposterShell
       title="Tugas Official Reposter"
-      description="Menampilkan daftar tugas official yang sejalan dengan pegiat_medsos_app sehingga aktivitas resmi tetap terpantau di modul reposter."
-      path="/tasks/official"
-      iframeTitle="Reposter - Tugas Official"
-    />
+      description="Menampilkan daftar tugas official yang dipantau untuk kebutuhan reposter."
+    >
+      <ReposterTaskList taskType="official" />
+    </ReposterShell>
   );
 }

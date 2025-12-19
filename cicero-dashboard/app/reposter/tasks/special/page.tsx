@@ -1,12 +1,13 @@
-import ReposterFrame from "../../ReposterFrame";
+import ReposterShell from "../../ReposterShell";
+import ReposterTaskList from "../ReposterTaskList";
 
 export default function ReposterSpecialTasksPage() {
   return (
-    <ReposterFrame
+    <ReposterShell
       title="Tugas Khusus Reposter"
-      description="Memuat tugas khusus atau kampanye tematik agar pelaksanaan di reposter selaras dengan tugas khusus pada pegiat_medsos_app."
-      path="/tasks/special"
-      iframeTitle="Reposter - Tugas Khusus"
-    />
+      description="Memuat tugas khusus dan kampanye tematik agar pelaksanaan di reposter lebih terarah."
+    >
+      <ReposterTaskList taskType="special" />
+    </ReposterShell>
   );
 }
