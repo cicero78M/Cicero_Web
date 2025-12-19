@@ -231,6 +231,24 @@ export type TaskItem = {
   metadata?: Record<string, any> | null;
 };
 
+export type InstaPost = {
+  id: string;
+  caption: string;
+  imageUrl: string;
+  createdAt: Date;
+  taskNumber: number;
+  isVideo: boolean;
+  videoUrl: string;
+  sourceUrl: string;
+  carouselImages: string[];
+  isCarousel: boolean;
+  downloaded: boolean;
+  reported: boolean;
+};
+
+export const REPOSTER_DOWNLOADED_POSTS_KEY = "reposter_downloaded_posts";
+export const REPOSTER_REPORTED_POSTS_KEY = "reposter_reported_posts";
+
 export type TaskListResponse = {
   tasks: TaskItem[];
   pagination: {
@@ -296,6 +314,56 @@ function ensureString(value: unknown, fallback: string = ""): string {
 function ensureArray<T>(value: unknown, mapper: (entry: any) => T): T[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => mapper(item));
+}
+
+function parseLocalTimestamp(value: string): Date | null {
+  if (!value) return null;
+  if (value.includes("T")) {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  const match =
+    value.match(
+      /(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/,
+    );
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second] = match;
+  const parsed = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second ?? 0),
+  );
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isSameLocalDay(target: Date, compareTo: Date): boolean {
+  return (
+    target.getFullYear() === compareTo.getFullYear() &&
+    target.getMonth() === compareTo.getMonth() &&
+    target.getDate() === compareTo.getDate()
+  );
+}
+
+function readLocalIdSet(key: string): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return new Set();
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return new Set(parsed.filter((entry) => typeof entry === "string"));
+    }
+  } catch {
+    const fallback = raw
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    return new Set(fallback);
+  }
+  return new Set();
 }
 
 function buildSatbinmasQuery(filters: SatbinmasFilterParams): string {
@@ -384,6 +452,26 @@ function normalizeTaskEntry(entry: any): TaskItem {
       ensureString(entry?.tanggal_selesai),
     metadata: entry?.metadata ?? entry?.meta ?? null,
   };
+}
+
+function extractCarouselImages(entry: any): string[] {
+  const rawCarousel =
+    entry?.carousel ??
+    entry?.carousel_images ??
+    entry?.children ??
+    entry?.resources ??
+    entry?.slides ??
+    entry?.items ??
+    [];
+  return ensureArray(rawCarousel, (item) => {
+    if (typeof item === "string") return item;
+    return (
+      ensureString(item?.image_url) ||
+      ensureString(item?.thumbnail_url) ||
+      ensureString(item?.display_url) ||
+      ensureString(item?.url)
+    );
+  }).filter(Boolean);
 }
 
 function normalizeAccountCoverageEntry(entry: any): SatbinmasAccountCoverage {
@@ -619,6 +707,104 @@ export async function getSpecialTasks(
   signal?: AbortSignal,
 ): Promise<TaskListResponse> {
   return getTaskList(token, "/api/tasks/special", filters, signal);
+}
+
+type FetchPostsOptions = {
+  signal?: AbortSignal;
+  downloadedIds?: string[];
+  reportedIds?: string[];
+};
+
+export async function fetchPosts(
+  token: string,
+  clientId: string,
+  options: FetchPostsOptions = {},
+): Promise<InstaPost[]> {
+  if (!clientId) {
+    throw new Error("Client ID belum tersedia.");
+  }
+  const params = new URLSearchParams({ client_id: clientId });
+  const url = `${buildApiUrl("/api/insta/posts")}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, { signal: options.signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal memuat postingan official.");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? [];
+
+  const downloadedSet = options.downloadedIds
+    ? new Set(options.downloadedIds)
+    : readLocalIdSet(REPOSTER_DOWNLOADED_POSTS_KEY);
+  const reportedSet = options.reportedIds
+    ? new Set(options.reportedIds)
+    : readLocalIdSet(REPOSTER_REPORTED_POSTS_KEY);
+
+  const today = new Date();
+  const posts = ensureArray(payload, (entry) => {
+    const id =
+      ensureString(entry?.shortcode) ||
+      ensureString(entry?.id) ||
+      ensureString(entry?.post_id);
+    if (!id) return null;
+
+    const createdAtRaw =
+      ensureString(entry?.created_at) ||
+      ensureString(entry?.createdAt) ||
+      ensureString(entry?.timestamp) ||
+      ensureString(entry?.taken_at);
+    const createdAt =
+      parseLocalTimestamp(createdAtRaw) ?? new Date(createdAtRaw);
+    if (!createdAt || Number.isNaN(createdAt.getTime())) return null;
+
+    const carouselImages = extractCarouselImages(entry);
+    const imageUrl =
+      ensureString(entry?.image_url) ||
+      ensureString(entry?.thumbnail_url) ||
+      carouselImages[0] ||
+      ensureString(entry?.display_url) ||
+      ensureString(entry?.media_url);
+    const videoUrl =
+      ensureString(entry?.video_url) ||
+      ensureString(entry?.videoUrl) ||
+      ensureString(entry?.media_url);
+    const mediaType =
+      ensureString(entry?.media_type) || ensureString(entry?.mediaType);
+    const isVideo =
+      Boolean(entry?.is_video || entry?.isVideo) ||
+      mediaType.toLowerCase() === "video" ||
+      Boolean(videoUrl);
+    const isCarousel =
+      Boolean(entry?.is_carousel) || carouselImages.length > 1;
+    const sourceUrl =
+      ensureString(entry?.source_url) ||
+      ensureString(entry?.post_url) ||
+      ensureString(entry?.permalink) ||
+      ensureString(entry?.link);
+
+    return {
+      id,
+      caption: ensureString(entry?.caption) || ensureString(entry?.text),
+      imageUrl,
+      createdAt,
+      taskNumber: 0,
+      isVideo,
+      videoUrl,
+      sourceUrl,
+      carouselImages,
+      isCarousel,
+      downloaded: downloadedSet.has(id),
+      reported: reportedSet.has(id),
+    } satisfies InstaPost;
+  }).filter((post): post is InstaPost => Boolean(post));
+
+  return posts
+    .filter((post) => isSameLocalDay(post.createdAt, today))
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .map((post, index) => ({
+      ...post,
+      taskNumber: index + 1,
+    }));
 }
 
 export async function getDashboardStats(
