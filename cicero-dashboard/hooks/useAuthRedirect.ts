@@ -18,7 +18,8 @@ export default function useAuthRedirect() {
         storedPath !== "/" &&
         !storedPath.startsWith("/login") &&
         !storedPath.startsWith("/login-update") &&
-        !storedPath.startsWith("/claim");
+        !storedPath.startsWith("/claim") &&
+        !storedPath.startsWith("/reposter");
       const targetPath = shouldUseStoredPath ? storedPath : "/dashboard";
       router.replace(targetPath);
     }

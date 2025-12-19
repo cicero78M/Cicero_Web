@@ -9,6 +9,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isStandalone =
     pathname === "/" ||
     pathname.startsWith("/login") ||
+    pathname.startsWith("/login-update") ||
     pathname.startsWith("/claim") ||
     pathname.startsWith("/reposter/login");
 
@@ -18,6 +19,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     const isPublicPath =
       pathname === "/" ||
       pathname.startsWith("/login") ||
+      pathname.startsWith("/login-update") ||
       pathname.startsWith("/claim") ||
       pathname.startsWith("/reposter/login");
 
