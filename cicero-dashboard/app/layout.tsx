@@ -1,6 +1,7 @@
 import "./globals.css";
 import LayoutClient from "@/components/LayoutClient";
 import { AuthProvider } from "@/context/AuthContext";
+import { ReposterAuthProvider } from "@/context/ReposterAuthContext";
 import Toast from "@/components/Toast";
 
 export const metadata = {
@@ -20,8 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <AuthProvider>
-          <Toast />
-          <LayoutClient>{children}</LayoutClient>
+          <ReposterAuthProvider>
+            <Toast />
+            <LayoutClient>{children}</LayoutClient>
+          </ReposterAuthProvider>
         </AuthProvider>
       </body>
     </html>
