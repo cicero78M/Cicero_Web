@@ -88,9 +88,10 @@ untuk memuat data tugas. Untuk tugas khusus, helper `getSpecialTasks` di
 `cicero-dashboard/utils/api.ts` menerima token reposter (`reposter_token`)
 dan meneruskannya melalui header Authorization. Daftar tugas official kini
 memakai helper `fetchPosts` yang memanggil `GET /api/insta/posts` dengan
-`client_id` yang diprioritaskan dari JWT/token reposter lalu fallback ke
-profil reposter, lalu menyaring postingan yang dibuat pada hari berjalan
-(lokal).
+`client_id` yang digabungkan dari data login/JWT serta profil remote hasil
+`getReposterUserProfile`. Profil remote yang sudah memuat `client_id`
+disimpan kembali ke `ReposterAuthContext` (localStorage) agar konsisten di
+seluruh halaman, lalu postingan disaring untuk hari berjalan (lokal).
 
 Status lokal untuk tugas official disimpan melalui localStorage:
 

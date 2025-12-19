@@ -5,12 +5,15 @@ import useReposterAuth from "@/hooks/useReposterAuth";
 import {
   fetchPosts,
   getSpecialTasks,
+  getReposterUserProfile,
   InstaPost,
   TaskItem,
 } from "@/utils/api";
 import {
   decodeJwtPayload,
   mergeReposterProfiles,
+  normalizeReposterProfile,
+  ReposterProfile,
 } from "@/utils/reposterProfile";
 
 type ReposterTaskListProps = {
@@ -32,17 +35,56 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
-  const { token, isHydrating, profile } = useReposterAuth();
+  const { token, isHydrating, profile, setAuth } = useReposterAuth();
   const [state, setState] = useState<TaskState>({
     tasks: [],
     loading: true,
     error: "",
   });
+  const [remoteProfile, setRemoteProfile] = useState<ReposterProfile | null>(
+    null,
+  );
 
-  const clientId = useMemo(() => {
+  const sessionProfile = useMemo(() => {
     const tokenProfile = token ? decodeJwtPayload(token) : null;
-    return mergeReposterProfiles([profile, tokenProfile])?.clientId ?? "";
+    return mergeReposterProfiles([profile, tokenProfile]);
   }, [profile, token]);
+
+  const combinedProfile = useMemo(
+    () => mergeReposterProfiles([remoteProfile, sessionProfile]),
+    [remoteProfile, sessionProfile],
+  );
+
+  const clientId = combinedProfile?.clientId ?? "";
+
+  useEffect(() => {
+    if (!token || !sessionProfile?.nrp) return;
+    let isActive = true;
+    const controller = new AbortController();
+    getReposterUserProfile(token, sessionProfile.nrp, controller.signal)
+      .then((res) => {
+        if (!isActive) return;
+        const normalized = normalizeReposterProfile([
+          res?.data?.user,
+          res?.data?.profile,
+          res?.data,
+          res?.user,
+          res?.profile,
+          res,
+        ]);
+        if (!normalized) return;
+        setRemoteProfile(normalized);
+        setAuth(token, normalized.rawSources[0] ?? profile ?? null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+      });
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [token, sessionProfile?.nrp, setAuth, profile]);
 
   useEffect(() => {
     if (isHydrating || !token) return;
