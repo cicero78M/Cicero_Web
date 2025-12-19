@@ -18,7 +18,6 @@ export default function LoginForm() {
   const { setAuth } = useReposterAuth();
 
   const [username, setUsername] = useState("");
-  const [whatsAppNumber, setWhatsAppNumber] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,7 +40,6 @@ export default function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nrp: username.trim(),
-          whatsapp: whatsAppNumber.trim(),
           password: password.trim(),
         }),
       });
@@ -102,20 +100,6 @@ export default function LoginForm() {
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
-              required
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="reposter-whatsapp">
-              Nomor WhatsApp
-            </label>
-            <input
-              id="reposter-whatsapp"
-              type="tel"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-              value={whatsAppNumber}
-              onChange={(event) => setWhatsAppNumber(event.target.value)}
-              autoComplete="tel"
               required
             />
           </div>
