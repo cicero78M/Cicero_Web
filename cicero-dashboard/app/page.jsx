@@ -85,6 +85,11 @@ export default function LandingPage() {
   useAuthRedirect();
   const [email, setEmail] = useState("");
   const [activeFeature, setActiveFeature] = useState(featureHighlights[0].id);
+  const loginCtas = [
+    { label: "Login Dashboard", href: "/login", variant: "primary" },
+    { label: "Login Update", href: "/login-update", variant: "outline" },
+    { label: "Login Reposter", href: "/reposter/login", variant: "outline" },
+  ];
 
   const packages = useMemo(
     () => [
@@ -155,12 +160,21 @@ export default function LandingPage() {
               <p className="text-sm text-slate-600">Next-Gen Command Dashboard</p>
             </div>
           </div>
-          <Link
-            href="/login"
-            className="rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-200/70 transition hover:scale-105 hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
-          >
-            Login
-          </Link>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {loginCtas.map((cta) => (
+              <Link
+                key={cta.label}
+                href={cta.href}
+                className={
+                  cta.variant === "primary"
+                    ? "rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-200/70 transition hover:scale-105 hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
+                    : "rounded-full border border-indigo-200/70 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
+                }
+              >
+                {cta.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -179,12 +193,21 @@ export default function LandingPage() {
                 Cicero kini menghadirkan insight prediktif, orkestrasi bot WhatsApp, dan kontrol workflow sesuai SOP terbaru agar tim Anda selalu selangkah di depan.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-violet-200/80 transition hover:scale-[1.03] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
-                >
-                  Aktifkan Agregator
-                </Link>
+                <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+                  {loginCtas.map((cta) => (
+                    <Link
+                      key={cta.label}
+                      href={cta.href}
+                      className={
+                        cta.variant === "primary"
+                          ? "inline-flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-violet-200/80 transition hover:scale-[1.03] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
+                          : "inline-flex flex-1 items-center justify-center rounded-full border border-indigo-200/70 bg-white/70 px-6 py-3 text-base font-semibold text-slate-700 transition hover:border-violet-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
+                      }
+                    >
+                      {cta.label}
+                    </Link>
+                  ))}
+                </div>
                 <a
                   href="https://wa.me/+6281235114745"
                   target="_blank"
