@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useState } from "react";
 
 export const REPOSTER_TOKEN_STORAGE_KEY = "reposter_token";
 export const REPOSTER_PROFILE_STORAGE_KEY = "reposter_profile";
@@ -39,32 +39,38 @@ export function ReposterAuthProvider({
     setIsHydrating(false);
   }, []);
 
-  const setAuth = (
-    newToken: string | null,
-    newProfile: Record<string, any> | null = null,
-  ) => {
-    setToken(newToken);
-    if (newToken) {
-      localStorage.setItem(REPOSTER_TOKEN_STORAGE_KEY, newToken);
-    } else {
-      localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
-    }
+  const setAuth = useCallback(
+    (
+      newToken: string | null,
+      newProfile: Record<string, any> | null = null,
+    ) => {
+      setToken(newToken);
+      if (newToken) {
+        localStorage.setItem(REPOSTER_TOKEN_STORAGE_KEY, newToken);
+      } else {
+        localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
+      }
 
-    setProfile(newProfile);
-    if (newProfile) {
-      localStorage.setItem(
-        REPOSTER_PROFILE_STORAGE_KEY,
-        JSON.stringify(newProfile),
-      );
-    } else {
-      localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
-    }
-  };
+      setProfile(newProfile);
+      if (newProfile) {
+        localStorage.setItem(
+          REPOSTER_PROFILE_STORAGE_KEY,
+          JSON.stringify(newProfile),
+        );
+      } else {
+        localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
+      }
+    },
+    [],
+  );
+
+  const contextValue = useMemo(
+    () => ({ token, profile, isHydrating, setAuth }),
+    [token, profile, isHydrating, setAuth],
+  );
 
   return (
-    <ReposterAuthContext.Provider
-      value={{ token, profile, isHydrating, setAuth }}
-    >
+    <ReposterAuthContext.Provider value={contextValue}>
       {children}
     </ReposterAuthContext.Provider>
   );
