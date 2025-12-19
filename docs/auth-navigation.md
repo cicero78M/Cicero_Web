@@ -10,7 +10,7 @@ The dashboard now tracks authentication hydration status and remembers the last 
 
 ## Remembering the last protected route
 
-- Client-side navigation stores the most recent non-public pathname in `localStorage` as `last_pathname`. Public paths such as `/`, `/login`, `/login-update`, and `/claim` are ignored.
+- Client-side navigation stores the most recent non-public pathname in `localStorage` as `last_pathname`. Public paths such as `/`, `/login`, `/login-update`, `/claim`, and any `/reposter` route are ignored so the landing page never auto-redirects into reposter login.
 - `useAuthRedirect` checks `last_pathname` after hydration completes. If a valid path exists and the user is authenticated, it redirects there; otherwise it falls back to `/dashboard`.
 
 ## Practical effects

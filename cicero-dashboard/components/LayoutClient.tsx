@@ -10,7 +10,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/claim") ||
-    pathname.startsWith("/reposter/login");
+    pathname.startsWith("/reposter");
 
   useEffect(() => {
     if (!pathname) return;
@@ -19,7 +19,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
       pathname === "/" ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/claim") ||
-      pathname.startsWith("/reposter/login");
+      pathname.startsWith("/reposter");
 
     if (!isPublicPath) {
       localStorage.setItem("last_pathname", pathname);
