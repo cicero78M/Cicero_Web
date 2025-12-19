@@ -76,7 +76,10 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 - `/reposter/tasks/official` menampilkan daftar tugas official dari
   `GET /api/insta/posts?client_id=...`. Data disaring ke postingan "hari ini"
   (berdasarkan waktu lokal) dan diurutkan menurun berdasarkan `created_at`
-  sehingga konten terbaru tampil lebih dulu.
+  sehingga konten terbaru tampil lebih dulu. Setiap kartu tugas official kini
+  memiliki action bar untuk download media (termasuk carousel), share via Web
+  Share API, copy caption dengan feedback, serta tombol buka aplikasi
+  TikTok/Instagram yang menampilkan instruksi pasca-klik.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
   endpoint backend.
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh

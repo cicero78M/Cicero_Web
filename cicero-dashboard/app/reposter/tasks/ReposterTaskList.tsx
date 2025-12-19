@@ -44,7 +44,15 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   const [remoteProfile, setRemoteProfile] = useState<ReposterProfile | null>(
     null,
   );
+  const [copyFeedback, setCopyFeedback] = useState<Record<string, string>>({});
+  const [carouselSelection, setCarouselSelection] = useState<
+    Record<string, number>
+  >({});
   const profileRef = useRef(profile);
+  const actionButtonClass =
+    "inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white";
+  const canShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   useEffect(() => {
     profileRef.current = profile;
@@ -133,6 +141,103 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
       controller.abort();
     };
   }, [isHydrating, token, taskType, clientId]);
+
+  const showCopyFeedback = (postId: string, message: string) => {
+    setCopyFeedback((prev) => ({ ...prev, [postId]: message }));
+    window.setTimeout(() => {
+      setCopyFeedback((prev) => {
+        if (!prev[postId]) return prev;
+        const next = { ...prev };
+        delete next[postId];
+        return next;
+      });
+    }, 2400);
+  };
+
+  const triggerDownload = async (url: string, filename: string) => {
+    if (!url) return;
+    const anchor = document.createElement("a");
+    anchor.download = filename;
+    anchor.rel = "noreferrer";
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      anchor.href = objectUrl;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      anchor.href = url;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    }
+  };
+
+  const downloadPostMedia = async (post: InstaPost) => {
+    const baseName = `reposter-task-${post.taskNumber}-${post.id}`;
+    if (post.isCarousel && post.carouselImages.length > 0) {
+      for (const [index, imageUrl] of post.carouselImages.entries()) {
+        await triggerDownload(imageUrl, `${baseName}-slide-${index + 1}.jpg`);
+      }
+      return;
+    }
+    if (post.isVideo && post.videoUrl) {
+      await triggerDownload(post.videoUrl, `${baseName}.mp4`);
+      return;
+    }
+    if (post.imageUrl) {
+      await triggerDownload(post.imageUrl, `${baseName}.jpg`);
+    }
+  };
+
+  const downloadCarouselSlide = async (post: InstaPost, index: number) => {
+    if (!post.carouselImages[index]) return;
+    const baseName = `reposter-task-${post.taskNumber}-${post.id}`;
+    await triggerDownload(
+      post.carouselImages[index],
+      `${baseName}-slide-${index + 1}.jpg`,
+    );
+  };
+
+  const handleCopyCaption = async (post: InstaPost) => {
+    if (!post.caption) {
+      showCopyFeedback(post.id, "Caption kosong.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(post.caption || "");
+      showCopyFeedback(post.id, "Caption disalin.");
+    } catch (error) {
+      showCopyFeedback(post.id, "Gagal menyalin caption.");
+    }
+  };
+
+  const handleShare = async (post: InstaPost) => {
+    if (!canShare) return;
+    const shareData: ShareData = {
+      title: `Tugas #${post.taskNumber}`,
+      text: post.caption || "",
+    };
+    if (post.sourceUrl) {
+      shareData.url = post.sourceUrl;
+    }
+    try {
+      await navigator.share(shareData);
+    } catch (error) {
+      // ignore aborts
+    }
+  };
+
+  const handleOpenApp = (post: InstaPost) => {
+    if (!post.sourceUrl) return;
+    window.open(post.sourceUrl, "_blank", "noopener,noreferrer");
+  };
 
   const summary = useMemo(() => {
     if (taskType === "official") {
@@ -238,6 +343,23 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                     {label}
                   </span>
                 );
+                const hasMedia =
+                  (post.isVideo && post.videoUrl) ||
+                  post.imageUrl ||
+                  (post.isCarousel && post.carouselImages.length > 0);
+                const isTikTok = post.sourceUrl?.includes("tiktok.com");
+                const isInstagram = post.sourceUrl?.includes("instagram.com");
+                const appLabel = isTikTok
+                  ? "TikTok"
+                  : isInstagram
+                    ? "IG"
+                    : "TikTok/IG";
+                const canCopyCaption = Boolean(post.caption);
+                const canOpenApp = Boolean(post.sourceUrl);
+                const selectedSlide = carouselSelection[post.id] ?? 0;
+                const shareTitle = canShare
+                  ? "Bagikan ke aplikasi lain"
+                  : "Web Share API tidak didukung di perangkat ini.";
 
                 return (
                   <div
@@ -313,6 +435,107 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                             post.reported ? "Sudah dilaporkan" : "Belum dilaporkan",
                             post.reported,
                           )}
+                        </div>
+                        <div className="space-y-3 pt-2">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className={actionButtonClass}
+                              onClick={() => downloadPostMedia(post)}
+                              disabled={!hasMedia}
+                              title={
+                                hasMedia
+                                  ? "Unduh media"
+                                  : "Media tidak tersedia."
+                              }
+                            >
+                              Download Media
+                            </button>
+                            <button
+                              type="button"
+                              className={actionButtonClass}
+                              onClick={() => handleShare(post)}
+                              disabled={!canShare}
+                              title={shareTitle}
+                            >
+                              Share (HP)
+                            </button>
+                            <button
+                              type="button"
+                              className={actionButtonClass}
+                              onClick={() => handleCopyCaption(post)}
+                              disabled={!canCopyCaption}
+                              title={
+                                canCopyCaption
+                                  ? "Salin caption"
+                                  : "Caption kosong."
+                              }
+                            >
+                              Copy Caption
+                            </button>
+                            <button
+                              type="button"
+                              className={actionButtonClass}
+                              onClick={() => handleOpenApp(post)}
+                              disabled={!canOpenApp}
+                              title={
+                                canOpenApp
+                                  ? `Buka ${appLabel}`
+                                  : "Link sumber tidak tersedia."
+                              }
+                            >
+                              Open App ({appLabel})
+                            </button>
+                          </div>
+                          {post.isCarousel && post.carouselImages.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                              <span>Pilih slide:</span>
+                              <select
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                                value={selectedSlide}
+                                onChange={(event) =>
+                                  setCarouselSelection((prev) => ({
+                                    ...prev,
+                                    [post.id]: Number(event.target.value),
+                                  }))
+                                }
+                              >
+                                {post.carouselImages.map((_, index) => (
+                                  <option key={index} value={index}>
+                                    Slide {index + 1}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                className={actionButtonClass}
+                                onClick={() =>
+                                  downloadCarouselSlide(post, selectedSlide)
+                                }
+                              >
+                                Download Slide
+                              </button>
+                              <span className="text-[11px] text-slate-400">
+                                Download Media = unduh semua slide.
+                              </span>
+                            </div>
+                          ) : null}
+                          {copyFeedback[post.id] ? (
+                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                              {copyFeedback[post.id]}
+                            </p>
+                          ) : null}
+                          {canOpenApp ? (
+                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+                              <p className="font-semibold">
+                                Instruksi setelah membuka {appLabel}:
+                              </p>
+                              <ol className="mt-1 list-decimal space-y-1 pl-4">
+                                <li>Paste caption yang sudah disalin.</li>
+                                <li>Upload media pada aplikasi terkait.</li>
+                              </ol>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
