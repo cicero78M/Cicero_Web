@@ -101,13 +101,16 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
         { total: 0, pending: 0, in_progress: 0, done: 0 },
       );
     }
+    const specialTasks = state.tasks.filter(
+      (task): task is TaskItem => "status" in task,
+    );
     const totals = {
-      total: state.tasks.length,
+      total: specialTasks.length,
       pending: 0,
       in_progress: 0,
       done: 0,
     };
-    state.tasks.forEach((task) => {
+    specialTasks.forEach((task) => {
       const statusKey = (task.status || "").toLowerCase();
       if (statusKey.includes("progress")) totals.in_progress += 1;
       else if (statusKey.includes("done") || statusKey.includes("complete")) {
