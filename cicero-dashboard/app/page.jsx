@@ -86,9 +86,9 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [activeFeature, setActiveFeature] = useState(featureHighlights[0].id);
   const loginCtas = [
-    { label: "Login Dashboard", href: "/login", variant: "primary" },
-    { label: "Login Update", href: "/login-update", variant: "outline" },
-    { label: "Login Reposter", href: "/reposter/login", variant: "outline" },
+    { label: "Dashboard", href: "/login", variant: "primary" },
+    { label: "Claims", href: "/login-update", variant: "outline" },
+    { label: "Reposter", href: "/reposter/login", variant: "outline" },
   ];
 
   const packages = useMemo(
