@@ -40,7 +40,8 @@ yang sama.
 
 - Entry point Next.js berada di `cicero-dashboard/app/reposter/page.tsx`.
 - Autentikasi reposter memakai halaman login khusus di
-  `cicero-dashboard/app/reposter/login/page.tsx` dengan context terpisah
+  `cicero-dashboard/app/reposter/login/page.tsx` dengan context terpisah dan
+  membungkus form client dalam Suspense karena menggunakan `useSearchParams`.
   `ReposterAuthContext` agar token tidak bercampur dengan login dashboard utama.
 - Token reposter disimpan di localStorage dengan kunci `reposter_token` dan
   cookie `reposter_session` agar middleware dapat melakukan redirect lebih awal
