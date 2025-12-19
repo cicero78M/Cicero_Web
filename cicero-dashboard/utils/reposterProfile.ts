@@ -5,7 +5,7 @@ type ProfileSource = Record<string, any> | null | undefined;
 export type ReposterProfile = {
   nrp: string;
   name: string;
-  polresName: string;
+  clientId: string;
   whatsapp: string;
   email: string;
   role: string;
@@ -132,14 +132,16 @@ export function normalizeReposterProfile(
       "nama_user",
       "user_name",
     ]),
-    polresName: pickString(normalizedSources, [
-      "nama_polres",
-      "polres_name",
-      "polres",
+    clientId: pickString(normalizedSources, [
+      "client_id",
+      "clientId",
+      "clientID",
       "nama_client",
       "client_name",
       "client",
-      "client_id",
+      "nama_polres",
+      "polres_name",
+      "polres",
     ]),
     whatsapp: pickString(normalizedSources, [
       "whatsapp",
@@ -222,7 +224,7 @@ export function normalizeReposterProfile(
   const hasData =
     profile.nrp ||
     profile.name ||
-    profile.polresName ||
+    profile.clientId ||
     profile.whatsapp ||
     profile.email ||
     profile.role ||

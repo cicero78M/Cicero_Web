@@ -18,12 +18,6 @@ const fallbackInitials = (value: string) =>
     .slice(0, 2)
     .toUpperCase();
 
-const buildInstagramLink = (username: string) =>
-  username ? `https://www.instagram.com/${username}` : "";
-
-const buildTiktokLink = (username: string) =>
-  username ? `https://www.tiktok.com/@${username}` : "";
-
 const sanitizeUsername = (value: string) => value.trim().replace(/^@/, "");
 
 type ProfileFormState = {
@@ -148,9 +142,6 @@ export default function ProfileClient() {
 
   const displayName = combinedProfile.name || combinedProfile.nrp || "User";
   const avatarInitials = fallbackInitials(displayName);
-  const instagramLink = buildInstagramLink(formState.instagramUsername);
-  const tiktokLink = buildTiktokLink(formState.tiktokUsername);
-
   const inputClassName =
     "w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-500/20";
   const readOnlyClassName =
@@ -244,12 +235,12 @@ export default function ProfileClient() {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-            Nama Polres
+            Client ID
           </label>
           <input
             readOnly
             className={readOnlyClassName}
-            value={combinedProfile.polresName || "-"}
+            value={combinedProfile.clientId || "-"}
           />
         </div>
         <div className="space-y-2">
@@ -304,16 +295,6 @@ export default function ProfileClient() {
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-            Link profile Instagram
-          </label>
-          <input
-            readOnly
-            className={readOnlyClassName}
-            value={instagramLink || "-"}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
             Username Instagram
           </label>
           <input
@@ -323,16 +304,6 @@ export default function ProfileClient() {
               handleChange("instagramUsername", event.target.value)
             }
             placeholder="contoh: polri"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-            Link profile TikTok
-          </label>
-          <input
-            readOnly
-            className={readOnlyClassName}
-            value={tiktokLink || "-"}
           />
         </div>
         <div className="space-y-2">
