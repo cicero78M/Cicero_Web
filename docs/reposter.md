@@ -94,4 +94,7 @@ Status lokal untuk tugas official disimpan melalui localStorage:
 - `reposter_downloaded_posts`: daftar ID post yang sudah diunduh.
 - `reposter_reported_posts`: daftar ID post yang sudah dilaporkan.
 
+Ringkasan tugas khusus menghitung status berdasarkan field `status` dari setiap
+task (misalnya pending, in progress, atau done) yang diterima dari backend.
+
 Detail parameter filter dan skema response dijelaskan di `docs/tasks_api.md`.
