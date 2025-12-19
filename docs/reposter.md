@@ -30,7 +30,7 @@ lingkungan tambahan khusus reposter selain dua nilai di atas.
    reposter (staging/production).
 3. Pastikan backend Cicero tersedia dan `NEXT_PUBLIC_API_URL` di dashboard
    menunjuk ke base URL yang benar karena login reposter memanggil
-   `/api/auth/reposter-login`.
+   `/api/auth/user-login` dengan payload `nrp`, `whatsapp`, dan `password`.
 
 Dengan konfigurasi tersebut, halaman `/reposter` akan menampilkan aplikasi
 reposter melalui iframe dan link “Buka reposter di tab baru” akan membuka URL
@@ -55,7 +55,8 @@ yang sama.
 ## Alur Login Reposter
 
 1. Pengguna mengakses `/reposter/login` langsung, atau memilihnya dari halaman agregator login update di `/login-update`.
-2. Dashboard mengirim POST ke `/api/auth/reposter-login` di backend Cicero.
+2. Dashboard mengirim POST ke `/api/auth/user-login` di backend Cicero dengan
+   payload `nrp`, `whatsapp`, dan `password`.
 3. Jika berhasil, token disimpan ke localStorage (`reposter_token`) dan cookie
    `reposter_session` dengan scope path `/reposter`.
 4. Pengguna diarahkan kembali ke path tujuan (default `/reposter`).
