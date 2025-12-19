@@ -45,6 +45,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
 - Rute `/reposter/profile`, `/reposter/tasks/official`, dan `/reposter/tasks/special` menampilkan halaman native dashboard yang menampilkan data profil, daftar tugas official, dan daftar tugas khusus berdasarkan token reposter.
 - `/reposter/tasks/official` kini mengambil posting Instagram dari `GET /api/insta/posts?client_id=...`, menggabungkan `client_id` dari token/login dan profil remote (`GET /api/users/{nrp}`), lalu menyaring konten "hari ini" (waktu lokal) agar konten terbaru muncul lebih dulu.
+- Pengambilan profil remote untuk halaman tugas official kini dijaga per-NRP agar pemanggilan `GET /api/users/{nrp}` tidak berulang saat state auth diperbarui.
 - `/reposter/profile` kini mengambil detail user dari tabel `user` melalui endpoint Cicero_V2 (`GET /api/users/{nrp}`), menampilkan Client ID, menyediakan form edit untuk Nama, Pangkat, Satfung, Jabatan, username Instagram/TikTok, serta email dengan tombol simpan yang memanggil `PUT /api/users/{nrp}`. Profil remote yang sudah lengkap disimpan kembali ke storage reposter agar halaman lain konsisten.
 - Helper `utils/reposterProfile.ts` membantu menormalkan payload login + JWT untuk menampilkan data profil sesuai pengguna yang sedang login, sekaligus memprioritaskan `client_id` dari token sebelum fallback ke label client.
 

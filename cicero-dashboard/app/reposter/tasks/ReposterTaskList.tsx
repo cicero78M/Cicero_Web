@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import {
   fetchPosts,
@@ -44,6 +44,11 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   const [remoteProfile, setRemoteProfile] = useState<ReposterProfile | null>(
     null,
   );
+  const profileRef = useRef(profile);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   const sessionProfile = useMemo(() => {
     const tokenProfile = token ? decodeJwtPayload(token) : null;
@@ -59,6 +64,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
 
   useEffect(() => {
     if (!token || !sessionProfile?.nrp) return;
+    if (remoteProfile?.nrp === sessionProfile.nrp) return;
     let isActive = true;
     const controller = new AbortController();
     getReposterUserProfile(token, sessionProfile.nrp, controller.signal)
@@ -74,7 +80,10 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
         ]);
         if (!normalized) return;
         setRemoteProfile(normalized);
-        setAuth(token, normalized.rawSources[0] ?? profile ?? null);
+        setAuth(
+          token,
+          normalized.rawSources[0] ?? profileRef.current ?? null,
+        );
       })
       .catch(() => {
         if (!isActive) return;
@@ -84,7 +93,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
       isActive = false;
       controller.abort();
     };
-  }, [token, sessionProfile?.nrp, setAuth, profile]);
+  }, [token, sessionProfile?.nrp, remoteProfile?.nrp, setAuth]);
 
   useEffect(() => {
     if (isHydrating || !token) return;
