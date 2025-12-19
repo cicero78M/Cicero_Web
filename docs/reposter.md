@@ -50,6 +50,9 @@ yang sama.
   secara langsung jika membutuhkan layar penuh.
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar
   pengalaman login reposter terasa terpisah dari modul utama.
+- Dashboard menambahkan rute `/reposter/profile`, `/reposter/tasks/official`, dan
+  `/reposter/tasks/special` yang menampilkan iframe ke halaman reposter terkait
+  sekaligus menyediakan deep-link langsung ke URL reposter.
 
 ## Alur Login Reposter
 
@@ -73,6 +76,12 @@ yang sama.
 - `/reposter` menampilkan iframe reposter dan dilindungi oleh hook
   `useRequireReposterAuth` di sisi client. Jika token belum ada, pengguna
   diarahkan ke `/reposter/login`.
+- `/reposter/profile` menampilkan halaman profil pengguna di reposter (setara
+  dengan fitur profil pada pegiat_medsos_app).
+- `/reposter/tasks/official` menampilkan daftar tugas official (setara dengan
+  tugas official pada pegiat_medsos_app).
+- `/reposter/tasks/special` menampilkan daftar tugas khusus (setara dengan
+  tugas khusus pada pegiat_medsos_app).
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh
   middleware.
 - Middleware di `cicero-dashboard/middleware.ts` memeriksa cookie
