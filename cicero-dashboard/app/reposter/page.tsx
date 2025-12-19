@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import useRequireReposterAuth from "@/hooks/useRequireReposterAuth";
 
 const DEFAULT_REPOSTER_URL = "http://localhost:5173";
 
 export default function ReposterPage() {
+  useRequireReposterAuth();
   const reposterUrl =
     process.env.NEXT_PUBLIC_REPOSTER_URL ?? DEFAULT_REPOSTER_URL;
 

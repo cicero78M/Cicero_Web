@@ -39,6 +39,9 @@ The repository includes multiple package managers, so lockfiles from the monorep
 ## Modul Reposter
 
 - Rute `/reposter` menampilkan aplikasi reposter sebagai micro-frontend yang berjalan terpisah melalui iframe di `app/reposter/page.tsx`.
+- Halaman `/reposter/login` menangani autentikasi reposter secara terpisah, menyimpan token di localStorage (`reposter_token`) dan cookie `reposter_session` untuk kebutuhan guard server.
+- Context `ReposterAuthContext` dan hook `useRequireReposterAuth` menjaga halaman reposter tetap terlindungi tanpa bercampur dengan sesi login dashboard utama.
+- Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
 - URL layanan reposter diatur lewat variabel `NEXT_PUBLIC_REPOSTER_URL` agar lingkungan staging/production dapat menunjuk ke host yang berbeda.
 - Sidebar menambahkan entri **Reposter** untuk mempermudah navigasi menuju modul ini.
 
