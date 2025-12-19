@@ -46,7 +46,6 @@ yang sama.
 - Token reposter disimpan di localStorage dengan kunci `reposter_token` dan
   cookie `reposter_session` agar middleware dapat melakukan redirect lebih awal
   sebelum halaman dirender.
-- Navigasi ke modul reposter tersedia di sidebar dashboard (`/reposter`).
 - Link “Buka reposter di tab baru” membantu pengguna membuka aplikasi reposter
   secara langsung jika membutuhkan layar penuh.
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar

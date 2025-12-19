@@ -20,7 +20,6 @@ import {
   Book,
   Workflow,
   Shield,
-  Share2,
 } from "lucide-react";
 import {
   Sheet,
@@ -85,7 +84,6 @@ export default function Sidebar() {
     ...(amplifyEnabled
       ? [{ label: "Diseminasi Insight", path: "/amplify", icon: LinkIcon }]
       : []),
-    { label: "Reposter", path: "/reposter", icon: Share2 },
     ...(tiktokEnabled
       ? [
           ...(isOperator
