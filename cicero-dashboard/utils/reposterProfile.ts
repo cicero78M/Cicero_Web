@@ -5,12 +5,17 @@ type ProfileSource = Record<string, any> | null | undefined;
 export type ReposterProfile = {
   nrp: string;
   name: string;
+  polresName: string;
   whatsapp: string;
   email: string;
   role: string;
+  jabatan: string;
+  satfung: string;
   unit: string;
   rank: string;
   avatarUrl: string;
+  instagramUsername: string;
+  tiktokUsername: string;
   rawSources: ProfileSource[];
 };
 
@@ -27,6 +32,62 @@ const pickString = (sources: ProfileSource[], keys: string[]): string => {
 
 const normalizeSources = (sources: ProfileSource[]): ProfileSource[] =>
   sources.filter((source) => source && typeof source === "object");
+
+const INSTAGRAM_USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
+const TIKTOK_USERNAME_PATTERN = /^[A-Za-z0-9._-]+$/;
+
+const normalizeInstagramUsername = (value: string): string => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (!/^https?:\/\//i.test(trimmed)) {
+    const normalized = trimmed.replace(/^@/, "");
+    return INSTAGRAM_USERNAME_PATTERN.test(normalized) ? normalized : "";
+  }
+  try {
+    const link = new URL(trimmed);
+    const host = link.hostname.toLowerCase();
+    if (
+      host !== "instagram.com" &&
+      host !== "www.instagram.com" &&
+      !host.endsWith(".instagram.com")
+    ) {
+      return "";
+    }
+    const segments = link.pathname.split("/").filter(Boolean);
+    const candidate = segments[0] ? segments[0].replace(/^@/, "") : "";
+    return INSTAGRAM_USERNAME_PATTERN.test(candidate) ? candidate : "";
+  } catch {
+    return "";
+  }
+};
+
+const normalizeTiktokUsername = (value: string): string => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (!/^https?:\/\//i.test(trimmed)) {
+    const normalized = trimmed.replace(/^@/, "");
+    return TIKTOK_USERNAME_PATTERN.test(normalized) ? normalized : "";
+  }
+  try {
+    const link = new URL(trimmed);
+    const host = link.hostname.toLowerCase();
+    if (
+      host !== "tiktok.com" &&
+      host !== "www.tiktok.com" &&
+      !host.endsWith(".tiktok.com")
+    ) {
+      return "";
+    }
+    const segments = link.pathname.split("/").filter(Boolean);
+    const raw = segments[0] || "";
+    const candidate = raw.startsWith("@") ? raw.slice(1) : raw;
+    return TIKTOK_USERNAME_PATTERN.test(candidate) ? candidate : "";
+  } catch {
+    return "";
+  }
+};
 
 export function decodeJwtPayload(token: string): Record<string, any> | null {
   if (!token) return null;
@@ -71,6 +132,15 @@ export function normalizeReposterProfile(
       "nama_user",
       "user_name",
     ]),
+    polresName: pickString(normalizedSources, [
+      "nama_polres",
+      "polres_name",
+      "polres",
+      "nama_client",
+      "client_name",
+      "client",
+      "client_id",
+    ]),
     whatsapp: pickString(normalizedSources, [
       "whatsapp",
       "no_wa",
@@ -92,6 +162,18 @@ export function normalizeReposterProfile(
       "jabatan",
       "position",
     ]),
+    jabatan: pickString(normalizedSources, [
+      "jabatan",
+      "position",
+      "role",
+      "user_role",
+    ]),
+    satfung: pickString(normalizedSources, [
+      "satfung",
+      "divisi",
+      "division",
+      "unit",
+    ]),
     unit: pickString(normalizedSources, [
       "satker",
       "unit",
@@ -100,6 +182,7 @@ export function normalizeReposterProfile(
     ]),
     rank: pickString(normalizedSources, [
       "pangkat",
+      "title",
       "rank",
       "grade",
     ]),
@@ -113,18 +196,43 @@ export function normalizeReposterProfile(
       "profilePicture",
       "foto",
     ]),
+    instagramUsername: normalizeInstagramUsername(
+      pickString(normalizedSources, [
+        "instagram",
+        "instagram_username",
+        "instagramUsername",
+        "insta",
+        "ig",
+        "ig_username",
+        "client_insta",
+      ]),
+    ),
+    tiktokUsername: normalizeTiktokUsername(
+      pickString(normalizedSources, [
+        "tiktok",
+        "tiktok_username",
+        "tiktokUsername",
+        "tt",
+        "client_tiktok",
+      ]),
+    ),
     rawSources: normalizedSources,
   };
 
   const hasData =
     profile.nrp ||
     profile.name ||
+    profile.polresName ||
     profile.whatsapp ||
     profile.email ||
     profile.role ||
+    profile.jabatan ||
+    profile.satfung ||
     profile.unit ||
     profile.rank ||
-    profile.avatarUrl;
+    profile.avatarUrl ||
+    profile.instagramUsername ||
+    profile.tiktokUsername;
 
   return hasData ? profile : null;
 }
