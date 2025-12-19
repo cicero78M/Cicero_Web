@@ -77,11 +77,15 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   `GET /api/insta/posts?client_id=...`. Data disaring ke postingan "hari ini"
   (berdasarkan waktu lokal) dan diurutkan menurun berdasarkan `created_at`
   sehingga konten terbaru tampil lebih dulu. Setiap kartu tugas official kini
-  memiliki action bar untuk download media (termasuk carousel), share via Web
-  Share API, copy caption dengan feedback, serta tombol buka aplikasi
-  TikTok/Instagram yang menampilkan instruksi pasca-klik. Aksi download/share/
-  copy kini dibungkus helper `utils/reposterTaskActions.ts` agar handler UI lebih
-  ringkas dan tetap menyediakan status feedback untuk pengguna.
+  memiliki action bar untuk:
+  - Download media.
+  - Share via Web Share API (HP yang mendukung).
+  - Copy caption dengan feedback.
+  - Open App + instruksi 2 langkah (paste caption + upload).
+  Aksi download/share/copy dibungkus helper `utils/reposterTaskActions.ts` agar
+  handler UI lebih ringkas dan tetap menyediakan status feedback untuk pengguna.
+  Perilaku fallback juga dicatat: tombol Share akan disabled bila Web Share API
+  tidak tersedia di perangkat/browser.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
   endpoint backend.
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh
