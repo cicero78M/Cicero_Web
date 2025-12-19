@@ -54,7 +54,7 @@ yang sama.
 
 ## Alur Login Reposter
 
-1. Pengguna mengakses `/reposter/login` dan mengisi kredensial reposter.
+1. Pengguna mengakses `/reposter/login` langsung, atau memilihnya dari halaman agregator login update di `/login-update`.
 2. Dashboard mengirim POST ke `/api/auth/reposter-login` di backend Cicero.
 3. Jika berhasil, token disimpan ke localStorage (`reposter_token`) dan cookie
    `reposter_session` dengan scope path `/reposter`.

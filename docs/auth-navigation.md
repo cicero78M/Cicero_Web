@@ -10,10 +10,15 @@ The dashboard now tracks authentication hydration status and remembers the last 
 
 ## Remembering the last protected route
 
-- Client-side navigation stores the most recent non-public pathname in `localStorage` as `last_pathname`. Public paths such as `/`, `/login`, and `/claim` are ignored.
+- Client-side navigation stores the most recent non-public pathname in `localStorage` as `last_pathname`. Public paths such as `/`, `/login`, `/login-update`, and `/claim` are ignored.
 - `useAuthRedirect` checks `last_pathname` after hydration completes. If a valid path exists and the user is authenticated, it redirects there; otherwise it falls back to `/dashboard`.
 
 ## Practical effects
 
 - Authenticated users who return to the site are kept on their current route during hydration, preventing unwanted jumps to `/`.
 - After logging in again, users land on the last protected page they visited instead of always starting at `/dashboard`.
+
+## Landing CTA terbaru
+
+- Landing page menampilkan tiga CTA login: `Login Dashboard` ke `/login`, `Login Update` ke `/login-update`, dan `Login Reposter` ke `/reposter/login`.
+- Halaman `/login-update` memberi pilihan eksplisit menuju login claim (`/claim`) dan login reposter (`/reposter/login`).
