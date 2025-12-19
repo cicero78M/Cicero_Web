@@ -36,6 +36,12 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Hero, ringkasan, dan kartu quick insight pada Instagram/TikTok sekarang dirender lewat scaffold bersama `components/insight/EngagementInsightMobileScaffold.jsx` sehingga padding, tipografi, dan jarak kontrol di layar sempit seragam tanpa duplikasi markup.
 - ChartBox bawaan mendapat padding responsif (p-4 → p-6) plus judul bertacking normal di mobile dan border empty state agar ruang baca tetap lega pada perangkat kecil.
 
+## Modul Reposter
+
+- Rute `/reposter` menampilkan aplikasi reposter sebagai micro-frontend yang berjalan terpisah melalui iframe di `app/reposter/page.tsx`.
+- URL layanan reposter diatur lewat variabel `NEXT_PUBLIC_REPOSTER_URL` agar lingkungan staging/production dapat menunjuk ke host yang berbeda.
+- Sidebar menambahkan entri **Reposter** untuk mempermudah navigasi menuju modul ini.
+
 ## Getting Started
 
 First, run the development server:
