@@ -49,6 +49,8 @@ yang sama.
 - Navigasi ke modul reposter tersedia di sidebar dashboard (`/reposter`).
 - Link “Buka reposter di tab baru” membantu pengguna membuka aplikasi reposter
   secara langsung jika membutuhkan layar penuh.
+- Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar
+  pengalaman login reposter terasa terpisah dari modul utama.
 
 ## Alur Login Reposter
 
