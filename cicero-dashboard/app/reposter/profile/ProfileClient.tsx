@@ -93,6 +93,9 @@ export default function ProfileClient() {
           res,
         ]);
         setRemoteProfile(normalized);
+        if (normalized) {
+          setAuth(token, normalized.rawSources[0] ?? profile ?? null);
+        }
       })
       .catch((error) => {
         if (!isActive) return;
@@ -108,7 +111,7 @@ export default function ProfileClient() {
       isActive = false;
       controller.abort();
     };
-  }, [token, sessionProfile?.nrp]);
+  }, [token, sessionProfile?.nrp, setAuth, profile]);
 
   const isDirty = useMemo(
     () => JSON.stringify(formState) !== JSON.stringify(initialFormState),
