@@ -198,6 +198,49 @@ export type SatbinmasHashtagItem = {
   clientId?: string;
 };
 
+export type TaskFilterParams = {
+  periode?: string;
+  status?: string;
+  clientId?: string;
+  client_id?: string;
+  userId?: string;
+  user_id?: string;
+  nrp?: string;
+  startDate?: string;
+  endDate?: string;
+  tanggal_mulai?: string;
+  tanggal_selesai?: string;
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type TaskItem = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  taskType: string;
+  clientId: string;
+  clientName: string;
+  assignedTo: string;
+  dueDate: string;
+  periodStart: string;
+  periodEnd: string;
+  metadata?: Record<string, any> | null;
+};
+
+export type TaskListResponse = {
+  tasks: TaskItem[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+  filters: Record<string, any>;
+};
+
 export type SatbinmasSummary = {
   totals: {
     accounts: number;
@@ -268,6 +311,79 @@ function buildSatbinmasQuery(filters: SatbinmasFilterParams): string {
   if (clientId) params.append("client_id", clientId);
   const query = params.toString();
   return query ? `?${query}` : "";
+}
+
+function buildTaskQuery(filters: TaskFilterParams): string {
+  const params = new URLSearchParams();
+  if (filters.periode) params.append("periode", filters.periode);
+  if (filters.status) params.append("status", filters.status);
+  const clientId = filters.clientId || filters.client_id;
+  if (clientId) params.append("client_id", clientId);
+  const userId = filters.userId || filters.user_id || filters.nrp;
+  if (userId) params.append("user_id", userId);
+  const startDate =
+    filters.startDate || filters.start_date || filters.tanggal_mulai;
+  const endDate = filters.endDate || filters.end_date || filters.tanggal_selesai;
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
+  if (typeof filters.limit === "number") {
+    params.append("limit", String(filters.limit));
+  }
+  if (typeof filters.offset === "number") {
+    params.append("offset", String(filters.offset));
+  }
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+function normalizeTaskEntry(entry: any): TaskItem {
+  return {
+    id:
+      ensureString(entry?.id) ||
+      ensureString(entry?.task_id) ||
+      ensureString(entry?.uuid),
+    title:
+      ensureString(entry?.title) ||
+      ensureString(entry?.name) ||
+      ensureString(entry?.task_name),
+    description:
+      ensureString(entry?.description) ||
+      ensureString(entry?.detail) ||
+      ensureString(entry?.notes),
+    status:
+      ensureString(entry?.status) ||
+      ensureString(entry?.state) ||
+      "unknown",
+    taskType:
+      ensureString(entry?.task_type) ||
+      ensureString(entry?.type) ||
+      ensureString(entry?.category),
+    clientId:
+      ensureString(entry?.client_id) ||
+      ensureString(entry?.clientId) ||
+      ensureString(entry?.polres_id),
+    clientName:
+      ensureString(entry?.client_name) ||
+      ensureString(entry?.clientName) ||
+      ensureString(entry?.polres_name),
+    assignedTo:
+      ensureString(entry?.assigned_to) ||
+      ensureString(entry?.user_id) ||
+      ensureString(entry?.nrp),
+    dueDate:
+      ensureString(entry?.due_date) ||
+      ensureString(entry?.deadline) ||
+      ensureString(entry?.dueAt),
+    periodStart:
+      ensureString(entry?.period_start) ||
+      ensureString(entry?.start_date) ||
+      ensureString(entry?.tanggal_mulai),
+    periodEnd:
+      ensureString(entry?.period_end) ||
+      ensureString(entry?.end_date) ||
+      ensureString(entry?.tanggal_selesai),
+    metadata: entry?.metadata ?? entry?.meta ?? null,
+  };
 }
 
 function normalizeAccountCoverageEntry(entry: any): SatbinmasAccountCoverage {
@@ -459,6 +575,50 @@ export async function getSatbinmasAccounts(
       null,
     polres: ensureString(entry?.polres) || ensureString(entry?.polres_name),
   }));
+}
+
+async function getTaskList(
+  token: string,
+  endpoint: string,
+  filters: TaskFilterParams = {},
+  signal?: AbortSignal,
+): Promise<TaskListResponse> {
+  const query = buildTaskQuery(filters);
+  const url = `${buildApiUrl(endpoint)}${query}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch tasks");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? {};
+  const pagination = payload?.pagination ?? payload?.meta ?? {};
+
+  return {
+    tasks: ensureArray(payload?.tasks ?? payload?.data ?? [], normalizeTaskEntry),
+    pagination: {
+      total: ensureNumber(pagination.total ?? payload?.total ?? 0),
+      limit: ensureNumber(pagination.limit ?? filters.limit ?? 0),
+      offset: ensureNumber(pagination.offset ?? filters.offset ?? 0),
+    },
+    filters: payload?.filters ?? filters ?? {},
+  };
+}
+
+export async function getOfficialTasks(
+  token: string,
+  filters: TaskFilterParams = {},
+  signal?: AbortSignal,
+): Promise<TaskListResponse> {
+  return getTaskList(token, "/api/tasks/official", filters, signal);
+}
+
+export async function getSpecialTasks(
+  token: string,
+  filters: TaskFilterParams = {},
+  signal?: AbortSignal,
+): Promise<TaskListResponse> {
+  return getTaskList(token, "/api/tasks/special", filters, signal);
 }
 
 export async function getDashboardStats(

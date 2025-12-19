@@ -87,3 +87,11 @@ yang sama.
 - Middleware di `cicero-dashboard/middleware.ts` memeriksa cookie
   `reposter_session` untuk semua path `/reposter/*` selain `/reposter/login`
   dan mengarahkan ke login bila cookie belum tersedia.
+
+## Integrasi Endpoint Tugas
+
+Halaman tugas reposter memakai endpoint backend yang sama dengan dashboard
+untuk memuat data tugas. Helper `getOfficialTasks` dan `getSpecialTasks` di
+`cicero-dashboard/utils/api.ts` menerima token reposter (`reposter_token`)
+dan meneruskannya melalui header Authorization. Detail parameter filter dan
+skema response dijelaskan di `docs/tasks_api.md`.
