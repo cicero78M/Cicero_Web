@@ -69,8 +69,10 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 - `/reposter/profile` menampilkan halaman profil pengguna berbasis data login
   reposter (selaras dengan profil pada pegiat_medsos_app), mengambil data detail
   dari tabel user (endpoint Cicero_V2) dan menyediakan tombol simpan data.
-- `/reposter/tasks/official` menampilkan daftar tugas official yang diambil dari
-  endpoint backend.
+- `/reposter/tasks/official` menampilkan daftar tugas official dari
+  `GET /api/insta/posts?client_id=...`. Data disaring ke postingan "hari ini"
+  (berdasarkan waktu lokal) dan diurutkan menurun berdasarkan `created_at`
+  sehingga konten terbaru tampil lebih dulu.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
   endpoint backend.
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh
