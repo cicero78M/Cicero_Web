@@ -37,9 +37,10 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   `/reposter/tasks/special` yang menampilkan data profil dan daftar tugas secara
   native di dashboard.
 - Halaman `/reposter/profile` kini mengambil detail user dari tabel `user`
-  melalui endpoint Cicero_V2 `GET /api/users/{nrp}` dan menyediakan form edit
-  untuk Nama, Pangkat, Satfung, Jabatan, username Instagram, username TikTok,
-  serta email. Pembaruan disimpan lewat `PUT /api/users/{nrp}`.
+  melalui endpoint Cicero_V2 `GET /api/users/{nrp}`, menampilkan Client ID, dan
+  menyediakan form edit untuk Nama, Pangkat, Satfung, Jabatan, username
+  Instagram, username TikTok, serta email. Pembaruan disimpan lewat
+  `PUT /api/users/{nrp}`.
 
 ## Alur Login Reposter
 
