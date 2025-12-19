@@ -44,7 +44,6 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar pengalaman login reposter terasa lebih fokus dan tidak tercampur dengan UI modul utama.
 - Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
 - URL layanan reposter diatur lewat variabel `NEXT_PUBLIC_REPOSTER_URL` agar lingkungan staging/production dapat menunjuk ke host yang berbeda.
-- Sidebar menambahkan entri **Reposter** untuk mempermudah navigasi menuju modul ini.
 
 ## Getting Started
 
