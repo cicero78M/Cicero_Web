@@ -875,7 +875,7 @@ export async function getReposterReportLinks(
   token: string,
   params: {
     postId: string;
-    clientId: string;
+    userId: string;
     platform?: string;
   },
   signal?: AbortSignal,
@@ -883,12 +883,12 @@ export async function getReposterReportLinks(
   if (!params.postId) {
     throw new Error("Post ID belum tersedia.");
   }
-  if (!params.clientId) {
-    throw new Error("Client ID belum tersedia.");
+  if (!params.userId) {
+    throw new Error("User ID belum tersedia.");
   }
   const query = new URLSearchParams({
     post_id: params.postId,
-    client_id: params.clientId,
+    user_id: params.userId,
   });
   if (params.platform) {
     query.append("platform", params.platform);

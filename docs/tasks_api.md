@@ -47,7 +47,6 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 
 - `post_id` (string, wajib): ID post official yang dilaporkan.
 - `user_id` (string, wajib): ID user/NRP pelapor (dipakai untuk mencari laporan).
-- `client_id` (string, opsional): ID client/polres terkait.
 - `platform` (string, opsional): platform sumber (mis. `instagram`) untuk
   menyesuaikan logika backend Cicero_V2/pegiat_medsos_app.
 
