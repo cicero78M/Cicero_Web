@@ -244,6 +244,7 @@ export type InstaPost = {
   isCarousel: boolean;
   downloaded: boolean;
   reported: boolean;
+  platform: string;
 };
 
 export const REPOSTER_DOWNLOADED_POSTS_KEY = "reposter_downloaded_posts";
@@ -257,6 +258,11 @@ export type TaskListResponse = {
     offset: number;
   };
   filters: Record<string, any>;
+};
+
+export type ReportLinkItem = {
+  platform: string;
+  url: string;
 };
 
 export type SatbinmasSummary = {
@@ -795,6 +801,7 @@ export async function fetchPosts(
       isCarousel,
       downloaded: downloadedSet.has(id),
       reported: reportedSet.has(id),
+      platform: ensureString(entry?.platform) || "instagram",
     } satisfies InstaPost;
   }).filter((post): post is InstaPost => Boolean(post));
 
@@ -805,6 +812,62 @@ export async function fetchPosts(
       ...post,
       taskNumber: index + 1,
     }));
+}
+
+function normalizeReportLinks(raw: any): ReportLinkItem[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((entry) => ({
+        platform:
+          ensureString(entry?.platform) ||
+          ensureString(entry?.name) ||
+          ensureString(entry?.type),
+        url: ensureString(entry?.url) || ensureString(entry?.link),
+      }))
+      .filter((entry) => entry.platform && entry.url);
+  }
+  if (raw && typeof raw === "object") {
+    return Object.entries(raw)
+      .map(([platform, url]) => ({
+        platform: ensureString(platform),
+        url: ensureString(url),
+      }))
+      .filter((entry) => entry.platform && entry.url);
+  }
+  return [];
+}
+
+export async function getReposterReportLinks(
+  token: string,
+  params: {
+    postId: string;
+    clientId: string;
+    platform?: string;
+  },
+  signal?: AbortSignal,
+): Promise<ReportLinkItem[]> {
+  if (!params.postId) {
+    throw new Error("Post ID belum tersedia.");
+  }
+  if (!params.clientId) {
+    throw new Error("Client ID belum tersedia.");
+  }
+  const query = new URLSearchParams({
+    post_id: params.postId,
+    client_id: params.clientId,
+  });
+  if (params.platform) {
+    query.append("platform", params.platform);
+  }
+  const url = `${buildApiUrl("/api/reposter/report-links")}?${query.toString()}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal memuat link laporan.");
+  }
+  const json = await res.json();
+  const payload = json?.data ?? json ?? {};
+  return normalizeReportLinks(payload?.links ?? payload?.data ?? payload);
 }
 
 export async function getDashboardStats(

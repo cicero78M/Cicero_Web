@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import {
   fetchPosts,
@@ -40,6 +41,7 @@ const statusLabels: Record<string, string> = {
 
 export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   const { token, isHydrating, profile, setAuth } = useReposterAuth();
+  const router = useRouter();
   const [state, setState] = useState<TaskState>({
     tasks: [],
     loading: true,
@@ -277,6 +279,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
         ];
   const summaryGridClass =
     taskType === "official" ? "md:grid-cols-2" : "md:grid-cols-4";
+  const defaultOfficialPlatform = "instagram";
 
   return (
     <div className="space-y-6">
@@ -322,6 +325,16 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                   (post.isCarousel && post.carouselImages.length > 0);
                 const canCopyCaption = Boolean(post.caption);
                 const selectedSlide = carouselSelection[post.id] ?? 0;
+                const reportPlatform =
+                  post.platform || defaultOfficialPlatform;
+                const reportUrl = clientId
+                  ? `/reposter/tasks/official/${post.id}/report?${new URLSearchParams(
+                      {
+                        client_id: clientId,
+                        platform: reportPlatform,
+                      },
+                    ).toString()}`
+                  : "";
 
                 return (
                   <div
@@ -425,6 +438,19 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                               }
                             >
                               Copy Caption
+                            </button>
+                            <button
+                              type="button"
+                              className={actionButtonClass}
+                              onClick={() => reportUrl && router.push(reportUrl)}
+                              disabled={!reportUrl}
+                              title={
+                                reportUrl
+                                  ? "Buka halaman laporan"
+                                  : "Client ID belum tersedia."
+                              }
+                            >
+                              Laporan
                             </button>
                           </div>
                           {post.isCarousel && post.carouselImages.length > 0 ? (
