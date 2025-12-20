@@ -82,6 +82,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   memiliki action bar untuk:
   - Download media.
   - Copy caption dengan feedback.
+  - Buka halaman **Laporan** yang menampilkan 5 tautan laporan per platform
+    berdasarkan `post_id`, `client_id`, dan `platform` yang diteruskan dari
+    daftar tugas official.
   Aksi download/copy dibungkus helper `utils/reposterTaskActions.ts` agar
   handler UI lebih ringkas dan tetap menyediakan status feedback untuk pengguna.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
@@ -104,10 +107,19 @@ memakai helper `fetchPosts` yang memanggil `GET /api/insta/posts` dengan
 disimpan kembali ke `ReposterAuthContext` (localStorage) agar konsisten di
 seluruh halaman, lalu postingan disaring untuk hari berjalan (lokal).
 
+Halaman laporan tugas official memanggil helper `getReposterReportLinks`
+(`GET /api/reposter/report-links`) untuk mengambil 5 tautan laporan per
+platform dan menampilkannya di `/reposter/tasks/official/[postId]/report`.
+
 Status lokal untuk tugas official disimpan melalui localStorage:
 
 - `reposter_downloaded_posts`: daftar ID post yang sudah diunduh.
 - `reposter_reported_posts`: daftar ID post yang sudah dilaporkan.
+
+Saat pengguna menekan tombol **Tandai sudah dilaporkan** di halaman
+`/reposter/tasks/official/[postId]/report`, ID post ditambahkan ke
+`reposter_reported_posts` agar status **Sudah dilaporkan** konsisten di daftar
+tugas official.
 
 Ringkasan tugas khusus menghitung status berdasarkan field `status` dari setiap
 task (misalnya pending, in progress, atau done) yang diterima dari backend.

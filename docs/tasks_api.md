@@ -9,6 +9,7 @@ serta cara memanggilnya dari dashboard/reposter.
 | --- | --- | --- |
 | `GET /api/tasks/special` | Daftar tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/insta/posts` | Daftar postingan official (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `GET /api/reposter/report-links` | Tautan laporan per platform untuk tugas official | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 
 Backend menyediakan helper `registerTaskEndpoints` di
 `backend/src/services/tasksEndpoints.js` untuk mendaftarkan route tugas khusus ke
@@ -33,6 +34,13 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 
 > Backend juga menerima alias `tanggal_mulai` / `tanggal_selesai` untuk
 > kompatibilitas dengan API lama.
+
+## Query Params (Laporan Reposter)
+
+- `post_id` (string, wajib): ID post official yang dilaporkan.
+- `client_id` (string, wajib): ID client/polres terkait.
+- `platform` (string, opsional): platform sumber (mis. `instagram`) untuk
+  menyesuaikan logika backend Cicero_V2/pegiat_medsos_app.
 
 ## Skema Response
 
@@ -78,6 +86,28 @@ Response dibuat stabil oleh helper `tasksEndpoints` dan selalu mengikuti pola:
   "meta": {
     "schema_version": "2024-10-01",
     "generated_at": "2024-10-01T12:00:00.000Z"
+  }
+}
+```
+
+### Skema Response (Report Links)
+
+Endpoint `/api/reposter/report-links` mengembalikan daftar tautan laporan per
+platform dalam format berikut:
+
+```json
+{
+  "success": true,
+  "data": {
+    "post_id": "post_123",
+    "client_id": "client_01",
+    "links": {
+      "instagram": "https://report.instagram.com/...",
+      "tiktok": "https://www.tiktok.com/report/...",
+      "facebook": "https://www.facebook.com/report/...",
+      "twitter": "https://help.twitter.com/report/...",
+      "youtube": "https://support.google.com/youtube/..."
+    }
   }
 }
 ```
