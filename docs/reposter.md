@@ -111,10 +111,20 @@ Halaman laporan tugas official memanggil helper `getReposterReportLinks`
 (`GET /api/reposter/report-links`) untuk mengambil 5 tautan laporan per
 platform dan menampilkannya di `/reposter/tasks/official/[postId]/report`.
 
+Halaman laporan kini menyediakan form input link (Instagram, Facebook, Twitter,
+TikTok, YouTube). Form mengirim data ke endpoint `POST /api/link-reports`
+(`submitReposterReportLinks`) dan melakukan pengecekan duplikasi melalui
+`GET /api/link-reports` (`getReposterReportLinkDuplicates`) agar link yang sudah
+pernah dilaporkan langsung ditolak dan direset.
+
 Status lokal untuk tugas official disimpan melalui localStorage:
 
 - `reposter_downloaded_posts`: daftar ID post yang sudah diunduh.
 - `reposter_reported_posts`: daftar ID post yang sudah dilaporkan.
+- `reposter_report_links_cache`: cache link laporan per platform agar input
+  tetap tersedia untuk user yang sama.
+- `reposter_report_links_history`: riwayat link laporan per platform untuk
+  mencegah duplikasi lokal sebelum hit API.
 
 Saat pengguna menekan tombol **Tandai sudah dilaporkan** di halaman
 `/reposter/tasks/official/[postId]/report`, ID post ditambahkan ke

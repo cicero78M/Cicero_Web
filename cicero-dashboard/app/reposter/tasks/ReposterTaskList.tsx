@@ -332,6 +332,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                       {
                         client_id: clientId,
                         platform: reportPlatform,
+                        task_number: String(post.taskNumber ?? ""),
                       },
                     ).toString()}`
                   : "";

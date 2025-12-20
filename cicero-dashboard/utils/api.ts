@@ -265,6 +265,18 @@ export type ReportLinkItem = {
   url: string;
 };
 
+export type ReposterReportPayload = {
+  shortcode: string;
+  userId: string;
+  postId?: string;
+  clientId?: string;
+  instagramLink: string;
+  facebookLink: string;
+  twitterLink: string;
+  tiktokLink?: string;
+  youtubeLink?: string;
+};
+
 export type SatbinmasSummary = {
   totals: {
     accounts: number;
@@ -868,6 +880,65 @@ export async function getReposterReportLinks(
   const json = await res.json();
   const payload = json?.data ?? json ?? {};
   return normalizeReportLinks(payload?.links ?? payload?.data ?? payload);
+}
+
+function normalizeReportDuplicates(raw: any): string[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((entry) => ensureString(entry))
+      .filter((entry) => entry.length > 0);
+  }
+  return [];
+}
+
+export async function getReposterReportLinkDuplicates(
+  token: string,
+  links: string[],
+  signal?: AbortSignal,
+): Promise<string[]> {
+  if (!links.length) return [];
+  const params = new URLSearchParams();
+  links.forEach((link) => params.append("links[]", link));
+  const url = `${buildApiUrl("/api/link-reports")}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) return [];
+  const json = await res.json();
+  const payload = json?.data ?? json ?? {};
+  const rawDuplicates =
+    payload?.duplicates ?? payload?.data?.duplicates ?? json?.duplicates;
+  return normalizeReportDuplicates(rawDuplicates).map((entry) =>
+    entry.trim().toLowerCase(),
+  );
+}
+
+export async function submitReposterReportLinks(
+  token: string,
+  payload: ReposterReportPayload,
+  signal?: AbortSignal,
+): Promise<void> {
+  const body = {
+    shortcode: payload.shortcode,
+    user_id: payload.userId,
+    post_id: payload.postId,
+    client_id: payload.clientId,
+    instagram_link: payload.instagramLink,
+    facebook_link: payload.facebookLink,
+    twitter_link: payload.twitterLink,
+    tiktok_link: payload.tiktokLink ?? "",
+    youtube_link: payload.youtubeLink ?? "",
+  };
+  const res = await fetchWithAuth(buildApiUrl("/api/link-reports"), token, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal mengirim laporan.");
+  }
 }
 
 export async function getDashboardStats(
