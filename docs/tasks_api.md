@@ -46,7 +46,8 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 ## Query Params (Laporan Reposter)
 
 - `post_id` (string, wajib): ID post official yang dilaporkan.
-- `client_id` (string, wajib): ID client/polres terkait.
+- `user_id` (string, wajib): ID user/NRP pelapor (dipakai untuk mencari laporan).
+- `client_id` (string, opsional): ID client/polres terkait.
 - `platform` (string, opsional): platform sumber (mis. `instagram`) untuk
   menyesuaikan logika backend Cicero_V2/pegiat_medsos_app.
 
@@ -129,13 +130,13 @@ platform dalam format berikut:
   "success": true,
   "data": {
     "post_id": "post_123",
-    "client_id": "client_01",
+    "user_id": "NRP123456",
     "links": {
-      "instagram": "https://report.instagram.com/...",
-      "tiktok": "https://www.tiktok.com/report/...",
-      "facebook": "https://www.facebook.com/report/...",
-      "twitter": "https://help.twitter.com/report/...",
-      "youtube": "https://support.google.com/youtube/..."
+      "instagram": "https://www.instagram.com/p/abc123",
+      "facebook": "https://www.facebook.com/permalink.php?story_fbid=...",
+      "twitter": "https://twitter.com/...",
+      "tiktok": "https://www.tiktok.com/@.../video/...",
+      "youtube": "https://youtu.be/..."
     }
   }
 }
