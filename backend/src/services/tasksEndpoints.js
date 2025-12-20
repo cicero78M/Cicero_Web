@@ -100,6 +100,17 @@ function buildTaskResponse({ taskType, filters, tasks }) {
   };
 }
 
+function buildReportLinksResponse({ postId, userId, links }) {
+  return {
+    success: true,
+    data: {
+      post_id: postId,
+      user_id: userId,
+      links,
+    },
+  };
+}
+
 function sendJson(res, status, payload) {
   if (!res) return;
   res.statusCode = status;
@@ -150,23 +161,105 @@ function createTasksHandler(taskType, { taskProvider } = {}) {
   };
 }
 
+function normalizeReportLinksValue(value) {
+  if (!value) return "";
+  return String(value).trim();
+}
+
+function normalizeReportLinksPayload(result) {
+  if (!result) return {};
+  const entry = Array.isArray(result) ? result[0] : result;
+  if (!entry) return {};
+  if (entry.links && typeof entry.links === "object") {
+    return entry.links;
+  }
+  const links = {
+    instagram: normalizeReportLinksValue(entry.instagram_link),
+    facebook: normalizeReportLinksValue(entry.facebook_link),
+    twitter: normalizeReportLinksValue(entry.twitter_link),
+    tiktok: normalizeReportLinksValue(entry.tiktok_link),
+    youtube: normalizeReportLinksValue(entry.youtube_link),
+  };
+  return Object.fromEntries(
+    Object.entries(links).filter(([, url]) => url),
+  );
+}
+
+function createReportLinksHandler({ reportLinksProvider } = {}) {
+  return async function reportLinksHandler(req, res) {
+    const token = resolveAuthToken(req);
+    if (!token) {
+      sendJson(res, 401, {
+        success: false,
+        message:
+          "Token tidak ditemukan. Sertakan Authorization atau X-Reposter-Token.",
+      });
+      return;
+    }
+
+    const query = parseQuery(req);
+    const postId = query.post_id || query.postId || "";
+    const userId = query.user_id || query.userId || "";
+    const platform = query.platform || "";
+
+    if (!postId || !userId) {
+      sendJson(res, 400, {
+        success: false,
+        message: "post_id dan user_id wajib diisi.",
+      });
+      return;
+    }
+
+    let links = {};
+
+    if (typeof reportLinksProvider === "function") {
+      try {
+        const result = await reportLinksProvider({
+          postId,
+          userId,
+          platform,
+          token,
+          req,
+        });
+        links = normalizeReportLinksPayload(result);
+      } catch (error) {
+        sendJson(res, 500, {
+          success: false,
+          message: "Gagal memuat tautan laporan.",
+        });
+        return;
+      }
+    }
+
+    sendJson(res, 200, buildReportLinksResponse({ postId, userId, links }));
+  };
+}
+
 function registerTaskEndpoints(app, options = {}) {
   if (!app || typeof app.get !== "function") {
     throw new Error(
       "registerTaskEndpoints membutuhkan app dengan metode get(path, handler).",
     );
   }
-  const { basePath = "/api/tasks", taskProvider } = options;
+  const {
+    basePath = "/api/tasks",
+    reportLinksPath = "/api/reposter/report-links",
+    taskProvider,
+    reportLinksProvider,
+  } = options;
   const officialHandler = createTasksHandler("official", { taskProvider });
   const specialHandler = createTasksHandler("special", { taskProvider });
+  const reportLinksHandler = createReportLinksHandler({ reportLinksProvider });
 
   app.get(`${basePath}/official`, officialHandler);
   app.get(`${basePath}/special`, specialHandler);
+  app.get(reportLinksPath, reportLinksHandler);
 }
 
 module.exports = {
   registerTaskEndpoints,
   createTasksHandler,
+  createReportLinksHandler,
   normalizeTaskFilters,
   resolveAuthToken,
   RESPONSE_SCHEMA_VERSION,
