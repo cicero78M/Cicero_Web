@@ -10,6 +10,8 @@ serta cara memanggilnya dari dashboard/reposter.
 | `GET /api/tasks/special` | Daftar tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/insta/posts` | Daftar postingan official (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/reposter/report-links` | Tautan laporan per platform untuk tugas official | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `GET /api/link-reports` | Deteksi duplikasi link laporan | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `POST /api/link-reports` | Kirim link laporan reposter | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 
 Backend menyediakan helper `registerTaskEndpoints` di
 `backend/src/services/tasksEndpoints.js` untuk mendaftarkan route tugas khusus ke
@@ -41,6 +43,27 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 - `client_id` (string, wajib): ID client/polres terkait.
 - `platform` (string, opsional): platform sumber (mis. `instagram`) untuk
   menyesuaikan logika backend Cicero_V2/pegiat_medsos_app.
+
+## Query Params (Deteksi Duplikasi Link)
+
+- `links[]` (string, wajib): kumpulan link laporan yang ingin dicek
+  duplikasinya. Backend mengembalikan daftar link yang sudah pernah dilaporkan.
+
+## Payload (Kirim Link Laporan)
+
+```json
+{
+  "shortcode": "abc123",
+  "user_id": "NRP123456",
+  "post_id": "post_123",
+  "client_id": "client_01",
+  "instagram_link": "https://www.instagram.com/p/abc123",
+  "facebook_link": "https://www.facebook.com/permalink.php?story_fbid=...",
+  "twitter_link": "https://twitter.com/...",
+  "tiktok_link": "https://www.tiktok.com/@.../video/...",
+  "youtube_link": "https://youtu.be/..."
+}
+```
 
 ## Skema Response
 
