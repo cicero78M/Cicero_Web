@@ -76,7 +76,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 - `/reposter/tasks/official` menampilkan daftar tugas official dari
   `GET /api/insta/posts?client_id=...`. Data disaring ke postingan "hari ini"
   (berdasarkan waktu lokal) dan diurutkan menurun berdasarkan `created_at`
-  sehingga konten terbaru tampil lebih dulu. Setiap kartu tugas official kini
+  sehingga konten terbaru tampil lebih dulu. Ringkasan tugas official hanya
+  menampilkan kartu **Total postingan** dan **Sudah dilaporkan** agar fokus
+  pada pelacakan laporan. Setiap kartu tugas official kini
   memiliki action bar untuk:
   - Download media.
   - Share via Web Share API (HP yang mendukung).

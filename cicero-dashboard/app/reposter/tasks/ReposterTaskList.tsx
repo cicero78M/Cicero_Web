@@ -280,24 +280,25 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     );
   }
 
+  const summaryItems =
+    taskType === "official"
+      ? [
+          { label: "Total postingan", value: summary.total },
+          { label: "Sudah dilaporkan", value: summary.done },
+        ]
+      : [
+          { label: "Total tugas", value: summary.total },
+          { label: "Menunggu", value: summary.pending },
+          { label: "Berjalan", value: summary.in_progress },
+          { label: "Selesai", value: summary.done },
+        ];
+  const summaryGridClass =
+    taskType === "official" ? "md:grid-cols-2" : "md:grid-cols-4";
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
-        {(
-          taskType === "official"
-            ? [
-                { label: "Total postingan", value: summary.total },
-                { label: "Belum diunduh", value: summary.pending },
-                { label: "Sudah diunduh", value: summary.in_progress },
-                { label: "Sudah dilaporkan", value: summary.done },
-              ]
-            : [
-                { label: "Total tugas", value: summary.total },
-                { label: "Menunggu", value: summary.pending },
-                { label: "Berjalan", value: summary.in_progress },
-                { label: "Selesai", value: summary.done },
-              ]
-        ).map((item) => (
+      <div className={`grid gap-4 ${summaryGridClass}`}>
+        {summaryItems.map((item) => (
           <div
             key={item.label}
             className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
