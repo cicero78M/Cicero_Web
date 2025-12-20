@@ -9,6 +9,7 @@ serta cara memanggilnya dari dashboard/reposter.
 | --- | --- | --- |
 | `GET /api/tasks/special` | Daftar tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/insta/posts` | Daftar postingan official (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `GET /api/insta/posts-khusus` | Daftar postingan khusus (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/reposter/report-links` | Tautan laporan per platform untuk tugas official | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/link-reports` | Deteksi duplikasi link laporan | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `POST /api/link-reports` | Kirim link laporan reposter | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
@@ -21,6 +22,10 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 > Halaman `/reposter/tasks/official` kini menarik posting Instagram per
 > `client_id` dari `GET /api/insta/posts`, memfilter konten "hari ini" dan
 > mengurutkannya berdasarkan `created_at`.
+>
+> Halaman `/reposter/tasks/special` kini mengikuti pola yang sama melalui
+> `GET /api/insta/posts-khusus?client_id=...` untuk menampilkan postingan
+> khusus harian.
 
 ## Query Params (Filter)
 
@@ -33,6 +38,7 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 - `limit` (number, opsional): jumlah item per halaman (default 50, max 200).
 - `offset` (number, opsional): offset pagination.
 - `client_id` (string, opsional): ID client untuk `GET /api/insta/posts`.
+- `client_id` (string, opsional): ID client untuk `GET /api/insta/posts-khusus`.
 
 > Backend juga menerima alias `tanggal_mulai` / `tanggal_selesai` untuk
 > kompatibilitas dengan API lama.

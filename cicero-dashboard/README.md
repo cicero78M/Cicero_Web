@@ -45,6 +45,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
 - Rute `/reposter/profile`, `/reposter/tasks/official`, dan `/reposter/tasks/special` menampilkan halaman native dashboard yang menampilkan data profil, daftar tugas official, dan daftar tugas khusus berdasarkan token reposter.
 - `/reposter/tasks/official` kini mengambil posting Instagram dari `GET /api/insta/posts?client_id=...`, menggabungkan `client_id` dari token/login dan profil remote (`GET /api/users/{nrp}`), lalu menyaring konten "hari ini" (waktu lokal) agar konten terbaru muncul lebih dulu.
+- `/reposter/tasks/special` kini mengikuti UI/UX tugas official dan memuat posting khusus dari `GET /api/insta/posts-khusus?client_id=...` agar daftar tugas khusus tampil konsisten.
 - Ringkasan tugas official di `/reposter/tasks/official` kini hanya menampilkan kartu **Total postingan** dan **Sudah dilaporkan** agar fokus pada status laporan.
 - Kartu tugas official menyediakan aksi download media, share via Web Share API (HP supported), copy caption, dan tombol buka aplikasi dengan instruksi 2 langkah (paste caption + upload), serta menonaktifkan tombol Share saat Web Share API tidak tersedia sebagai fallback.
 - Pengambilan profil remote untuk halaman tugas official kini dijaga per-NRP agar pemanggilan `GET /api/users/{nrp}` tidak berulang saat state auth diperbarui.
