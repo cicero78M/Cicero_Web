@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import {
   fetchPosts,
-  getSpecialTasks,
+  fetchSpecialPosts,
   getReposterUserProfile,
   InstaPost,
-  TaskItem,
 } from "@/utils/api";
 import {
   decodeJwtPayload,
@@ -26,17 +25,9 @@ type ReposterTaskListProps = {
 };
 
 type TaskState = {
-  tasks: Array<TaskItem | InstaPost>;
+  tasks: InstaPost[];
   loading: boolean;
   error: string;
-};
-
-const statusLabels: Record<string, string> = {
-  pending: "Menunggu",
-  in_progress: "Berjalan",
-  done: "Selesai",
-  completed: "Selesai",
-  approved: "Disetujui",
 };
 
 export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
@@ -126,8 +117,13 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
           });
           setState({ tasks: posts, loading: false, error: "" });
         } else {
-          const res = await getSpecialTasks(token, {}, controller.signal);
-          setState({ tasks: res.tasks, loading: false, error: "" });
+          if (!clientId) {
+            throw new Error("Client ID belum tersedia.");
+          }
+          const posts = await fetchSpecialPosts(token, clientId, {
+            signal: controller.signal,
+          });
+          setState({ tasks: posts, loading: false, error: "" });
         }
       } catch (error) {
         setState({
@@ -214,38 +210,16 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   };
 
   const summary = useMemo(() => {
-    if (taskType === "official") {
-      const posts = state.tasks as InstaPost[];
-      return posts.reduce(
-        (totals, post) => {
-          totals.total += 1;
-          if (post.reported) totals.done += 1;
-          else if (post.downloaded) totals.in_progress += 1;
-          else totals.pending += 1;
-          return totals;
-        },
-        { total: 0, pending: 0, in_progress: 0, done: 0 },
-      );
-    }
-    const specialTasks = state.tasks.filter(
-      (task): task is TaskItem => "status" in task,
+    return state.tasks.reduce(
+      (totals, post) => {
+        totals.total += 1;
+        if (post.reported) totals.done += 1;
+        else if (post.downloaded) totals.in_progress += 1;
+        else totals.pending += 1;
+        return totals;
+      },
+      { total: 0, pending: 0, in_progress: 0, done: 0 },
     );
-    const totals = {
-      total: specialTasks.length,
-      pending: 0,
-      in_progress: 0,
-      done: 0,
-    };
-    specialTasks.forEach((task) => {
-      const statusKey = (task.status || "").toLowerCase();
-      if (statusKey.includes("progress")) totals.in_progress += 1;
-      else if (statusKey.includes("done") || statusKey.includes("complete")) {
-        totals.done += 1;
-      } else if (statusKey.includes("pending") || statusKey.includes("todo")) {
-        totals.pending += 1;
-      }
-    });
-    return totals;
   }, [state.tasks, taskType]);
 
   if (state.loading) {
@@ -265,21 +239,13 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     );
   }
 
-  const summaryItems =
-    taskType === "official"
-      ? [
-          { label: "Total postingan", value: summary.total },
-          { label: "Sudah dilaporkan", value: summary.done },
-        ]
-      : [
-          { label: "Total tugas", value: summary.total },
-          { label: "Menunggu", value: summary.pending },
-          { label: "Berjalan", value: summary.in_progress },
-          { label: "Selesai", value: summary.done },
-        ];
-  const summaryGridClass =
-    taskType === "official" ? "md:grid-cols-2" : "md:grid-cols-4";
+  const summaryItems = [
+    { label: "Total postingan", value: summary.total },
+    { label: "Sudah dilaporkan", value: summary.done },
+  ];
+  const summaryGridClass = "md:grid-cols-2";
   const defaultOfficialPlatform = "instagram";
+  const canReport = taskType === "official";
 
   return (
     <div className="space-y-6">
@@ -301,233 +267,207 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
 
       {state.tasks.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
-          Belum ada tugas {taskType === "official" ? "official" : "khusus"} yang
-          terdaftar.
+          Belum ada postingan{" "}
+          {taskType === "official" ? "official" : "khusus"} yang terdaftar.
         </div>
       ) : (
         <div className="space-y-3">
-          {taskType === "official"
-            ? (state.tasks as InstaPost[]).map((post) => {
-                const statusBadge = (label: string, active: boolean) => (
-                  <span
-                    className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-                      active
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
-                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
-                  >
-                    {label}
-                  </span>
-                );
-                const hasMedia =
-                  (post.isVideo && post.videoUrl) ||
-                  post.imageUrl ||
-                  (post.isCarousel && post.carouselImages.length > 0);
-                const canCopyCaption = Boolean(post.caption);
-                const selectedSlide = carouselSelection[post.id] ?? 0;
-                const reportPlatform =
-                  post.platform || defaultOfficialPlatform;
-                const reportUrl = clientId
-                  ? `/reposter/tasks/official/${post.id}/report?${new URLSearchParams(
-                      {
-                        client_id: clientId,
-                        platform: reportPlatform,
-                        task_number: String(post.taskNumber ?? ""),
-                      },
-                    ).toString()}`
-                  : "";
+          {(state.tasks as InstaPost[]).map((post) => {
+            const statusBadge = (label: string, active: boolean) => (
+              <span
+                className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
+                  active
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
+                    : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                {label}
+              </span>
+            );
+            const hasMedia =
+              (post.isVideo && post.videoUrl) ||
+              post.imageUrl ||
+              (post.isCarousel && post.carouselImages.length > 0);
+            const canCopyCaption = Boolean(post.caption);
+            const selectedSlide = carouselSelection[post.id] ?? 0;
+            const reportPlatform = post.platform || defaultOfficialPlatform;
+            const reportUrl =
+              canReport && clientId
+                ? `/reposter/tasks/official/${post.id}/report?${new URLSearchParams(
+                    {
+                      client_id: clientId,
+                      platform: reportPlatform,
+                      task_number: String(post.taskNumber ?? ""),
+                    },
+                  ).toString()}`
+                : "";
 
-                return (
-                  <div
-                    key={post.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
-                  >
-                    <div className="flex flex-col gap-4 md:flex-row">
-                      <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 md:max-w-[220px]">
-                        {post.isVideo && post.videoUrl ? (
-                          <video
-                            controls
-                            className="h-full w-full object-cover"
-                            src={post.videoUrl}
-                          />
-                        ) : post.imageUrl ? (
-                          <img
-                            src={post.imageUrl}
-                            alt={post.caption || "Postingan official"}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-40 items-center justify-center text-xs text-slate-400">
-                            Tidak ada media
-                          </div>
-                        )}
+            return (
+              <div
+                key={post.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
+              >
+                <div className="flex flex-col gap-4 md:flex-row">
+                  <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 md:max-w-[220px]">
+                    {post.isVideo && post.videoUrl ? (
+                      <video
+                        controls
+                        className="h-full w-full object-cover"
+                        src={post.videoUrl}
+                      />
+                    ) : post.imageUrl ? (
+                      <img
+                        src={post.imageUrl}
+                        alt={
+                          post.caption ||
+                          `Postingan ${taskType === "official" ? "official" : "khusus"}`
+                        }
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-40 items-center justify-center text-xs text-slate-400">
+                        Tidak ada media
                       </div>
-                      <div className="flex flex-1 flex-col justify-between gap-3">
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
-                            <span>Tugas #{post.taskNumber}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col justify-between gap-3">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                        <span>Tugas #{post.taskNumber}</span>
+                        <span>•</span>
+                        <span>
+                          {post.createdAt.toLocaleString("id-ID", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                        {post.isCarousel ? (
+                          <>
                             <span>•</span>
                             <span>
-                              {post.createdAt.toLocaleString("id-ID", {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })}
+                              Carousel ({post.carouselImages.length})
                             </span>
-                            {post.isCarousel ? (
-                              <>
-                                <span>•</span>
-                                <span>
-                                  Carousel ({post.carouselImages.length})
-                                </span>
-                              </>
-                            ) : null}
-                            {post.isVideo ? (
-                              <>
-                                <span>•</span>
-                                <span>Video</span>
-                              </>
-                            ) : null}
-                          </div>
-                          <p className="text-sm text-slate-600 dark:text-slate-200">
-                            {post.caption || "Tidak ada caption."}
-                          </p>
-                          {post.sourceUrl ? (
-                            <a
-                              href={post.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
-                            >
-                              Lihat sumber
-                            </a>
-                          ) : null}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {statusBadge(
-                            post.downloaded ? "Sudah diunduh" : "Belum diunduh",
-                            post.downloaded,
-                          )}
-                          {statusBadge(
-                            post.reported ? "Sudah dilaporkan" : "Belum dilaporkan",
-                            post.reported,
-                          )}
-                        </div>
-                        <div className="space-y-3 pt-2">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              className={actionButtonClass}
-                              onClick={() => downloadPostMedia(post)}
-                              disabled={!hasMedia}
-                              title={
-                                hasMedia
-                                  ? "Unduh media"
-                                  : "Media tidak tersedia."
-                              }
-                            >
-                              Download Media
-                            </button>
-                            <button
-                              type="button"
-                              className={actionButtonClass}
-                              onClick={() => handleCopyCaption(post)}
-                              disabled={!canCopyCaption}
-                              title={
-                                canCopyCaption
-                                  ? "Salin caption"
-                                  : "Caption kosong."
-                              }
-                            >
-                              Copy Caption
-                            </button>
-                            <button
-                              type="button"
-                              className={actionButtonClass}
-                              onClick={() => reportUrl && router.push(reportUrl)}
-                              disabled={!reportUrl}
-                              title={
-                                reportUrl
-                                  ? "Buka halaman laporan"
-                                  : "Client ID belum tersedia."
-                              }
-                            >
-                              Laporan
-                            </button>
-                          </div>
-                          {post.isCarousel && post.carouselImages.length > 0 ? (
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
-                              <span>Pilih slide:</span>
-                              <select
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                                value={selectedSlide}
-                                onChange={(event) =>
-                                  setCarouselSelection((prev) => ({
-                                    ...prev,
-                                    [post.id]: Number(event.target.value),
-                                  }))
-                                }
-                              >
-                                {post.carouselImages.map((_, index) => (
-                                  <option key={index} value={index}>
-                                    Slide {index + 1}
-                                  </option>
-                                ))}
-                              </select>
-                              <button
-                                type="button"
-                                className={actionButtonClass}
-                                onClick={() =>
-                                  downloadCarouselSlide(post, selectedSlide)
-                                }
-                              >
-                                Download Slide
-                              </button>
-                              <span className="text-[11px] text-slate-400">
-                                Download Media = unduh semua slide.
-                              </span>
-                            </div>
-                          ) : null}
-                          {actionFeedback[post.id] ? (
-                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-                              {actionFeedback[post.id]}
-                            </p>
-                          ) : null}
-                        </div>
+                          </>
+                        ) : null}
+                        {post.isVideo ? (
+                          <>
+                            <span>•</span>
+                            <span>Video</span>
+                          </>
+                        ) : null}
                       </div>
+                      <p className="text-sm text-slate-600 dark:text-slate-200">
+                        {post.caption || "Tidak ada caption."}
+                      </p>
+                      {post.sourceUrl ? (
+                        <a
+                          href={post.sourceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
+                        >
+                          Lihat sumber
+                        </a>
+                      ) : null}
                     </div>
-                  </div>
-                );
-              })
-            : (state.tasks as TaskItem[]).map((task) => {
-                const statusKey = (task.status || "").toLowerCase();
-                const statusLabel =
-                  statusLabels[statusKey] || task.status || "Tidak diketahui";
-                return (
-                  <div
-                    key={task.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/40"
-                  >
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
-                          {task.title}
-                        </h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-300">
-                          {task.description || "Tidak ada deskripsi."}
+                    <div className="flex flex-wrap gap-2">
+                      {statusBadge(
+                        post.downloaded ? "Sudah diunduh" : "Belum diunduh",
+                        post.downloaded,
+                      )}
+                      {statusBadge(
+                        post.reported ? "Sudah dilaporkan" : "Belum dilaporkan",
+                        post.reported,
+                      )}
+                    </div>
+                    <div className="space-y-3 pt-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className={actionButtonClass}
+                          onClick={() => downloadPostMedia(post)}
+                          disabled={!hasMedia}
+                          title={
+                            hasMedia
+                              ? "Unduh media"
+                              : "Media tidak tersedia."
+                          }
+                        >
+                          Download Media
+                        </button>
+                        <button
+                          type="button"
+                          className={actionButtonClass}
+                          onClick={() => handleCopyCaption(post)}
+                          disabled={!canCopyCaption}
+                          title={
+                            canCopyCaption ? "Salin caption" : "Caption kosong."
+                          }
+                        >
+                          Copy Caption
+                        </button>
+                        {canReport ? (
+                          <button
+                            type="button"
+                            className={actionButtonClass}
+                            onClick={() =>
+                              reportUrl && router.push(reportUrl)
+                            }
+                            disabled={!reportUrl}
+                            title={
+                              reportUrl
+                                ? "Buka halaman laporan"
+                                : "Client ID belum tersedia."
+                            }
+                          >
+                            Laporan
+                          </button>
+                        ) : null}
+                      </div>
+                      {post.isCarousel && post.carouselImages.length > 0 ? (
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                          <span>Pilih slide:</span>
+                          <select
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            value={selectedSlide}
+                            onChange={(event) =>
+                              setCarouselSelection((prev) => ({
+                                ...prev,
+                                [post.id]: Number(event.target.value),
+                              }))
+                            }
+                          >
+                            {post.carouselImages.map((_, index) => (
+                              <option key={index} value={index}>
+                                Slide {index + 1}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className={actionButtonClass}
+                            onClick={() =>
+                              downloadCarouselSlide(post, selectedSlide)
+                            }
+                          >
+                            Download Slide
+                          </button>
+                          <span className="text-[11px] text-slate-400">
+                            Download Media = unduh semua slide.
+                          </span>
+                        </div>
+                      ) : null}
+                      {actionFeedback[post.id] ? (
+                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                          {actionFeedback[post.id]}
                         </p>
-                        <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-300">
-                          <span>Client: {task.clientName || "-"}</span>
-                          <span>Assignee: {task.assignedTo || "-"}</span>
-                          <span>Due: {task.dueDate || "-"}</span>
-                        </div>
-                      </div>
-                      <span className="w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-cyan-900/40 dark:text-cyan-200">
-                        {statusLabel}
-                      </span>
+                      ) : null}
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

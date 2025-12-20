@@ -87,8 +87,10 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
     daftar tugas official.
   Aksi download/copy dibungkus helper `utils/reposterTaskActions.ts` agar
   handler UI lebih ringkas dan tetap menyediakan status feedback untuk pengguna.
-- `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
-  endpoint backend.
+- `/reposter/tasks/special` menampilkan daftar tugas khusus dari
+  `GET /api/insta/posts-khusus?client_id=...` dengan UI/UX yang mengikuti
+  standar halaman tugas official (ringkasan dua kartu dan kartu tugas yang
+  menampilkan media/caption).
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh
   middleware.
 - Middleware di `cicero-dashboard/middleware.ts` memeriksa cookie
@@ -98,14 +100,14 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 ## Integrasi Endpoint Tugas
 
 Halaman tugas reposter memakai endpoint backend yang sama dengan dashboard
-untuk memuat data tugas. Untuk tugas khusus, helper `getSpecialTasks` di
-`cicero-dashboard/utils/api.ts` menerima token reposter (`reposter_token`)
-dan meneruskannya melalui header Authorization. Daftar tugas official kini
-memakai helper `fetchPosts` yang memanggil `GET /api/insta/posts` dengan
-`client_id` yang digabungkan dari data login/JWT serta profil remote hasil
-`getReposterUserProfile`. Profil remote yang sudah memuat `client_id`
-disimpan kembali ke `ReposterAuthContext` (localStorage) agar konsisten di
-seluruh halaman, lalu postingan disaring untuk hari berjalan (lokal).
+untuk memuat data tugas. Daftar tugas official memakai helper `fetchPosts`
+yang memanggil `GET /api/insta/posts` dengan `client_id` yang digabungkan dari
+data login/JWT serta profil remote hasil `getReposterUserProfile`. Tugas
+khusus kini memakai helper `fetchSpecialPosts` yang memanggil
+`GET /api/insta/posts-khusus` dengan mekanisme `client_id` serupa. Profil
+remote yang sudah memuat `client_id` disimpan kembali ke
+`ReposterAuthContext` (localStorage) agar konsisten di seluruh halaman, lalu
+postingan disaring untuk hari berjalan (lokal).
 
 Halaman laporan tugas official memanggil helper `getReposterReportLinks`
 (`GET /api/reposter/report-links`) untuk mengambil 5 tautan laporan per

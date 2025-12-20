@@ -733,20 +733,21 @@ type FetchPostsOptions = {
   reportedIds?: string[];
 };
 
-export async function fetchPosts(
+async function fetchReposterPosts(
   token: string,
   clientId: string,
+  endpoint: string,
   options: FetchPostsOptions = {},
 ): Promise<InstaPost[]> {
   if (!clientId) {
     throw new Error("Client ID belum tersedia.");
   }
   const params = new URLSearchParams({ client_id: clientId });
-  const url = `${buildApiUrl("/api/insta/posts")}?${params.toString()}`;
+  const url = `${buildApiUrl(endpoint)}?${params.toString()}`;
   const res = await fetchWithAuth(url, token, { signal: options.signal });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || "Gagal memuat postingan official.");
+    throw new Error(text || "Gagal memuat postingan reposter.");
   }
   const json = await res.json();
   const payload = json?.data ?? json ?? [];
@@ -824,6 +825,27 @@ export async function fetchPosts(
       ...post,
       taskNumber: index + 1,
     }));
+}
+
+export async function fetchPosts(
+  token: string,
+  clientId: string,
+  options: FetchPostsOptions = {},
+): Promise<InstaPost[]> {
+  return fetchReposterPosts(token, clientId, "/api/insta/posts", options);
+}
+
+export async function fetchSpecialPosts(
+  token: string,
+  clientId: string,
+  options: FetchPostsOptions = {},
+): Promise<InstaPost[]> {
+  return fetchReposterPosts(
+    token,
+    clientId,
+    "/api/insta/posts-khusus",
+    options,
+  );
 }
 
 function normalizeReportLinks(raw: any): ReportLinkItem[] {
