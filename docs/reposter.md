@@ -81,13 +81,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   pada pelacakan laporan. Setiap kartu tugas official kini
   memiliki action bar untuk:
   - Download media.
-  - Share via Web Share API (HP yang mendukung).
   - Copy caption dengan feedback.
-  - Open App + instruksi 2 langkah (paste caption + upload).
-  Aksi download/share/copy dibungkus helper `utils/reposterTaskActions.ts` agar
+  Aksi download/copy dibungkus helper `utils/reposterTaskActions.ts` agar
   handler UI lebih ringkas dan tetap menyediakan status feedback untuk pengguna.
-  Perilaku fallback juga dicatat: tombol Share akan disabled bila Web Share API
-  tidak tersedia di perangkat/browser.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus yang diambil dari
   endpoint backend.
 - `/reposter/login` adalah halaman login khusus reposter, tidak diblok oleh
