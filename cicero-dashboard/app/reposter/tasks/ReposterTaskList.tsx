@@ -18,7 +18,6 @@ import {
 import {
   copyCaption,
   downloadMedia,
-  sharePost,
 } from "@/utils/reposterTaskActions";
 
 type ReposterTaskListProps = {
@@ -58,8 +57,6 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   const profileRef = useRef(profile);
   const actionButtonClass =
     "inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white";
-  const canShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   useEffect(() => {
     profileRef.current = profile;
@@ -214,20 +211,6 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     showActionFeedback(post.id, result.message);
   };
 
-  const handleShare = async (post: InstaPost) => {
-    const result = await sharePost({
-      title: `Tugas #${post.taskNumber}`,
-      text: post.caption || "",
-      url: post.sourceUrl,
-    });
-    showActionFeedback(post.id, result.message);
-  };
-
-  const handleOpenApp = (post: InstaPost) => {
-    if (!post.sourceUrl) return;
-    window.open(post.sourceUrl, "_blank", "noopener,noreferrer");
-  };
-
   const summary = useMemo(() => {
     if (taskType === "official") {
       const posts = state.tasks as InstaPost[];
@@ -337,19 +320,8 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                   (post.isVideo && post.videoUrl) ||
                   post.imageUrl ||
                   (post.isCarousel && post.carouselImages.length > 0);
-                const isTikTok = post.sourceUrl?.includes("tiktok.com");
-                const isInstagram = post.sourceUrl?.includes("instagram.com");
-                const appLabel = isTikTok
-                  ? "TikTok"
-                  : isInstagram
-                    ? "IG"
-                    : "TikTok/IG";
                 const canCopyCaption = Boolean(post.caption);
-                const canOpenApp = Boolean(post.sourceUrl);
                 const selectedSlide = carouselSelection[post.id] ?? 0;
-                const shareTitle = canShare
-                  ? "Bagikan ke aplikasi lain"
-                  : "Web Share API tidak didukung di perangkat ini.";
 
                 return (
                   <div
@@ -444,15 +416,6 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                             <button
                               type="button"
                               className={actionButtonClass}
-                              onClick={() => handleShare(post)}
-                              disabled={!canShare}
-                              title={shareTitle}
-                            >
-                              Share (HP)
-                            </button>
-                            <button
-                              type="button"
-                              className={actionButtonClass}
                               onClick={() => handleCopyCaption(post)}
                               disabled={!canCopyCaption}
                               title={
@@ -462,19 +425,6 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                               }
                             >
                               Copy Caption
-                            </button>
-                            <button
-                              type="button"
-                              className={actionButtonClass}
-                              onClick={() => handleOpenApp(post)}
-                              disabled={!canOpenApp}
-                              title={
-                                canOpenApp
-                                  ? `Buka ${appLabel}`
-                                  : "Link sumber tidak tersedia."
-                              }
-                            >
-                              Open App ({appLabel})
                             </button>
                           </div>
                           {post.isCarousel && post.carouselImages.length > 0 ? (
@@ -514,17 +464,6 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                             <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
                               {actionFeedback[post.id]}
                             </p>
-                          ) : null}
-                          {canOpenApp ? (
-                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
-                              <p className="font-semibold">
-                                Instruksi setelah membuka {appLabel}:
-                              </p>
-                              <ol className="mt-1 list-decimal space-y-1 pl-4">
-                                <li>Paste caption yang sudah disalin.</li>
-                                <li>Upload media pada aplikasi terkait.</li>
-                              </ol>
-                            </div>
                           ) : null}
                         </div>
                       </div>

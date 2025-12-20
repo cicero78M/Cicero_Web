@@ -8,12 +8,6 @@ type DownloadMediaInput = {
   filename?: string;
 };
 
-type SharePostInput = {
-  title: string;
-  text: string;
-  url?: string;
-};
-
 export const downloadMedia = async ({
   url,
   filename,
@@ -49,28 +43,6 @@ export const downloadMedia = async ({
     } catch (fallbackError) {
       return { ok: false, message: "Gagal mengunduh media." };
     }
-  }
-};
-
-export const sharePost = async ({
-  title,
-  text,
-  url,
-}: SharePostInput): Promise<ReposterActionResult> => {
-  if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
-    return { ok: false, message: "Web Share API tidak didukung." };
-  }
-
-  try {
-    const shareData: ShareData = {
-      title,
-      text,
-      ...(url ? { url } : {}),
-    };
-    await navigator.share(shareData);
-    return { ok: true, message: "Konten dibagikan." };
-  } catch (error) {
-    return { ok: false, message: "Gagal membagikan konten." };
   }
 };
 
