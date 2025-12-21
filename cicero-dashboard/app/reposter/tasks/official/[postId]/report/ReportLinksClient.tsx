@@ -6,6 +6,7 @@ import useReposterAuth from "@/hooks/useReposterAuth";
 import {
   getReposterReportLinks,
   getReposterReportLinkDuplicates,
+  isAbortError,
   REPOSTER_REPORTED_POSTS_KEY,
   submitReposterReportLinks,
 } from "@/utils/api";
@@ -288,6 +289,7 @@ export default function ReportLinksClient() {
         setReportLinksNotice("Tautan laporan sebelumnya sudah tercatat.");
       })
       .catch((err) => {
+        if (isAbortError(err, controller.signal)) return;
         setReportLinksError(
           err instanceof Error ? err.message : "Gagal memuat tautan laporan.",
         );

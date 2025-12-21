@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import useReposterAuth from "@/hooks/useReposterAuth";
-import { getReposterUserProfile, updateUser } from "@/utils/api";
+import {
+  getReposterUserProfile,
+  isAbortError,
+  updateUser,
+} from "@/utils/api";
 import {
   decodeJwtPayload,
   mergeReposterProfiles,
@@ -99,6 +103,7 @@ export default function ProfileClient() {
       })
       .catch((error) => {
         if (!isActive) return;
+        if (isAbortError(error, controller.signal)) return;
         const message =
           error instanceof Error ? error.message : "Gagal memuat profil.";
         setFetchState({ isLoading: false, error: message });

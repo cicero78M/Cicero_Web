@@ -30,6 +30,20 @@ export function normalizeWhatsapp(whatsapp: string): string {
   return trimmed.startsWith("0") ? `62${trimmed.slice(1)}` : trimmed;
 }
 
+export function isAbortError(
+  error: unknown,
+  signal?: AbortSignal,
+): boolean {
+  if (signal?.aborted) return true;
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return true;
+  }
+  if (error instanceof Error && error.name === "AbortError") {
+    return true;
+  }
+  return false;
+}
+
 type ApiMessageResponse = {
   success: boolean;
   message: string;
