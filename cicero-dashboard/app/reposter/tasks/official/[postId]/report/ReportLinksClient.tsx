@@ -237,7 +237,7 @@ export default function ReportLinksClient() {
       setReportLinksError("User ID belum tersedia.");
       return;
     }
-    if (!reportShortcode) {
+    if (!postId && !reportShortcode) {
       setReportLinksNotice(
         "Masukkan link Instagram untuk memuat tautan laporan sebelumnya.",
       );
@@ -248,6 +248,7 @@ export default function ReportLinksClient() {
     getReposterReportLinks(
       token,
       {
+        postId,
         shortcode: reportShortcode,
         userId: reportUserId,
       },

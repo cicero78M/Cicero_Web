@@ -917,22 +917,27 @@ function normalizeReportLinks(raw: any): ReportLinkItem[] {
 export async function getReposterReportLinks(
   token: string,
   params: {
-    shortcode: string;
+    shortcode?: string;
+    postId?: string;
     userId: string;
     isSpecial?: boolean;
   },
   signal?: AbortSignal,
 ): Promise<ReportLinkItem[]> {
-  if (!params.shortcode) {
-    throw new Error("Shortcode belum tersedia.");
-  }
   if (!params.userId) {
     throw new Error("User ID belum tersedia.");
   }
+  const postId = params.postId || params.shortcode;
+  if (!postId) {
+    throw new Error("Post ID atau shortcode belum tersedia.");
+  }
   const query = new URLSearchParams({
-    shortcode: params.shortcode,
+    post_id: postId,
     user_id: params.userId,
   });
+  if (params.shortcode) {
+    query.set("shortcode", params.shortcode);
+  }
   const endpoint = params.isSpecial
     ? "/api/link-reports-khusus"
     : "/api/link-reports";

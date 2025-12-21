@@ -93,8 +93,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
     daftar tugas official.
   Status **Sudah dilaporkan** pada daftar official disinkronkan dari backend
   dengan helper `getReposterReportLinks` (`GET /api/link-reports`) menggunakan
-  `user_id` dari profil login (`userId`, `id`, `nrp`, atau `user_id`) dan
-  `shortcode` yang tersimpan di data postingan atau fallback ke ID jika valid.
+  `user_id` dari profil login (`userId`, `id`, `nrp`, atau `user_id`) serta
+  `post_id` sebagai kunci utama. `shortcode` tetap dikirim bila tersedia untuk
+  fallback kompatibilitas backend lama.
   Aksi download/copy dibungkus helper `utils/reposterTaskActions.ts` agar
   handler UI lebih ringkas dan tetap menyediakan status feedback untuk pengguna.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus dari
@@ -121,9 +122,11 @@ postingan disaring untuk hari berjalan (lokal).
 
 Halaman laporan tugas official memanggil helper `getReposterReportLinks`
 (`GET /api/link-reports`) untuk mengambil 5 tautan laporan per platform dengan
-parameter `shortcode` dan `user_id` (dari profil/JWT). Shortcode diambil dari
-`postId` jika bentuknya sudah seperti shortcode Instagram, atau dari link
-Instagram yang diisi/tersimpan di cache lokal sebelum fallback ke data profil.
+parameter `post_id` dan `user_id` (dari profil/JWT), serta menambahkan
+`shortcode` jika tersedia sebagai fallback kompatibilitas backend lama. Shortcode
+diambil dari `postId` jika bentuknya sudah seperti shortcode Instagram, atau
+dari link Instagram yang diisi/tersimpan di cache lokal sebelum fallback ke data
+profil.
 Untuk laporan tugas khusus, helper yang sama diarahkan ke
 `GET /api/link-reports-khusus`. Tautan yang sudah tercatat akan ditampilkan
 sebagai informasi dan dipakai sebagai nilai awal pada form di

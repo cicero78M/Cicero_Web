@@ -79,12 +79,6 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
 
   const clientId = combinedProfile?.clientId ?? "";
 
-  const isLikelyShortcode = (value: string) => {
-    if (!value) return false;
-    if (!/^[A-Za-z0-9_-]{5,20}$/.test(value)) return false;
-    return /[A-Za-z]/.test(value);
-  };
-
   useEffect(() => {
     if (!token || !sessionProfile?.nrp) return;
     if (remoteProfile?.nrp === sessionProfile.nrp) return;
@@ -137,19 +131,14 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
           if (reportUserId) {
             const reportEntries = await Promise.all(
               posts.map(async (post) => {
-                const shortcode =
-                  post.shortcode ||
-                  (isLikelyShortcode(post.id) ? post.id : "");
-                if (!shortcode) {
-                  return {
-                    id: post.id,
-                    reported: post.reported,
-                  };
-                }
                 try {
                   const links = await getReposterReportLinks(
                     token,
-                    { shortcode, userId: reportUserId },
+                    {
+                      postId: post.id,
+                      shortcode: post.shortcode,
+                      userId: reportUserId,
+                    },
                     controller.signal,
                   );
                   return {
