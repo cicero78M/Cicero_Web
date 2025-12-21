@@ -146,6 +146,7 @@ export default function useTiktokCommentsData({
     )
       .trim()
       .toLowerCase();
+    const isOperatorRole = normalizedEffectiveRoleFromAuth === "operator";
     const normalizedEffectiveClientTypeFromAuth = String(
       effectiveClientTypeFromAuth || "",
     )
@@ -161,6 +162,7 @@ export default function useTiktokCommentsData({
     const isDitbinmasRoleFromAuth =
       normalizedEffectiveRoleFromAuth === "ditbinmas";
     const derivedDirectorateRoleFromAuth =
+      !isOperatorRole &&
       ((directorateRoles.has(normalizedEffectiveRoleFromAuth) &&
         (normalizedEffectiveClientTypeFromAuth !== "ORG" ||
           isDitbinmasRoleFromAuth)) ||
@@ -178,7 +180,9 @@ export default function useTiktokCommentsData({
           ? normalizedClientId
           : "DITBINMAS"
       : normalizedClientId;
-    const dashboardClientId = derivedDirectorateRoleFromAuth
+    const dashboardClientId = isOperatorRole
+      ? normalizedClientId
+      : derivedDirectorateRoleFromAuth
       ? effectiveDirectorateClientIdFromAuth
       : normalizedClientId;
 
@@ -250,6 +254,7 @@ export default function useTiktokCommentsData({
         // sudah menjadi ORG.
         const isDitbinmasRole = normalizedEffectiveRole === "ditbinmas";
         const derivedDirectorateRole =
+          !isOperatorRole &&
           ((directorateRoles.has(normalizedEffectiveRole) &&
             (normalizedEffectiveClientType !== "ORG" || isDitbinmasRole)) ||
             normalizedEffectiveClientType === "DIREKTORAT") &&
@@ -265,11 +270,14 @@ export default function useTiktokCommentsData({
               ? normalizedClientId
               : "DITBINMAS"
           : normalizedClientId;
-        const directorate = derivedDirectorateRole || isDirectorateClientType;
+        const directorate =
+          !isOperatorRole && (derivedDirectorateRole || isDirectorateClientType);
         const orgClient = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
-        setIsDirectorateRole(derivedDirectorateRole);
-        setIsDirectorateScopedClient(isScopedDirectorateClient);
+        setIsDirectorateRole(!isOperatorRole && derivedDirectorateRole);
+        setIsDirectorateScopedClient(
+          !isOperatorRole && isScopedDirectorateClient,
+        );
         setIsDirectorate(directorate);
         setIsOrgClient(orgClient);
         setClientName(
@@ -286,7 +294,10 @@ export default function useTiktokCommentsData({
           "BIDHUMAS",
         ]);
         setCanSelectScope(
-          directorate && !orgClient && allowedScopeClients.has(normalizedClientIdUpper),
+          !isOperatorRole &&
+            directorate &&
+            !orgClient &&
+            allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         let users: any[] = [];

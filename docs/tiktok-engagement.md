@@ -32,6 +32,7 @@ Pengguna dengan peran Ditbinmas mendapat opsi **Lingkup Data**:
 - `client` menampilkan rekap hanya untuk client aktif pengguna (default).
 - `all` menampilkan gabungan seluruh client Ditbinmas. Opsi ini diteruskan ke `useTiktokCommentsData` melalui parameter `scope`.
 - Kontrol lingkup kini hanya muncul untuk pengguna direktorat non-ORG dengan `client_id` **DITBINMAS**, **DITSAMAPTA**, **DITLANTAS**, atau **BIDHUMAS** agar satker lain tidak melihat filter yang tidak relevan.
+- Role **operator** selalu dikunci ke `client_id` login untuk mengambil data statistik, profil, dan rekap komentar. Mode direktorat dimatikan sehingga dropdown lingkup tidak aktif dan data sosial media hanya berasal dari satker operator tersebut.
 
 ## Perubahan hook
 `useTiktokCommentsData` sekarang menerima parameter opsional `scope` (`"client" | "all"`). Nilai `"all"` menonaktifkan filter client sehingga data rekap dapat meliputi seluruh satker Ditbinmas. Hook ini juga mengembalikan `isOrgClient` yang diambil dari `effectiveClientType` ter-normalisasi agar komponen pemanggil dapat menyembunyikan kontrol lingkup ketika pengguna berasal dari klien bertipe ORG. Penggunaan `DEFAULT_INSIGHT_TABS` tidak mengubah kontrol lingkup atau alur salin rekap; keduanya tetap dijaga untuk keselarasan lintas halaman.
