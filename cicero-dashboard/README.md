@@ -52,6 +52,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Pengambilan profil remote untuk halaman tugas official kini dijaga per-NRP agar pemanggilan `GET /api/users/{nrp}` tidak berulang saat state auth diperbarui.
 - Halaman laporan tugas official (`/reposter/tasks/official/[postId]/report`) kini menampilkan tautan laporan yang sudah tercatat (mengisi nilai awal form bila tersedia) sekaligus menyediakan form untuk mengirim laporan baru.
 - `/reposter/profile` kini mengambil detail user dari tabel `user` melalui endpoint Cicero_V2 (`GET /api/users/{nrp}`), menampilkan Client ID, menyediakan form edit untuk Nama, Pangkat, Satfung, Jabatan, username Instagram/TikTok, serta email dengan tombol simpan yang memanggil `PUT /api/users/{nrp}`. Profil remote yang sudah lengkap disimpan kembali ke storage reposter agar halaman lain konsisten.
+- Fetch data reposter (profil, daftar tugas, dan tautan laporan) mengabaikan abort request agar error UI tidak terisi ketika user berpindah halaman atau request dibatalkan.
 - Helper `utils/reposterProfile.ts` membantu menormalkan payload login + JWT untuk menampilkan data profil sesuai pengguna yang sedang login, sekaligus memprioritaskan `client_id` dari token sebelum fallback ke label client.
 - Helper `utils/reposterTaskActions.ts` membungkus aksi download media, share, dan copy caption agar handler di daftar tugas reposter tetap ringkas dan UI bisa menampilkan feedback keberhasilan/gagal.
 
