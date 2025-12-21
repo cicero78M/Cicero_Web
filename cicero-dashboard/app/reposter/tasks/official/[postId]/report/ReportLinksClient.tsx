@@ -179,8 +179,12 @@ export default function ReportLinksClient() {
 
   const reportShortcode = useMemo(() => {
     if (isLikelyShortcode(postId)) return postId;
-    return profileShortcode || postId;
-  }, [postId, profileShortcode]);
+    const draftShortcode = extractInstagramShortcode(
+      draftLinks.instagram ?? "",
+    );
+    if (draftShortcode) return draftShortcode;
+    return profileShortcode || "";
+  }, [draftLinks.instagram, postId, profileShortcode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -225,10 +229,21 @@ export default function ReportLinksClient() {
 
   useEffect(() => {
     if (!token) return;
-    const controller = new AbortController();
-    setReportLinksLoading(true);
     setReportLinksError("");
     setReportLinksNotice("");
+    setReportLinksLoading(false);
+    if (!reportUserId) {
+      setReportLinksError("User ID belum tersedia.");
+      return;
+    }
+    if (!reportShortcode) {
+      setReportLinksNotice(
+        "Masukkan link Instagram untuk memuat tautan laporan sebelumnya.",
+      );
+      return;
+    }
+    const controller = new AbortController();
+    setReportLinksLoading(true);
     getReposterReportLinks(
       token,
       {
