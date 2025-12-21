@@ -14,6 +14,31 @@ import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
 import { getEngagementStatus } from "@/utils/engagementStatus";
 
+const USER_IDENTIFIER_FIELDS = [
+  "nrp",
+  "nip",
+  "nrp_nip",
+  "nrpNip",
+  "user_id",
+  "userId",
+  "userID",
+  "NRP",
+  "NIP",
+  "NRP_NIP",
+];
+
+function normalizeString(value?: unknown): string {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getUserIdentifier(user: any): string {
+  return USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
+    if (acc) return acc;
+    const value = normalizeString(user?.[field]);
+    return value || acc;
+  }, "");
+}
+
 interface Options {
   viewBy: string;
   customDate: string;
@@ -369,6 +394,66 @@ export default function useInstagramLikesData({
                   "",
               );
               return userClientId === normalizedClientId;
+            });
+          }
+        }
+
+        if (isOperatorRole && normalizedLoginClientId) {
+          const normalizeRole = (value: unknown) =>
+            String(value || "").trim().toLowerCase();
+          const normalizeClientId = (value: unknown) =>
+            String(value || "").trim().toLowerCase();
+          const hasRoleField = filteredUsers.some((u: any) =>
+            Boolean(
+              normalizeRole(
+                u.role || u.user_role || u.userRole || u.roleName || "",
+              ),
+            ),
+          );
+
+          if (hasRoleField) {
+            filteredUsers = filteredUsers.filter((u: any) => {
+              const roleValue = normalizeRole(
+                u.role || u.user_role || u.userRole || u.roleName || "",
+              );
+              if (roleValue !== "operator") return false;
+              const userClientId = normalizeClientId(
+                u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
+              );
+              return userClientId === normalizedLoginClientId;
+            });
+          } else {
+            const directoryRes = await getUserDirectory(
+              token,
+              userClientId,
+              controller.signal,
+            );
+            const dirData =
+              directoryRes.data || directoryRes.users || directoryRes || [];
+            const operatorIds = new Set(
+              (dirData as any[])
+                .filter((u: any) => {
+                  const roleValue = normalizeRole(
+                    u.role || u.user_role || u.userRole || u.roleName || "",
+                  );
+                  if (roleValue !== "operator") return false;
+                  const userClientId = normalizeClientId(
+                    u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
+                  );
+                  return userClientId === normalizedLoginClientId;
+                })
+                .map((u: any) => getUserIdentifier(u))
+                .filter(Boolean),
+            );
+            filteredUsers = filteredUsers.filter((u: any) => {
+              const userClientId = normalizeClientId(
+                u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
+              );
+              if (userClientId && userClientId !== normalizedLoginClientId) {
+                return false;
+              }
+              const identifier = getUserIdentifier(u);
+              return identifier ? operatorIds.has(identifier) : false;
             });
           }
         }

@@ -92,6 +92,25 @@ export default function UserDirectoryPage() {
       onSuccess: async (res) => {
         let data = res.data || res.users || res;
         let arr = Array.isArray(data) ? data : [];
+        const normalizedLoginClientId = String(client_id || "")
+          .trim()
+          .toLowerCase();
+
+        if (normalizedRole === "operator" && normalizedLoginClientId) {
+          const normalizeRole = (value) => String(value || "").trim().toLowerCase();
+          const normalizeClientId = (value) =>
+            String(value || "").trim().toLowerCase();
+          arr = arr.filter((u) => {
+            const roleValue = normalizeRole(
+              u.role || u.user_role || u.userRole || u.roleName || "",
+            );
+            if (roleValue !== "operator") return false;
+            const userClientId = normalizeClientId(
+              u.client_id || u.clientId || u.clientID || u.client || "",
+            );
+            return userClientId === normalizedLoginClientId;
+          });
+        }
 
         const profileRes = await getClientProfile(token, client_id);
         const profile = profileRes.client || profileRes.profile || profileRes || {};
