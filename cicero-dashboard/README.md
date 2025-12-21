@@ -40,6 +40,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 - Rute `/reposter` kini menampilkan menu modul reposter dengan kartu ringkas untuk menuju profil pengguna, tugas official, dan tugas khusus (lihat `app/reposter/page.tsx`).
 - Halaman `/reposter/login` menangani autentikasi reposter secara terpisah, mengirim POST ke `/api/auth/user-login` dengan payload `nrp` dan `password`, menyimpan token di localStorage (`reposter_token`), menyimpan ringkasan profil ke localStorage (`reposter_profile`), dan cookie `reposter_session` untuk kebutuhan guard server, serta membungkus form login dalam Suspense karena memakai `useSearchParams`.
+- Form `/reposter/login` kini menampilkan ikon input, tombol tampil/sembunyikan password, serta opsi simpan username & password ke localStorage (`reposter_saved_credentials`).
 - Context `ReposterAuthContext` dan hook `useRequireReposterAuth` menjaga halaman reposter tetap terlindungi tanpa bercampur dengan sesi login dashboard utama.
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar pengalaman login reposter terasa lebih fokus dan tidak tercampur dengan UI modul utama.
 - Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
