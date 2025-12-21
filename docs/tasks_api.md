@@ -48,13 +48,13 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 - `post_id` (string, wajib): ID postingan yang dilaporkan (kunci utama).
 - `user_id` (string, wajib): ID user/NRP pelapor (dipakai untuk mencari laporan).
 - `shortcode` (string, opsional): fallback shortcode Instagram untuk kompatibilitas
-  backend lama.
+  backend lama saat `post_id` kosong.
 - Gunakan `GET /api/link-reports-khusus` untuk laporan tugas khusus.
 
 Front-end reposter juga memakai parameter ini untuk menyinkronkan badge
 **Sudah dilaporkan** di daftar tugas official dengan memanggil
 `getReposterReportLinks` per postingan menggunakan `post_id` dan `user_id`,
-serta menyertakan `shortcode` bila tersedia.
+serta menyertakan `shortcode` hanya jika `post_id` tidak tersedia.
 
 ## Query Params (Deteksi Duplikasi Link)
 
@@ -81,7 +81,8 @@ Catatan sumber `shortcode`:
 
 - Frontend mengekstrak dari `instagram_link` yang berformat `/p/{shortcode}`,
   `/reel/{shortcode}`, `/reels/{shortcode}`, atau `/tv/{shortcode}`.
-- Jika tidak berhasil diekstrak, frontend mengirim fallback dari `post_id`.
+- Jika tidak berhasil diekstrak dan `post_id` kosong, frontend mengirim fallback
+  dari shortcode profil reposter.
 
 ## Skema Response
 
