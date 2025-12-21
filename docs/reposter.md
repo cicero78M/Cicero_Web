@@ -117,7 +117,8 @@ Halaman laporan tugas official memanggil helper `getReposterReportLinks`
 parameter `shortcode` dan `user_id` (dari profil/JWT). Untuk laporan tugas
 khusus, helper yang sama diarahkan ke `GET /api/link-reports-khusus`. Tautan
 yang sudah tercatat akan ditampilkan sebagai informasi dan dipakai sebagai
-nilai awal pada form di `/reposter/tasks/official/[postId]/report`.
+nilai awal pada form di `/reposter/tasks/official/[postId]/report`, sekaligus
+menyegarkan cache dan history link lokal agar deteksi duplikasi konsisten.
 
 Halaman laporan kini menyediakan form input link (Instagram, Facebook, Twitter,
 TikTok, YouTube). Form mengirim data ke endpoint `POST /api/link-reports`

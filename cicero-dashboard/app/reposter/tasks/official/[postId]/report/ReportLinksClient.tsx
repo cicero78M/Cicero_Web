@@ -129,8 +129,7 @@ export default function ReportLinksClient() {
     [profile?.id, profile?.nrp, profile?.userId, profile?.user_id],
   );
 
-  const normalizeLink = (value: string) =>
-    value.trim().replace(/\s+/g, " ").toLowerCase();
+  const normalizeLink = (value: string) => value.trim().toLowerCase();
 
   const isValidLink = (platform: string, value: string) => {
     const trimmed = value.trim();
@@ -248,6 +247,17 @@ export default function ReportLinksClient() {
           });
           return next;
         });
+        persistCache(mapped);
+        const normalizedMapped = Object.entries(mapped).reduce(
+          (acc, [platform, url]) => {
+            if (url) {
+              acc[platform] = normalizeLink(url);
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+        persistHistory(normalizedMapped);
         setReportLinksNotice("Tautan laporan sebelumnya sudah tercatat.");
       })
       .catch((err) => {
