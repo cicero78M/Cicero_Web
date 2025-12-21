@@ -94,6 +94,15 @@ export default function ReportLinksClient() {
     Array<{ platform: string; url: string }>
   >([]);
 
+  const profileShortcode = useMemo(
+    () =>
+      profile?.shortcode ||
+      profile?.lastShortcode ||
+      profile?.last_shortcode ||
+      "",
+    [profile?.lastShortcode, profile?.last_shortcode, profile?.shortcode],
+  );
+
   const draftEntries = useMemo(
     () =>
       PLATFORM_ORDER.map((platform) => ({
@@ -151,6 +160,17 @@ export default function ReportLinksClient() {
     }
   };
 
+  const isLikelyShortcode = (value: string) => {
+    if (!value) return false;
+    if (!/^[A-Za-z0-9_-]{5,20}$/.test(value)) return false;
+    return /[A-Za-z]/.test(value);
+  };
+
+  const reportShortcode = useMemo(() => {
+    if (isLikelyShortcode(postId)) return postId;
+    return profileShortcode || postId;
+  }, [postId, profileShortcode]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const cached: Record<string, string> = {};
@@ -201,9 +221,8 @@ export default function ReportLinksClient() {
     getReposterReportLinks(
       token,
       {
-        postId,
+        shortcode: reportShortcode,
         userId: reportUserId,
-        platform: sourcePlatform || undefined,
       },
       controller.signal,
     )
@@ -240,7 +259,7 @@ export default function ReportLinksClient() {
         setReportLinksLoading(false);
       });
     return () => controller.abort();
-  }, [postId, reportUserId, sourcePlatform, token]);
+  }, [postId, reportShortcode, reportUserId, token]);
 
   const handleDraftChange = (platform: string, value: string) => {
     setDraftError("");
@@ -405,13 +424,8 @@ export default function ReportLinksClient() {
         }
       }
 
-      const shortcode =
-        profile?.shortcode ||
-        profile?.lastShortcode ||
-        profile?.last_shortcode ||
-        "";
       await submitReposterReportLinks(token, {
-        shortcode: shortcode || postId,
+        shortcode: profileShortcode || postId,
         userId:
           profile?.userId ||
           profile?.id ||
