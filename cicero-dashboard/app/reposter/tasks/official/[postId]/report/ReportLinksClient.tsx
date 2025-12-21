@@ -165,6 +165,18 @@ export default function ReportLinksClient() {
     return /[A-Za-z]/.test(value);
   };
 
+  const extractInstagramShortcode = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    try {
+      const url = new URL(trimmed);
+      const match = url.pathname.match(/\/(p|reel|reels|tv)\/([^/?#]+)/i);
+      return match?.[2] ?? "";
+    } catch {
+      return "";
+    }
+  };
+
   const reportShortcode = useMemo(() => {
     if (isLikelyShortcode(postId)) return postId;
     return profileShortcode || postId;
@@ -395,6 +407,13 @@ export default function ReportLinksClient() {
       {} as Record<string, string>,
     );
 
+    const shortcodeFromLink = extractInstagramShortcode(sanitized.instagram);
+    const shortcodeForSubmit = shortcodeFromLink || postId || "";
+    if (!shortcodeForSubmit) {
+      setDraftError("Shortcode Instagram tidak ditemukan pada link.");
+      return;
+    }
+
     try {
       setDraftLoading(true);
       const localHistory = loadHistory();
@@ -435,7 +454,7 @@ export default function ReportLinksClient() {
       }
 
       await submitReposterReportLinks(token, {
-        shortcode: profileShortcode || postId,
+        shortcode: shortcodeForSubmit,
         userId:
           profile?.userId ||
           profile?.id ||

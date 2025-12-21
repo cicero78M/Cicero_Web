@@ -70,6 +70,12 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 }
 ```
 
+Catatan sumber `shortcode`:
+
+- Frontend mengekstrak dari `instagram_link` yang berformat `/p/{shortcode}`,
+  `/reel/{shortcode}`, `/reels/{shortcode}`, atau `/tv/{shortcode}`.
+- Jika tidak berhasil diekstrak, frontend mengirim fallback dari `post_id`.
+
 ## Skema Response
 
 Response dibuat stabil oleh helper `tasksEndpoints` dan selalu mengikuti pola:
