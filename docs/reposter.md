@@ -114,11 +114,14 @@ postingan disaring untuk hari berjalan (lokal).
 
 Halaman laporan tugas official memanggil helper `getReposterReportLinks`
 (`GET /api/link-reports`) untuk mengambil 5 tautan laporan per platform dengan
-parameter `shortcode` dan `user_id` (dari profil/JWT). Untuk laporan tugas
-khusus, helper yang sama diarahkan ke `GET /api/link-reports-khusus`. Tautan
-yang sudah tercatat akan ditampilkan sebagai informasi dan dipakai sebagai
-nilai awal pada form di `/reposter/tasks/official/[postId]/report`, sekaligus
-menyegarkan cache dan history link lokal agar deteksi duplikasi konsisten.
+parameter `shortcode` dan `user_id` (dari profil/JWT). Shortcode diambil dari
+`postId` jika bentuknya sudah seperti shortcode Instagram, atau dari link
+Instagram yang diisi/tersimpan di cache lokal sebelum fallback ke data profil.
+Untuk laporan tugas khusus, helper yang sama diarahkan ke
+`GET /api/link-reports-khusus`. Tautan yang sudah tercatat akan ditampilkan
+sebagai informasi dan dipakai sebagai nilai awal pada form di
+`/reposter/tasks/official/[postId]/report`, sekaligus menyegarkan cache dan
+history link lokal agar deteksi duplikasi konsisten.
 
 Halaman laporan kini menyediakan form input link (Instagram, Facebook, Twitter,
 TikTok, YouTube). Form mengirim data ke endpoint `POST /api/link-reports`
