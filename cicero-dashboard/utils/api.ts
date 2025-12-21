@@ -874,26 +874,26 @@ function normalizeReportLinks(raw: any): ReportLinkItem[] {
 export async function getReposterReportLinks(
   token: string,
   params: {
-    postId: string;
+    shortcode: string;
     userId: string;
-    platform?: string;
+    isSpecial?: boolean;
   },
   signal?: AbortSignal,
 ): Promise<ReportLinkItem[]> {
-  if (!params.postId) {
-    throw new Error("Post ID belum tersedia.");
+  if (!params.shortcode) {
+    throw new Error("Shortcode belum tersedia.");
   }
   if (!params.userId) {
     throw new Error("User ID belum tersedia.");
   }
   const query = new URLSearchParams({
-    post_id: params.postId,
+    shortcode: params.shortcode,
     user_id: params.userId,
   });
-  if (params.platform) {
-    query.append("platform", params.platform);
-  }
-  const url = `${buildApiUrl("/api/reposter/report-links")}?${query.toString()}`;
+  const endpoint = params.isSpecial
+    ? "/api/link-reports-khusus"
+    : "/api/link-reports";
+  const url = `${buildApiUrl(endpoint)}?${query.toString()}`;
   const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();

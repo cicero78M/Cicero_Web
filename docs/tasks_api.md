@@ -10,8 +10,8 @@ serta cara memanggilnya dari dashboard/reposter.
 | `GET /api/tasks/special` | Daftar tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/insta/posts` | Daftar postingan official (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/insta/posts-khusus` | Daftar postingan khusus (reposter) | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
-| `GET /api/reposter/report-links` | Tautan laporan per platform untuk tugas official | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
-| `GET /api/link-reports` | Deteksi duplikasi link laporan | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `GET /api/link-reports` | Tautan laporan per platform untuk tugas official **atau** deteksi duplikasi link laporan | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `GET /api/link-reports-khusus` | Tautan laporan per platform untuk tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `POST /api/link-reports` | Kirim link laporan reposter | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 
 Backend menyediakan helper `registerTaskEndpoints` di
@@ -45,10 +45,9 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 
 ## Query Params (Laporan Reposter)
 
-- `post_id` (string, wajib): ID post official yang dilaporkan.
+- `shortcode` (string, wajib): shortcode postingan Instagram yang dilaporkan.
 - `user_id` (string, wajib): ID user/NRP pelapor (dipakai untuk mencari laporan).
-- `platform` (string, opsional): platform sumber (mis. `instagram`) untuk
-  menyesuaikan logika backend Cicero_V2/pegiat_medsos_app.
+- Gunakan `GET /api/link-reports-khusus` untuk laporan tugas khusus.
 
 ## Query Params (Deteksi Duplikasi Link)
 
@@ -121,8 +120,8 @@ Response dibuat stabil oleh helper `tasksEndpoints` dan selalu mengikuti pola:
 
 ### Skema Response (Report Links)
 
-Endpoint `/api/reposter/report-links` mengembalikan daftar tautan laporan per
-platform dalam format berikut:
+Endpoint `/api/link-reports` (atau `/api/link-reports-khusus` untuk tugas
+khusus) mengembalikan daftar tautan laporan per platform dalam format berikut:
 
 ```json
 {
