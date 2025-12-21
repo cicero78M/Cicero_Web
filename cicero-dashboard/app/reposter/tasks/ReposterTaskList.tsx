@@ -7,6 +7,7 @@ import {
   fetchPosts,
   fetchSpecialPosts,
   getReposterUserProfile,
+  isAbortError,
   InstaPost,
 } from "@/utils/api";
 import {
@@ -126,6 +127,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
           setState({ tasks: posts, loading: false, error: "" });
         }
       } catch (error) {
+        if (isAbortError(error, controller.signal)) return;
         setState({
           tasks: [],
           loading: false,

@@ -45,6 +45,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   remote diterima, datanya disimpan ke `ReposterAuthContext` (localStorage) dan
   akan dipakai kembali sampai NRP berganti agar permintaan ulang tidak terjadi
   pada render berikutnya.
+- Penanganan error untuk fetch reposter kini mengabaikan abort request (misalnya
+  ketika user berpindah halaman atau hook dibersihkan) agar state error tidak
+  terisi saat pembatalan yang disengaja.
 
 ## Alur Login Reposter
 
