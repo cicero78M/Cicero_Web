@@ -97,9 +97,11 @@ export default function useInstagramLikesData({
       .trim()
       .toLowerCase();
     const normalizedEffectiveRoleUpper = normalizedEffectiveRoleLower.toUpperCase();
+    const isOperatorRole = normalizedEffectiveRoleLower === "operator";
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
     const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
-    const derivedDirectorateRole = isDirectorateRoleValue || isDitbinmasRole;
+    const derivedDirectorateRole =
+      !isOperatorRole && (isDirectorateRoleValue || isDitbinmasRole);
     setIsDirectorateRole(derivedDirectorateRole);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
@@ -110,11 +112,11 @@ export default function useInstagramLikesData({
       ? "BIDHUMAS"
       : "DITBINMAS";
     const directorateScopedClient =
-      isDirectorateRoleValue && !isDitbinmasClient;
+      !isOperatorRole && isDirectorateRoleValue && !isDitbinmasClient;
     setIsDirectorateScopedClient(directorateScopedClient);
     const shouldUseDirectorateFetcher =
-      derivedDirectorateRole || isDitSamaptaBidhumas;
-    const dashboardClientId = derivedDirectorateRole
+      !isOperatorRole && (derivedDirectorateRole || isDitSamaptaBidhumas);
+    const dashboardClientId = !isOperatorRole && derivedDirectorateRole
       ? ditbinmasClientId
       : userClientId;
     const normalizedLoginClientId = String(userClientId || "")
@@ -206,7 +208,7 @@ export default function useInstagramLikesData({
             "",
         ).toUpperCase();
         const dir = normalizedEffectiveClientType === "DIREKTORAT";
-        const directorate = dir || derivedDirectorateRole;
+        const directorate = !isOperatorRole && (dir || derivedDirectorateRole);
         const isOrg = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorate(directorate);
@@ -219,13 +221,20 @@ export default function useInstagramLikesData({
             "",
         );
         setCanSelectScope(
-          directorate && !isOrg && allowedScopeClients.has(normalizedClientIdUpper),
+          !isOperatorRole &&
+            directorate &&
+            !isOrg &&
+            allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         const hasDifferentRoleClient =
-          directorate && normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
+          !isOperatorRole &&
+          directorate &&
+          normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
         setIsDirectorateScopedClient(hasDifferentRoleClient);
-        setIsDirectorateRole(directorate || isDirectorateRoleValue);
+        setIsDirectorateRole(
+          !isOperatorRole && (directorate || isDirectorateRoleValue),
+        );
 
         let users: any[] = [];
         if (directorate) {
