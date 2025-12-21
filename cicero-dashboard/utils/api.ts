@@ -848,19 +848,38 @@ export async function fetchSpecialPosts(
   );
 }
 
+const REPORT_LINK_FIELDS: Array<[string, string]> = [
+  ["instagram_link", "instagram"],
+  ["facebook_link", "facebook"],
+  ["twitter_link", "twitter"],
+  ["tiktok_link", "tiktok"],
+  ["youtube_link", "youtube"],
+];
+
+function normalizeReportLinkRecord(record: any): ReportLinkItem[] {
+  if (!record || typeof record !== "object") return [];
+  return REPORT_LINK_FIELDS.map(([field, platform]) => ({
+    platform,
+    url: ensureString(record?.[field]),
+  })).filter((entry) => entry.url);
+}
+
 function normalizeReportLinks(raw: any): ReportLinkItem[] {
   if (Array.isArray(raw)) {
-    return raw
-      .map((entry) => ({
-        platform:
-          ensureString(entry?.platform) ||
-          ensureString(entry?.name) ||
-          ensureString(entry?.type),
-        url: ensureString(entry?.url) || ensureString(entry?.link),
-      }))
-      .filter((entry) => entry.platform && entry.url);
+    return raw.flatMap((entry) => {
+      const fromFields = normalizeReportLinkRecord(entry);
+      if (fromFields.length > 0) return fromFields;
+      const platform =
+        ensureString(entry?.platform) ||
+        ensureString(entry?.name) ||
+        ensureString(entry?.type);
+      const url = ensureString(entry?.url) || ensureString(entry?.link);
+      return platform && url ? [{ platform, url }] : [];
+    });
   }
   if (raw && typeof raw === "object") {
+    const fromFields = normalizeReportLinkRecord(raw);
+    if (fromFields.length > 0) return fromFields;
     return Object.entries(raw)
       .map(([platform, url]) => ({
         platform: ensureString(platform),
