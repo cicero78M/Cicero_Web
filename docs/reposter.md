@@ -49,12 +49,15 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
 ## Alur Login Reposter
 
 1. Pengguna mengakses `/reposter/login` langsung, atau memilihnya dari halaman agregator login update di `/login-update`.
-2. Dashboard mengirim POST ke `/api/auth/user-login` di backend Cicero dengan
+2. Form login reposter menampilkan ikon input, tombol tampil/sembunyikan
+   password, serta opsi simpan username & password yang disimpan di localStorage
+   (`reposter_saved_credentials`).
+3. Dashboard mengirim POST ke `/api/auth/user-login` di backend Cicero dengan
    payload `nrp` dan `password`.
-3. Jika berhasil, token disimpan ke localStorage (`reposter_token`), ringkasan
+4. Jika berhasil, token disimpan ke localStorage (`reposter_token`), ringkasan
    profil ke `reposter_profile`, dan cookie `reposter_session` dengan scope path
    `/reposter`.
-4. Pengguna diarahkan kembali ke path tujuan (default `/reposter`).
+5. Pengguna diarahkan kembali ke path tujuan (default `/reposter`).
 
 ## Perbedaan Autentikasi Reposter vs Dashboard Utama
 

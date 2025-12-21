@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Eye, EyeOff, Lock, UserRound } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import { getApiBaseUrl } from "@/utils/api";
@@ -11,6 +12,7 @@ import {
 } from "@/utils/reposterProfile";
 
 const SESSION_COOKIE = "reposter_session";
+const SAVED_CREDENTIALS_KEY = "reposter_saved_credentials";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -19,8 +21,29 @@ export default function LoginForm() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberCredentials, setRememberCredentials] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem(SAVED_CREDENTIALS_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as {
+        username?: string;
+        password?: string;
+        remember?: boolean;
+      };
+      if (parsed?.remember) {
+        setUsername(parsed.username ?? "");
+        setPassword(parsed.password ?? "");
+        setRememberCredentials(true);
+      }
+    } catch (err) {
+      console.warn("Gagal membaca kredensial reposter tersimpan.", err);
+    }
+  }, []);
 
   const nextPath = useMemo(() => {
     const candidate = searchParams.get("next");
@@ -58,6 +81,18 @@ export default function LoginForm() {
         setAuth(sessionToken, mergedProfile ?? profileSnapshot ?? tokenPayload);
         const encoded = encodeURIComponent(sessionToken);
         document.cookie = `${SESSION_COOKIE}=${encoded}; Path=/reposter; SameSite=Lax; Max-Age=86400`;
+        if (rememberCredentials) {
+          window.localStorage.setItem(
+            SAVED_CREDENTIALS_KEY,
+            JSON.stringify({
+              username: username.trim(),
+              password: password.trim(),
+              remember: true,
+            }),
+          );
+        } else {
+          window.localStorage.removeItem(SAVED_CREDENTIALS_KEY);
+        }
         router.push(nextPath);
       } else {
         setError(data?.message || "Login gagal");
@@ -93,30 +128,57 @@ export default function LoginForm() {
             <label className="text-sm font-medium" htmlFor="reposter-username">
               NRP
             </label>
-            <input
-              id="reposter-username"
-              type="text"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              autoComplete="username"
-              required
-            />
+            <div className="relative">
+              <UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                id="reposter-username"
+                type="text"
+                className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
+                required
+              />
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-sm font-medium" htmlFor="reposter-password">
               Password
             </label>
-            <input
-              id="reposter-password"
-              type="password"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-            />
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                id="reposter-password"
+                type={showPassword ? "text" : "password"}
+                className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-10 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 dark:hover:text-slate-200 dark:focus-visible:ring-cyan-500/40"
+                aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
+          <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:border-slate-600 dark:text-cyan-400 dark:focus:ring-cyan-500"
+              checked={rememberCredentials}
+              onChange={(event) => setRememberCredentials(event.target.checked)}
+            />
+            Simpan username & password
+          </label>
 
           {error ? (
             <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
