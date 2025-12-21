@@ -91,6 +91,10 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   - Buka halaman **Laporan** yang menampilkan 5 tautan laporan per platform
     berdasarkan `post_id`, `client_id`, dan `platform` yang diteruskan dari
     daftar tugas official.
+  Status **Sudah dilaporkan** pada daftar official disinkronkan dari backend
+  dengan helper `getReposterReportLinks` (`GET /api/link-reports`) menggunakan
+  `user_id` dari profil login (`userId`, `id`, `nrp`, atau `user_id`) dan
+  `shortcode` yang tersimpan di data postingan atau fallback ke ID jika valid.
   Aksi download/copy dibungkus helper `utils/reposterTaskActions.ts` agar
   handler UI lebih ringkas dan tetap menyediakan status feedback untuk pengguna.
 - `/reposter/tasks/special` menampilkan daftar tugas khusus dari
@@ -144,7 +148,9 @@ Status lokal untuk tugas official disimpan melalui localStorage:
 Saat pengguna menekan tombol **Tandai sudah dilaporkan** di halaman
 `/reposter/tasks/official/[postId]/report`, ID post ditambahkan ke
 `reposter_reported_posts` agar status **Sudah dilaporkan** konsisten di daftar
-tugas official.
+tugas official. Setelah daftar tugas dimuat, status laporan akan diselaraskan
+kembali dengan data backend (jika tersedia) agar badge **Sudah dilaporkan**
+tidak hanya bergantung pada localStorage.
 
 Ringkasan tugas khusus menghitung status berdasarkan field `status` dari setiap
 task (misalnya pending, in progress, atau done) yang diterima dari backend.

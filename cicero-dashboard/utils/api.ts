@@ -247,6 +247,7 @@ export type TaskItem = {
 
 export type InstaPost = {
   id: string;
+  shortcode: string;
   caption: string;
   imageUrl: string;
   createdAt: Date;
@@ -369,6 +370,12 @@ function parseLocalTimestamp(value: string): Date | null {
     Number(second ?? 0),
   );
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isLikelyShortcode(value: string): boolean {
+  if (!value) return false;
+  if (!/^[A-Za-z0-9_-]{5,20}$/.test(value)) return false;
+  return /[A-Za-z]/.test(value);
 }
 
 function isSameLocalDay(target: Date, compareTo: Date): boolean {
@@ -775,10 +782,12 @@ async function fetchReposterPosts(
 
   const today = new Date();
   const posts = ensureArray(payload, (entry) => {
-    const id =
+    const shortcode =
       ensureString(entry?.shortcode) ||
-      ensureString(entry?.id) ||
-      ensureString(entry?.post_id);
+      ensureString(entry?.short_code) ||
+      ensureString(entry?.code);
+    const id =
+      shortcode || ensureString(entry?.id) || ensureString(entry?.post_id);
     if (!id) return null;
 
     const createdAtRaw =
@@ -818,6 +827,7 @@ async function fetchReposterPosts(
     return {
       id,
       caption: ensureString(entry?.caption) || ensureString(entry?.text),
+      shortcode: shortcode || (isLikelyShortcode(id) ? id : ""),
       imageUrl,
       createdAt,
       taskNumber: 0,
