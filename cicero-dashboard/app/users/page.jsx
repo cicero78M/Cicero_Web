@@ -97,18 +97,48 @@ export default function UserDirectoryPage() {
           .toLowerCase();
 
         if (normalizedRole === "operator" && normalizedLoginClientId) {
-          const normalizeRole = (value) => String(value || "").trim().toLowerCase();
+          const normalizeRole = (value) =>
+            String(value || "").trim().toLowerCase();
           const normalizeClientId = (value) =>
             String(value || "").trim().toLowerCase();
+          const collectRoleValues = (value) => {
+            if (!value) return [];
+            if (Array.isArray(value)) {
+              return value.flatMap((item) => {
+                if (typeof item === "string") return [item];
+                if (item && typeof item === "object") {
+                  return [
+                    item.role,
+                    item.role_name,
+                    item.roleName,
+                    item.name,
+                  ].filter(Boolean);
+                }
+                return [];
+              });
+            }
+            return [];
+          };
           arr = arr.filter((u) => {
-            const roleValue = normalizeRole(
-              u.role || u.user_role || u.userRole || u.roleName || "",
-            );
-            if (roleValue !== "operator") return false;
+            const roleValues = [
+              u.role,
+              u.user_role,
+              u.userRole,
+              u.roleName,
+              u.role_name,
+              ...collectRoleValues(u.roles),
+              ...collectRoleValues(u.user_roles),
+              ...collectRoleValues(u.role_list),
+              ...collectRoleValues(u.roleList),
+            ]
+              .map(normalizeRole)
+              .filter(Boolean);
+            const isOperatorUser = roleValues.includes("operator");
+            if (!isOperatorUser) return false;
             const userClientId = normalizeClientId(
               u.client_id || u.clientId || u.clientID || u.client || "",
             );
-            return userClientId === normalizedLoginClientId;
+            return !userClientId || userClientId === normalizedLoginClientId;
           });
         }
 
