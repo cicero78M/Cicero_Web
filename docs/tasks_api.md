@@ -49,6 +49,10 @@ server (Express/Koa/Fastify yang mendukung `app.get`).
 - `user_id` (string, wajib): ID user/NRP pelapor (dipakai untuk mencari laporan).
 - Gunakan `GET /api/link-reports-khusus` untuk laporan tugas khusus.
 
+Front-end reposter juga memakai parameter ini untuk menyinkronkan badge
+**Sudah dilaporkan** di daftar tugas official dengan memanggil
+`getReposterReportLinks` per postingan yang memiliki shortcode valid.
+
 ## Query Params (Deteksi Duplikasi Link)
 
 - `links[]` (string, wajib): kumpulan link laporan yang ingin dicek
@@ -172,6 +176,11 @@ import { fetchPosts, getSpecialTasks } from "@/utils/api";
 const special = await getSpecialTasks(token, { status: "pending" });
 const officialPosts = await fetchPosts(token, clientId);
 ```
+
+Untuk menampilkan status laporan yang akurat di daftar tugas official, UI
+melakukan panggilan `getReposterReportLinks` untuk setiap shortcode yang valid
+dengan parameter `user_id` dari profil reposter, lalu menandai `reported = true`
+jika backend mengembalikan tautan laporan.
 
 Pastikan token yang dipakai sesuai konteks:
 

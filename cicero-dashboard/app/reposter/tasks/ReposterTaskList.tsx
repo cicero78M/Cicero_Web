@@ -6,6 +6,7 @@ import useReposterAuth from "@/hooks/useReposterAuth";
 import {
   fetchPosts,
   fetchSpecialPosts,
+  getReposterReportLinks,
   getReposterUserProfile,
   isAbortError,
   InstaPost,
@@ -66,7 +67,23 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     [remoteProfile, sessionProfile],
   );
 
+  const reportUserId = useMemo(
+    () =>
+      profile?.userId ||
+      profile?.id ||
+      profile?.nrp ||
+      profile?.user_id ||
+      "",
+    [profile?.id, profile?.nrp, profile?.userId, profile?.user_id],
+  );
+
   const clientId = combinedProfile?.clientId ?? "";
+
+  const isLikelyShortcode = (value: string) => {
+    if (!value) return false;
+    if (!/^[A-Za-z0-9_-]{5,20}$/.test(value)) return false;
+    return /[A-Za-z]/.test(value);
+  };
 
   useEffect(() => {
     if (!token || !sessionProfile?.nrp) return;
@@ -116,7 +133,46 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
           const posts = await fetchPosts(token, clientId, {
             signal: controller.signal,
           });
-          setState({ tasks: posts, loading: false, error: "" });
+          let nextPosts = posts;
+          if (reportUserId) {
+            const reportEntries = await Promise.all(
+              posts.map(async (post) => {
+                const shortcode =
+                  post.shortcode ||
+                  (isLikelyShortcode(post.id) ? post.id : "");
+                if (!shortcode) {
+                  return {
+                    id: post.id,
+                    reported: post.reported,
+                  };
+                }
+                try {
+                  const links = await getReposterReportLinks(
+                    token,
+                    { shortcode, userId: reportUserId },
+                    controller.signal,
+                  );
+                  return {
+                    id: post.id,
+                    reported: post.reported || links.length > 0,
+                  };
+                } catch (error) {
+                  if (isAbortError(error, controller.signal)) {
+                    throw error;
+                  }
+                  return { id: post.id, reported: post.reported };
+                }
+              }),
+            );
+            const reportMap = new Map(
+              reportEntries.map((entry) => [entry.id, entry.reported]),
+            );
+            nextPosts = posts.map((post) => ({
+              ...post,
+              reported: reportMap.get(post.id) ?? post.reported,
+            }));
+          }
+          setState({ tasks: nextPosts, loading: false, error: "" });
         } else {
           if (!clientId) {
             throw new Error("Client ID belum tersedia.");
@@ -144,7 +200,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     return () => {
       controller.abort();
     };
-  }, [isHydrating, token, taskType, clientId]);
+  }, [isHydrating, token, taskType, clientId, reportUserId]);
 
   const showActionFeedback = (postId: string, message: string) => {
     setActionFeedback((prev) => ({ ...prev, [postId]: message }));
