@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import {
+  getReposterReportLinks,
   getReposterReportLinkDuplicates,
   REPOSTER_REPORTED_POSTS_KEY,
   submitReposterReportLinks,
@@ -86,6 +87,12 @@ export default function ReportLinksClient() {
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState("");
   const [draftSuccess, setDraftSuccess] = useState("");
+  const [reportLinksLoading, setReportLinksLoading] = useState(false);
+  const [reportLinksError, setReportLinksError] = useState("");
+  const [reportLinksNotice, setReportLinksNotice] = useState("");
+  const [reportLinks, setReportLinks] = useState<
+    Array<{ platform: string; url: string }>
+  >([]);
 
   const draftEntries = useMemo(
     () =>
@@ -101,6 +108,16 @@ export default function ReportLinksClient() {
   const userKey = useMemo(
     () => profile?.userId || profile?.id || "anon",
     [profile?.id, profile?.userId],
+  );
+
+  const reportUserId = useMemo(
+    () =>
+      profile?.userId ||
+      profile?.id ||
+      profile?.nrp ||
+      profile?.user_id ||
+      "",
+    [profile?.id, profile?.nrp, profile?.userId, profile?.user_id],
   );
 
   const normalizeLink = (value: string) =>
@@ -174,6 +191,56 @@ export default function ReportLinksClient() {
       })
       .catch(() => undefined);
   }, [draftLinks]);
+
+  useEffect(() => {
+    if (!token) return;
+    const controller = new AbortController();
+    setReportLinksLoading(true);
+    setReportLinksError("");
+    setReportLinksNotice("");
+    getReposterReportLinks(
+      token,
+      {
+        postId,
+        userId: reportUserId,
+        platform: sourcePlatform || undefined,
+      },
+      controller.signal,
+    )
+      .then((links) => {
+        setReportLinks(links);
+        if (links.length === 0) {
+          setReportLinksNotice("Belum ada tautan laporan yang tercatat.");
+          return;
+        }
+        const mapped: Record<string, string> = {};
+        links.forEach((link) => {
+          const platformKey = link.platform?.toLowerCase();
+          if (platformKey && !mapped[platformKey]) {
+            mapped[platformKey] = link.url;
+          }
+        });
+        setDraftLinks((prev) => {
+          const next = { ...prev };
+          Object.entries(mapped).forEach(([platform, url]) => {
+            if (!next[platform]) {
+              next[platform] = url;
+            }
+          });
+          return next;
+        });
+        setReportLinksNotice("Tautan laporan sebelumnya sudah tercatat.");
+      })
+      .catch((err) => {
+        setReportLinksError(
+          err instanceof Error ? err.message : "Gagal memuat tautan laporan.",
+        );
+      })
+      .finally(() => {
+        setReportLinksLoading(false);
+      });
+    return () => controller.abort();
+  }, [postId, reportUserId, sourcePlatform, token]);
 
   const handleDraftChange = (platform: string, value: string) => {
     setDraftError("");
@@ -418,10 +485,42 @@ export default function ReportLinksClient() {
               Form laporan
             </p>
             <p className="text-sm text-slate-500 dark:text-slate-300">
-              Lengkapi tautan laporan untuk setiap platform. Instagram, Facebook,
-              dan Twitter wajib diisi.
+              Menampilkan dan mengirim tautan laporan untuk setiap platform.
+              Instagram, Facebook, dan Twitter wajib diisi.
             </p>
           </div>
+
+          {reportLinksLoading ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+              Memuat tautan laporan...
+            </div>
+          ) : null}
+
+          {!reportLinksLoading && reportLinksNotice ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+              <p className="font-semibold text-slate-700 dark:text-slate-100">
+                {reportLinksNotice}
+              </p>
+              {reportLinks.length > 0 ? (
+                <ul className="mt-2 space-y-1 text-sm text-slate-500 dark:text-slate-300">
+                  {reportLinks.map((link) => (
+                    <li key={`${link.platform}-${link.url}`}>
+                      <span className="font-semibold text-slate-600 dark:text-slate-200">
+                        {PLATFORM_LABELS[link.platform] || link.platform}
+                      </span>
+                      : {link.url}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+
+          {reportLinksError ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-600 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200">
+              {reportLinksError}
+            </div>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             {draftEntries.map((entry) => (

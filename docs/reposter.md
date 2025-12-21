@@ -111,8 +111,10 @@ postingan disaring untuk hari berjalan (lokal).
 
 Halaman laporan tugas official memanggil helper `getReposterReportLinks`
 (`GET /api/reposter/report-links`) untuk mengambil 5 tautan laporan per
-platform dengan parameter `post_id` dan `user_id` (dari profil/JWT), lalu
-menampilkannya di `/reposter/tasks/official/[postId]/report`.
+platform dengan parameter `post_id`, `user_id` (dari profil/JWT), serta
+opsional `platform` dari query string. Tautan yang sudah tercatat akan
+ditampilkan sebagai informasi dan dipakai sebagai nilai awal pada form di
+`/reposter/tasks/official/[postId]/report`.
 
 Halaman laporan kini menyediakan form input link (Instagram, Facebook, Twitter,
 TikTok, YouTube). Form mengirim data ke endpoint `POST /api/link-reports`
