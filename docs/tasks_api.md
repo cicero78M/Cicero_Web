@@ -121,7 +121,8 @@ Response dibuat stabil oleh helper `tasksEndpoints` dan selalu mengikuti pola:
 ### Skema Response (Report Links)
 
 Endpoint `/api/link-reports` (atau `/api/link-reports-khusus` untuk tugas
-khusus) mengembalikan daftar tautan laporan per platform dalam format berikut:
+khusus) mengembalikan daftar tautan laporan per platform. Response bisa
+menyediakan field `*_link` langsung pada `data`, selain bentuk objek `links`.
 
 ```json
 {
@@ -129,6 +130,11 @@ khusus) mengembalikan daftar tautan laporan per platform dalam format berikut:
   "data": {
     "post_id": "post_123",
     "user_id": "NRP123456",
+    "instagram_link": "https://www.instagram.com/p/abc123",
+    "facebook_link": "https://www.facebook.com/permalink.php?story_fbid=...",
+    "twitter_link": "https://twitter.com/...",
+    "tiktok_link": "https://www.tiktok.com/@.../video/...",
+    "youtube_link": "https://youtu.be/...",
     "links": {
       "instagram": "https://www.instagram.com/p/abc123",
       "facebook": "https://www.facebook.com/permalink.php?story_fbid=...",
