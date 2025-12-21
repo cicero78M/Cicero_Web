@@ -927,15 +927,14 @@ export async function getReposterReportLinks(
   if (!params.userId) {
     throw new Error("User ID belum tersedia.");
   }
-  const postId = params.postId || params.shortcode;
-  if (!postId) {
+  if (!params.postId && !params.shortcode) {
     throw new Error("Post ID atau shortcode belum tersedia.");
   }
-  const query = new URLSearchParams({
-    post_id: postId,
-    user_id: params.userId,
-  });
-  if (params.shortcode) {
+  const query = new URLSearchParams({ user_id: params.userId });
+  if (params.postId) {
+    query.set("post_id", params.postId);
+  }
+  if (!params.postId && params.shortcode) {
     query.set("shortcode", params.shortcode);
   }
   const endpoint = params.isSpecial

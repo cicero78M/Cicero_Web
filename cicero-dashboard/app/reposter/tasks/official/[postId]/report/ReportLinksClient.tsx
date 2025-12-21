@@ -160,12 +160,6 @@ export default function ReportLinksClient() {
     }
   };
 
-  const isLikelyShortcode = (value: string) => {
-    if (!value) return false;
-    if (!/^[A-Za-z0-9_-]{5,20}$/.test(value)) return false;
-    return /[A-Za-z]/.test(value);
-  };
-
   const extractInstagramShortcode = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return "";
@@ -178,14 +172,13 @@ export default function ReportLinksClient() {
     }
   };
 
-  const reportShortcode = useMemo(() => {
-    if (isLikelyShortcode(postId)) return postId;
+  const fallbackShortcode = useMemo(() => {
     const draftShortcode = extractInstagramShortcode(
       draftLinks.instagram ?? "",
     );
     if (draftShortcode) return draftShortcode;
     return profileShortcode || "";
-  }, [draftLinks.instagram, postId, profileShortcode]);
+  }, [draftLinks.instagram, profileShortcode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -237,7 +230,7 @@ export default function ReportLinksClient() {
       setReportLinksError("User ID belum tersedia.");
       return;
     }
-    if (!postId && !reportShortcode) {
+    if (!postId && !fallbackShortcode) {
       setReportLinksNotice(
         "Masukkan link Instagram untuk memuat tautan laporan sebelumnya.",
       );
@@ -248,8 +241,8 @@ export default function ReportLinksClient() {
     getReposterReportLinks(
       token,
       {
-        postId,
-        shortcode: reportShortcode,
+        postId: postId || undefined,
+        shortcode: postId ? undefined : fallbackShortcode,
         userId: reportUserId,
       },
       controller.signal,
@@ -299,7 +292,7 @@ export default function ReportLinksClient() {
         setReportLinksLoading(false);
       });
     return () => controller.abort();
-  }, [postId, reportShortcode, reportUserId, token]);
+  }, [fallbackShortcode, postId, reportUserId, token]);
 
   const handleDraftChange = (platform: string, value: string) => {
     setDraftError("");
@@ -426,7 +419,8 @@ export default function ReportLinksClient() {
     );
 
     const shortcodeFromLink = extractInstagramShortcode(sanitized.instagram);
-    const shortcodeForSubmit = shortcodeFromLink || postId || "";
+    const shortcodeForSubmit =
+      postId || shortcodeFromLink || profileShortcode || "";
     if (!shortcodeForSubmit) {
       setDraftError("Shortcode Instagram tidak ditemukan pada link.");
       return;
