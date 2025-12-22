@@ -81,6 +81,7 @@ interface Options {
   customDate: string;
   fromDate: string;
   toDate: string;
+  scope?: "client" | "all";
 }
 
 interface RekapSummary {
@@ -102,6 +103,7 @@ export default function useTiktokCommentsData({
   customDate,
   fromDate,
   toDate,
+  scope = "client",
 }: Options) {
   const auth = useContext(AuthContext);
   const normalizedLoginClientId = useMemo(
@@ -125,6 +127,7 @@ export default function useTiktokCommentsData({
   const [isDirectorateScopedClient, setIsDirectorateScopedClient] =
     useState(false);
   const [isDirectorateRole, setIsDirectorateRole] = useState(false);
+  const [canSelectScope, setCanSelectScope] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -191,6 +194,12 @@ export default function useTiktokCommentsData({
       normalizedEffectiveRoleFromAuth !== "";
     const isDirectorateClientTypeFromAuth =
       normalizedEffectiveClientTypeFromAuth === "DIREKTORAT";
+    const allowedScopeClients = new Set([
+      "DITBINMAS",
+      "DITSAMAPTA",
+      "DITLANTAS",
+      "BIDHUMAS",
+    ]);
     // Saat role direktorat terdeteksi (termasuk kasus role Ditbinmas yang
     // dinormalisasi menjadi ORG), paksa pengambilan metrik memakai client
     // Ditbinmas agar total postingan/engagement tidak nol pada akun ORG.
@@ -312,6 +321,12 @@ export default function useTiktokCommentsData({
             (profileData as any)?.client ||
             "",
         );
+        setCanSelectScope(
+          !isOperatorRole &&
+            directorate &&
+            !orgClient &&
+            allowedScopeClients.has(normalizedClientIdUpper),
+        );
 
         let users: any[] = [];
         if (directorate) {
@@ -350,7 +365,9 @@ export default function useTiktokCommentsData({
 
         let filteredUsers = users;
         const shouldFilterByClient = Boolean(normalizedClientIdLower);
-        if (shouldFilterByClient) {
+        const shouldApplyScopeFilter =
+          shouldFilterByClient && (!directorate || scope === "client");
+        if (shouldApplyScopeFilter) {
           filteredUsers = users.filter((u: any) => {
             const userClient = normalizeString(
               u.client_id || u.clientId || u.clientID || u.client || "",
@@ -487,6 +504,7 @@ export default function useTiktokCommentsData({
     customDate,
     fromDate,
     toDate,
+    scope,
     auth?.token,
     auth?.clientId,
     auth?.effectiveRole,
@@ -502,6 +520,7 @@ export default function useTiktokCommentsData({
     clientName,
     isDirectorateRole,
     isDirectorateScopedClient,
+    canSelectScope,
     loading,
     error,
   };
