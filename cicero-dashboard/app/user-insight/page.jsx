@@ -25,7 +25,7 @@ import { showToast } from "@/utils/showToast";
 import { User, Instagram, Music, RefreshCw } from "lucide-react";
 import {
   filterUserDirectoryByScope,
-  getEffectiveUserDirectoryScope,
+  getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
 
@@ -121,8 +121,11 @@ export default function UserInsightPage() {
         return;
       }
       try {
-        const scope = getEffectiveUserDirectoryScope(effectiveClientType);
         const normalizedRole = normalizeDirectoryRole(effectiveRole || role);
+        const scope = getUserDirectoryFetchScope({
+          role: normalizedRole || undefined,
+          effectiveClientType,
+        });
         const [usersRes, profileRes] = await Promise.all([
           getUserDirectory(token, clientId, {
             role: normalizedRole || undefined,

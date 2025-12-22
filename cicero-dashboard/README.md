@@ -23,10 +23,12 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - `client_type` efektif menentukan scope data:
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
   - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
+- Helper `getUserDirectoryFetchScope` memastikan permintaan data user selalu memakai scope direktorat ketika role login termasuk direktorat, meskipun `effectiveClientType` terset ke ORG karena remap khusus.
 - Filter role pada `filterUserDirectoryByScope` otomatis di-skip bila payload user tidak memiliki sinyal role sama sekali, sehingga daftar personil ORG tetap tampil walau API hanya mengirim data dasar tanpa atribut role.
 - Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) tetap diperlakukan sebagai scope **DIREKTORAT** di `filterUserDirectoryByScope` walaupun `client_type` login bertipe **ORG**, agar data direktorat yang sudah lolos dari API tetap tampil di halaman `/users` dan `/user-insight`.
 - `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat hanya dianggap **DIREKTORAT** bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
 - Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
+- Halaman `/users` tidak lagi melakukan fan-out `getClientProfile` untuk seluruh `client_id` ketika login Ditbinmas; label kesatuan mengandalkan field `nama_client`/`client_name` dari payload direktori.
 - Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
 - Type guard `isAbortSignal` di `utils/api.ts` kini menolak nilai `null` supaya pemilihan `AbortSignal` untuk `getUserDirectory` tidak memicu error tipe saat opsi bersifat opsional.
 

@@ -29,6 +29,23 @@ export function getEffectiveUserDirectoryScope(
     : "ORG";
 }
 
+export function getUserDirectoryFetchScope(params: {
+  role?: string;
+  effectiveClientType?: string;
+}): UserDirectoryScope {
+  const normalizedRole = normalizeDirectoryRole(params.role);
+  const isDirectorateRole =
+    DIRECTORY_ROLE_CANONICAL.includes(
+      normalizedRole as (typeof DIRECTORY_ROLE_CANONICAL)[number],
+    ) && normalizedRole !== "operator";
+
+  if (isDirectorateRole) {
+    return "DIREKTORAT";
+  }
+
+  return getEffectiveUserDirectoryScope(params.effectiveClientType);
+}
+
 function normalizeClientId(value?: string): string {
   return String(value || "").trim().toLowerCase();
 }

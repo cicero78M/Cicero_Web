@@ -13,7 +13,7 @@ import {
 } from "@/utils/api";
 import {
   filterUserDirectoryByScope,
-  getEffectiveUserDirectoryScope,
+  getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
 import { Pencil, Check, X, RefreshCw } from "lucide-react";
@@ -91,7 +91,10 @@ export default function UserDirectoryPage() {
     ([_, tk, cid]) => {
       if (!tk) throw new Error("Token tidak ditemukan. Silakan login ulang.");
       if (!cid) throw new Error("Client ID tidak ditemukan.");
-      const scope = getEffectiveUserDirectoryScope(effectiveClientType);
+      const scope = getUserDirectoryFetchScope({
+        role: normalizedRole || undefined,
+        effectiveClientType,
+      });
       return getUserDirectory(tk, cid, {
         role: normalizedRole || undefined,
         scope,
@@ -123,7 +126,7 @@ export default function UserDirectoryPage() {
             client_id,
         );
 
-        if (dir) {
+        if (dir && !isDitbinmas) {
           const nameMap = await getClientNames(
             token,
             arr.map((u) =>
