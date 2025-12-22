@@ -108,7 +108,7 @@ export default function useInstagramLikesData({
         : "";
     const token = authToken ?? fallbackToken;
     const userClientId = authClientId ?? fallbackClientId;
-    const role = authRole ?? fallbackRole;
+    const role = effectiveRole ?? authRole ?? fallbackRole;
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);

@@ -2166,7 +2166,7 @@ export default function ExecutiveSummaryPage() {
 
   useEffect(() => {
     const normalizedClientId = clientId?.toLowerCase();
-    const normalizedRole = (role ?? effectiveRole)?.toLowerCase();
+    const normalizedRole = (effectiveRole ?? role)?.toLowerCase();
 
     if (!normalizedClientId || !normalizedRole) {
       setIsAuthorized(false);
