@@ -34,6 +34,18 @@ function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeNumber(value?: unknown): number | undefined {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : undefined;
+}
+
+function extractRekapUsers(payload: any): any[] {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.users)) return payload.users;
+  if (Array.isArray(payload)) return payload;
+  return [];
+}
+
 function normalizeRolePayload(value?: unknown): string | undefined {
   const normalized = String(value || "").trim().toLowerCase();
   return normalized || undefined;
@@ -242,6 +254,8 @@ export default function useInstagramLikesData({
           ? (statsData as any).instagram_posts
           : [];
         setIgPosts(posts);
+        const totalIGPostFromStats =
+          Number((statsData as any).instagramPosts) || 0;
 
         const client_id = userClientId;
 
@@ -294,6 +308,14 @@ export default function useInstagramLikesData({
         );
 
         let users: any[] = [];
+        let rekapMeta: {
+          totalIGPost?: number;
+          totalUser?: number;
+          totalSudahLike?: number;
+          totalKurangLike?: number;
+          totalBelumLike?: number;
+          totalTanpaUsername?: number;
+        } = {};
         if (directorate) {
           const directoryClientId = client_id;
           const directoryRes = await getUserDirectory(
@@ -408,7 +430,7 @@ export default function useInstagramLikesData({
                   ...u,
                   nama_client: mappedName,
                   client_name: mappedName,
-                }
+            }
               : u;
           });
         } else {
@@ -422,11 +444,47 @@ export default function useInstagramLikesData({
             controller.signal,
             { role: requestRole, scope: requestScope },
           );
-          users = Array.isArray(rekapRes?.data)
-            ? rekapRes.data
-            : Array.isArray(rekapRes)
-            ? rekapRes
-            : [];
+          users = extractRekapUsers(rekapRes);
+          rekapMeta = {
+            totalIGPost:
+              normalizeNumber(
+                rekapRes?.totalPosts ??
+                  rekapRes?.summary?.totalPosts ??
+                  rekapRes?.summary?.totalIGPost ??
+                  rekapRes?.summary?.total_ig_post,
+              ) ?? undefined,
+            totalUser:
+              normalizeNumber(
+                rekapRes?.usersCount ??
+                  rekapRes?.summary?.totalUsers ??
+                  rekapRes?.summary?.totalUser ??
+                  rekapRes?.summary?.total_users,
+              ) ?? undefined,
+            totalSudahLike: normalizeNumber(
+              rekapRes?.sudahUsersCount ??
+                rekapRes?.summary?.totalSudahLike ??
+                rekapRes?.summary?.total_sudah_like ??
+                rekapRes?.summary?.total_sudah,
+            ),
+            totalKurangLike: normalizeNumber(
+              rekapRes?.kurangUsersCount ??
+                rekapRes?.summary?.totalKurangLike ??
+                rekapRes?.summary?.total_kurang_like ??
+                rekapRes?.summary?.total_kurang,
+            ),
+            totalBelumLike: normalizeNumber(
+              rekapRes?.belumUsersCount ??
+                rekapRes?.summary?.totalBelumLike ??
+                rekapRes?.summary?.total_belum_like ??
+                rekapRes?.summary?.total_belum,
+            ),
+            totalTanpaUsername: normalizeNumber(
+              rekapRes?.noUsernameUsersCount ??
+                rekapRes?.summary?.totalTanpaUsername ??
+                rekapRes?.summary?.total_tanpa_username ??
+                rekapRes?.summary?.total_tanpa,
+            ),
+          };
         }
 
         let filteredUsers = users;
@@ -520,8 +578,15 @@ export default function useInstagramLikesData({
           [...filteredUsers].sort(compareUsersByPangkatAndNrp),
           client_id,
         );
-        const totalUser = sortedUsers.length;
-        const totalIGPost = Number((statsData as any).instagramPosts) || 0;
+        const totalIGPost =
+          normalizeNumber(rekapMeta.totalIGPost) ?? totalIGPostFromStats;
+        const computedTotals = {
+          totalUser: sortedUsers.length,
+          totalSudahLike: 0,
+          totalKurangLike: 0,
+          totalBelumLike: 0,
+          totalTanpaUsername: 0,
+        };
         let totalSudahLike = 0;
         let totalKurangLike = 0;
         let totalBelumLike = 0;
@@ -541,14 +606,23 @@ export default function useInstagramLikesData({
           else if (status === "kurang") totalKurangLike += 1;
           else totalBelumLike += 1;
         });
+        computedTotals.totalSudahLike = totalSudahLike;
+        computedTotals.totalKurangLike = totalKurangLike;
+        computedTotals.totalBelumLike = totalBelumLike;
+        computedTotals.totalTanpaUsername = totalTanpaUsername;
 
         if (controller.signal.aborted) return;
         setRekapSummary({
-          totalUser,
-          totalSudahLike,
-          totalKurangLike,
-          totalBelumLike,
-          totalTanpaUsername,
+          totalUser: rekapMeta.totalUser ?? computedTotals.totalUser,
+          totalSudahLike:
+            rekapMeta.totalSudahLike ?? computedTotals.totalSudahLike,
+          totalKurangLike:
+            rekapMeta.totalKurangLike ?? computedTotals.totalKurangLike,
+          totalBelumLike:
+            rekapMeta.totalBelumLike ?? computedTotals.totalBelumLike,
+          totalTanpaUsername:
+            rekapMeta.totalTanpaUsername ??
+            computedTotals.totalTanpaUsername,
           totalIGPost,
         });
         setChartData(sortedUsers);
