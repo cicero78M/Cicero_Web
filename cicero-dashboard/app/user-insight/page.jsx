@@ -11,7 +11,11 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { getUserDirectory, getClientProfile } from "@/utils/api";
+import {
+  getUserDirectory,
+  getClientProfile,
+  extractUserDirectoryUsers,
+} from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { accumulateContactStats } from "@/utils/contactStats";
 import Loader from "@/components/Loader";
@@ -126,8 +130,7 @@ export default function UserInsightPage() {
           }),
           getClientProfile(token, clientId),
         ]);
-        const raw = usersRes.data || usersRes.users || usersRes;
-        const users = Array.isArray(raw) ? raw : [];
+        const users = extractUserDirectoryUsers(usersRes);
 
         // helper untuk membuat data chart per divisi
         const generateChartData = (arr) => {
