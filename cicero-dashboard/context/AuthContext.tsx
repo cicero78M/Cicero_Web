@@ -21,6 +21,54 @@ type AuthState = {
 
 export const AuthContext = createContext<AuthState | undefined>(undefined);
 
+const DIRECTORATE_ROLE_KEYS = new Set([
+  "ditbinmas",
+  "ditsamapta",
+  "ditlantas",
+  "bidhumas",
+  "direktorat",
+]);
+
+function normalizeRoleValue(value?: string) {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return {
+      raw: "",
+      mapped: "",
+      lower: "",
+      upper: "",
+    };
+  }
+
+  const normalized = raw.toLowerCase();
+  const compact = normalized.replace(/[\s-_]+/g, "");
+  let mapped = "";
+
+  if (compact.includes("ditbinmas")) mapped = "DITBINMAS";
+  else if (compact.includes("bidhumas")) mapped = "BIDHUMAS";
+  else if (compact.includes("ditsamapta")) mapped = "DITSAMAPTA";
+  else if (compact.includes("ditlantas")) mapped = "DITLANTAS";
+  else if (compact.includes("operator")) mapped = "OPERATOR";
+  else if (compact.includes("direktorat")) mapped = "DIREKTORAT";
+  else mapped = raw;
+
+  return {
+    raw,
+    mapped,
+    lower: mapped.toLowerCase(),
+    upper: mapped.toUpperCase(),
+  };
+}
+
+function normalizeClientType(value?: string) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const normalized = raw.toUpperCase();
+  if (normalized.includes("DIREKTORAT")) return "DIREKTORAT";
+  if (normalized.includes("ORG")) return "ORG";
+  return normalized;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
@@ -60,15 +108,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const normalizedClientId = clientId?.toUpperCase();
-    const normalizedRole = role?.toUpperCase();
-    const normalizedClientType = profile?.client_type
-      ? String(profile.client_type).toUpperCase()
-      : null;
+    const normalizedRole = normalizeRoleValue(role);
+    const normalizedClientType = normalizeClientType(
+      profile?.client_type ||
+        profile?.clientType ||
+        profile?.client_type_code ||
+        profile?.clientTypeName,
+    );
 
     const isDitSamaptaBidhumas =
       normalizedClientId === "DITSAMAPTA" &&
       normalizedClientType === "DIREKTORAT" &&
-      normalizedRole === "BIDHUMAS";
+      normalizedRole.upper === "BIDHUMAS";
 
     if (isDitSamaptaBidhumas) {
       setEffectiveRole("BIDHUMAS");
@@ -76,8 +127,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setEffectiveRole(role);
-    setEffectiveClientType(profile?.client_type ?? null);
+    const effectiveRoleValue = normalizedRole.upper || normalizedRole.raw;
+    const isOperatorRole = normalizedRole.lower === "operator";
+    const isDirectorateRole = DIRECTORATE_ROLE_KEYS.has(normalizedRole.lower);
+    const resolvedClientType =
+      normalizedClientType === "DIREKTORAT" && !isOperatorRole && isDirectorateRole
+        ? "DIREKTORAT"
+        : normalizedClientType
+        ? "ORG"
+        : "";
+
+    setEffectiveRole(effectiveRoleValue || null);
+    setEffectiveClientType(resolvedClientType || null);
   }, [clientId, role, profile]);
 
   const setAuth = (
@@ -118,4 +179,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-

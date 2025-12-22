@@ -16,9 +16,11 @@ The repository includes multiple package managers, so lockfiles from the monorep
 ### User directory scope & role normalization
 
 - Mapping role yang distandardkan untuk halaman personil berada di `utils/userDirectoryScope.ts`: `ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`, dan `operator`. Nilai role dari token maupun data user akan dinormalisasi ke bentuk tersebut sebelum proses filter.
+- `AuthContext` menormalkan role login ke bentuk kanonik (uppercase/lowercase) lewat pemetaan: `DITBINMAS`, `BIDHUMAS`, `DITSAMAPTA`, `DITLANTAS`, `OPERATOR`, dan `DIREKTORAT`, sehingga `effectiveRole` menjadi sumber kebenaran untuk filter personil.
 - `client_type` efektif menentukan scope data:
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
   - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
+- `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat hanya dianggap **DIREKTORAT** bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
 - Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
 - Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
 
