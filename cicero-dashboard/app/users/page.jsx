@@ -88,27 +88,30 @@ export default function UserDirectoryPage() {
 
   const { error, isLoading, mutate } = useSWR(
     token && client_id ? ["user-directory", token, client_id] : null,
-    ([_, tk, cid]) => {
+    async ([_, tk, cid]) => {
       if (!tk) throw new Error("Token tidak ditemukan. Silakan login ulang.");
       if (!cid) throw new Error("Client ID tidak ditemukan.");
+      const profileRes = await getClientProfile(tk, cid);
+      const profile = profileRes.client || profileRes.profile || profileRes || {};
+      const rawClientType = (profile.client_type || "").toUpperCase();
       const scope = getUserDirectoryFetchScope({
         role: normalizedRole || undefined,
-        effectiveClientType,
+        clientType: rawClientType,
       });
-      return getUserDirectory(tk, cid, {
+      const directoryRes = await getUserDirectory(tk, cid, {
         role: normalizedRole || undefined,
         scope,
       });
+      return { directoryRes, profile };
     },
     {
       refreshInterval: 10000,
       onSuccess: async (res) => {
-        let arr = extractUserDirectoryUsers(res);
-        const profileRes = await getClientProfile(token, client_id);
-        const profile = profileRes.client || profileRes.profile || profileRes || {};
+        let arr = extractUserDirectoryUsers(res.directoryRes);
+        const profile = res.profile || {};
         const rawClientType = (profile.client_type || "").toUpperCase();
         const normalizedEffectiveClientType = String(
-          effectiveClientType || rawClientType,
+          rawClientType || effectiveClientType,
         ).toUpperCase();
         const { users: scopedUsers, scope } = filterUserDirectoryByScope(arr, {
           clientId: client_id,

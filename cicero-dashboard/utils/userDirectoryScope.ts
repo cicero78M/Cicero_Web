@@ -31,6 +31,7 @@ export function getEffectiveUserDirectoryScope(
 
 export function getUserDirectoryFetchScope(params: {
   role?: string;
+  clientType?: string;
   effectiveClientType?: string;
 }): UserDirectoryScope {
   const normalizedRole = normalizeDirectoryRole(params.role);
@@ -43,7 +44,9 @@ export function getUserDirectoryFetchScope(params: {
     return "DIREKTORAT";
   }
 
-  return getEffectiveUserDirectoryScope(params.effectiveClientType);
+  return getEffectiveUserDirectoryScope(
+    params.clientType ?? params.effectiveClientType,
+  );
 }
 
 function normalizeClientId(value?: string): string {
@@ -121,6 +124,8 @@ export function filterUserDirectoryByScope(
     ? "DIREKTORAT"
     : getEffectiveUserDirectoryScope(params.effectiveClientType);
   const normalizedClientId = normalizeClientId(params.clientId);
+  const shouldFilterByClientId =
+    (scope === "ORG" && !roleImpliesDirectorate) || normalizedRole === "operator";
 
   const filtered = users.filter((user) => {
     if (shouldApplyRoleFilter) {
@@ -132,7 +137,7 @@ export function filterUserDirectoryByScope(
       }
     }
 
-    if (scope === "ORG" && normalizedClientId && !roleImpliesDirectorate) {
+    if (shouldFilterByClientId && normalizedClientId) {
       const userClientId = normalizeClientId(
         (user.client_id ||
           user.clientId ||
