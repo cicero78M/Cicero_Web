@@ -29,7 +29,7 @@ const DIRECTORATE_ROLE_KEYS = new Set([
   "direktorat",
 ]);
 
-function normalizeRoleValue(value?: string) {
+function normalizeRoleValue(value?: string | null) {
   const raw = String(value ?? "").trim();
   if (!raw) {
     return {

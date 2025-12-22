@@ -17,6 +17,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 - Mapping role yang distandardkan untuk halaman personil berada di `utils/userDirectoryScope.ts`: `ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`, dan `operator`. Nilai role dari token maupun data user akan dinormalisasi ke bentuk tersebut sebelum proses filter.
 - `AuthContext` menormalkan role login ke bentuk kanonik (uppercase/lowercase) lewat pemetaan: `DITBINMAS`, `BIDHUMAS`, `DITSAMAPTA`, `DITLANTAS`, `OPERATOR`, dan `DIREKTORAT`, sehingga `effectiveRole` menjadi sumber kebenaran untuk filter personil.
+- Normalisasi role di `AuthContext` kini aman saat nilai role belum tersedia (null) sehingga efek derivasi tetap berjalan tanpa error tipe.
 - `client_type` efektif menentukan scope data:
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
   - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
