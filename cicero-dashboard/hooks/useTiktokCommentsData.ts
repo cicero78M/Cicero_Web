@@ -283,11 +283,11 @@ export default function useTiktokCommentsData({
               ? normalizedClientId
               : "DITBINMAS"
           : normalizedClientId;
+        const orgClient = normalizedEffectiveClientType === "ORG";
         const directorate =
           !isOperatorRole &&
           !orgClient &&
           (derivedDirectorateRole || isDirectorateClientType);
-        const orgClient = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorateRole(!isOperatorRole && derivedDirectorateRole);
         setIsDirectorateScopedClient(
