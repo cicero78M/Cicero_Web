@@ -1121,7 +1121,9 @@ export type UserDirectoryParams = {
 };
 
 function isAbortSignal(value: unknown): value is AbortSignal {
-  return Boolean(value) && typeof value === "object" && "aborted" in value;
+  return (
+    value !== null && typeof value === "object" && "aborted" in value
+  );
 }
 
 export async function getUserDirectory(
