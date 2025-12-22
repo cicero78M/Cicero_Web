@@ -219,16 +219,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     return nextChar === "" || /[^a-z0-9]/.test(nextChar);
   };
 
-  const chartBoxContainerClassName =
-    "border border-sky-200/70 bg-white/80 p-4 shadow-[0_28px_65px_-32px_rgba(79,70,229,0.35)] backdrop-blur sm:p-5";
-
-  const chartBoxEmptyStateClassName =
-    "rounded-2xl border border-sky-200/70 bg-white/75 px-4 py-6 text-slate-600";
-
-  const chartBoxDecorations = (
-    <div className="absolute inset-x-6 top-0 h-20 rounded-full bg-gradient-to-b from-sky-200/50 via-indigo-200/20 to-transparent blur-2xl" />
-  );
-
   const chartBoxCommonProps = {
     fieldJumlah: "jumlah_komentar",
     labelSudah: "User Sudah Komentar",
@@ -236,10 +226,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     labelBelum: "User Belum Komentar",
     labelTotal: "Total Komentar",
     showTotalUser: true,
-    useDefaultContainerStyle: false,
-    containerClassName: chartBoxContainerClassName,
-    emptyStateClassName: chartBoxEmptyStateClassName,
-    decorations: chartBoxDecorations,
     titleClassName: "text-slate-700",
   };
 
