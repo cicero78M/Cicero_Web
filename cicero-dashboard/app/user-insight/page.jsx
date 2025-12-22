@@ -11,11 +11,7 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import {
-  getUserDirectory,
-  getClientProfile,
-  getClientNames,
-} from "@/utils/api";
+import { getUserDirectory, getClientProfile } from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { accumulateContactStats } from "@/utils/contactStats";
 import Loader from "@/components/Loader";
@@ -158,26 +154,26 @@ export default function UserInsightPage() {
 
         let processedUsers = users;
         if (dir) {
-          const nameMap = await getClientNames(
-            token,
-            users.map((u) =>
-              String(
-                u.client_id || u.clientId || u.clientID || u.id || "",
-              ),
-            ),
-          );
-          processedUsers = users.map((u) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(
-                  u.client_id || u.clientId || u.clientID || u.id || "",
-                )
-              ] ||
-              u.nama_client ||
-              u.client_name ||
-              u.client,
-          }));
+          const activeClientName =
+            profile.nama_client ||
+            profile.client_name ||
+            profile.client ||
+            "";
+          processedUsers = users.map((u) => {
+            const userClientId = String(
+              u.client_id || u.clientId || u.clientID || u.id || "",
+            );
+            const isActiveClient =
+              String(clientId) !== "" && String(clientId) === userClientId;
+            return {
+              ...u,
+              nama_client:
+                u.nama_client ||
+                u.client_name ||
+                (isActiveClient ? activeClientName : "") ||
+                u.client,
+            };
+          });
         }
 
         const summaryCounts = processedUsers.reduce(
@@ -873,4 +869,3 @@ function SummaryItem({
 function Divider() {
   return <div className="hidden h-full w-px self-stretch bg-sky-100 md:block" />;
 }
-
