@@ -264,10 +264,10 @@ export default function useInstagramLikesData({
         const requestScope =
           normalizeScopePayload(normalizedEffectiveClientType) ??
           requestScopeFromAuth;
+        const isOrg = normalizedEffectiveClientType === "ORG";
         const dir = normalizedEffectiveClientType === "DIREKTORAT";
         const directorate =
           !isOperatorRole && !isOrg && (dir || derivedDirectorateRole);
-        const isOrg = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorate(directorate);
         setIsOrgClient(isOrg);
