@@ -76,6 +76,63 @@ function deduplicateUsers(users: any[]) {
   });
 }
 
+function normalizeUserRecord(user: any) {
+  const jumlahKomentarRaw =
+    user?.jumlah_komentar ??
+    user?.jumlahKomentar ??
+    user?.comments ??
+    user?.comment_count ??
+    user?.commentCount ??
+    user?.total_comments ??
+    user?.totalComments ??
+    user?.total_comment ??
+    user?.totalComment ??
+    0;
+  const normalizedUsername =
+    user?.username ??
+    user?.tiktok_username ??
+    user?.tiktokUsername ??
+    user?.user_name ??
+    user?.userName ??
+    user?.handle ??
+    user?.user_handle ??
+    "";
+  const normalizedName = user?.nama ?? user?.name ?? user?.full_name ?? user?.fullName ?? "";
+  const normalizedTitle = user?.title ?? user?.pangkat ?? user?.rank ?? "";
+  const normalizedDivisi = user?.divisi ?? user?.satfung ?? user?.unit ?? user?.division ?? "";
+  const normalizedClientId =
+    user?.client_id ?? user?.clientId ?? user?.clientID ?? user?.client ?? "";
+
+  return {
+    ...user,
+    client_id: normalizedClientId || user?.client_id,
+    nama: normalizedName || user?.nama,
+    title: normalizedTitle || user?.title,
+    divisi: normalizedDivisi || user?.divisi,
+    username: String(normalizedUsername || user?.username || "").trim(),
+    jumlah_komentar: Number(jumlahKomentarRaw) || 0,
+  };
+}
+
+function extractRekapPayload(payload: any) {
+  if (!payload) {
+    return { users: [], summary: {} as Record<string, any> };
+  }
+  if (Array.isArray(payload)) {
+    return { users: payload, summary: {} as Record<string, any> };
+  }
+
+  const users = Array.isArray(payload.data)
+    ? payload.data
+    : Array.isArray(payload.users)
+      ? payload.users
+      : Array.isArray(payload.chartData)
+        ? payload.chartData
+        : [];
+  const summary = payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
+  return { users, summary };
+}
+
 interface Options {
   viewBy: string;
   customDate: string;
@@ -329,6 +386,7 @@ export default function useTiktokCommentsData({
         );
 
         let users: any[] = [];
+        let rekapSummaryPayload: Record<string, any> = {};
         if (directorate) {
           const rekapRes = await getRekapKomentarTiktok(
             token,
@@ -340,11 +398,9 @@ export default function useTiktokCommentsData({
             controller.signal,
             { role: requestRole, scope: requestScope },
           );
-          users = Array.isArray(rekapRes?.data)
-            ? rekapRes.data
-            : Array.isArray(rekapRes)
-            ? rekapRes
-            : [];
+          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
+          users = payloadUsers;
+          rekapSummaryPayload = summary;
         } else {
           const rekapRes = await getRekapKomentarTiktok(
             token,
@@ -356,11 +412,9 @@ export default function useTiktokCommentsData({
             controller.signal,
             { role: requestRole, scope: requestScope },
           );
-          users = Array.isArray(rekapRes?.data)
-            ? rekapRes.data
-            : Array.isArray(rekapRes)
-            ? rekapRes
-            : [];
+          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
+          users = payloadUsers;
+          rekapSummaryPayload = summary;
         }
 
         let filteredUsers = users;
@@ -437,7 +491,8 @@ export default function useTiktokCommentsData({
           }
         }
 
-        const uniqueUsers = deduplicateUsers(filteredUsers);
+        const normalizedUsers = filteredUsers.map(normalizeUserRecord);
+        const uniqueUsers = deduplicateUsers(normalizedUsers);
 
         const sortedUsers = prioritizeUsersForClient(
           [...uniqueUsers].sort(compareUsersByPangkatAndNrp),
@@ -445,6 +500,12 @@ export default function useTiktokCommentsData({
         );
         const totalUser = sortedUsers.length;
         const totalTiktokPostRaw =
+          rekapSummaryPayload?.totalPosts ??
+          rekapSummaryPayload?.totalPost ??
+          rekapSummaryPayload?.total_tiktok_post ??
+          rekapSummaryPayload?.total_tiktok_posts ??
+          rekapSummaryPayload?.totalTiktokPost ??
+          rekapSummaryPayload?.totalTiktokPosts ??
           (statsData as any)?.ttPosts ??
           (statsData as any)?.tiktokPosts ??
           (statsData as any)?.totalTiktokPost ??
