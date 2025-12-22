@@ -96,7 +96,9 @@ export function filterUserDirectoryByScope(
     normalizedRole as (typeof DIRECTORY_ROLE_CANONICAL)[number],
   );
   const roleImpliesDirectorate = shouldFilterByRole && normalizedRole !== "operator";
-  const scope = getEffectiveUserDirectoryScope(params.effectiveClientType);
+  const scope = roleImpliesDirectorate
+    ? "DIREKTORAT"
+    : getEffectiveUserDirectoryScope(params.effectiveClientType);
   const normalizedClientId = normalizeClientId(params.clientId);
 
   const filtered = users.filter((user) => {

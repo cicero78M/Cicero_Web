@@ -23,8 +23,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - `client_type` efektif menentukan scope data:
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
   - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
-- Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) di `filterUserDirectoryByScope` tetap menjaga UI pada scope **ORG**, tetapi melewati filter `client_id` agar data direktorat yang sudah lolos dari API tetap tampil di halaman `/users` dan `/user-insight`.
-- Filter `client_id` di `filterUserDirectoryByScope` hanya menggunakan kolom identitas client (`client_id`, `clientId`, `clientID`, `client`) dan tidak lagi memakai `user.id`, supaya data personil ORG yang tidak membawa client_id tidak terbuang dari tampilan `/users`.
+- Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) tetap diperlakukan sebagai scope **DIREKTORAT** di `filterUserDirectoryByScope` walaupun `client_type` login bertipe **ORG**, agar data direktorat yang sudah lolos dari API tetap tampil di halaman `/users` dan `/user-insight`.
 - `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat hanya dianggap **DIREKTORAT** bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
 - Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
 - Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
