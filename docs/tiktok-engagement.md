@@ -43,6 +43,8 @@ Mulai Oktober 2024, hook ini memaksa pengambilan direktori user memakai `client_
 
 Per April 2025, pencocokan nama client direktorat untuk TikTok Engagement Insight tidak lagi memanggil `/api/clients/profile` untuk daftar `client_id`. Hook kini memanfaatkan data direktori yang sudah diambil agar profil yang dipanggil hanya milik `client_id` login, sesuai kebutuhan pembatasan request.
 
+Per Mei 2025, pemanggilan `/api/tiktok/rekap-komentar` tidak lagi di-fan-out berdasarkan daftar `client_id`. Hook memanggil endpoint ini satu kali dengan `client_id` login serta payload `role`/`scope`, lalu melakukan filter scope di sisi UI agar mengikuti aturan direktorat/ORG yang sudah ditetapkan.
+
 Per November 2024, jalur bertipe klien **DIREKTORAT** tidak lagi memaksa `client_id` Ditbinmas untuk mengambil data statistik atau tugas. Untuk tipe klien ini, hook mempertahankan `client_id` login ketika menghitung metrik dashboard maupun daftar tugas sehingga satker direktorat non-Ditbinmas tidak lagi melihat data dari Ditbinmas.
 
 ## Kompatibilitas rute lama

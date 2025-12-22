@@ -4,7 +4,6 @@ import {
   getDashboardStats,
   getRekapLikesIG,
   getClientProfile,
-  getClientNames,
   getUserDirectory,
 } from "@/utils/api";
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
@@ -308,6 +307,29 @@ export default function useInstagramLikesData({
           );
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
+          const directoryNameMap = (dirData as any[]).reduce(
+            (acc, entry) => {
+              const clientId = String(
+                entry?.client_id ||
+                  entry?.clientId ||
+                  entry?.clientID ||
+                  entry?.client ||
+                  "",
+              );
+              if (!clientId) return acc;
+              const name =
+                entry?.nama_client ||
+                entry?.client_name ||
+                entry?.client ||
+                entry?.nama ||
+                entry?.name;
+              if (name) {
+                acc[clientId] = name;
+              }
+              return acc;
+            },
+            {} as Record<string, string>,
+          );
           let clientIds: string[] = [];
 
           const expectedRole = directorateScopedClient
@@ -376,26 +398,19 @@ export default function useInstagramLikesData({
               return userClientId === normalizedLoginClientId;
             });
           }
-          const nameMap = await getClientNames(
-            token,
-            users.map((u: any) =>
-              String(u.client_id || u.clientId || u.clientID || u.client || ""),
-            ),
-            controller.signal,
-          );
-          users = users.map((u: any) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(
-                  u.client_id ||
-                    u.clientId ||
-                    u.clientID ||
-                    u.client ||
-                    "",
-                )
-              ] || u.nama_client,
-          }));
+          users = users.map((u: any) => {
+            const key = String(
+              u.client_id || u.clientId || u.clientID || u.client || "",
+            );
+            const mappedName = directoryNameMap[key];
+            return mappedName
+              ? {
+                  ...u,
+                  nama_client: mappedName,
+                  client_name: mappedName,
+                }
+              : u;
+          });
         } else {
           const rekapRes = await getRekapLikesIG(
             token,
