@@ -24,6 +24,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
   - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
 - Helper `getUserDirectoryFetchScope` memastikan permintaan data user selalu memakai scope direktorat ketika role login termasuk direktorat, meskipun `effectiveClientType` terset ke ORG karena remap khusus.
+- Halaman User Directory menentukan scope request dari `client_type` asli pada profil client dan memastikan role `operator` tetap difilter berdasarkan `client_id` peminta.
 - Filter role pada `filterUserDirectoryByScope` otomatis di-skip bila payload user tidak memiliki sinyal role sama sekali, sehingga daftar personil ORG tetap tampil walau API hanya mengirim data dasar tanpa atribut role.
 - Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) tetap diperlakukan sebagai scope **DIREKTORAT** di `filterUserDirectoryByScope` walaupun `client_type` login bertipe **ORG**, agar data direktorat yang sudah lolos dari API tetap tampil di halaman `/users` dan `/user-insight`.
 - `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat hanya dianggap **DIREKTORAT** bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
