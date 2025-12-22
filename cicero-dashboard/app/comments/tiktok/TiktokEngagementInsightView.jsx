@@ -110,6 +110,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const actionNeededCount =
     (Number(rekapSummary.totalKurangKomentar) || 0) +
     (Number(rekapSummary.totalBelumKomentar) || 0);
+  const actionNeededRate = getPercentage(actionNeededCount);
+  const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
   const summaryCards = [
     {
@@ -176,14 +178,22 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       title: "Prioritas perbaikan",
       detail:
         actionNeededCount > 0
-          ? `${actionNeededCount} akun masih membutuhkan aksi, termasuk ${rekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
+          ? `${actionNeededCount} akun masih membutuhkan aksi${
+              actionNeededRate !== undefined
+                ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
+                : ""
+            }, termasuk ${rekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
           : "Seluruh akun aktif sudah memenuhi target komentar.",
     },
     {
       title: "Kebersihan data",
       detail:
         totalTanpaUsername > 0
-          ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan.`
+          ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan (kelengkapan ${
+              usernameCompletionPercent !== undefined
+                ? `${Math.round(usernameCompletionPercent)}%`
+                : "sedang diproses"
+            }).`
           : "Seluruh akun sudah memiliki username yang valid.",
     },
   ];
