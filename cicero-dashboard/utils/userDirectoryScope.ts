@@ -111,7 +111,7 @@ export function filterUserDirectoryByScope(
       }
     }
 
-    if (scope === "ORG" && normalizedClientId) {
+    if (scope === "ORG" && normalizedClientId && !roleImpliesDirectorate) {
       const userClientId = normalizeClientId(
         (user.client_id ||
           user.clientId ||
