@@ -54,7 +54,7 @@ function collectRoleValues(value: unknown): string[] {
 }
 
 function getUserRoleValues(user: Record<string, unknown>): string[] {
-  return [
+  const roleValues = [
     user.role,
     user.user_role,
     user.userRole,
@@ -65,6 +65,17 @@ function getUserRoleValues(user: Record<string, unknown>): string[] {
     ...collectRoleValues(user.role_list),
     ...collectRoleValues(user.roleList),
   ].filter(Boolean) as string[];
+
+  const flagRoles = DIRECTORY_ROLE_CANONICAL.filter((role) => {
+    const value = user[role];
+    if (value === true) return true;
+    if (typeof value === "string") {
+      return value.trim().toLowerCase() === "true";
+    }
+    return false;
+  });
+
+  return [...roleValues, ...flagRoles];
 }
 
 export function filterUserDirectoryByScope(
