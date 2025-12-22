@@ -95,6 +95,10 @@ export function filterUserDirectoryByScope(
   const shouldFilterByRole = DIRECTORY_ROLE_CANONICAL.includes(
     normalizedRole as (typeof DIRECTORY_ROLE_CANONICAL)[number],
   );
+  const hasRoleSignals = users.some(
+    (user) => getUserRoleValues(user).length > 0,
+  );
+  const shouldApplyRoleFilter = shouldFilterByRole && hasRoleSignals;
   const roleImpliesDirectorate = shouldFilterByRole && normalizedRole !== "operator";
   const scope = roleImpliesDirectorate
     ? "DIREKTORAT"
@@ -102,7 +106,7 @@ export function filterUserDirectoryByScope(
   const normalizedClientId = normalizeClientId(params.clientId);
 
   const filtered = users.filter((user) => {
-    if (shouldFilterByRole) {
+    if (shouldApplyRoleFilter) {
       const roles = getUserRoleValues(user)
         .map((role) => normalizeDirectoryRole(role))
         .filter(Boolean);
@@ -131,6 +135,6 @@ export function filterUserDirectoryByScope(
     users: filtered,
     scope,
     normalizedRole,
-    shouldFilterByRole,
+    shouldFilterByRole: shouldApplyRoleFilter,
   };
 }
