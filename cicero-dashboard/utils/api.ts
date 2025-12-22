@@ -1256,11 +1256,14 @@ export async function getRekapKomentarTiktok(
   startDate?: string,
   endDate?: string,
   signal?: AbortSignal,
+  options?: { role?: string; scope?: string },
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
+  if (options?.role) params.append("role", options.role);
+  if (options?.scope) params.append("scope", options.scope);
   const url = `${buildApiUrl("/api/tiktok/rekap-komentar")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });

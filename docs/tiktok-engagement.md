@@ -37,6 +37,8 @@ Pengguna dengan peran Ditbinmas mendapat opsi **Lingkup Data**:
 ## Perubahan hook
 `useTiktokCommentsData` sekarang menerima parameter opsional `scope` (`"client" | "all"`). Nilai `"all"` menonaktifkan filter client sehingga data rekap dapat meliputi seluruh satker Ditbinmas. Hook ini juga mengembalikan `isOrgClient` yang diambil dari `effectiveClientType` ter-normalisasi agar komponen pemanggil dapat menyembunyikan kontrol lingkup ketika pengguna berasal dari klien bertipe ORG. Penggunaan `DEFAULT_INSIGHT_TABS` tidak mengubah kontrol lingkup atau alur salin rekap; keduanya tetap dijaga untuk keselarasan lintas halaman.
 
+Mulai pembaruan backend Cicero_V2, pemanggilan `/api/tiktok/rekap-komentar` selalu menyertakan payload `role` dan `scope` berdasarkan login. Kombinasi ini memastikan backend dapat mengeksekusi standar terbaru: scope **DIREKTORAT** mengambil tugas berdasarkan `client_id` login dan merangkum personel dengan role sepadan, scope **ORG** dengan role direktorat mengambil tugas direktorat terkait, sementara scope **ORG** dengan role operator hanya mengambil tugas `client_id` operator serta personel ber-role operator.
+
 Mulai Oktober 2024, hook ini memaksa pengambilan direktori user memakai `client_id` direktorat hanya saat `effectiveClientType` benar-benar **DIREKTORAT**. Akun bertipe **ORG** selalu memakai `client_id` login untuk statistik, profil, dan rekap sehingga tidak ada fan-out pemanggilan profil berdasarkan daftar `client_id`.
 
 Per April 2025, pencocokan nama client direktorat untuk TikTok Engagement Insight tidak lagi memanggil `/api/clients/profile` untuk daftar `client_id`. Hook kini memanfaatkan data direktori yang sudah diambil agar profil yang dipanggil hanya milik `client_id` login, sesuai kebutuhan pembatasan request.

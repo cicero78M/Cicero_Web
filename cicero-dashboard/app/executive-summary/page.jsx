@@ -2585,6 +2585,7 @@ export default function ExecutiveSummaryPage() {
               startDateParam,
               endDateParam,
               controller.signal,
+              { role: rekapRole, scope: rekapScope },
             ).catch((error) => {
               console.warn("Gagal memuat rekap komentar TikTok", error);
               return { data: [] };
@@ -2708,6 +2709,7 @@ export default function ExecutiveSummaryPage() {
                 previousStartDateParam,
                 previousEndDateParam,
                 controller.signal,
+                { role: rekapRole, scope: rekapScope },
               );
               const previousCommentsRaw = ensureArray(previousCommentsResponse);
               const preparedPreviousComments = prepareTrendActivityRecords(
