@@ -30,6 +30,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
 - Halaman `/users` tidak lagi melakukan fan-out `getClientProfile` untuk seluruh `client_id` ketika login Ditbinmas; label kesatuan mengandalkan field `nama_client`/`client_name` dari payload direktori.
 - Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
+- Pemanggilan `getUserDirectory` di hook insight Instagram/TikTok, ringkasan eksekutif, dan agregasi absensi likes selalu membawa `role` + `scope` agar data direktori yang ditarik sudah selaras dengan permintaan role maupun client.
 - Type guard `isAbortSignal` di `utils/api.ts` kini menolak nilai `null` supaya pemilihan `AbortSignal` untuk `getUserDirectory` tidak memicu error tipe saat opsi bersifat opsional.
 
 ## Dashboard Likes Instagram

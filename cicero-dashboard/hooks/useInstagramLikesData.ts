@@ -13,6 +13,10 @@ import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
 import { getEngagementStatus } from "@/utils/engagementStatus";
+import {
+  getUserDirectoryFetchScope,
+  normalizeDirectoryRole,
+} from "@/utils/userDirectoryScope";
 
 const USER_IDENTIFIER_FIELDS = [
   "nrp",
@@ -121,6 +125,13 @@ export default function useInstagramLikesData({
     )
       .trim()
       .toLowerCase();
+    const normalizedDirectoryRole = normalizeDirectoryRole(
+      effectiveRole ?? role ?? "",
+    );
+    const directoryScope = getUserDirectoryFetchScope({
+      role: normalizedDirectoryRole || undefined,
+      effectiveClientType,
+    });
     const normalizedEffectiveRoleUpper = normalizedEffectiveRoleLower.toUpperCase();
     const isOperatorRole = normalizedEffectiveRoleLower === "operator";
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
@@ -267,6 +278,10 @@ export default function useInstagramLikesData({
           const directoryRes = await getUserDirectory(
             token,
             directoryClientId,
+            {
+              role: normalizedDirectoryRole || undefined,
+              scope: directoryScope,
+            },
             controller.signal,
           );
           const dirData =
@@ -426,6 +441,10 @@ export default function useInstagramLikesData({
             const directoryRes = await getUserDirectory(
               token,
               userClientId,
+              {
+                role: normalizedDirectoryRole || undefined,
+                scope: directoryScope,
+              },
               controller.signal,
             );
             const dirData =
