@@ -33,6 +33,16 @@ function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeRolePayload(value?: unknown): string | undefined {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized || undefined;
+}
+
+function normalizeScopePayload(value?: unknown): string | undefined {
+  const normalized = String(value || "").trim().toUpperCase();
+  return normalized || undefined;
+}
+
 function getUserIdentifier(user: any): string {
   return USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
     if (acc) return acc;
@@ -165,6 +175,7 @@ export default function useTiktokCommentsData({
       (typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
         : "");
+    const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
     const normalizedDirectoryRole = normalizeDirectoryRole(role);
     const directoryScope = getUserDirectoryFetchScope({
@@ -285,6 +296,9 @@ export default function useTiktokCommentsData({
         )
           .trim()
           .toUpperCase();
+        const requestScope = normalizeScopePayload(
+          normalizedEffectiveClientType || effectiveClientTypeFromAuth,
+        );
         // Per 2024-09, beberapa role direktorat dikonversi menjadi ORG pada
         // `effectiveClientType` (mis. DITSAMAPTA/BIDHUMAS). Gunakan daftar
         // role direktorat yang diketahui agar jalur pengambilan data
@@ -442,6 +456,7 @@ export default function useTiktokCommentsData({
                 startDate,
                 endDate,
                 controller.signal,
+                { role: requestRole, scope: requestScope },
               ).catch(() => ({ data: [] })),
             ),
           );
@@ -505,6 +520,7 @@ export default function useTiktokCommentsData({
             startDate,
             endDate,
             controller.signal,
+            { role: requestRole, scope: requestScope },
           );
           users = Array.isArray(rekapRes?.data)
             ? rekapRes.data

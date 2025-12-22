@@ -392,6 +392,7 @@ describe("useTiktokCommentsData", () => {
       "start",
       "end",
       expect.any(AbortSignal),
+      { role: "bidhumas", scope: "ORG" },
     );
     expect(result.current.isDirectorate).toBe(false);
     expect(result.current.isOrgClient).toBe(true);
