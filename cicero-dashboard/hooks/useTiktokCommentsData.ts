@@ -145,7 +145,7 @@ export default function useTiktokCommentsData({
     const normalizedDirectoryRole = normalizeDirectoryRole(role);
     const directoryScope = getUserDirectoryFetchScope({
       role: normalizedDirectoryRole || undefined,
-      effectiveClientType: effectiveClientTypeFromAuth,
+      effectiveClientType: effectiveClientTypeFromAuth ?? undefined,
     });
 
     if (!token || !userClientId) {
