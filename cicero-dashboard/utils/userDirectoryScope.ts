@@ -117,7 +117,6 @@ export function filterUserDirectoryByScope(
           user.clientId ||
           user.clientID ||
           user.client ||
-          user.id ||
           "") as string,
       );
       if (userClientId && userClientId !== normalizedClientId) {
