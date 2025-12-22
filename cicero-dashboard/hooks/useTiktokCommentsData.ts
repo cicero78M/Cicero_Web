@@ -176,13 +176,10 @@ export default function useTiktokCommentsData({
       "bidhumas",
       "direktorat",
     ]);
-    const isDitbinmasRoleFromAuth =
-      normalizedEffectiveRoleFromAuth === "ditbinmas";
     const derivedDirectorateRoleFromAuth =
       !isOperatorRole &&
       ((directorateRoles.has(normalizedEffectiveRoleFromAuth) &&
-        (normalizedEffectiveClientTypeFromAuth !== "ORG" ||
-          isDitbinmasRoleFromAuth)) ||
+        normalizedEffectiveClientTypeFromAuth !== "ORG") ||
         normalizedEffectiveClientTypeFromAuth === "DIREKTORAT") &&
       normalizedEffectiveRoleFromAuth !== "";
     const isDirectorateClientTypeFromAuth =
@@ -269,11 +266,10 @@ export default function useTiktokCommentsData({
         // role direktorat yang diketahui agar jalur pengambilan data
         // direktorat tetap dipakai walaupun normalizedEffectiveClientType
         // sudah menjadi ORG.
-        const isDitbinmasRole = normalizedEffectiveRole === "ditbinmas";
         const derivedDirectorateRole =
           !isOperatorRole &&
           ((directorateRoles.has(normalizedEffectiveRole) &&
-            (normalizedEffectiveClientType !== "ORG" || isDitbinmasRole)) ||
+            normalizedEffectiveClientType !== "ORG") ||
             normalizedEffectiveClientType === "DIREKTORAT") &&
           normalizedEffectiveRole !== "";
         const isDirectorateClientType =
@@ -288,7 +284,9 @@ export default function useTiktokCommentsData({
               : "DITBINMAS"
           : normalizedClientId;
         const directorate =
-          !isOperatorRole && (derivedDirectorateRole || isDirectorateClientType);
+          !isOperatorRole &&
+          !orgClient &&
+          (derivedDirectorateRole || isDirectorateClientType);
         const orgClient = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorateRole(!isOperatorRole && derivedDirectorateRole);
