@@ -137,6 +137,7 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       expect.any(AbortSignal),
+      { role: "bidhumas", scope: "ORG" },
     );
     expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
       "token",
@@ -146,6 +147,7 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       expect.any(AbortSignal),
+      { role: "bidhumas", scope: "ORG" },
     );
     expect(result.current.chartData).toHaveLength(2);
     expect(result.current.rekapSummary.totalUser).toBe(2);
@@ -219,6 +221,7 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       expect.any(AbortSignal),
+      { role: "operator", scope: "DIREKTORAT" },
     );
     expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
       "token",
@@ -228,6 +231,7 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       expect.any(AbortSignal),
+      { role: "operator", scope: "DIREKTORAT" },
     );
     expect(result.current.isDirectorate).toBe(true);
     expect(result.current.isOrgClient).toBe(false);

@@ -35,6 +35,16 @@ function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeRolePayload(value?: unknown): string | undefined {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized || undefined;
+}
+
+function normalizeScopePayload(value?: unknown): string | undefined {
+  const normalized = String(value || "").trim().toUpperCase();
+  return normalized || undefined;
+}
+
 function getUserIdentifier(user: any): string {
   return USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
     if (acc) return acc;
@@ -113,6 +123,8 @@ export default function useInstagramLikesData({
     const token = authToken ?? fallbackToken;
     const userClientId = authClientId ?? fallbackClientId;
     const role = effectiveRole ?? authRole ?? fallbackRole;
+    const requestRole = normalizeRolePayload(role);
+    const requestScopeFromAuth = normalizeScopePayload(effectiveClientType);
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -190,6 +202,7 @@ export default function useInstagramLikesData({
               userClientId,
               scope,
               ditbinmasClientId,
+              { role: requestRole, scope: requestScopeFromAuth },
             );
           if (controller.signal.aborted) return;
           const sortedUsers = prioritizeUsersForClient(
@@ -243,6 +256,9 @@ export default function useInstagramLikesData({
             profile.clientTypeName ??
             "",
         ).toUpperCase();
+        const requestScope =
+          normalizeScopePayload(normalizedEffectiveClientType) ??
+          requestScopeFromAuth;
         const dir = normalizedEffectiveClientType === "DIREKTORAT";
         const directorate = !isOperatorRole && (dir || derivedDirectorateRole);
         const isOrg = normalizedEffectiveClientType === "ORG";
@@ -331,6 +347,7 @@ export default function useInstagramLikesData({
                 startDate,
                 endDate,
                 controller.signal,
+                { role: requestRole, scope: requestScope },
               ).catch(() => ({ data: [] })),
             ),
           );
@@ -382,6 +399,7 @@ export default function useInstagramLikesData({
             startDate,
             endDate,
             controller.signal,
+            { role: requestRole, scope: requestScope },
           );
           users = Array.isArray(rekapRes?.data)
             ? rekapRes.data

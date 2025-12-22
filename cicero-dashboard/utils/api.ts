@@ -1054,11 +1054,14 @@ export async function getRekapLikesIG(
   startDate?: string,
   endDate?: string,
   signal?: AbortSignal,
+  options?: { role?: string; scope?: string },
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);
+  if (options?.role) params.append("role", options.role);
+  if (options?.scope) params.append("scope", options.scope);
   const url = `${buildApiUrl("/api/insta/rekap-likes")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });

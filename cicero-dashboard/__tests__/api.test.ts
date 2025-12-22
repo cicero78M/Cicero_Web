@@ -60,11 +60,15 @@ test("getRekapLikesIG supports date range params", async () => {
     undefined,
     "2023-12-01",
     "2023-12-31",
+    undefined,
+    { role: "operator", scope: "ORG" },
   );
   const url = (global.fetch as jest.Mock).mock.calls[0][0];
   expect(url).toContain("/api/insta/rekap-likes");
   expect(url).toContain("tanggal_mulai=2023-12-01");
   expect(url).toContain("tanggal_selesai=2023-12-31");
+  expect(url).toContain("role=operator");
+  expect(url).toContain("scope=ORG");
 });
 
 test("getRekapKomentarTiktok supports date range params", async () => {

@@ -115,6 +115,16 @@ const metricValueToString = (metric, { fallback = "-" } = {}) => {
   return `${value}${suffix ?? ""}`;
 };
 
+const normalizeRekapRole = (value) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized || undefined;
+};
+
+const normalizeRekapScope = (value) => {
+  const normalized = String(value || "").trim().toUpperCase();
+  return normalized || undefined;
+};
+
 const monthLabelFormatter = new Intl.DateTimeFormat("id-ID", {
   month: "short",
   year: "numeric",
@@ -2532,6 +2542,8 @@ export default function ExecutiveSummaryPage() {
           role: normalizedDirectoryRole || undefined,
           effectiveClientType,
         });
+        const rekapRole = normalizeRekapRole(effectiveRole ?? role ?? "");
+        const rekapScope = normalizeRekapScope(effectiveClientType);
         const [directoryResponse, statsResult, likesResult, commentsResult] =
           await Promise.all([
             getUserDirectory(
@@ -2560,6 +2572,7 @@ export default function ExecutiveSummaryPage() {
               startDateParam,
               endDateParam,
               controller.signal,
+              { role: rekapRole, scope: rekapScope },
             ).catch((error) => {
               console.warn("Gagal memuat rekap likes IG", error);
               return { data: [] };
@@ -2664,6 +2677,7 @@ export default function ExecutiveSummaryPage() {
                 previousStartDateParam,
                 previousEndDateParam,
                 controller.signal,
+                { role: rekapRole, scope: rekapScope },
               );
               const previousLikesRaw = ensureArray(previousLikesResponse);
               const preparedPreviousLikes = prepareTrendActivityRecords(
