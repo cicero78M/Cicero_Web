@@ -199,7 +199,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   ];
 
   const shouldGroupByClient =
-    isDirectorate && !isDirectorateScopedClient && !isDirectorateRole;
+    isDirectorate &&
+    (directorateScope === "all" ||
+      (!isDirectorateScopedClient && !isDirectorateRole));
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
