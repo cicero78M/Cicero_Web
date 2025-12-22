@@ -9,6 +9,7 @@ import {
   getClientProfile,
   getClientNames,
   updateUserRoles,
+  extractUserDirectoryUsers,
 } from "@/utils/api";
 import {
   filterUserDirectoryByScope,
@@ -99,8 +100,7 @@ export default function UserDirectoryPage() {
     {
       refreshInterval: 10000,
       onSuccess: async (res) => {
-        let data = res.data || res.users || res;
-        let arr = Array.isArray(data) ? data : [];
+        let arr = extractUserDirectoryUsers(res);
         const profileRes = await getClientProfile(token, client_id);
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const rawClientType = (profile.client_type || "").toUpperCase();

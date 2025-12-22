@@ -20,6 +20,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import {
   getUserDirectory,
+  extractUserDirectoryUsers,
   getDashboardStats,
   getRekapLikesIG,
   getRekapKomentarTiktok,
@@ -2561,9 +2562,7 @@ export default function ExecutiveSummaryPage() {
           return;
         }
 
-        const rawDirectory =
-          directoryResponse?.data || directoryResponse?.users || directoryResponse;
-        const users = Array.isArray(rawDirectory) ? rawDirectory : [];
+        const users = extractUserDirectoryUsers(directoryResponse);
         const insight = computeUserInsight(users);
         const insightPersonnelByClient = insight?.personnelByClient;
         const activeDirectoryUsers = users.filter((user) =>

@@ -1120,6 +1120,23 @@ export type UserDirectoryParams = {
   scope?: "DIREKTORAT" | "ORG";
 };
 
+export function extractUserDirectoryUsers(payload: any): any[] {
+  if (!payload) return [];
+  const candidates = [
+    payload.data,
+    payload.users,
+    payload.data?.users,
+    payload.data?.data,
+    payload.users?.data,
+    payload.result,
+    payload.result?.users,
+    payload.result?.data,
+  ];
+
+  const match = candidates.find((entry) => Array.isArray(entry));
+  return Array.isArray(match) ? match : [];
+}
+
 function isAbortSignal(value: unknown): value is AbortSignal {
   return (
     value !== null && typeof value === "object" && "aborted" in value
