@@ -141,7 +141,7 @@ export default function useTiktokCommentsData({
       (typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
         : "");
-    const effectiveClientTypeFromAuth = auth?.effectiveClientType;
+    const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
     const normalizedDirectoryRole = normalizeDirectoryRole(role);
     const directoryScope = getUserDirectoryFetchScope({
       role: normalizedDirectoryRole || undefined,
