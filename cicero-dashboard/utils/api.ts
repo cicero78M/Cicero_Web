@@ -1115,14 +1115,34 @@ export async function getClientNames(
 }
 
 // Ambil daftar user untuk User Directory
+export type UserDirectoryParams = {
+  role?: string;
+  scope?: "DIREKTORAT" | "ORG";
+};
+
+function isAbortSignal(value: unknown): value is AbortSignal {
+  return Boolean(value) && typeof value === "object" && "aborted" in value;
+}
+
 export async function getUserDirectory(
   token: string,
   client_id: string,
+  options?: UserDirectoryParams | AbortSignal,
   signal?: AbortSignal,
 ): Promise<any> {
-  const url = `${buildApiUrl("/api/users/list")}?client_id=${encodeURIComponent(client_id)}`;
+  const resolvedSignal = isAbortSignal(options) ? options : signal;
+  const resolvedOptions = isAbortSignal(options) ? {} : options;
+  const params = new URLSearchParams({ client_id });
+  if (resolvedOptions?.role) {
+    params.set("role", resolvedOptions.role);
+  }
+  if (resolvedOptions?.scope) {
+    params.set("scope", resolvedOptions.scope);
+  }
 
-  const res = await fetchWithAuth(url, token, { signal });
+  const url = `${buildApiUrl("/api/users/list")}?${params.toString()}`;
+
+  const res = await fetchWithAuth(url, token, { signal: resolvedSignal });
   if (!res.ok) throw new Error("Gagal fetch daftar user");
   return res.json();
 }

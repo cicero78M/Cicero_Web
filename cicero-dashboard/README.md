@@ -13,6 +13,15 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Dropdown **Satfung/Divisi** untuk pengguna baru menambahkan opsi **SUBDIT DALMAS** dan **SUBDIT GASUM** agar unit terkait dapat dipilih langsung tanpa input manual.
 - Pilihan **Satfung/Divisi** juga mencakup **UNIT POLSATWA** sehingga kesatuan tersebut tersedia di dropdown tambah dan edit pengguna tanpa perlu input manual, kini dibaca langsung dari daftar opsi terpusat `utils/validateUserForm` agar validasi dan tampilan selalu selaras.
 
+### User directory scope & role normalization
+
+- Mapping role yang distandardkan untuk halaman personil berada di `utils/userDirectoryScope.ts`: `ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`, dan `operator`. Nilai role dari token maupun data user akan dinormalisasi ke bentuk tersebut sebelum proses filter.
+- `client_type` efektif menentukan scope data:
+  - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
+  - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
+- Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
+- Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
+
 ## Dashboard Likes Instagram
 
 - Rute `/likes/instagram` dan `/likes/instagram/rekap` berbagi halaman bertab yang sama sehingga tautan ke rekap langsung membuka tab rekap tanpa redirect terpisah, sementara tab insight tetap menjadi default saat membuka rute utama.

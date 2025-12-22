@@ -19,10 +19,16 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { showToast } from "@/utils/showToast";
 import { User, Instagram, Music, RefreshCw } from "lucide-react";
+import {
+  filterUserDirectoryByScope,
+  getEffectiveUserDirectoryScope,
+  normalizeDirectoryRole,
+} from "@/utils/userDirectoryScope";
 
 export default function UserInsightPage() {
   useRequireAuth();
-  const { token, clientId, effectiveClientType } = useAuth();
+  const { token, clientId, effectiveClientType, role, effectiveRole } =
+    useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -111,8 +117,13 @@ export default function UserInsightPage() {
         return;
       }
       try {
+        const scope = getEffectiveUserDirectoryScope(effectiveClientType);
+        const normalizedRole = normalizeDirectoryRole(effectiveRole || role);
         const [usersRes, profileRes] = await Promise.all([
-          getUserDirectory(token, clientId),
+          getUserDirectory(token, clientId, {
+            role: normalizedRole || undefined,
+            scope,
+          }),
           getClientProfile(token, clientId),
         ]);
         const raw = usersRes.data || usersRes.users || usersRes;
@@ -149,10 +160,16 @@ export default function UserInsightPage() {
         const normalizedEffectiveClientType = String(
           effectiveClientType || rawClientType,
         ).toUpperCase();
-        const dir = normalizedEffectiveClientType === "DIREKTORAT";
+        const { users: scopedUsers, scope: resolvedScope } =
+          filterUserDirectoryByScope(users, {
+            clientId,
+            role: normalizedRole,
+            effectiveClientType: normalizedEffectiveClientType,
+          });
+        const dir = resolvedScope === "DIREKTORAT";
         setIsDirectorate(dir);
 
-        let processedUsers = users;
+        let processedUsers = scopedUsers;
         if (dir) {
           const activeClientName =
             profile.nama_client ||

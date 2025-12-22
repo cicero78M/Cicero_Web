@@ -10,6 +10,11 @@ import {
   getClientNames,
   updateUserRoles,
 } from "@/utils/api";
+import {
+  filterUserDirectoryByScope,
+  getEffectiveUserDirectoryScope,
+  normalizeDirectoryRole,
+} from "@/utils/userDirectoryScope";
 import { Pencil, Check, X, RefreshCw } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -66,7 +71,7 @@ export default function UserDirectoryPage() {
   const client_id = clientId;
   const role = authRole;
 
-  const normalizedRole = String(effectiveRole || role || "").toLowerCase();
+  const normalizedRole = normalizeDirectoryRole(effectiveRole || role);
   const isDitbinmasClient = client_id === "DITBINMAS";
   const isDitbinmas = isDitbinmasClient && normalizedRole === "ditbinmas";
   const [showAllDitbinmas, setShowAllDitbinmas] = useState(() => !isDitbinmas);
@@ -85,70 +90,30 @@ export default function UserDirectoryPage() {
     ([_, tk, cid]) => {
       if (!tk) throw new Error("Token tidak ditemukan. Silakan login ulang.");
       if (!cid) throw new Error("Client ID tidak ditemukan.");
-      return getUserDirectory(tk, cid);
+      const scope = getEffectiveUserDirectoryScope(effectiveClientType);
+      return getUserDirectory(tk, cid, {
+        role: normalizedRole || undefined,
+        scope,
+      });
     },
     {
       refreshInterval: 10000,
       onSuccess: async (res) => {
         let data = res.data || res.users || res;
         let arr = Array.isArray(data) ? data : [];
-        const normalizedLoginClientId = String(client_id || "")
-          .trim()
-          .toLowerCase();
-
-        if (normalizedRole === "operator" && normalizedLoginClientId) {
-          const normalizeRole = (value) =>
-            String(value || "").trim().toLowerCase();
-          const normalizeClientId = (value) =>
-            String(value || "").trim().toLowerCase();
-          const collectRoleValues = (value) => {
-            if (!value) return [];
-            if (Array.isArray(value)) {
-              return value.flatMap((item) => {
-                if (typeof item === "string") return [item];
-                if (item && typeof item === "object") {
-                  return [
-                    item.role,
-                    item.role_name,
-                    item.roleName,
-                    item.name,
-                  ].filter(Boolean);
-                }
-                return [];
-              });
-            }
-            return [];
-          };
-          arr = arr.filter((u) => {
-            const roleValues = [
-              u.role,
-              u.user_role,
-              u.userRole,
-              u.roleName,
-              u.role_name,
-              ...collectRoleValues(u.roles),
-              ...collectRoleValues(u.user_roles),
-              ...collectRoleValues(u.role_list),
-              ...collectRoleValues(u.roleList),
-            ]
-              .map(normalizeRole)
-              .filter(Boolean);
-            const isOperatorUser = roleValues.includes("operator");
-            if (!isOperatorUser) return false;
-            const userClientId = normalizeClientId(
-              u.client_id || u.clientId || u.clientID || u.client || "",
-            );
-            return !userClientId || userClientId === normalizedLoginClientId;
-          });
-        }
-
         const profileRes = await getClientProfile(token, client_id);
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const rawClientType = (profile.client_type || "").toUpperCase();
         const normalizedEffectiveClientType = String(
           effectiveClientType || rawClientType,
         ).toUpperCase();
-        const dir = normalizedEffectiveClientType === "DIREKTORAT";
+        const { users: scopedUsers, scope } = filterUserDirectoryByScope(arr, {
+          clientId: client_id,
+          role: normalizedRole,
+          effectiveClientType: normalizedEffectiveClientType,
+        });
+        arr = scopedUsers;
+        const dir = scope === "DIREKTORAT";
         setIsDirectorate(dir && !isDitbinmas);
         setClientName(
           profile.nama_client ||
