@@ -4,7 +4,6 @@ import {
   getDashboardStats,
   getRekapKomentarTiktok,
   getClientProfile,
-  getClientNames,
   getUserDirectory,
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
@@ -119,6 +118,31 @@ export default function useTiktokCommentsData({
     useState(false);
   const [isDirectorateRole, setIsDirectorateRole] = useState(false);
   const [canSelectScope, setCanSelectScope] = useState(false);
+
+  const getClientNameFromDirectory = (
+    directory: any[],
+    targetClientId: string,
+  ) => {
+    if (!directory?.length || !targetClientId) return "";
+    const normalizedTarget = String(targetClientId || "").trim().toLowerCase();
+    const entry = directory.find((item) => {
+      const clientId = String(
+        item?.client_id || item?.clientId || item?.clientID || item?.client || "",
+      )
+        .trim()
+        .toLowerCase();
+      return clientId === normalizedTarget;
+    });
+    if (!entry) return "";
+    return (
+      entry?.nama_client ||
+      entry?.client_name ||
+      entry?.client ||
+      entry?.nama ||
+      entry?.name ||
+      ""
+    );
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -331,6 +355,10 @@ export default function useTiktokCommentsData({
           );
           const dirData =
             directoryRes.data || directoryRes.users || directoryRes || [];
+          const directoryClientName = getClientNameFromDirectory(
+            dirData as any[],
+            normalizedClientId,
+          );
           let clientIds: string[] = [];
           const expectedRole = normalizedEffectiveRole || normalizedClientIdLower;
           const normalizeClientId = (value: unknown) =>
@@ -427,29 +455,43 @@ export default function useTiktokCommentsData({
           );
 
           if (users.length) {
-            const nameMap = await getClientNames(
-              token,
-              users.map((u: any) =>
-                String(
-                  u.client_id ||
-                    u.clientId ||
-                    u.clientID ||
-                    u.client ||
+            const directoryNameMap = (dirData as any[]).reduce(
+              (acc, entry) => {
+                const clientId = String(
+                  entry?.client_id ||
+                    entry?.clientId ||
+                    entry?.clientID ||
+                    entry?.client ||
                     "",
-                ),
-              ),
-              controller.signal,
+                );
+                if (!clientId) return acc;
+                const name =
+                  entry?.nama_client ||
+                  entry?.client_name ||
+                  entry?.client ||
+                  entry?.nama ||
+                  entry?.name;
+                if (name) {
+                  acc[clientId] = name;
+                }
+                return acc;
+              },
+              {} as Record<string, string>,
             );
             users = users.map((u: any) => {
               const key = String(
                 u.client_id || u.clientId || u.clientID || u.client || "",
               );
-              const mappedName = nameMap[key];
-              return mappedName
+              const mappedName = directoryNameMap[key];
+              const fallbackName = key === normalizedClientId
+                ? directoryClientName
+                : "";
+              const resolvedName = mappedName || fallbackName;
+              return resolvedName
                 ? {
                     ...u,
-                    nama_client: mappedName,
-                    client_name: mappedName,
+                    nama_client: resolvedName,
+                    client_name: resolvedName,
                   }
                 : u;
             });
