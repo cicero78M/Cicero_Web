@@ -91,11 +91,14 @@ export function filterUserDirectoryByScope(
   normalizedRole: string;
   shouldFilterByRole: boolean;
 } {
-  const scope = getEffectiveUserDirectoryScope(params.effectiveClientType);
   const normalizedRole = normalizeDirectoryRole(params.role);
   const shouldFilterByRole = DIRECTORY_ROLE_CANONICAL.includes(
     normalizedRole as (typeof DIRECTORY_ROLE_CANONICAL)[number],
   );
+  const roleImpliesDirectorate = shouldFilterByRole && normalizedRole !== "operator";
+  const scope = roleImpliesDirectorate
+    ? "DIREKTORAT"
+    : getEffectiveUserDirectoryScope(params.effectiveClientType);
   const normalizedClientId = normalizeClientId(params.clientId);
 
   const filtered = users.filter((user) => {
