@@ -373,101 +373,21 @@ export default function useTiktokCommentsData({
             dirData as any[],
             normalizedClientId,
           );
-          let clientIds: string[] = [];
-          const expectedRole = normalizedEffectiveRole || normalizedClientIdLower;
-          const normalizeClientId = (value: unknown) =>
-            String(value || "").trim().toLowerCase();
-          if (isDirectorateClientType) {
-            const lockToClient = scope !== "all" && Boolean(normalizedClientId);
-            const scopedClientId = lockToClient
-              ? normalizeClientId(normalizedClientId)
-              : "";
-            clientIds = Array.from(
-              new Set(
-                (dirData as any[])
-                  .filter((u: any) => {
-                    if (!lockToClient) return true;
-                    return (
-                      scopedClientId ===
-                      normalizeClientId(
-                        u.client_id ||
-                          u.clientId ||
-                          u.clientID ||
-                          u.client ||
-                          "",
-                      )
-                    );
-                  })
-                  .map((u: any) =>
-                    String(
-                      u.client_id ||
-                        u.clientId ||
-                        u.clientID ||
-                        u.client ||
-                        "",
-                    ),
-                  )
-                  .filter(Boolean) as string[],
-              ),
-            ) as string[];
-          } else {
-            clientIds = Array.from(
-              new Set(
-                (dirData as any[])
-                  .filter(
-                    (u: any) =>
-                      String(
-                        u.role ||
-                          u.user_role ||
-                          u.userRole ||
-                          u.roleName ||
-                          "",
-                      ).toLowerCase() === expectedRole,
-                  )
-                  .map((u: any) =>
-                    String(
-                      u.client_id ||
-                        u.clientId ||
-                        u.clientID ||
-                        u.client ||
-                        "",
-                    ),
-                  )
-                  .filter(Boolean) as string[],
-              ),
-            ) as string[];
-          }
-
-          const fallbackClientId = directoryClientId;
-          [fallbackClientId, effectiveDirectorateClientId].forEach((cid) => {
-            const normalizedCid = String(cid || "");
-            if (normalizedCid && !clientIds.includes(normalizedCid)) {
-              clientIds.push(normalizedCid);
-            }
-          });
-
-          const rekapAll = await Promise.all(
-            clientIds.map((cid: string) =>
-              getRekapKomentarTiktok(
-                token,
-                cid,
-                periode,
-                date,
-                startDate,
-                endDate,
-                controller.signal,
-                { role: requestRole, scope: requestScope },
-              ).catch(() => ({ data: [] })),
-            ),
+          const rekapRes = await getRekapKomentarTiktok(
+            token,
+            normalizedClientId,
+            periode,
+            date,
+            startDate,
+            endDate,
+            controller.signal,
+            { role: requestRole, scope: requestScope },
           );
-
-          users = rekapAll.flatMap((res: any) =>
-            Array.isArray(res?.data)
-              ? res.data
-              : Array.isArray(res)
-              ? res
-              : [],
-          );
+          users = Array.isArray(rekapRes?.data)
+            ? rekapRes.data
+            : Array.isArray(rekapRes)
+            ? rekapRes
+            : [];
 
           if (users.length) {
             const directoryNameMap = (dirData as any[]).reduce(
