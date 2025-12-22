@@ -130,7 +130,7 @@ export default function useInstagramLikesData({
     );
     const directoryScope = getUserDirectoryFetchScope({
       role: normalizedDirectoryRole || undefined,
-      effectiveClientType,
+      effectiveClientType: effectiveClientType ?? undefined,
     });
     const normalizedEffectiveRoleUpper = normalizedEffectiveRoleLower.toUpperCase();
     const isOperatorRole = normalizedEffectiveRoleLower === "operator";
