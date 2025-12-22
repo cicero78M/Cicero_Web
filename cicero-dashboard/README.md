@@ -23,10 +23,10 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - `client_type` efektif menentukan scope data:
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
   - **ORG:** tampilkan personil dengan role yang sama **dan** `client_id` yang sama.
-- Helper `getUserDirectoryFetchScope` memastikan permintaan data user selalu memakai scope direktorat ketika role login termasuk direktorat, meskipun `effectiveClientType` terset ke ORG karena remap khusus.
+- Helper `getUserDirectoryFetchScope` memastikan permintaan data user mengikuti `client_type` efektif: ORG selalu memakai scope **ORG** walau role login direktorat, sedangkan scope **DIREKTORAT** hanya dipakai saat `client_type` memang direktorat.
 - Halaman User Directory menentukan scope request dari `client_type` asli pada profil client dan memastikan role `operator` tetap difilter berdasarkan `client_id` peminta.
 - Filter role pada `filterUserDirectoryByScope` otomatis di-skip bila payload user tidak memiliki sinyal role sama sekali, sehingga daftar personil ORG tetap tampil walau API hanya mengirim data dasar tanpa atribut role.
-- Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) tetap diperlakukan sebagai scope **DIREKTORAT** di `filterUserDirectoryByScope` walaupun `client_type` login bertipe **ORG**, agar data direktorat yang sudah lolos dari API tetap tampil di halaman `/users` dan `/user-insight`.
+- Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) hanya mengaktifkan scope **DIREKTORAT** di `filterUserDirectoryByScope` ketika `client_type` login memang direktorat; akun ORG tetap terkunci ke scope **ORG**.
 - `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat hanya dianggap **DIREKTORAT** bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
 - Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
 - Halaman `/users` tidak lagi melakukan fan-out `getClientProfile` untuk seluruh `client_id` ketika login Ditbinmas; label kesatuan mengandalkan field `nama_client`/`client_name` dari payload direktori.
@@ -111,12 +111,11 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 
 - Hook `hooks/useTiktokCommentsData` kini selalu memfilter data ke `client_id` aktif ketika `scope` bukan "all" sehingga pengguna tetap berada pada cakupan login default, sementara opsi agregasi lintas klien tetap tersedia saat `scope` bernilai "all".
 - Untuk klien bertipe **DIREKTORAT**, hook `hooks/useTiktokCommentsData` sekarang mengumpulkan task dan rekap berdasarkan `client_id` yang diberikan, bukan lagi bergantung pada kecocokan `role` di direktori pengguna. Pendekatan ini memastikan satker direktorat non-ORG menampilkan data sesuai akun login tanpa mengubah perilaku klien ORG.
-- Deteksi direktorat pada `useTiktokCommentsData` kini mengenali role DITSAMAPTA, DITLANTAS, BIDHUMAS, maupun DIREKTORAT sebagai direktorat walaupun `effectiveClientType` sudah dinormalisasi menjadi ORG; jalur pengambilan data direktorat tetap aktif dan penanganan khusus Ditbinmas tidak berubah.
+- Deteksi direktorat pada `useTiktokCommentsData` mengikuti `effectiveClientType`: akun ORG tidak lagi memakai jalur direktorat walau role bertipe direktorat, sehingga scope dan pemanggilan profil klien terkunci ke `client_id` login.
 - Data komentar TikTok untuk klien bertipe **ORG** kini dideduplikasi berdasarkan kombinasi `client_id`, identifier (NRP/NIP/user id), maupun username/nama sehingga total user serta grafik kepatuhan tidak berlipat ganda.
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
 - Hook `useTiktokCommentsData` menormalkan `effectiveClientType` kosong/null menjadi `undefined` sebelum menghitung `directoryScope`, sehingga pemetaan scope tidak memicu error tipe saat nilai dari autentikasi belum tersedia.
-- Pengguna berperan Ditbinmas dengan `client_type` ORG (misalnya kombinasi DITSAMAPTA→BIDHUMAS) kini memuat task/post menggunakan `client_id` Ditbinmas sehingga rekap mengikuti akun induk, bukan klien login mentah.
-- Pilih **scope: client** bila ingin membatasi task/post ke `client_id` Ditbinmas aktif, atau gunakan **scope: all** untuk menjangkau satker jajaran melalui pemetaan `client_id` Ditbinmas yang sama.
+- Akun bertipe **ORG** selalu memakai `client_id` login untuk mengambil statistik, profil, dan rekap komentar sehingga tidak ada fan-out `getClientProfile` berdasarkan daftar `client_id`.
 - Rute `/comments/tiktok/rekap` kini membuka tab rekap pada halaman insight yang sama dengan `/comments/tiktok` sehingga pengalaman rekap mengikuti standar layout insight tanpa redirect tambahan.
 - Komponen berbagi `TiktokEngagementInsightView` diekstrak ke berkas terpisah di `app/comments/tiktok/TiktokEngagementInsightView.jsx` sehingga halaman `page.jsx` dan `rekap/page.jsx` hanya mengekspor Page component default sesuai aturan Next.js.
 - Halaman utama `/comments/tiktok` sekarang cukup merender `TiktokEngagementInsightView` dari berkas terpisah tanpa named export lain sehingga lint Next.js mengenali Page component default dengan benar.

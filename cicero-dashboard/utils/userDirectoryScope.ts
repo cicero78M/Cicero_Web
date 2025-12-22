@@ -34,6 +34,12 @@ export function getUserDirectoryFetchScope(params: {
   clientType?: string;
   effectiveClientType?: string;
 }): UserDirectoryScope {
+  const effectiveScope = getEffectiveUserDirectoryScope(
+    params.clientType ?? params.effectiveClientType,
+  );
+  if (effectiveScope === "ORG") {
+    return "ORG";
+  }
   const normalizedRole = normalizeDirectoryRole(params.role);
   const isDirectorateRole =
     DIRECTORY_ROLE_CANONICAL.includes(
@@ -44,9 +50,7 @@ export function getUserDirectoryFetchScope(params: {
     return "DIREKTORAT";
   }
 
-  return getEffectiveUserDirectoryScope(
-    params.clientType ?? params.effectiveClientType,
-  );
+  return effectiveScope;
 }
 
 function normalizeClientId(value?: string): string {
@@ -119,10 +123,16 @@ export function filterUserDirectoryByScope(
     (user) => getUserRoleValues(user).length > 0,
   );
   const shouldApplyRoleFilter = shouldFilterByRole && hasRoleSignals;
-  const roleImpliesDirectorate = shouldFilterByRole && normalizedRole !== "operator";
+  const effectiveScope = getEffectiveUserDirectoryScope(
+    params.effectiveClientType,
+  );
+  const roleImpliesDirectorate =
+    shouldFilterByRole &&
+    normalizedRole !== "operator" &&
+    effectiveScope !== "ORG";
   const scope = roleImpliesDirectorate
     ? "DIREKTORAT"
-    : getEffectiveUserDirectoryScope(params.effectiveClientType);
+    : effectiveScope;
   const normalizedClientId = normalizeClientId(params.clientId);
   const shouldFilterByClientId =
     (scope === "ORG" && !roleImpliesDirectorate) || normalizedRole === "operator";

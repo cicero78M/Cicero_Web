@@ -148,14 +148,19 @@ export default function useInstagramLikesData({
     const isOperatorRole = normalizedEffectiveRoleLower === "operator";
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
     const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
+    const isOrgScope = requestScopeFromAuth === "ORG";
     const derivedDirectorateRole =
-      !isOperatorRole && (isDirectorateRoleValue || isDitbinmasRole);
+      !isOperatorRole &&
+      !isOrgScope &&
+      (isDirectorateRoleValue || isDitbinmasRole);
     setIsDirectorateRole(derivedDirectorateRole);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
     const isDitSamaptaBidhumas =
-      normalizedClientIdUpper === "DITSAMAPTA" && roleLower === "bidhumas";
+      normalizedClientIdUpper === "DITSAMAPTA" &&
+      roleLower === "bidhumas" &&
+      !isOrgScope;
     const ditbinmasClientId = isDitSamaptaBidhumas
       ? "BIDHUMAS"
       : "DITBINMAS";
@@ -260,7 +265,8 @@ export default function useInstagramLikesData({
           normalizeScopePayload(normalizedEffectiveClientType) ??
           requestScopeFromAuth;
         const dir = normalizedEffectiveClientType === "DIREKTORAT";
-        const directorate = !isOperatorRole && (dir || derivedDirectorateRole);
+        const directorate =
+          !isOperatorRole && !isOrg && (dir || derivedDirectorateRole);
         const isOrg = normalizedEffectiveClientType === "ORG";
         if (controller.signal.aborted) return;
         setIsDirectorate(directorate);
