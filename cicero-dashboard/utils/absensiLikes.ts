@@ -1,4 +1,14 @@
-import { getDashboardStats, getRekapLikesIG, getClientProfile, getClientNames, getUserDirectory } from "@/utils/api";
+import {
+  getDashboardStats,
+  getRekapLikesIG,
+  getClientProfile,
+  getClientNames,
+  getUserDirectory,
+} from "@/utils/api";
+import {
+  getUserDirectoryFetchScope,
+  normalizeDirectoryRole,
+} from "@/utils/userDirectoryScope";
 
 interface FetchParams {
   periode: string;
@@ -40,7 +50,16 @@ export async function fetchDitbinmasAbsensiLikes(
   const profileRes = await getClientProfile(token, clientId, signal);
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
-  const directoryRes = await getUserDirectory(token, clientId, signal);
+  const normalizedRole = normalizeDirectoryRole(clientId);
+  const directoryScope = getUserDirectoryFetchScope({
+    role: normalizedRole || undefined,
+  });
+  const directoryRes = await getUserDirectory(
+    token,
+    clientId,
+    { role: normalizedRole || undefined, scope: directoryScope },
+    signal,
+  );
   const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
   const expectedRole = clientId.toLowerCase();
   const clientIds: string[] = Array.from(

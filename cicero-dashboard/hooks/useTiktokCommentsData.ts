@@ -12,6 +12,10 @@ import { AuthContext } from "@/context/AuthContext";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import { getEngagementStatus } from "@/utils/engagementStatus";
+import {
+  getUserDirectoryFetchScope,
+  normalizeDirectoryRole,
+} from "@/utils/userDirectoryScope";
 
 const USER_IDENTIFIER_FIELDS = [
   "nrp",
@@ -138,6 +142,11 @@ export default function useTiktokCommentsData({
         ? localStorage.getItem("user_role") ?? ""
         : "");
     const effectiveClientTypeFromAuth = auth?.effectiveClientType;
+    const normalizedDirectoryRole = normalizeDirectoryRole(role);
+    const directoryScope = getUserDirectoryFetchScope({
+      role: normalizedDirectoryRole || undefined,
+      effectiveClientType: effectiveClientTypeFromAuth,
+    });
 
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -316,6 +325,10 @@ export default function useTiktokCommentsData({
           const directoryRes = await getUserDirectory(
             token,
             directoryClientId,
+            {
+              role: normalizedDirectoryRole || undefined,
+              scope: directoryScope,
+            },
             controller.signal,
           );
           const dirData =
@@ -497,6 +510,10 @@ export default function useTiktokCommentsData({
             const directoryRes = await getUserDirectory(
               token,
               userClientId,
+              {
+                role: normalizedDirectoryRole || undefined,
+                scope: directoryScope,
+              },
               controller.signal,
             );
             const dirData =

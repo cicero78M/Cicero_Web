@@ -28,6 +28,10 @@ import {
   getTiktokPosts,
 } from "@/utils/api";
 import {
+  getUserDirectoryFetchScope,
+  normalizeDirectoryRole,
+} from "@/utils/userDirectoryScope";
+import {
   normalizeFormattedNumber,
   normalizeNumericInput,
   calculateRatePerDay,
@@ -2161,7 +2165,8 @@ const MAX_SELECTABLE_YEAR = 2035;
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const router = useRouter();
-  const { token, clientId, role, effectiveRole } = useAuth();
+  const { token, clientId, role, effectiveRole, effectiveClientType } =
+    useAuth();
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -2520,9 +2525,24 @@ export default function ExecutiveSummaryPage() {
       const previousEndDateParam = previousPeriodRange?.endDate;
 
       try {
+        const normalizedDirectoryRole = normalizeDirectoryRole(
+          effectiveRole ?? role ?? "",
+        );
+        const directoryScope = getUserDirectoryFetchScope({
+          role: normalizedDirectoryRole || undefined,
+          effectiveClientType,
+        });
         const [directoryResponse, statsResult, likesResult, commentsResult] =
           await Promise.all([
-            getUserDirectory(token, clientId, controller.signal),
+            getUserDirectory(
+              token,
+              clientId,
+              {
+                role: normalizedDirectoryRole || undefined,
+                scope: directoryScope,
+              },
+              controller.signal,
+            ),
             getDashboardStats(
               token,
               periodeParam,
