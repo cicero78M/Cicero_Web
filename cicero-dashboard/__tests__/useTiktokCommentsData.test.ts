@@ -4,7 +4,6 @@ import {
   getDashboardStats,
   getRekapKomentarTiktok,
   getClientProfile,
-  getClientNames,
   getUserDirectory,
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
@@ -15,7 +14,6 @@ jest.mock("@/utils/api", () => ({
   getDashboardStats: jest.fn(),
   getRekapKomentarTiktok: jest.fn(),
   getClientProfile: jest.fn(),
-  getClientNames: jest.fn(),
   getUserDirectory: jest.fn(),
 }));
 
@@ -27,7 +25,6 @@ const mockedGetDashboardStats = getDashboardStats as Mocked<typeof getDashboardS
 const mockedGetRekapKomentarTiktok =
   getRekapKomentarTiktok as Mocked<typeof getRekapKomentarTiktok>;
 const mockedGetClientProfile = getClientProfile as Mocked<typeof getClientProfile>;
-const mockedGetClientNames = getClientNames as Mocked<typeof getClientNames>;
 const mockedGetUserDirectory = getUserDirectory as Mocked<typeof getUserDirectory>;
 const mockedGetPeriodeDateForView =
   getPeriodeDateForView as Mocked<typeof getPeriodeDateForView>;
@@ -43,10 +40,9 @@ describe("useTiktokCommentsData", () => {
       endDate: "end",
     });
     mockedGetDashboardStats.mockResolvedValue({ ttPosts: 10 });
-    mockedGetClientNames.mockResolvedValue({});
   });
 
-  it("filters directorate data to the scoped client when the login is limited to a single client", async () => {
+  it("filters directorate data to the login client even when recap payload includes other clients", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "CLIENT_A");
     localStorage.setItem("user_role", "ditbinmas");
@@ -58,28 +54,12 @@ describe("useTiktokCommentsData", () => {
         { role: "client_a", client_id: "CLIENT_B" },
       ],
     } as any);
-    mockedGetClientNames.mockResolvedValue({
-      CLIENT_A: "Client A",
-      CLIENT_B: "Client B",
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        { client_id: "CLIENT_A", username: "user-a", jumlah_komentar: 6 },
+        { client_id: "CLIENT_B", username: "user-b", jumlah_komentar: 2 },
+      ],
     } as any);
-
-    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
-      if (clientId === "CLIENT_A") {
-        return {
-          data: [
-            { client_id: "CLIENT_A", username: "user-a", jumlah_komentar: 6 },
-          ],
-        } as any;
-      }
-      if (clientId === "CLIENT_B") {
-        return {
-          data: [
-            { client_id: "CLIENT_B", username: "user-b", jumlah_komentar: 2 },
-          ],
-        } as any;
-      }
-      return { data: [] } as any;
-    });
 
     const { result } = renderHook(() =>
       useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
@@ -106,28 +86,12 @@ describe("useTiktokCommentsData", () => {
         { role: "bidhumas", client_id: "CLIENT_OTHER" },
       ],
     } as any);
-    mockedGetClientNames.mockResolvedValue({
-      CLIENT_ROOT: "Client Root",
-      CLIENT_OTHER: "Client Other",
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        { client_id: "CLIENT_ROOT", username: "root-user", jumlah_komentar: 4 },
+        { client_id: "CLIENT_OTHER", username: "other-user", jumlah_komentar: 1 },
+      ],
     } as any);
-
-    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
-      if (clientId === "CLIENT_ROOT") {
-        return {
-          data: [
-            { client_id: "CLIENT_ROOT", username: "root-user", jumlah_komentar: 4 },
-          ],
-        } as any;
-      }
-      if (clientId === "CLIENT_OTHER") {
-        return {
-          data: [
-            { client_id: "CLIENT_OTHER", username: "other-user", jumlah_komentar: 1 },
-          ],
-        } as any;
-      }
-      return { data: [] } as any;
-    });
 
     const { result } = renderHook(() =>
       useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
@@ -142,65 +106,6 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.isOrgClient).toBe(false);
   });
 
-  it("allows directorate users to broaden the recap scope when requested", async () => {
-    localStorage.setItem("cicero_token", "token");
-    localStorage.setItem("client_id", "DITBINMAS");
-    localStorage.setItem("user_role", "ditbinmas");
-
-    mockedGetClientProfile.mockResolvedValue({ client_type: "DIREKTORAT" } as any);
-    mockedGetUserDirectory.mockResolvedValue({
-      data: [
-        { role: "ditbinmas", client_id: "CLIENT_A" },
-        { role: "ditbinmas", client_id: "CLIENT_B" },
-      ],
-    } as any);
-    mockedGetClientNames.mockResolvedValue({
-      CLIENT_A: "Client A",
-      CLIENT_B: "Client B",
-      DITBINMAS: "Ditbinmas",
-    } as any);
-
-    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
-      if (clientId === "CLIENT_A") {
-        return {
-          data: [
-            { client_id: "CLIENT_A", username: "user-a", jumlah_komentar: 4 },
-          ],
-        } as any;
-      }
-      if (clientId === "CLIENT_B") {
-        return {
-          data: [
-            { client_id: "CLIENT_B", username: "user-b", jumlah_komentar: 3 },
-          ],
-        } as any;
-      }
-      if (clientId === "DITBINMAS") {
-        return {
-          data: [
-            { client_id: "DITBINMAS", username: "root", jumlah_komentar: 2 },
-          ],
-        } as any;
-      }
-      return { data: [] } as any;
-    });
-
-    const { result } = renderHook(() =>
-      useTiktokCommentsData({
-        viewBy: "monthly",
-        customDate: "",
-        fromDate: "",
-        toDate: "",
-        scope: "all",
-      }),
-    );
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.chartData).toHaveLength(3);
-    expect(result.current.rekapSummary.totalUser).toBe(3);
-  });
-
   it("filters directorate data for the root Ditbinmas account to match recap", async () => {
     localStorage.setItem("cicero_token", "token");
     localStorage.setItem("client_id", "DITBINMAS");
@@ -213,36 +118,11 @@ describe("useTiktokCommentsData", () => {
         { role: "ditbinmas", client_id: "CLIENT_B" },
       ],
     } as any);
-    mockedGetClientNames.mockResolvedValue({
-      CLIENT_A: "Client A",
-      CLIENT_B: "Client B",
-      DITBINMAS: "Ditbinmas",
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        { client_id: "DITBINMAS", username: "root-user", jumlah_komentar: 5 },
+      ],
     } as any);
-
-    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
-      if (clientId === "CLIENT_A") {
-        return {
-          data: [
-            { client_id: "CLIENT_A", username: "user-a", jumlah_komentar: 4 },
-          ],
-        } as any;
-      }
-      if (clientId === "CLIENT_B") {
-        return {
-          data: [
-            { client_id: "CLIENT_B", username: "user-b", jumlah_komentar: 3 },
-          ],
-        } as any;
-      }
-      if (clientId === "DITBINMAS") {
-        return {
-          data: [
-            { client_id: "DITBINMAS", username: "root-user", jumlah_komentar: 5 },
-          ],
-        } as any;
-      }
-      return { data: [] } as any;
-    });
 
     const { result } = renderHook(() =>
       useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),
@@ -270,28 +150,11 @@ describe("useTiktokCommentsData", () => {
         { role: "different", client_id: "DIRECT_B" },
       ],
     } as any);
-    mockedGetClientNames.mockResolvedValue({
-      DIRECT_A: "Direktorat A",
-      DIRECT_B: "Direktorat B",
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        { client_id: "DIRECT_A", username: "alpha", jumlah_komentar: 5 },
+      ],
     } as any);
-
-    mockedGetRekapKomentarTiktok.mockImplementation(async (_, clientId) => {
-      if (clientId === "DIRECT_A") {
-        return {
-          data: [
-            { client_id: "DIRECT_A", username: "alpha", jumlah_komentar: 5 },
-          ],
-        } as any;
-      }
-      if (clientId === "DIRECT_B") {
-        return {
-          data: [
-            { client_id: "DIRECT_B", username: "beta", jumlah_komentar: 3 },
-          ],
-        } as any;
-      }
-      return { data: [] } as any;
-    });
 
     const { result } = renderHook(() =>
       useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "" }),

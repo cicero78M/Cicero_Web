@@ -24,7 +24,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     initialTab === "rekap" ? "rekap" : "insight",
   );
   const rekapSectionRef = useRef(null);
-  const [directorateScope, setDirectorateScope] = useState("client");
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
@@ -50,7 +49,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     clientName,
     isDirectorateRole,
     isDirectorateScopedClient,
-    canSelectScope,
     loading,
     error,
   } = useTiktokCommentsData({
@@ -58,18 +56,12 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
-    scope: directorateScope,
   });
 
   const viewLabel = useMemo(
     () => viewOptions.find((option) => option.value === viewBy)?.label,
     [viewOptions, viewBy],
   );
-
-  const directorateScopeOptions = [
-    { value: "client", label: clientName },
-    { value: "all", label: `Satker Jajaran ${clientName}` },
-  ];
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -78,12 +70,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
   };
 
-  const handleDirectorateScopeChange = (event) => {
-    const { value } = event.target || {};
-    if (value === "client" || value === "all") {
-      setDirectorateScope(value);
-    }
-  };
 
   if (loading) return <Loader />;
   if (error)
@@ -187,13 +173,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     },
   ];
 
-  const scopeSelectorProps = {
-    value: directorateScope,
-    onChange: handleDirectorateScopeChange,
-    options: directorateScopeOptions,
-    canSelectScope,
-  };
-
   const shouldGroupByClient =
     isDirectorate && !isDirectorateScopedClient && !isDirectorateRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
@@ -292,7 +271,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
             date: selectorDateValue,
             onDateChange: handleDateChange,
           }}
-          scopeSelectorProps={scopeSelectorProps}
           onCopyRekap={handleCopyRekap}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
