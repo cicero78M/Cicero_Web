@@ -110,6 +110,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 
 ## Dashboard Komentar TikTok
 
+- Insight TikTok kini mendukung selector cakupan direktorat (client/all) seperti Instagram, memanfaatkan opsi `scope` di hook `useTiktokCommentsData` dan meneruskan `scopeSelectorProps` ke scaffold mobile agar kontrol tampil konsisten.
 - Hook `hooks/useTiktokCommentsData` kini selalu memfilter data ke `client_id` aktif ketika `scope` bukan "all" sehingga pengguna tetap berada pada cakupan login default, sementara opsi agregasi lintas klien tetap tersedia saat `scope` bernilai "all".
 - Untuk klien bertipe **DIREKTORAT**, hook `hooks/useTiktokCommentsData` sekarang mengumpulkan task dan rekap berdasarkan `client_id` yang diberikan, bukan lagi bergantung pada kecocokan `role` di direktori pengguna. Pendekatan ini memastikan satker direktorat non-ORG menampilkan data sesuai akun login tanpa mengubah perilaku klien ORG.
 - Deteksi direktorat pada `useTiktokCommentsData` mengikuti `effectiveClientType`: akun ORG tidak lagi memakai jalur direktorat walau role bertipe direktorat, sehingga scope dan pemanggilan profil klien terkunci ke `client_id` login.

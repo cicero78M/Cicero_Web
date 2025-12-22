@@ -23,6 +23,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
+  const [directorateScope, setDirectorateScope] = useState("client");
   const rekapSectionRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     clientName,
     isDirectorateRole,
     isDirectorateScopedClient,
+    canSelectScope,
     loading,
     error,
   } = useTiktokCommentsData({
@@ -56,6 +58,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     customDate: normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
+    scope: directorateScope,
   });
 
   const viewLabel = useMemo(
@@ -69,6 +72,18 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const handleDirectorateScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDirectorateScope(value);
+    }
+  };
+
+  const directorateScopeOptions = [
+    { value: "client", label: clientName },
+    { value: "all", label: `Satker Jajaran ${clientName}` },
+  ];
 
 
   if (loading) return <Loader />;
@@ -218,6 +233,13 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     titleClassName: "text-slate-700",
   };
 
+  const scopeSelectorProps = {
+    value: directorateScope,
+    onChange: handleDirectorateScopeChange,
+    options: directorateScopeOptions,
+    canSelectScope,
+  };
+
   async function handleCopyRekap() {
     const message = buildTiktokRekap(rekapSummary, chartData, {
       clientName,
@@ -271,6 +293,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
             date: selectorDateValue,
             onDateChange: handleDateChange,
           }}
+          scopeSelectorProps={scopeSelectorProps}
           onCopyRekap={handleCopyRekap}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
