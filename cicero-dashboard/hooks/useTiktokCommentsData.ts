@@ -477,6 +477,7 @@ export default function useTiktokCommentsData({
               {
                 role: normalizedDirectoryRole || undefined,
                 scope: directoryScope,
+                regional_id: normalizedRegionalId,
               },
               controller.signal,
             );

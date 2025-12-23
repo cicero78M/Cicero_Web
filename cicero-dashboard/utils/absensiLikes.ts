@@ -58,7 +58,11 @@ export async function fetchDitbinmasAbsensiLikes(
   const directoryRes = await getUserDirectory(
     token,
     clientId,
-    { role: normalizedRole || undefined, scope: directoryScope },
+    {
+      role: normalizedRole || undefined,
+      scope: directoryScope,
+      regional_id: requestContext?.regional_id,
+    },
     signal,
   );
   const dirData = directoryRes.data || directoryRes.users || directoryRes || [];

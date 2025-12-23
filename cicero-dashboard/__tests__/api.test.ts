@@ -3,6 +3,7 @@ import {
   getRekapAmplify,
   getRekapLikesIG,
   getRekapKomentarTiktok,
+  getUserDirectory,
   updateUserViaClaim,
 } from "../utils/api";
 
@@ -94,6 +95,20 @@ test("getRekapKomentarTiktok supports date range params", async () => {
   expect(url).toContain("role=operator");
   expect(url).toContain("scope=ORG");
   expect(url).toContain("regional_id=R-99");
+});
+
+test("getUserDirectory passes regional_id when provided", async () => {
+  await getUserDirectory("tok", "DITBINMAS", {
+    role: "operator",
+    scope: "ORG",
+    regional_id: "R-11",
+  });
+  const url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("/api/users/list");
+  expect(url).toContain("client_id=DITBINMAS");
+  expect(url).toContain("role=operator");
+  expect(url).toContain("scope=ORG");
+  expect(url).toContain("regional_id=R-11");
 });
 
 test("getDashboardStats normalizes fields", async () => {
