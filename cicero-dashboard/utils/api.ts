@@ -280,6 +280,18 @@ export type ReportLinkItem = {
   url: string;
 };
 
+export type ReportLinkDetailInfo = {
+  caption: string;
+  imageUrl: string;
+  shortcode: string;
+  postId?: string;
+};
+
+export type ReportLinkDetail = {
+  links: ReportLinkItem[];
+  info: ReportLinkDetailInfo | null;
+};
+
 export type ReposterReportPayload = {
   shortcode: string;
   userId: string;
@@ -880,6 +892,14 @@ const REPORT_LINK_FIELDS: Array<[string, string]> = [
   ["youtube_link", "youtube"],
 ];
 
+function extractReportItems(raw: any): any[] {
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw?.items)) return raw.items;
+  if (Array.isArray(raw?.data?.items)) return raw.data.items;
+  if (Array.isArray(raw?.data?.data?.items)) return raw.data.data.items;
+  return [];
+}
+
 function normalizeReportLinkRecord(record: any): ReportLinkItem[] {
   if (!record || typeof record !== "object") return [];
   return REPORT_LINK_FIELDS.map(([field, platform]) => ({
@@ -912,6 +932,41 @@ function normalizeReportLinks(raw: any): ReportLinkItem[] {
       .filter((entry) => entry.platform && entry.url);
   }
   return [];
+}
+
+function normalizeReportLinksPayload(raw: any): ReportLinkItem[] {
+  const links = normalizeReportLinks(
+    raw?.links ??
+      raw?.data?.links ??
+      raw?.data?.data ??
+      raw?.data ??
+      raw,
+  );
+  const items = extractReportItems(raw);
+  if (items.length > 0) {
+    const fromItems = items.flatMap((item) =>
+      normalizeReportLinkRecord(item),
+    );
+    if (fromItems.length > 0) return fromItems;
+  }
+  return links;
+}
+
+function normalizeReportLinkInfo(raw: any): ReportLinkDetailInfo | null {
+  if (!raw || typeof raw !== "object") return null;
+  const caption = ensureString(raw?.caption);
+  const imageUrl = ensureString(
+    raw?.image_url || raw?.imageUrl || raw?.thumbnail_url,
+  );
+  const shortcode = ensureString(raw?.shortcode);
+  const postId = ensureString(raw?.post_id || raw?.postId);
+  if (!caption && !imageUrl && !shortcode && !postId) return null;
+  return {
+    caption,
+    imageUrl,
+    shortcode,
+    postId,
+  };
 }
 
 export async function getReposterReportLinks(
@@ -947,8 +1002,48 @@ export async function getReposterReportLinks(
     throw new Error(text || "Gagal memuat link laporan.");
   }
   const json = await res.json();
-  const payload = json?.data ?? json ?? {};
-  return normalizeReportLinks(payload?.links ?? payload?.data ?? payload);
+  return normalizeReportLinksPayload(json ?? {});
+}
+
+export async function getReposterReportLinkDetail(
+  token: string,
+  params: {
+    shortcode?: string;
+    postId?: string;
+    userId: string;
+    isSpecial?: boolean;
+  },
+  signal?: AbortSignal,
+): Promise<ReportLinkDetail> {
+  if (!params.userId) {
+    throw new Error("User ID belum tersedia.");
+  }
+  if (!params.postId && !params.shortcode) {
+    throw new Error("Post ID atau shortcode belum tersedia.");
+  }
+  const query = new URLSearchParams({ user_id: params.userId });
+  if (params.postId) {
+    query.set("post_id", params.postId);
+  }
+  if (!params.postId && params.shortcode) {
+    query.set("shortcode", params.shortcode);
+  }
+  const endpoint = params.isSpecial
+    ? "/api/link-reports-khusus"
+    : "/api/link-reports";
+  const url = `${buildApiUrl(endpoint)}?${query.toString()}`;
+  const res = await fetchWithAuth(url, token, { signal });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal memuat link laporan.");
+  }
+  const json = await res.json();
+  const items = extractReportItems(json ?? {});
+  const info = normalizeReportLinkInfo(items[0]);
+  return {
+    links: normalizeReportLinksPayload(json ?? {}),
+    info,
+  };
 }
 
 function normalizeReportDuplicates(raw: any): string[] {

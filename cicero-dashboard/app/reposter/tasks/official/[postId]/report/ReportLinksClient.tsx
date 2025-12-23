@@ -4,18 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import {
-  getReposterReportLinks,
+  getReposterReportLinkDetail,
   getReposterReportLinkDuplicates,
   isAbortError,
+  ReportLinkDetailInfo,
   REPOSTER_REPORTED_POSTS_KEY,
   submitReposterReportLinks,
 } from "@/utils/api";
 
 const PLATFORM_ORDER = [
   "instagram",
-  "tiktok",
   "facebook",
   "twitter",
+  "tiktok",
   "youtube",
 ];
 
@@ -94,6 +95,9 @@ export default function ReportLinksClient() {
   const [reportLinks, setReportLinks] = useState<
     Array<{ platform: string; url: string }>
   >([]);
+  const [reportInfo, setReportInfo] = useState<ReportLinkDetailInfo | null>(
+    null,
+  );
 
   const profileShortcode = useMemo(
     () =>
@@ -226,6 +230,7 @@ export default function ReportLinksClient() {
     setReportLinksError("");
     setReportLinksNotice("");
     setReportLinksLoading(false);
+    setReportInfo(null);
     if (!reportUserId) {
       setReportLinksError("User ID belum tersedia.");
       return;
@@ -238,7 +243,7 @@ export default function ReportLinksClient() {
     }
     const controller = new AbortController();
     setReportLinksLoading(true);
-    getReposterReportLinks(
+    getReposterReportLinkDetail(
       token,
       {
         postId: postId || undefined,
@@ -247,14 +252,15 @@ export default function ReportLinksClient() {
       },
       controller.signal,
     )
-      .then((links) => {
-        setReportLinks(links);
-        if (links.length === 0) {
+      .then((detail) => {
+        setReportLinks(detail.links);
+        setReportInfo(detail.info);
+        if (detail.links.length === 0) {
           setReportLinksNotice("Belum ada tautan laporan yang tercatat.");
           return;
         }
         const mapped: Record<string, string> = {};
-        links.forEach((link) => {
+        detail.links.forEach((link) => {
           const platformKey = link.platform?.toLowerCase();
           if (platformKey && !mapped[platformKey]) {
             mapped[platformKey] = link.url;
@@ -530,6 +536,37 @@ export default function ReportLinksClient() {
             </span>
             : {sourcePlatform || "Instagram"}
           </p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            <span className="font-semibold text-slate-800 dark:text-white">
+              Image URL
+            </span>
+            :{" "}
+            {reportInfo?.imageUrl ? (
+              <a
+                href={reportInfo.imageUrl}
+                className="break-words text-sky-600 underline-offset-4 hover:underline dark:text-cyan-300"
+                rel="noreferrer"
+                target="_blank"
+              >
+                {reportInfo.imageUrl}
+              </a>
+            ) : (
+              "-"
+            )}
+          </p>
+          <div className="text-sm text-slate-600 dark:text-slate-300">
+            <span className="font-semibold text-slate-800 dark:text-white">
+              Caption
+            </span>
+            :{" "}
+            {reportInfo?.caption ? (
+              <span className="whitespace-pre-line text-slate-600 dark:text-slate-200">
+                {reportInfo.caption}
+              </span>
+            ) : (
+              "-"
+            )}
+          </div>
         </div>
       </div>
 
