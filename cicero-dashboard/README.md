@@ -122,6 +122,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Dashboard Amplify
 
 - `getRekapAmplify` di `utils/api.ts` kini menerima opsi `role`, `scope`, dan `regional_id` agar permintaan `/api/amplify/rekap` dapat mengikuti cakupan direktorat/ORG serta filter regional jika tersedia.
+- `getRekapAmplify` juga menerima `AbortSignal` agar halaman Amplify bisa membatalkan request saat parameter berubah atau komponen unmount.
 - Parameter rentang tanggal pada rekap amplify kini memakai `tanggal_mulai`/`tanggal_selesai`, mengikuti pola endpoint insight lain yang mengandalkan format tanggal backend yang sama.
 - `AuthContext` mengekspose `regionalId` hasil pembacaan profil klien sehingga halaman Amplify dapat meneruskan informasi regional ke API bila diperlukan.
 - Hook `useTiktokCommentsData` menormalkan `effectiveClientType` kosong/null menjadi `undefined` sebelum menghitung `directoryScope`, sehingga pemetaan scope tidak memicu error tipe saat nilai dari autentikasi belum tersedia.

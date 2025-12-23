@@ -80,13 +80,14 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
   }, [initialTab]);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError("");
 
     if (!token || !clientId) {
       setError("Token atau Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
-      return;
+      return () => controller.abort();
     }
 
     const selectedDate =
@@ -117,11 +118,18 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
             role: normalizedRole,
             scope: normalizedScope,
             regional_id: resolvedRegionalId,
+            signal: controller.signal,
           },
         );
+        if (controller.signal.aborted) return;
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        const profileRes = await getClientProfile(token, clientId);
+        const profileRes = await getClientProfile(
+          token,
+          clientId,
+          controller.signal,
+        );
+        if (controller.signal.aborted) return;
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
         const resolvedClientName =
@@ -149,7 +157,9 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
                   "",
               ),
             ),
+            controller.signal,
           );
+          if (controller.signal.aborted) return;
           enrichedUsers = users.map((u) => ({
             ...u,
             nama_client:
@@ -187,13 +197,16 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
         });
         setChartData(enrichedUsers);
       } catch (err) {
-        setError(`Gagal mengambil data: ${err.message || err}`);
+        if (!(err instanceof DOMException && err.name === "AbortError")) {
+          setError(`Gagal mengambil data: ${err.message || err}`);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     fetchData();
+    return () => controller.abort();
   }, [
     token,
     clientId,
@@ -203,7 +216,8 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     regionalId,
     viewBy,
     normalizedCustomDate,
-    normalizedRange,
+    normalizedRange?.startDate,
+    normalizedRange?.endDate,
   ]);
 
   if (loading) return <Loader />;

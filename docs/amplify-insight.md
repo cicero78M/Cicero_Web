@@ -11,6 +11,7 @@ Dokumen ini merangkum standar UI/UX dan alur kerja halaman **Amplifikasi Link In
 ## Alur kerja data
 
 - Periode diambil dari `useLikesDateSelector` dan diteruskan ke `getRekapAmplify` melalui `getPeriodeDateForView`.
+- Pengambilan data di `AmplifyInsightView` memakai `AbortController` agar request dibatalkan saat komponen unmount atau periode berubah, sehingga tidak ada `setState` setelah unmount.
 - Jika tipe klien adalah direktorat, data diperkaya dengan nama client melalui `getClientNames`.
 - Ringkasan (total user, sudah/belum post, total link) dihitung di `AmplifyInsightView` sebelum ditampilkan.
 
