@@ -33,6 +33,11 @@ Inside `cicero-dashboard` you will find the typical Next.js project layout:
 - Untuk role lain, hook menormalisasi `client_id` aktif dan tipe klien untuk membedakan direktorat vs ORG. Klien direktorat mendapat dropdown lingkup yang membatasi rekap ke satker aktif saat `scope: "client"` atau menggabungkan seluruh jajaran saat `scope: "all"`, sementara klien ORG selalu difilter ke `client_id` login. Data kemudian digrup berdasarkan divisi atau kelompok memakai `groupUsersByKelompok`, lalu dihitung ulang status Sudah/Kurang/Belum Likes serta Tanpa Username.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L97-L214】【F:cicero-dashboard/app/likes/instagram/page.jsx†L1-L160】【F:cicero-dashboard/utils/instagramEngagement.ts†L1-L69】
 - Tombol "Copy Rekap" menggunakan `buildInstagramRekap` dari modul `utils/instagramEngagement.ts` untuk membangkitkan pesan WA siap kirim yang berisi rekapitulasi per klien dan cakupan Ditbinmas terpilih.【F:cicero-dashboard/app/likes/instagram/page.jsx†L121-L200】【F:cicero-dashboard/utils/instagramEngagement.ts†L71-L120】
 
+### Amplifikasi Link Insight
+
+- Halaman `/amplify` kini menggunakan `InsightLayout`, `EngagementInsightMobileScaffold`, dan `DetailRekapSection` agar alur insight/rekap konsisten dengan standar Instagram Engagement Insight.
+- Tombol **Salin Rekap** memanfaatkan `buildAmplifyRekap` untuk menyiapkan ringkasan amplifikasi link yang siap dibagikan ke kanal koordinasi.
+
 ### Knowledge Base Pages
 
 - Navigasi sidebar kini menambahkan tautan ke `/mekanisme-absensi` dan `/panduan-sop` sebagai pusat informasi SOP dan alur absensi digital.【F:cicero-dashboard/components/Sidebar.jsx†L1-L120】
@@ -128,6 +133,7 @@ Additional documents live under the [`docs/`](docs) directory:
 - [`google_auth_policies.md`](docs/google_auth_policies.md) – Google OAuth terms and privacy policy links
 - [`auth-navigation.md`](docs/auth-navigation.md) – ringkasan alur hidrasi autentikasi dan pemulihan rute terakhir
 - [`google_contacts_service_account.md`](docs/google_contacts_service_account.md) – panduan penempatan `credentials.json` untuk layanan Google Contacts di backend Cicero_V2
+- [`amplify-insight.md`](docs/amplify-insight.md) – standar UI/UX dan alur kerja Amplifikasi Link Insight
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
