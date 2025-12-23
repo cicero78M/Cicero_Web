@@ -124,57 +124,53 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
     const load = async () => {
       setState((prev) => ({ ...prev, loading: true, error: "" }));
       try {
-        if (taskType === "official") {
-          if (!clientId) {
-            throw new Error("Client ID belum tersedia.");
-          }
-          const posts = await fetchPosts(token, clientId, {
-            signal: controller.signal,
-          });
-          let nextPosts = posts;
-          if (reportUserId) {
-            const reportEntries = await Promise.all(
-              posts.map(async (post) => {
-                try {
-                  const links = await getReposterReportLinks(
-                    token,
-                    {
-                      postId: post.id,
-                      shortcode: post.shortcode,
-                      userId: reportUserId,
-                    },
-                    controller.signal,
-                  );
-                  return {
-                    id: post.id,
-                    reported: post.reported || links.length > 0,
-                  };
-                } catch (error) {
-                  if (isAbortError(error, controller.signal)) {
-                    throw error;
-                  }
-                  return { id: post.id, reported: post.reported };
-                }
-              }),
-            );
-            const reportMap = new Map(
-              reportEntries.map((entry) => [entry.id, entry.reported]),
-            );
-            nextPosts = posts.map((post) => ({
-              ...post,
-              reported: reportMap.get(post.id) ?? post.reported,
-            }));
-          }
-          setState({ tasks: nextPosts, loading: false, error: "" });
-        } else {
-          if (!clientId) {
-            throw new Error("Client ID belum tersedia.");
-          }
-          const posts = await fetchSpecialPosts(token, clientId, {
-            signal: controller.signal,
-          });
-          setState({ tasks: posts, loading: false, error: "" });
+        if (!clientId) {
+          throw new Error("Client ID belum tersedia.");
         }
+        const isSpecial = taskType === "special";
+        const posts = isSpecial
+          ? await fetchSpecialPosts(token, clientId, {
+              signal: controller.signal,
+            })
+          : await fetchPosts(token, clientId, {
+              signal: controller.signal,
+            });
+        let nextPosts = posts;
+        if (reportUserId) {
+          const reportEntries = await Promise.all(
+            posts.map(async (post) => {
+              try {
+                const links = await getReposterReportLinks(
+                  token,
+                  {
+                    postId: post.id,
+                    shortcode: post.shortcode,
+                    userId: reportUserId,
+                    isSpecial,
+                  },
+                  controller.signal,
+                );
+                return {
+                  id: post.id,
+                  reported: post.reported || links.length > 0,
+                };
+              } catch (error) {
+                if (isAbortError(error, controller.signal)) {
+                  throw error;
+                }
+                return { id: post.id, reported: post.reported };
+              }
+            }),
+          );
+          const reportMap = new Map(
+            reportEntries.map((entry) => [entry.id, entry.reported]),
+          );
+          nextPosts = posts.map((post) => ({
+            ...post,
+            reported: reportMap.get(post.id) ?? post.reported,
+          }));
+        }
+        setState({ tasks: nextPosts, loading: false, error: "" });
       } catch (error) {
         if (isAbortError(error, controller.signal)) return;
         setState({
@@ -296,7 +292,7 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   ];
   const summaryGridClass = "md:grid-cols-2";
   const defaultOfficialPlatform = "instagram";
-  const canReport = taskType === "official";
+  const canReport = Boolean(clientId);
 
   return (
     <div className="space-y-6">
@@ -349,9 +345,12 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
               : caption;
             const selectedSlide = carouselSelection[post.id] ?? 0;
             const reportPlatform = post.platform || defaultOfficialPlatform;
+            const reportPath = taskType === "special"
+              ? "/reposter/tasks/special"
+              : "/reposter/tasks/official";
             const reportUrl =
               canReport && clientId
-                ? `/reposter/tasks/official/${post.id}/report?${new URLSearchParams(
+                ? `${reportPath}/${post.id}/report?${new URLSearchParams(
                     {
                       client_id: clientId,
                       platform: reportPlatform,

@@ -131,14 +131,17 @@ data profil.
 Untuk laporan tugas khusus, helper yang sama diarahkan ke
 `GET /api/link-reports-khusus`. Tautan yang sudah tercatat akan ditampilkan
 sebagai informasi dan dipakai sebagai nilai awal pada form di
-`/reposter/tasks/official/[postId]/report`, sekaligus menyegarkan cache dan
+`/reposter/tasks/special/[postId]/report`, sekaligus menyegarkan cache dan
 history link lokal agar deteksi duplikasi konsisten.
 
 Halaman laporan kini menyediakan form input link (Instagram, Facebook, Twitter,
 TikTok, YouTube). Form mengirim data ke endpoint `POST /api/link-reports`
-(`submitReposterReportLinks`) dan melakukan pengecekan duplikasi melalui
-`GET /api/link-reports` (`getReposterReportLinkDuplicates`) agar link yang sudah
-pernah dilaporkan langsung ditolak dan direset.
+(`submitReposterReportLinks`) untuk laporan official, atau
+`POST /api/link-reports-khusus` untuk laporan tugas khusus, serta melakukan
+pengecekan duplikasi melalui `GET /api/link-reports` (official) atau
+`GET /api/link-reports-khusus` (khusus) via
+`getReposterReportLinkDuplicates` agar link yang sudah pernah dilaporkan langsung
+ditolak dan direset.
 
 Status lokal untuk tugas official disimpan melalui localStorage:
 
@@ -148,6 +151,12 @@ Status lokal untuk tugas official disimpan melalui localStorage:
   tetap tersedia untuk user yang sama.
 - `reposter_report_links_history`: riwayat link laporan per platform untuk
   mencegah duplikasi lokal sebelum hit API.
+
+Untuk tugas khusus, status dan cache laporan dipisahkan:
+
+- `reposter_special_reported_posts`: daftar ID post khusus yang sudah dilaporkan.
+- `reposter_special_report_links_cache`: cache link laporan tugas khusus.
+- `reposter_special_report_links_history`: riwayat link laporan tugas khusus.
 
 Saat pengguna menekan tombol **Tandai sudah dilaporkan** di halaman
 `/reposter/tasks/official/[postId]/report`, ID post ditambahkan ke

@@ -9,6 +9,7 @@ import {
   isAbortError,
   ReportLinkDetailInfo,
   REPOSTER_REPORTED_POSTS_KEY,
+  REPOSTER_SPECIAL_REPORTED_POSTS_KEY,
   submitReposterReportLinks,
 } from "@/utils/api";
 
@@ -28,9 +29,6 @@ const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube",
 };
 
-const REPORT_LINK_CACHE_KEY = "reposter_report_links_cache";
-const REPORT_LINK_HISTORY_KEY = "reposter_report_links_history";
-
 const PLATFORM_VALIDATORS: Record<string, (value: string) => boolean> = {
   instagram: (value) =>
     value.includes("instagram.com") ||
@@ -46,9 +44,13 @@ const PLATFORM_VALIDATORS: Record<string, (value: string) => boolean> = {
 
 const PLATFORM_REQUIRED = new Set(["instagram", "facebook", "twitter"]);
 
-function readReportedPostIds(): Set<string> {
+type ReportLinksClientProps = {
+  isSpecial?: boolean;
+};
+
+function readReportedPostIds(storageKey: string): Set<string> {
   if (typeof window === "undefined") return new Set();
-  const raw = window.localStorage.getItem(REPOSTER_REPORTED_POSTS_KEY);
+  const raw = window.localStorage.getItem(storageKey);
   if (!raw) return new Set();
   try {
     const parsed = JSON.parse(raw);
@@ -65,15 +67,17 @@ function readReportedPostIds(): Set<string> {
   return new Set();
 }
 
-function writeReportedPostIds(ids: Set<string>) {
+function writeReportedPostIds(storageKey: string, ids: Set<string>) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(
-    REPOSTER_REPORTED_POSTS_KEY,
+    storageKey,
     JSON.stringify(Array.from(ids)),
   );
 }
 
-export default function ReportLinksClient() {
+export default function ReportLinksClient({
+  isSpecial = false,
+}: ReportLinksClientProps) {
   const { token, profile } = useReposterAuth();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -84,6 +88,15 @@ export default function ReportLinksClient() {
   const clientId = searchParams.get("client_id") ?? "";
   const sourcePlatform = searchParams.get("platform") ?? "";
   const taskNumber = searchParams.get("task_number") ?? "";
+  const reportCacheKey = isSpecial
+    ? "reposter_special_report_links_cache"
+    : "reposter_report_links_cache";
+  const reportHistoryKey = isSpecial
+    ? "reposter_special_report_links_history"
+    : "reposter_report_links_history";
+  const reportedPostsKey = isSpecial
+    ? REPOSTER_SPECIAL_REPORTED_POSTS_KEY
+    : REPOSTER_REPORTED_POSTS_KEY;
 
   const [draftLinks, setDraftLinks] = useState<Record<string, string>>({});
   const [draftLoading, setDraftLoading] = useState(false);
@@ -195,7 +208,7 @@ export default function ReportLinksClient() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const cached: Record<string, string> = {};
-    const raw = window.localStorage.getItem(REPORT_LINK_CACHE_KEY);
+    const raw = window.localStorage.getItem(reportCacheKey);
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
@@ -213,7 +226,7 @@ export default function ReportLinksClient() {
       }
     }
     setDraftLinks((prev) => ({ ...cached, ...prev }));
-  }, [userKey]);
+  }, [reportCacheKey, userKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -257,6 +270,7 @@ export default function ReportLinksClient() {
         postId: postId || undefined,
         shortcode: postId ? undefined : fallbackShortcode,
         userId: reportUserId,
+        isSpecial,
       },
       controller.signal,
     )
@@ -306,7 +320,7 @@ export default function ReportLinksClient() {
         setReportLinksLoading(false);
       });
     return () => controller.abort();
-  }, [fallbackShortcode, postId, reportUserId, token]);
+  }, [fallbackShortcode, isSpecial, postId, reportUserId, token]);
 
   const handleDraftChange = (platform: string, value: string) => {
     setDraftError("");
@@ -316,7 +330,7 @@ export default function ReportLinksClient() {
 
   const persistCache = (nextLinks: Record<string, string>) => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(REPORT_LINK_CACHE_KEY);
+    const raw = window.localStorage.getItem(reportCacheKey);
     let cache: Record<string, string> = {};
     if (raw) {
       try {
@@ -331,15 +345,12 @@ export default function ReportLinksClient() {
         cache[`${userKey}_${platform}`] = entry;
       }
     });
-    window.localStorage.setItem(
-      REPORT_LINK_CACHE_KEY,
-      JSON.stringify(cache),
-    );
+    window.localStorage.setItem(reportCacheKey, JSON.stringify(cache));
   };
 
   const loadHistory = () => {
     if (typeof window === "undefined") return {};
-    const raw = window.localStorage.getItem(REPORT_LINK_HISTORY_KEY);
+    const raw = window.localStorage.getItem(reportHistoryKey);
     const history: Record<string, Set<string>> = {};
     if (raw) {
       try {
@@ -364,7 +375,7 @@ export default function ReportLinksClient() {
 
   const persistHistory = (nextLinks: Record<string, string>) => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(REPORT_LINK_HISTORY_KEY);
+    const raw = window.localStorage.getItem(reportHistoryKey);
     let cache: Record<string, string[]> = {};
     if (raw) {
       try {
@@ -382,10 +393,7 @@ export default function ReportLinksClient() {
         cache[key] = Array.from(current);
       }
     });
-    window.localStorage.setItem(
-      REPORT_LINK_HISTORY_KEY,
-      JSON.stringify(cache),
-    );
+    window.localStorage.setItem(reportHistoryKey, JSON.stringify(cache));
   };
 
   const handleSubmitReport = async () => {
@@ -458,10 +466,9 @@ export default function ReportLinksClient() {
         return;
       }
 
-      const duplicates = await getReposterReportLinkDuplicates(
-        token,
-        Object.values(sanitized),
-      );
+      const duplicates = await getReposterReportLinkDuplicates(token, Object.values(sanitized), {
+        isSpecial,
+      });
       if (duplicates.length > 0) {
         const nextLinksWithDuplicates = { ...draftLinks };
         let hasDuplicate = false;
@@ -494,18 +501,22 @@ export default function ReportLinksClient() {
         twitterLink: sanitized.twitter,
         tiktokLink: sanitized.tiktok,
         youtubeLink: sanitized.youtube,
+      }, {
+        isSpecial,
       });
 
       persistCache(sanitized);
       persistHistory(normalizedValues);
       setDraftSuccess("Laporan terkirim.");
-      const reportedSet = readReportedPostIds();
+      const reportedSet = readReportedPostIds(reportedPostsKey);
       if (postId) {
         reportedSet.add(postId);
-        writeReportedPostIds(reportedSet);
+        writeReportedPostIds(reportedPostsKey, reportedSet);
       }
     } catch (err) {
-      setDraftError(err instanceof Error ? err.message : "Gagal mengirim laporan.");
+      setDraftError(
+        err instanceof Error ? err.message : "Gagal mengirim laporan.",
+      );
     } finally {
       setDraftLoading(false);
     }
@@ -595,9 +606,7 @@ export default function ReportLinksClient() {
                     <button
                       type="button"
                       className="text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
-                      onClick={() =>
-                        setIsCaptionExpanded((prev) => !prev)
-                      }
+                      onClick={() => setIsCaptionExpanded((prev) => !prev)}
                     >
                       {isCaptionExpanded ? "Tutup" : "Lihat selengkapnya"}
                     </button>
