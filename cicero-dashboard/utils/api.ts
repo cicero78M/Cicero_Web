@@ -264,6 +264,8 @@ export type InstaPost = {
 
 export const REPOSTER_DOWNLOADED_POSTS_KEY = "reposter_downloaded_posts";
 export const REPOSTER_REPORTED_POSTS_KEY = "reposter_reported_posts";
+export const REPOSTER_SPECIAL_REPORTED_POSTS_KEY =
+  "reposter_special_reported_posts";
 
 export type TaskListResponse = {
   tasks: TaskItem[];
@@ -764,6 +766,7 @@ type FetchPostsOptions = {
   signal?: AbortSignal;
   downloadedIds?: string[];
   reportedIds?: string[];
+  reportedStorageKey?: string;
 };
 
 async function fetchReposterPosts(
@@ -790,7 +793,9 @@ async function fetchReposterPosts(
     : readLocalIdSet(REPOSTER_DOWNLOADED_POSTS_KEY);
   const reportedSet = options.reportedIds
     ? new Set(options.reportedIds)
-    : readLocalIdSet(REPOSTER_REPORTED_POSTS_KEY);
+    : readLocalIdSet(
+        options.reportedStorageKey ?? REPOSTER_REPORTED_POSTS_KEY,
+      );
 
   const today = new Date();
   const posts = ensureArray(payload, (entry) => {
@@ -880,7 +885,11 @@ export async function fetchSpecialPosts(
     token,
     clientId,
     "/api/insta/posts-khusus",
-    options,
+    {
+      ...options,
+      reportedStorageKey:
+        options.reportedStorageKey ?? REPOSTER_SPECIAL_REPORTED_POSTS_KEY,
+    },
   );
 }
 
@@ -1058,13 +1067,18 @@ function normalizeReportDuplicates(raw: any): string[] {
 export async function getReposterReportLinkDuplicates(
   token: string,
   links: string[],
-  signal?: AbortSignal,
+  options?: { isSpecial?: boolean; signal?: AbortSignal },
 ): Promise<string[]> {
   if (!links.length) return [];
   const params = new URLSearchParams();
   links.forEach((link) => params.append("links[]", link));
-  const url = `${buildApiUrl("/api/link-reports")}?${params.toString()}`;
-  const res = await fetchWithAuth(url, token, { signal });
+  const endpoint = options?.isSpecial
+    ? "/api/link-reports-khusus"
+    : "/api/link-reports";
+  const url = `${buildApiUrl(endpoint)}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, {
+    signal: options?.signal,
+  });
   if (!res.ok) return [];
   const json = await res.json();
   const payload = json?.data ?? json ?? {};
@@ -1078,7 +1092,7 @@ export async function getReposterReportLinkDuplicates(
 export async function submitReposterReportLinks(
   token: string,
   payload: ReposterReportPayload,
-  signal?: AbortSignal,
+  options?: { isSpecial?: boolean; signal?: AbortSignal },
 ): Promise<void> {
   const body = {
     shortcode: payload.shortcode,
@@ -1091,13 +1105,16 @@ export async function submitReposterReportLinks(
     tiktok_link: payload.tiktokLink ?? "",
     youtube_link: payload.youtubeLink ?? "",
   };
-  const res = await fetchWithAuth(buildApiUrl("/api/link-reports"), token, {
+  const endpoint = options?.isSpecial
+    ? "/api/link-reports-khusus"
+    : "/api/link-reports";
+  const res = await fetchWithAuth(buildApiUrl(endpoint), token, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-    signal,
+    signal: options?.signal,
   });
   if (!res.ok) {
     const text = await res.text();

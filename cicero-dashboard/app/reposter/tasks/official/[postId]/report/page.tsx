@@ -1,5 +1,5 @@
 import ReposterShell from "../../../../ReposterShell";
-import ReportLinksClient from "./ReportLinksClient";
+import ReportLinksClient from "../../../ReportLinksClient";
 
 export default function ReposterReportLinksPage() {
   return (

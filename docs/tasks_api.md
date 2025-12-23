@@ -13,6 +13,7 @@ serta cara memanggilnya dari dashboard/reposter.
 | `GET /api/link-reports` | Tautan laporan per platform untuk tugas official **atau** deteksi duplikasi link laporan | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `GET /api/link-reports-khusus` | Tautan laporan per platform untuk tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 | `POST /api/link-reports` | Kirim link laporan reposter | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
+| `POST /api/link-reports-khusus` | Kirim link laporan reposter untuk tugas khusus | `Authorization: Bearer <token>` atau `X-Reposter-Token` |
 
 Backend menyediakan helper `registerTaskEndpoints` di
 `backend/src/services/tasksEndpoints.js` untuk mendaftarkan route tugas khusus ke
@@ -76,6 +77,9 @@ serta menyertakan `shortcode` hanya jika `post_id` tidak tersedia.
   "youtube_link": "https://youtu.be/..."
 }
 ```
+
+Gunakan endpoint `POST /api/link-reports-khusus` untuk laporan tugas khusus,
+sementara laporan official tetap memakai `POST /api/link-reports`.
 
 Catatan sumber `shortcode`:
 
