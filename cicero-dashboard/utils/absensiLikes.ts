@@ -24,7 +24,7 @@ export async function fetchDitbinmasAbsensiLikes(
   loginClientId?: string,
   scope: "client" | "all" = "client",
   effectiveClientId: string = "DITBINMAS",
-  requestContext?: { role?: string; scope?: string },
+  requestContext?: { role?: string; scope?: string; regional_id?: string },
 ) {
   const clientId = effectiveClientId || "DITBINMAS";
   // effectiveClientId allows alternate Ditbinmas-style coordinators (e.g.

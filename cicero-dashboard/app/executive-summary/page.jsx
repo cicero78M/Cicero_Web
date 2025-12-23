@@ -2573,7 +2573,7 @@ export default function ExecutiveSummaryPage() {
               startDateParam,
               endDateParam,
               controller.signal,
-              { role: rekapRole, scope: rekapScope },
+              { role: rekapRole, scope: rekapScope, regional_id: normalizedRegionalId },
             ).catch((error) => {
               console.warn("Gagal memuat rekap likes IG", error);
               return { data: [] };
@@ -2679,7 +2679,7 @@ export default function ExecutiveSummaryPage() {
                 previousStartDateParam,
                 previousEndDateParam,
                 controller.signal,
-                { role: rekapRole, scope: rekapScope },
+                { role: rekapRole, scope: rekapScope, regional_id: normalizedRegionalId },
               );
               const previousLikesRaw = ensureArray(previousLikesResponse);
               const preparedPreviousLikes = prepareTrendActivityRecords(

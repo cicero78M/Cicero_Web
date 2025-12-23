@@ -94,6 +94,7 @@ export default function useInstagramLikesData({
     role: authRole,
     effectiveRole,
     effectiveClientType,
+    regionalId: authRegionalId,
   } = useAuth();
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
@@ -136,6 +137,9 @@ export default function useInstagramLikesData({
     const role = effectiveRole ?? authRole ?? fallbackRole;
     const requestRole = normalizeRolePayload(role);
     const requestScopeFromAuth = normalizeScopePayload(effectiveClientType);
+    const normalizedRegionalIdFromAuth = authRegionalId
+      ? String(authRegionalId)
+      : undefined;
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -205,6 +209,13 @@ export default function useInstagramLikesData({
           selectedDate,
         );
         if (shouldUseDirectorateFetcher) {
+          const requestContext = {
+            role: requestRole,
+            scope: requestScopeFromAuth,
+            ...(normalizedRegionalIdFromAuth
+              ? { regional_id: normalizedRegionalIdFromAuth }
+              : {}),
+          };
           const { users, summary, posts, clientName } =
             await fetchDitbinmasAbsensiLikes(
               token,
@@ -218,7 +229,7 @@ export default function useInstagramLikesData({
               userClientId,
               scope,
               ditbinmasClientId,
-              { role: requestRole, scope: requestScopeFromAuth },
+              requestContext,
             );
           if (controller.signal.aborted) return;
           const sortedUsers = prioritizeUsersForClient(
@@ -266,6 +277,15 @@ export default function useInstagramLikesData({
           controller.signal,
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
+        const resolvedRegionalId =
+          normalizedRegionalIdFromAuth ??
+          profile?.regional_id ??
+          profile?.regionalId ??
+          profile?.regionalID ??
+          profile?.regional;
+        const normalizedRegionalId = resolvedRegionalId
+          ? String(resolvedRegionalId)
+          : undefined;
         const normalizedEffectiveClientType = String(
           effectiveClientType ??
             profile.client_type ??
@@ -307,6 +327,11 @@ export default function useInstagramLikesData({
           !isOperatorRole && (directorate || isDirectorateRoleValue),
         );
 
+        const requestContext = {
+          role: requestRole,
+          scope: requestScope,
+          ...(normalizedRegionalId ? { regional_id: normalizedRegionalId } : {}),
+        };
         let users: any[] = [];
         let rekapMeta: {
           totalIGPost?: number;
@@ -397,7 +422,7 @@ export default function useInstagramLikesData({
                 startDate,
                 endDate,
                 controller.signal,
-                { role: requestRole, scope: requestScope },
+                requestContext,
               ).catch(() => ({ data: [] })),
             ),
           );
@@ -442,7 +467,7 @@ export default function useInstagramLikesData({
             startDate,
             endDate,
             controller.signal,
-            { role: requestRole, scope: requestScope },
+            requestContext,
           );
           users = extractRekapUsers(rekapRes);
           rekapMeta = {

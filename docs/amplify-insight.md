@@ -46,14 +46,14 @@ Contoh query (mode rentang tanggal + regional):
 
 ## Alignment workflow dengan `/api/insta/rekap-likes`
 
-- Struktur parameter tanggal mengikuti pola yang sama dengan `/api/insta/rekap-likes`: `periode`, `tanggal` (harian), serta pasangan `tanggal_mulai`/`tanggal_selesai` (rentang).
+- Struktur parameter tanggal mengikuti pola yang sama dengan `/api/insta/rekap-likes`: `periode`, `tanggal` (harian), serta pasangan `tanggal_mulai`/`tanggal_selesai` (rentang). Rekap likes juga menerima `role`, `scope`, dan `regional_id` untuk penyaringan berdasarkan konteks login.
 - `role` dan `scope` diteruskan dari sesi login agar backend menerapkan aturan scope yang konsisten di kedua endpoint.
 - `client_id` tetap menjadi sumber identitas utama; jika user berada pada scope direktorat, backend dapat meluaskan rekap ke seluruh klien di bawah direktorat tersebut, sedangkan scope ORG membatasi rekap ke organisasi/klien yang bersangkutan.
 
 Contoh query (selaras dengan rekap likes):
 
 ```
-/api/insta/rekap-likes?client_id=123&periode=harian&tanggal=2024-06-12&role=KAPOLDA&scope=DIREKTORAT
+/api/insta/rekap-likes?client_id=123&periode=harian&tanggal=2024-06-12&role=KAPOLDA&scope=DIREKTORAT&regional_id=11
 ```
 
 ## Lokasi modul terkait
