@@ -118,6 +118,12 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 - Deteksi direktorat pada `useTiktokCommentsData` mengikuti `effectiveClientType`: akun ORG tidak lagi memakai jalur direktorat walau role bertipe direktorat, sehingga scope dan pemanggilan profil klien terkunci ke `client_id` login.
 - Data komentar TikTok untuk klien bertipe **ORG** kini dideduplikasi berdasarkan kombinasi `client_id`, identifier (NRP/NIP/user id), maupun username/nama sehingga total user serta grafik kepatuhan tidak berlipat ganda.
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
+
+## Dashboard Amplify
+
+- `getRekapAmplify` di `utils/api.ts` kini menerima opsi `role`, `scope`, dan `regional_id` agar permintaan `/api/amplify/rekap` dapat mengikuti cakupan direktorat/ORG serta filter regional jika tersedia.
+- Parameter rentang tanggal pada rekap amplify kini memakai `tanggal_mulai`/`tanggal_selesai`, mengikuti pola endpoint insight lain yang mengandalkan format tanggal backend yang sama.
+- `AuthContext` mengekspose `regionalId` hasil pembacaan profil klien sehingga halaman Amplify dapat meneruskan informasi regional ke API bila diperlukan.
 - Hook `useTiktokCommentsData` menormalkan `effectiveClientType` kosong/null menjadi `undefined` sebelum menghitung `directoryScope`, sehingga pemetaan scope tidak memicu error tipe saat nilai dari autentikasi belum tersedia.
 - Akun bertipe **ORG** selalu memakai `client_id` login untuk mengambil statistik, profil, dan rekap komentar sehingga tidak ada fan-out `getClientProfile` berdasarkan daftar `client_id`.
 - Perhitungan `orgClient` kini dilakukan sebelum menentukan flag direktorat di `useTiktokCommentsData`, sehingga hasil build tidak gagal karena akses nilai sebelum deklarasi.
