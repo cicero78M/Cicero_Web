@@ -298,6 +298,11 @@ export default function useTiktokCommentsData({
           startDate,
           endDate,
           dashboardClientId,
+          {
+            role: requestRole,
+            scope: requestScopeFromAuth,
+            regional_id: regionalId ? String(regionalId) : undefined,
+          },
           controller.signal,
         );
 

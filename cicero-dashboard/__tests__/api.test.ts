@@ -145,6 +145,26 @@ test("getDashboardStats includes client_id when provided", async () => {
   expect(url).toContain("client_id=DITBINMAS");
 });
 
+test("getDashboardStats includes role, scope, and regional_id when provided", async () => {
+  await getDashboardStats(
+    "tok",
+    "harian",
+    "2025-12-23",
+    undefined,
+    undefined,
+    "DITBINMAS",
+    { role: "ditbinmas", scope: "ORG", regional_id: "R-12" },
+  );
+  const url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("/api/dashboard/stats");
+  expect(url).toContain("periode=harian");
+  expect(url).toContain("tanggal=2025-12-23");
+  expect(url).toContain("client_id=DITBINMAS");
+  expect(url).toContain("role=ditbinmas");
+  expect(url).toContain("scope=ORG");
+  expect(url).toContain("regional_id=R-12");
+});
+
 test("updateUserViaClaim throws backend validation messages", async () => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: false,
