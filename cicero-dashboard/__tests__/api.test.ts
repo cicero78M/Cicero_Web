@@ -84,7 +84,7 @@ test("getRekapKomentarTiktok supports date range params", async () => {
     "2024-03-01",
     "2024-03-31",
     undefined,
-    { role: "operator", scope: "ORG" },
+    { role: "operator", scope: "ORG", regional_id: "R-99" },
   );
   const url = (global.fetch as jest.Mock).mock.calls[0][0];
   expect(url).toContain("/api/tiktok/rekap-komentar");
@@ -92,6 +92,7 @@ test("getRekapKomentarTiktok supports date range params", async () => {
   expect(url).toContain("end_date=2024-03-31");
   expect(url).toContain("role=operator");
   expect(url).toContain("scope=ORG");
+  expect(url).toContain("regional_id=R-99");
 });
 
 test("getDashboardStats normalizes fields", async () => {
