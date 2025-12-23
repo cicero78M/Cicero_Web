@@ -1286,6 +1286,7 @@ export async function getRekapAmplify(
     role?: string;
     scope?: string;
     regional_id?: string;
+    signal?: AbortSignal;
   },
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
@@ -1297,7 +1298,7 @@ export async function getRekapAmplify(
   if (options?.regional_id) params.append("regional_id", options.regional_id);
   const url = `${buildApiUrl("/api/amplify/rekap")}?${params.toString()}`;
 
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal: options?.signal });
   if (!res.ok) throw new Error("Failed to fetch rekap amplifikasi");
   return res.json();
 }
