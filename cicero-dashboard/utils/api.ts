@@ -1122,6 +1122,7 @@ export async function getClientNames(
 export type UserDirectoryParams = {
   role?: string;
   scope?: "DIREKTORAT" | "ORG";
+  regional_id?: string;
 };
 
 export function extractUserDirectoryUsers(payload: any): any[] {
@@ -1161,6 +1162,9 @@ export async function getUserDirectory(
   }
   if (resolvedOptions?.scope) {
     params.set("scope", resolvedOptions.scope);
+  }
+  if (resolvedOptions?.regional_id) {
+    params.set("regional_id", resolvedOptions.regional_id);
   }
 
   const url = `${buildApiUrl("/api/users/list")}?${params.toString()}`;

@@ -31,8 +31,14 @@ import {
 
 export default function UserInsightPage() {
   useRequireAuth();
-  const { token, clientId, effectiveClientType, role, effectiveRole } =
-    useAuth();
+  const {
+    token,
+    clientId,
+    effectiveClientType,
+    role,
+    effectiveRole,
+    regionalId,
+  } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -126,10 +132,12 @@ export default function UserInsightPage() {
           role: normalizedRole || undefined,
           effectiveClientType,
         });
+        const normalizedRegionalId = regionalId ? String(regionalId) : undefined;
         const [usersRes, profileRes] = await Promise.all([
           getUserDirectory(token, clientId, {
             role: normalizedRole || undefined,
             scope,
+            regional_id: normalizedRegionalId,
           }),
           getClientProfile(token, clientId),
         ]);

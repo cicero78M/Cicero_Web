@@ -349,6 +349,7 @@ export default function useInstagramLikesData({
             {
               role: normalizedDirectoryRole || undefined,
               scope: directoryScope,
+              regional_id: normalizedRegionalId,
             },
             controller.signal,
           );
@@ -566,6 +567,7 @@ export default function useInstagramLikesData({
               {
                 role: normalizedDirectoryRole || undefined,
                 scope: directoryScope,
+                regional_id: normalizedRegionalId,
               },
               controller.signal,
             );

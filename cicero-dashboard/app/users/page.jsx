@@ -68,6 +68,7 @@ export default function UserDirectoryPage() {
     role: authRole,
     effectiveRole,
     effectiveClientType,
+    regionalId,
   } = useAuth();
   const client_id = clientId;
   const role = authRole;
@@ -87,12 +88,23 @@ export default function UserDirectoryPage() {
   const showKesatuanColumn = isDitbinmasClient && showAllDitbinmas;
 
   const { error, isLoading, mutate } = useSWR(
-    token && client_id ? ["user-directory", token, client_id] : null,
+    token && client_id
+      ? ["user-directory", token, client_id, regionalId]
+      : null,
     async ([_, tk, cid]) => {
       if (!tk) throw new Error("Token tidak ditemukan. Silakan login ulang.");
       if (!cid) throw new Error("Client ID tidak ditemukan.");
       const profileRes = await getClientProfile(tk, cid);
       const profile = profileRes.client || profileRes.profile || profileRes || {};
+      const resolvedRegionalId =
+        regionalId ??
+        profile.regional_id ??
+        profile.regionalId ??
+        profile.regionalID ??
+        profile.regional;
+      const normalizedRegionalId = resolvedRegionalId
+        ? String(resolvedRegionalId)
+        : undefined;
       const rawClientType = (profile.client_type || "").toUpperCase();
       const scope = getUserDirectoryFetchScope({
         role: normalizedRole || undefined,
@@ -101,6 +113,7 @@ export default function UserDirectoryPage() {
       const directoryRes = await getUserDirectory(tk, cid, {
         role: normalizedRole || undefined,
         scope,
+        regional_id: normalizedRegionalId,
       });
       return { directoryRes, profile };
     },
