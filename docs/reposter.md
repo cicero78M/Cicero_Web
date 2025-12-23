@@ -84,8 +84,9 @@ Login reposter memanfaatkan API dashboard sehingga memerlukan
   (berdasarkan waktu lokal) dan diurutkan menurun berdasarkan `created_at`
   sehingga konten terbaru tampil lebih dulu. Ringkasan tugas official hanya
   menampilkan kartu **Total postingan** dan **Sudah dilaporkan** agar fokus
-  pada pelacakan laporan. Setiap kartu tugas official kini
-  memiliki action bar untuk:
+  pada pelacakan laporan. Caption tugas official dipotong agar ukuran kartu
+  konsisten, lalu bisa diperluas lewat tombol "Lihat selengkapnya". Setiap
+  kartu tugas official kini memiliki action bar untuk:
   - Download media.
   - Copy caption dengan feedback.
   - Buka halaman **Laporan** yang menampilkan 5 tautan laporan per platform

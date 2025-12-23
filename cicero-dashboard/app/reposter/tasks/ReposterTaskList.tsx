@@ -46,12 +46,16 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
   const [actionFeedback, setActionFeedback] = useState<
     Record<string, string>
   >({});
+  const [expandedCaptions, setExpandedCaptions] = useState<
+    Record<string, boolean>
+  >({});
   const [carouselSelection, setCarouselSelection] = useState<
     Record<string, number>
   >({});
   const profileRef = useRef(profile);
   const actionButtonClass =
     "inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white";
+  const captionPreviewLimit = 160;
 
   useEffect(() => {
     profileRef.current = profile;
@@ -336,6 +340,13 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
               post.imageUrl ||
               (post.isCarousel && post.carouselImages.length > 0);
             const canCopyCaption = Boolean(post.caption);
+            const caption = post.caption?.trim() ?? "";
+            const isCaptionAvailable = Boolean(caption);
+            const isCaptionLong = caption.length > captionPreviewLimit;
+            const isCaptionExpanded = expandedCaptions[post.id] ?? false;
+            const captionPreview = isCaptionLong
+              ? `${caption.slice(0, captionPreviewLimit).trimEnd()}...`
+              : caption;
             const selectedSlide = carouselSelection[post.id] ?? 0;
             const reportPlatform = post.platform || defaultOfficialPlatform;
             const reportUrl =
@@ -401,10 +412,30 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                             <span>•</span>
                             <span>Video</span>
                           </>
-                        ) : null}
+                      ) : null}
                       </div>
                       <p className="text-sm text-slate-600 dark:text-slate-200">
-                        {post.caption || "Tidak ada caption."}
+                        {isCaptionAvailable
+                          ? isCaptionExpanded
+                            ? caption
+                            : captionPreview
+                          : "Tidak ada caption."}
+                        {isCaptionAvailable &&
+                        isCaptionLong &&
+                        !isCaptionExpanded ? (
+                          <button
+                            type="button"
+                            className="ml-2 inline-flex items-center text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
+                            onClick={() =>
+                              setExpandedCaptions((prev) => ({
+                                ...prev,
+                                [post.id]: true,
+                              }))
+                            }
+                          >
+                            Lihat selengkapnya
+                          </button>
+                        ) : null}
                       </p>
                       {post.sourceUrl ? (
                         <a
