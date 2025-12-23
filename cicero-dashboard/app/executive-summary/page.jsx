@@ -2564,6 +2564,11 @@ export default function ExecutiveSummaryPage() {
               startDateParam,
               endDateParam,
               clientId,
+              {
+                role: rekapRole,
+                scope: rekapScope,
+                regional_id: normalizedRegionalId,
+              },
               controller.signal,
             ),
             getRekapLikesIG(

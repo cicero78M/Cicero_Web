@@ -260,6 +260,11 @@ export default function useInstagramLikesData({
           startDate,
           endDate,
           dashboardClientId,
+          {
+            role: requestRole,
+            scope: requestScopeFromAuth,
+            regional_id: normalizedRegionalIdFromAuth,
+          },
           controller.signal,
         );
         const posts = Array.isArray((statsData as any).ig_posts)

@@ -1129,6 +1129,7 @@ export async function getDashboardStats(
   startDate?: string,
   endDate?: string,
   client_id?: string,
+  options?: { role?: string; scope?: string; regional_id?: string },
   signal?: AbortSignal,
 ): Promise<any> {
   const params = new URLSearchParams();
@@ -1137,6 +1138,9 @@ export async function getDashboardStats(
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);
   if (client_id) params.append("client_id", client_id);
+  if (options?.role) params.append("role", options.role);
+  if (options?.scope) params.append("scope", options.scope);
+  if (options?.regional_id) params.append("regional_id", options.regional_id);
   const url = `${buildApiUrl("/api/dashboard/stats")}${
     params.toString() ? `?${params.toString()}` : ""
   }`;
