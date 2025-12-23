@@ -140,6 +140,11 @@ export default function useInstagramLikesData({
     const normalizedRegionalIdFromAuth = authRegionalId
       ? String(authRegionalId)
       : undefined;
+    const profileRequestContext = {
+      role: requestRole,
+      scope: requestScopeFromAuth,
+      regional_id: normalizedRegionalIdFromAuth,
+    };
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -275,6 +280,7 @@ export default function useInstagramLikesData({
           token,
           profileClientId,
           controller.signal,
+          profileRequestContext,
         );
         const profile = profileRes.client || profileRes.profile || profileRes || {};
         const resolvedRegionalId =

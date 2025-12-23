@@ -48,7 +48,12 @@ export async function fetchDitbinmasAbsensiLikes(
   const totalIGPost = Number(statsData.instagramPosts) || 0;
 
   // gather user directory
-  const profileRes = await getClientProfile(token, clientId, signal);
+  const profileRes = await getClientProfile(
+    token,
+    clientId,
+    signal,
+    requestContext,
+  );
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
   const normalizedRole = normalizeDirectoryRole(clientId);
@@ -131,6 +136,7 @@ export async function fetchDitbinmasAbsensiLikes(
       String(u.client_id || u.clientId || u.clientID || u.client || ""),
     ),
     signal,
+    requestContext,
   );
 
   users = users.map((u) => {

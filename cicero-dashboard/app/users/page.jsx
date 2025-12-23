@@ -72,8 +72,15 @@ export default function UserDirectoryPage() {
   } = useAuth();
   const client_id = clientId;
   const role = authRole;
-
   const normalizedRole = normalizeDirectoryRole(effectiveRole || role);
+  const normalizedScope = String(effectiveClientType || "")
+    .trim()
+    .toUpperCase();
+  const profileRequestContext = {
+    role: normalizedRole || undefined,
+    scope: normalizedScope || undefined,
+    regional_id: regionalId ? String(regionalId) : undefined,
+  };
   const isDitbinmasClient = client_id === "DITBINMAS";
   const isDitbinmas = isDitbinmasClient && normalizedRole === "ditbinmas";
   const [showAllDitbinmas, setShowAllDitbinmas] = useState(() => !isDitbinmas);
@@ -94,7 +101,7 @@ export default function UserDirectoryPage() {
     async ([_, tk, cid]) => {
       if (!tk) throw new Error("Token tidak ditemukan. Silakan login ulang.");
       if (!cid) throw new Error("Client ID tidak ditemukan.");
-      const profileRes = await getClientProfile(tk, cid);
+      const profileRes = await getClientProfile(tk, cid, undefined, profileRequestContext);
       const profile = profileRes.client || profileRes.profile || profileRes || {};
       const resolvedRegionalId =
         regionalId ??
@@ -148,6 +155,8 @@ export default function UserDirectoryPage() {
             arr.map((u) =>
               String(u.client_id || u.clientId || u.clientID || u.client || ""),
             ),
+            undefined,
+            profileRequestContext,
           );
           arr = arr.map((u) => ({
             ...u,

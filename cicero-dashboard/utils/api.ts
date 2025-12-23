@@ -1183,12 +1183,22 @@ export async function getRekapLikesIG(
 }
 
 // Ambil profile client berdasarkan token dan client_id
+export type ClientProfileParams = {
+  role?: string;
+  scope?: string;
+  regional_id?: string;
+};
+
 export async function getClientProfile(
   token: string,
   client_id: string,
   signal?: AbortSignal,
+  options?: ClientProfileParams,
 ): Promise<any> {
   const params = new URLSearchParams({ client_id });
+  if (options?.role) params.append("role", options.role);
+  if (options?.scope) params.append("scope", options.scope);
+  if (options?.regional_id) params.append("regional_id", options.regional_id);
   const url = `${buildApiUrl("/api/clients/profile")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });
@@ -1209,12 +1219,13 @@ export async function getClientNames(
   token: string,
   clientIds: string[],
   signal?: AbortSignal,
+  options?: ClientProfileParams,
 ): Promise<Record<string, string>> {
   const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
   const entries = await Promise.all(
     uniqueIds.map(async (id) => {
       try {
-        const profile = await getClientProfile(token, id, signal);
+        const profile = await getClientProfile(token, id, signal, options);
         const name =
           profile.nama ||
           profile.nama_client ||
