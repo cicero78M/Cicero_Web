@@ -29,9 +29,23 @@ const numberFormatter = new Intl.NumberFormat("id-ID");
 
 const formatNumber = (value) => numberFormatter.format(Number(value) || 0);
 
+const normalizeRolePayload = (value) =>
+  String(value || "").trim().toLowerCase() || undefined;
+
+const normalizeScopePayload = (value) =>
+  String(value || "").trim().toUpperCase() || undefined;
+
 export default function AmplifyInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const { token, clientId } = useAuth();
+  const {
+    token,
+    clientId,
+    role,
+    effectiveRole,
+    effectiveClientType,
+    regionalId,
+    profile,
+  } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -81,6 +95,14 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
       viewBy,
       selectedDate,
     );
+    const normalizedRole = normalizeRolePayload(effectiveRole ?? role);
+    const normalizedScope = normalizeScopePayload(effectiveClientType);
+    const resolvedRegionalId =
+      regionalId ||
+      profile?.regional_id ||
+      profile?.regionalId ||
+      profile?.regionalID ||
+      profile?.regional;
 
     async function fetchData() {
       try {
@@ -91,6 +113,11 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
           date,
           startDate,
           endDate,
+          {
+            role: normalizedRole,
+            scope: normalizedScope,
+            regional_id: resolvedRegionalId,
+          },
         );
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
@@ -167,7 +194,17 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     }
 
     fetchData();
-  }, [token, clientId, viewBy, normalizedCustomDate, normalizedRange]);
+  }, [
+    token,
+    clientId,
+    role,
+    effectiveRole,
+    effectiveClientType,
+    regionalId,
+    viewBy,
+    normalizedCustomDate,
+    normalizedRange,
+  ]);
 
   if (loading) return <Loader />;
   if (error)

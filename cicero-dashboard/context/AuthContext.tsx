@@ -9,6 +9,7 @@ type AuthState = {
   role: string | null;
   effectiveRole: string | null;
   effectiveClientType: string | null;
+  regionalId: string | null;
   profile: any | null;
   isHydrating: boolean;
   setAuth: (
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [effectiveClientType, setEffectiveClientType] = useState<string | null>(
     null,
   );
+  const [regionalId, setRegionalId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
 
@@ -105,6 +107,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     fetchProfile();
   }, [token, clientId]);
+
+  useEffect(() => {
+    const resolvedRegionalId =
+      profile?.regional_id ||
+      profile?.regionalId ||
+      profile?.regionalID ||
+      profile?.regional;
+    setRegionalId(resolvedRegionalId ? String(resolvedRegionalId) : null);
+  }, [profile]);
 
   useEffect(() => {
     const normalizedClientId = clientId?.toUpperCase();
@@ -170,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role,
         effectiveRole,
         effectiveClientType,
+        regionalId,
         profile,
         isHydrating,
         setAuth,

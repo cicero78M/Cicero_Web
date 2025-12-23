@@ -44,11 +44,15 @@ test("getRekapAmplify supports date range params", async () => {
     undefined,
     "2024-02-01",
     "2024-02-28",
+    { role: "operator", scope: "ORG", regional_id: "R-01" },
   );
   const call = (global.fetch as jest.Mock).mock.calls[0];
   expect(call[0]).toContain("/api/amplify/rekap");
-  expect(call[0]).toContain("start_date=2024-02-01");
-  expect(call[0]).toContain("end_date=2024-02-28");
+  expect(call[0]).toContain("tanggal_mulai=2024-02-01");
+  expect(call[0]).toContain("tanggal_selesai=2024-02-28");
+  expect(call[0]).toContain("role=operator");
+  expect(call[0]).toContain("scope=ORG");
+  expect(call[0]).toContain("regional_id=R-01");
   expect(call[1].headers.Authorization).toBe("Bearer tok");
 });
 
