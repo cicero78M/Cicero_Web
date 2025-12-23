@@ -19,6 +19,43 @@ Dokumen ini merangkum standar UI/UX dan alur kerja halaman **Amplifikasi Link In
 
 - Tombol **Salin Rekap** menggunakan utilitas `buildAmplifyRekap` untuk menghasilkan teks ringkas yang bisa ditempel ke WhatsApp atau laporan harian.
 
+## API params `/api/amplify/rekap`
+
+Parameter query yang dipakai frontend (sesuai backend):
+
+- `client_id`: ID klien yang dipilih pada halaman.
+- `periode`: nilai periode rekap (contoh: `harian`, `mingguan`, `bulanan`).
+- `tanggal`: tanggal spesifik untuk mode harian.
+- `tanggal_mulai`: tanggal awal untuk rentang periode.
+- `tanggal_selesai`: tanggal akhir untuk rentang periode.
+- `role`: role login (dipakai backend untuk filtering akses).
+- `scope`: scope akses (mis. `DIREKTORAT` atau `ORG`).
+- `regional_id`: filter regional bila tersedia.
+
+Contoh query (mode harian):
+
+```
+/api/amplify/rekap?client_id=123&periode=harian&tanggal=2024-06-12&role=KAPOLDA&scope=DIREKTORAT
+```
+
+Contoh query (mode rentang tanggal + regional):
+
+```
+/api/amplify/rekap?client_id=123&periode=rentang&tanggal_mulai=2024-06-01&tanggal_selesai=2024-06-12&role=KAPOLDA&scope=ORG&regional_id=11
+```
+
+## Alignment workflow dengan `/api/insta/rekap-likes`
+
+- Struktur parameter tanggal mengikuti pola yang sama dengan `/api/insta/rekap-likes`: `periode`, `tanggal` (harian), serta pasangan `tanggal_mulai`/`tanggal_selesai` (rentang).
+- `role` dan `scope` diteruskan dari sesi login agar backend menerapkan aturan scope yang konsisten di kedua endpoint.
+- `client_id` tetap menjadi sumber identitas utama; jika user berada pada scope direktorat, backend dapat meluaskan rekap ke seluruh klien di bawah direktorat tersebut, sedangkan scope ORG membatasi rekap ke organisasi/klien yang bersangkutan.
+
+Contoh query (selaras dengan rekap likes):
+
+```
+/api/insta/rekap-likes?client_id=123&periode=harian&tanggal=2024-06-12&role=KAPOLDA&scope=DIREKTORAT
+```
+
 ## Lokasi modul terkait
 
 - `cicero-dashboard/app/amplify/AmplifyInsightView.jsx`
