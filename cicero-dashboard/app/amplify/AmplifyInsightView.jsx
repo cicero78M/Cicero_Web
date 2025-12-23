@@ -104,6 +104,11 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
       profile?.regionalId ||
       profile?.regionalID ||
       profile?.regional;
+    const profileRequestContext = {
+      role: normalizedRole,
+      scope: normalizedScope,
+      regional_id: resolvedRegionalId,
+    };
 
     async function fetchData() {
       try {
@@ -128,6 +133,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
           token,
           clientId,
           controller.signal,
+          profileRequestContext,
         );
         if (controller.signal.aborted) return;
         const profile =
@@ -158,6 +164,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
               ),
             ),
             controller.signal,
+            profileRequestContext,
           );
           if (controller.signal.aborted) return;
           enrichedUsers = users.map((u) => ({

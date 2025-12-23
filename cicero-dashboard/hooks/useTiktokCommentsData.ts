@@ -210,11 +210,17 @@ export default function useTiktokCommentsData({
     const regionalId = auth?.regionalId ?? null;
     const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
+    const requestScopeFromAuth = normalizeScopePayload(effectiveClientTypeFromAuth);
     const normalizedDirectoryRole = normalizeDirectoryRole(role);
     const directoryScope = getUserDirectoryFetchScope({
       role: normalizedDirectoryRole || undefined,
       effectiveClientType: effectiveClientTypeFromAuth ?? undefined,
     });
+    const profileRequestContext = {
+      role: requestRole,
+      scope: requestScopeFromAuth,
+      regional_id: regionalId ? String(regionalId) : undefined,
+    };
 
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -300,6 +306,7 @@ export default function useTiktokCommentsData({
           token,
           dashboardClientId,
           controller.signal,
+          profileRequestContext,
         );
         const profileData =
           (profile as any)?.client || (profile as any)?.profile || profile || {};

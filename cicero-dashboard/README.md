@@ -33,6 +33,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
 - Parameter `regional_id` kini ikut dikirim oleh `getUserDirectory` saat tersedia agar endpoint `/api/users/list` dapat menyaring direktori personil berdasarkan wilayah aktif.
 - Pemanggilan `getUserDirectory` di hook insight Instagram/TikTok, ringkasan eksekutif, dan agregasi absensi likes selalu membawa `role` + `scope` agar data direktori yang ditarik sudah selaras dengan permintaan role maupun client.
+- Pemanggilan `getClientProfile` kini dapat menyertakan `role`, `scope`, dan `regional_id` (jika tersedia) agar endpoint `/api/clients/profile` mengembalikan profil yang selaras dengan cakupan data login, termasuk untuk client Ditbinmas.
 - Type guard `isAbortSignal` di `utils/api.ts` kini menolak nilai `null` supaya pemilihan `AbortSignal` untuk `getUserDirectory` tidak memicu error tipe saat opsi bersifat opsional.
 
 ## Dashboard Likes Instagram

@@ -99,7 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function fetchProfile() {
       if (!token || !clientId) return;
       try {
-        const res = await getClientProfile(token, clientId);
+        const res = await getClientProfile(token, clientId, undefined, {
+          role: role || undefined,
+        });
         setProfile(res.client || res.profile || res);
       } catch (err) {
         console.error(err);

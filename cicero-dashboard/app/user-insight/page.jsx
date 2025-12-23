@@ -128,18 +128,26 @@ export default function UserInsightPage() {
       }
       try {
         const normalizedRole = normalizeDirectoryRole(effectiveRole || role);
+        const normalizedScope = String(effectiveClientType || "")
+          .trim()
+          .toUpperCase();
         const scope = getUserDirectoryFetchScope({
           role: normalizedRole || undefined,
           effectiveClientType,
         });
         const normalizedRegionalId = regionalId ? String(regionalId) : undefined;
+        const profileRequestContext = {
+          role: normalizedRole || undefined,
+          scope: normalizedScope || undefined,
+          regional_id: normalizedRegionalId,
+        };
         const [usersRes, profileRes] = await Promise.all([
           getUserDirectory(token, clientId, {
             role: normalizedRole || undefined,
             scope,
             regional_id: normalizedRegionalId,
           }),
-          getClientProfile(token, clientId),
+          getClientProfile(token, clientId, undefined, profileRequestContext),
         ]);
         const users = extractUserDirectoryUsers(usersRes);
 
