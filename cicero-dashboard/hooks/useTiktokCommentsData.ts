@@ -207,6 +207,7 @@ export default function useTiktokCommentsData({
       (typeof window !== "undefined"
         ? localStorage.getItem("user_role") ?? ""
         : "");
+    const regionalId = auth?.regionalId ?? null;
     const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
     const normalizedDirectoryRole = normalizeDirectoryRole(role);
@@ -302,6 +303,16 @@ export default function useTiktokCommentsData({
         );
         const profileData =
           (profile as any)?.client || (profile as any)?.profile || profile || {};
+        const resolvedRegionalId =
+          regionalId ??
+          (profileData as any)?.regional_id ??
+          (profileData as any)?.regionalId ??
+          (profileData as any)?.regionalID ??
+          (profileData as any)?.regional ??
+          null;
+        const normalizedRegionalId = resolvedRegionalId
+          ? String(resolvedRegionalId)
+          : undefined;
         const effectiveRoleFromStats =
           (statsPayload as any)?.effectiveRole ||
           (statsPayload as any)?.effective_role ||
@@ -396,7 +407,11 @@ export default function useTiktokCommentsData({
             startDate,
             endDate,
             controller.signal,
-            { role: requestRole, scope: requestScope },
+            {
+              role: requestRole,
+              scope: requestScope,
+              regional_id: normalizedRegionalId,
+            },
           );
           const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
           users = payloadUsers;
@@ -410,7 +425,11 @@ export default function useTiktokCommentsData({
             startDate,
             endDate,
             controller.signal,
-            { role: requestRole, scope: requestScope },
+            {
+              role: requestRole,
+              scope: requestScope,
+              regional_id: normalizedRegionalId,
+            },
           );
           const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
           users = payloadUsers;

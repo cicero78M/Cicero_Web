@@ -2175,7 +2175,7 @@ const MAX_SELECTABLE_YEAR = 2035;
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const router = useRouter();
-  const { token, clientId, role, effectiveRole, effectiveClientType } =
+  const { token, clientId, role, effectiveRole, effectiveClientType, regionalId } =
     useAuth();
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -2544,6 +2544,7 @@ export default function ExecutiveSummaryPage() {
         });
         const rekapRole = normalizeRekapRole(effectiveRole ?? role ?? "");
         const rekapScope = normalizeRekapScope(effectiveClientType);
+        const normalizedRegionalId = regionalId ? String(regionalId) : undefined;
         const [directoryResponse, statsResult, likesResult, commentsResult] =
           await Promise.all([
             getUserDirectory(
@@ -2585,7 +2586,7 @@ export default function ExecutiveSummaryPage() {
               startDateParam,
               endDateParam,
               controller.signal,
-              { role: rekapRole, scope: rekapScope },
+              { role: rekapRole, scope: rekapScope, regional_id: normalizedRegionalId },
             ).catch((error) => {
               console.warn("Gagal memuat rekap komentar TikTok", error);
               return { data: [] };
@@ -2709,7 +2710,11 @@ export default function ExecutiveSummaryPage() {
                 previousStartDateParam,
                 previousEndDateParam,
                 controller.signal,
-                { role: rekapRole, scope: rekapScope },
+                {
+                  role: rekapRole,
+                  scope: rekapScope,
+                  regional_id: normalizedRegionalId,
+                },
               );
               const previousCommentsRaw = ensureArray(previousCommentsResponse);
               const preparedPreviousComments = prepareTrendActivityRecords(
