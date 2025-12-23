@@ -98,6 +98,7 @@ export default function ReportLinksClient() {
   const [reportInfo, setReportInfo] = useState<ReportLinkDetailInfo | null>(
     null,
   );
+  const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
 
   const profileShortcode = useMemo(
     () =>
@@ -133,6 +134,13 @@ export default function ReportLinksClient() {
       "",
     [profile?.id, profile?.nrp, profile?.userId, profile?.user_id],
   );
+
+  const captionText = reportInfo?.caption?.trim() ?? "";
+  const hasCaption = Boolean(captionText);
+
+  useEffect(() => {
+    setIsCaptionExpanded(false);
+  }, [postId, reportInfo?.caption]);
 
   const normalizeLink = (value: string) => value.trim().toLowerCase();
 
@@ -506,66 +514,99 @@ export default function ReportLinksClient() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
-        <div className="space-y-2">
+        <div className="space-y-4">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
             Informasi tugas
           </p>
-          {taskNumber ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              <span className="font-semibold text-slate-800 dark:text-white">
-                Nomor tugas
-              </span>
-              : {taskNumber}
-            </p>
-          ) : null}
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-slate-800 dark:text-white">
-              Post ID
-            </span>
-            : {postId || "-"}
-          </p>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-slate-800 dark:text-white">
-              Client ID
-            </span>
-            : {clientId || "-"}
-          </p>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-slate-800 dark:text-white">
-              Platform sumber
-            </span>
-            : {sourcePlatform || "Instagram"}
-          </p>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-slate-800 dark:text-white">
-              Image URL
-            </span>
-            :{" "}
-            {reportInfo?.imageUrl ? (
-              <a
-                href={reportInfo.imageUrl}
-                className="break-words text-sky-600 underline-offset-4 hover:underline dark:text-cyan-300"
-                rel="noreferrer"
-                target="_blank"
-              >
-                {reportInfo.imageUrl}
-              </a>
-            ) : (
-              "-"
-            )}
-          </p>
-          <div className="text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-slate-800 dark:text-white">
-              Caption
-            </span>
-            :{" "}
-            {reportInfo?.caption ? (
-              <span className="whitespace-pre-line text-slate-600 dark:text-slate-200">
-                {reportInfo.caption}
-              </span>
-            ) : (
-              "-"
-            )}
+          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+            <div className="space-y-2">
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900">
+                {reportInfo?.imageUrl ? (
+                  <img
+                    src={reportInfo.imageUrl}
+                    alt={`Gambar tugas ${taskNumber || postId || ""}`.trim()}
+                    className="aspect-[4/5] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-[4/5] items-center justify-center text-xs text-slate-400">
+                    Gambar belum tersedia
+                  </div>
+                )}
+              </div>
+              {reportInfo?.imageUrl ? (
+                <a
+                  href={reportInfo.imageUrl}
+                  className="text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Buka gambar asli
+                </a>
+              ) : null}
+            </div>
+            <div className="space-y-4">
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Nomor tugas
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700 dark:text-slate-200">
+                    {taskNumber || "-"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Post ID
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700 dark:text-slate-200">
+                    {postId || "-"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Client ID
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700 dark:text-slate-200">
+                    {clientId || "-"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Platform sumber
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700 dark:text-slate-200">
+                    {sourcePlatform || "Instagram"}
+                  </dd>
+                </div>
+              </dl>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Caption
+                </p>
+                {hasCaption ? (
+                  <div className="mt-2 space-y-2">
+                    <p
+                      className={`whitespace-pre-line text-sm text-slate-600 dark:text-slate-200 ${
+                        isCaptionExpanded ? "" : "line-clamp-4"
+                      }`}
+                    >
+                      {captionText}
+                    </p>
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-sky-600 hover:underline dark:text-cyan-300"
+                      onClick={() =>
+                        setIsCaptionExpanded((prev) => !prev)
+                      }
+                    >
+                      {isCaptionExpanded ? "Tutup" : "Lihat selengkapnya"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-500">-</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
