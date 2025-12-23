@@ -1054,7 +1054,7 @@ export async function getRekapLikesIG(
   startDate?: string,
   endDate?: string,
   signal?: AbortSignal,
-  options?: { role?: string; scope?: string },
+  options?: { role?: string; scope?: string; regional_id?: string },
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
@@ -1062,6 +1062,7 @@ export async function getRekapLikesIG(
   if (endDate) params.append("tanggal_selesai", endDate);
   if (options?.role) params.append("role", options.role);
   if (options?.scope) params.append("scope", options.scope);
+  if (options?.regional_id) params.append("regional_id", options.regional_id);
   const url = `${buildApiUrl("/api/insta/rekap-likes")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal });

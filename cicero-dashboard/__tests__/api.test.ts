@@ -65,7 +65,7 @@ test("getRekapLikesIG supports date range params", async () => {
     "2023-12-01",
     "2023-12-31",
     undefined,
-    { role: "operator", scope: "ORG" },
+    { role: "operator", scope: "ORG", regional_id: "R-02" },
   );
   const url = (global.fetch as jest.Mock).mock.calls[0][0];
   expect(url).toContain("/api/insta/rekap-likes");
@@ -73,6 +73,7 @@ test("getRekapLikesIG supports date range params", async () => {
   expect(url).toContain("tanggal_selesai=2023-12-31");
   expect(url).toContain("role=operator");
   expect(url).toContain("scope=ORG");
+  expect(url).toContain("regional_id=R-02");
 });
 
 test("getRekapKomentarTiktok supports date range params", async () => {
