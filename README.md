@@ -92,13 +92,13 @@ pm2 restart cicero-web
 
 ## Environment Variables
 
-Create a `.env.local` file inside `cicero-dashboard` and define the following variable:
+Create a `.env.local` file inside `cicero-dashboard` and define the following variable (a ready-to-copy template lives in `cicero-dashboard/.env.example`):
 
 ```bash
 NEXT_PUBLIC_API_URL=<backend base url>
 ```
 
-`NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use.
+`NEXT_PUBLIC_API_URL` specifies the Cicero API endpoint that the dashboard will use and is required for all API calls.
 If the variable is missing, the dashboard will refuse to send requests and surface a clear error instead of falling back to the Next.js server (which can trigger "failed to find server action" messages).
 
 ## Usage Notes
