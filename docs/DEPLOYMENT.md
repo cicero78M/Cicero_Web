@@ -26,7 +26,7 @@ npm install
 
 ## 3. Configure Environment
 
-Create a `.env.local` file inside `cicero-dashboard` and define the API URL used by the dashboard:
+Create a `.env.local` file inside `cicero-dashboard` (you can copy from `.env.example`) and define the API URL used by the dashboard:
 
 ```bash
 NEXT_PUBLIC_API_URL=<backend base url>
