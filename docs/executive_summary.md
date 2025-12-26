@@ -35,6 +35,8 @@ halaman ini.
 - Hook `useInstagramLikesData` dan utilitas `fetchDitbinmasAbsensiLikes` membangun rekap absensi likes lintas Polres sekaligus mendukung mode tampilan per satker, lalu menyajikan tombol "Copy Rekap" untuk distribusi cepat via WA.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L42-L204】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L188】【F:cicero-dashboard/utils/instagramEngagement.ts†L71-L120】
 - Segmen "Rincian Kinerja Platform" menampilkan kontribusi likes dan komentar per konten (jumlah konten bulanan menjadi pembagi) sehingga persentase keterlibatan satker lebih representatif pada chart bar.
 - Knowledge base `/mekanisme-absensi` dan `/panduan-sop` menyediakan konteks SOP, matriks RACI, panduan WA bot, dan FAQ shadowban yang mempercepat onboarding pengguna baru.【F:cicero-dashboard/app/mekanisme-absensi/page.jsx†L1-L320】【F:cicero-dashboard/app/panduan-sop/page.jsx†L1-L320】
+- Ringkasan eksekutif kini diambil langsung dari endpoint backend `/api/executive-summary` lewat helper `getExecutiveSummary` (`cicero-dashboard/utils/api.ts`). Filter yang dikirim mencakup `month` (YYYY-MM), `periode=bulanan`, `client_id`, `start_date`, `end_date`, serta `scope/role/regional_id` mengikuti hak akses Ditbinmas.
+- Respons yang dikonsumsi UI memuat `monthLabel`, `summaryMetrics` (label, value, suffix, change), `highlights`, `engagementByChannel` (reach + engagementRate), `audienceComposition`, `contentTable`, `platformAnalytics`, dan `narratives` (overview/dashboard/instagram/tiktok). Semua bidang ini langsung dipetakan ke kartu, chart, dan tabel pada halaman `/executive-summary`.
 
 ## Aplikasi Android pegiat_medsos_apps
 

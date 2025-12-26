@@ -26,6 +26,7 @@ import {
   getRekapKomentarTiktok,
   getInstagramPosts,
   getTiktokPosts,
+  getExecutiveSummary,
 } from "@/utils/api";
 import {
   getUserDirectoryFetchScope,
@@ -141,6 +142,307 @@ const ensureValidDate = (value) => {
   }
 
   return null;
+};
+
+const ensureStringValue = (value, fallback = "") => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || fallback;
+  }
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+  const stringified = String(value).trim();
+  return stringified || fallback;
+};
+
+const ensureNumberValue = (value, fallback = null) => {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : fallback;
+  }
+  if (typeof value === "string") {
+    const cleaned = value.replace(/[^\d.-]/g, "");
+    const parsed = Number.parseFloat(cleaned);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeStringArray = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => ensureStringValue(item, ""))
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  return [];
+};
+
+const normalizeExecutiveSummaryPayload = (
+  payload,
+  { fallbackMonthKey, fallbackMonthLabel } = {},
+) => {
+  const source = payload?.data ?? payload ?? {};
+  const monthKey =
+    ensureStringValue(
+      source.monthKey ?? source.month ?? source.periode ?? source.period,
+      "",
+    ) || fallbackMonthKey;
+  const resolvedMonthLabel =
+    ensureStringValue(source.monthLabel ?? source.month_label ?? source.label, "") ||
+    fallbackMonthLabel ||
+    monthKey ||
+    "";
+  const narratives = source.narratives ?? {};
+
+  const summaryMetrics = Array.isArray(source.summaryMetrics ?? source.summary)
+    ? (source.summaryMetrics ?? source.summary)
+        .map((metric) => {
+          const label = ensureStringValue(
+            metric?.label ?? metric?.title ?? metric?.name,
+            "",
+          );
+          if (!label) {
+            return null;
+          }
+          const valueCandidate =
+            metric?.value ?? metric?.total ?? metric?.count ?? metric?.amount;
+          return {
+            label,
+            value:
+              ensureNumberValue(valueCandidate, null) ??
+              valueCandidate ??
+              null,
+            change: ensureStringValue(metric?.change ?? metric?.delta ?? metric?.trend, ""),
+            suffix: ensureStringValue(
+              metric?.suffix ?? metric?.unit ?? metric?.symbol,
+              "",
+            ),
+          };
+        })
+        .filter(Boolean)
+    : [];
+
+  const engagementByChannelRaw =
+    source.engagementByChannel ?? source.channels ?? source.channelSummary ?? [];
+  const engagementByChannel = Array.isArray(engagementByChannelRaw)
+    ? engagementByChannelRaw
+        .map((entry) => {
+          const channel = ensureStringValue(
+            entry?.channel ?? entry?.name ?? entry?.platform ?? entry?.label,
+            "",
+          );
+          if (!channel) {
+            return null;
+          }
+          return {
+            channel,
+            reach:
+              ensureNumberValue(
+                entry?.reach ??
+                  entry?.totalReach ??
+                  entry?.reachCount ??
+                  entry?.impressions ??
+                  entry?.total_impressions,
+                0,
+              ) ?? 0,
+            engagementRate:
+              ensureNumberValue(
+                entry?.engagementRate ??
+                  entry?.engagement_rate ??
+                  entry?.engagement ??
+                  entry?.rate ??
+                  entry?.engagementPercent,
+                null,
+              ) ?? null,
+          };
+        })
+        .filter(Boolean)
+    : [];
+
+  const audienceCompositionRaw =
+    source.audienceComposition ?? source.audience ?? source.audienceMix ?? [];
+  const audienceComposition = Array.isArray(audienceCompositionRaw)
+    ? audienceCompositionRaw
+        .map((entry) => {
+          const name = ensureStringValue(entry?.name ?? entry?.label ?? entry?.segment, "");
+          if (!name) {
+            return null;
+          }
+          return {
+            name,
+            value:
+              ensureNumberValue(
+                entry?.value ?? entry?.share ?? entry?.percentage ?? entry?.percent,
+                null,
+              ) ?? 0,
+          };
+        })
+        .filter(Boolean)
+    : [];
+
+  const contentTableRaw = Array.isArray(source.contentTable ?? source.topContent ?? source.contents)
+    ? source.contentTable ?? source.topContent ?? source.contents
+    : [];
+  const contentTable = contentTableRaw
+    .map((row, index) => {
+      if (!row || typeof row !== "object") {
+        return null;
+      }
+      const likes = ensureNumberValue(
+        row.likes ?? row.likeCount ?? row.metrics?.likes ?? row.interactions?.likes,
+        null,
+      );
+      const comments = ensureNumberValue(
+        row.comments ??
+          row.commentCount ??
+          row.metrics?.comments ??
+          row.interactions?.comments,
+        null,
+      );
+      const engagementRate = ensureNumberValue(
+        row.engagement ?? row.engagementRate ?? row.engagement_rate ?? row.rate,
+        null,
+      );
+      const reach = ensureNumberValue(
+        row.reach ?? row.view ?? row.views ?? row.impressions ?? row.totalReach,
+        null,
+      );
+      let totalInteractions = ensureNumberValue(
+        row.totalInteractions ?? row.interactions ?? row.total_interactions,
+        null,
+      );
+      if (totalInteractions == null) {
+        if (likes != null || comments != null) {
+          totalInteractions = (likes ?? 0) + (comments ?? 0);
+        } else if (engagementRate != null && reach != null) {
+          totalInteractions = Math.round(reach * (engagementRate / 100));
+        }
+      }
+
+      const publishedAt = ensureValidDate(
+        row.publishedAt ??
+          row.tanggal ??
+          row.date ??
+          row.published_at ??
+          row.created_at ??
+          row.time,
+      );
+
+      return {
+        id: String(
+          row.id ??
+            row.contentId ??
+            row.slug ??
+            row.permalink ??
+            row.url ??
+            row.link ??
+            `${row.platform ?? row.channel ?? "content"}-${index + 1}`,
+        ),
+        platform: row.platform ?? row.channel ?? row.source ?? "",
+        title: row.title ?? row.name ?? row.caption ?? "Konten",
+        format: normalizeContentType(row.format ?? row.type ?? ""),
+        publishedAt,
+        likes: likes ?? 0,
+        comments: comments ?? 0,
+        totalInteractions: totalInteractions ?? 0,
+      };
+    })
+    .filter((entry) => entry && entry.id);
+
+  const platformAnalytics =
+    Array.isArray(source?.platformAnalytics?.platforms)
+      ? source.platformAnalytics
+      : Array.isArray((source.platformAnalytics ?? source.platforms)?.platforms)
+        ? source.platformAnalytics ?? source.platforms
+        : Array.isArray(source.platforms)
+          ? { platforms: source.platforms }
+          : source.platformAnalytics ?? {};
+
+  return {
+    monthKey: monthKey || null,
+    data: {
+      ...source,
+      monthLabel: resolvedMonthLabel || undefined,
+      summaryMetrics,
+      highlights: normalizeStringArray(source.highlights ?? narratives.highlights),
+      engagementByChannel,
+      audienceComposition,
+      contentTable,
+      platformAnalytics,
+      overviewNarrative:
+        ensureStringValue(
+          source.overviewNarrative ?? source.overview ?? narratives.overview,
+          "",
+        ) || "",
+      dashboardNarrative:
+        ensureStringValue(
+          source.dashboardNarrative ??
+            narratives.dashboard ??
+            narratives.dashboardNarrative ??
+            narratives.platform,
+          "",
+        ) || "",
+      userInsightNarrative:
+        ensureStringValue(
+          source.userInsightNarrative ??
+            narratives.userInsight ??
+            narratives.user ??
+            narratives.personnel,
+          "",
+        ) || "",
+      instagramNarrative:
+        ensureStringValue(
+          source.instagramNarrative ??
+            narratives.instagram ??
+            narratives.instagramNarrative ??
+            narratives.ig,
+          "",
+        ) || "",
+      tiktokNarrative:
+        ensureStringValue(
+          source.tiktokNarrative ?? narratives.tiktok ?? narratives.tiktokNarrative ?? narratives.tt,
+          "",
+        ) || "",
+    },
+  };
+};
+
+const hasMeaningfulExecutiveData = (entry) => {
+  if (!entry || typeof entry !== "object") {
+    return false;
+  }
+
+  return Boolean(
+    (Array.isArray(entry.summaryMetrics) && entry.summaryMetrics.length > 0) ||
+      (Array.isArray(entry.highlights) && entry.highlights.length > 0) ||
+      (Array.isArray(entry.engagementByChannel) &&
+        entry.engagementByChannel.length > 0) ||
+      (Array.isArray(entry.audienceComposition) &&
+        entry.audienceComposition.length > 0) ||
+      (Array.isArray(entry.contentTable) && entry.contentTable.length > 0) ||
+      (Array.isArray(entry?.platformAnalytics?.platforms) &&
+        entry.platformAnalytics.platforms.length > 0) ||
+      ensureStringValue(entry.overviewNarrative) ||
+      ensureStringValue(entry.dashboardNarrative) ||
+      ensureStringValue(entry.instagramNarrative) ||
+      ensureStringValue(entry.tiktokNarrative),
+  );
 };
 
 const aggregateMonthlyActivity = (likesRecords = [], commentRecords = []) => {
@@ -2179,6 +2481,11 @@ export default function ExecutiveSummaryPage() {
     useAuth();
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [executiveSummaryState, setExecutiveSummaryState] = useState({
+    loading: false,
+    error: "",
+    dataByMonth: {},
+  });
 
   useEffect(() => {
     const normalizedClientId = clientId?.toLowerCase();
@@ -2200,11 +2507,19 @@ export default function ExecutiveSummaryPage() {
     setIsAuthorized(allowed);
     setIsCheckingAccess(false);
   }, [clientId, effectiveRole, role, router]);
+  const availableMonthKeys = useMemo(() => {
+    return Array.from(
+      new Set([
+        ...Object.keys(monthlyData),
+        ...Object.keys(executiveSummaryState.dataByMonth ?? {}),
+      ]),
+    );
+  }, [executiveSummaryState.dataByMonth]);
   const availableYears = useMemo(() => {
-    return Object.keys(monthlyData)
+    return availableMonthKeys
       .map((key) => extractYearFromMonthKey(key))
       .filter((year) => Number.isFinite(year));
-  }, []);
+  }, [availableMonthKeys]);
   const resolvedYear = useMemo(() => {
     if (availableYears.length > 0) {
       return Math.max(...availableYears);
@@ -2217,24 +2532,24 @@ export default function ExecutiveSummaryPage() {
   const defaultSelectedMonth = useMemo(() => {
     const now = new Date();
     const currentMonthKey = buildMonthKey(now.getFullYear(), now.getMonth());
-    const hasCuratedData = (data) =>
-      Array.isArray(data?.platformAnalytics?.platforms) &&
-      data.platformAnalytics.platforms.length > 0;
+    const hasCuratedData = (data) => hasMeaningfulExecutiveData(data);
+    const resolveMonthlyEntry = (key) =>
+      executiveSummaryState.dataByMonth?.[key] ?? monthlyData[key];
 
     const monthOptionKeys = new Set(monthOptions.map((option) => option.key));
     const currentMonthHasOption = monthOptionKeys.has(currentMonthKey);
 
-    if (currentMonthHasOption && hasCuratedData(monthlyData[currentMonthKey])) {
+    if (currentMonthHasOption && hasCuratedData(resolveMonthlyEntry(currentMonthKey))) {
       return currentMonthKey;
     }
 
-    const availableDataKeys = Object.keys(monthlyData)
+    const availableDataKeys = availableMonthKeys
       .filter((key) => monthOptionKeys.has(key))
       .sort()
       .reverse();
 
     for (const key of availableDataKeys) {
-      if (hasCuratedData(monthlyData[key])) {
+      if (hasCuratedData(resolveMonthlyEntry(key))) {
         return key;
       }
     }
@@ -2244,7 +2559,7 @@ export default function ExecutiveSummaryPage() {
     }
 
     return monthOptions[0]?.key ?? currentMonthKey;
-  }, [monthOptions]);
+  }, [availableMonthKeys, executiveSummaryState.dataByMonth, monthOptions]);
   const yearOptions = useMemo(() => {
     return Array.from(
       { length: MAX_SELECTABLE_YEAR - MIN_SELECTABLE_YEAR + 1 },
@@ -2419,7 +2734,101 @@ export default function ExecutiveSummaryPage() {
     previousPeriodLabel: "",
   });
 
-  const rawMonthlyData = monthlyData[selectedMonthKey];
+  useEffect(() => {
+    if (!token || !clientId) {
+      setExecutiveSummaryState((prev) => ({
+        ...prev,
+        loading: false,
+        error: prev.error,
+      }));
+      return;
+    }
+
+    const controller = new AbortController();
+    const periodRange = getMonthDateRange(selectedMonthKey);
+
+    setExecutiveSummaryState((prev) => ({
+      ...prev,
+      loading: true,
+      error: "",
+    }));
+
+    getExecutiveSummary(
+      token,
+      {
+        clientId,
+        month: selectedMonthKey,
+        periode: "bulanan",
+        startDate: periodRange?.startDate,
+        endDate: periodRange?.endDate,
+        scope: normalizeRekapScope(effectiveClientType),
+        role: normalizeRekapRole(effectiveRole ?? role ?? ""),
+        regional_id: regionalId ? String(regionalId) : undefined,
+      },
+      controller.signal,
+    )
+      .then((response) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        const normalized = normalizeExecutiveSummaryPayload(response, {
+          fallbackMonthKey: selectedMonthKey,
+          fallbackMonthLabel: selectedMonthLabel,
+        });
+
+        const targetMonthKey = normalized?.monthKey ?? selectedMonthKey;
+        setExecutiveSummaryState((prev) => ({
+          loading: false,
+          error: "",
+          dataByMonth: targetMonthKey
+            ? {
+                ...prev.dataByMonth,
+                [targetMonthKey]: normalized?.data ?? {},
+              }
+            : prev.dataByMonth,
+        }));
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || error?.name === "AbortError") {
+          return;
+        }
+
+        setExecutiveSummaryState((prev) => ({
+          ...prev,
+          loading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat ringkasan eksekutif.",
+        }));
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    clientId,
+    effectiveClientType,
+    effectiveRole,
+    role,
+    selectedMonthKey,
+    selectedMonthLabel,
+    regionalId,
+    token,
+  ]);
+
+  const backendMonthlyData = executiveSummaryState.dataByMonth?.[selectedMonthKey];
+  const curatedMonthlyData = monthlyData[selectedMonthKey];
+  const shouldUseBackendMonthlyData =
+    backendMonthlyData &&
+    (hasMeaningfulExecutiveData(backendMonthlyData) ||
+      ensureStringValue(backendMonthlyData.monthLabel));
+  const rawMonthlyData = shouldUseBackendMonthlyData
+    ? backendMonthlyData
+    : curatedMonthlyData;
+  const executiveSummaryLoading = executiveSummaryState.loading;
+  const executiveSummaryError = executiveSummaryState.error;
   const fallbackMonthLabel =
     rawMonthlyData?.monthLabel ??
     selectedMonthLabel ??
@@ -2462,6 +2871,125 @@ export default function ExecutiveSummaryPage() {
         ? rawMonthlyData.platformAnalytics
         : defaultMonthlyEntry.platformAnalytics,
   };
+  const activeMonthLabel = data.monthLabel || fallbackMonthLabel;
+  const summaryMetricCards = useMemo(() => {
+    if (!Array.isArray(data.summaryMetrics)) {
+      return [];
+    }
+
+    return data.summaryMetrics
+      .map((metric) => {
+        const label = ensureStringValue(metric?.label ?? metric?.title ?? metric?.name, "");
+        if (!label) {
+          return null;
+        }
+        const changeLabel = ensureStringValue(metric?.change, "");
+        const normalizedMetric = {
+          value:
+            ensureNumberValue(metric?.value, metric?.value === 0 ? 0 : null) ?? metric?.value,
+          suffix: ensureStringValue(metric?.suffix, ""),
+        };
+
+        return {
+          key: label,
+          label,
+          value: metricValueToString(normalizedMetric, { fallback: "-" }),
+          change: changeLabel || null,
+        };
+      })
+      .filter(Boolean);
+  }, [data.summaryMetrics]);
+  const highlightItems = useMemo(() => {
+    return normalizeStringArray(data.highlights);
+  }, [data.highlights]);
+  const engagementByChannelData = useMemo(() => {
+    if (!Array.isArray(data.engagementByChannel)) {
+      return [];
+    }
+    return data.engagementByChannel
+      .map((entry) => {
+        const channelLabel = ensureStringValue(
+          entry?.channel ?? entry?.name ?? entry?.platform ?? entry?.label,
+          "",
+        );
+        if (!channelLabel) {
+          return null;
+        }
+        return {
+          channel: channelLabel,
+          reach:
+            ensureNumberValue(
+              entry?.reach ?? entry?.totalReach ?? entry?.impressions ?? entry?.value,
+              0,
+            ) ?? 0,
+          engagementRate:
+            ensureNumberValue(
+              entry?.engagementRate ?? entry?.engagement_rate ?? entry?.engagement,
+              null,
+            ) ?? null,
+        };
+      })
+      .filter(Boolean);
+  }, [data.engagementByChannel]);
+  const audienceCompositionData = useMemo(() => {
+    if (!Array.isArray(data.audienceComposition)) {
+      return [];
+    }
+    return data.audienceComposition
+      .map((entry) => {
+        const label = ensureStringValue(entry?.name ?? entry?.label ?? entry?.segment, "");
+        if (!label) {
+          return null;
+        }
+        return {
+          name: label,
+          value:
+            ensureNumberValue(
+              entry?.value ?? entry?.share ?? entry?.percentage ?? entry?.percent,
+              null,
+            ) ?? 0,
+        };
+      })
+      .filter(Boolean);
+  }, [data.audienceComposition]);
+  const audienceCompositionTotal = useMemo(() => {
+    return audienceCompositionData.reduce((sum, entry) => {
+      const numeric = Number(entry?.value);
+      if (Number.isFinite(numeric)) {
+        return sum + numeric;
+      }
+      return sum;
+    }, 0);
+  }, [audienceCompositionData]);
+  const channelNarratives = useMemo(() => {
+    return [
+      {
+        key: "overview",
+        title: "Gambaran Umum",
+        content: ensureStringValue(data.overviewNarrative, ""),
+      },
+      {
+        key: "dashboard",
+        title: "Narasi Dashboard",
+        content: ensureStringValue(data.dashboardNarrative, ""),
+      },
+      {
+        key: "instagram",
+        title: "Instagram",
+        content: ensureStringValue(data.instagramNarrative, ""),
+      },
+      {
+        key: "tiktok",
+        title: "TikTok",
+        content: ensureStringValue(data.tiktokNarrative, ""),
+      },
+    ].filter((entry) => entry.content);
+  }, [
+    data.dashboardNarrative,
+    data.instagramNarrative,
+    data.overviewNarrative,
+    data.tiktokNarrative,
+  ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -3278,7 +3806,101 @@ export default function ExecutiveSummaryPage() {
     instagramPostCount,
     tiktokPostCount,
   ]);
+  const backendContentRows = useMemo(() => {
+    if (!Array.isArray(data.contentTable)) {
+      return [];
+    }
+
+    const periodRange = getMonthDateRange(selectedMonthKey);
+    const filteredContentTable = periodRange
+      ? filterRecordsByDateRange(data.contentTable, periodRange, {
+          extraPaths: POST_DATE_PATHS,
+        })
+      : data.contentTable;
+
+    return filteredContentTable
+      .map((row, index) => {
+        if (!row || typeof row !== "object") {
+          return null;
+        }
+
+        const likes = Math.max(
+          0,
+          Number(
+            row.likes ??
+              row.likeCount ??
+              row.metrics?.likes ??
+              row.interactions?.likes ??
+              0,
+          ) || 0,
+        );
+        const comments = Math.max(
+          0,
+          Number(
+            row.comments ??
+              row.commentCount ??
+              row.metrics?.comments ??
+              row.interactions?.comments ??
+              0,
+          ) || 0,
+        );
+        const engagementRate = ensureNumberValue(
+          row.engagement ?? row.engagementRate ?? row.engagement_rate,
+          null,
+        );
+        const reach = ensureNumberValue(
+          row.reach ?? row.view ?? row.views ?? row.impressions ?? row.totalReach,
+          null,
+        );
+        let totalInteractions = Math.max(
+          0,
+          Number(
+            row.totalInteractions ??
+              row.interactions ??
+              likes + comments,
+          ) ||
+            likes + comments,
+        );
+
+        if (!Number.isFinite(totalInteractions) && reach != null && engagementRate != null) {
+          totalInteractions = Math.round(reach * (engagementRate / 100));
+        }
+
+        const publishedAt = ensureValidDate(
+          row.publishedAt ??
+            row.tanggal ??
+            row.date ??
+            row.published_at ??
+            row.created_at ??
+            null,
+        );
+
+        return {
+          id: String(
+            row.id ??
+              row.contentId ??
+              row.slug ??
+              `${row.platform ?? "content"}-${index + 1}`,
+          ),
+          platform: row.platform ?? row.channel ?? "",
+          title: row.title ?? row.name ?? row.caption ?? "Konten",
+          format: normalizeContentType(row.format ?? row.type ?? ""),
+          publishedAt,
+          likes: Number.isFinite(likes) ? likes : 0,
+          comments: Number.isFinite(comments) ? comments : 0,
+          totalInteractions: Number.isFinite(totalInteractions)
+            ? totalInteractions
+            : likes + comments,
+        };
+      })
+      .filter((entry) => entry && entry.id)
+      .slice(0, 10);
+  }, [data.contentTable, selectedMonthKey]);
   const topContentRows = useMemo(() => {
+    if (backendContentRows.length > 0) {
+      return backendContentRows;
+    }
+
     const instagramPosts = Array.isArray(instagramPostsForSelectedMonth)
       ? instagramPostsForSelectedMonth
       : [];
@@ -3358,84 +3980,11 @@ export default function ExecutiveSummaryPage() {
       return limited;
     }
 
-    if (!Array.isArray(data.contentTable)) {
-      return [];
-    }
-
-    const periodRange = getMonthDateRange(selectedMonthKey);
-    const filteredContentTable = periodRange
-      ? filterRecordsByDateRange(data.contentTable, periodRange, {
-          extraPaths: POST_DATE_PATHS,
-        })
-      : data.contentTable;
-
-    return filteredContentTable
-      .map((row, index) => {
-        if (!row || typeof row !== "object") {
-          return null;
-        }
-
-        const likes = Math.max(
-          0,
-          Number(
-            row.likes ??
-              row.likeCount ??
-              row.metrics?.likes ??
-              row.interactions?.likes ??
-              0,
-          ) || 0,
-        );
-        const comments = Math.max(
-          0,
-          Number(
-            row.comments ??
-              row.commentCount ??
-              row.metrics?.comments ??
-              row.interactions?.comments ??
-              0,
-          ) || 0,
-        );
-        const totalInteractions = Math.max(
-          0,
-          Number(
-            row.totalInteractions ??
-              row.interactions ??
-              likes + comments,
-          ) ||
-            likes + comments,
-        );
-
-        const publishedAt = ensureValidDate(
-          row.publishedAt ??
-            row.tanggal ??
-            row.date ??
-            row.published_at ??
-            row.created_at ??
-            null,
-        );
-
-        return {
-          id: String(
-            row.id ??
-              row.contentId ??
-              row.slug ??
-              `${row.platform ?? "content"}-${index + 1}`,
-          ),
-          platform: row.platform ?? row.channel ?? "",
-          title: row.title ?? row.name ?? row.caption ?? "Konten",
-          format: normalizeContentType(row.format ?? row.type ?? ""),
-          publishedAt,
-          likes,
-          comments,
-          totalInteractions,
-        };
-      })
-      .filter((entry) => entry && entry.id)
-      .slice(0, 10);
+    return backendContentRows;
   }, [
+    backendContentRows,
     instagramPostsForSelectedMonth,
     tiktokPostsForSelectedMonth,
-    data.contentTable,
     selectedMonthKey,
   ]);
   const instagramMonthlyTrend = useMemo(() => {
@@ -4307,6 +4856,270 @@ export default function ExecutiveSummaryPage() {
           </div>
         </div>
       </header>
+
+      <section
+        aria-label="Ringkasan Kinerja Bulanan"
+        className="space-y-6 rounded-3xl border border-brand-100/60 bg-white/95 p-6 shadow-[0_20px_45px_rgba(29,107,135,0.12)]"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-brand-600">
+              Ringkasan Kinerja Bulanan
+            </h2>
+            <p className="text-sm text-neutral-mist">
+              Menampilkan ringkasan {activeMonthLabel} berdasarkan data terbaru dari backend.
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-1 text-xs text-neutral-slate sm:items-end">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-brand-700 ring-1 ring-brand-100">
+              Periode {activeMonthLabel}
+            </span>
+            {executiveSummaryLoading ? (
+              <span className="text-neutral-slate">Memuat ringkasan eksekutif…</span>
+            ) : null}
+          </div>
+        </div>
+
+        {executiveSummaryError ? (
+          <div className="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {executiveSummaryError}
+          </div>
+        ) : null}
+
+        {executiveSummaryLoading ? (
+          <div className="flex h-32 items-center justify-center text-sm text-neutral-slate">
+            Menyiapkan kartu ringkasan dan highlights…
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {summaryMetricCards.length > 0 ? (
+                summaryMetricCards.map((metric) => (
+                  <div
+                    key={metric.key}
+                    className="rounded-2xl border border-brand-100 bg-white/85 p-4 shadow-sm"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-700/80">
+                      {metric.label}
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold text-neutral-navy">
+                      {metric.value}
+                    </p>
+                    {metric.change ? (
+                      <p className="mt-1 text-xs font-medium text-emerald-600">
+                        {metric.change}
+                      </p>
+                    ) : null}
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full rounded-2xl border border-dashed border-brand-100 px-4 py-6 text-sm text-neutral-slate">
+                  Belum ada metrik ringkasan yang tersedia untuk periode ini.
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-3 rounded-3xl border border-brand-100 bg-white/85 p-5 shadow-inner">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-700">
+                    Highlights
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-[0.24em] text-neutral-mist">
+                    {activeMonthLabel}
+                  </span>
+                </div>
+                {highlightItems.length > 0 ? (
+                  <ul className="space-y-2 text-sm text-neutral-navy">
+                    {highlightItems.map((item, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="mt-1 h-2 w-2 rounded-full bg-brand-500" aria-hidden />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-neutral-slate">
+                    Belum ada poin highlight yang dikirimkan backend untuk periode ini.
+                  </p>
+                )}
+                {ensureStringValue(data.userInsightNarrative) ? (
+                  <p className="rounded-xl bg-brand-50/60 px-3 py-2 text-xs text-brand-700">
+                    {data.userInsightNarrative}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-3 rounded-3xl border border-brand-100 bg-white/85 p-5 shadow-inner">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-700">
+                    Narasi Per Kanal
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-[0.24em] text-neutral-mist">
+                    Backend
+                  </span>
+                </div>
+                {channelNarratives.length > 0 ? (
+                  <div className="space-y-3">
+                    {channelNarratives.map((entry) => (
+                      <div
+                        key={entry.key}
+                        className="rounded-2xl border border-brand-100/70 bg-white px-3 py-2"
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-brand-700/80">
+                          {entry.title}
+                        </p>
+                        <p className="mt-1 text-sm text-neutral-navy leading-relaxed">
+                          {entry.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-slate">
+                    Narasi kanal akan muncul setelah backend mengirimkan ringkasan per platform.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-3 rounded-3xl border border-brand-100 bg-white/85 p-5 shadow-inner">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-700">
+                    Kontribusi Kanal
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-[0.24em] text-neutral-mist">
+                    Reach · Engagement Rate
+                  </span>
+                </div>
+                {engagementByChannelData.length > 0 ? (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={engagementByChannelData}
+                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(125, 211, 252, 0.3)" />
+                        <XAxis
+                          dataKey="channel"
+                          tick={{ fill: "#0f172a", fontSize: 12 }}
+                          axisLine={{ stroke: "rgba(148,163,184,0.5)" }}
+                        />
+                        <YAxis
+                          tickFormatter={(value) =>
+                            formatNumber(value, { maximumFractionDigits: 0 })
+                          }
+                          tick={{ fill: "#0f172a", fontSize: 12 }}
+                          axisLine={{ stroke: "rgba(148,163,184,0.5)" }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            borderRadius: 12,
+                            borderColor: "rgba(148,163,184,0.4)",
+                          }}
+                          formatter={(value, name, { payload }) => {
+                            if (name === "reach") {
+                              return [
+                                formatNumber(value, { maximumFractionDigits: 0 }),
+                                "Reach",
+                              ];
+                            }
+                            return [
+                              formatPercent(value),
+                              "Engagement Rate",
+                              payload?.channel,
+                            ];
+                          }}
+                        />
+                        <Legend />
+                        <Bar dataKey="reach" name="Reach" fill="#0ea5e9" radius={[6, 6, 0, 0]}>
+                          <LabelList
+                            dataKey="engagementRate"
+                            position="top"
+                            formatter={(value) =>
+                              value !== null && value !== undefined ? formatPercent(value) : ""
+                            }
+                            fill="#0f172a"
+                            fontSize={11}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-slate">
+                    Belum ada data kontribusi kanal dari backend untuk periode ini.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-3 rounded-3xl border border-brand-100 bg-white/85 p-5 shadow-inner">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-700">
+                    Komposisi Audiens
+                  </h3>
+                  <span className="text-[11px] uppercase tracking-[0.24em] text-neutral-mist">
+                    {activeMonthLabel}
+                  </span>
+                </div>
+                {audienceCompositionData.length > 0 ? (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={audienceCompositionData}
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius={55}
+                          outerRadius={100}
+                          paddingAngle={4}
+                        >
+                          {audienceCompositionData.map((entry, index) => (
+                            <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          ))}
+                          <LabelList
+                            dataKey="value"
+                            position="outside"
+                            formatter={(value) =>
+                              audienceCompositionTotal
+                                ? formatPercent((value / audienceCompositionTotal) * 100)
+                                : `${formatNumber(value, { maximumFractionDigits: 0 })}`
+                            }
+                            fill="#0f172a"
+                            fontSize={11}
+                          />
+                        </Pie>
+                        <Tooltip
+                          formatter={(value, _name, item) => [
+                            `${formatNumber(value, { maximumFractionDigits: 0 })} (${formatPercent(
+                              audienceCompositionTotal
+                                ? (value / audienceCompositionTotal) * 100
+                                : 0,
+                            )})`,
+                            item?.payload?.name ?? "Audiens",
+                          ]}
+                          contentStyle={{
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            borderRadius: 12,
+                            borderColor: "rgba(148,163,184,0.4)",
+                          }}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-slate">
+                    Backend belum mengirimkan komposisi audiens untuk periode ini.
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </section>
 
       <section
         aria-label="Tren Aktivitas Harian"
