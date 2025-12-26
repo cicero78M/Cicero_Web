@@ -3140,29 +3140,38 @@ export default function ExecutiveSummaryPage() {
         const tiktokPosts = ensureArray(result.tiktokPosts);
         const previousInstagramPosts = ensureArray(result.previousInstagramPosts);
         const previousTiktokPosts = ensureArray(result.previousTiktokPosts);
+        const filteredTiktokPosts = filterRecordsByDateRange(tiktokPosts, result.range, {
+          extraPaths: POST_DATE_PATHS,
+        });
+        const filteredPreviousTiktokPosts = result.previousRange
+          ? filterRecordsByDateRange(previousTiktokPosts, result.previousRange, {
+              extraPaths: POST_DATE_PATHS,
+            })
+          : previousTiktokPosts;
 
         const totals = summarizeEngagementTotals({
           likesRecords,
           commentRecords: commentsRecords,
           instagramPosts,
-          tiktokPosts,
+          tiktokPosts: filteredTiktokPosts,
         });
         const previousTotals = summarizeEngagementTotals({
           likesRecords: previousLikesRecords,
           commentRecords: previousCommentsRecords,
           instagramPosts: previousInstagramPosts,
-          tiktokPosts: previousTiktokPosts,
+          tiktokPosts: filteredPreviousTiktokPosts,
         });
 
         const postTotals = {
           instagramPosts: instagramPosts.length,
-          tiktokPosts: tiktokPosts.length,
-          totalPosts: instagramPosts.length + tiktokPosts.length,
+          tiktokPosts: filteredTiktokPosts.length,
+          totalPosts: instagramPosts.length + filteredTiktokPosts.length,
         };
         const previousPostTotals = {
           instagramPosts: previousInstagramPosts.length,
-          tiktokPosts: previousTiktokPosts.length,
-          totalPosts: previousInstagramPosts.length + previousTiktokPosts.length,
+          tiktokPosts: filteredPreviousTiktokPosts.length,
+          totalPosts:
+            previousInstagramPosts.length + filteredPreviousTiktokPosts.length,
         };
 
         const averageEngagement =
