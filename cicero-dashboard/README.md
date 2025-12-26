@@ -113,6 +113,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Dashboard Utama
 
 - Halaman `/dashboard` menormalkan bentuk respons aggregator terbaru dan melakukan fallback ke endpoint rapid Instagram/TikTok (`/api/insta/rapid-profile`, `/api/insta/rapid-posts`, `/api/tiktok/rapid-profile`, `/api/tiktok/rapid-posts`) sehingga kartu highlight tetap menampilkan data akun resmi meski struktur response aggregator berubah atau kosong.【F:app/dashboard/page.tsx†L1-L223】
+- Pemanggilan helper backend untuk profil dan posting Instagram/TikTok sekarang menerima token autentikasi yang sudah dipastikan tersedia lebih dulu, sehingga build tidak lagi gagal karena argumen token bertipe `null` ketika data aggregator diambil.【F:app/dashboard/page.tsx†L240-L378】
 
 ## Dashboard Komentar TikTok
 

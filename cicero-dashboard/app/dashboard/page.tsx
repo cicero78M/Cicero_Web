@@ -296,7 +296,7 @@ export default function DashboardPage() {
 
     const controller = new AbortController();
 
-    async function fetchData() {
+    async function fetchData(authToken: string) {
       try {
         const apiBaseUrl = getApiBaseUrl();
         const endpoints = [
@@ -316,7 +316,7 @@ export default function DashboardPage() {
         for (const endpoint of endpoints) {
           try {
             const res = await fetch(endpoint, {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { Authorization: `Bearer ${authToken}` },
               cache: "no-store",
               signal: controller.signal,
             });
@@ -353,13 +353,13 @@ export default function DashboardPage() {
               instagramProfile
                 ? Promise.resolve(instagramProfile)
                 : getInstagramProfileViaBackend(
-                    token,
+                    authToken,
                     resolvedInstagramUsername,
                   ),
               instagramPosts.length > 0
                 ? Promise.resolve(instagramPosts)
                 : getInstagramPostsViaBackend(
-                    token,
+                    authToken,
                     resolvedInstagramUsername,
                     50,
                   ),
@@ -380,11 +380,11 @@ export default function DashboardPage() {
               tiktokProfileData && resolvedTiktokUsername
                 ? Promise.resolve(tiktokProfileData)
                 : resolvedTiktokUsername
-                ? getTiktokProfileViaBackend(token, resolvedTiktokUsername)
+                ? getTiktokProfileViaBackend(authToken, resolvedTiktokUsername)
                 : Promise.resolve(tiktokProfileData),
               tiktokPostsData.length > 0 || !resolvedClientId
                 ? Promise.resolve(tiktokPostsData)
-                : getTiktokPostsViaBackend(token, resolvedClientId, 50),
+                : getTiktokPostsViaBackend(authToken, resolvedClientId, 50),
             ]);
 
             tiktokProfileData = profileRes || tiktokProfileData;
@@ -414,7 +414,7 @@ export default function DashboardPage() {
         );
       }
     }
-    fetchData();
+    fetchData(token);
 
     return () => controller.abort();
   }, [token, clientId, clientUsernames, profile]);
