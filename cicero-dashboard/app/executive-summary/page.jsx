@@ -127,28 +127,56 @@ const normalizeRekapScope = (value) => {
 };
 
 const resolveRekapScope = (effectiveClientType, profile) => {
-  const profileScope =
-    profile?.scope ||
-    profile?.client_scope ||
-    profile?.clientScope ||
-    profile?.access_scope ||
-    profile?.accessScope ||
-    profile?.akses_scope ||
-    profile?.scope_rekap ||
-    profile?.rekap_scope;
-  const normalizedProfileScope = normalizeRekapScope(profileScope);
-  if (normalizedProfileScope) return normalizedProfileScope;
+  const scopeCandidates = [
+    profile?.scope,
+    profile?.client_scope,
+    profile?.clientScope,
+    profile?.access_scope,
+    profile?.accessScope,
+    profile?.akses_scope,
+    profile?.scope_rekap,
+    profile?.rekap_scope,
+    profile?.client?.scope,
+    profile?.client?.client_scope,
+    profile?.client?.clientScope,
+    profile?.client?.access_scope,
+    profile?.client?.accessScope,
+    profile?.client?.akses_scope,
+    profile?.client?.scope_rekap,
+    profile?.client?.rekap_scope,
+  ];
+
+  for (const candidate of scopeCandidates) {
+    const normalizedScope = normalizeRekapScope(candidate);
+    if (normalizedScope) return normalizedScope;
+  }
+
   return normalizeRekapScope(effectiveClientType);
 };
 
 const resolveRekapRegionalId = (regionalId, profile) => {
-  const resolvedRegionalId =
-    regionalId ||
-    profile?.regional_id ||
-    profile?.regionalId ||
-    profile?.regionalID ||
-    profile?.regional;
-  return resolvedRegionalId ? String(resolvedRegionalId) : undefined;
+  const regionalCandidates = [
+    regionalId,
+    profile?.regional_id,
+    profile?.regionalId,
+    profile?.regionalID,
+    profile?.regional,
+    profile?.client?.regional_id,
+    profile?.client?.regionalId,
+    profile?.client?.regionalID,
+    profile?.client?.regional,
+    profile?.client?.region_id,
+    profile?.client?.regionId,
+    profile?.client?.regionID,
+  ];
+
+  for (const candidate of regionalCandidates) {
+    if (candidate === null || candidate === undefined) continue;
+    const normalized = String(candidate).trim();
+    if (normalized) return normalized;
+  }
+
+  return undefined;
 };
 
 const monthLabelFormatter = new Intl.DateTimeFormat("id-ID", {
