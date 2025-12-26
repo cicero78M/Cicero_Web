@@ -728,6 +728,33 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(summary.totals.complianceRate).toBeCloseTo((2 / 3) * 100, 5);
   });
 
+  it("mengurutkan Personil dengan Komentar Tertinggi berdasarkan data bulan berjalan", () => {
+    const rawLikes = [
+      {
+        client_id: "CLI-20",
+        nama_client: "Client U",
+        username: "likesHero",
+        jumlah_like: 40,
+        jumlah_komentar: 2,
+      },
+      {
+        client_id: "CLI-20",
+        nama_client: "Client U",
+        username: "commentsHero",
+        jumlah_like: 1,
+        jumlah_komentar: 25,
+      },
+    ];
+
+    const summary = aggregateLikesRecords(rawLikes);
+
+    expect(summary.topPersonnel[0].username).toBe("likesHero");
+    expect(summary.topCommentPersonnel[0].username).toBe("commentsHero");
+    expect(summary.topCommentPersonnel.map((person) => person.username)).toEqual(
+      expect.arrayContaining(["likesHero", "commentsHero"]),
+    );
+  });
+
   it("menghitung personil unik berdasarkan handle yang sudah dinormalisasi", () => {
     const directoryUsers = [
       {

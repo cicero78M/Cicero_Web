@@ -59,6 +59,7 @@ interface LikesSummaryData {
   };
   clients: LikesSummaryClient[];
   topPersonnel: LikesSummaryPersonnel[];
+  topCommentPersonnel?: LikesSummaryPersonnel[];
   lastUpdated: Date | string | null;
 }
 
@@ -175,6 +176,9 @@ const PlatformLikesSummary = ({
   hiddenSections,
 }: PlatformLikesSummaryProps) => {
   const clients = Array.isArray(data?.clients) ? data.clients : [];
+  const rawTopCommentPersonnel = Array.isArray(data?.topCommentPersonnel)
+    ? data.topCommentPersonnel
+    : [];
   const topPersonnel = Array.isArray(data?.topPersonnel) ? data.topPersonnel : [];
   const instagramPostCount = Math.max(0, Number(postTotals?.instagram) || 0);
   const tiktokPostCount = Math.max(0, Number(postTotals?.tiktok) || 0);
@@ -346,7 +350,10 @@ const PlatformLikesSummary = ({
   }, [topPersonnel]);
 
   const topCommentPersonnel = useMemo(() => {
-    return [...topPersonnel]
+    const source =
+      rawTopCommentPersonnel.length > 0 ? rawTopCommentPersonnel : topPersonnel;
+
+    return [...source]
       .filter((person) => (person.username || person.nama) && (person.comments ?? 0) > 0)
       .sort((a, b) => {
         if ((b.comments ?? 0) !== (a.comments ?? 0)) {
@@ -358,7 +365,7 @@ const PlatformLikesSummary = ({
         return (b.active ? 1 : 0) - (a.active ? 1 : 0);
       })
       .slice(0, 5);
-  }, [topPersonnel]);
+  }, [rawTopCommentPersonnel, topPersonnel]);
 
   const totalTopCommentPersonnel = topCommentPersonnel.length;
   const totalTopLikesPersonnel = standoutPersonnel.length;
