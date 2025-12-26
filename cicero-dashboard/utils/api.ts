@@ -1245,6 +1245,35 @@ export async function getDashboardStats(
 }
 
 // Ambil rekap absensi instagram harian
+export type RoleScopeRegionalOptions = {
+  role?: string;
+  scope?: string;
+  regional_id?: string;
+  signal?: AbortSignal;
+};
+
+function resolveRoleScopeRegionalOptions(
+  signalOrOptions?: AbortSignal | RoleScopeRegionalOptions,
+  options?: RoleScopeRegionalOptions,
+): { options: RoleScopeRegionalOptions; signal?: AbortSignal } {
+  const mergedOptions: RoleScopeRegionalOptions = {};
+  let resolvedSignal: AbortSignal | undefined;
+
+  [signalOrOptions, options].forEach((candidate) => {
+    if (!candidate) return;
+    if (isAbortSignal(candidate)) {
+      if (!resolvedSignal) resolvedSignal = candidate;
+      return;
+    }
+    Object.assign(mergedOptions, candidate);
+    if (!resolvedSignal && candidate.signal && isAbortSignal(candidate.signal)) {
+      resolvedSignal = candidate.signal;
+    }
+  });
+
+  return { options: mergedOptions, signal: resolvedSignal };
+}
+
 export async function getRekapLikesIG(
   token: string,
   client_id: string,
@@ -1252,19 +1281,23 @@ export async function getRekapLikesIG(
   tanggal?: string,
   startDate?: string,
   endDate?: string,
-  signal?: AbortSignal,
-  options?: { role?: string; scope?: string; regional_id?: string },
+  signalOrOptions?: AbortSignal | RoleScopeRegionalOptions,
+  options?: RoleScopeRegionalOptions,
 ): Promise<any> {
+  const { options: resolvedOptions, signal: resolvedSignal } =
+    resolveRoleScopeRegionalOptions(signalOrOptions, options);
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);
-  if (options?.role) params.append("role", options.role);
-  if (options?.scope) params.append("scope", options.scope);
-  if (options?.regional_id) params.append("regional_id", options.regional_id);
+  if (resolvedOptions.role) params.append("role", resolvedOptions.role);
+  if (resolvedOptions.scope) params.append("scope", resolvedOptions.scope);
+  if (resolvedOptions.regional_id) {
+    params.append("regional_id", resolvedOptions.regional_id);
+  }
   const url = `${buildApiUrl("/api/insta/rekap-likes")}?${params.toString()}`;
 
-  const res = await fetchWithAuth(url, token, { signal });
+  const res = await fetchWithAuth(url, token, { signal: resolvedSignal });
   if (!res.ok) throw new Error("Failed to fetch rekap");
   return res.json();
 }
