@@ -1484,7 +1484,13 @@ export async function getMonthlyPlatformRecap(
       : Array.isArray(prevIgPosts)
       ? prevIgPosts
       : [];
-    previousTiktokPosts = Array.isArray(prevTtPosts) ? prevTtPosts : [];
+    previousTiktokPosts = Array.isArray(prevTtPosts?.posts)
+      ? prevTtPosts.posts
+      : Array.isArray(prevTtPosts?.data)
+      ? prevTtPosts.data
+      : Array.isArray(prevTtPosts)
+      ? prevTtPosts
+      : [];
   }
 
   const instagramPosts = Array.isArray(instagramPostsResponse?.posts)
@@ -1494,7 +1500,11 @@ export async function getMonthlyPlatformRecap(
     : Array.isArray(instagramPostsResponse)
     ? instagramPostsResponse
     : [];
-  const tiktokPosts = Array.isArray(tiktokPostsResponse)
+  const tiktokPosts = Array.isArray(tiktokPostsResponse?.posts)
+    ? tiktokPostsResponse.posts
+    : Array.isArray(tiktokPostsResponse?.data)
+    ? tiktokPostsResponse.data
+    : Array.isArray(tiktokPostsResponse)
     ? tiktokPostsResponse
     : [];
 

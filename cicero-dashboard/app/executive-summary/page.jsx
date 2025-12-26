@@ -275,7 +275,9 @@ const summarizeEngagementTotals = ({
   const likesFromRekap = sumNumericFromRecords(likesRecords, likeCandidates);
   const commentsFromRekap = sumNumericFromRecords(commentRecords, commentCandidates);
 
-  const posts = ensureArray(instagramPosts, tiktokPosts);
+  const instagramPostList = ensureArray(instagramPosts);
+  const tiktokPostList = ensureArray(tiktokPosts);
+  const posts = [...instagramPostList, ...tiktokPostList];
   const fallbackLikes = sumNumericFromRecords(posts, likeCandidates);
   const fallbackComments = sumNumericFromRecords(posts, commentCandidates);
 
@@ -3468,8 +3470,118 @@ export default function ExecutiveSummaryPage() {
       return sum;
     }, 0);
   }, [audienceCompositionData]);
+  const derivedChannelSummaryNarrative = useMemo(() => {
+    const metrics = monthlyPerformanceState.metrics;
+    if (!metrics || !metrics.postTotals) {
+      return "";
+    }
+    const { postTotals, totals } = metrics;
+    const instagramCount = Number(postTotals.instagramPosts ?? 0);
+    const tiktokCount = Number(postTotals.tiktokPosts ?? 0);
+    const totalPosts =
+      Number(postTotals.totalPosts ?? instagramCount + tiktokCount) || 0;
+    const monthName = activeMonthLabel || "periode ini";
+
+    const parts = [];
+    if (totalPosts > 0) {
+      parts.push(
+        `Selama ${monthName}, terbit ${formatNumber(instagramCount, { maximumFractionDigits: 0 })} konten Instagram dan ${formatNumber(tiktokCount, { maximumFractionDigits: 0 })} konten TikTok (total ${formatNumber(totalPosts, { maximumFractionDigits: 0 })} konten).`,
+      );
+    }
+
+    if (totals?.totalEngagement > 0) {
+      const engagementLabel = formatNumber(totals.totalEngagement, {
+        maximumFractionDigits: 0,
+      });
+      const likesLabel = formatNumber(totals.totalLikes ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      const commentsLabel = formatNumber(totals.totalComments ?? 0, {
+        maximumFractionDigits: 0,
+      });
+      parts.push(
+        `Konten tersebut menghasilkan ${engagementLabel} interaksi (${likesLabel} likes dan ${commentsLabel} komentar).`,
+      );
+    }
+
+    return parts.join(" ");
+  }, [activeMonthLabel, monthlyPerformanceState.metrics]);
+  const channelContributionNarrative = useMemo(() => {
+    if (!Array.isArray(engagementByChannelData) || engagementByChannelData.length === 0) {
+      return "";
+    }
+
+    const sortedByReach = [...engagementByChannelData].sort(
+      (a, b) => (b?.reach ?? 0) - (a?.reach ?? 0),
+    );
+    const topReach = sortedByReach[0];
+    const engagementLeaders = engagementByChannelData
+      .filter((entry) => Number.isFinite(entry?.engagementRate))
+      .sort((a, b) => (b.engagementRate ?? 0) - (a.engagementRate ?? 0));
+    const narrativeParts = [];
+
+    if (topReach) {
+      narrativeParts.push(
+        `${topReach.channel} menyumbang jangkauan terbesar dengan ${formatNumber(topReach.reach ?? 0, { maximumFractionDigits: 0 })} akun tersentuh.`,
+      );
+    }
+
+    if (engagementLeaders.length > 0) {
+      const bestEngagement = engagementLeaders[0];
+      narrativeParts.push(
+        `Engagement rate tertinggi dicapai ${bestEngagement.channel} di kisaran ${formatPercent(bestEngagement.engagementRate)}.`,
+      );
+    }
+
+    if (engagementByChannelData.length > 1) {
+      narrativeParts.push(
+        `Data membandingkan ${engagementByChannelData.length} kanal untuk periode ini.`,
+      );
+    }
+
+    return narrativeParts.join(" ");
+  }, [engagementByChannelData]);
+  const audienceNarrative = useMemo(() => {
+    if (!Array.isArray(audienceCompositionData) || audienceCompositionData.length === 0) {
+      return "";
+    }
+    const sorted = [...audienceCompositionData].sort(
+      (a, b) => (b?.value ?? 0) - (a?.value ?? 0),
+    );
+    const topSegment = sorted[0];
+    const totalValue =
+      audienceCompositionTotal ||
+      sorted.reduce((sum, item) => {
+        const numeric = Number(item?.value);
+        return Number.isFinite(numeric) ? sum + numeric : sum;
+      }, 0);
+    const topShare =
+      topSegment && totalValue
+        ? (Number(topSegment.value ?? 0) / totalValue) * 100
+        : null;
+    const topThree = sorted
+      .slice(0, 3)
+      .map((item) => item?.name)
+      .filter(Boolean);
+
+    const parts = [];
+    if (topSegment) {
+      const shareLabel = Number.isFinite(topShare)
+        ? formatPercent(topShare)
+        : formatNumber(topSegment.value ?? 0, { maximumFractionDigits: 0 });
+      parts.push(
+        `Audiens terbesar berasal dari segmen ${topSegment.name}${shareLabel ? ` (${shareLabel})` : ""}.`,
+      );
+    }
+    if (topThree.length > 0) {
+      const labelPrefix = topThree.length >= 3 ? "Tiga segmen teratas" : "Segmen teratas";
+      parts.push(`${labelPrefix}: ${topThree.join(", ")}.`);
+    }
+
+    return parts.join(" ");
+  }, [audienceCompositionData, audienceCompositionTotal]);
   const channelNarratives = useMemo(() => {
-    return [
+    const entries = [
       {
         key: "overview",
         title: "Gambaran Umum",
@@ -3491,11 +3603,31 @@ export default function ExecutiveSummaryPage() {
         content: ensureStringValue(data.tiktokNarrative, ""),
       },
     ].filter((entry) => entry.content);
+
+    if (derivedChannelSummaryNarrative) {
+      entries.push({
+        key: "auto-summary",
+        title: "Ringkasan Konten",
+        content: derivedChannelSummaryNarrative,
+      });
+    }
+
+    if (channelContributionNarrative) {
+      entries.push({
+        key: "channel-contribution",
+        title: "Kontribusi Kanal",
+        content: channelContributionNarrative,
+      });
+    }
+
+    return entries;
   }, [
     data.dashboardNarrative,
     data.instagramNarrative,
     data.overviewNarrative,
     data.tiktokNarrative,
+    derivedChannelSummaryNarrative,
+    channelContributionNarrative,
   ]);
 
   useEffect(() => {
@@ -5578,59 +5710,66 @@ export default function ExecutiveSummaryPage() {
                   </span>
                 </div>
                 {engagementByChannelData.length > 0 ? (
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={engagementByChannelData}
-                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(125, 211, 252, 0.3)" />
-                        <XAxis
-                          dataKey="channel"
-                          tick={{ fill: "#0f172a", fontSize: 12 }}
-                          axisLine={{ stroke: "rgba(148,163,184,0.5)" }}
-                        />
-                        <YAxis
-                          tickFormatter={(value) =>
-                            formatNumber(value, { maximumFractionDigits: 0 })
-                          }
-                          tick={{ fill: "#0f172a", fontSize: 12 }}
-                          axisLine={{ stroke: "rgba(148,163,184,0.5)" }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(255,255,255,0.95)",
-                            borderRadius: 12,
-                            borderColor: "rgba(148,163,184,0.4)",
-                          }}
-                          formatter={(value, name, { payload }) => {
-                            if (name === "reach") {
-                              return [
-                                formatNumber(value, { maximumFractionDigits: 0 }),
-                                "Reach",
-                              ];
-                            }
-                            return [
-                              formatPercent(value),
-                              "Engagement Rate",
-                              payload?.channel,
-                            ];
-                          }}
-                        />
-                        <Legend />
-                        <Bar dataKey="reach" name="Reach" fill="#0ea5e9" radius={[6, 6, 0, 0]}>
-                          <LabelList
-                            dataKey="engagementRate"
-                            position="top"
-                            formatter={(value) =>
-                              value !== null && value !== undefined ? formatPercent(value) : ""
-                            }
-                            fill="#0f172a"
-                            fontSize={11}
+                  <div className="space-y-3">
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={engagementByChannelData}
+                          margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(125, 211, 252, 0.3)" />
+                          <XAxis
+                            dataKey="channel"
+                            tick={{ fill: "#0f172a", fontSize: 12 }}
+                            axisLine={{ stroke: "rgba(148,163,184,0.5)" }}
                           />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                          <YAxis
+                            tickFormatter={(value) =>
+                              formatNumber(value, { maximumFractionDigits: 0 })
+                            }
+                            tick={{ fill: "#0f172a", fontSize: 12 }}
+                            axisLine={{ stroke: "rgba(148,163,184,0.5)" }}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255,255,255,0.95)",
+                              borderRadius: 12,
+                              borderColor: "rgba(148,163,184,0.4)",
+                            }}
+                            formatter={(value, name, { payload }) => {
+                              if (name === "reach") {
+                                return [
+                                  formatNumber(value, { maximumFractionDigits: 0 }),
+                                  "Reach",
+                                ];
+                              }
+                              return [
+                                formatPercent(value),
+                                "Engagement Rate",
+                                payload?.channel,
+                              ];
+                            }}
+                          />
+                          <Legend />
+                          <Bar dataKey="reach" name="Reach" fill="#0ea5e9" radius={[6, 6, 0, 0]}>
+                            <LabelList
+                              dataKey="engagementRate"
+                              position="top"
+                              formatter={(value) =>
+                                value !== null && value !== undefined ? formatPercent(value) : ""
+                              }
+                              fill="#0f172a"
+                              fontSize={11}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {channelContributionNarrative ? (
+                      <p className="text-sm leading-relaxed text-neutral-navy">
+                        {channelContributionNarrative}
+                      </p>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="text-sm text-neutral-slate">
@@ -5649,50 +5788,57 @@ export default function ExecutiveSummaryPage() {
                   </span>
                 </div>
                 {audienceCompositionData.length > 0 ? (
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={audienceCompositionData}
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius={55}
-                          outerRadius={100}
-                          paddingAngle={4}
-                        >
-                          {audienceCompositionData.map((entry, index) => (
-                            <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                          ))}
-                          <LabelList
+                  <div className="space-y-3">
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={audienceCompositionData}
                             dataKey="value"
-                            position="outside"
-                            formatter={(value) =>
-                              audienceCompositionTotal
-                                ? formatPercent((value / audienceCompositionTotal) * 100)
-                                : `${formatNumber(value, { maximumFractionDigits: 0 })}`
-                            }
-                            fill="#0f172a"
-                            fontSize={11}
+                            nameKey="name"
+                            innerRadius={55}
+                            outerRadius={100}
+                            paddingAngle={4}
+                          >
+                            {audienceCompositionData.map((entry, index) => (
+                              <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                            <LabelList
+                              dataKey="value"
+                              position="outside"
+                              formatter={(value) =>
+                                audienceCompositionTotal
+                                  ? formatPercent((value / audienceCompositionTotal) * 100)
+                                  : `${formatNumber(value, { maximumFractionDigits: 0 })}`
+                              }
+                              fill="#0f172a"
+                              fontSize={11}
+                            />
+                          </Pie>
+                          <Tooltip
+                            formatter={(value, _name, item) => [
+                              `${formatNumber(value, { maximumFractionDigits: 0 })} (${formatPercent(
+                                audienceCompositionTotal
+                                  ? (value / audienceCompositionTotal) * 100
+                                  : 0,
+                              )})`,
+                              item?.payload?.name ?? "Audiens",
+                            ]}
+                            contentStyle={{
+                              backgroundColor: "rgba(255,255,255,0.95)",
+                              borderRadius: 12,
+                              borderColor: "rgba(148,163,184,0.4)",
+                            }}
                           />
-                        </Pie>
-                        <Tooltip
-                          formatter={(value, _name, item) => [
-                            `${formatNumber(value, { maximumFractionDigits: 0 })} (${formatPercent(
-                              audienceCompositionTotal
-                                ? (value / audienceCompositionTotal) * 100
-                                : 0,
-                            )})`,
-                            item?.payload?.name ?? "Audiens",
-                          ]}
-                          contentStyle={{
-                            backgroundColor: "rgba(255,255,255,0.95)",
-                            borderRadius: 12,
-                            borderColor: "rgba(148,163,184,0.4)",
-                          }}
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {audienceNarrative ? (
+                      <p className="text-sm leading-relaxed text-neutral-navy">
+                        {audienceNarrative}
+                      </p>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="text-sm text-neutral-slate">
