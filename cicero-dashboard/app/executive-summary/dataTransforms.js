@@ -139,6 +139,7 @@ const createEmptyLikesSummary = () => ({
   },
   clients: [],
   topPersonnel: [],
+  topCommentPersonnel: [],
   lastUpdated: null,
 });
 
@@ -1814,6 +1815,19 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     })
     .slice(0, 10);
 
+  const topCommentPersonnel = personnelList
+    .filter((person) => person.username || person.nama)
+    .sort((a, b) => {
+      if (b.comments !== a.comments) {
+        return b.comments - a.comments;
+      }
+      if (b.likes !== a.likes) {
+        return b.likes - a.likes;
+      }
+      return (b.active ? 1 : 0) - (a.active ? 1 : 0);
+    })
+    .slice(0, 10);
+
   return {
     totals: {
       totalClients: clients.length,
@@ -1836,6 +1850,7 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       return b.activePersonnel - a.activePersonnel;
     }),
     topPersonnel,
+    topCommentPersonnel,
     lastUpdated: latestActivity,
   };
 };
