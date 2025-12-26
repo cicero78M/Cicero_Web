@@ -1504,16 +1504,236 @@ export async function getRekapAmplify(
   return res.json();
 }
 
+type InstagramPostFetchOptions = {
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  scope?: string;
+  role?: string;
+  regional_id?: string;
+  signal?: AbortSignal;
+};
+
+type InstagramPostMetrics = {
+  like_count: number;
+  comment_count: number;
+  share_count: number;
+  save_count: number;
+  view_count: number;
+  reach: number;
+  engagement_rate: number;
+  interactions: number;
+  [key: string]: unknown;
+};
+
+type InstagramPostResponse = {
+  posts: any[];
+  data: any[];
+  pagination?: any;
+  raw?: any;
+};
+
+function normalizeInstagramPostRecord(post: any, index: number): any | null {
+  if (!post || typeof post !== "object") {
+    return null;
+  }
+
+  const metrics: Record<string, unknown> =
+    post?.metrics && typeof post.metrics === "object" ? post.metrics : {};
+  const likes = ensureNumber(
+    post.like_count ??
+      post.likes ??
+      post.total_like ??
+      metrics.like_count ??
+      metrics.likes ??
+      metrics.like ??
+      metrics.total_likes,
+    0,
+  );
+  const comments = ensureNumber(
+    post.comment_count ??
+      post.comments ??
+      post.total_comment ??
+      metrics.comment_count ??
+      metrics.comments ??
+      metrics.comment ??
+      metrics.total_comments,
+    0,
+  );
+  const shares = ensureNumber(
+    post.share_count ??
+      post.shares ??
+      post.total_share ??
+      metrics.share_count ??
+      metrics.shares ??
+      metrics.share ??
+      metrics.total_shares,
+    0,
+  );
+  const saves = ensureNumber(
+    post.save_count ??
+      post.saves ??
+      metrics.save_count ??
+      metrics.saves ??
+      metrics.save,
+    0,
+  );
+  const reach = ensureNumber(
+    post.reach ??
+      post.impression_count ??
+      metrics.reach ??
+      metrics.impressions ??
+      metrics.reach_count,
+    0,
+  );
+  const views = ensureNumber(
+    post.view_count ??
+      post.views ??
+      post.play_count ??
+      metrics.view_count ??
+      metrics.views ??
+      metrics.play_count ??
+      metrics.played,
+    0,
+  );
+  const engagementRate = ensureNumber(
+    post.engagement_rate ??
+      post.engagementRate ??
+      post.engagement ??
+      metrics.engagement_rate ??
+      metrics.engagementRate ??
+      metrics.engagement ??
+      metrics.engagement_percent,
+    0,
+  );
+  const interactionsBase = likes + comments + shares + saves;
+  const interactions = ensureNumber(
+    post.interactions ??
+      post.interaction_count ??
+      post.total_interaction ??
+      post.total_engagement ??
+      post.engagement_total ??
+      metrics.interactions ??
+      metrics.interaction_count ??
+      metrics.total_interaction ??
+      metrics.total_interactions ??
+      metrics.total_engagement,
+    interactionsBase,
+  );
+
+  const publishedSource =
+    post.published_at ??
+    post.publishedAt ??
+    post.posted_at ??
+    post.postedAt ??
+    post.published_time ??
+    post.publish_time ??
+    post.post_date ??
+    post.postDate ??
+    post.timestamp ??
+    post.created_at ??
+    post.createdAt ??
+    post.tanggal ??
+    post.date ??
+    metrics.published_at ??
+    metrics.timestamp;
+
+  const parsedTimestamp = publishedSource
+    ? parseLocalTimestamp(String(publishedSource))
+    : null;
+  const isoTimestamp = parsedTimestamp
+    ? parsedTimestamp.toISOString()
+    : typeof publishedSource === "string"
+    ? publishedSource
+    : null;
+
+  const idSource =
+    post.id ??
+    post.post_id ??
+    post.media_id ??
+    post.mediaId ??
+    post.code ??
+    post.shortcode ??
+    post.pk ??
+    `ig-post-${index + 1}`;
+
+  const normalizedMetrics: InstagramPostMetrics = {
+    like_count: likes,
+    comment_count: comments,
+    share_count: shares,
+    save_count: saves,
+    view_count: views,
+    reach,
+    engagement_rate: engagementRate,
+    interactions,
+    ...metrics,
+  };
+
+  return {
+    ...post,
+    id: String(idSource),
+    caption: ensureString(
+      post.caption ?? post.title ?? post.message ?? post.text ?? "",
+      "",
+    ),
+    media_type: ensureString(
+      post.media_type ?? post.type ?? post.content_type ?? post.format ?? "",
+      "",
+    ),
+    type: ensureString(
+      post.type ?? post.media_type ?? post.content_type ?? post.format ?? "",
+      "",
+    ),
+    published_at: isoTimestamp ?? post.published_at ?? post.publishedAt ?? null,
+    timestamp: isoTimestamp ?? post.timestamp ?? null,
+    created_at: isoTimestamp ?? post.created_at ?? post.createdAt ?? null,
+    activityDate: isoTimestamp ?? post.activityDate ?? post.activity_date ?? null,
+    tanggal: post.tanggal ?? (isoTimestamp ? isoTimestamp.slice(0, 10) : post.tanggal),
+    like_count: likes,
+    comment_count: comments,
+    share_count: shares,
+    view_count: views,
+    save_count: saves,
+    reach,
+    engagement_rate: engagementRate,
+    interactions,
+    metrics: normalizedMetrics,
+  };
+}
+
+function extractInstagramPostsPayload(payload: any): any[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.posts)) {
+    return payload.posts;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+
+  if (Array.isArray(payload?.records)) {
+    return payload.records;
+  }
+
+  if (payload?.data) {
+    return extractInstagramPostsPayload(payload.data);
+  }
+
+  return [];
+}
+
 export async function getInstagramPosts(
   token: string,
   client_id: string,
-  options: {
-    startDate?: string;
-    endDate?: string;
-    limit?: number;
-    signal?: AbortSignal;
-  } = {},
-): Promise<any> {
+  options: InstagramPostFetchOptions = {},
+): Promise<InstagramPostResponse> {
   const params = new URLSearchParams({ client_id });
   if (options.startDate) {
     params.append("start_date", options.startDate);
@@ -1524,11 +1744,44 @@ export async function getInstagramPosts(
   if (typeof options.limit === "number" && Number.isFinite(options.limit)) {
     params.append("limit", String(options.limit));
   }
+  if (options.scope) {
+    params.append("scope", options.scope);
+  }
+  if (options.role) {
+    params.append("role", options.role);
+  }
+  if (options.regional_id) {
+    params.append("regional_id", options.regional_id);
+  }
   const query = params.toString();
-  const url = `${buildApiUrl("/api/insta/posts")}${query ? `?${query}` : ""}`;
-  const res = await fetchWithAuth(url, token, { signal: options.signal });
-  if (!res.ok) throw new Error("Failed to fetch instagram posts");
-  return res.json();
+  const url = `${buildApiUrl("/api/cicero_v2/instagram/posts")}${
+    query ? `?${query}` : ""
+  }`;
+  const res = await fetchWithAuth(url, token, {
+    signal: options.signal,
+    headers: {
+      "X-Cicero-Token": token,
+      "X-Cicero-Reposter-Token": token,
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch instagram posts: ${text}`);
+  }
+
+  const json = await res.json();
+  const payload = json?.data ?? json ?? {};
+  const postsRaw = extractInstagramPostsPayload(payload);
+  const normalizedPosts = postsRaw
+    .map((post: any, index: number) => normalizeInstagramPostRecord(post, index))
+    .filter(Boolean);
+
+  return {
+    posts: normalizedPosts,
+    data: normalizedPosts,
+    pagination: payload?.pagination ?? json?.pagination ?? json?.meta,
+    raw: payload,
+  };
 }
 
 // Fetch Instagram posts via backend using username (backend handles RapidAPI call)
