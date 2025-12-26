@@ -90,6 +90,8 @@ test("getRekapKomentarTiktok supports date range params", async () => {
   );
   const url = (global.fetch as jest.Mock).mock.calls[0][0];
   expect(url).toContain("/api/tiktok/rekap-komentar");
+  expect(url).toContain("tanggal_mulai=2024-03-01");
+  expect(url).toContain("tanggal_selesai=2024-03-31");
   expect(url).toContain("start_date=2024-03-01");
   expect(url).toContain("end_date=2024-03-31");
   expect(url).toContain("role=operator");

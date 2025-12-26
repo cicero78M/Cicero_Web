@@ -26,6 +26,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Komponen `ViewDataSelector` dipakai untuk memilih periode dan tanggal terkait dan kini dikelola oleh hook bersama `useLikesDateSelector` agar logika pemilihan tanggal tetap konsisten dengan halaman Instagram.
 - `useLikesDateSelector` mempertahankan perilaku lama: untuk mode `custom_range`, tanggal awal dan akhir akan otomatis ditukar jika pengguna memilih rentang terbalik.
 - Mode `month` menggunakan format `YYYY-MM` agar konsisten dengan API.
+- `getRekapKomentarTiktok` mengirimkan pasangan `tanggal_mulai`/`tanggal_selesai` sekaligus alias `start_date`/`end_date` sehingga backend terbaru yang mewajibkan nama Indonesia tetap bekerja berdampingan dengan adapter lama, selaras dengan pola filter tanggal pada rekap likes Instagram dan dashboard stats.
 
 ## Ruang lingkup Ditbinmas
 Kontrol **Lingkup Data** hanya muncul untuk role direktorat tertentu (Ditbinmas/Ditsamapta/Ditlantas/Bidhumas) agar pengguna bisa memilih antara data `client` aktif atau cakupan **Satker Jajaran**. Saat scope disetel ke satker jajaran, grafik insight otomatis dikelompokkan per `client_id` (Polres) agar ringkasan tetap terbaca, sedangkan scope `client` tetap menampilkan rekap per divisi/satfung. Role **operator** tetap dikunci ke `client_id` login untuk mengambil data statistik, profil, dan rekap komentar.
