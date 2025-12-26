@@ -2223,7 +2223,6 @@ const prepareTrendActivityRecords = (records, options = {}) => {
     return [];
   }
 
-  const applyFallbackDate = options.applyFallbackDate !== false;
   const extraPaths = Array.isArray(options.extraPaths)
     ? options.extraPaths
     : typeof options.extraPaths === "string"
@@ -2266,7 +2265,7 @@ const prepareTrendActivityRecords = (records, options = {}) => {
 
     const hasResolvableDate = resolveRecordDate(clone, extraPaths);
 
-    if (!hasResolvableDate && fallbackIso && applyFallbackDate) {
+    if (!hasResolvableDate && fallbackIso) {
       clone.activityDate = fallbackIso;
       if (!clone.tanggal) {
         clone.tanggal = fallbackDateOnly;
