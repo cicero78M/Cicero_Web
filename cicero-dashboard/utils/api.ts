@@ -203,6 +203,11 @@ export async function getExecutiveSummary(
 ): Promise<ExecutiveSummaryResponse> {
   const params = new URLSearchParams();
 
+  const clientId = filters.clientId || filters.client_id;
+  if (!clientId) {
+    throw new Error("client_id wajib diisi untuk executive summary.");
+  }
+
   const monthParam = filters.month || filters.period;
   if (monthParam) {
     params.set("month", monthParam);
@@ -221,15 +226,13 @@ export async function getExecutiveSummary(
   if (startDate) params.set("start_date", startDate);
   if (endDate) params.set("end_date", endDate);
 
-  const clientId = filters.clientId || filters.client_id;
-  if (clientId) params.set("client_id", clientId);
   if (filters.scope) params.set("scope", filters.scope);
   if (filters.role) params.set("role", filters.role);
   if (filters.regional_id) params.set("regional_id", filters.regional_id);
 
   const query = params.toString() ? `?${params.toString()}` : "";
   const res = await fetchWithAuth(
-    `${buildApiUrl("/api/cicero_v2/executive-summary/monthly")}${query}`,
+    `${buildApiUrl(`/api/clients/${encodeURIComponent(clientId)}/summary`)}${query}`,
     token,
     { signal },
   );
