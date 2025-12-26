@@ -3812,20 +3812,31 @@ export default function ExecutiveSummaryPage() {
         const likesRawAll = ensureArray(likesResult);
         const commentsRawAll = ensureArray(commentsResult);
 
-        const likesTrendRecordsAll = prepareTrendActivityRecords(likesRawAll, {
-          applyFallbackDate: false,
-        });
-        const commentsTrendRecordsAll = prepareTrendActivityRecords(
-          commentsRawAll,
-          { applyFallbackDate: false },
-        );
+        const fallbackTrendDateIso = periodRange?.startDate
+          ? `${periodRange.startDate}T00:00:00.000Z`
+          : null;
+
+        const likesTrendRecordsAll = prepareTrendActivityRecords(likesRawAll);
+        const commentsTrendRecordsAll =
+          prepareTrendActivityRecords(commentsRawAll);
+
+        const likesTrendRecordsWithFallback = fallbackTrendDateIso
+          ? prepareTrendActivityRecords(likesRawAll, {
+              fallbackDate: fallbackTrendDateIso,
+            })
+          : likesTrendRecordsAll;
+        const commentsTrendRecordsWithFallback = fallbackTrendDateIso
+          ? prepareTrendActivityRecords(commentsRawAll, {
+              fallbackDate: fallbackTrendDateIso,
+            })
+          : commentsTrendRecordsAll;
 
         const likesRecordsInSelectedRange = filterRecordsByDateRange(
-          likesTrendRecordsAll,
+          likesTrendRecordsWithFallback,
           periodRange,
         );
         const commentsRecordsInSelectedRange = filterRecordsByDateRange(
-          commentsTrendRecordsAll,
+          commentsTrendRecordsWithFallback,
           periodRange,
         );
         let previousLikesRecordsInRange = [];
@@ -3833,13 +3844,17 @@ export default function ExecutiveSummaryPage() {
 
         if (previousPeriodRange) {
           previousLikesRecordsInRange = filterRecordsByDateRange(
-            likesTrendRecordsAll,
+            likesTrendRecordsWithFallback,
             previousPeriodRange,
           );
           previousCommentsRecordsInRange = filterRecordsByDateRange(
-            commentsTrendRecordsAll,
+            commentsTrendRecordsWithFallback,
             previousPeriodRange,
           );
+
+          const previousFallbackTrendDateIso = previousStartDateParam
+            ? `${previousStartDateParam}T00:00:00.000Z`
+            : null;
 
           if (previousLikesRecordsInRange.length === 0) {
             try {
@@ -3856,7 +3871,9 @@ export default function ExecutiveSummaryPage() {
               const previousLikesRaw = ensureArray(previousLikesResponse);
               const preparedPreviousLikes = prepareTrendActivityRecords(
                 previousLikesRaw,
-                { applyFallbackDate: false },
+                previousFallbackTrendDateIso
+                  ? { fallbackDate: previousFallbackTrendDateIso }
+                  : undefined,
               );
               previousLikesRecordsInRange = filterRecordsByDateRange(
                 preparedPreviousLikes,
@@ -3889,7 +3906,9 @@ export default function ExecutiveSummaryPage() {
               const previousCommentsRaw = ensureArray(previousCommentsResponse);
               const preparedPreviousComments = prepareTrendActivityRecords(
                 previousCommentsRaw,
-                { applyFallbackDate: false },
+                previousFallbackTrendDateIso
+                  ? { fallbackDate: previousFallbackTrendDateIso }
+                  : undefined,
               );
               previousCommentsRecordsInRange = filterRecordsByDateRange(
                 preparedPreviousComments,

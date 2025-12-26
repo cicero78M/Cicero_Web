@@ -943,29 +943,6 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(totalLikes).toBe(10);
   });
 
-  it("mengabaikan likes tanpa tanggal saat menghitung personil teratas untuk bulan terpilih", () => {
-    const rawLikes = [
-      { jumlah_like: 9, username: "tanpaTanggal" },
-      { jumlah_like: 6, username: "bravo", tanggal: "2024-07-05" },
-      { jumlah_like: 4, username: "charlie", tanggal: "2024-06-28" },
-    ];
-
-    const sanitized = prepareTrendActivityRecords(rawLikes, {
-      applyFallbackDate: false,
-    });
-    const julyRecords = sanitized.filter((record) => {
-      const resolved = resolveRecordDate(record);
-      if (!resolved) return false;
-      const parsed = resolved.parsed;
-      return parsed.getUTCFullYear() === 2024 && parsed.getUTCMonth() === 6;
-    });
-
-    const summary = aggregateLikesRecords(julyRecords);
-    expect(summary.topPersonnel).toHaveLength(1);
-    expect(summary.topPersonnel[0].username).toBe("bravo");
-    expect(summary.totals.totalLikes).toBe(6);
-  });
-
   it("groups posts with only date/tanggal fields and shows the trend card", () => {
     const posts = [
       { tanggal: "2024-07-01", likes: 2 },
