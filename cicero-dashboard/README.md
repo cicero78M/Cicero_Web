@@ -110,6 +110,10 @@ Proyek ini menyediakan `app/not-found.tsx` sebagai fallback 404 khusus dengan to
 
 Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks autentikasi ketika menghitung hak akses menu. Pendekatan ini mencegah ReferenceError selama proses prerendering halaman 404/_not-found dan memastikan logika akses Ditbinmas tetap aktif di mode statis maupun dinamis.
 
+## Dashboard Utama
+
+- Halaman `/dashboard` menormalkan bentuk respons aggregator terbaru dan melakukan fallback ke endpoint rapid Instagram/TikTok (`/api/insta/rapid-profile`, `/api/insta/rapid-posts`, `/api/tiktok/rapid-profile`, `/api/tiktok/rapid-posts`) sehingga kartu highlight tetap menampilkan data akun resmi meski struktur response aggregator berubah atau kosong.【F:app/dashboard/page.tsx†L1-L223】
+
 ## Dashboard Komentar TikTok
 
 - Insight TikTok kini mendukung selector cakupan direktorat (client/all) seperti Instagram, memanfaatkan opsi `scope` di hook `useTiktokCommentsData` dan meneruskan `scopeSelectorProps` ke scaffold mobile agar kontrol tampil konsisten.

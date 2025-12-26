@@ -5,7 +5,13 @@ import DashboardStats from "@/components/DashboardStats";
 import SocialCardsClient from "@/components/SocialCardsClient";
 import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { getApiBaseUrl } from "@/utils/api";
+import {
+  getApiBaseUrl,
+  getInstagramPostsViaBackend,
+  getInstagramProfileViaBackend,
+  getTiktokPostsViaBackend,
+  getTiktokProfileViaBackend,
+} from "@/utils/api";
 
 type PlatformKey = "instagram" | "tiktok";
 type PostType = "video" | "carousel" | "image";
@@ -109,8 +115,140 @@ const pickNumericValue = (source: any, paths: string[]): number => {
   return 0;
 };
 
+const ensureArray = (value: any): any[] => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+};
+
+const pickNestedValue = (source: any, paths: string[]): any => {
+  for (const path of paths) {
+    const segments = path.split(".");
+    let current: any = source;
+    let found = true;
+
+    for (const segment of segments) {
+      if (current == null) {
+        found = false;
+        break;
+      }
+      current = current[segment];
+    }
+
+    if (found && current !== undefined && current !== null) return current;
+  }
+  return undefined;
+};
+
+const normalizeAggregatorPayload = (
+  payload: any,
+): {
+  instagramProfile: any;
+  instagramPosts: any[];
+  tiktokProfile: any;
+  tiktokPosts: any[];
+} => {
+  const data = payload?.data ?? payload ?? {};
+  const profiles = pickNestedValue(data, ["profiles"]) || {};
+  const stats =
+    pickNestedValue(data, ["stats", "statistics", "metrics"]) || {};
+  const postsContainer =
+    pickNestedValue(data, ["posts", "data.posts", "content.posts"]) || {};
+
+  const instagramProfile =
+    pickNestedValue(data, [
+      "igProfile",
+      "ig_profile",
+      "instagramProfile",
+      "instagram_profile",
+      "instagram.profile",
+      "instagram.profileData",
+      "instagram.profile_data",
+      "instagram.data.profile",
+      "profiles.instagram",
+      "profiles.ig",
+      "profiles.instagram_profile",
+    ]) ?? pickNestedValue(profiles, ["instagram", "ig"]);
+
+  const instagramStats =
+    pickNestedValue(data, [
+      "igStats",
+      "ig_stats",
+      "instagramStats",
+      "instagram_stats",
+      "instagram.stats",
+      "stats.instagram",
+      "statistics.instagram",
+      "metrics.instagram",
+    ]) ?? pickNestedValue(stats, ["instagram", "ig"]);
+
+  const instagramPosts = ensureArray(
+    pickNestedValue(data, [
+      "igPosts",
+      "ig_posts",
+      "instagramPosts",
+      "instagram_posts",
+      "instagram.posts",
+      "instagram.data.posts",
+      "posts.instagram",
+      "posts.ig",
+      "posts.instagram.posts",
+    ]) ?? pickNestedValue(postsContainer, ["instagram", "ig"]),
+  );
+
+  const tiktokProfile =
+    pickNestedValue(data, [
+      "tiktokProfile",
+      "ttProfile",
+      "tiktok_profile",
+      "tiktok.profile",
+      "tiktok.data.profile",
+      "profiles.tiktok",
+      "profiles.tt",
+    ]) ?? pickNestedValue(profiles, ["tiktok", "tt"]);
+
+  const tiktokStats =
+    pickNestedValue(data, [
+      "tiktokStats",
+      "ttStats",
+      "tiktok_stats",
+      "tiktok.stats",
+      "stats.tiktok",
+      "statistics.tiktok",
+      "metrics.tiktok",
+    ]) ?? pickNestedValue(stats, ["tiktok", "tt"]);
+
+  const tiktokPosts = ensureArray(
+    pickNestedValue(data, [
+      "tiktokPosts",
+      "tiktok_posts",
+      "ttPosts",
+      "tt_posts",
+      "tiktok.posts",
+      "tiktok.data.posts",
+      "posts.tiktok",
+      "posts.tt",
+      "posts.tiktok.posts",
+    ]) ?? pickNestedValue(postsContainer, ["tiktok", "tt"]),
+  );
+
+  const mergeProfile = (profile: any, statsData: any) => {
+    if (profile || statsData) {
+      return { ...(statsData || {}), ...(profile || {}) };
+    }
+    return null;
+  };
+
+  return {
+    instagramProfile: mergeProfile(instagramProfile, instagramStats),
+    instagramPosts,
+    tiktokProfile: mergeProfile(tiktokProfile, tiktokStats),
+    tiktokPosts,
+  };
+};
+
 export default function DashboardPage() {
-  const { token, profile } = useAuth();
+  const { token, profile, clientId } = useAuth();
   const [igProfile, setIgProfile] = useState<any>(null);
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [tiktokProfile, setTiktokProfile] = useState<any>(null);
@@ -156,22 +294,118 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token) return;
 
+    const controller = new AbortController();
+
     async function fetchData() {
       try {
         const apiBaseUrl = getApiBaseUrl();
-        const res = await fetch(`${apiBaseUrl}/api/aggregator?periode=harian`, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Failed to fetch aggregator data");
-        const json = await res.json();
-        const data = json.data || json;
-        setIgProfile(data.igProfile ?? null);
-        setIgPosts(Array.isArray(data.igPosts) ? data.igPosts : []);
-        setTiktokProfile(data.tiktokProfile ?? null);
-        setTiktokPosts(Array.isArray(data.tiktokPosts) ? data.tiktokPosts : []);
+        const endpoints = [
+          `${apiBaseUrl}/api/social/aggregator?periode=harian`,
+          `${apiBaseUrl}/api/aggregator?periode=harian`,
+        ];
+
+        let normalizedAggregator:
+          | {
+              instagramProfile: any;
+              instagramPosts: any[];
+              tiktokProfile: any;
+              tiktokPosts: any[];
+            }
+          | null = null;
+
+        for (const endpoint of endpoints) {
+          try {
+            const res = await fetch(endpoint, {
+              headers: { Authorization: `Bearer ${token}` },
+              cache: "no-store",
+              signal: controller.signal,
+            });
+            if (!res.ok) continue;
+            const json = await res.json();
+            normalizedAggregator = normalizeAggregatorPayload(json);
+            break;
+          } catch (err) {
+            if (controller.signal.aborted) return;
+            continue;
+          }
+        }
+
+        const resolvedInstagramUsername = clientUsernames.instagram;
+        const resolvedTiktokUsername = clientUsernames.tiktok;
+        const resolvedClientId =
+          clientId ??
+          profile?.client_id ??
+          profile?.clientId ??
+          profile?.clientID ??
+          profile?.client?.client_id ??
+          profile?.client?.clientId ??
+          profile?.client?.clientID ??
+          undefined;
+
+        let instagramProfile = normalizedAggregator?.instagramProfile ?? null;
+        let instagramPosts = normalizedAggregator?.instagramPosts ?? [];
+        let tiktokProfileData = normalizedAggregator?.tiktokProfile ?? null;
+        let tiktokPostsData = normalizedAggregator?.tiktokPosts ?? [];
+
+        if (resolvedInstagramUsername) {
+          try {
+            const [profileRes, postsRes] = await Promise.all([
+              instagramProfile
+                ? Promise.resolve(instagramProfile)
+                : getInstagramProfileViaBackend(
+                    token,
+                    resolvedInstagramUsername,
+                  ),
+              instagramPosts.length > 0
+                ? Promise.resolve(instagramPosts)
+                : getInstagramPostsViaBackend(
+                    token,
+                    resolvedInstagramUsername,
+                    50,
+                  ),
+            ]);
+            instagramProfile = profileRes || instagramProfile;
+            const normalizedPosts = ensureArray(postsRes);
+            if (normalizedPosts.length > 0) {
+              instagramPosts = normalizedPosts;
+            }
+          } catch (err) {
+            console.warn("Gagal memuat data Instagram via backend", err);
+          }
+        }
+
+        if (resolvedTiktokUsername || resolvedClientId) {
+          try {
+            const [profileRes, postsRes] = await Promise.all([
+              tiktokProfileData && resolvedTiktokUsername
+                ? Promise.resolve(tiktokProfileData)
+                : resolvedTiktokUsername
+                ? getTiktokProfileViaBackend(token, resolvedTiktokUsername)
+                : Promise.resolve(tiktokProfileData),
+              tiktokPostsData.length > 0 || !resolvedClientId
+                ? Promise.resolve(tiktokPostsData)
+                : getTiktokPostsViaBackend(token, resolvedClientId, 50),
+            ]);
+
+            tiktokProfileData = profileRes || tiktokProfileData;
+            const normalizedPosts = ensureArray(postsRes);
+            if (normalizedPosts.length > 0) {
+              tiktokPostsData = normalizedPosts;
+            }
+          } catch (err) {
+            console.warn("Gagal memuat data TikTok via backend", err);
+          }
+        }
+
+        if (controller.signal.aborted) return;
+
+        setIgProfile(instagramProfile);
+        setIgPosts(instagramPosts);
+        setTiktokProfile(tiktokProfileData);
+        setTiktokPosts(tiktokPostsData);
         setApiBaseError(null);
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error("Failed to fetch aggregator data", err);
         setApiBaseError(
           err instanceof Error
@@ -181,7 +415,9 @@ export default function DashboardPage() {
       }
     }
     fetchData();
-  }, [token]);
+
+    return () => controller.abort();
+  }, [token, clientId, clientUsernames, profile]);
 
   const analytics = useMemo(() => {
     const instagramFollowers = pickNumericValue(igProfile, [
