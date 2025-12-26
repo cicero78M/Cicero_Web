@@ -3642,7 +3642,16 @@ export default function ExecutiveSummaryPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [token, clientId, selectedMonthKey]);
+  }, [
+    token,
+    clientId,
+    selectedMonthKey,
+    role,
+    effectiveRole,
+    effectiveClientType,
+    regionalId,
+    profile,
+  ]);
 
   const {
     summary: userSummary,
