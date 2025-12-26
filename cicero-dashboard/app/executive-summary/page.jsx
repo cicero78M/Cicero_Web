@@ -2827,6 +2827,7 @@ export default function ExecutiveSummaryPage() {
     activity: { likes: [], comments: [] },
     trendActivity: { likes: [], comments: [] },
     posts: { instagram: [], tiktok: [] },
+    previousPosts: { instagram: [], tiktok: [] },
     previousLikesSummary: null,
     previousPostTotals: null,
     previousPeriodLabel: "",
@@ -3121,6 +3122,7 @@ export default function ExecutiveSummaryPage() {
           trendActivity: { likes: [], comments: [] },
           likesSummary: createEmptyLikesSummary(),
           posts: { instagram: [], tiktok: [] },
+          previousPosts: { instagram: [], tiktok: [] },
           previousLikesSummary: null,
           previousPostTotals: null,
           previousPeriodLabel: "",
@@ -3605,6 +3607,10 @@ export default function ExecutiveSummaryPage() {
             instagram: instagramPostsSanitized,
             tiktok: tiktokPostsSanitized,
           },
+          previousPosts: {
+            instagram: previousInstagramPostsFiltered,
+            tiktok: previousTiktokPostsFiltered,
+          },
           previousPostTotals,
           previousPeriodLabel,
         });
@@ -3640,6 +3646,7 @@ export default function ExecutiveSummaryPage() {
           trendActivity: { likes: [], comments: [] },
           likesSummary: createEmptyLikesSummary(),
           posts: { instagram: [], tiktok: [] },
+          previousPosts: { instagram: [], tiktok: [] },
           previousLikesSummary: null,
           previousPostTotals: null,
           previousPeriodLabel: "",
@@ -3704,6 +3711,7 @@ export default function ExecutiveSummaryPage() {
     previousPeriodLabel,
     activity: platformActivityState,
     posts: platformPostsState,
+    previousPosts: platformPreviousPostsState,
   } = platformState;
   const platformActivity =
     platformActivityState && typeof platformActivityState === "object"
@@ -3713,6 +3721,34 @@ export default function ExecutiveSummaryPage() {
     platformPostsState && typeof platformPostsState === "object"
       ? platformPostsState
       : { instagram: [], tiktok: [] };
+  const platformPreviousPosts =
+    platformPreviousPostsState && typeof platformPreviousPostsState === "object"
+      ? platformPreviousPostsState
+      : { instagram: [], tiktok: [] };
+  const platformPostsWithHistory = useMemo(() => {
+    const instagramCurrent = Array.isArray(platformPosts?.instagram)
+      ? platformPosts.instagram
+      : [];
+    const instagramPrevious = Array.isArray(platformPreviousPosts?.instagram)
+      ? platformPreviousPosts.instagram
+      : [];
+    const tiktokCurrent = Array.isArray(platformPosts?.tiktok)
+      ? platformPosts.tiktok
+      : [];
+    const tiktokPrevious = Array.isArray(platformPreviousPosts?.tiktok)
+      ? platformPreviousPosts.tiktok
+      : [];
+
+    return {
+      instagram: [...instagramCurrent, ...instagramPrevious],
+      tiktok: [...tiktokCurrent, ...tiktokPrevious],
+    };
+  }, [
+    platformPosts?.instagram,
+    platformPosts?.tiktok,
+    platformPreviousPosts?.instagram,
+    platformPreviousPosts?.tiktok,
+  ]);
   const postsForSelectedMonth = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
       Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
@@ -4131,7 +4167,9 @@ export default function ExecutiveSummaryPage() {
   ]);
   const instagramMonthlyTrend = useMemo(() => {
     const instagramPosts = filterRecordsWithResolvableDate(
-      Array.isArray(platformPosts?.instagram) ? platformPosts.instagram : [],
+      Array.isArray(platformPostsWithHistory?.instagram)
+        ? platformPostsWithHistory.instagram
+        : [],
       {
         extraPaths: POST_DATE_PATHS,
       },
@@ -4141,7 +4179,7 @@ export default function ExecutiveSummaryPage() {
       platformKey: "instagram",
       platformLabel: "Instagram",
     });
-  }, [platformPosts?.instagram]);
+  }, [platformPostsWithHistory?.instagram]);
 
   const instagramWeeklyTrendCardData = useMemo(() => {
     return buildWeeklyEngagementTrend(instagramPostsForSelectedMonth, {
@@ -4152,7 +4190,9 @@ export default function ExecutiveSummaryPage() {
 
   const tiktokMonthlyTrend = useMemo(() => {
     const tiktokPosts = filterRecordsWithResolvableDate(
-      Array.isArray(platformPosts?.tiktok) ? platformPosts.tiktok : [],
+      Array.isArray(platformPostsWithHistory?.tiktok)
+        ? platformPostsWithHistory.tiktok
+        : [],
       {
         extraPaths: POST_DATE_PATHS,
       },
@@ -4162,7 +4202,7 @@ export default function ExecutiveSummaryPage() {
       platformKey: "tiktok",
       platformLabel: "TikTok",
     });
-  }, [platformPosts?.tiktok]);
+  }, [platformPostsWithHistory?.tiktok]);
 
   const tiktokWeeklyTrendCardData = useMemo(() => {
     return buildWeeklyEngagementTrend(tiktokPostsForSelectedMonth, {
