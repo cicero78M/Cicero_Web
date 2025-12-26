@@ -9,6 +9,8 @@ import {
 export const POST_DATE_PATHS = Object.freeze([
   "publishedAt",
   "published_at",
+  "create_time",
+  "createTime",
   "timestamp",
   "createdAt",
   "created_at",
@@ -154,6 +156,8 @@ export const normalizePlatformPost = (
     pickNestedDate(post, [
       "timestamp",
       "taken_at",
+      "create_time",
+      "createTime",
       "created_time",
       "created_at",
       "publish_time",
@@ -451,4 +455,3 @@ export const buildMonthlyEngagementTrend = (
     hasTrendSamples: normalizedPosts.length > 0,
   };
 };
-
