@@ -117,16 +117,31 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       "BIDHUMAS",
+      {
+        role: "bidhumas",
+        scope: "ORG",
+        regional_id: undefined,
+      },
       expect.any(AbortSignal),
     );
     expect(mockedGetClientProfile).toHaveBeenCalledWith(
       "token",
       "BIDHUMAS",
-      expect.any(AbortSignal),
+      expect.anything(),
+      {
+        role: "bidhumas",
+        scope: "ORG",
+        regional_id: undefined,
+      },
     );
     expect(mockedGetUserDirectory).toHaveBeenCalledWith(
       "token",
       "BIDHUMAS",
+      {
+        role: "bidhumas",
+        scope: "ORG",
+        regional_id: undefined,
+      },
       expect.any(AbortSignal),
     );
     expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
@@ -136,8 +151,8 @@ describe("useInstagramLikesData", () => {
       "date",
       "start",
       "end",
-      expect.any(AbortSignal),
-      { role: "bidhumas", scope: "ORG" },
+      expect.anything(),
+      { role: "bidhumas", scope: "ORG", regional_id: undefined },
     );
     expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
       "token",
@@ -146,8 +161,8 @@ describe("useInstagramLikesData", () => {
       "date",
       "start",
       "end",
-      expect.any(AbortSignal),
-      { role: "bidhumas", scope: "ORG" },
+      expect.anything(),
+      { role: "bidhumas", scope: "ORG", regional_id: undefined },
     );
     expect(result.current.chartData).toHaveLength(2);
     expect(result.current.rekapSummary.totalUser).toBe(2);
@@ -220,8 +235,8 @@ describe("useInstagramLikesData", () => {
       "date",
       "start",
       "end",
-      expect.any(AbortSignal),
-      { role: "operator", scope: "DIREKTORAT" },
+      expect.anything(),
+      { role: "operator", scope: "DIREKTORAT", regional_id: undefined },
     );
     expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
       "token",
@@ -230,8 +245,8 @@ describe("useInstagramLikesData", () => {
       "date",
       "start",
       "end",
-      expect.any(AbortSignal),
-      { role: "operator", scope: "DIREKTORAT" },
+      expect.anything(),
+      { role: "operator", scope: "DIREKTORAT", regional_id: undefined },
     );
     expect(result.current.isDirectorate).toBe(true);
     expect(result.current.isOrgClient).toBe(false);

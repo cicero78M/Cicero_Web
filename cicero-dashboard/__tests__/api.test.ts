@@ -3,6 +3,7 @@ import {
   getRekapAmplify,
   getRekapLikesIG,
   getRekapKomentarTiktok,
+  getTiktokPosts,
   getUserDirectory,
   updateUserViaClaim,
 } from "../utils/api";
@@ -111,6 +112,23 @@ test("getUserDirectory passes regional_id when provided", async () => {
   expect(url).toContain("role=operator");
   expect(url).toContain("scope=ORG");
   expect(url).toContain("regional_id=R-11");
+});
+
+test("getTiktokPosts forwards scope and regional_id", async () => {
+  await getTiktokPosts("tok", "DITBINMAS", {
+    startDate: "2025-10-01",
+    endDate: "2025-10-31",
+    scope: "ORG",
+    role: "operator",
+    regional_id: "R-88",
+  });
+  const url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("/api/tiktok/posts");
+  expect(url).toContain("start_date=2025-10-01");
+  expect(url).toContain("end_date=2025-10-31");
+  expect(url).toContain("scope=ORG");
+  expect(url).toContain("role=operator");
+  expect(url).toContain("regional_id=R-88");
 });
 
 test("getDashboardStats normalizes fields", async () => {

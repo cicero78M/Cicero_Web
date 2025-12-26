@@ -3346,6 +3346,9 @@ export default function ExecutiveSummaryPage() {
             const tiktokDatabaseResponse = await getTiktokPosts(token, clientId, {
               startDate: startDateParam,
               endDate: endDateParam,
+              scope: rekapScope,
+              role: rekapRole,
+              regional_id: normalizedRegionalId,
               signal: controller.signal,
             });
             tiktokDatabasePostsRaw = ensureArray(tiktokDatabaseResponse);
@@ -3383,6 +3386,9 @@ export default function ExecutiveSummaryPage() {
             const previousTiktokResponse = await getTiktokPosts(token, clientId, {
               startDate: previousStartDateParam,
               endDate: previousEndDateParam,
+              scope: rekapScope,
+              role: rekapRole,
+              regional_id: normalizedRegionalId,
               signal: controller.signal,
             });
             previousTiktokPostsRaw = ensureArray(previousTiktokResponse);

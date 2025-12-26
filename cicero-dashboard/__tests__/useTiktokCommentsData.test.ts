@@ -40,6 +40,7 @@ describe("useTiktokCommentsData", () => {
       endDate: "end",
     });
     mockedGetDashboardStats.mockResolvedValue({ ttPosts: 10 });
+    mockedGetUserDirectory.mockResolvedValue({ data: [] } as any);
   });
 
   it("filters directorate data to the login client even when recap payload includes other clients", async () => {
@@ -205,12 +206,22 @@ describe("useTiktokCommentsData", () => {
       "start",
       "end",
       "DITBINMAS",
+      {
+        role: "ditbinmas",
+        scope: undefined,
+        regional_id: undefined,
+      },
       expect.any(AbortSignal),
     );
     expect(mockedGetClientProfile).toHaveBeenCalledWith(
       "token",
       "DITBINMAS",
-      expect.any(AbortSignal),
+      expect.anything(),
+      {
+        role: "ditbinmas",
+        scope: undefined,
+        regional_id: undefined,
+      },
     );
     expect(result.current.rekapSummary.totalTiktokPost).toBe(8);
     expect(result.current.rekapSummary.totalSudahKomentar).toBe(1);
@@ -254,8 +265,8 @@ describe("useTiktokCommentsData", () => {
       "date",
       "start",
       "end",
-      expect.any(AbortSignal),
-      { role: "bidhumas", scope: "ORG" },
+      expect.anything(),
+      { role: "bidhumas", scope: "ORG", regional_id: undefined },
     );
     expect(result.current.isDirectorate).toBe(false);
     expect(result.current.isOrgClient).toBe(true);

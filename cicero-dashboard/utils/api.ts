@@ -2078,6 +2078,9 @@ export async function getTiktokPosts(
     startDate?: string;
     endDate?: string;
     limit?: number;
+    scope?: string;
+    role?: string;
+    regional_id?: string;
     signal?: AbortSignal;
   } = {},
 ): Promise<any> {
@@ -2090,6 +2093,15 @@ export async function getTiktokPosts(
   }
   if (typeof options.limit === "number" && Number.isFinite(options.limit)) {
     params.append("limit", String(options.limit));
+  }
+  if (options.scope) {
+    params.append("scope", options.scope);
+  }
+  if (options.role) {
+    params.append("role", options.role);
+  }
+  if (options.regional_id) {
+    params.append("regional_id", options.regional_id);
   }
   const query = params.toString();
   const url = `${buildApiUrl("/api/tiktok/posts")}${query ? `?${query}` : ""}`;
