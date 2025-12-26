@@ -1277,6 +1277,241 @@ function resolveRoleScopeRegionalOptions(
   return { options: mergedOptions, signal: resolvedSignal };
 }
 
+export type MonthDateRange = {
+  monthKey: string;
+  startDate: string;
+  endDate: string;
+};
+
+export function buildMonthDateRange(monthKey?: string | null): MonthDateRange | null {
+  if (!monthKey || typeof monthKey !== "string") {
+    return null;
+  }
+
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = Number(yearStr);
+  const monthIndex = Number(monthStr) - 1;
+
+  if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) {
+    return null;
+  }
+
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const startDate = `${year}-${pad(monthIndex + 1)}-01`;
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+  const endDate = `${year}-${pad(monthIndex + 1)}-${pad(lastDay)}`;
+
+  return { monthKey, startDate, endDate };
+}
+
+export function getPreviousMonthKey(monthKey?: string | null): string | null {
+  if (!monthKey || typeof monthKey !== "string") return null;
+
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    return null;
+  }
+
+  const previousMonth = month - 1;
+  const previousYear = previousMonth >= 1 ? year : year - 1;
+  const normalizedMonth = previousMonth >= 1 ? previousMonth : 12;
+
+  if (!Number.isFinite(previousYear) || previousYear <= 0) {
+    return null;
+  }
+
+  return `${previousYear}-${String(normalizedMonth).padStart(2, "0")}`;
+}
+
+export type MonthlyPlatformRecapResult = {
+  range: MonthDateRange;
+  previousRange: MonthDateRange | null;
+  likes: any;
+  comments: any;
+  instagramPosts: any[];
+  tiktokPosts: any[];
+  previousLikes: any;
+  previousComments: any;
+  previousInstagramPosts: any[];
+  previousTiktokPosts: any[];
+};
+
+export async function getMonthlyPlatformRecap(
+  token: string,
+  client_id: string,
+  monthKey?: string | null,
+  options?: RoleScopeRegionalOptions & { signal?: AbortSignal },
+): Promise<MonthlyPlatformRecapResult> {
+  const range = buildMonthDateRange(monthKey);
+  if (!range) {
+    throw new Error("monthKey tidak valid untuk rekap bulanan.");
+  }
+
+  const previousMonthKey = getPreviousMonthKey(range.monthKey);
+  const previousRange = previousMonthKey
+    ? buildMonthDateRange(previousMonthKey)
+    : null;
+  const { options: resolvedOptions, signal } = resolveRoleScopeRegionalOptions(
+    options?.signal,
+    options,
+  );
+
+  const tanggalParam = range.startDate;
+  const startDateParam = range.startDate;
+  const endDateParam = range.endDate;
+  const previousTanggalParam = previousRange?.startDate;
+  const previousStartDateParam = previousRange?.startDate;
+  const previousEndDateParam = previousRange?.endDate;
+
+  const [likes, comments, instagramPostsResponse, tiktokPostsResponse] =
+    await Promise.all([
+      getRekapLikesIG(
+        token,
+        client_id,
+        "harian",
+        tanggalParam,
+        startDateParam,
+        endDateParam,
+        signal,
+        resolvedOptions,
+      ).catch((error) => {
+        console.warn("Gagal memuat rekap likes IG bulanan", error);
+        return { data: [] };
+      }),
+      getRekapKomentarTiktok(
+        token,
+        client_id,
+        "harian",
+        tanggalParam,
+        startDateParam,
+        endDateParam,
+        signal,
+        resolvedOptions,
+      ).catch((error) => {
+        console.warn("Gagal memuat rekap komentar TikTok bulanan", error);
+        return { data: [] };
+      }),
+      getInstagramPosts(token, client_id, {
+        startDate: startDateParam,
+        endDate: endDateParam,
+        scope: resolvedOptions.scope,
+        role: resolvedOptions.role,
+        regional_id: resolvedOptions.regional_id,
+        signal,
+      }).catch((error) => {
+        console.warn("Gagal memuat konten Instagram bulanan", error);
+        return { posts: [], data: [] };
+      }),
+      getTiktokPosts(token, client_id, {
+        startDate: startDateParam,
+        endDate: endDateParam,
+        scope: resolvedOptions.scope,
+        role: resolvedOptions.role,
+        regional_id: resolvedOptions.regional_id,
+        signal,
+      }).catch((error) => {
+        console.warn("Gagal memuat konten TikTok bulanan", error);
+        return [];
+      }),
+    ]);
+
+  let previousLikes: any = { data: [] };
+  let previousComments: any = { data: [] };
+  let previousInstagramPosts: any[] = [];
+  let previousTiktokPosts: any[] = [];
+
+  if (previousRange) {
+    const [prevLikes, prevComments, prevIgPosts, prevTtPosts] = await Promise.all([
+      getRekapLikesIG(
+        token,
+        client_id,
+        "harian",
+        previousTanggalParam,
+        previousStartDateParam,
+        previousEndDateParam,
+        signal,
+        resolvedOptions,
+      ).catch((error) => {
+        console.warn("Gagal memuat rekap likes IG bulan sebelumnya", error);
+        return { data: [] };
+      }),
+      getRekapKomentarTiktok(
+        token,
+        client_id,
+        "harian",
+        previousTanggalParam,
+        previousStartDateParam,
+        previousEndDateParam,
+        signal,
+        resolvedOptions,
+      ).catch((error) => {
+        console.warn("Gagal memuat rekap komentar TikTok bulan sebelumnya", error);
+        return { data: [] };
+      }),
+      getInstagramPosts(token, client_id, {
+        startDate: previousStartDateParam,
+        endDate: previousEndDateParam,
+        scope: resolvedOptions.scope,
+        role: resolvedOptions.role,
+        regional_id: resolvedOptions.regional_id,
+        signal,
+      }).catch((error) => {
+        console.warn("Gagal memuat konten Instagram bulan sebelumnya", error);
+        return { posts: [], data: [] };
+      }),
+      getTiktokPosts(token, client_id, {
+        startDate: previousStartDateParam,
+        endDate: previousEndDateParam,
+        scope: resolvedOptions.scope,
+        role: resolvedOptions.role,
+        regional_id: resolvedOptions.regional_id,
+        signal,
+      }).catch((error) => {
+        console.warn("Gagal memuat konten TikTok bulan sebelumnya", error);
+        return [];
+      }),
+    ]);
+
+    previousLikes = prevLikes;
+    previousComments = prevComments;
+    previousInstagramPosts = Array.isArray(prevIgPosts?.posts)
+      ? prevIgPosts.posts
+      : Array.isArray(prevIgPosts?.data)
+      ? prevIgPosts.data
+      : Array.isArray(prevIgPosts)
+      ? prevIgPosts
+      : [];
+    previousTiktokPosts = Array.isArray(prevTtPosts) ? prevTtPosts : [];
+  }
+
+  const instagramPosts = Array.isArray(instagramPostsResponse?.posts)
+    ? instagramPostsResponse.posts
+    : Array.isArray(instagramPostsResponse?.data)
+    ? instagramPostsResponse.data
+    : Array.isArray(instagramPostsResponse)
+    ? instagramPostsResponse
+    : [];
+  const tiktokPosts = Array.isArray(tiktokPostsResponse)
+    ? tiktokPostsResponse
+    : [];
+
+  return {
+    range,
+    previousRange,
+    likes,
+    comments,
+    instagramPosts,
+    tiktokPosts,
+    previousLikes,
+    previousComments,
+    previousInstagramPosts,
+    previousTiktokPosts,
+  };
+}
+
 export async function getRekapLikesIG(
   token: string,
   client_id: string,
