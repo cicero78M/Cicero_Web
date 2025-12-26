@@ -27,6 +27,7 @@ import {
   getInstagramPosts,
   getTiktokPosts,
   getExecutiveSummary,
+  getMonthlyPlatformRecap,
 } from "@/utils/api";
 import {
   getUserDirectoryFetchScope,
@@ -225,6 +226,156 @@ const ensureNumberValue = (value, fallback = null) => {
   }
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const sumNumericFromRecords = (records, paths = []) => {
+  if (!Array.isArray(records) || paths.length === 0) {
+    return 0;
+  }
+  return records.reduce((total, record) => {
+    if (!record || typeof record !== "object") {
+      return total;
+    }
+    const value = pickNestedNumeric(record, paths);
+    const numeric = Number.isFinite(value) ? value : 0;
+    return total + Math.max(0, numeric);
+  }, 0);
+};
+
+const summarizeEngagementTotals = ({
+  likesRecords = [],
+  commentRecords = [],
+  instagramPosts = [],
+  tiktokPosts = [],
+}) => {
+  const likeCandidates = [
+    "like_count",
+    "likes",
+    "jumlah_like",
+    "jumlah_likes",
+    "total_likes",
+    "total_like",
+    "rekap.like",
+    "rekap.likes",
+    "metrics.like_count",
+    "metrics.likes",
+  ];
+  const commentCandidates = [
+    "comment_count",
+    "comments",
+    "jumlah_komentar",
+    "jumlah_comment",
+    "total_comments",
+    "rekap.comment",
+    "rekap.comments",
+    "metrics.comment_count",
+    "metrics.comments",
+  ];
+
+  const likesFromRekap = sumNumericFromRecords(likesRecords, likeCandidates);
+  const commentsFromRekap = sumNumericFromRecords(commentRecords, commentCandidates);
+
+  const posts = ensureArray(instagramPosts, tiktokPosts);
+  const fallbackLikes = sumNumericFromRecords(posts, likeCandidates);
+  const fallbackComments = sumNumericFromRecords(posts, commentCandidates);
+
+  const totalLikes = likesFromRekap || fallbackLikes;
+  const totalComments = commentsFromRekap || fallbackComments;
+  const totalEngagement = totalLikes + totalComments;
+
+  return { totalLikes, totalComments, totalEngagement };
+};
+
+const formatDeltaPercent = (current, previous) => {
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) {
+    return null;
+  }
+  if (previous === 0) {
+    return current > 0 ? Infinity : 0;
+  }
+  return ((current - previous) / previous) * 100;
+};
+
+const buildMonthlyPerformanceNarrative = ({
+  monthLabel,
+  totals,
+  previousTotals,
+  postTotals,
+  previousPostTotals,
+  averageEngagement,
+}) => {
+  const safeMonthLabel = monthLabel || "bulan ini";
+  const totalEngagementLabel = formatNumber(totals.totalEngagement, {
+    maximumFractionDigits: 0,
+  });
+  const likesLabel = formatNumber(totals.totalLikes, { maximumFractionDigits: 0 });
+  const commentsLabel = formatNumber(totals.totalComments, { maximumFractionDigits: 0 });
+  const postsLabel = formatNumber(postTotals.totalPosts, { maximumFractionDigits: 0 });
+  const averageLabel = Number.isFinite(averageEngagement)
+    ? formatNumber(averageEngagement, { maximumFractionDigits: 1 })
+    : "-";
+
+  const engagementDelta = formatDeltaPercent(
+    totals.totalEngagement,
+    previousTotals.totalEngagement,
+  );
+  const likeDelta = formatDeltaPercent(totals.totalLikes, previousTotals.totalLikes);
+  const commentDelta = formatDeltaPercent(
+    totals.totalComments,
+    previousTotals.totalComments,
+  );
+  const postDelta = formatDeltaPercent(
+    postTotals.totalPosts,
+    previousPostTotals.totalPosts,
+  );
+
+  const directionLabel = (value) => {
+    if (value === null || value === undefined) return null;
+    if (value === Infinity) return "lebih tinggi dari bulan sebelumnya (data baru)";
+    if (value > 0) return `naik ${formatPercent(Math.abs(value))}`;
+    if (value < 0) return `turun ${formatPercent(Math.abs(value))}`;
+    return "stabil";
+  };
+
+  const narrativeParts = [
+    `Pada ${safeMonthLabel}, total engagement mencapai ${totalEngagementLabel} dengan ${likesLabel} likes dan ${commentsLabel} komentar dari ${postsLabel} konten Instagram serta TikTok.`,
+  ];
+  if (Number.isFinite(averageEngagement) && averageEngagement > 0) {
+    narrativeParts.push(
+      `Rata-rata interaksi per konten berada di kisaran ${averageLabel}.`,
+    );
+  }
+  if (Number.isFinite(engagementDelta)) {
+    narrativeParts.push(
+      `Kinerja engagement ${directionLabel(engagementDelta)} dibanding bulan sebelumnya.`,
+    );
+  }
+  const narrative = narrativeParts.join(" ");
+
+  const buildHighlight = (label, delta) => {
+    if (delta === null || delta === undefined) {
+      return null;
+    }
+    if (delta === Infinity) {
+      return `${label} lebih tinggi dari bulan sebelumnya (data baru tersedia).`;
+    }
+    if (delta > 0) {
+      return `${label} naik ${formatPercent(Math.abs(delta))} vs bulan sebelumnya.`;
+    }
+    if (delta < 0) {
+      return `${label} turun ${formatPercent(Math.abs(delta))} vs bulan sebelumnya.`;
+    }
+    return `${label} stabil dibanding bulan sebelumnya.`;
+  };
+
+  const highlights = [
+    buildHighlight("Total engagement", engagementDelta),
+    buildHighlight("Likes", likeDelta),
+    buildHighlight("Komentar", commentDelta),
+    buildHighlight("Volume konten", postDelta),
+  ].filter(Boolean);
+
+  return { narrative, highlights };
 };
 
 const normalizeStringArray = (value) => {
@@ -2584,6 +2735,14 @@ export default function ExecutiveSummaryPage() {
     error: "",
     dataByMonth: {},
   });
+  const [monthlyPerformanceState, setMonthlyPerformanceState] = useState({
+    loading: false,
+    error: "",
+    metrics: null,
+    highlights: [],
+    narrative: "",
+    monthLabel: "",
+  });
 
   useEffect(() => {
     const normalizedClientId = clientId?.toLowerCase();
@@ -2928,6 +3087,162 @@ export default function ExecutiveSummaryPage() {
     profile,
   ]);
 
+  useEffect(() => {
+    if (!token || !clientId) {
+      setMonthlyPerformanceState((prev) => ({
+        ...prev,
+        loading: false,
+        error: "",
+        metrics: null,
+        highlights: [],
+        narrative: "",
+        monthLabel: selectedMonthLabel || prev.monthLabel,
+      }));
+      return;
+    }
+
+    const controller = new AbortController();
+    setMonthlyPerformanceState((prev) => ({
+      ...prev,
+      loading: true,
+      error: "",
+      monthLabel: selectedMonthLabel || prev.monthLabel,
+    }));
+
+    if (!profile || !effectiveClientType) {
+      return () => {
+        controller.abort();
+      };
+    }
+
+    const rekapRole = normalizeRekapRole(effectiveRole ?? role ?? "");
+    const rekapScope = resolveRekapScope(effectiveClientType, profile);
+    const normalizedRegionalId = resolveRekapRegionalId(regionalId, profile);
+
+    getMonthlyPlatformRecap(token, clientId, selectedMonthKey, {
+      role: rekapRole,
+      scope: rekapScope,
+      regional_id: normalizedRegionalId,
+      signal: controller.signal,
+    })
+      .then((result) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        const likesRecords = ensureArray(result.likes);
+        const commentsRecords = ensureArray(result.comments);
+        const previousLikesRecords = ensureArray(result.previousLikes);
+        const previousCommentsRecords = ensureArray(result.previousComments);
+        const instagramPosts = ensureArray(result.instagramPosts);
+        const tiktokPosts = ensureArray(result.tiktokPosts);
+        const previousInstagramPosts = ensureArray(result.previousInstagramPosts);
+        const previousTiktokPosts = ensureArray(result.previousTiktokPosts);
+
+        const totals = summarizeEngagementTotals({
+          likesRecords,
+          commentRecords: commentsRecords,
+          instagramPosts,
+          tiktokPosts,
+        });
+        const previousTotals = summarizeEngagementTotals({
+          likesRecords: previousLikesRecords,
+          commentRecords: previousCommentsRecords,
+          instagramPosts: previousInstagramPosts,
+          tiktokPosts: previousTiktokPosts,
+        });
+
+        const postTotals = {
+          instagramPosts: instagramPosts.length,
+          tiktokPosts: tiktokPosts.length,
+          totalPosts: instagramPosts.length + tiktokPosts.length,
+        };
+        const previousPostTotals = {
+          instagramPosts: previousInstagramPosts.length,
+          tiktokPosts: previousTiktokPosts.length,
+          totalPosts: previousInstagramPosts.length + previousTiktokPosts.length,
+        };
+
+        const averageEngagement =
+          postTotals.totalPosts > 0
+            ? totals.totalEngagement / postTotals.totalPosts
+            : null;
+
+        const deltas = {
+          engagement: formatDeltaPercent(
+            totals.totalEngagement,
+            previousTotals.totalEngagement,
+          ),
+          likes: formatDeltaPercent(totals.totalLikes, previousTotals.totalLikes),
+          comments: formatDeltaPercent(
+            totals.totalComments,
+            previousTotals.totalComments,
+          ),
+          posts: formatDeltaPercent(postTotals.totalPosts, previousPostTotals.totalPosts),
+        };
+
+        const rangeLabel = (() => {
+          const parsedStart = ensureValidDate(result.range?.startDate);
+          if (parsedStart) {
+            return monthLabelFormatter.format(parsedStart);
+          }
+          return selectedMonthLabel || selectedMonthKey || "Periode Tidak Tersedia";
+        })();
+
+        const narrativeData = buildMonthlyPerformanceNarrative({
+          monthLabel: rangeLabel,
+          totals,
+          previousTotals,
+          postTotals,
+          previousPostTotals,
+          averageEngagement,
+        });
+
+        setMonthlyPerformanceState({
+          loading: false,
+          error: "",
+          metrics: {
+            totals,
+            previousTotals,
+            postTotals,
+            previousPostTotals,
+            averageEngagement,
+            deltas,
+          },
+          highlights: narrativeData.highlights,
+          narrative: narrativeData.narrative,
+          monthLabel: rangeLabel,
+        });
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || error?.name === "AbortError") {
+          return;
+        }
+        setMonthlyPerformanceState((prev) => ({
+          ...prev,
+          loading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Gagal menghitung ringkasan kinerja bulanan.",
+        }));
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    clientId,
+    effectiveClientType,
+    effectiveRole,
+    role,
+    selectedMonthKey,
+    selectedMonthLabel,
+    regionalId,
+    token,
+    profile,
+  ]);
+
   const backendMonthlyData = executiveSummaryState.dataByMonth?.[selectedMonthKey];
   const curatedMonthlyData = monthlyData[selectedMonthKey];
   const shouldUseBackendMonthlyData =
@@ -2939,6 +3254,8 @@ export default function ExecutiveSummaryPage() {
     : curatedMonthlyData;
   const executiveSummaryLoading = executiveSummaryState.loading;
   const executiveSummaryError = executiveSummaryState.error;
+  const summaryLoading = monthlyPerformanceState.loading;
+  const summaryError = monthlyPerformanceState.error || executiveSummaryError;
   const fallbackMonthLabel =
     rawMonthlyData?.monthLabel ??
     selectedMonthLabel ??
@@ -2981,8 +3298,76 @@ export default function ExecutiveSummaryPage() {
         ? rawMonthlyData.platformAnalytics
         : defaultMonthlyEntry.platformAnalytics,
   };
-  const activeMonthLabel = data.monthLabel || fallbackMonthLabel;
+  const activeMonthLabel =
+    monthlyPerformanceState.monthLabel || data.monthLabel || fallbackMonthLabel;
   const summaryMetricCards = useMemo(() => {
+    if (monthlyPerformanceState.metrics) {
+      const { totals, postTotals, averageEngagement, deltas } =
+        monthlyPerformanceState.metrics;
+      const formatDeltaLabel = (delta) => {
+        if (delta === null || delta === undefined) {
+          return "";
+        }
+        if (delta === Infinity) {
+          return "Naik dari 0";
+        }
+        if (delta === 0) {
+          return "Stabil";
+        }
+        const formatted = formatNumber(Math.abs(delta), {
+          maximumFractionDigits: 1,
+        });
+        const prefix = delta > 0 ? "+" : "-";
+        return `${prefix}${formatted}%`;
+      };
+
+      const metrics = [
+        {
+          key: "total-engagement",
+          label: "Total Engagement",
+          value: totals.totalEngagement,
+          delta: deltas.engagement,
+        },
+        {
+          key: "total-likes",
+          label: "Total Likes",
+          value: totals.totalLikes,
+          delta: deltas.likes,
+        },
+        {
+          key: "total-comments",
+          label: "Total Komentar",
+          value: totals.totalComments,
+          delta: deltas.comments,
+        },
+        {
+          key: "total-posts",
+          label: "Jumlah Konten",
+          value: postTotals.totalPosts,
+          delta: deltas.posts,
+        },
+      ];
+
+      if (Number.isFinite(averageEngagement)) {
+        metrics.push({
+          key: "avg-interactions",
+          label: "Rata-rata Interaksi/Konten",
+          value: averageEngagement,
+          delta: null,
+        });
+      }
+
+      return metrics.map((metric) => ({
+        key: metric.key,
+        label: metric.label,
+        value: metricValueToString(
+          { value: metric.value, suffix: metric.key === "avg-interactions" ? "" : "" },
+          { fallback: "-" },
+        ),
+        change: formatDeltaLabel(metric.delta) || null,
+      }));
+    }
+
     if (!Array.isArray(data.summaryMetrics)) {
       return [];
     }
@@ -3008,10 +3393,22 @@ export default function ExecutiveSummaryPage() {
         };
       })
       .filter(Boolean);
-  }, [data.summaryMetrics]);
+  }, [data.summaryMetrics, monthlyPerformanceState.metrics]);
   const highlightItems = useMemo(() => {
+    if (
+      Array.isArray(monthlyPerformanceState.highlights) &&
+      monthlyPerformanceState.highlights.length > 0
+    ) {
+      return monthlyPerformanceState.highlights;
+    }
     return normalizeStringArray(data.highlights);
-  }, [data.highlights]);
+  }, [data.highlights, monthlyPerformanceState.highlights]);
+  const monthlyNarrative = useMemo(() => {
+    if (monthlyPerformanceState.narrative) {
+      return monthlyPerformanceState.narrative;
+    }
+    return ensureStringValue(data.overviewNarrative, "");
+  }, [data.overviewNarrative, monthlyPerformanceState.narrative]);
   const engagementByChannelData = useMemo(() => {
     if (!Array.isArray(data.engagementByChannel)) {
       return [];
@@ -5049,26 +5446,26 @@ export default function ExecutiveSummaryPage() {
               Ringkasan Kinerja Bulanan
             </h2>
             <p className="text-sm text-neutral-mist">
-              Menampilkan ringkasan {activeMonthLabel} berdasarkan data terbaru dari backend.
+              Menampilkan ringkasan {activeMonthLabel} berbasis rekap likes, komentar, dan daftar konten bulan berjalan.
             </p>
           </div>
           <div className="flex flex-col items-start gap-1 text-xs text-neutral-slate sm:items-end">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-brand-700 ring-1 ring-brand-100">
               Periode {activeMonthLabel}
             </span>
-            {executiveSummaryLoading ? (
+            {summaryLoading ? (
               <span className="text-neutral-slate">Memuat ringkasan eksekutif…</span>
             ) : null}
           </div>
         </div>
 
-        {executiveSummaryError ? (
+        {summaryError ? (
           <div className="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-            {executiveSummaryError}
+            {summaryError}
           </div>
         ) : null}
 
-        {executiveSummaryLoading ? (
+        {summaryLoading ? (
           <div className="flex h-32 items-center justify-center text-sm text-neutral-slate">
             Menyiapkan kartu ringkasan dan highlights…
           </div>
@@ -5122,9 +5519,14 @@ export default function ExecutiveSummaryPage() {
                   </ul>
                 ) : (
                   <p className="text-sm text-neutral-slate">
-                    Belum ada poin highlight yang dikirimkan backend untuk periode ini.
+                    Belum ada poin highlight yang bisa disusun dari rekap periode ini.
                   </p>
                 )}
+                {monthlyNarrative ? (
+                  <p className="rounded-xl bg-brand-50/60 px-3 py-2 text-xs text-brand-700">
+                    {monthlyNarrative}
+                  </p>
+                ) : null}
                 {ensureStringValue(data.userInsightNarrative) ? (
                   <p className="rounded-xl bg-brand-50/60 px-3 py-2 text-xs text-brand-700">
                     {data.userInsightNarrative}
