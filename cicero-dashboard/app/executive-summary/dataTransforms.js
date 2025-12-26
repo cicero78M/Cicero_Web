@@ -1157,6 +1157,40 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return Array.from(new Set([...aliasCandidates, ...handleAliases]));
   };
 
+  const collectRekapPersonnelEntries = (source = {}) => {
+    const candidates = [];
+
+    const containers = [
+      source?.rekap?.data_personnel,
+      source?.rekap?.data_personel,
+      source?.rekap?.data_personil,
+      source?.rekap?.dataPersonel,
+      source?.rekap?.dataPersonil,
+      source?.rekap?.dataPersonnel,
+      source?.rekap?.personnel,
+      source?.rekap?.personel,
+      source?.rekap?.personil,
+      source?.rekap?.users,
+      source?.rekap?.user,
+      source?.rekap?.data,
+    ];
+
+    containers.forEach((container) => {
+      if (!Array.isArray(container)) {
+        return;
+      }
+
+      container.forEach((entry) => {
+        if (!entry || typeof entry !== "object") {
+          return;
+        }
+        candidates.push(entry);
+      });
+    });
+
+    return candidates;
+  };
+
   const registerAliasForPersonnel = (
     aliases = [],
     clientKey,
@@ -1485,6 +1519,37 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       aliasCandidates,
       clientEntry.key,
     );
+    const rekapPersonnelEntries = collectRekapPersonnelEntries(record).map(
+      (entry) => {
+        const entryIdentifiers = resolveClientIdentifiers(entry);
+        const entryNames = resolvePersonnelNames(entry);
+        const targetIdentifiers = {
+          clientId: entryIdentifiers.clientId || identifiers.clientId,
+          clientKey: entryIdentifiers.clientKey || identifiers.clientKey,
+          clientName: entryIdentifiers.clientName || identifiers.clientName,
+          divisi: entryIdentifiers.divisi || identifiers.divisi,
+        };
+        const targetClient = ensureClientEntry(targetIdentifiers);
+        const entryLikes = extractMetricValue(entry, "likes");
+        const entryComments = extractMetricValue(entry, "comments");
+
+        return {
+          entry,
+          identifiers: targetIdentifiers,
+          clientEntry: targetClient,
+          names: entryNames,
+          likes: entryLikes,
+          comments: entryComments,
+        };
+      },
+    );
+    const filteredRekapPersonnel = rekapPersonnelEntries.filter((item) => {
+      const hasIdentity =
+        Boolean(item.names?.username) || Boolean(item.names?.nama);
+      const hasActivity = (item.likes ?? 0) > 0 || (item.comments ?? 0) > 0;
+      return hasIdentity || hasActivity;
+    });
+    const hasRekapPersonnel = filteredRekapPersonnel.length > 0;
     const likes = toSafeNumber(
       record?.jumlah_like ??
         record?.jumlahLike ??
@@ -1518,40 +1583,113 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     const personnelKey =
       matchedDirectoryKey ||
       buildPersonnelKey(record, identifiers.clientKey, `record-${index}`);
-    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
-      clientId: identifiers.clientId,
-      clientName: identifiers.clientName,
-      divisi: identifiers.divisi,
-      username,
-      nama,
-      pangkat,
-    });
 
-    personnelRecord.likes += likes;
-    personnelRecord.comments += comments;
-    if (likes > 0 || comments > 0) {
-      personnelRecord.active = true;
+    if (!hasRekapPersonnel) {
+      const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
+        clientId: identifiers.clientId,
+        clientName: identifiers.clientName,
+        divisi: identifiers.divisi,
+        username,
+        nama,
+        pangkat,
+      });
+
+      personnelRecord.likes += likes;
+      personnelRecord.comments += comments;
+      if (likes > 0 || comments > 0) {
+        personnelRecord.active = true;
+      }
+
+      updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
+      updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+      updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
+      updateIfEmpty(personnelRecord, "username", username);
+      updateIfEmpty(personnelRecord, "nama", nama);
+      updateIfEmpty(personnelRecord, "pangkat", pangkat);
+
+      clientEntry.totalLikes += likes;
+      clientEntry.totalComments += comments;
+
+      registerAliasForPersonnel(
+        aliasCandidates,
+        clientEntry.key,
+        personnelRecord.key,
+      );
+
+      const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
+      if (directorySet && matchedDirectoryKey) {
+        directorySet.add(matchedDirectoryKey);
+      }
+
+      const activityDate =
+        parseDateValue(
+          record?.tanggal ?? record?.date ?? record?.activityDate,
+        ) ??
+        parseDateValue(record?.updated_at ?? record?.updatedAt) ??
+        parseDateValue(record?.created_at ?? record?.createdAt) ??
+        null;
+
+      if (activityDate && (!latestActivity || activityDate > latestActivity)) {
+        latestActivity = activityDate;
+      }
     }
 
-    updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
-    updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
-    updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
-    updateIfEmpty(personnelRecord, "username", username);
-    updateIfEmpty(personnelRecord, "nama", nama);
-    updateIfEmpty(personnelRecord, "pangkat", pangkat);
+    filteredRekapPersonnel.forEach((item, rekapIndex) => {
+      const entryNames = item.names ?? resolvePersonnelNames(item.entry);
+      const rekapClient = item.clientEntry ?? clientEntry;
+      const personnelKey = buildPersonnelKey(
+        item.entry,
+        rekapClient.key,
+        `rekap-${index}-${rekapIndex}`,
+      );
+      const personnelRecord = registerPersonnel(rekapClient, personnelKey, {
+        clientId: item.identifiers.clientId,
+        clientName: item.identifiers.clientName,
+        divisi: item.identifiers.divisi,
+        username: entryNames.username,
+        nama: entryNames.nama,
+        pangkat: entryNames.pangkat,
+      });
 
-    clientEntry.totalLikes += likes;
-    clientEntry.totalComments += comments;
+      personnelRecord.likes += item.likes;
+      personnelRecord.comments += item.comments;
+      if (item.likes > 0 || item.comments > 0) {
+        personnelRecord.active = true;
+      }
 
-    registerAliasForPersonnel(
-      aliasCandidates,
-      clientEntry.key,
-      personnelRecord.key,
-    );
+      updateIfEmpty(personnelRecord, "clientId", item.identifiers.clientId);
+      updateIfEmpty(personnelRecord, "clientName", item.identifiers.clientName);
+      updateIfEmpty(personnelRecord, "divisi", item.identifiers.divisi);
+      updateIfEmpty(personnelRecord, "username", entryNames.username);
+      updateIfEmpty(personnelRecord, "nama", entryNames.nama);
+      updateIfEmpty(personnelRecord, "pangkat", entryNames.pangkat);
 
-    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
-    if (directorySet && matchedDirectoryKey) {
-      directorySet.add(matchedDirectoryKey);
+      registerAliasForPersonnel(
+        collectPersonnelAliasCandidates(item.entry, entryNames),
+        rekapClient.key,
+        personnelRecord.key,
+      );
+
+      const rekapDirectorySet = clientDirectoryPersonnelKeys.get(
+        rekapClient.key,
+      );
+      if (rekapDirectorySet) {
+        rekapDirectorySet.add(personnelRecord.key);
+      }
+    });
+
+    if (hasRekapPersonnel) {
+      const rekapLikesTotal = filteredRekapPersonnel.reduce(
+        (sum, item) => sum + (Number.isFinite(item.likes) ? item.likes : 0),
+        0,
+      );
+      const rekapCommentsTotal = filteredRekapPersonnel.reduce(
+        (sum, item) => sum + (Number.isFinite(item.comments) ? item.comments : 0),
+        0,
+      );
+
+      clientEntry.totalLikes += rekapLikesTotal;
+      clientEntry.totalComments += rekapCommentsTotal;
     }
 
     const activityDate =
