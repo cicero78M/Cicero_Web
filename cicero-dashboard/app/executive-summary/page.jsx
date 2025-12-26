@@ -2851,6 +2851,12 @@ export default function ExecutiveSummaryPage() {
       error: "",
     }));
 
+    if (!profile || !effectiveClientType) {
+      return () => {
+        controller.abort();
+      };
+    }
+
     const rekapScope = resolveRekapScope(effectiveClientType, profile);
     const normalizedRegionalId = resolveRekapRegionalId(regionalId, profile);
 
@@ -2918,6 +2924,7 @@ export default function ExecutiveSummaryPage() {
     selectedMonthLabel,
     regionalId,
     token,
+    profile,
   ]);
 
   const backendMonthlyData = executiveSummaryState.dataByMonth?.[selectedMonthKey];
@@ -3132,6 +3139,10 @@ export default function ExecutiveSummaryPage() {
         loading: true,
         error: "",
       }));
+
+      if (!profile || !effectiveClientType) {
+        return;
+      }
 
       const periodRange = getMonthDateRange(selectedMonthKey);
       const periodeParam = periodRange ? "bulanan" : undefined;
