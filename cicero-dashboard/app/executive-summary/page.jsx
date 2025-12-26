@@ -126,6 +126,31 @@ const normalizeRekapScope = (value) => {
   return normalized || undefined;
 };
 
+const resolveRekapScope = (effectiveClientType, profile) => {
+  const profileScope =
+    profile?.scope ||
+    profile?.client_scope ||
+    profile?.clientScope ||
+    profile?.access_scope ||
+    profile?.accessScope ||
+    profile?.akses_scope ||
+    profile?.scope_rekap ||
+    profile?.rekap_scope;
+  const normalizedProfileScope = normalizeRekapScope(profileScope);
+  if (normalizedProfileScope) return normalizedProfileScope;
+  return normalizeRekapScope(effectiveClientType);
+};
+
+const resolveRekapRegionalId = (regionalId, profile) => {
+  const resolvedRegionalId =
+    regionalId ||
+    profile?.regional_id ||
+    profile?.regionalId ||
+    profile?.regionalID ||
+    profile?.regional;
+  return resolvedRegionalId ? String(resolvedRegionalId) : undefined;
+};
+
 const monthLabelFormatter = new Intl.DateTimeFormat("id-ID", {
   month: "short",
   year: "numeric",
@@ -2515,8 +2540,15 @@ const MAX_SELECTABLE_YEAR = 2035;
 export default function ExecutiveSummaryPage() {
   useRequireAuth();
   const router = useRouter();
-  const { token, clientId, role, effectiveRole, effectiveClientType, regionalId } =
-    useAuth();
+  const {
+    token,
+    clientId,
+    role,
+    effectiveRole,
+    effectiveClientType,
+    regionalId,
+    profile,
+  } = useAuth();
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [executiveSummaryState, setExecutiveSummaryState] = useState({
@@ -2791,6 +2823,9 @@ export default function ExecutiveSummaryPage() {
       error: "",
     }));
 
+    const rekapScope = resolveRekapScope(effectiveClientType, profile);
+    const normalizedRegionalId = resolveRekapRegionalId(regionalId, profile);
+
     getExecutiveSummary(
       token,
       {
@@ -2800,9 +2835,9 @@ export default function ExecutiveSummaryPage() {
         periodScope: "monthly",
         start_date: periodRange?.startDate,
         end_date: periodRange?.endDate,
-        scope: normalizeRekapScope(effectiveClientType),
+        scope: rekapScope,
         role: normalizeRekapRole(effectiveRole ?? role ?? ""),
-        regional_id: regionalId ? String(regionalId) : undefined,
+        regional_id: normalizedRegionalId,
       },
       controller.signal,
     )
@@ -3110,8 +3145,8 @@ export default function ExecutiveSummaryPage() {
           effectiveClientType,
         });
         const rekapRole = normalizeRekapRole(effectiveRole ?? role ?? "");
-        const rekapScope = normalizeRekapScope(effectiveClientType);
-        const normalizedRegionalId = regionalId ? String(regionalId) : undefined;
+        const rekapScope = resolveRekapScope(effectiveClientType, profile);
+        const normalizedRegionalId = resolveRekapRegionalId(regionalId, profile);
         const [directoryResponse, statsResult, likesResult, commentsResult] =
           await Promise.all([
             getUserDirectory(
