@@ -143,6 +143,32 @@ const createEmptyLikesSummary = () => ({
   lastUpdated: null,
 });
 
+const extractRecordArray = (input) => {
+  if (Array.isArray(input)) {
+    return input;
+  }
+
+  if (input && typeof input === "object") {
+    const candidates = [
+      input?.data,
+      input?.records,
+      input?.items,
+      input?.results,
+      input?.result,
+      input?.list,
+      input?.users,
+    ];
+
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  return [];
+};
+
 const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
   const records = new Map();
   const aliasToCanonical = new Map();
@@ -542,8 +568,29 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
 };
 
 const aggregateLikesRecords = (records = [], options = {}) => {
-  const safeRecords = Array.isArray(records)
-    ? records.filter((item) => item && typeof item === "object")
+  const normalizeRecordsInput = (input) => {
+    const baseArray = extractRecordArray(input);
+    const extraCandidates = [
+      extractRecordArray(input?.chartData),
+      extractRecordArray(input?.users),
+      extractRecordArray(input?.records),
+    ];
+
+    const merged = [...baseArray];
+
+    extraCandidates.forEach((candidate) => {
+      if (!Array.isArray(candidate) || candidate.length === 0) {
+        return;
+      }
+      merged.push(...candidate);
+    });
+
+    return merged;
+  };
+
+  const normalizedRecords = normalizeRecordsInput(records);
+  const safeRecords = Array.isArray(normalizedRecords)
+    ? normalizedRecords.filter((item) => item && typeof item === "object")
     : [];
   const directoryUsersRaw = Array.isArray(options?.directoryUsers)
     ? options.directoryUsers.filter((item) => item && typeof item === "object")
