@@ -248,6 +248,49 @@ describe("groupRecordsByMonth monthly trend integration", () => {
     expect(summary.clients[0].totalLikes).toBe(12);
   });
 
+  it("prioritizes monthly rekap personnel when mixing with cross-month activity", () => {
+    const summary = aggregateLikesRecords([
+      {
+        client_id: "CLI-77",
+        nama_client: "Client Rekap",
+        rekap: {
+          data: {
+            data_personil: [
+              { nama: "Alpha", total_like_personil: 8, jumlah_komentar: 2 },
+              { nama: "Bravo", total_like_personil: 5 },
+            ],
+          },
+        },
+      },
+      {
+        client_id: "CLI-77",
+        nama_client: "Client Rekap",
+        username: "Alpha",
+        jumlah_like: 50,
+        jumlah_komentar: 10,
+        tanggal: "2024-01-01",
+      },
+    ]);
+
+    expect(summary.totals.totalLikes).toBe(13);
+    expect(summary.totals.totalComments).toBe(2);
+    expect(summary.topPersonnel.map((person) => person.nama)).toEqual(
+      expect.arrayContaining(["Alpha", "Bravo"]),
+    );
+    expect(summary.topPersonnel[0].likes).toBe(8);
+    expect(summary.topCommentPersonnel[0].comments).toBe(2);
+
+    const client = summary.clients.find(
+      (entry) => entry.clientId === "CLI-77",
+    );
+    expect(client?.totalLikes).toBe(13);
+    expect(client?.totalComments).toBe(2);
+
+    const alpha = client?.personnel.find((person) => person.nama === "Alpha");
+    expect(alpha?.likes).toBe(8);
+    expect(alpha?.comments).toBe(2);
+  });
+
   it("menggunakan direktori pengguna sebagai baseline ketika tidak ada aktivitas", () => {
     const directoryUsers = [
       { client_id: "CLI-01", nama_client: "Client A", username: "alpha" },

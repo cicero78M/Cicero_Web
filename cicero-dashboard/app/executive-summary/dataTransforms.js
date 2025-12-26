@@ -169,6 +169,126 @@ const extractRecordArray = (input) => {
   return [];
 };
 
+const extractMetricValue = (record, type) => {
+  if (type === "likes") {
+    return (
+      record?.likes_personil ??
+      record?.likes_personel ??
+      record?.likes_personnel ??
+      record?.total_like_personil ??
+      record?.total_like_personel ??
+      record?.total_like_personnel ??
+      record?.totalLikesPersonil ??
+      record?.totalLikesPersonel ??
+      record?.totalLikesPersonnel ??
+      record?.rekap?.likes_personil ??
+      record?.rekap?.likes_personel ??
+      record?.rekap?.likes_personnel ??
+      record?.rekap?.total_like_personil ??
+      record?.rekap?.total_like_personel ??
+      record?.rekap?.total_like_personnel ??
+      record?.rekap?.totalLikesPersonil ??
+      record?.rekap?.totalLikesPersonel ??
+      record?.rekap?.totalLikesPersonnel ??
+      record?.metrics?.likes_personil ??
+      record?.metrics?.likes_personel ??
+      record?.metrics?.likes_personnel ??
+      record?.metrics?.total_like_personil ??
+      record?.metrics?.total_like_personel ??
+      record?.metrics?.total_like_personnel ??
+      record?.metrics?.totalLikesPersonil ??
+      record?.metrics?.totalLikesPersonel ??
+      record?.metrics?.totalLikesPersonnel ??
+      record?.jumlah_like ??
+      record?.jumlahLike ??
+      record?.total_like ??
+      record?.likes ??
+      record?.totalLikes ??
+      record?.like_count ??
+      record?.likeCount ??
+      record?.total_likes ??
+      record?.rekap?.jumlah_like ??
+      record?.rekap?.jumlahLike ??
+      record?.rekap?.total_like ??
+      record?.rekap?.likes ??
+      record?.rekap?.totalLikes ??
+      record?.rekap?.like_count ??
+      record?.rekap?.likeCount ??
+      record?.rekap?.total_likes ??
+      record?.metrics?.likes ??
+      record?.metrics?.totalLikes ??
+      record?.metrics?.like_count ??
+      record?.metrics?.likeCount ??
+      record?.metrics?.total_likes ??
+      0
+    );
+  }
+
+  return (
+    record?.komentar_personil ??
+    record?.komentar_personel ??
+    record?.komentar_personnel ??
+    record?.comments_personil ??
+    record?.comments_personel ??
+    record?.comments_personnel ??
+    record?.total_comments_personil ??
+    record?.total_comments_personel ??
+    record?.total_comments_personnel ??
+    record?.totalCommentsPersonil ??
+    record?.totalCommentsPersonel ??
+    record?.totalCommentsPersonnel ??
+    record?.rekap?.komentar_personil ??
+    record?.rekap?.komentar_personel ??
+    record?.rekap?.komentar_personnel ??
+    record?.rekap?.comments_personil ??
+    record?.rekap?.comments_personel ??
+    record?.rekap?.comments_personnel ??
+    record?.rekap?.total_comments_personil ??
+    record?.rekap?.total_comments_personel ??
+    record?.rekap?.total_comments_personnel ??
+    record?.rekap?.totalCommentsPersonil ??
+    record?.rekap?.totalCommentsPersonel ??
+    record?.rekap?.totalCommentsPersonnel ??
+    record?.metrics?.komentar_personil ??
+    record?.metrics?.komentar_personel ??
+    record?.metrics?.komentar_personnel ??
+    record?.metrics?.comments_personil ??
+    record?.metrics?.comments_personel ??
+    record?.metrics?.comments_personnel ??
+    record?.metrics?.total_comments_personil ??
+    record?.metrics?.total_comments_personel ??
+    record?.metrics?.total_comments_personnel ??
+    record?.metrics?.totalCommentsPersonil ??
+    record?.metrics?.totalCommentsPersonel ??
+    record?.metrics?.totalCommentsPersonnel ??
+    record?.jumlah_komentar ??
+    record?.jumlahKomentar ??
+    record?.total_komentar ??
+    record?.totalKomentar ??
+    record?.total_comments ??
+    record?.totalComments ??
+    record?.comment_count ??
+    record?.commentCount ??
+    record?.comments ??
+    record?.rekap?.jumlah_komentar ??
+    record?.rekap?.jumlahKomentar ??
+    record?.rekap?.total_komentar ??
+    record?.rekap?.totalKomentar ??
+    record?.rekap?.total_comments ??
+    record?.rekap?.totalComments ??
+    record?.rekap?.comment_count ??
+    record?.rekap?.commentCount ??
+    record?.rekap?.comments ??
+    record?.rekap?.komentar ??
+    record?.metrics?.comments ??
+    record?.metrics?.comment_count ??
+    record?.metrics?.commentCount ??
+    record?.metrics?.totalComments ??
+    record?.metrics?.total_comments ??
+    0
+  );
+};
+
 const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
   const records = new Map();
   const aliasToCanonical = new Map();
@@ -302,127 +422,6 @@ const mergeActivityRecords = (likesRecords = [], commentRecords = []) => {
       target[field] = Math.max(current, numeric);
     });
   };
-
-  const extractMetricValue = (record, type) => {
-    if (type === "likes") {
-      return (
-        record?.likes_personil ??
-        record?.likes_personel ??
-        record?.likes_personnel ??
-        record?.total_like_personil ??
-        record?.total_like_personel ??
-        record?.total_like_personnel ??
-        record?.totalLikesPersonil ??
-        record?.totalLikesPersonel ??
-        record?.totalLikesPersonnel ??
-        record?.rekap?.likes_personil ??
-        record?.rekap?.likes_personel ??
-        record?.rekap?.likes_personnel ??
-        record?.rekap?.total_like_personil ??
-        record?.rekap?.total_like_personel ??
-        record?.rekap?.total_like_personnel ??
-        record?.rekap?.totalLikesPersonil ??
-        record?.rekap?.totalLikesPersonel ??
-        record?.rekap?.totalLikesPersonnel ??
-        record?.metrics?.likes_personil ??
-        record?.metrics?.likes_personel ??
-        record?.metrics?.likes_personnel ??
-        record?.metrics?.total_like_personil ??
-        record?.metrics?.total_like_personel ??
-        record?.metrics?.total_like_personnel ??
-        record?.metrics?.totalLikesPersonil ??
-        record?.metrics?.totalLikesPersonel ??
-        record?.metrics?.totalLikesPersonnel ??
-        record?.jumlah_like ??
-        record?.jumlahLike ??
-        record?.total_like ??
-        record?.likes ??
-        record?.totalLikes ??
-        record?.like_count ??
-        record?.likeCount ??
-        record?.total_likes ??
-        record?.rekap?.jumlah_like ??
-        record?.rekap?.jumlahLike ??
-        record?.rekap?.total_like ??
-        record?.rekap?.likes ??
-        record?.rekap?.totalLikes ??
-        record?.rekap?.like_count ??
-        record?.rekap?.likeCount ??
-        record?.rekap?.total_likes ??
-        record?.metrics?.likes ??
-        record?.metrics?.totalLikes ??
-        record?.metrics?.like_count ??
-        record?.metrics?.likeCount ??
-        record?.metrics?.total_likes ??
-        0
-      );
-    }
-
-    return (
-      record?.komentar_personil ??
-      record?.komentar_personel ??
-      record?.komentar_personnel ??
-      record?.comments_personil ??
-      record?.comments_personel ??
-      record?.comments_personnel ??
-      record?.total_comments_personil ??
-      record?.total_comments_personel ??
-      record?.total_comments_personnel ??
-      record?.totalCommentsPersonil ??
-      record?.totalCommentsPersonel ??
-      record?.totalCommentsPersonnel ??
-      record?.rekap?.komentar_personil ??
-      record?.rekap?.komentar_personel ??
-      record?.rekap?.komentar_personnel ??
-      record?.rekap?.comments_personil ??
-      record?.rekap?.comments_personel ??
-      record?.rekap?.comments_personnel ??
-      record?.rekap?.total_comments_personil ??
-      record?.rekap?.total_comments_personel ??
-      record?.rekap?.total_comments_personnel ??
-      record?.rekap?.totalCommentsPersonil ??
-      record?.rekap?.totalCommentsPersonel ??
-      record?.rekap?.totalCommentsPersonnel ??
-      record?.metrics?.komentar_personil ??
-      record?.metrics?.komentar_personel ??
-      record?.metrics?.komentar_personnel ??
-      record?.metrics?.comments_personil ??
-      record?.metrics?.comments_personel ??
-      record?.metrics?.comments_personnel ??
-      record?.metrics?.total_comments_personil ??
-      record?.metrics?.total_comments_personel ??
-      record?.metrics?.total_comments_personnel ??
-      record?.metrics?.totalCommentsPersonil ??
-      record?.metrics?.totalCommentsPersonel ??
-      record?.metrics?.totalCommentsPersonnel ??
-      record?.jumlah_komentar ??
-      record?.jumlahKomentar ??
-      record?.total_komentar ??
-      record?.totalKomentar ??
-      record?.total_comments ??
-      record?.totalComments ??
-      record?.comment_count ??
-      record?.commentCount ??
-      record?.comments ??
-      record?.rekap?.jumlah_komentar ??
-      record?.rekap?.jumlahKomentar ??
-      record?.rekap?.total_komentar ??
-      record?.rekap?.totalKomentar ??
-      record?.rekap?.total_comments ??
-      record?.rekap?.totalComments ??
-      record?.rekap?.comment_count ??
-      record?.rekap?.commentCount ??
-      record?.rekap?.comments ??
-      record?.rekap?.komentar ??
-      record?.metrics?.comments ??
-      record?.metrics?.comment_count ??
-      record?.metrics?.commentCount ??
-      record?.metrics?.totalComments ??
-      record?.metrics?.total_comments ??
-      0
-    );
-  };
-
   const ingest = (recordsInput, type) => {
     if (!Array.isArray(recordsInput)) {
       return;
@@ -1204,38 +1203,87 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     return Array.from(new Set([...aliasCandidates, ...handleAliases]));
   };
 
-  const collectRekapPersonnelEntries = (source = {}) => {
-    const candidates = [];
+  const unwrapRekapPersonnelList = (rekapSource) => {
+    const queue = [];
+    const seen = new Set();
 
-    const containers = [
-      source?.rekap?.data_personnel,
-      source?.rekap?.data_personel,
-      source?.rekap?.data_personil,
-      source?.rekap?.dataPersonel,
-      source?.rekap?.dataPersonil,
-      source?.rekap?.dataPersonnel,
-      source?.rekap?.personnel,
-      source?.rekap?.personel,
-      source?.rekap?.personil,
-      source?.rekap?.users,
-      source?.rekap?.user,
-      source?.rekap?.data,
-    ];
-
-    containers.forEach((container) => {
-      if (!Array.isArray(container)) {
+    const enqueue = (candidate) => {
+      if (candidate == null) {
         return;
       }
+      queue.push(candidate);
+    };
 
-      container.forEach((entry) => {
-        if (!entry || typeof entry !== "object") {
-          return;
+    enqueue(rekapSource);
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+
+      if (Array.isArray(current)) {
+        const filtered = current.filter(
+          (entry) => entry && typeof entry === "object",
+        );
+        if (filtered.length > 0) {
+          return filtered;
         }
-        candidates.push(entry);
-      });
-    });
+        continue;
+      }
 
-    return candidates;
+      if (!current || typeof current !== "object") {
+        continue;
+      }
+
+      if (seen.has(current)) {
+        continue;
+      }
+      seen.add(current);
+
+      const directContainers = [
+        current?.data_personnel,
+        current?.data_personel,
+        current?.data_personil,
+        current?.dataPersonel,
+        current?.dataPersonil,
+        current?.dataPersonnel,
+        current?.personnel,
+        current?.personel,
+        current?.personil,
+        current?.users,
+        current?.user,
+        current?.data,
+        current?.chartData,
+        current?.records,
+      ];
+
+      for (const container of directContainers) {
+        const array = extractRecordArray(container).filter(
+          (entry) => entry && typeof entry === "object",
+        );
+        if (array.length > 0) {
+          return array;
+        }
+      }
+
+      const wrapperCandidates = [
+        current?.data,
+        current?.chartData,
+        current?.records,
+        current?.users,
+      ];
+
+      wrapperCandidates.forEach((candidate) => enqueue(candidate));
+    }
+
+    return [];
+  };
+
+  const collectRekapPersonnelEntries = (source = {}) => {
+    const primary = unwrapRekapPersonnelList(source?.rekap);
+    if (primary.length > 0) {
+      return primary;
+    }
+
+    return unwrapRekapPersonnelList(source);
   };
 
   const registerAliasForPersonnel = (
@@ -1554,7 +1602,175 @@ const aggregateLikesRecords = (records = [], options = {}) => {
     registerAliasForPersonnel(aliasCandidates, clientEntry.key, personnelRecord.key);
   });
 
+  const recordsWithRekap = [];
+  const rawRecords = [];
+
   safeRecords.forEach((record, index) => {
+    const rekapEntries = collectRekapPersonnelEntries(record);
+    if (rekapEntries.length > 0) {
+      recordsWithRekap.push({ record, index, rekapEntries });
+    } else {
+      rawRecords.push({ record, index });
+    }
+  });
+
+  const clientsWithAuthoritativeRekap = new Set();
+
+  recordsWithRekap.forEach(({ record, index, rekapEntries }) => {
+    const identifiers = resolveClientIdentifiers(record);
+    const clientEntry = ensureClientEntry(identifiers);
+
+    const mappedRekapPersonnel = rekapEntries.map((entry) => {
+      const entryIdentifiers = resolveClientIdentifiers(entry);
+      const entryNames = resolvePersonnelNames(entry);
+      const resolvedClientId =
+        toNormalizedString(entryIdentifiers.clientId) &&
+        toNormalizedString(entryIdentifiers.clientId) !== "LAINNYA"
+          ? entryIdentifiers.clientId
+          : identifiers.clientId;
+      const resolvedClientKey =
+        toNormalizedString(entryIdentifiers.clientKey) &&
+        toNormalizedString(entryIdentifiers.clientKey) !== "LAINNYA"
+          ? entryIdentifiers.clientKey
+          : identifiers.clientKey;
+      const resolvedClientName =
+        toNormalizedString(entryIdentifiers.clientName) &&
+        toNormalizedString(entryIdentifiers.clientName) !== "LAINNYA"
+          ? entryIdentifiers.clientName
+          : identifiers.clientName;
+      const resolvedDivisi =
+        toNormalizedString(entryIdentifiers.divisi) &&
+        toNormalizedString(entryIdentifiers.divisi) !== "LAINNYA"
+          ? entryIdentifiers.divisi
+          : identifiers.divisi;
+      const targetIdentifiers = {
+        clientId: resolvedClientId,
+        clientKey: resolvedClientKey,
+        clientName: resolvedClientName,
+        divisi: resolvedDivisi,
+      };
+      const targetClient = ensureClientEntry(targetIdentifiers);
+      const entryLikes = toSafeNumber(extractMetricValue(entry, "likes"));
+      const entryComments = toSafeNumber(extractMetricValue(entry, "comments"));
+
+      return {
+        entry,
+        identifiers: targetIdentifiers,
+        clientEntry: targetClient,
+        names: entryNames,
+        likes: entryLikes,
+        comments: entryComments,
+      };
+    });
+
+    const filteredRekapPersonnel = mappedRekapPersonnel.filter((item) => {
+      const hasIdentity =
+        Boolean(item.names?.username) || Boolean(item.names?.nama);
+      const hasActivity = (item.likes ?? 0) > 0 || (item.comments ?? 0) > 0;
+      return hasIdentity || hasActivity;
+    });
+    if (filteredRekapPersonnel.length === 0) {
+      rawRecords.push({ record, index });
+      return;
+    }
+
+    const rekapTotalsByClient = new Map();
+
+    filteredRekapPersonnel.forEach((item, rekapIndex) => {
+      const entryNames = item.names ?? resolvePersonnelNames(item.entry);
+      const rekapClient = item.clientEntry ?? clientEntry;
+      const aliasCandidates = collectPersonnelAliasCandidates(
+        item.entry,
+        entryNames,
+      );
+      const matchedDirectoryKey = findDirectoryKeyForAliases(
+        aliasCandidates,
+        rekapClient.key,
+      );
+      const personnelKey =
+        matchedDirectoryKey ||
+        buildPersonnelKey(
+          item.entry,
+          rekapClient.key,
+          `rekap-${index}-${rekapIndex}`,
+        );
+      const personnelRecord = registerPersonnel(rekapClient, personnelKey, {
+        clientId: item.identifiers.clientId,
+        clientName: item.identifiers.clientName,
+        divisi: item.identifiers.divisi,
+        username: entryNames.username,
+        nama: entryNames.nama,
+        pangkat: entryNames.pangkat,
+      });
+
+      personnelRecord.likes += item.likes;
+      personnelRecord.comments += item.comments;
+      if (item.likes > 0 || item.comments > 0) {
+        personnelRecord.active = true;
+      }
+
+      updateIfEmpty(personnelRecord, "clientId", item.identifiers.clientId);
+      updateIfEmpty(personnelRecord, "clientName", item.identifiers.clientName);
+      updateIfEmpty(personnelRecord, "divisi", item.identifiers.divisi);
+      updateIfEmpty(personnelRecord, "username", entryNames.username);
+      updateIfEmpty(personnelRecord, "nama", entryNames.nama);
+      updateIfEmpty(personnelRecord, "pangkat", entryNames.pangkat);
+
+      registerAliasForPersonnel(
+        aliasCandidates,
+        rekapClient.key,
+        personnelRecord.key,
+      );
+
+      const rekapDirectorySet = clientDirectoryPersonnelKeys.get(
+        rekapClient.key,
+      );
+      if (rekapDirectorySet) {
+        rekapDirectorySet.add(personnelRecord.key);
+      }
+
+      clientsWithAuthoritativeRekap.add(rekapClient.key);
+      const existingTotals = rekapTotalsByClient.get(rekapClient.key) ?? {
+        likes: 0,
+        comments: 0,
+      };
+      rekapTotalsByClient.set(rekapClient.key, {
+        likes: existingTotals.likes + toSafeNumber(item.likes),
+        comments: existingTotals.comments + toSafeNumber(item.comments),
+      });
+
+      const entryActivityDate =
+        parseDateValue(
+          item.entry?.tanggal ?? item.entry?.date ?? item.entry?.activityDate,
+        ) ??
+        parseDateValue(item.entry?.updated_at ?? item.entry?.updatedAt) ??
+        parseDateValue(item.entry?.created_at ?? item.entry?.createdAt) ??
+        parseDateValue(
+          record?.tanggal ?? record?.date ?? record?.activityDate,
+        ) ??
+        parseDateValue(record?.updated_at ?? record?.updatedAt) ??
+        parseDateValue(record?.created_at ?? record?.createdAt) ??
+        null;
+
+      if (
+        entryActivityDate &&
+        (!latestActivity || entryActivityDate > latestActivity)
+      ) {
+        latestActivity = entryActivityDate;
+      }
+    });
+
+    rekapTotalsByClient.forEach((totals, clientKey) => {
+      const target = clientsMap.get(clientKey);
+      if (!target) {
+        return;
+      }
+      target.totalLikes += toSafeNumber(totals.likes);
+      target.totalComments += toSafeNumber(totals.comments);
+    });
+  });
+
+  rawRecords.forEach(({ record, index }) => {
     const identifiers = resolveClientIdentifiers(record);
     const clientEntry = ensureClientEntry(identifiers);
     const resolvedNames = resolvePersonnelNames(record);
@@ -1566,37 +1782,21 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       aliasCandidates,
       clientEntry.key,
     );
-    const rekapPersonnelEntries = collectRekapPersonnelEntries(record).map(
-      (entry) => {
-        const entryIdentifiers = resolveClientIdentifiers(entry);
-        const entryNames = resolvePersonnelNames(entry);
-        const targetIdentifiers = {
-          clientId: entryIdentifiers.clientId || identifiers.clientId,
-          clientKey: entryIdentifiers.clientKey || identifiers.clientKey,
-          clientName: entryIdentifiers.clientName || identifiers.clientName,
-          divisi: entryIdentifiers.divisi || identifiers.divisi,
-        };
-        const targetClient = ensureClientEntry(targetIdentifiers);
-        const entryLikes = extractMetricValue(entry, "likes");
-        const entryComments = extractMetricValue(entry, "comments");
 
-        return {
-          entry,
-          identifiers: targetIdentifiers,
-          clientEntry: targetClient,
-          names: entryNames,
-          likes: entryLikes,
-          comments: entryComments,
-        };
-      },
-    );
-    const filteredRekapPersonnel = rekapPersonnelEntries.filter((item) => {
-      const hasIdentity =
-        Boolean(item.names?.username) || Boolean(item.names?.nama);
-      const hasActivity = (item.likes ?? 0) > 0 || (item.comments ?? 0) > 0;
-      return hasIdentity || hasActivity;
-    });
-    const hasRekapPersonnel = filteredRekapPersonnel.length > 0;
+    const activityDate =
+      parseDateValue(record?.tanggal ?? record?.date ?? record?.activityDate) ??
+      parseDateValue(record?.updated_at ?? record?.updatedAt) ??
+      parseDateValue(record?.created_at ?? record?.createdAt) ??
+      null;
+
+    if (activityDate && (!latestActivity || activityDate > latestActivity)) {
+      latestActivity = activityDate;
+    }
+
+    if (clientsWithAuthoritativeRekap.has(clientEntry.key)) {
+      return;
+    }
+
     const likes = toSafeNumber(
       record?.jumlah_like ??
         record?.jumlahLike ??
@@ -1631,122 +1831,40 @@ const aggregateLikesRecords = (records = [], options = {}) => {
       matchedDirectoryKey ||
       buildPersonnelKey(record, identifiers.clientKey, `record-${index}`);
 
-    if (!hasRekapPersonnel) {
-      const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
-        clientId: identifiers.clientId,
-        clientName: identifiers.clientName,
-        divisi: identifiers.divisi,
-        username,
-        nama,
-        pangkat,
-      });
-
-      personnelRecord.likes += likes;
-      personnelRecord.comments += comments;
-      if (likes > 0 || comments > 0) {
-        personnelRecord.active = true;
-      }
-
-      updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
-      updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
-      updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
-      updateIfEmpty(personnelRecord, "username", username);
-      updateIfEmpty(personnelRecord, "nama", nama);
-      updateIfEmpty(personnelRecord, "pangkat", pangkat);
-
-      clientEntry.totalLikes += likes;
-      clientEntry.totalComments += comments;
-
-      registerAliasForPersonnel(
-        aliasCandidates,
-        clientEntry.key,
-        personnelRecord.key,
-      );
-
-      const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
-      if (directorySet && matchedDirectoryKey) {
-        directorySet.add(matchedDirectoryKey);
-      }
-
-      const activityDate =
-        parseDateValue(
-          record?.tanggal ?? record?.date ?? record?.activityDate,
-        ) ??
-        parseDateValue(record?.updated_at ?? record?.updatedAt) ??
-        parseDateValue(record?.created_at ?? record?.createdAt) ??
-        null;
-
-      if (activityDate && (!latestActivity || activityDate > latestActivity)) {
-        latestActivity = activityDate;
-      }
-    }
-
-    filteredRekapPersonnel.forEach((item, rekapIndex) => {
-      const entryNames = item.names ?? resolvePersonnelNames(item.entry);
-      const rekapClient = item.clientEntry ?? clientEntry;
-      const personnelKey = buildPersonnelKey(
-        item.entry,
-        rekapClient.key,
-        `rekap-${index}-${rekapIndex}`,
-      );
-      const personnelRecord = registerPersonnel(rekapClient, personnelKey, {
-        clientId: item.identifiers.clientId,
-        clientName: item.identifiers.clientName,
-        divisi: item.identifiers.divisi,
-        username: entryNames.username,
-        nama: entryNames.nama,
-        pangkat: entryNames.pangkat,
-      });
-
-      personnelRecord.likes += item.likes;
-      personnelRecord.comments += item.comments;
-      if (item.likes > 0 || item.comments > 0) {
-        personnelRecord.active = true;
-      }
-
-      updateIfEmpty(personnelRecord, "clientId", item.identifiers.clientId);
-      updateIfEmpty(personnelRecord, "clientName", item.identifiers.clientName);
-      updateIfEmpty(personnelRecord, "divisi", item.identifiers.divisi);
-      updateIfEmpty(personnelRecord, "username", entryNames.username);
-      updateIfEmpty(personnelRecord, "nama", entryNames.nama);
-      updateIfEmpty(personnelRecord, "pangkat", entryNames.pangkat);
-
-      registerAliasForPersonnel(
-        collectPersonnelAliasCandidates(item.entry, entryNames),
-        rekapClient.key,
-        personnelRecord.key,
-      );
-
-      const rekapDirectorySet = clientDirectoryPersonnelKeys.get(
-        rekapClient.key,
-      );
-      if (rekapDirectorySet) {
-        rekapDirectorySet.add(personnelRecord.key);
-      }
+    const personnelRecord = registerPersonnel(clientEntry, personnelKey, {
+      clientId: identifiers.clientId,
+      clientName: identifiers.clientName,
+      divisi: identifiers.divisi,
+      username,
+      nama,
+      pangkat,
     });
 
-    if (hasRekapPersonnel) {
-      const rekapLikesTotal = filteredRekapPersonnel.reduce(
-        (sum, item) => sum + (Number.isFinite(item.likes) ? item.likes : 0),
-        0,
-      );
-      const rekapCommentsTotal = filteredRekapPersonnel.reduce(
-        (sum, item) => sum + (Number.isFinite(item.comments) ? item.comments : 0),
-        0,
-      );
-
-      clientEntry.totalLikes += rekapLikesTotal;
-      clientEntry.totalComments += rekapCommentsTotal;
+    personnelRecord.likes += likes;
+    personnelRecord.comments += comments;
+    if (likes > 0 || comments > 0) {
+      personnelRecord.active = true;
     }
 
-    const activityDate =
-      parseDateValue(record?.tanggal ?? record?.date ?? record?.activityDate) ??
-      parseDateValue(record?.updated_at ?? record?.updatedAt) ??
-      parseDateValue(record?.created_at ?? record?.createdAt) ??
-      null;
+    updateIfEmpty(personnelRecord, "clientId", identifiers.clientId);
+    updateIfEmpty(personnelRecord, "clientName", identifiers.clientName);
+    updateIfEmpty(personnelRecord, "divisi", identifiers.divisi);
+    updateIfEmpty(personnelRecord, "username", username);
+    updateIfEmpty(personnelRecord, "nama", nama);
+    updateIfEmpty(personnelRecord, "pangkat", pangkat);
 
-    if (activityDate && (!latestActivity || activityDate > latestActivity)) {
-      latestActivity = activityDate;
+    clientEntry.totalLikes += likes;
+    clientEntry.totalComments += comments;
+
+    registerAliasForPersonnel(
+      aliasCandidates,
+      clientEntry.key,
+      personnelRecord.key,
+    );
+
+    const directorySet = clientDirectoryPersonnelKeys.get(clientEntry.key);
+    if (directorySet && matchedDirectoryKey) {
+      directorySet.add(matchedDirectoryKey);
     }
   });
 
