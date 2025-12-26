@@ -162,13 +162,19 @@ function handleTokenExpired(): void {
 
 export type ExecutiveSummaryFilters = {
   month?: string;
+  period?: string;
   periode?: string;
+  periodScope?: string;
+  period_scope?: string;
   startDate?: string;
   endDate?: string;
   clientId?: string;
+  client_id?: string;
   scope?: string;
   role?: string;
   regional_id?: string;
+  start_date?: string;
+  end_date?: string;
 };
 
 export type ExecutiveSummaryResponse = {
@@ -197,18 +203,33 @@ export async function getExecutiveSummary(
 ): Promise<ExecutiveSummaryResponse> {
   const params = new URLSearchParams();
 
-  if (filters.month) params.set("month", filters.month);
-  if (filters.periode) params.set("periode", filters.periode);
-  if (filters.startDate) params.set("start_date", filters.startDate);
-  if (filters.endDate) params.set("end_date", filters.endDate);
-  if (filters.clientId) params.set("client_id", filters.clientId);
+  const monthParam = filters.month || filters.period;
+  if (monthParam) {
+    params.set("month", monthParam);
+    params.set("period", monthParam);
+  }
+
+  const periodScope =
+    filters.periodScope || filters.period_scope || filters.periode || filters.period;
+  if (periodScope) {
+    params.set("period_scope", periodScope);
+    params.set("periode", periodScope);
+  }
+
+  const startDate = filters.startDate || filters.start_date;
+  const endDate = filters.endDate || filters.end_date;
+  if (startDate) params.set("start_date", startDate);
+  if (endDate) params.set("end_date", endDate);
+
+  const clientId = filters.clientId || filters.client_id;
+  if (clientId) params.set("client_id", clientId);
   if (filters.scope) params.set("scope", filters.scope);
   if (filters.role) params.set("role", filters.role);
   if (filters.regional_id) params.set("regional_id", filters.regional_id);
 
   const query = params.toString() ? `?${params.toString()}` : "";
   const res = await fetchWithAuth(
-    `${buildApiUrl("/api/executive-summary")}${query}`,
+    `${buildApiUrl("/api/cicero_v2/executive-summary/monthly")}${query}`,
     token,
     { signal },
   );

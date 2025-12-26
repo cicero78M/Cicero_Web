@@ -200,18 +200,34 @@ const normalizeExecutiveSummaryPayload = (
   const source = payload?.data ?? payload ?? {};
   const monthKey =
     ensureStringValue(
-      source.monthKey ?? source.month ?? source.periode ?? source.period,
+      source.monthKey ??
+        source.month_key ??
+        source.month ??
+        source.periode ??
+        source.period ??
+        source.period_key,
       "",
     ) || fallbackMonthKey;
   const resolvedMonthLabel =
-    ensureStringValue(source.monthLabel ?? source.month_label ?? source.label, "") ||
+    ensureStringValue(
+      source.monthLabel ??
+        source.month_label ??
+        source.periodLabel ??
+        source.period_label ??
+        source.label ??
+        source.period_name ??
+        source.month_name,
+      "",
+    ) ||
     fallbackMonthLabel ||
     monthKey ||
     "";
   const narratives = source.narratives ?? {};
 
-  const summaryMetrics = Array.isArray(source.summaryMetrics ?? source.summary)
-    ? (source.summaryMetrics ?? source.summary)
+  const summaryMetricsSource =
+    source.summaryMetrics ?? source.summary_metrics ?? source.summary;
+  const summaryMetrics = Array.isArray(summaryMetricsSource)
+    ? summaryMetricsSource
         .map((metric) => {
           const label = ensureStringValue(
             metric?.label ?? metric?.title ?? metric?.name,
@@ -221,7 +237,11 @@ const normalizeExecutiveSummaryPayload = (
             return null;
           }
           const valueCandidate =
-            metric?.value ?? metric?.total ?? metric?.count ?? metric?.amount;
+            metric?.value ??
+            metric?.metric_value ??
+            metric?.total ??
+            metric?.count ??
+            metric?.amount;
           return {
             label,
             value:
@@ -239,7 +259,11 @@ const normalizeExecutiveSummaryPayload = (
     : [];
 
   const engagementByChannelRaw =
-    source.engagementByChannel ?? source.channels ?? source.channelSummary ?? [];
+    source.engagementByChannel ??
+    source.engagement_by_channel ??
+    source.channels ??
+    source.channelSummary ??
+    [];
   const engagementByChannel = Array.isArray(engagementByChannelRaw)
     ? engagementByChannelRaw
         .map((entry) => {
@@ -258,7 +282,8 @@ const normalizeExecutiveSummaryPayload = (
                   entry?.totalReach ??
                   entry?.reachCount ??
                   entry?.impressions ??
-                  entry?.total_impressions,
+                  entry?.total_impressions ??
+                  entry?.reach_total,
                 0,
               ) ?? 0,
             engagementRate:
@@ -267,7 +292,8 @@ const normalizeExecutiveSummaryPayload = (
                   entry?.engagement_rate ??
                   entry?.engagement ??
                   entry?.rate ??
-                  entry?.engagementPercent,
+                  entry?.engagementPercent ??
+                  entry?.engagement_rate_percent,
                 null,
               ) ?? null,
           };
@@ -276,7 +302,11 @@ const normalizeExecutiveSummaryPayload = (
     : [];
 
   const audienceCompositionRaw =
-    source.audienceComposition ?? source.audience ?? source.audienceMix ?? [];
+    source.audienceComposition ??
+    source.audience_composition ??
+    source.audience ??
+    source.audienceMix ??
+    [];
   const audienceComposition = Array.isArray(audienceCompositionRaw)
     ? audienceCompositionRaw
         .map((entry) => {
@@ -296,8 +326,10 @@ const normalizeExecutiveSummaryPayload = (
         .filter(Boolean)
     : [];
 
-  const contentTableRaw = Array.isArray(source.contentTable ?? source.topContent ?? source.contents)
-    ? source.contentTable ?? source.topContent ?? source.contents
+  const contentTableRaw = Array.isArray(
+    source.contentTable ?? source.content_table ?? source.topContent ?? source.contents,
+  )
+    ? source.contentTable ?? source.content_table ?? source.topContent ?? source.contents
     : [];
   const contentTable = contentTableRaw
     .map((row, index) => {
@@ -347,6 +379,7 @@ const normalizeExecutiveSummaryPayload = (
       return {
         id: String(
           row.id ??
+            row.content_id ??
             row.contentId ??
             row.slug ??
             row.permalink ??
@@ -368,11 +401,11 @@ const normalizeExecutiveSummaryPayload = (
   const platformAnalytics =
     Array.isArray(source?.platformAnalytics?.platforms)
       ? source.platformAnalytics
-      : Array.isArray((source.platformAnalytics ?? source.platforms)?.platforms)
-        ? source.platformAnalytics ?? source.platforms
-        : Array.isArray(source.platforms)
-          ? { platforms: source.platforms }
-          : source.platformAnalytics ?? {};
+      : Array.isArray((source.platformAnalytics ?? source.platforms ?? source.platform_analytics)?.platforms)
+        ? source.platformAnalytics ?? source.platform_analytics ?? source.platforms
+        : Array.isArray(source.platforms ?? source.platform_analytics)
+          ? { platforms: source.platforms ?? source.platform_analytics }
+          : source.platformAnalytics ?? source.platform_analytics ?? {};
 
   return {
     monthKey: monthKey || null,
@@ -380,7 +413,12 @@ const normalizeExecutiveSummaryPayload = (
       ...source,
       monthLabel: resolvedMonthLabel || undefined,
       summaryMetrics,
-      highlights: normalizeStringArray(source.highlights ?? narratives.highlights),
+      highlights: normalizeStringArray(
+        source.highlights ??
+          source.key_highlights ??
+          narratives.highlights ??
+          narratives.key_highlights,
+      ),
       engagementByChannel,
       audienceComposition,
       contentTable,
@@ -2756,11 +2794,12 @@ export default function ExecutiveSummaryPage() {
     getExecutiveSummary(
       token,
       {
-        clientId,
+        client_id: clientId,
         month: selectedMonthKey,
-        periode: "bulanan",
-        startDate: periodRange?.startDate,
-        endDate: periodRange?.endDate,
+        period: selectedMonthKey,
+        periodScope: "monthly",
+        start_date: periodRange?.startDate,
+        end_date: periodRange?.endDate,
         scope: normalizeRekapScope(effectiveClientType),
         role: normalizeRekapRole(effectiveRole ?? role ?? ""),
         regional_id: regionalId ? String(regionalId) : undefined,
