@@ -1454,8 +1454,14 @@ export async function getRekapKomentarTiktok(
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, periode });
   if (tanggal) params.append("tanggal", tanggal);
-  if (startDate) params.append("start_date", startDate);
-  if (endDate) params.append("end_date", endDate);
+  if (startDate) {
+    params.append("tanggal_mulai", startDate);
+    params.append("start_date", startDate);
+  }
+  if (endDate) {
+    params.append("tanggal_selesai", endDate);
+    params.append("end_date", endDate);
+  }
   if (options?.role) params.append("role", options.role);
   if (options?.scope) params.append("scope", options.scope);
   if (options?.regional_id) params.append("regional_id", options.regional_id);
