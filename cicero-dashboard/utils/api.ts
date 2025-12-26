@@ -160,6 +160,68 @@ function handleTokenExpired(): void {
   }
 }
 
+export type ExecutiveSummaryFilters = {
+  month?: string;
+  periode?: string;
+  startDate?: string;
+  endDate?: string;
+  clientId?: string;
+  scope?: string;
+  role?: string;
+  regional_id?: string;
+};
+
+export type ExecutiveSummaryResponse = {
+  month?: string;
+  monthKey?: string;
+  monthLabel?: string;
+  summaryMetrics?: any[];
+  highlights?: any[];
+  engagementByChannel?: any[];
+  audienceComposition?: any[];
+  contentTable?: any[];
+  platformAnalytics?: any;
+  narratives?: Record<string, unknown>;
+  overviewNarrative?: string;
+  dashboardNarrative?: string;
+  userInsightNarrative?: string;
+  instagramNarrative?: string;
+  tiktokNarrative?: string;
+  [key: string]: unknown;
+};
+
+export async function getExecutiveSummary(
+  token: string,
+  filters: ExecutiveSummaryFilters = {},
+  signal?: AbortSignal,
+): Promise<ExecutiveSummaryResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.month) params.set("month", filters.month);
+  if (filters.periode) params.set("periode", filters.periode);
+  if (filters.startDate) params.set("start_date", filters.startDate);
+  if (filters.endDate) params.set("end_date", filters.endDate);
+  if (filters.clientId) params.set("client_id", filters.clientId);
+  if (filters.scope) params.set("scope", filters.scope);
+  if (filters.role) params.set("role", filters.role);
+  if (filters.regional_id) params.set("regional_id", filters.regional_id);
+
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await fetchWithAuth(
+    `${buildApiUrl("/api/executive-summary")}${query}`,
+    token,
+    { signal },
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal memuat executive summary.");
+  }
+
+  const json = await res.json();
+  return json?.data ?? json ?? {};
+}
+
 export type SatbinmasFilterParams = {
   periode?: string;
   tanggal?: string;
