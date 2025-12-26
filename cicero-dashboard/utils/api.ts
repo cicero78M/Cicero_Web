@@ -1775,7 +1775,7 @@ export async function getInstagramPosts(
     params.append("regional_id", options.regional_id);
   }
   const query = params.toString();
-  const url = `${buildApiUrl("/api/cicero_v2/instagram/posts")}${
+  const url = `${buildApiUrl("/api/instagram/posts")}${
     query ? `?${query}` : ""
   }`;
   const res = await fetchWithAuth(url, token, {
