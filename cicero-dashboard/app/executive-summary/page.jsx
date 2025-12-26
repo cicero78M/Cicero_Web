@@ -3286,9 +3286,16 @@ export default function ExecutiveSummaryPage() {
             const instagramDatabaseResponse = await getInstagramPosts(token, clientId, {
               startDate: startDateParam,
               endDate: endDateParam,
+              scope: rekapScope,
+              role: rekapRole,
+              regional_id: normalizedRegionalId,
               signal: controller.signal,
             });
-            instagramDatabasePostsRaw = ensureArray(instagramDatabaseResponse);
+            instagramDatabasePostsRaw = ensureArray(
+              instagramDatabaseResponse?.posts,
+              instagramDatabaseResponse?.data,
+              instagramDatabaseResponse,
+            );
           } catch (error) {
             console.warn("Gagal memuat konten Instagram dari database", error);
             instagramDatabaseError = error;
@@ -3314,9 +3321,16 @@ export default function ExecutiveSummaryPage() {
             const previousInstagramResponse = await getInstagramPosts(token, clientId, {
               startDate: previousStartDateParam,
               endDate: previousEndDateParam,
+              scope: rekapScope,
+              role: rekapRole,
+              regional_id: normalizedRegionalId,
               signal: controller.signal,
             });
-            previousInstagramPostsRaw = ensureArray(previousInstagramResponse);
+            previousInstagramPostsRaw = ensureArray(
+              previousInstagramResponse?.posts,
+              previousInstagramResponse?.data,
+              previousInstagramResponse,
+            );
           } catch (error) {
             console.warn(
               "Gagal memuat konten Instagram periode sebelumnya dari database",
