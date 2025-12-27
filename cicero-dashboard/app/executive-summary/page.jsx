@@ -2422,6 +2422,7 @@ export default function ExecutiveSummaryPage() {
     highlights: [],
     narrative: "",
     monthLabel: "",
+    engagementByChannel: [],
   });
 
   useEffect(() => {
@@ -2777,6 +2778,7 @@ export default function ExecutiveSummaryPage() {
         highlights: [],
         narrative: "",
         monthLabel: selectedMonthLabel || prev.monthLabel,
+        engagementByChannel: [],
       }));
       return;
     }
@@ -2787,6 +2789,7 @@ export default function ExecutiveSummaryPage() {
       loading: true,
       error: "",
       monthLabel: selectedMonthLabel || prev.monthLabel,
+      engagementByChannel: prev.engagementByChannel ?? [],
     }));
 
     if (!profile || !effectiveClientType) {
@@ -2886,6 +2889,66 @@ export default function ExecutiveSummaryPage() {
           previousPostTotals,
           averageEngagement,
         });
+        const buildEngagementByChannel = () => {
+          const aggregatePosts = (posts, { platformKey, platformLabel }) => {
+            const safePosts = ensureArray(posts);
+            const totals = safePosts.reduce(
+              (acc, post, index) => {
+                const normalized = normalizePlatformPost(post, {
+                  platformKey,
+                  platformLabel,
+                  fallbackIndex: index,
+                });
+                if (!normalized) {
+                  return acc;
+                }
+                const metrics = normalized.metrics ?? {};
+                const likesMetric = Number(metrics.likes);
+                const commentsMetric = Number(metrics.comments);
+                const reachMetric = Number(metrics.reach);
+                const viewsMetric = Number(metrics.views);
+                const interactions =
+                  (Number.isFinite(likesMetric) ? Math.max(0, likesMetric) : 0) +
+                  (Number.isFinite(commentsMetric) ? Math.max(0, commentsMetric) : 0);
+                const resolvedReach = Number.isFinite(reachMetric) && reachMetric > 0
+                  ? reachMetric
+                  : Number.isFinite(viewsMetric) && viewsMetric > 0
+                    ? viewsMetric
+                    : 0;
+                return {
+                  reach: acc.reach + Math.max(0, resolvedReach),
+                  interactions: acc.interactions + interactions,
+                };
+              },
+              { reach: 0, interactions: 0 },
+            );
+            const engagementRate =
+              totals.reach > 0 ? (totals.interactions / totals.reach) * 100 : null;
+            return {
+              channel: platformLabel,
+              reach: totals.reach,
+              engagementRate,
+            };
+          };
+
+          const derivedEntries = [
+            aggregatePosts(instagramPosts, {
+              platformKey: "instagram",
+              platformLabel: "Instagram",
+            }),
+            aggregatePosts(filteredTiktokPosts, {
+              platformKey: "tiktok",
+              platformLabel: "TikTok",
+            }),
+          ].filter(
+            (entry) =>
+              entry &&
+              (entry.reach > 0 ||
+                (entry.engagementRate !== null && entry.engagementRate !== undefined)),
+          );
+
+          return normalizeEngagementByChannelEntries(derivedEntries);
+        };
 
         setMonthlyPerformanceState({
           loading: false,
@@ -2901,6 +2964,7 @@ export default function ExecutiveSummaryPage() {
           highlights: narrativeData.highlights,
           narrative: narrativeData.narrative,
           monthLabel: rangeLabel,
+          engagementByChannel: buildEngagementByChannel(),
         });
       })
       .catch((error) => {
@@ -3098,9 +3162,19 @@ export default function ExecutiveSummaryPage() {
     }
     return ensureStringValue(data.overviewNarrative, "");
   }, [data.overviewNarrative, monthlyPerformanceState.narrative]);
+  // Prioritize engagement by channel derived from monthly recap posts (reach + engagement rate),
+  // then fall back to backend-provided values when the derived array is empty.
   const engagementByChannelData = useMemo(() => {
+    if (
+      Array.isArray(monthlyPerformanceState.engagementByChannel) &&
+      monthlyPerformanceState.engagementByChannel.length > 0
+    ) {
+      return normalizeEngagementByChannelEntries(
+        monthlyPerformanceState.engagementByChannel,
+      );
+    }
     return normalizeEngagementByChannelEntries(data.engagementByChannel);
-  }, [data.engagementByChannel]);
+  }, [data.engagementByChannel, monthlyPerformanceState.engagementByChannel]);
   const audienceCompositionData = useMemo(() => {
     if (!Array.isArray(data.audienceComposition)) {
       return [];
