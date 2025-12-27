@@ -193,6 +193,31 @@ const monthLabelFormatter = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
 });
 
+const LIKE_FIELD_CANDIDATES = [
+  "like_count",
+  "likes",
+  "jumlah_like",
+  "jumlah_likes",
+  "total_likes",
+  "total_like",
+  "rekap.like",
+  "rekap.likes",
+  "metrics.like_count",
+  "metrics.likes",
+];
+
+const COMMENT_FIELD_CANDIDATES = [
+  "comment_count",
+  "comments",
+  "jumlah_komentar",
+  "jumlah_comment",
+  "total_comments",
+  "rekap.comment",
+  "rekap.comments",
+  "metrics.comment_count",
+  "metrics.comments",
+];
+
 const sumNumericFromRecords = (records, paths = []) => {
   if (!Array.isArray(records) || paths.length === 0) {
     return 0;
@@ -213,38 +238,17 @@ const summarizeEngagementTotals = ({
   instagramPosts = [],
   tiktokPosts = [],
 }) => {
-  const likeCandidates = [
-    "like_count",
-    "likes",
-    "jumlah_like",
-    "jumlah_likes",
-    "total_likes",
-    "total_like",
-    "rekap.like",
-    "rekap.likes",
-    "metrics.like_count",
-    "metrics.likes",
-  ];
-  const commentCandidates = [
-    "comment_count",
-    "comments",
-    "jumlah_komentar",
-    "jumlah_comment",
-    "total_comments",
-    "rekap.comment",
-    "rekap.comments",
-    "metrics.comment_count",
-    "metrics.comments",
-  ];
-
-  const likesFromRekap = sumNumericFromRecords(likesRecords, likeCandidates);
-  const commentsFromRekap = sumNumericFromRecords(commentRecords, commentCandidates);
+  const likesFromRekap = sumNumericFromRecords(likesRecords, LIKE_FIELD_CANDIDATES);
+  const commentsFromRekap = sumNumericFromRecords(
+    commentRecords,
+    COMMENT_FIELD_CANDIDATES,
+  );
 
   const instagramPostList = ensureArray(instagramPosts);
   const tiktokPostList = ensureArray(tiktokPosts);
   const posts = [...instagramPostList, ...tiktokPostList];
-  const fallbackLikes = sumNumericFromRecords(posts, likeCandidates);
-  const fallbackComments = sumNumericFromRecords(posts, commentCandidates);
+  const fallbackLikes = sumNumericFromRecords(posts, LIKE_FIELD_CANDIDATES);
+  const fallbackComments = sumNumericFromRecords(posts, COMMENT_FIELD_CANDIDATES);
 
   const totalLikes = likesFromRekap || fallbackLikes;
   const totalComments = commentsFromRekap || fallbackComments;
@@ -2821,38 +2825,80 @@ export default function ExecutiveSummaryPage() {
         const tiktokPosts = ensureArray(result.tiktokPosts);
         const previousInstagramPosts = ensureArray(result.previousInstagramPosts);
         const previousTiktokPosts = ensureArray(result.previousTiktokPosts);
+        const filteredInstagramPosts = filterRecordsByDateRange(
+          filterRecordsWithResolvableDate(instagramPosts, { extraPaths: POST_DATE_PATHS }),
+          result.range,
+          { extraPaths: POST_DATE_PATHS },
+        );
         const filteredTiktokPosts = filterRecordsByDateRange(tiktokPosts, result.range, {
           extraPaths: POST_DATE_PATHS,
         });
+        const filteredPreviousInstagramPosts = result.previousRange
+          ? filterRecordsByDateRange(
+              filterRecordsWithResolvableDate(previousInstagramPosts, {
+                extraPaths: POST_DATE_PATHS,
+              }),
+              result.previousRange,
+              { extraPaths: POST_DATE_PATHS },
+            )
+          : previousInstagramPosts;
         const filteredPreviousTiktokPosts = result.previousRange
           ? filterRecordsByDateRange(previousTiktokPosts, result.previousRange, {
               extraPaths: POST_DATE_PATHS,
             })
           : previousTiktokPosts;
+        const filteredLikesRecords = filterRecordsByDateRange(
+          filterRecordsWithResolvableDate(likesRecords, { extraPaths: POST_DATE_PATHS }),
+          result.range,
+        );
+        const filteredCommentsRecords = filterRecordsByDateRange(
+          filterRecordsWithResolvableDate(commentsRecords, { extraPaths: POST_DATE_PATHS }),
+          result.range,
+        );
+        const filteredPreviousLikesRecords = result.previousRange
+          ? filterRecordsByDateRange(
+              filterRecordsWithResolvableDate(previousLikesRecords, {
+                extraPaths: POST_DATE_PATHS,
+              }),
+              result.previousRange,
+            )
+          : filterRecordsWithResolvableDate(previousLikesRecords, {
+              extraPaths: POST_DATE_PATHS,
+            });
+        const filteredPreviousCommentsRecords = result.previousRange
+          ? filterRecordsByDateRange(
+              filterRecordsWithResolvableDate(previousCommentsRecords, {
+                extraPaths: POST_DATE_PATHS,
+              }),
+              result.previousRange,
+            )
+          : filterRecordsWithResolvableDate(previousCommentsRecords, {
+              extraPaths: POST_DATE_PATHS,
+            });
 
         const totals = summarizeEngagementTotals({
-          likesRecords,
-          commentRecords: commentsRecords,
-          instagramPosts,
+          likesRecords: filteredLikesRecords,
+          commentRecords: filteredCommentsRecords,
+          instagramPosts: filteredInstagramPosts,
           tiktokPosts: filteredTiktokPosts,
         });
         const previousTotals = summarizeEngagementTotals({
-          likesRecords: previousLikesRecords,
-          commentRecords: previousCommentsRecords,
-          instagramPosts: previousInstagramPosts,
+          likesRecords: filteredPreviousLikesRecords,
+          commentRecords: filteredPreviousCommentsRecords,
+          instagramPosts: filteredPreviousInstagramPosts,
           tiktokPosts: filteredPreviousTiktokPosts,
         });
 
         const postTotals = {
-          instagramPosts: instagramPosts.length,
+          instagramPosts: filteredInstagramPosts.length,
           tiktokPosts: filteredTiktokPosts.length,
-          totalPosts: instagramPosts.length + filteredTiktokPosts.length,
+          totalPosts: filteredInstagramPosts.length + filteredTiktokPosts.length,
         };
         const previousPostTotals = {
-          instagramPosts: previousInstagramPosts.length,
+          instagramPosts: filteredPreviousInstagramPosts.length,
           tiktokPosts: filteredPreviousTiktokPosts.length,
           totalPosts:
-            previousInstagramPosts.length + filteredPreviousTiktokPosts.length,
+            filteredPreviousInstagramPosts.length + filteredPreviousTiktokPosts.length,
         };
 
         const averageEngagement =
@@ -2918,9 +2964,14 @@ export default function ExecutiveSummaryPage() {
                 return {
                   reach: acc.reach + Math.max(0, resolvedReach),
                   interactions: acc.interactions + interactions,
+                  likes:
+                    acc.likes + Math.max(0, Number.isFinite(likesMetric) ? likesMetric : 0),
+                  comments:
+                    acc.comments +
+                    Math.max(0, Number.isFinite(commentsMetric) ? commentsMetric : 0),
                 };
               },
-              { reach: 0, interactions: 0 },
+              { reach: 0, interactions: 0, likes: 0, comments: 0 },
             );
             const engagementRate =
               totals.reach > 0 ? (totals.interactions / totals.reach) * 100 : null;
@@ -2928,18 +2979,45 @@ export default function ExecutiveSummaryPage() {
               channel: platformLabel,
               reach: totals.reach,
               engagementRate,
+              likes: totals.likes,
+              comments: totals.comments,
             };
           };
 
+          const instagramAggregate = aggregatePosts(filteredInstagramPosts, {
+            platformKey: "instagram",
+            platformLabel: "Instagram",
+          });
+          const tiktokAggregate = aggregatePosts(filteredTiktokPosts, {
+            platformKey: "tiktok",
+            platformLabel: "TikTok",
+          });
+          const instagramLikes =
+            sumNumericFromRecords(filteredLikesRecords, LIKE_FIELD_CANDIDATES) ||
+            instagramAggregate.likes;
+          const instagramComments = instagramAggregate.comments;
+          const tiktokComments =
+            sumNumericFromRecords(filteredCommentsRecords, COMMENT_FIELD_CANDIDATES) ||
+            tiktokAggregate.comments;
+          const instagramInteractions = instagramLikes + instagramComments;
+          const tiktokInteractions = tiktokAggregate.likes + tiktokComments;
           const derivedEntries = [
-            aggregatePosts(instagramPosts, {
-              platformKey: "instagram",
-              platformLabel: "Instagram",
-            }),
-            aggregatePosts(filteredTiktokPosts, {
-              platformKey: "tiktok",
-              platformLabel: "TikTok",
-            }),
+            {
+              channel: "Instagram",
+              reach: instagramAggregate.reach,
+              engagementRate:
+                instagramAggregate.reach > 0
+                  ? (instagramInteractions / instagramAggregate.reach) * 100
+                  : null,
+            },
+            {
+              channel: "TikTok",
+              reach: tiktokAggregate.reach,
+              engagementRate:
+                tiktokAggregate.reach > 0
+                  ? (tiktokInteractions / tiktokAggregate.reach) * 100
+                  : null,
+            },
           ].filter(
             (entry) =>
               entry &&
