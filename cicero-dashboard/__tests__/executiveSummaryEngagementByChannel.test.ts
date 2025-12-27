@@ -1,4 +1,4 @@
-import { normalizeExecutiveSummaryPayload } from "@/app/executive-summary/page";
+import { normalizeExecutiveSummaryPayload } from "@/app/executive-summary/normalizers";
 
 describe("normalizeExecutiveSummaryPayload engagementByChannel support", () => {
   it("converts engagement_by_channel map objects into array entries", () => {
