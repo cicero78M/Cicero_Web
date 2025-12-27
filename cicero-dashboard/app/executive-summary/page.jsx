@@ -399,6 +399,58 @@ const normalizeStringArray = (value) => {
   return [];
 };
 
+const normalizeEngagementByChannelEntries = (raw) => {
+  const normalizeEntry = (entry, fallbackChannel = "") => {
+    const entryObject = entry && typeof entry === "object" ? entry : {};
+    const channel = ensureStringValue(
+      entryObject.channel ??
+        entryObject.name ??
+        entryObject.platform ??
+        entryObject.label ??
+        fallbackChannel,
+      "",
+    );
+    if (!channel) {
+      return null;
+    }
+
+    const reachCandidate =
+      entryObject.reach ??
+      entryObject.totalReach ??
+      entryObject.reachCount ??
+      entryObject.impressions ??
+      entryObject.total_impressions ??
+      entryObject.reach_total ??
+      entry;
+
+    const engagementRateCandidate =
+      entryObject.engagementRate ??
+      entryObject.engagement_rate ??
+      entryObject.engagement ??
+      entryObject.rate ??
+      entryObject.engagementPercent ??
+      entryObject.engagement_rate_percent;
+
+    return {
+      channel,
+      reach: ensureNumberValue(reachCandidate, 0) ?? 0,
+      engagementRate: ensureNumberValue(engagementRateCandidate, null) ?? null,
+    };
+  };
+
+  if (Array.isArray(raw)) {
+    return raw.map((entry) => normalizeEntry(entry)).filter(Boolean);
+  }
+
+  if (raw && typeof raw === "object") {
+    return Object.entries(raw)
+      .map(([channelKey, entry]) => normalizeEntry(entry, channelKey))
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
 const normalizeExecutiveSummaryPayload = (
   payload,
   { fallbackMonthKey, fallbackMonthLabel } = {},
@@ -470,42 +522,7 @@ const normalizeExecutiveSummaryPayload = (
     source.channels ??
     source.channelSummary ??
     [];
-  const engagementByChannel = Array.isArray(engagementByChannelRaw)
-    ? engagementByChannelRaw
-        .map((entry) => {
-          const channel = ensureStringValue(
-            entry?.channel ?? entry?.name ?? entry?.platform ?? entry?.label,
-            "",
-          );
-          if (!channel) {
-            return null;
-          }
-          return {
-            channel,
-            reach:
-              ensureNumberValue(
-                entry?.reach ??
-                  entry?.totalReach ??
-                  entry?.reachCount ??
-                  entry?.impressions ??
-                  entry?.total_impressions ??
-                  entry?.reach_total,
-                0,
-              ) ?? 0,
-            engagementRate:
-              ensureNumberValue(
-                entry?.engagementRate ??
-                  entry?.engagement_rate ??
-                  entry?.engagement ??
-                  entry?.rate ??
-                  entry?.engagementPercent ??
-                  entry?.engagement_rate_percent,
-                null,
-              ) ?? null,
-          };
-        })
-        .filter(Boolean)
-    : [];
+  const engagementByChannel = normalizeEngagementByChannelEntries(engagementByChannelRaw);
 
   const audienceCompositionRaw =
     source.audienceComposition ??
@@ -3421,33 +3438,7 @@ export default function ExecutiveSummaryPage() {
     return ensureStringValue(data.overviewNarrative, "");
   }, [data.overviewNarrative, monthlyPerformanceState.narrative]);
   const engagementByChannelData = useMemo(() => {
-    if (!Array.isArray(data.engagementByChannel)) {
-      return [];
-    }
-    return data.engagementByChannel
-      .map((entry) => {
-        const channelLabel = ensureStringValue(
-          entry?.channel ?? entry?.name ?? entry?.platform ?? entry?.label,
-          "",
-        );
-        if (!channelLabel) {
-          return null;
-        }
-        return {
-          channel: channelLabel,
-          reach:
-            ensureNumberValue(
-              entry?.reach ?? entry?.totalReach ?? entry?.impressions ?? entry?.value,
-              0,
-            ) ?? 0,
-          engagementRate:
-            ensureNumberValue(
-              entry?.engagementRate ?? entry?.engagement_rate ?? entry?.engagement,
-              null,
-            ) ?? null,
-        };
-      })
-      .filter(Boolean);
+    return normalizeEngagementByChannelEntries(data.engagementByChannel);
   }, [data.engagementByChannel]);
   const audienceCompositionData = useMemo(() => {
     if (!Array.isArray(data.audienceComposition)) {
@@ -6591,3 +6582,5 @@ export default function ExecutiveSummaryPage() {
     </div>
   );
 }
+
+export { normalizeExecutiveSummaryPayload, normalizeEngagementByChannelEntries };
