@@ -4,6 +4,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 The repository includes multiple package managers, so lockfiles from the monorepo (e.g., `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`) should be left untouched when building from this dashboard package. Next.js is configured with `outputFileTracingRoot` set to the repository root (`path.join(__dirname)` in `next.config.ts`), so builds must be run from this `cicero-dashboard` directory to ensure tracing resolves modules from the correct project instead of a parent workspace.
 
+### Executive summary data source
+
+- Grafik **Kontribusi Kanal** di halaman ringkasan eksekutif kini memprioritaskan agregasi reach dan engagement rate yang diturunkan dari rekap bulanan (Instagram/TikTok) menggunakan helper normalisasi existing. Jika backend tidak mengirim data kanal, chart otomatis memakai derivasi reach (dari `metrics.reach`/`views`) dan engagement rate `(likes + comments) / reach` yang dihitung dari posting periode tersebut.
+
 ### Dependency note
 
 - The dashboard pins `react-d3-cloud` to version `1.0.6` with explicit overrides for its `d3-*` transitive dependencies to satisfy current security advisories while keeping React 18 compatibility. If you hit install conflicts, clear any old lockfiles or `node_modules` from earlier installs and run `npm install` again from the `cicero-dashboard` directory.
