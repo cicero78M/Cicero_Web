@@ -114,6 +114,12 @@ Proyek ini menyediakan `app/not-found.tsx` sebagai fallback 404 khusus dengan to
 
 Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks autentikasi ketika menghitung hak akses menu. Pendekatan ini mencegah ReferenceError selama proses prerendering halaman 404/_not-found dan memastikan logika akses Ditbinmas tetap aktif di mode statis maupun dinamis.
 
+## Premium CICERO
+
+- Halaman **/premium** merangkum fitur paket premium (recap WA Bot, jadwal 15:00/18:00/20:30, ANEV harian/mingguan/bulanan/kustom, unduhan Excel, dan panduan operator) dengan tombol **Daftar Sekarang** ke **/premium/register**.
+- Formulir **/premium/register** menyediakan template pesan WA yang dapat dikirim otomatis ke WA Bot CICERO untuk permintaan aktivasi.
+- Menu **Premium** tersedia di sidebar/dashboard; header insight Instagram dan TikTok menambahkan tombol **Premium** di sisi kanan melalui prop `headerAction` pada `InsightLayout`.
+
 ## Dashboard Utama
 
 - Halaman `/dashboard` menormalkan bentuk respons aggregator terbaru dan melakukan fallback ke endpoint rapid Instagram/TikTok (`/api/insta/rapid-profile`, `/api/insta/rapid-posts`, `/api/tiktok/rapid-profile`, `/api/tiktok/rapid-posts`) sehingga kartu highlight tetap menampilkan data akun resmi meski struktur response aggregator berubah atau kosong.【F:app/dashboard/page.tsx†L1-L223】
