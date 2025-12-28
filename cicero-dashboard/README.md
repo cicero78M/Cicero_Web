@@ -118,7 +118,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 
 - Halaman **/premium** merangkum fitur paket premium (recap WA Bot, jadwal 15:00/18:00/20:30, ANEV harian/mingguan/bulanan/kustom, unduhan Excel, dan panduan operator) dengan tombol **Daftar Sekarang** ke **/premium/register**.
 - Formulir **/premium/register** menyediakan template pesan WA yang dapat dikirim otomatis ke WA Bot CICERO untuk permintaan aktivasi.
-- Menu **Premium** tersedia di sidebar/dashboard; header insight Instagram dan TikTok menambahkan tombol **Premium** di sisi kanan melalui prop `headerAction` pada `InsightLayout`.
+- Menu **Premium** di sidebar/dashboard serta tombol **Premium** pada header insight Instagram dan TikTok hanya muncul untuk pengguna dengan `client_type` **ORG**, sehingga akun direktorat tidak melihat CTA paket premium.
 
 ## Dashboard Utama
 
