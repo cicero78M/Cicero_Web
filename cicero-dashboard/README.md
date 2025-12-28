@@ -147,6 +147,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Insight Engagement Instagram & TikTok
 
 - Dropdown lingkup di halaman insight Instagram dan TikTok kini memakai istilah direktorat (`directorateScope`) serta menggunakan flag `isDirectorateRole` dan `isDirectorateScopedClient` dari hook terkait. Perubahan ini memastikan alur data dan pemilihan cakupan mengikuti status direktorat pengguna, bukan lagi terikat khusus pada client Ditbinmas.
+- Selektor periode pada insight Instagram dan TikTok disembunyikan; data keduanya selalu terkunci ke “Hari ini” sehingga pengguna tidak lagi memilih tanggal/bulan/rentang manual.
 
 ## Menu khusus Ditbinmas
 
