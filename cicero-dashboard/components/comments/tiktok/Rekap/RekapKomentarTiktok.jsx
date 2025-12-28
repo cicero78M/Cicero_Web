@@ -6,10 +6,12 @@ import {
   useMemo,
   useState,
 } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Check,
   Music,
+  Sparkles,
   UserX,
   Users,
   X,
@@ -52,6 +54,7 @@ function getKomentarStatus({ jumlahKomentar = 0, totalPostCount = 0, hasUsername
  * @param {boolean} showCopyButton tampilkan tombol salin rekap standar
  * @param {string} clientName label client/direktorat manual (opsional)
  * @param {{ periodeLabel?: string, viewLabel?: string, directorateName?: string }} reportContext konteks laporan
+ * @param {boolean} showPremiumCta tampilkan CTA Premium di samping tombol salin rekap
  */
 const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   {
@@ -61,6 +64,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     showCopyButton = true,
     clientName = "",
     reportContext = {},
+    showPremiumCta = false,
   },
   ref,
 ) {
@@ -752,21 +756,39 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
 
       {showRekapButton && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
-          <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-blue-200 bg-white p-4 text-blue-900 shadow-[0_20px_45px_rgba(37,99,235,0.15)] md:flex-row md:items-center md:justify-end">
-            <button
-              onClick={handleDownloadRekap}
-              className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 md:w-auto"
-            >
-              Salin Teks Rekap
-            </button>
-            {showCopyButton && (
-              <button
-                onClick={handleCopyRekap}
-                className="w-full rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 md:w-auto"
+          <div className="pointer-events-auto flex w-full max-w-4xl flex-col gap-3 rounded-2xl border border-blue-200 bg-white p-4 text-blue-900 shadow-[0_20px_45px_rgba(37,99,235,0.15)] md:flex-row md:items-center md:gap-4 md:justify-end">
+            {showPremiumCta && (
+              <Link
+                href="/premium"
+                className="group flex w-full flex-1 items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-3 text-left shadow-[0_18px_35px_rgba(99,102,241,0.25)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 focus-visible:ring-offset-2 md:min-w-[240px]"
               >
-                Salin Rekap
-              </button>
+                <div className="flex flex-col text-white">
+                  <span className="text-sm font-semibold">Aktifkan Premium & rekap otomatis</span>
+                  <span className="text-xs font-medium text-indigo-100/90">
+                    Nikmati reminder pintar dan ringkasan komentar siap kirim.
+                  </span>
+                </div>
+                <span className="rounded-full bg-white/15 p-2 text-white transition group-hover:rotate-6">
+                  <Sparkles className="h-5 w-5" aria-hidden />
+                </span>
+              </Link>
             )}
+            <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+              <button
+                onClick={handleDownloadRekap}
+                className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 md:w-auto"
+              >
+                Salin Teks Rekap
+              </button>
+              {showCopyButton && (
+                <button
+                  onClick={handleCopyRekap}
+                  className="w-full rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 md:w-auto"
+                >
+                  Salin Rekap
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

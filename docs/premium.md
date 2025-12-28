@@ -13,9 +13,9 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - **/premium**: Halaman ringkasan fitur + tombol **Daftar Sekarang** menuju formulir pendaftaran.
 - **/premium/register**: Formulir pendaftaran dengan template pesan WA Bot yang dapat dikirim langsung (target `https://wa.me/+6281235114745`).
 - Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
-- Header insight Instagram dan TikTok kini menampilkan tombol **Premium** (kanan atas) yang juga mengarah ke **/premium**.
+- CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
 
 ## Penempatan CTA di Insight
 
-- Gunakan prop `headerAction` pada `components/InsightLayout` untuk merender CTA di sisi kanan header tanpa menggeser tab insight/rekap.
-- CTA bawaan insight Instagram dan TikTok menggunakan kelas gradasi biru–ungu dan fokus ring `focus-visible:ring-indigo-200` agar mudah diakses di desktop maupun mobile.
+- CTA insight Instagram dan TikTok menggunakan tautan gradasi biru–ungu dengan ikon **Sparkles** dan teks ajakan (mis. “Coba Premium untuk rekap otomatis”). Letakkan di samping tombol salin rekap sehingga lebarnya memenuhi ruang tersisa (gunakan `flex-1` pada wrapper).
+- Untuk kasus lain, prop `headerAction` pada `components/InsightLayout` tetap dapat dipakai jika CTA harus muncul di header tanpa menggeser tab insight/rekap.
