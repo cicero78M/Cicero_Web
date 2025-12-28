@@ -236,6 +236,15 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     canSelectScope,
   };
 
+  const premiumCta = isOrgClient
+    ? {
+        label: "Premium CICERO",
+        description: "Jadwalkan rekap otomatis & briefing WA Bot tiap hari.",
+        href: "/premium",
+        actionLabel: "Lihat Paket",
+      }
+    : null;
+
   return (
     <InsightLayout
       title="Instagram Engagement Insight"
@@ -248,6 +257,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
           scopeSelectorProps={scopeSelectorProps}
+          premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
           summaryCards={summaryCards}
           quickInsights={quickInsights}

@@ -46,6 +46,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     regionalId,
     profile,
   } = useAuth();
+  const isOrgClient = String(effectiveClientType || "").toUpperCase() === "ORG";
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -307,6 +308,15 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     },
   ];
 
+  const premiumCta = isOrgClient
+    ? {
+        label: "Premium CICERO",
+        description: "Aktifkan rekap otomatis & reminder WA Bot amplifikasi.",
+        href: "/premium",
+        actionLabel: "Daftar",
+      }
+    : null;
+
   const handleTabChange = (value) => {
     setActiveTab(value);
     if (value === "rekap" && rekapSectionRef.current) {
@@ -366,6 +376,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
             date: selectorDateValue,
             onDateChange: handleDateChange,
           }}
+          premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
           summaryCards={summaryCards}
           quickInsights={quickInsights}
