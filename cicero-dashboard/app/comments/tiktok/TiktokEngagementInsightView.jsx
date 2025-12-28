@@ -287,7 +287,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
         <EngagementInsightMobileScaffold
           scopeSelectorProps={scopeSelectorProps}
           onCopyRekap={handleCopyRekap}
-          showPremiumCta={isOrgClient}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
           quickInsightTone="indigo"
