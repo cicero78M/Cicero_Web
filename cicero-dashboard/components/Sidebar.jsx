@@ -54,6 +54,7 @@ export default function Sidebar() {
   const tiktokEnabledRaw = isActive(getStatus(profile, "client_tiktok_status"));
   const normalizedEffectiveRole = effectiveRole?.toLowerCase();
   const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
+  const isOrgClient = normalizedEffectiveClientType === "org";
   const isOperator = normalizedEffectiveRole === "operator";
   const normalizedClientId = clientId?.toLowerCase();
   const hasEngagementAccessOverride =
@@ -118,7 +119,9 @@ export default function Sidebar() {
       path: "/mekanisme-absensi",
       icon: Workflow,
     },
-    { label: "Premium", path: "/premium", icon: Sparkles },
+    ...(isOrgClient
+      ? [{ label: "Premium", path: "/premium", icon: Sparkles }]
+      : []),
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },
   ];
 
