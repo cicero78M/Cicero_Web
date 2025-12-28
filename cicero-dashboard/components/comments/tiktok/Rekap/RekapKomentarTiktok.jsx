@@ -756,7 +756,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
 
       {showRekapButton && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex w-full justify-end px-4">
-          <div className="pointer-events-auto flex w-full max-w-4xl flex-col gap-3 rounded-2xl border border-blue-200 bg-white p-4 text-blue-900 shadow-[0_20px_45px_rgba(37,99,235,0.15)] md:flex-row md:items-center md:gap-4 md:justify-end">
+          <div className="pointer-events-auto flex w-full max-w-full flex-col gap-3 rounded-2xl border border-blue-200 bg-white p-4 text-blue-900 shadow-[0_20px_45px_rgba(37,99,235,0.15)] md:flex-row md:items-center md:gap-4 md:justify-end">
             {showPremiumCta && (
               <Link
                 href="/premium"
