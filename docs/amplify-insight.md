@@ -6,6 +6,7 @@ Dokumen ini merangkum standar UI/UX dan alur kerja halaman **Amplifikasi Link In
 
 - Menggunakan `InsightLayout` agar header, tab, dan latar visual konsisten dengan halaman Instagram Engagement Insight.
 - Menggunakan `EngagementInsightMobileScaffold` untuk kontrol periode, tombol salin rekap, kartu ringkasan, serta panel quick insight.
+- Properti `premiumCta` pada `EngagementInsightMobileScaffold` menampilkan tombol ajakan Premium penuh lebar di header kontrol (baik mobile maupun desktop) agar ruang kosong terisi rapi dan CTA tetap mencolok.
 - Rekap detail disajikan di dalam `DetailRekapSection` agar pengguna dapat beralih tab tanpa meninggalkan halaman.
 
 ## Alur kerja data

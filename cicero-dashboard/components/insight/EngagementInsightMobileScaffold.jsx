@@ -32,6 +32,7 @@ export default function EngagementInsightMobileScaffold({
   summaryItemProps = {},
   quickInsights = [],
   quickInsightTone = "blue",
+  premiumCta,
   children,
 }) {
   const tone = quickInsightPalettes[quickInsightTone] || quickInsightPalettes.blue;
@@ -59,11 +60,56 @@ export default function EngagementInsightMobileScaffold({
     );
   };
 
+  const renderPremiumCta = () => {
+    if (!premiumCta) return null;
+
+    const {
+      label = "Aktifkan Premium",
+      description = "Otomatiskan rekap dan WA Bot harian untuk tim Anda.",
+      actionLabel = "Premium",
+      href,
+      target,
+      rel,
+      onClick,
+    } = premiumCta;
+
+    const resolvedTarget = target || undefined;
+    const resolvedRel =
+      resolvedTarget === "_blank" && !rel ? "noreferrer noopener" : rel;
+
+    const Component = href ? "a" : "button";
+    const componentProps = href
+      ? { href, target: resolvedTarget, rel: resolvedRel }
+      : { type: "button", onClick };
+
+    return (
+      <Component
+        {...componentProps}
+        className="group flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 px-4 py-3 text-left text-white shadow-[0_18px_48px_-22px_rgba(245,158,11,0.55)] transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:ring-offset-2 focus:ring-offset-white sm:flex-1"
+      >
+        <span className="rounded-xl bg-white/20 p-2 shadow-inner shadow-white/20">
+          <Sparkles className="h-5 w-5 drop-shadow-sm" aria-hidden />
+        </span>
+        <span className="flex flex-1 flex-col gap-0.5">
+          <span className="text-sm font-semibold leading-tight">{label}</span>
+          {description ? (
+            <span className="text-xs font-medium text-white/90">
+              {description}
+            </span>
+          ) : null}
+        </span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/85 group-hover:text-white">
+          {actionLabel}
+        </span>
+      </Component>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-8">
       {(viewSelectorProps || scopeSelectorProps || onCopyRekap) && (
         <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/70 p-4 shadow-inner backdrop-blur sm:p-5 md:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:gap-4">
             {viewSelectorProps ? (
               <ViewDataSelector
                 {...viewSelectorProps}
@@ -72,18 +118,21 @@ export default function EngagementInsightMobileScaffold({
                 controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
               />
             ) : null}
-            <div className="flex flex-wrap gap-3 sm:justify-end">
-              {renderScopeSelector()}
-              {onCopyRekap ? (
-                <button
-                  onClick={onCopyRekap}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-teal-200/80 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_22px_rgba(45,212,191,0.25)] transition-colors hover:border-teal-300 hover:bg-teal-100"
-                  type="button"
-                >
-                  <Copy className="h-4 w-4" aria-hidden />
-                  {copyLabel}
-                </button>
-              ) : null}
+            <div className="flex w-full flex-col gap-3 sm:flex-1">
+              {renderPremiumCta()}
+              <div className="flex flex-wrap gap-3 sm:justify-end">
+                {renderScopeSelector()}
+                {onCopyRekap ? (
+                  <button
+                    onClick={onCopyRekap}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-teal-200/80 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_22px_rgba(45,212,191,0.25)] transition-colors hover:border-teal-300 hover:bg-teal-100"
+                    type="button"
+                  >
+                    <Copy className="h-4 w-4" aria-hidden />
+                    {copyLabel}
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

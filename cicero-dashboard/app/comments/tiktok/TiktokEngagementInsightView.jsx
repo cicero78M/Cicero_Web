@@ -239,6 +239,15 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     canSelectScope,
   };
 
+  const premiumCta = isOrgClient
+    ? {
+        label: "Premium CICERO",
+        description: "Dapatkan rekap otomatis & notifikasi WA Bot komentar.",
+        href: "/premium",
+        actionLabel: "Upgrade",
+      }
+    : null;
+
   async function handleCopyRekap() {
     const message = buildTiktokRekap(rekapSummary, chartData, {
       clientName,
@@ -286,6 +295,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
           scopeSelectorProps={scopeSelectorProps}
+          premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
