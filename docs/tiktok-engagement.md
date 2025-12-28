@@ -17,6 +17,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Header, filter tanggal, dan kontrol lingkup kini dibungkus `heroContent` yang diberikan ke `InsightLayout` sehingga struktur halaman TikTok dan Instagram identik dan tidak lagi memakai layout khusus untuk TikTok.
 - Segmen `heroContent` (selector periode dengan label uppercase, kontrol lingkup Ditbinmas, tombol **Salin Rekap** berwarna teal, serta fallback prompt ketika clipboard diblokir) menjadi standar konsesi: pola dari TikTok Engagement Insight kini dipakai ulang pada halaman Instagram Engagement Insight agar alur filter dan penyalinan rekap benar-benar seragam di kedua platform.
 - Header insight kini menambahkan CTA **Premium** di sisi kanan (prop `headerAction` pada `InsightLayout`). Tombol ini memakai gaya gradasi biru–ungu dan mengarah ke rute **/premium** untuk membuka detail paket premium serta formulir pendaftaran. CTA disejajarkan dengan grup tab agar tetap terbaca di desktop maupun mobile.
+- Panel CTA lengket di bagian bawah (tombol salin rekap dan link Premium) tidak lagi dibatasi `max-w-4xl`; lebar bar mengikuti kontainer induk sehingga panel di `RekapLikesIG` dan `RekapKomentarTiktok` selaras dengan tabel dan tidak terpotong pada layar lebar.
 
 ## Ringkasan mengikuti standar rekap likes
 - Kartu ringkasan memakai gaya bawaan `SummaryItem` (border biru lembut, glow gradasi) seperti halaman **Rekap Likes IG**, dengan enam metrik tetap: jumlah post TikTok, total user, sudah/kurang/belum komentar, dan tanpa username.
