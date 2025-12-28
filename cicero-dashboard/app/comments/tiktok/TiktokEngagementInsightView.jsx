@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
@@ -275,15 +274,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     directorateOfficialName: clientName || "Satker",
   };
 
-  const premiumCta = isOrgClient ? (
-    <Link
-      href="/premium"
-      className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(99,102,241,0.28)] transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-    >
-      Premium
-    </Link>
-  ) : null;
-
   return (
     <InsightLayout
       title="TikTok Engagement Insight"
@@ -292,7 +282,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       activeTab={activeTab}
       onTabChange={handleTabChange}
       heroContent={null}
-      headerAction={premiumCta}
     >
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
@@ -382,6 +371,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           showCopyButton={false}
           clientName={clientName}
           reportContext={reportContext}
+          showPremiumCta={isOrgClient}
         />
       </DetailRekapSection>
     </InsightLayout>

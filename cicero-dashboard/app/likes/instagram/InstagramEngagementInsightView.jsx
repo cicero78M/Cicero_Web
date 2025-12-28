@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import RekapLikesIG from "@/components/likes/instagram/Rekap/RekapLikesIG";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
-import Link from "next/link";
 import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
@@ -237,15 +236,6 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     canSelectScope,
   };
 
-  const premiumCta = isOrgClient ? (
-    <Link
-      href="/premium"
-      className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(99,102,241,0.28)] transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-    >
-      Premium
-    </Link>
-  ) : null;
-
   return (
     <InsightLayout
       title="Instagram Engagement Insight"
@@ -254,7 +244,6 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       activeTab={activeTab}
       onTabChange={handleTabChange}
       heroContent={null}
-      headerAction={premiumCta}
     >
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
@@ -341,6 +330,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             periodeLabel: reportPeriodeLabel,
             viewLabel: viewOptions.find((option) => option.value === viewBy)?.label,
           }}
+          showPremiumCta={isOrgClient}
         />
       </DetailRekapSection>
     </InsightLayout>
