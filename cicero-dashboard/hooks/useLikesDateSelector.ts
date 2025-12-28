@@ -5,7 +5,8 @@ import { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 
 type DateRange = { startDate?: string; endDate?: string };
 
-type ViewOption = (typeof VIEW_OPTIONS)[number]["value"];
+type ViewOption = (typeof VIEW_OPTIONS)[number];
+type ViewValue = ViewOption["value"];
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear();
@@ -57,10 +58,18 @@ export function formatDisplayRange(start?: string, end?: string) {
   return `${formatDisplayDate(start)} s.d. ${formatDisplayDate(end)}`;
 }
 
-export function useLikesDateSelector() {
+export function useLikesDateSelector({
+  options = VIEW_OPTIONS,
+}: { options?: ViewOption[] } = {}) {
+  const viewOptions = options?.length ? options : VIEW_OPTIONS;
+  const defaultView =
+    viewOptions.find((option) => option.value === "today")?.value ||
+    viewOptions[0]?.value ||
+    "today";
+
   const today = getLocalDateString();
   const currentMonth = getLocalMonthString();
-  const [viewBy, setViewBy] = useState<ViewOption>("today");
+  const [viewBy, setViewBy] = useState<ViewValue>(defaultView);
   const [dailyDate, setDailyDate] = useState(today);
   const [monthlyDate, setMonthlyDate] = useState(currentMonth);
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -68,18 +77,31 @@ export function useLikesDateSelector() {
     endDate: today,
   });
 
-  const handleViewChange = (nextView: ViewOption) => {
+  const normalizedViewBy = viewOptions.some((option) => option.value === viewBy)
+    ? viewBy
+    : defaultView;
+
+  const handleViewChange = (nextView: ViewValue) => {
+    if (!viewOptions.some((option) => option.value === nextView)) {
+      setViewBy(defaultView);
+      return;
+    }
+
     setViewBy((prevView) => {
+      const currentView = viewOptions.some((option) => option.value === prevView)
+        ? prevView
+        : defaultView;
+
       if (nextView === "today") {
         setDailyDate(today);
       }
-      if (nextView === "date" && prevView !== "date") {
+      if (nextView === "date" && currentView !== "date") {
         setDailyDate(today);
       }
-      if (nextView === "month" && prevView !== "month") {
+      if (nextView === "month" && currentView !== "month") {
         setMonthlyDate(currentMonth);
       }
-      if (nextView === "custom_range" && prevView !== "custom_range") {
+      if (nextView === "custom_range" && currentView !== "custom_range") {
         setDateRange({
           startDate: today,
           endDate: today,
@@ -90,7 +112,7 @@ export function useLikesDateSelector() {
   };
 
   const handleDateChange = (val: string | DateRange) => {
-    if (viewBy === "custom_range") {
+    if (normalizedViewBy === "custom_range") {
       if (!val || typeof val !== "object") {
         return;
       }
@@ -119,7 +141,7 @@ export function useLikesDateSelector() {
       });
       return;
     }
-    if (viewBy === "month") {
+    if (normalizedViewBy === "month") {
       setMonthlyDate((val as string) || currentMonth);
       return;
     }
@@ -136,18 +158,18 @@ export function useLikesDateSelector() {
   };
 
   const normalizedCustomDate =
-    viewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
+    normalizedViewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
 
   const reportPeriodeLabel = useMemo(() => {
-    if (viewBy === "custom_range") {
+    if (normalizedViewBy === "custom_range") {
       return formatDisplayRange(normalizedRangeStart, normalizedRangeEnd);
     }
-    if (viewBy === "month") {
+    if (normalizedViewBy === "month") {
       return formatDisplayMonth(normalizedMonthlyDate);
     }
     return formatDisplayDate(normalizedDailyDate);
   }, [
-    viewBy,
+    normalizedViewBy,
     normalizedRangeStart,
     normalizedRangeEnd,
     normalizedMonthlyDate,
@@ -155,15 +177,15 @@ export function useLikesDateSelector() {
   ]);
 
   const selectorDateValue =
-    viewBy === "custom_range"
+    normalizedViewBy === "custom_range"
       ? dateRange
-      : viewBy === "month"
+      : normalizedViewBy === "month"
         ? monthlyDate
         : dailyDate;
 
   return {
-    viewBy,
-    viewOptions: VIEW_OPTIONS,
+    viewBy: normalizedViewBy,
+    viewOptions,
     selectorDateValue,
     handleViewChange,
     handleDateChange,

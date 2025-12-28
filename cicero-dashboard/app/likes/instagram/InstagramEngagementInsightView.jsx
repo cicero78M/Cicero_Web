@@ -37,16 +37,16 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     }
   }, [initialTab]);
 
+  const viewOptions = [
+    { value: "today", label: "Hari ini", periode: "harian" },
+  ];
+
   const {
     viewBy,
-    viewOptions,
-    selectorDateValue,
-    handleViewChange,
-    handleDateChange,
     normalizedCustomDate,
     normalizedRange,
     reportPeriodeLabel,
-  } = useLikesDateSelector();
+  } = useLikesDateSelector({ options: viewOptions });
 
   const {
     chartData,
@@ -247,13 +247,6 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     >
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
-          viewSelectorProps={{
-            value: viewBy,
-            onChange: handleViewChange,
-            options: viewOptions,
-            date: selectorDateValue,
-            onDateChange: handleDateChange,
-          }}
           scopeSelectorProps={scopeSelectorProps}
           onCopyRekap={handleCopyRekap}
           summaryCards={summaryCards}

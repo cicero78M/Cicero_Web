@@ -61,27 +61,33 @@ export default function EngagementInsightMobileScaffold({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/70 p-4 shadow-inner backdrop-blur sm:p-5 md:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <ViewDataSelector
-            {...viewSelectorProps}
-            className="w-full justify-start gap-3 sm:w-auto"
-            labelClassName="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:tracking-[0.28em]"
-            controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
-          />
-          <div className="flex flex-wrap gap-3 sm:justify-end">
-            {renderScopeSelector()}
-            <button
-              onClick={onCopyRekap}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-teal-200/80 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_22px_rgba(45,212,191,0.25)] transition-colors hover:border-teal-300 hover:bg-teal-100"
-              type="button"
-            >
-              <Copy className="h-4 w-4" aria-hidden />
-              {copyLabel}
-            </button>
+      {(viewSelectorProps || scopeSelectorProps || onCopyRekap) && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-sky-100/60 bg-white/70 p-4 shadow-inner backdrop-blur sm:p-5 md:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            {viewSelectorProps ? (
+              <ViewDataSelector
+                {...viewSelectorProps}
+                className="w-full justify-start gap-3 sm:w-auto"
+                labelClassName="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:tracking-[0.28em]"
+                controlClassName="border-sky-200/70 bg-white/90 text-slate-800 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+            ) : null}
+            <div className="flex flex-wrap gap-3 sm:justify-end">
+              {renderScopeSelector()}
+              {onCopyRekap ? (
+                <button
+                  onClick={onCopyRekap}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-teal-200/80 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-700 shadow-[0_0_22px_rgba(45,212,191,0.25)] transition-colors hover:border-teal-300 hover:bg-teal-100"
+                  type="button"
+                >
+                  <Copy className="h-4 w-4" aria-hidden />
+                  {copyLabel}
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {summaryCards.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
