@@ -249,6 +249,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
         <EngagementInsightMobileScaffold
           scopeSelectorProps={scopeSelectorProps}
           onCopyRekap={handleCopyRekap}
+          showPremiumCta={isOrgClient}
           summaryCards={summaryCards}
           quickInsights={quickInsights}
           quickInsightTone="blue"
