@@ -239,7 +239,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   return (
     <InsightLayout
       title="Instagram Engagement Insight"
-      description="Pantau performa likes dan komentar harian dengan visualisasi chart bar."
+      description="Pantau performa likes dan komentar harian."
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}

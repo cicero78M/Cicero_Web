@@ -277,7 +277,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   return (
     <InsightLayout
       title="TikTok Engagement Insight"
-      description="Pantau performa engagement personel TikTok dengan ringkasan kepatuhan komentar dan tabel rekap terintegrasi."
+      description="Pantau performa engagement TikTok."
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
