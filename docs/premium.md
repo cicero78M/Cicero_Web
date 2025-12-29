@@ -15,12 +15,12 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
 - Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan payload ringkas:
-  - `username`, `client_id`, dan `uuid` terisi otomatis dari sesi login.
+  - `username` dan `client_id` terisi otomatis dari sesi login.
     - Nilai berasal dari token autentikasi (payload JWT) atau profil yang diambil setelah login. Jika pengguna login ulang, nilai akan diisi ulang dari token tanpa perlu refresh manual.
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
   - `amount` berisi harga dasar + suffix acak (nominal unik).
 - Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
-  - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan client ID/UUID untuk mempercepat verifikasi.
+  - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan client ID untuk mempercepat verifikasi.
   - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”.
 
 ## Penempatan CTA di Insight
@@ -36,5 +36,5 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
   - **Premium 3**: Rp 1.100.000 + suffix acak → tampil sebagai `Rp 1.100.xxx`. Manfaat: prioritas WA Bot dengan rekap terjadwal dan file Excel ANEV bulanan.
 - Saat pengguna memilih paket di formulir `/premium/register`, suffix di-generate otomatis dan ditampilkan pada label “Jumlah yang harus ditransfer”. Nominal numerik yang sama dikirim ke backend lewat payload permintaan premium.
 - Suffix dikunci saat proses submit berlangsung (tidak bisa mengganti paket selama loading atau setelah berhasil terkirim).
-- Instruksi transfer ditampilkan jelas di panel informasi: gunakan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan sertakan client ID/UUID pada catatan transfer agar verifikasi otomatis lebih cepat.
+- Instruksi transfer ditampilkan jelas di panel informasi: gunakan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan sertakan client ID pada catatan transfer agar verifikasi otomatis lebih cepat.
 - Setelah submit formulir, tim memverifikasi data pembayaran (nominal + rekening pengirim) sebelum mengaktifkan recap WA Bot sesuai paket.

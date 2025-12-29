@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Banknote, Loader2, MessageCircle, Shield, Sparkles } from "lucide-react";
+import { ArrowLeft, Banknote, Loader2, Shield, Sparkles } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import {
@@ -44,7 +44,6 @@ const premiumTiers = [
 const initialFormState = {
   username: "",
   clientId: "",
-  uuid: "",
   bankName: "",
   senderName: "",
   accountNumber: "",
@@ -55,7 +54,7 @@ const initialFormState = {
 
 export default function PremiumRegisterContent() {
   useRequireAuth();
-  const { profile, clientId, userId, username, token, isHydrating } = useAuth();
+  const { profile, clientId, username, token, isHydrating } = useAuth();
 
   const [formState, setFormState] = useState(initialFormState);
   const [error, setError] = useState("");
@@ -84,26 +83,14 @@ export default function PremiumRegisterContent() {
     );
   }, [clientId, profile]);
 
-  const resolvedUuid = useMemo(() => {
-    return (
-      userId ||
-      profile?.user_id ||
-      profile?.userId ||
-      profile?.uuid ||
-      profile?.id ||
-      ""
-    );
-  }, [profile, userId]);
-
   useEffect(() => {
     if (isHydrating) return;
     setFormState((prev) => ({
       ...prev,
       username: resolvedUsername || prev.username,
       clientId: resolvedClientId || prev.clientId,
-      uuid: resolvedUuid || prev.uuid,
     }));
-  }, [isHydrating, resolvedClientId, resolvedUsername, resolvedUuid]);
+  }, [isHydrating, resolvedClientId, resolvedUsername]);
 
   useEffect(() => {
     if (isHydrating) return;
@@ -117,7 +104,6 @@ export default function PremiumRegisterContent() {
           ...prev,
           username: context.username || prev.username || resolvedUsername,
           clientId: context.clientId || prev.clientId || resolvedClientId,
-          uuid: context.uuid || prev.uuid || resolvedUuid,
         }));
       } catch (err) {
         const message =
@@ -131,7 +117,7 @@ export default function PremiumRegisterContent() {
     fetchContext();
 
     return () => abortController.abort();
-  }, [isHydrating, resolvedClientId, resolvedUsername, resolvedUuid, token]);
+  }, [isHydrating, resolvedClientId, resolvedUsername, token]);
 
   const selectedTier = useMemo(
     () => premiumTiers.find((tier) => tier.value === formState.premiumTier),
@@ -157,7 +143,6 @@ export default function PremiumRegisterContent() {
 
 Username Dashboard: ${formState.username || "(diisi otomatis)"}
 Client ID: ${formState.clientId || "(diisi otomatis)"}
-UUID User: ${formState.uuid || "(diisi otomatis)"}
 
 Paket Premium: ${selectedTier?.label || formState.premiumTier || "-"}
 Nama Bank: ${formState.bankName || "-"}
@@ -202,7 +187,6 @@ Catatan tambahan:`;
     const missingFields = [];
     if (!formState.username.trim()) missingFields.push("username");
     if (!formState.clientId.trim()) missingFields.push("client_id");
-    if (!formState.uuid.trim()) missingFields.push("UUID");
     if (!formState.premiumTier.trim()) missingFields.push("paket premium");
     if (!formState.bankName.trim()) missingFields.push("nama bank");
     if (!formState.senderName.trim()) missingFields.push("nama pengirim");
@@ -232,7 +216,6 @@ Catatan tambahan:`;
         {
           username: formState.username.trim(),
           client_id: formState.clientId.trim(),
-          uuid: formState.uuid.trim(),
           premium_tier: formState.premiumTier.trim(),
           bank_name: formState.bankName.trim(),
           sender_name: formState.senderName.trim(),
@@ -300,7 +283,7 @@ Catatan tambahan:`;
             <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-inner">
               <h2 className="text-sm font-semibold text-slate-800">Langkah cepat</h2>
               <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-slate-600">
-                <li>Periksa data login yang terisi otomatis (username, Client ID, UUID).</li>
+                <li>Periksa data login yang terisi otomatis (username, Client ID).</li>
                 <li>Lengkapi paket premium, detail bank, dan nominal transfer.</li>
                 <li>Kirim formulir ini, lalu salin template WA untuk konfirmasi pembayaran.</li>
                 <li>Tunggu verifikasi dari tim CICERO. Formulir akan terkunci setelah berhasil.</li>
@@ -378,7 +361,7 @@ Catatan tambahan:`;
                   </div>
                 )}
 
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2">
                   <label className="space-y-1 text-sm text-slate-700">
                     <span className="font-semibold">Username</span>
                     <input
@@ -397,16 +380,6 @@ Catatan tambahan:`;
                       disabled
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-inner"
                       placeholder="Memuat client ID..."
-                    />
-                  </label>
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold">UUID User</span>
-                    <input
-                      value={formState.uuid}
-                      readOnly
-                      disabled
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-inner"
-                      placeholder="Memuat UUID..."
                     />
                   </label>
                 </div>
@@ -534,7 +507,7 @@ Catatan tambahan:`;
                   </p>
                   <p className="text-xs text-slate-700">
                     Transfer sesuai nominal unik yang muncul di formulir. Sisipkan catatan client
-                    ID/UUID agar tim dapat melakukan verifikasi otomatis sebelum aktivasi.
+                    ID agar tim dapat melakukan verifikasi otomatis sebelum aktivasi.
                   </p>
                 </div>
               </div>
