@@ -175,6 +175,65 @@ export type SubmitPremiumRequestResponse = ApiMessageResponse & {
   data?: any;
 };
 
+export type PremiumRequestContext = {
+  username: string;
+  clientId: string;
+  uuid: string;
+};
+
+export async function getPremiumRequestContext(
+  token?: string | null,
+  signal?: AbortSignal,
+): Promise<PremiumRequestContext> {
+  const endpoint = buildApiUrl("/api/premium/request/context");
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(endpoint, { headers, signal });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  if (res.status === 401) {
+    handleTokenExpired();
+  }
+
+  const message = extractResponseMessage(
+    data,
+    res.ok
+      ? "Context permintaan premium berhasil dimuat."
+      : "Gagal memuat context permintaan premium.",
+  );
+
+  if (!res.ok) {
+    throw new Error(message);
+  }
+
+  const payload = data?.data ?? data ?? {};
+  const normalizeValue = (keys: string[]): string => {
+    for (const key of keys) {
+      const value = payload?.[key];
+      if (typeof value === "string" || typeof value === "number") {
+        const normalized = String(value).trim();
+        if (normalized) return normalized;
+      }
+    }
+    return "";
+  };
+
+  return {
+    username: normalizeValue(["username", "user_name", "name", "nama"]),
+    clientId: normalizeValue(["client_id", "clientId", "cid", "client"]),
+    uuid: normalizeValue(["uuid", "user_id", "userId", "id"]),
+  };
+}
+
 export async function submitPremiumRequest(
   payload: SubmitPremiumRequestPayload,
   token?: string | null,
