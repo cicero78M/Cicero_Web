@@ -96,12 +96,18 @@ export default function LoginPage() {
       if (data.success && data.token) {
         const userId = data.user?.user_id || null;
         const userClient = data.user?.client_id || null;
+        const userName =
+          data.user?.username ||
+          data.user?.user_name ||
+          data.user?.name ||
+          data.user?.nama_user ||
+          null;
         const userRole =
           data.user?.role ||
           data.user?.user_role ||
           data.user?.roleName ||
           null;
-        setAuth(data.token, userClient, userId, userRole);
+        setAuth(data.token, userClient, userId, userRole, userName);
         router.push("/dashboard");
       } else {
         setError(data.message || "Login gagal");

@@ -52,7 +52,7 @@ const initialFormState = {
 
 export default function PremiumRegisterContent() {
   useRequireAuth();
-  const { profile, clientId, userId, token, isHydrating } = useAuth();
+  const { profile, clientId, userId, username, token, isHydrating } = useAuth();
 
   const [formState, setFormState] = useState(initialFormState);
   const [error, setError] = useState("");
@@ -61,6 +61,7 @@ export default function PremiumRegisterContent() {
 
   const resolvedUsername = useMemo(() => {
     return (
+      username ||
       profile?.username ||
       profile?.user?.username ||
       profile?.name ||
@@ -68,7 +69,7 @@ export default function PremiumRegisterContent() {
       profile?.client_name ||
       ""
     );
-  }, [profile]);
+  }, [profile, username]);
 
   const resolvedClientId = useMemo(() => {
     return (

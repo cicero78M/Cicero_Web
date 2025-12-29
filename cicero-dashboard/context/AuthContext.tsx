@@ -6,6 +6,7 @@ type AuthState = {
   token: string | null;
   clientId: string | null;
   userId: string | null;
+  username: string | null;
   role: string | null;
   effectiveRole: string | null;
   effectiveClientType: string | null;
@@ -17,6 +18,7 @@ type AuthState = {
     clientId: string | null,
     userId: string | null,
     role: string | null,
+    username?: string | null,
   ) => void;
 };
 
@@ -70,10 +72,57 @@ function normalizeClientType(value?: string) {
   return normalized;
 }
 
+function decodeJwtPayload(token: string | null): Record<string, any> | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  const payload = parts[1];
+  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  try {
+    const decoded = JSON.parse(atob(padded));
+    if (!decoded || typeof decoded !== "object") return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+function pickString(source: Record<string, any> | null, keys: string[]) {
+  if (!source) return "";
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function extractTokenProfile(token: string | null) {
+  const payload = decodeJwtPayload(token);
+  const username = pickString(payload, [
+    "username",
+    "user_name",
+    "name",
+    "nama",
+    "sub",
+  ]);
+  const userId = pickString(payload, [
+    "user_id",
+    "userId",
+    "uuid",
+    "id",
+    "sub",
+  ]);
+  const clientId = pickString(payload, ["client_id", "clientId", "cid"]);
+  const role = pickString(payload, ["role", "user_role", "roleName"]);
+  return { username, userId, clientId, role };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
   const [effectiveClientType, setEffectiveClientType] = useState<string | null>(
@@ -87,11 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedToken = localStorage.getItem("cicero_token");
     const storedClient = localStorage.getItem("client_id");
     const storedUser = localStorage.getItem("user_id");
+    const storedUsername = localStorage.getItem("username");
     const storedRole = localStorage.getItem("user_role");
+    const tokenProfile = extractTokenProfile(storedToken);
     setToken(storedToken);
-    setClientId(storedClient);
-    setUserId(storedUser);
-    setRole(storedRole);
+    setClientId(storedClient || tokenProfile.clientId || null);
+    setUserId(storedUser || tokenProfile.userId || null);
+    setUsername(storedUsername || tokenProfile.username || null);
+    setRole(storedRole || tokenProfile.role || null);
     setIsHydrating(false);
   }, []);
 
@@ -159,18 +211,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     newClient: string | null,
     newUser: string | null,
     newRole: string | null,
+    newUsername?: string | null,
   ) => {
+    const tokenProfile = extractTokenProfile(newToken);
+    const resolvedClientId = newClient || tokenProfile.clientId || null;
+    const resolvedUserId = newUser || tokenProfile.userId || null;
+    const resolvedRole = newRole || tokenProfile.role || null;
+    const resolvedUsername = newUsername || tokenProfile.username || null;
+
     setToken(newToken);
-    setClientId(newClient);
-    setUserId(newUser);
-    setRole(newRole);
+    setClientId(resolvedClientId);
+    setUserId(resolvedUserId);
+    setUsername(resolvedUsername);
+    setRole(resolvedRole);
     if (newToken) localStorage.setItem("cicero_token", newToken);
     else localStorage.removeItem("cicero_token");
-    if (newClient) localStorage.setItem("client_id", newClient);
+    if (resolvedClientId) localStorage.setItem("client_id", resolvedClientId);
     else localStorage.removeItem("client_id");
-    if (newUser) localStorage.setItem("user_id", newUser);
+    if (resolvedUserId) localStorage.setItem("user_id", resolvedUserId);
     else localStorage.removeItem("user_id");
-    if (newRole) localStorage.setItem("user_role", newRole);
+    if (resolvedUsername) localStorage.setItem("username", resolvedUsername);
+    else localStorage.removeItem("username");
+    if (resolvedRole) localStorage.setItem("user_role", resolvedRole);
     else localStorage.removeItem("user_role");
   };
 
@@ -180,6 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         clientId,
         userId,
+        username,
         role,
         effectiveRole,
         effectiveClientType,
