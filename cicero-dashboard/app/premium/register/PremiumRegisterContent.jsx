@@ -44,6 +44,8 @@ const premiumTiers = [
 const initialFormState = {
   username: "",
   clientId: "",
+  dashboardUserId: "",
+  userId: "",
   bankName: "",
   senderName: "",
   accountNumber: "",
@@ -54,7 +56,7 @@ const initialFormState = {
 
 export default function PremiumRegisterContent() {
   useRequireAuth();
-  const { profile, clientId, username, token, isHydrating } = useAuth();
+  const { profile, clientId, username, userId, token, isHydrating } = useAuth();
 
   const [formState, setFormState] = useState(initialFormState);
   const [error, setError] = useState("");
@@ -74,14 +76,28 @@ export default function PremiumRegisterContent() {
   }, [profile, username]);
 
   const resolvedClientId = useMemo(() => {
+    const candidates = [
+      clientId,
+      profile?.client_id,
+      profile?.clientId,
+      profile?.id_client,
+      ...(Array.isArray(profile?.client_ids) ? profile.client_ids : []),
+      ...(Array.isArray(profile?.clientIds) ? profile.clientIds : []),
+    ];
+    const match = candidates.find((value) => typeof value === "string" && value.trim());
+    return typeof match === "string" ? match.trim() : "";
+  }, [clientId, profile]);
+
+  const resolvedUserId = useMemo(() => {
     return (
-      clientId ||
-      profile?.client_id ||
-      profile?.clientId ||
-      profile?.id_client ||
+      userId ||
+      profile?.user_id ||
+      profile?.userId ||
+      profile?.user_uuid ||
+      profile?.uuid ||
       ""
     );
-  }, [clientId, profile]);
+  }, [profile, userId]);
 
   useEffect(() => {
     if (isHydrating) return;
@@ -89,8 +105,9 @@ export default function PremiumRegisterContent() {
       ...prev,
       username: resolvedUsername || prev.username,
       clientId: resolvedClientId || prev.clientId,
+      userId: resolvedUserId || prev.userId,
     }));
-  }, [isHydrating, resolvedClientId, resolvedUsername]);
+  }, [isHydrating, resolvedClientId, resolvedUserId, resolvedUsername]);
 
   useEffect(() => {
     if (isHydrating) return;
@@ -104,6 +121,8 @@ export default function PremiumRegisterContent() {
           ...prev,
           username: context.username || prev.username || resolvedUsername,
           clientId: context.clientId || prev.clientId || resolvedClientId,
+          dashboardUserId: context.dashboardUserId || prev.dashboardUserId,
+          userId: context.userId || prev.userId || resolvedUserId,
         }));
       } catch (err) {
         const message =
@@ -117,7 +136,7 @@ export default function PremiumRegisterContent() {
     fetchContext();
 
     return () => abortController.abort();
-  }, [isHydrating, resolvedClientId, resolvedUsername, token]);
+  }, [isHydrating, resolvedClientId, resolvedUserId, resolvedUsername, token]);
 
   const selectedTier = useMemo(
     () => premiumTiers.find((tier) => tier.value === formState.premiumTier),
@@ -143,6 +162,8 @@ export default function PremiumRegisterContent() {
 
 Username Dashboard: ${formState.username || "(diisi otomatis)"}
 Client ID: ${formState.clientId || "(diisi otomatis)"}
+Dashboard User ID: ${formState.dashboardUserId || "-"}
+User ID: ${formState.userId || "-"}
 
 Paket Premium: ${selectedTier?.label || formState.premiumTier || "-"}
 Nama Bank: ${formState.bankName || "-"}
@@ -221,6 +242,7 @@ Catatan tambahan:`;
           sender_name: formState.senderName.trim(),
           account_number: formState.accountNumber.trim(),
           amount: numericAmount,
+          transfer_amount: numericAmount,
         },
         token,
       );
