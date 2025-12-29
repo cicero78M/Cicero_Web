@@ -31,10 +31,9 @@ const premiumTiers = [
     value: "premium_3",
     label: "Premium 3",
     description: "Prioritas WA Bot dengan rekap otomatis terjadwal.",
-    basePrice: 1100000,
+    basePrice: 100000,
     benefits: [
-      "Recap WA Bot jam 15:00 / 18:00 / 20:30",
-      "Rekap file Excel ANEV Bulanan",
+      "Rekap file Excel ANEV Harian, Mingguan dan Bulanan",
     ],
   },
 ];
@@ -392,7 +391,7 @@ Catatan tambahan:`;
                       <option value="">Pilih paket</option>
                       {premiumTiers.map((tier) => (
                         <option key={tier.value} value={tier.value}>
-                          {tier.label} — Rp {tier.basePrice.toLocaleString("id-ID")}.xxx
+                          {tier.label} — Rp {tier.basePrice.toLocaleString("id-ID")}
                         </option>
                       ))}
                     </select>
@@ -508,31 +507,10 @@ Catatan tambahan:`;
                 </div>
               </div>
             </div>
-            <div className="rounded-2xl border border-sky-100 bg-white/80 p-5 shadow-[0_15px_32px_-25px_rgba(56,189,248,0.6)]">
-              <h2 className="text-sm font-semibold text-slate-800">Template WA</h2>
-              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-sm font-mono text-slate-700">
-                <pre className="whitespace-pre-wrap break-words">{templateMessage}</pre>
-              </div>
-              <a
-                href={whatsappTarget}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-14px_rgba(79,70,229,0.55)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Salin & kirim via WhatsApp
-              </a>
-            </div>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-indigo-50 bg-indigo-50/70 p-4 text-sm text-indigo-800 shadow-inner">
-            <p className="font-semibold">Nomor WA Dashboard</p>
-            <p className="mt-1 text-indigo-700/80">
-              Gunakan nomor yang sama dengan login dashboard agar recap otomatis terkirim ke kanal yang tepat.
-            </p>
-          </div>
           <div className="rounded-2xl border border-sky-50 bg-sky-50/70 p-4 text-sm text-sky-800 shadow-inner">
             <p className="font-semibold">Periode ANEV</p>
             <p className="mt-1 text-sky-700/80">
