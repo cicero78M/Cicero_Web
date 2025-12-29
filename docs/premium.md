@@ -23,8 +23,11 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 ## Harga dasar & nominal transfer
 
 - Setiap paket memiliki harga dasar dan tiga digit acak untuk memudahkan pencocokan pembayaran:
-  - **Premium 30 Hari**: Rp 300.000 + suffix acak (000–999) → tampil sebagai `Rp 300.xxx`.
-  - **Premium 90 Hari**: Rp 200.000 + suffix acak (000–999) → tampil sebagai `Rp 200.xxx`.
-  - **Premium Kustom**: Rp 100.000 + suffix acak (000–999) → tampil sebagai `Rp 100.xxx`.
+  - **Premium 1**: Rp 300.000 + suffix acak (000–999) → tampil sebagai `Rp 300.xxx`. Manfaat: recap WA Bot 15:00/18:00/20:30, akses ANEV harian–bulanan, unduhan Excel + panduan operator dasar.
+  - **Tier 2 — Opsi 1**: Rp 550.000 + suffix acak → tampil sebagai `Rp 550.xxx`. Manfaat: pendampingan operator saat jam kerja, template laporan + catatan tindak lanjut, prioritas eskalasi.
+  - **Tier 2 — Opsi 2**: Rp 750.000 + suffix acak → tampil sebagai `Rp 750.xxx`. Manfaat: seluruh Opsi 1 + sweep recap malam tambahan, format laporan kustom untuk pimpinan, monitoring multi-kanal dengan reminder.
+  - **Premium 3**: Rp 1.100.000 + suffix acak → tampil sebagai `Rp 1.100.xxx`. Manfaat: pendampingan penuh lintas kanal, review strategi mingguan & rekomendasi KPI, jadwal recap fleksibel.
 - Saat pengguna memilih paket di formulir `/premium/register`, suffix di-generate otomatis dan ditampilkan pada label “Jumlah yang harus ditransfer”. Nominal numerik yang sama dikirim ke backend lewat payload permintaan premium.
 - Suffix dikunci saat proses submit berlangsung (tidak bisa mengganti paket selama loading atau setelah berhasil terkirim).
+- Instruksi transfer ditampilkan jelas di panel informasi: gunakan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan sertakan client ID/UUID pada catatan transfer agar verifikasi otomatis lebih cepat.
+- Setelah submit formulir, tim memverifikasi data pembayaran (nominal + rekening pengirim) sebelum mengaktifkan recap WA Bot sesuai paket.

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Banknote, Loader2, MessageCircle, Shield } from "lucide-react";
+import { ArrowLeft, Banknote, Loader2, MessageCircle, Shield, Sparkles } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { submitPremiumRequest } from "@/utils/api";
@@ -10,22 +10,48 @@ import { showToast } from "@/utils/showToast";
 
 const premiumTiers = [
   {
-    value: "premium_monthly",
-    label: "Premium 30 Hari",
-    description: "Recap otomatis + ANEV kustom selama 30 hari.",
+    value: "premium_1",
+    label: "Premium 1",
+    description: "Recap otomatis dasar dengan akses ANEV lengkap untuk 1 tim.",
     basePrice: 300000,
+    benefits: [
+      "Recap WA Bot jam 15:00 / 18:00 / 20:30",
+      "Halaman ANEV harian, mingguan, bulanan",
+      "Unduhan Excel & panduan operator dasar",
+    ],
   },
   {
-    value: "premium_quarterly",
-    label: "Premium 90 Hari",
-    description: "Cocok untuk evaluasi triwulan dengan jadwal recap rutin.",
-    basePrice: 200000,
+    value: "tier_2_option_1",
+    label: "Tier 2 - Opsi 1",
+    description: "Pendampingan operator dan eskalasi prioritas pada jam kerja.",
+    basePrice: 550000,
+    benefits: [
+      "Pendampingan operator saat jam kerja",
+      "Template laporan + catatan tindak lanjut",
+      "Prioritas eskalasi ketika ada anomali",
+    ],
   },
   {
-    value: "premium_custom",
-    label: "Premium Kustom",
-    description: "Untuk kebutuhan di luar periode standar (isi nominal sesuai invoice).",
-    basePrice: 100000,
+    value: "tier_2_option_2",
+    label: "Tier 2 - Opsi 2",
+    description: "Sweep malam tambahan dan format laporan kustom untuk pimpinan.",
+    basePrice: 750000,
+    benefits: [
+      "Semua manfaat Opsi 1 + sweep recap malam tambahan",
+      "Penyesuaian format laporan sesuai pimpinan",
+      "Monitoring multi-kanal dengan reminder otomatis",
+    ],
+  },
+  {
+    value: "premium_3",
+    label: "Premium 3",
+    description: "Pendampingan penuh dengan konfigurasi multi-kanal dan review rutin.",
+    basePrice: 1100000,
+    benefits: [
+      "Pendampingan penuh + koordinasi multi-kanal",
+      "Review strategi mingguan & rekomendasi KPI",
+      "Jadwal recap fleksibel sesuai kesepakatan",
+    ],
   },
 ];
 
@@ -266,6 +292,60 @@ Catatan tambahan:`;
               </ol>
             </div>
 
+            <div className="rounded-2xl border border-indigo-50 bg-white/95 p-6 shadow-[0_15px_32px_-25px_rgba(99,102,241,0.35)]">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-indigo-500" />
+                    <h3 className="text-base font-semibold text-slate-800">Paket & tarif</h3>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Pilih paket sesuai kebutuhan tim. Harga sudah termasuk penambahan 3 digit acak
+                    untuk memudahkan pencocokan transfer.
+                  </p>
+                </div>
+                <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-indigo-700 shadow-inner">
+                  Rp xxx + 3 digit acak
+                </span>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {premiumTiers.map((tier) => (
+                  <button
+                    key={tier.value}
+                    type="button"
+                    onClick={() => handleTierChange(tier.value)}
+                    disabled={isFormLocked}
+                    className={`flex h-full flex-col gap-2 rounded-xl border bg-white px-4 py-3 text-left shadow-inner transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-70 ${
+                      formState.premiumTier === tier.value
+                        ? "border-indigo-200 ring-1 ring-indigo-100"
+                        : "border-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">{tier.label}</p>
+                        <p className="text-xs text-slate-600">{tier.description}</p>
+                      </div>
+                      <span className="rounded-lg bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-700 shadow-inner">
+                        Rp {tier.basePrice.toLocaleString("id-ID")}.xxx
+                      </span>
+                    </div>
+                    <ul className="space-y-1 text-xs text-slate-600">
+                      {tier.benefits.map((benefit) => (
+                        <li key={benefit} className="flex items-start gap-1">
+                          <span className="mt-[6px] inline-block h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="text-[11px] font-semibold text-indigo-700">
+                      Klik untuk memilih paket ini
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="rounded-2xl border border-indigo-50 bg-white/90 p-6 shadow-[0_15px_32px_-25px_rgba(99,102,241,0.35)]">
               <div className="flex items-center gap-2">
                 <Banknote className="h-4 w-4 text-indigo-500" />
@@ -328,7 +408,7 @@ Catatan tambahan:`;
                       <option value="">Pilih paket</option>
                       {premiumTiers.map((tier) => (
                         <option key={tier.value} value={tier.value}>
-                          {tier.label}
+                          {tier.label} — Rp {tier.basePrice.toLocaleString("id-ID")}.xxx
                         </option>
                       ))}
                     </select>
@@ -420,24 +500,45 @@ Catatan tambahan:`;
                     )}
                   </button>
                 </div>
+                <p className="text-xs font-semibold text-indigo-700">
+                  Data pembayaran akan diverifikasi setelah submit agar aktivasi recap sesuai nominal
+                  dan rekening pengirim.
+                </p>
               </form>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-sky-100 bg-white/80 p-5 shadow-[0_15px_32px_-25px_rgba(56,189,248,0.6)]">
-            <h2 className="text-sm font-semibold text-slate-800">Template WA</h2>
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-sm font-mono text-slate-700">
-              <pre className="whitespace-pre-wrap break-words">{templateMessage}</pre>
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 shadow-[0_18px_45px_-28px_rgba(234,179,8,0.45)]">
+              <div className="flex items-start gap-3">
+                <Banknote className="h-5 w-5 text-amber-500" />
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-amber-700">Instruksi transfer</p>
+                  <p className="text-sm font-bold text-slate-800">
+                    0891758684 (BCA a.n Rizqa Febryan Prastyo)
+                  </p>
+                  <p className="text-xs text-slate-700">
+                    Transfer sesuai nominal unik yang muncul di formulir. Sisipkan catatan client
+                    ID/UUID agar tim dapat melakukan verifikasi otomatis sebelum aktivasi.
+                  </p>
+                </div>
+              </div>
             </div>
-            <a
-              href={whatsappTarget}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-14px_rgba(79,70,229,0.55)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Salin & kirim via WhatsApp
-            </a>
+            <div className="rounded-2xl border border-sky-100 bg-white/80 p-5 shadow-[0_15px_32px_-25px_rgba(56,189,248,0.6)]">
+              <h2 className="text-sm font-semibold text-slate-800">Template WA</h2>
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-sm font-mono text-slate-700">
+                <pre className="whitespace-pre-wrap break-words">{templateMessage}</pre>
+              </div>
+              <a
+                href={whatsappTarget}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-14px_rgba(79,70,229,0.55)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Salin & kirim via WhatsApp
+              </a>
+            </div>
           </div>
         </div>
 
