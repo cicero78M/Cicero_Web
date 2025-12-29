@@ -167,6 +167,8 @@ export type SubmitPremiumRequestPayload = {
   bank_name: string;
   sender_name: string;
   account_number: string;
+  dashboard_user_id?: string;
+  dashboardUserId?: string;
   amount?: number;
   transfer_amount?: number;
 };
@@ -257,6 +259,13 @@ export async function submitPremiumRequest(
     (payload as any).transferAmount ??
     payload.amount ??
     (payload as any).amount;
+  const dashboardUserId = (() => {
+    const raw =
+      payload.dashboard_user_id ||
+      (payload as any).dashboardUserId ||
+      "";
+    return typeof raw === "string" ? raw.trim() : "";
+  })();
 
   const body: Record<string, any> = {
     username: payload.username,
@@ -267,6 +276,9 @@ export async function submitPremiumRequest(
     sender_name: payload.sender_name,
     transfer_amount: transferAmount,
   };
+  if (dashboardUserId) {
+    body.dashboard_user_id = dashboardUserId;
+  }
 
   if (payload.amount !== undefined) {
     body.amount = payload.amount;

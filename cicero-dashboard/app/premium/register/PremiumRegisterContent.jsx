@@ -238,6 +238,7 @@ Catatan tambahan:`;
           username: formState.username.trim(),
           client_id: formState.clientId.trim(),
           premium_tier: formState.premiumTier.trim(),
+          dashboard_user_id: formState.dashboardUserId.trim() || undefined,
           bank_name: formState.bankName.trim(),
           sender_name: formState.senderName.trim(),
           account_number: formState.accountNumber.trim(),

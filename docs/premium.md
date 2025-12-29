@@ -18,6 +18,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
   - `username` dan `client_id` terisi otomatis dari token dashboard/profil login; backend menolak (`403`) jika username yang dikirim berbeda dengan akun dashboard aktif atau `client_id` tidak ada di daftar akses pengguna.
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
   - `transfer_amount` dikirim bersama `amount` berisi harga dasar + suffix acak (nominal unik); backend menerima keduanya dan menyimpan field yang dikirim pada metadata request.
+  - Identifier `dashboard_user_id` diteruskan bila tersedia dari endpoint context agar tabel audit tidak menerima nilai kosong/`user_id` null ketika menulis entri histori.
 - Backend `/api/premium/request/context` mengembalikan `username` serta identifier `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang data login tanpa membuka UUID.
 - Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
   - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan client ID untuk mempercepat verifikasi.
