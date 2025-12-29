@@ -14,14 +14,14 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - **/premium/register**: Formulir pendaftaran dengan template pesan WA Bot yang dapat dikirim langsung (target `https://wa.me/+6281235114745`) sekaligus mengirim permintaan ke backend.
 - Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
-- Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan payload ringkas:
-  - `username` dan `client_id` terisi otomatis dari sesi login.
-    - Nilai berasal dari token autentikasi (payload JWT) atau profil yang diambil setelah login. Jika pengguna login ulang, nilai akan diisi ulang dari token tanpa perlu refresh manual.
+- Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** yang mengikuti validasi terbaru di Cicero_V2:
+  - `username` dan `client_id` terisi otomatis dari token dashboard/profil login; backend menolak (`403`) jika username yang dikirim berbeda dengan akun dashboard aktif atau `client_id` tidak ada di daftar akses pengguna.
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
-  - `amount` berisi harga dasar + suffix acak (nominal unik).
+  - `transfer_amount` dikirim bersama `amount` berisi harga dasar + suffix acak (nominal unik); backend menerima keduanya dan menyimpan field yang dikirim pada metadata request.
+- Backend `/api/premium/request/context` mengembalikan `username` serta identifier `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang data login tanpa membuka UUID.
 - Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
   - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan client ID untuk mempercepat verifikasi.
-  - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”.
+  - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”. Jika token dashboard tidak memuat `client_id`, backend akan memakai client tunggal milik pengguna atau menolak request dengan 400/403 agar tetap sesuai RLS.
 
 ## Penempatan CTA di Insight
 

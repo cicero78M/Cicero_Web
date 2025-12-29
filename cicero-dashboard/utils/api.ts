@@ -161,13 +161,14 @@ function handleTokenExpired(): void {
 }
 
 export type SubmitPremiumRequestPayload = {
-  username: string;
-  client_id: string;
-  premium_tier: string;
+  username?: string;
+  client_id?: string;
+  premium_tier?: string;
   bank_name: string;
   sender_name: string;
   account_number: string;
-  amount: number;
+  amount?: number;
+  transfer_amount?: number;
 };
 
 export type SubmitPremiumRequestResponse = ApiMessageResponse & {
@@ -176,7 +177,9 @@ export type SubmitPremiumRequestResponse = ApiMessageResponse & {
 
 export type PremiumRequestContext = {
   username: string;
-  clientId: string;
+  clientId?: string;
+  dashboardUserId?: string;
+  userId?: string;
 };
 
 export async function getPremiumRequestContext(
@@ -225,10 +228,17 @@ export async function getPremiumRequestContext(
     return "";
   };
 
-  return {
-    username: normalizeValue(["username", "user_name", "name", "nama"]),
-    clientId: normalizeValue(["client_id", "clientId", "cid", "client"]),
-  };
+  const username = normalizeValue(["username", "user_name", "name", "nama"]);
+  const clientId = normalizeValue(["client_id", "clientId", "cid", "client"]);
+  const dashboardUserId = normalizeValue([
+    "dashboard_user_id",
+    "dashboardUserId",
+    "dashboard_user",
+    "dashboardUser",
+  ]);
+  const userId = normalizeValue(["user_id", "userId", "user_uuid", "uuid"]);
+
+  return { username, clientId, dashboardUserId, userId };
 }
 
 export async function submitPremiumRequest(
@@ -242,10 +252,30 @@ export async function submitPremiumRequest(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const transferAmount =
+    payload.transfer_amount ??
+    (payload as any).transferAmount ??
+    payload.amount ??
+    (payload as any).amount;
+
+  const body: Record<string, any> = {
+    username: payload.username,
+    client_id: payload.client_id,
+    premium_tier: payload.premium_tier,
+    bank_name: payload.bank_name,
+    account_number: payload.account_number,
+    sender_name: payload.sender_name,
+    transfer_amount: transferAmount,
+  };
+
+  if (payload.amount !== undefined) {
+    body.amount = payload.amount;
+  }
+
   const res = await fetch(endpoint, {
     method: "POST",
     headers,
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
     signal,
   });
 
