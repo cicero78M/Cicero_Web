@@ -12,7 +12,7 @@ const premiumTiers = [
   {
     value: "premium_1",
     label: "Premium 1",
-    description: "Recap otomatis dasar dengan akses ANEV lengkap untuk 1 tim.",
+    description: "Recap otomatis dengan akses ANEV lengkap untuk 1 User.",
     basePrice: 300000,
     benefits: [
       "Recap WA Bot jam 15:00 / 18:00 / 20:30",
@@ -21,36 +21,20 @@ const premiumTiers = [
     ],
   },
   {
-    value: "tier_2_option_1",
-    label: "Tier 2 - Opsi 1",
-    description: "Pendampingan operator dan eskalasi prioritas pada jam kerja.",
-    basePrice: 550000,
-    benefits: [
-      "Pendampingan operator saat jam kerja",
-      "Template laporan + catatan tindak lanjut",
-      "Prioritas eskalasi ketika ada anomali",
-    ],
-  },
-  {
-    value: "tier_2_option_2",
-    label: "Tier 2 - Opsi 2",
-    description: "Sweep malam tambahan dan format laporan kustom untuk pimpinan.",
-    basePrice: 750000,
-    benefits: [
-      "Semua manfaat Opsi 1 + sweep recap malam tambahan",
-      "Penyesuaian format laporan sesuai pimpinan",
-      "Monitoring multi-kanal dengan reminder otomatis",
-    ],
+    value: "premium_2",
+    label: "Premium 2",
+    description: "Prioritas Web Dashboard untuk monitoring ANEV.",
+    basePrice: 200000,
+    benefits: ["Web ANEV dashboard", "Download data"],
   },
   {
     value: "premium_3",
     label: "Premium 3",
-    description: "Pendampingan penuh dengan konfigurasi multi-kanal dan review rutin.",
+    description: "Prioritas WA Bot dengan rekap otomatis terjadwal.",
     basePrice: 1100000,
     benefits: [
-      "Pendampingan penuh + koordinasi multi-kanal",
-      "Review strategi mingguan & rekomendasi KPI",
-      "Jadwal recap fleksibel sesuai kesepakatan",
+      "Recap WA Bot jam 15:00 / 18:00 / 20:30",
+      "Rekap file Excel ANEV Bulanan",
     ],
   },
 ];
