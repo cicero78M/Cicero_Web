@@ -119,7 +119,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 
 - Halaman **/premium** merangkum fitur paket premium (recap WA Bot, jadwal 15:00/18:00/20:30, ANEV harian/mingguan/bulanan/kustom, unduhan Excel, dan panduan operator) dengan tombol **Daftar Sekarang** ke **/premium/register**.
 - Formulir **/premium/register** kini form terkontrol yang mengisi otomatis username, Client ID, dan UUID dari sesi login, memvalidasi paket premium + detail bank, mengirim payload melalui helper `submitPremiumRequest` (`cicero-dashboard/utils/api.ts`), serta menampilkan status loading/sukses sambil mengunci dan mengosongkan form setelah pengajuan berhasil.
-- Pilihan paket premium kini diringkas menjadi **Premium 1** (Rp 300.xxx: recap otomatis & akses ANEV lengkap), **Premium 2** (Rp 200.xxx: prioritas Web Dashboard ANEV + unduhan data), dan **Premium 3** (Rp 1.100.xxx: prioritas WA Bot dengan rekap terjadwal + Excel ANEV bulanan). Nominal dihitung dari harga dasar + 3 digit acak untuk memudahkan verifikasi transfer.
+- Pengajuan **/premium/register** mengirim POST ke backend **`/api/premium/request`** dengan payload `username`, `client_id`, `uuid`, `premium_tier`, `bank_name`, `sender_name`, `account_number`, serta `amount` berisi harga dasar + suffix acak (nominal unik). Alur pengguna: pilih paket & isi rekening → submit (nominal unik terkunci dan dikirim) → verifikasi pembayaran/nominal oleh tim dengan instruksi transfer ke **0891758684 (BCA a.n Rizqa Febryan Prastyo)** + catatan client ID/UUID.
 - Menu **Premium** di sidebar/dashboard serta tombol **Premium** pada header insight Instagram dan TikTok hanya muncul untuk pengguna dengan `client_type` **ORG**, sehingga akun direktorat tidak melihat CTA paket premium.
 
 ## Dashboard Utama
