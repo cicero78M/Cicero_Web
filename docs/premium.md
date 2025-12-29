@@ -16,6 +16,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
 - Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan payload ringkas:
   - `username`, `client_id`, dan `uuid` terisi otomatis dari sesi login.
+    - Nilai berasal dari token autentikasi (payload JWT) atau profil yang diambil setelah login. Jika pengguna login ulang, nilai akan diisi ulang dari token tanpa perlu refresh manual.
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
   - `amount` berisi harga dasar + suffix acak (nominal unik).
 - Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
