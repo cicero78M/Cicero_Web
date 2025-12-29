@@ -310,7 +310,7 @@ Catatan tambahan:`;
                         <p className="text-xs text-slate-600">{tier.description}</p>
                       </div>
                       <span className="rounded-lg bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-700 shadow-inner">
-                        Rp {tier.basePrice.toLocaleString("id-ID")}.xxx
+                        Rp {tier.basePrice.toLocaleString("id-ID")}
                       </span>
                     </div>
                     <ul className="space-y-1 text-xs text-slate-600">
