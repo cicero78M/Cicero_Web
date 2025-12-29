@@ -163,7 +163,6 @@ function handleTokenExpired(): void {
 export type SubmitPremiumRequestPayload = {
   username: string;
   client_id: string;
-  uuid: string;
   premium_tier: string;
   bank_name: string;
   sender_name: string;
@@ -178,7 +177,6 @@ export type SubmitPremiumRequestResponse = ApiMessageResponse & {
 export type PremiumRequestContext = {
   username: string;
   clientId: string;
-  uuid: string;
 };
 
 export async function getPremiumRequestContext(
@@ -230,7 +228,6 @@ export async function getPremiumRequestContext(
   return {
     username: normalizeValue(["username", "user_name", "name", "nama"]),
     clientId: normalizeValue(["client_id", "clientId", "cid", "client"]),
-    uuid: normalizeValue(["uuid", "user_id", "userId", "id"]),
   };
 }
 
