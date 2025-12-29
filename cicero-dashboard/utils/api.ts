@@ -160,6 +160,68 @@ function handleTokenExpired(): void {
   }
 }
 
+export type SubmitPremiumRequestPayload = {
+  username: string;
+  client_id: string;
+  uuid: string;
+  premium_tier: string;
+  bank_name: string;
+  sender_name: string;
+  account_number: string;
+  amount: number;
+};
+
+export type SubmitPremiumRequestResponse = ApiMessageResponse & {
+  data?: any;
+};
+
+export async function submitPremiumRequest(
+  payload: SubmitPremiumRequestPayload,
+  token?: string | null,
+  signal?: AbortSignal,
+): Promise<SubmitPremiumRequestResponse> {
+  const endpoint = buildApiUrl("/api/premium/request");
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+    signal,
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  if (res.status === 401) {
+    handleTokenExpired();
+  }
+
+  const message = extractResponseMessage(
+    data,
+    res.ok
+      ? "Permintaan premium berhasil dikirim."
+      : "Permintaan premium gagal diproses.",
+  );
+
+  if (!res.ok) {
+    throw new Error(message);
+  }
+
+  return {
+    success: data?.success ?? res.ok,
+    message,
+    data: data?.data ?? data,
+  };
+}
+
 export type ExecutiveSummaryFilters = {
   month?: string;
   period?: string;
