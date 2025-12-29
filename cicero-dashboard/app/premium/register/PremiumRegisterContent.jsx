@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Banknote, Loader2, MessageCircle, Shield, Sparkles } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
-import { submitPremiumRequest } from "@/utils/api";
+import {
+  getPremiumRequestContext,
+  submitPremiumRequest,
+} from "@/utils/api";
 import { showToast } from "@/utils/showToast";
 
 const premiumTiers = [
@@ -101,6 +104,34 @@ export default function PremiumRegisterContent() {
       uuid: resolvedUuid || prev.uuid,
     }));
   }, [isHydrating, resolvedClientId, resolvedUsername, resolvedUuid]);
+
+  useEffect(() => {
+    if (isHydrating) return;
+
+    const abortController = new AbortController();
+
+    async function fetchContext() {
+      try {
+        const context = await getPremiumRequestContext(token, abortController.signal);
+        setFormState((prev) => ({
+          ...prev,
+          username: context.username || prev.username || resolvedUsername,
+          clientId: context.clientId || prev.clientId || resolvedClientId,
+          uuid: context.uuid || prev.uuid || resolvedUuid,
+        }));
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Gagal memuat data permintaan premium.";
+        showToast(message, "error");
+      }
+    }
+
+    fetchContext();
+
+    return () => abortController.abort();
+  }, [isHydrating, resolvedClientId, resolvedUsername, resolvedUuid, token]);
 
   const selectedTier = useMemo(
     () => premiumTiers.find((tier) => tier.value === formState.premiumTier),
