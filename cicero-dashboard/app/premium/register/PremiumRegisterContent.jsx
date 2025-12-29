@@ -13,16 +13,19 @@ const premiumTiers = [
     value: "premium_monthly",
     label: "Premium 30 Hari",
     description: "Recap otomatis + ANEV kustom selama 30 hari.",
+    basePrice: 300000,
   },
   {
     value: "premium_quarterly",
     label: "Premium 90 Hari",
     description: "Cocok untuk evaluasi triwulan dengan jadwal recap rutin.",
+    basePrice: 200000,
   },
   {
     value: "premium_custom",
     label: "Premium Kustom",
     description: "Untuk kebutuhan di luar periode standar (isi nominal sesuai invoice).",
+    basePrice: 100000,
   },
 ];
 
@@ -35,6 +38,7 @@ const initialFormState = {
   accountNumber: "",
   premiumTier: "",
   amount: "",
+  amountSuffix: "",
 };
 
 export default function PremiumRegisterContent() {
@@ -99,6 +103,14 @@ export default function PremiumRegisterContent() {
     return `Rp ${numericAmount.toLocaleString("id-ID")}`;
   }, [formState.amount]);
 
+  const formattedSuggestedAmount = useMemo(() => {
+    if (!formState.premiumTier) return "-";
+    const tier = premiumTiers.find((item) => item.value === formState.premiumTier);
+    if (!tier || !formState.amountSuffix) return "-";
+    const baseLabel = (tier.basePrice / 1000).toLocaleString("id-ID");
+    return `Rp ${baseLabel}.${formState.amountSuffix}`;
+  }, [formState.amountSuffix, formState.premiumTier]);
+
   const templateMessage = useMemo(() => {
     return `Halo Tim Cicero, saya ingin mendaftarkan paket Premium.
 
@@ -124,9 +136,20 @@ Catatan tambahan:`;
   const isFormLocked = isSubmitting || Boolean(successMessage);
 
   const handleTierChange = (value) => {
+    if (isFormLocked) return;
+
+    const selectedTier = premiumTiers.find((tier) => tier.value === value);
+    const newSuffix = selectedTier
+      ? String(Math.floor(Math.random() * 1000)).padStart(3, "0")
+      : "";
+    const basePrice = selectedTier?.basePrice ?? 0;
+    const computedAmount = selectedTier ? String(basePrice + Number(newSuffix)) : "";
+
     setFormState((prev) => ({
       ...prev,
       premiumTier: value,
+      amountSuffix: newSuffix,
+      amount: computedAmount,
     }));
   };
 
@@ -188,6 +211,7 @@ Catatan tambahan:`;
         accountNumber: "",
         premiumTier: "",
         amount: "",
+        amountSuffix: "",
       }));
     } catch (err) {
       const message =
@@ -316,20 +340,20 @@ Catatan tambahan:`;
                   <label className="space-y-1 text-sm text-slate-700">
                     <span className="font-semibold">Nominal transfer</span>
                     <input
-                      type="number"
-                      min="0"
-                      step="1000"
-                      value={formState.amount}
-                      onChange={(event) =>
-                        setFormState((prev) => ({ ...prev, amount: event.target.value }))
-                      }
+                      type="text"
+                      value={formattedAmount === "-" ? "" : formattedAmount}
+                      readOnly
                       disabled={isFormLocked}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-inner focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-                      placeholder="Masukkan nominal sesuai bukti transfer"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-inner disabled:cursor-not-allowed disabled:bg-slate-100"
+                      placeholder="Nominal otomatis setelah pilih paket"
                     />
                     <p className="text-xs text-slate-500">
-                      Nominal dikirim ke backend bersama data login untuk verifikasi pembayaran.
+                      Nominal dihitung dari harga dasar + 3 digit acak untuk mempermudah verifikasi
+                      pembayaran.
                     </p>
+                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs font-semibold text-indigo-700 shadow-inner">
+                      Jumlah yang harus ditransfer: {formattedSuggestedAmount}
+                    </div>
                   </label>
                 </div>
 
