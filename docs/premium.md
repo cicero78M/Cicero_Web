@@ -8,12 +8,19 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - Unduhan Excel untuk setiap periode ANEV.
 - Panduan khusus operator agar distribusi tugas dan eskalasi berjalan konsisten.
 
-## Rute dan CTA
+## Rute, CTA, dan alur submit backend
 
 - **/premium**: Halaman ringkasan fitur + tombol **Daftar Sekarang** menuju formulir pendaftaran.
-- **/premium/register**: Formulir pendaftaran dengan template pesan WA Bot yang dapat dikirim langsung (target `https://wa.me/+6281235114745`).
+- **/premium/register**: Formulir pendaftaran dengan template pesan WA Bot yang dapat dikirim langsung (target `https://wa.me/+6281235114745`) sekaligus mengirim permintaan ke backend.
 - Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
+- Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan payload ringkas:
+  - `username`, `client_id`, dan `uuid` terisi otomatis dari sesi login.
+  - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
+  - `amount` berisi harga dasar + suffix acak (nominal unik).
+- Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
+  - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan client ID/UUID untuk mempercepat verifikasi.
+  - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”.
 
 ## Penempatan CTA di Insight
 
