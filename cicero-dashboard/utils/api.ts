@@ -161,16 +161,14 @@ function handleTokenExpired(): void {
 }
 
 export type SubmitPremiumRequestPayload = {
-  premium_tier?: string;
+  premium_tier: string;
   bank_name: string;
   sender_name: string;
   account_number: string;
-  dashboard_user_id?: string;
-  dashboardUserId?: string;
-  user_id?: string;
-  userId?: string;
-  amount?: number;
   transfer_amount?: number;
+  amount?: number;
+  dashboard_user_id?: string;
+  user_id?: string;
 };
 
 export type SubmitPremiumRequestResponse = ApiMessageResponse & {
@@ -250,29 +248,20 @@ export async function submitPremiumRequest(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const transferAmount =
-    payload.transfer_amount ??
-    (payload as any).transferAmount ??
-    payload.amount ??
-    (payload as any).amount;
-  const dashboardUserId = (() => {
-    const raw =
-      payload.dashboard_user_id ||
-      (payload as any).dashboardUserId ||
-      "";
-    return typeof raw === "string" ? raw.trim() : "";
-  })();
-  const userId = (() => {
-    const raw = payload.user_id || (payload as any).userId || "";
-    return typeof raw === "string" ? raw.trim() : "";
-  })();
+  const transferAmount = payload.transfer_amount ?? payload.amount;
+  const amount = payload.amount ?? transferAmount;
+  const dashboardUserId =
+    typeof payload.dashboard_user_id === "string"
+      ? payload.dashboard_user_id.trim()
+      : "";
+  const userId =
+    typeof payload.user_id === "string" ? payload.user_id.trim() : "";
 
   const body: Record<string, any> = {
     premium_tier: payload.premium_tier,
     bank_name: payload.bank_name,
     account_number: payload.account_number,
     sender_name: payload.sender_name,
-    transfer_amount: transferAmount,
   };
   if (dashboardUserId) {
     body.dashboard_user_id = dashboardUserId;
@@ -281,8 +270,11 @@ export async function submitPremiumRequest(
     body.user_id = userId;
   }
 
-  if (payload.amount !== undefined) {
-    body.amount = payload.amount;
+  if (transferAmount !== undefined) {
+    body.transfer_amount = transferAmount;
+  }
+  if (amount !== undefined) {
+    body.amount = amount;
   }
 
   const res = await fetch(endpoint, {
