@@ -42,8 +42,6 @@ const premiumTiers = [
 ];
 
 const initialFormState = {
-  username: "",
-  clientId: "",
   dashboardUserId: "",
   userId: "",
   bankName: "",
@@ -56,37 +54,23 @@ const initialFormState = {
 
 export default function PremiumRegisterContent() {
   useRequireAuth();
-  const { profile, clientId, username, userId, token, isHydrating } = useAuth();
+  const { profile, userId, token, isHydrating } = useAuth();
 
   const [formState, setFormState] = useState(initialFormState);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const resolvedUsername = useMemo(() => {
-    return (
-      username ||
-      profile?.username ||
-      profile?.user?.username ||
-      profile?.name ||
-      profile?.nama_client ||
-      profile?.client_name ||
-      ""
-    );
-  }, [profile, username]);
-
-  const resolvedClientId = useMemo(() => {
+  const resolvedDashboardUserId = useMemo(() => {
     const candidates = [
-      clientId,
-      profile?.client_id,
-      profile?.clientId,
-      profile?.id_client,
-      ...(Array.isArray(profile?.client_ids) ? profile.client_ids : []),
-      ...(Array.isArray(profile?.clientIds) ? profile.clientIds : []),
+      profile?.dashboard_user_id,
+      profile?.dashboardUserId,
+      profile?.dashboard_user,
+      profile?.dashboardUser,
     ];
     const match = candidates.find((value) => typeof value === "string" && value.trim());
     return typeof match === "string" ? match.trim() : "";
-  }, [clientId, profile]);
+  }, [profile]);
 
   const resolvedUserId = useMemo(() => {
     return (
@@ -103,11 +87,10 @@ export default function PremiumRegisterContent() {
     if (isHydrating) return;
     setFormState((prev) => ({
       ...prev,
-      username: resolvedUsername || prev.username,
-      clientId: resolvedClientId || prev.clientId,
+      dashboardUserId: resolvedDashboardUserId || prev.dashboardUserId,
       userId: resolvedUserId || prev.userId,
     }));
-  }, [isHydrating, resolvedClientId, resolvedUserId, resolvedUsername]);
+  }, [isHydrating, resolvedDashboardUserId, resolvedUserId]);
 
   useEffect(() => {
     if (isHydrating) return;
@@ -119,9 +102,8 @@ export default function PremiumRegisterContent() {
         const context = await getPremiumRequestContext(token, abortController.signal);
         setFormState((prev) => ({
           ...prev,
-          username: context.username || prev.username || resolvedUsername,
-          clientId: context.clientId || prev.clientId || resolvedClientId,
-          dashboardUserId: context.dashboardUserId || prev.dashboardUserId,
+          dashboardUserId:
+            context.dashboardUserId || prev.dashboardUserId || resolvedDashboardUserId,
           userId: context.userId || prev.userId || resolvedUserId,
         }));
       } catch (err) {
@@ -136,7 +118,7 @@ export default function PremiumRegisterContent() {
     fetchContext();
 
     return () => abortController.abort();
-  }, [isHydrating, resolvedClientId, resolvedUserId, resolvedUsername, token]);
+  }, [isHydrating, resolvedDashboardUserId, resolvedUserId, token]);
 
   const selectedTier = useMemo(
     () => premiumTiers.find((tier) => tier.value === formState.premiumTier),
@@ -158,12 +140,20 @@ export default function PremiumRegisterContent() {
   }, [formState.amountSuffix, formState.premiumTier]);
 
   const templateMessage = useMemo(() => {
+    const identifierLines = [];
+    if (formState.dashboardUserId) {
+      identifierLines.push(`Dashboard User ID: ${formState.dashboardUserId}`);
+    }
+    if (formState.userId) {
+      identifierLines.push(`User ID: ${formState.userId}`);
+    }
+    if (identifierLines.length === 0) {
+      identifierLines.push("Identifier pengguna: (terisi otomatis jika tersedia)");
+    }
+
     return `Halo Tim Cicero, saya ingin mendaftarkan paket Premium.
 
-Username Dashboard: ${formState.username || "(diisi otomatis)"}
-Client ID: ${formState.clientId || "(diisi otomatis)"}
-Dashboard User ID: ${formState.dashboardUserId || "-"}
-User ID: ${formState.userId || "-"}
+${identifierLines.join("\n")}
 
 Paket Premium: ${selectedTier?.label || formState.premiumTier || "-"}
 Nama Bank: ${formState.bankName || "-"}
@@ -172,7 +162,7 @@ No. Rekening: ${formState.accountNumber || "-"}
 Nominal Transfer: ${formattedAmount}
 
 Catatan tambahan:`;
-  }, [formState, formattedAmount, selectedTier]);
+  }, [formState.accountNumber, formState.bankName, formState.dashboardUserId, formState.premiumTier, formState.senderName, formState.userId, formattedAmount, selectedTier?.label]);
 
   const whatsappTarget = useMemo(() => {
     return (
@@ -206,8 +196,6 @@ Catatan tambahan:`;
     setSuccessMessage("");
 
     const missingFields = [];
-    if (!formState.username.trim()) missingFields.push("username");
-    if (!formState.clientId.trim()) missingFields.push("client_id");
     if (!formState.premiumTier.trim()) missingFields.push("paket premium");
     if (!formState.bankName.trim()) missingFields.push("nama bank");
     if (!formState.senderName.trim()) missingFields.push("nama pengirim");
@@ -233,12 +221,13 @@ Catatan tambahan:`;
 
     setIsSubmitting(true);
     try {
+      const dashboardUserId = formState.dashboardUserId.trim();
+      const derivedUserId = formState.userId.trim();
       const response = await submitPremiumRequest(
         {
-          username: formState.username.trim(),
-          client_id: formState.clientId.trim(),
           premium_tier: formState.premiumTier.trim(),
-          dashboard_user_id: formState.dashboardUserId.trim() || undefined,
+          dashboard_user_id: dashboardUserId || undefined,
+          user_id: derivedUserId || undefined,
           bank_name: formState.bankName.trim(),
           sender_name: formState.senderName.trim(),
           account_number: formState.accountNumber.trim(),
@@ -306,8 +295,8 @@ Catatan tambahan:`;
             <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-inner">
               <h2 className="text-sm font-semibold text-slate-800">Langkah cepat</h2>
               <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-slate-600">
-                <li>Periksa data login yang terisi otomatis (username, Client ID).</li>
-                <li>Lengkapi paket premium, detail bank, dan nominal transfer.</li>
+                <li>Pilih paket premium agar nominal unik dihitung otomatis.</li>
+                <li>Lengkapi detail bank, nama pengirim, dan nomor rekening.</li>
                 <li>Kirim formulir ini, lalu salin template WA untuk konfirmasi pembayaran.</li>
                 <li>Tunggu verifikasi dari tim CICERO. Formulir akan terkunci setelah berhasil.</li>
               </ol>
@@ -383,29 +372,6 @@ Catatan tambahan:`;
                     {successMessage}
                   </div>
                 )}
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold">Username</span>
-                    <input
-                      value={formState.username}
-                      readOnly
-                      disabled
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-inner"
-                      placeholder="Memuat username..."
-                    />
-                  </label>
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold">Client ID</span>
-                    <input
-                      value={formState.clientId}
-                      readOnly
-                      disabled
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-inner"
-                      placeholder="Memuat client ID..."
-                    />
-                  </label>
-                </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="space-y-1 text-sm text-slate-700">
@@ -492,7 +458,7 @@ Catatan tambahan:`;
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-slate-500">
-                    Data login diisi otomatis dari sesi aktif. Hubungi admin jika ada ketidaksesuaian.
+                    Pastikan nama bank, pengirim, dan rekening sesuai bukti transfer. Hubungi admin jika ada kendala nominal unik.
                   </p>
                   <button
                     type="submit"
@@ -529,8 +495,7 @@ Catatan tambahan:`;
                     0891758684 (BCA a.n Rizqa Febryan Prastyo)
                   </p>
                   <p className="text-xs text-slate-700">
-                    Transfer sesuai nominal unik yang muncul di formulir. Sisipkan catatan client
-                    ID agar tim dapat melakukan verifikasi otomatis sebelum aktivasi.
+                    Transfer sesuai nominal unik yang muncul di formulir. Tambahkan catatan nama pengirim agar tim dapat melakukan verifikasi otomatis sebelum aktivasi.
                   </p>
                 </div>
               </div>

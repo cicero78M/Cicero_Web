@@ -161,14 +161,14 @@ function handleTokenExpired(): void {
 }
 
 export type SubmitPremiumRequestPayload = {
-  username?: string;
-  client_id?: string;
   premium_tier?: string;
   bank_name: string;
   sender_name: string;
   account_number: string;
   dashboard_user_id?: string;
   dashboardUserId?: string;
+  user_id?: string;
+  userId?: string;
   amount?: number;
   transfer_amount?: number;
 };
@@ -178,8 +178,6 @@ export type SubmitPremiumRequestResponse = ApiMessageResponse & {
 };
 
 export type PremiumRequestContext = {
-  username: string;
-  clientId?: string;
   dashboardUserId?: string;
   userId?: string;
 };
@@ -230,8 +228,6 @@ export async function getPremiumRequestContext(
     return "";
   };
 
-  const username = normalizeValue(["username", "user_name", "name", "nama"]);
-  const clientId = normalizeValue(["client_id", "clientId", "cid", "client"]);
   const dashboardUserId = normalizeValue([
     "dashboard_user_id",
     "dashboardUserId",
@@ -240,7 +236,7 @@ export async function getPremiumRequestContext(
   ]);
   const userId = normalizeValue(["user_id", "userId", "user_uuid", "uuid"]);
 
-  return { username, clientId, dashboardUserId, userId };
+  return { dashboardUserId, userId };
 }
 
 export async function submitPremiumRequest(
@@ -266,10 +262,12 @@ export async function submitPremiumRequest(
       "";
     return typeof raw === "string" ? raw.trim() : "";
   })();
+  const userId = (() => {
+    const raw = payload.user_id || (payload as any).userId || "";
+    return typeof raw === "string" ? raw.trim() : "";
+  })();
 
   const body: Record<string, any> = {
-    username: payload.username,
-    client_id: payload.client_id,
     premium_tier: payload.premium_tier,
     bank_name: payload.bank_name,
     account_number: payload.account_number,
@@ -278,6 +276,9 @@ export async function submitPremiumRequest(
   };
   if (dashboardUserId) {
     body.dashboard_user_id = dashboardUserId;
+  }
+  if (userId) {
+    body.user_id = userId;
   }
 
   if (payload.amount !== undefined) {

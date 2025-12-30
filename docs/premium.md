@@ -15,13 +15,12 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
 - Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** yang mengikuti validasi terbaru di Cicero_V2:
-  - `username` dan `client_id` terisi otomatis dari token dashboard/profil login; backend menolak (`403`) jika username yang dikirim berbeda dengan akun dashboard aktif atau `client_id` tidak ada di daftar akses pengguna.
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
   - `transfer_amount` dikirim bersama `amount` berisi harga dasar + suffix acak (nominal unik); backend menerima keduanya dan menyimpan field yang dikirim pada metadata request.
-  - Identifier `dashboard_user_id` diteruskan bila tersedia dari endpoint context agar tabel audit tidak menerima nilai kosong/`user_id` null ketika menulis entri histori.
-- Backend `/api/premium/request/context` mengembalikan `username` serta identifier `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang data login tanpa membuka UUID.
+  - Identifier `dashboard_user_id` atau `user_id` diteruskan bila tersedia dari endpoint context agar tabel audit tidak menerima nilai kosong/`user_id` null ketika menulis entri histori.
+- Backend `/api/premium/request/context` hanya mengembalikan identifier `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang data login yang masih dipakai backend tanpa meminta pengguna menyalin username/Client ID.
 - Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
-  - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan client ID untuk mempercepat verifikasi.
+  - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan nama pengirim untuk mempercepat verifikasi.
   - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”. Jika token dashboard tidak memuat `client_id`, backend akan memakai client tunggal milik pengguna atau menolak request dengan 400/403 agar tetap sesuai RLS.
 
 ## Penempatan CTA di Insight
@@ -37,5 +36,5 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
   - **Premium 3**: Rp 1.100.000 + suffix acak → tampil sebagai `Rp 1.100.xxx`. Manfaat: prioritas WA Bot dengan rekap terjadwal dan file Excel ANEV bulanan.
 - Saat pengguna memilih paket di formulir `/premium/register`, suffix di-generate otomatis dan ditampilkan pada label “Jumlah yang harus ditransfer”. Nominal numerik yang sama dikirim ke backend lewat payload permintaan premium.
 - Suffix dikunci saat proses submit berlangsung (tidak bisa mengganti paket selama loading atau setelah berhasil terkirim).
-- Instruksi transfer ditampilkan jelas di panel informasi: gunakan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan sertakan client ID pada catatan transfer agar verifikasi otomatis lebih cepat.
+- Instruksi transfer ditampilkan jelas di panel informasi: gunakan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan sertakan nama pengirim pada catatan transfer agar verifikasi otomatis lebih cepat.
 - Setelah submit formulir, tim memverifikasi data pembayaran (nominal + rekening pengirim) sebelum mengaktifkan recap WA Bot sesuai paket.
