@@ -118,9 +118,22 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Premium CICERO
 
 - Halaman **/premium** merangkum fitur paket premium (recap WA Bot, jadwal 15:00/18:00/20:30, ANEV harian/mingguan/bulanan/kustom, unduhan Excel, dan panduan operator) dengan tombol **Daftar Sekarang** ke **/premium/register**.
-- Formulir **/premium/register** kini form terkontrol yang menghitung nominal unik setelah paket dipilih, memvalidasi paket premium + detail bank, mengirim payload melalui helper `submitPremiumRequest` (`cicero-dashboard/utils/api.ts`), serta menampilkan status loading/sukses sambil mengunci dan mengosongkan form setelah pengajuan berhasil.
-- Form **/premium/register** juga memuat context permintaan dari endpoint **`/api/premium/request/context`** untuk mengisi ulang identifier `dashboard_user_id`/`user_id` langsung dari backend tanpa menampilkan field yang sudah dihapus dari UI.
-- Pengajuan **/premium/register** mengirim POST ke backend **`/api/premium/request`** dengan payload yang mengikuti validasi terbaru: `premium_tier`, `bank_name`, `sender_name`, `account_number`, nominal unik yang dikirim sebagai `transfer_amount` dan `amount`, serta identifier opsional `dashboard_user_id` atau `user_id` bila tersedia. Helper `submitPremiumRequest` kini membatasi tipe payload agar hanya memuat kunci yang diterima Cicero_V2 dan membangun body snake\_case tanpa field lama seperti `username`/`client_id`. Alur pengguna: pilih paket & isi rekening → submit (nominal unik terkunci dan dikirim) → verifikasi pembayaran/nominal oleh tim dengan instruksi transfer ke **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan nama pengirim untuk mempercepat verifikasi.
+- Formulir **/premium/register** kini form terkontrol yang menghitung nominal unik setelah paket dipilih, memvalidasi paket premium + detail bank, mengirim payload melalui helper `submitPremiumRequest` (`cicero-dashboard/utils/api.ts`), serta menampilkan status loading/sukses sambil mengunci dan mengosongkan form setelah pengajuan berhasil. Form tidak lagi menampilkan atau memvalidasi `username`/`Client ID`.
+- Form **/premium/register** juga memuat context permintaan dari endpoint **`/api/premium/request/context`** untuk mengisi ulang identifier `dashboard_user_id`/`user_id` langsung dari backend tanpa meminta pengguna mengisi field yang sudah dihapus dari UI.
+- Pengajuan **/premium/register** mengirim POST ke backend **`/api/premium/request`** dengan field yang diterima server: `premium_tier`, `bank_name`, `sender_name`, `account_number`, nominal unik yang dikirim sebagai `transfer_amount` dan `amount`, serta identifier opsional `dashboard_user_id` atau `user_id` bila tersedia. Contoh payload:
+  ```json
+  {
+    "premium_tier": "premium_2",
+    "bank_name": "BRI",
+    "sender_name": "Anjani",
+    "account_number": "9876543210",
+    "transfer_amount": 200381,
+    "amount": 200381,
+    "dashboard_user_id": "dash_123",
+    "user_id": "user_123"
+  }
+  ```
+  Alur pengguna: pilih paket (nominal unik dikalkulasi otomatis) → isi rekening & nama pengirim → submit (nominal unik terkunci dan dikirim bersama identifier login) → verifikasi pembayaran/nominal oleh tim dengan instruksi transfer ke **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan nama pengirim untuk mempercepat verifikasi. QA tidak perlu mencari field `username`/`Client ID` karena sudah dihapus dari form dan payload.
 - Menu **Premium** di sidebar/dashboard serta tombol **Premium** pada header insight Instagram dan TikTok hanya muncul untuk pengguna dengan `client_type` **ORG**, sehingga akun direktorat tidak melihat CTA paket premium.
 
 ## Dashboard Utama
