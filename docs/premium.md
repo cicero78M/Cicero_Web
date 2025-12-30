@@ -14,14 +14,27 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - **/premium/register**: Formulir pendaftaran dengan template pesan WA Bot yang dapat dikirim langsung (target `https://wa.me/+6281235114745`) sekaligus mengirim permintaan ke backend.
 - Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
-- Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** yang mengikuti validasi terbaru di Cicero_V2:
+- Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan field yang disetujui backend:
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
-  - `transfer_amount` dikirim bersama `amount` berisi harga dasar + suffix acak (nominal unik); backend menerima keduanya dan menyimpan field yang dikirim pada metadata request.
-  - Identifier `dashboard_user_id` atau `user_id` diteruskan bila tersedia dari endpoint context agar tabel audit tidak menerima nilai kosong/`user_id` null ketika menulis entri histori.
-- Backend `/api/premium/request/context` hanya mengembalikan identifier `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang data login yang masih dipakai backend tanpa meminta pengguna menyalin username/Client ID.
-- Langkah pengguna: **isi form** (pilih paket → detail rekening) → **submit** (permintaan terkirim + form terkunci saat loading/berhasil) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
+  - `transfer_amount` dan `amount` berisi harga dasar + suffix acak (nominal unik) yang dikunci setelah paket dipilih.
+  - Identifier opsional `dashboard_user_id` atau `user_id` dari context login; UI tidak lagi meminta/menampilkan `username` maupun `client_id`.
+- Contoh payload yang dikirim ke backend:
+  ```json
+  {
+    "premium_tier": "premium_1",
+    "bank_name": "BCA",
+    "sender_name": "Rizqa Febryan",
+    "account_number": "1234567890",
+    "transfer_amount": 300742,
+    "amount": 300742,
+    "dashboard_user_id": "dash_901",
+    "user_id": "user_901"
+  }
+  ```
+- Backend `/api/premium/request/context` hanya mengembalikan `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang identifier yang masih dipakai server tanpa menampilkan atau memvalidasi field `username`/`Client ID`.
+- Langkah pengguna: **pilih paket** (nominal unik di-generate) → **isi detail rekening & nama pengirim** → **submit** (form terkunci saat loading/berhasil, payload berisi nominal unik + identifier login) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
   - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan nama pengirim untuk mempercepat verifikasi.
-  - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”. Jika token dashboard tidak memuat `client_id`, backend akan memakai client tunggal milik pengguna atau menolak request dengan 400/403 agar tetap sesuai RLS.
+  - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”; form tidak lagi menampilkan atau memvalidasi `username`/`Client ID` sehingga QA tidak mencari field yang sudah dihapus.
 
 ## Penempatan CTA di Insight
 
