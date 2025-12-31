@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Banknote, Loader2, Shield, Sparkles } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
@@ -60,6 +60,15 @@ export default function PremiumRegisterContent() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contextStatus, setContextStatus] = useState("");
+  const [contextMessage, setContextMessage] = useState("");
+  const [contextLocked, setContextLocked] = useState(false);
+  const [contextRequestId, setContextRequestId] = useState("");
+  const deriveSuffixFromAmount = useCallback((value) => {
+    const numericAmount = Number(value);
+    if (!Number.isFinite(numericAmount)) return "";
+    return String(Math.round(numericAmount)).slice(-3).padStart(3, "0");
+  }, []);
 
   const resolvedDashboardUserId = useMemo(() => {
     const candidates = [
@@ -100,12 +109,41 @@ export default function PremiumRegisterContent() {
     async function fetchContext() {
       try {
         const context = await getPremiumRequestContext(token, abortController.signal);
+        const chooseString = (...candidates) => {
+          for (const candidate of candidates) {
+            if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+          }
+          return "";
+        };
+        const transferAmount = context.transferAmount;
+        const contextSuffix =
+          context.uniqueCode || deriveSuffixFromAmount(transferAmount) || undefined;
+        const locked =
+          Boolean(context.locked) ||
+          (context.status &&
+            ["pending", "processing", "waiting_payment", "paid", "submitted"].includes(
+              context.status.toLowerCase(),
+            ));
+
         setFormState((prev) => ({
           ...prev,
           dashboardUserId:
             context.dashboardUserId || prev.dashboardUserId || resolvedDashboardUserId,
           userId: context.userId || prev.userId || resolvedUserId,
+          premiumTier: chooseString(context.premiumTier, prev.premiumTier),
+          bankName: chooseString(context.bankName, prev.bankName),
+          senderName: chooseString(context.senderName, prev.senderName),
+          accountNumber: chooseString(context.accountNumber, prev.accountNumber),
+          amount:
+            typeof transferAmount === "number" && Number.isFinite(transferAmount)
+              ? String(transferAmount)
+              : prev.amount,
+          amountSuffix: contextSuffix ?? prev.amountSuffix,
         }));
+        setContextStatus(context.status || "");
+        setContextLocked(locked);
+        setContextMessage(context.message || context.lockReason || "");
+        setContextRequestId(context.requestId || "");
       } catch (err) {
         const message =
           err instanceof Error
@@ -118,7 +156,7 @@ export default function PremiumRegisterContent() {
     fetchContext();
 
     return () => abortController.abort();
-  }, [isHydrating, resolvedDashboardUserId, resolvedUserId, token]);
+  }, [deriveSuffixFromAmount, isHydrating, resolvedDashboardUserId, resolvedUserId, token]);
 
   const selectedTier = useMemo(
     () => premiumTiers.find((tier) => tier.value === formState.premiumTier),
@@ -132,12 +170,20 @@ export default function PremiumRegisterContent() {
   }, [formState.amount]);
 
   const formattedSuggestedAmount = useMemo(() => {
+    const numericAmount = Number(formState.amount);
+    if (Number.isFinite(numericAmount) && numericAmount > 0) {
+      return `Rp ${numericAmount.toLocaleString("id-ID")}`;
+    }
     if (!formState.premiumTier) return "-";
     const tier = premiumTiers.find((item) => item.value === formState.premiumTier);
-    if (!tier || !formState.amountSuffix) return "-";
-    const baseLabel = (tier.basePrice / 1000).toLocaleString("id-ID");
-    return `Rp ${baseLabel}.${formState.amountSuffix}`;
-  }, [formState.amountSuffix, formState.premiumTier]);
+    if (!tier) return "-";
+    const suffix = formState.amountSuffix;
+    const suffixNumber = Number(suffix);
+    if (Number.isFinite(suffixNumber) && suffixNumber >= 0) {
+      return `Rp ${(tier.basePrice + suffixNumber).toLocaleString("id-ID")}`;
+    }
+    return `Rp ${tier.basePrice.toLocaleString("id-ID")}`;
+  }, [formState.amount, formState.amountSuffix, formState.premiumTier]);
 
   const templateMessage = useMemo(() => {
     const identifierLines = [];
@@ -146,6 +192,12 @@ export default function PremiumRegisterContent() {
     }
     if (formState.userId) {
       identifierLines.push(`User ID: ${formState.userId}`);
+    }
+    if (contextRequestId) {
+      identifierLines.push(`Request ID: ${contextRequestId}`);
+    }
+    if (contextStatus) {
+      identifierLines.push(`Status: ${contextStatus}`);
     }
     if (identifierLines.length === 0) {
       identifierLines.push("Identifier pengguna: (terisi otomatis jika tersedia)");
@@ -162,7 +214,7 @@ No. Rekening: ${formState.accountNumber || "-"}
 Nominal Transfer: ${formattedAmount}
 
 Catatan tambahan:`;
-  }, [formState.accountNumber, formState.bankName, formState.dashboardUserId, formState.premiumTier, formState.senderName, formState.userId, formattedAmount, selectedTier?.label]);
+  }, [contextRequestId, contextStatus, formState.accountNumber, formState.bankName, formState.dashboardUserId, formState.premiumTier, formState.senderName, formState.userId, formattedAmount, selectedTier?.label]);
 
   const whatsappTarget = useMemo(() => {
     return (
@@ -170,7 +222,7 @@ Catatan tambahan:`;
     );
   }, [templateMessage]);
 
-  const isFormLocked = isSubmitting || Boolean(successMessage);
+  const isFormLocked = isSubmitting || Boolean(successMessage) || contextLocked;
 
   const handleTierChange = (value) => {
     if (isFormLocked) return;
@@ -223,6 +275,7 @@ Catatan tambahan:`;
     try {
       const dashboardUserId = formState.dashboardUserId.trim();
       const derivedUserId = formState.userId.trim();
+      const payloadSuffix = formState.amountSuffix || deriveSuffixFromAmount(numericAmount);
       const response = await submitPremiumRequest(
         {
           premium_tier: formState.premiumTier.trim(),
@@ -233,22 +286,37 @@ Catatan tambahan:`;
           account_number: formState.accountNumber.trim(),
           amount: numericAmount,
           transfer_amount: numericAmount,
+          unique_code: payloadSuffix || undefined,
+          request_id: contextRequestId || undefined,
+          premium_request_id: contextRequestId || undefined,
         },
         token,
       );
       const successText =
         response.message || "Permintaan premium berhasil dikirim.";
-      setSuccessMessage(successText);
+      const statusSuffix = response.status
+        ? `Status: ${response.status}`
+        : contextStatus
+          ? `Status: ${contextStatus}`
+          : "";
+      const composedSuccess = statusSuffix ? `${successText} (${statusSuffix})` : successText;
+      setSuccessMessage(composedSuccess);
       showToast(successText, "success");
-      setFormState((prev) => ({
-        ...prev,
-        bankName: "",
-        senderName: "",
-        accountNumber: "",
-        premiumTier: "",
-        amount: "",
-        amountSuffix: "",
-      }));
+      setContextStatus(response.status || contextStatus);
+      setContextLocked(response.locked ?? true);
+      setContextRequestId(response.requestId || contextRequestId);
+      setContextMessage(response.message || contextMessage);
+      setFormState((prev) => {
+        const transferAmountFromResponse =
+          typeof response.transferAmount === "number"
+            ? String(response.transferAmount)
+            : prev.amount;
+        return {
+          ...prev,
+          amount: transferAmountFromResponse,
+          amountSuffix: prev.amountSuffix || payloadSuffix,
+        };
+      });
     } catch (err) {
       const message =
         err instanceof Error
@@ -362,6 +430,29 @@ Catatan tambahan:`;
                 <h3 className="text-base font-semibold text-slate-800">Data permintaan</h3>
               </div>
               <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+                {(contextStatus || contextMessage) && (
+                  <div
+                    className={`flex flex-col gap-1 rounded-lg border px-3 py-2 text-sm shadow-inner ${contextLocked ? "border-amber-200 bg-amber-50 text-amber-800" : "border-indigo-100 bg-indigo-50 text-indigo-800"}`}
+                  >
+                    <div className="flex items-center gap-2 font-semibold">
+                      <span>Status backend:</span>
+                      <span className="rounded-md bg-white/60 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-700">
+                        {contextStatus || "tersedia"}
+                      </span>
+                      {contextRequestId ? (
+                        <span className="rounded-md bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                          ID: {contextRequestId}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="text-xs leading-relaxed">
+                      {contextMessage ||
+                        (contextLocked
+                          ? "Permintaan premium aktif terdeteksi. Form dikunci agar nominal unik dan status tidak berubah saat verifikasi."
+                          : "Context backend berhasil dimuat. Identitas pengguna dan nominal unik akan mengikuti data terbaru dari server.")}
+                    </p>
+                  </div>
+                )}
                 {error && (
                   <div className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                     {error}
@@ -405,8 +496,8 @@ Catatan tambahan:`;
                       placeholder="Nominal otomatis setelah pilih paket"
                     />
                     <p className="text-xs text-slate-500">
-                      Nominal dihitung dari harga dasar + 3 digit acak untuk mempermudah verifikasi
-                      pembayaran.
+                      Nominal mengikuti context backend (harga dasar + 3 digit acak unik). Jika
+                      permintaan sudah terkunci di server, nilai ini tidak dapat diubah.
                     </p>
                     <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs font-semibold text-indigo-700 shadow-inner">
                       Jumlah yang harus ditransfer: {formattedSuggestedAmount}

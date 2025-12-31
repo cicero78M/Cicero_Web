@@ -165,6 +165,9 @@ export type SubmitPremiumRequestPayload = {
   bank_name: string;
   sender_name: string;
   account_number: string;
+  premium_request_id?: string;
+  request_id?: string;
+  unique_code?: string;
   transfer_amount?: number;
   amount?: number;
   dashboard_user_id?: string;
@@ -173,11 +176,26 @@ export type SubmitPremiumRequestPayload = {
 
 export type SubmitPremiumRequestResponse = ApiMessageResponse & {
   data?: any;
+  status?: string;
+  locked?: boolean;
+  requestId?: string;
+  transferAmount?: number;
 };
 
 export type PremiumRequestContext = {
   dashboardUserId?: string;
   userId?: string;
+  premiumTier?: string;
+  transferAmount?: number;
+  uniqueCode?: string;
+  status?: string;
+  locked?: boolean;
+  lockReason?: string;
+  bankName?: string;
+  senderName?: string;
+  accountNumber?: string;
+  requestId?: string;
+  message?: string;
 };
 
 export async function getPremiumRequestContext(
@@ -199,31 +217,50 @@ export async function getPremiumRequestContext(
     data = null;
   }
 
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     handleTokenExpired();
   }
 
+  const successFlag = res.ok && data?.success !== false;
   const message = extractResponseMessage(
     data,
-    res.ok
+    successFlag
       ? "Context permintaan premium berhasil dimuat."
       : "Gagal memuat context permintaan premium.",
   );
 
-  if (!res.ok) {
+  if (!successFlag) {
     throw new Error(message);
   }
 
   const payload = data?.data ?? data ?? {};
+  const requestPayload = payload?.request ?? payload?.context ?? payload;
   const normalizeValue = (keys: string[]): string => {
     for (const key of keys) {
-      const value = payload?.[key];
+      const value = payload?.[key] ?? requestPayload?.[key];
       if (typeof value === "string" || typeof value === "number") {
         const normalized = String(value).trim();
         if (normalized) return normalized;
       }
     }
     return "";
+  };
+
+  const normalizeNumber = (keys: string[]): number | undefined => {
+    for (const key of keys) {
+      const rawValue = payload?.[key] ?? requestPayload?.[key];
+      if (rawValue === null || rawValue === undefined) continue;
+      const numericValue =
+        typeof rawValue === "string"
+          ? Number(rawValue)
+          : typeof rawValue === "number"
+            ? rawValue
+            : undefined;
+      if (numericValue !== undefined && Number.isFinite(numericValue)) {
+        return numericValue;
+      }
+    }
+    return undefined;
   };
 
   const dashboardUserId = normalizeValue([
@@ -233,8 +270,54 @@ export async function getPremiumRequestContext(
     "dashboardUser",
   ]);
   const userId = normalizeValue(["user_id", "userId", "user_uuid", "uuid"]);
+  const premiumTier = normalizeValue(["premium_tier", "premiumTier", "tier"]);
+  const uniqueCode = normalizeValue(["unique_code", "uniqueCode", "suffix"]);
+  const bankName = normalizeValue(["bank_name", "bankName"]);
+  const senderName = normalizeValue(["sender_name", "senderName", "payer_name"]);
+  const accountNumber = normalizeValue(["account_number", "accountNumber"]);
+  const requestId = normalizeValue([
+    "request_id",
+    "premium_request_id",
+    "requestId",
+    "premiumRequestId",
+    "id",
+  ]);
+  const status = normalizeValue(["status", "request_status", "state"]);
+  const lockReason = normalizeValue(["lock_reason", "lockReason", "reason"]);
+  const messageText =
+    normalizeValue(["message", "detail"]) ||
+    (typeof data?.message === "string" ? data.message : "");
 
-  return { dashboardUserId, userId };
+  const transferAmount = normalizeNumber([
+    "transfer_amount",
+    "amount",
+    "unique_amount",
+    "nominal_transfer",
+    "nominal",
+  ]);
+  const locked =
+    Boolean(payload?.locked ?? requestPayload?.locked) ||
+    Boolean(payload?.is_locked ?? requestPayload?.is_locked) ||
+    (typeof status === "string" &&
+      ["pending", "processing", "waiting_payment", "paid", "submitted"].includes(
+        status.toLowerCase(),
+      ));
+
+  return {
+    dashboardUserId,
+    userId,
+    premiumTier,
+    uniqueCode,
+    bankName,
+    senderName,
+    accountNumber,
+    requestId,
+    status,
+    lockReason,
+    message: messageText || message,
+    transferAmount,
+    locked,
+  };
 }
 
 export async function submitPremiumRequest(
@@ -276,6 +359,15 @@ export async function submitPremiumRequest(
   if (amount !== undefined) {
     body.amount = amount;
   }
+  if (payload.unique_code) {
+    body.unique_code = payload.unique_code;
+  }
+  if (payload.premium_request_id) {
+    body.premium_request_id = payload.premium_request_id;
+  }
+  if (payload.request_id) {
+    body.request_id = payload.request_id;
+  }
 
   const res = await fetch(endpoint, {
     method: "POST",
@@ -291,25 +383,47 @@ export async function submitPremiumRequest(
     data = null;
   }
 
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     handleTokenExpired();
   }
 
+  const successFlag = res.ok && data?.success !== false;
   const message = extractResponseMessage(
     data,
-    res.ok
+    successFlag
       ? "Permintaan premium berhasil dikirim."
       : "Permintaan premium gagal diproses.",
   );
 
-  if (!res.ok) {
+  if (!successFlag) {
     throw new Error(message);
   }
+
+  const responseData = data?.data ?? data ?? {};
+  const status =
+    responseData?.status ??
+    responseData?.request_status ??
+    (typeof data?.status === "string" ? data.status : undefined);
+  const locked =
+    Boolean(responseData?.locked ?? data?.locked) ||
+    Boolean(responseData?.is_locked ?? data?.is_locked);
+  const transferAmount =
+    responseData?.transfer_amount ??
+    responseData?.amount ??
+    (typeof data?.transfer_amount === "number" ? data.transfer_amount : undefined);
+  const requestId =
+    responseData?.request_id ??
+    responseData?.premium_request_id ??
+    (typeof data?.request_id === "string" ? data.request_id : undefined);
 
   return {
     success: data?.success ?? res.ok,
     message,
     data: data?.data ?? data,
+    status: typeof status === "string" ? status : undefined,
+    locked,
+    transferAmount: Number(transferAmount) || undefined,
+    requestId: typeof requestId === "string" ? requestId : undefined,
   };
 }
 
