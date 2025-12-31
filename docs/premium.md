@@ -16,7 +16,8 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
 - Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan field yang disetujui backend:
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.
-  - `transfer_amount` dan `amount` berisi harga dasar + suffix acak (nominal unik) yang dikunci setelah paket dipilih.
+  - `unique_code` (suffix acak yang ditampilkan di UI) serta `request_id`/`premium_request_id` bila backend sudah memberikan konteks permintaan aktif.
+  - `transfer_amount` dan `amount` berisi harga dasar + suffix acak (nominal unik) yang dikunci setelah paket dipilih atau mengikuti nilai yang dikirim backend.
   - Identifier opsional `dashboard_user_id` atau `user_id` dari context login; UI tidak lagi meminta/menampilkan `username` maupun `client_id`.
 - Contoh payload yang dikirim ke backend:
   ```json
@@ -25,14 +26,16 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
     "bank_name": "BCA",
     "sender_name": "Rizqa Febryan",
     "account_number": "1234567890",
+    "unique_code": "742",
+    "request_id": "req_01J0EXAMPLE",
     "transfer_amount": 300742,
     "amount": 300742,
     "dashboard_user_id": "dash_901",
     "user_id": "user_901"
   }
   ```
-- Backend `/api/premium/request/context` hanya mengembalikan `dashboard_user_id`/`user_id` agar UI bisa mengisi ulang identifier yang masih dipakai server tanpa menampilkan atau memvalidasi field `username`/`Client ID`.
-- Langkah pengguna: **pilih paket** (nominal unik di-generate) → **isi detail rekening & nama pengirim** → **submit** (form terkunci saat loading/berhasil, payload berisi nominal unik + identifier login) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
+- Backend `/api/premium/request/context` mengembalikan `dashboard_user_id`/`user_id`, status permintaan (`pending/processing/waiting_payment`), `request_id`, serta nominal unik bila sudah dipilih di server agar UI tidak menghitung ulang suffix yang sudah dikunci backend.
+- Langkah pengguna: **pilih paket** (nominal unik di-generate atau mengikuti context backend) → **isi detail rekening & nama pengirim** → **submit** (form terkunci saat loading/berhasil atau ketika backend menandai status pending, payload berisi nominal unik + identifier login + `request_id`) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
   - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan nama pengirim untuk mempercepat verifikasi.
   - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”; form tidak lagi menampilkan atau memvalidasi `username`/`Client ID` sehingga QA tidak mencari field yang sudah dihapus.
 

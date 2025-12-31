@@ -118,15 +118,17 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Premium CICERO
 
 - Halaman **/premium** merangkum fitur paket premium (recap WA Bot, jadwal 15:00/18:00/20:30, ANEV harian/mingguan/bulanan/kustom, unduhan Excel, dan panduan operator) dengan tombol **Daftar Sekarang** ke **/premium/register**.
-- Formulir **/premium/register** kini form terkontrol yang menghitung nominal unik setelah paket dipilih, memvalidasi paket premium + detail bank, mengirim payload melalui helper `submitPremiumRequest` (`cicero-dashboard/utils/api.ts`), serta menampilkan status loading/sukses sambil mengunci dan mengosongkan form setelah pengajuan berhasil. Form tidak lagi menampilkan atau memvalidasi `username`/`Client ID`.
-- Form **/premium/register** juga memuat context permintaan dari endpoint **`/api/premium/request/context`** untuk mengisi ulang identifier `dashboard_user_id`/`user_id` langsung dari backend tanpa meminta pengguna mengisi field yang sudah dihapus dari UI.
-- Pengajuan **/premium/register** mengirim POST ke backend **`/api/premium/request`** dengan field yang diterima server: `premium_tier`, `bank_name`, `sender_name`, `account_number`, nominal unik yang dikirim sebagai `transfer_amount` dan `amount`, serta identifier opsional `dashboard_user_id` atau `user_id` bila tersedia. Contoh payload:
+- Formulir **/premium/register** kini form terkontrol yang menghitung nominal unik setelah paket dipilih, memvalidasi paket premium + detail bank, mengirim payload melalui helper `submitPremiumRequest` (`cicero-dashboard/utils/api.ts`), serta menampilkan status loading/sukses sambil mengunci form setelah pengajuan berhasil. Form tidak lagi menampilkan atau memvalidasi `username`/`Client ID`.
+- Form **/premium/register** juga memuat context permintaan dari endpoint **`/api/premium/request/context`** untuk mengisi ulang identifier `dashboard_user_id`/`user_id`, status permintaan, `request_id`, serta nominal unik langsung dari backend. Jika backend menandai status `pending/processing/waiting_payment`, UI otomatis mengunci form dan menampilkan pesan alasan kunci agar nominal unik tidak berubah saat verifikasi.
+- Pengajuan **/premium/register** mengirim POST ke backend **`/api/premium/request`** dengan field yang diterima server: `premium_tier`, `bank_name`, `sender_name`, `account_number`, `unique_code` (suffix acak), `request_id`/`premium_request_id` bila tersedia dari context, nominal unik yang dikirim sebagai `transfer_amount` dan `amount`, serta identifier opsional `dashboard_user_id` atau `user_id` bila tersedia. Contoh payload:
   ```json
   {
     "premium_tier": "premium_2",
     "bank_name": "BRI",
     "sender_name": "Anjani",
     "account_number": "9876543210",
+    "unique_code": "381",
+    "request_id": "req_01J0EXAMPLE",
     "transfer_amount": 200381,
     "amount": 200381,
     "dashboard_user_id": "dash_123",
