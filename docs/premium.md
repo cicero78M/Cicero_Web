@@ -19,6 +19,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
   - `unique_code` (suffix acak yang ditampilkan di UI) serta `request_id`/`premium_request_id` bila backend sudah memberikan konteks permintaan aktif.
   - `transfer_amount` dan `amount` berisi harga dasar + suffix acak (nominal unik) yang dikunci setelah paket dipilih atau mengikuti nilai yang dikirim backend.
   - Identifier opsional `dashboard_user_id` atau `user_id` dari context login; UI tidak lagi meminta/menampilkan `username` maupun `client_id`.
+  - Respons `data` dari backend juga dinormalisasi; UI membaca `transfer_amount` atau fallback ke `amount` sebagai `transferAmount` agar nominal yang dikunci backend selalu ditampilkan konsisten di form.
 - Contoh payload yang dikirim ke backend:
   ```json
   {

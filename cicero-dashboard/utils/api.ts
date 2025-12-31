@@ -407,7 +407,7 @@ export async function submitPremiumRequest(
   const locked =
     Boolean(responseData?.locked ?? data?.locked) ||
     Boolean(responseData?.is_locked ?? data?.is_locked);
-  const transferAmount =
+  const responseTransferAmount =
     responseData?.transfer_amount ??
     responseData?.amount ??
     (typeof data?.transfer_amount === "number" ? data.transfer_amount : undefined);
@@ -422,7 +422,7 @@ export async function submitPremiumRequest(
     data: data?.data ?? data,
     status: typeof status === "string" ? status : undefined,
     locked,
-    transferAmount: Number(transferAmount) || undefined,
+    transferAmount: Number(responseTransferAmount) || undefined,
     requestId: typeof requestId === "string" ? requestId : undefined,
   };
 }
