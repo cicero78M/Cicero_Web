@@ -20,7 +20,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
   - `transfer_amount` dan `amount` berisi harga dasar + suffix acak (nominal unik) yang dikunci setelah paket dipilih atau mengikuti nilai yang dikirim backend.
   - Identifier opsional `dashboard_user_id` atau `user_id` dari context login; UI tidak lagi meminta/menampilkan `username` maupun `client_id`.
   - Respons `data` dari backend juga dinormalisasi; UI membaca `transfer_amount` atau fallback ke `amount` sebagai `transferAmount` agar nominal yang dikunci backend selalu ditampilkan konsisten di form.
-  - Tombol submit akan menunggu context backend selesai dimuat dan otomatis menolak klik tambahan bila backend sudah menandai permintaan premium sebelumnya masih diproses. Saat penolakan terjadi, UI memuat ulang context (`/api/premium/request/context`) dan mengunci form dengan pesan status backend agar pengguna tidak mengirim duplikasi.
+  - Tombol submit akan menunggu context backend selesai dimuat dan otomatis menolak klik tambahan bila backend sudah menandai permintaan premium sebelumnya masih diproses. Saat penolakan terjadi, UI memuat ulang context (`/api/premium/request/latest`) dan mengunci form dengan pesan status backend agar pengguna tidak mengirim duplikasi.
 - Contoh payload yang dikirim ke backend:
   ```json
   {
@@ -36,7 +36,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
     "user_id": "user_901"
   }
   ```
-- Backend `/api/premium/request/context` mengembalikan `dashboard_user_id`/`user_id`, status permintaan (`pending/processing/waiting_payment`), `request_id`, serta nominal unik bila sudah dipilih di server agar UI tidak menghitung ulang suffix yang sudah dikunci backend.
+- Backend `/api/premium/request/latest` mengembalikan `dashboard_user_id`/`user_id`, status permintaan (`pending/processing/waiting_payment`), `request_id`, serta nominal unik bila sudah dipilih di server agar UI tidak menghitung ulang suffix yang sudah dikunci backend.
 - Langkah pengguna: **pilih paket** (nominal unik di-generate atau mengikuti context backend) → **isi detail rekening & nama pengirim** → **submit** (form terkunci saat loading/berhasil atau ketika backend menandai status pending, payload berisi nominal unik + identifier login + `request_id`) → **verifikasi** (tim cek nominal unik & rekening pengirim sebelum mengaktifkan recap).
   - Instruksi transfer ditampilkan di panel info dengan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan mencantumkan nama pengirim untuk mempercepat verifikasi.
   - Nominal unik yang sama dikirim ke backend dan ditampilkan sebagai label “Jumlah yang harus ditransfer”; form tidak lagi menampilkan atau memvalidasi `username`/`Client ID` sehingga QA tidak mencari field yang sudah dihapus.

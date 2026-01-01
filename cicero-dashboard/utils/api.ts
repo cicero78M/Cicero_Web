@@ -202,7 +202,7 @@ export async function getPremiumRequestContext(
   token?: string | null,
   signal?: AbortSignal,
 ): Promise<PremiumRequestContext> {
-  const endpoint = buildApiUrl("/api/premium/request/context");
+  const endpoint = buildApiUrl("/api/premium/request/latest");
   const headers: Record<string, string> = { Accept: "application/json" };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
