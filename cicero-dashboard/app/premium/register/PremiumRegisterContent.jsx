@@ -7,6 +7,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import {
   getPremiumRequestContext,
+  isAbortError,
   submitPremiumRequest,
 } from "@/utils/api";
 import { showToast } from "@/utils/showToast";
@@ -64,6 +65,7 @@ export default function PremiumRegisterContent() {
   const [contextMessage, setContextMessage] = useState("");
   const [contextLocked, setContextLocked] = useState(false);
   const [contextRequestId, setContextRequestId] = useState("");
+  const [isContextLoading, setIsContextLoading] = useState(true);
   const deriveSuffixFromAmount = useCallback((value) => {
     const numericAmount = Number(value);
     if (!Number.isFinite(numericAmount)) return "";
@@ -101,14 +103,11 @@ export default function PremiumRegisterContent() {
     }));
   }, [isHydrating, resolvedDashboardUserId, resolvedUserId]);
 
-  useEffect(() => {
-    if (isHydrating) return;
-
-    const abortController = new AbortController();
-
-    async function fetchContext() {
+  const syncContext = useCallback(
+    async ({ signal, silent } = {}) => {
+      setIsContextLoading(true);
       try {
-        const context = await getPremiumRequestContext(token, abortController.signal);
+        const context = await getPremiumRequestContext(token, signal);
         const chooseString = (...candidates) => {
           for (const candidate of candidates) {
             if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
@@ -145,18 +144,35 @@ export default function PremiumRegisterContent() {
         setContextMessage(context.message || context.lockReason || "");
         setContextRequestId(context.requestId || "");
       } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Gagal memuat data permintaan premium.";
-        showToast(message, "error");
+        if (!isAbortError(err, signal)) {
+          const message =
+            err instanceof Error
+              ? err.message
+              : "Gagal memuat data permintaan premium.";
+          if (!silent) {
+            showToast(message, "error");
+          }
+        }
+      } finally {
+        setIsContextLoading(false);
       }
-    }
+    },
+    [
+      deriveSuffixFromAmount,
+      resolvedDashboardUserId,
+      resolvedUserId,
+      token,
+    ],
+  );
 
-    fetchContext();
+  useEffect(() => {
+    if (isHydrating) return;
+
+    const abortController = new AbortController();
+    syncContext({ signal: abortController.signal });
 
     return () => abortController.abort();
-  }, [deriveSuffixFromAmount, isHydrating, resolvedDashboardUserId, resolvedUserId, token]);
+  }, [isHydrating, syncContext]);
 
   const selectedTier = useMemo(
     () => premiumTiers.find((tier) => tier.value === formState.premiumTier),
@@ -223,6 +239,7 @@ Catatan tambahan:`;
   }, [templateMessage]);
 
   const isFormLocked = isSubmitting || Boolean(successMessage) || contextLocked;
+  const isSubmitDisabled = isFormLocked || isHydrating || isContextLoading;
 
   const handleTierChange = (value) => {
     if (isFormLocked) return;
@@ -246,6 +263,22 @@ Catatan tambahan:`;
     event.preventDefault();
     setError("");
     setSuccessMessage("");
+
+    if (isContextLoading) {
+      const message = "Context backend sedang dimuat. Tunggu hingga selesai sebelum mengirim.";
+      setError(message);
+      showToast(message, "error");
+      return;
+    }
+
+    if (contextLocked) {
+      const message =
+        contextMessage ||
+        "Permintaan premium sebelumnya masih diproses. Tunggu verifikasi sebelum mengajukan kembali.";
+      setError(message);
+      showToast(message, "error");
+      return;
+    }
 
     const missingFields = [];
     if (!formState.premiumTier.trim()) missingFields.push("paket premium");
@@ -324,8 +357,10 @@ Catatan tambahan:`;
           : "Pengajuan premium gagal dikirim. Silakan coba lagi.";
       setError(message);
       showToast(message, "error");
+    } finally {
+      setIsSubmitting(false);
+      await syncContext({ silent: true });
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -553,7 +588,7 @@ Catatan tambahan:`;
                   </p>
                   <button
                     type="submit"
-                    disabled={isFormLocked || isHydrating}
+                    disabled={isSubmitDisabled}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_-14px_rgba(99,102,241,0.65)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isSubmitting ? (
