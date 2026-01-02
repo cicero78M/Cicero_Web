@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
+import { isPremiumTierAllowedForAnev } from "@/utils/premium";
 
 export default function useRequirePremium() {
   const router = useRouter();
@@ -10,9 +11,7 @@ export default function useRequirePremium() {
   useEffect(() => {
     if (isHydrating || isProfileLoading) return;
 
-    const normalizedTier = premiumTier?.toLowerCase();
-    const allowed =
-      normalizedTier === "premium_1" || normalizedTier === "premium_3";
+    const allowed = isPremiumTierAllowedForAnev(premiumTier);
 
     if (!allowed) {
       router.replace("/premium");

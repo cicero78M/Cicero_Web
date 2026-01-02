@@ -29,6 +29,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import useAuth from "@/hooks/useAuth";
+import { isPremiumTierAllowedForAnev } from "@/utils/premium";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -61,7 +62,6 @@ export default function Sidebar() {
   const tiktokEnabledRaw = isActive(getStatus(profile, "client_tiktok_status"));
   const normalizedEffectiveRole = effectiveRole?.toLowerCase();
   const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
-  const normalizedPremiumTier = premiumTier?.toLowerCase();
   const isOrgClient = normalizedEffectiveClientType === "org";
   const isOperator = normalizedEffectiveRole === "operator";
   const normalizedClientId = clientId?.toLowerCase();
@@ -74,8 +74,7 @@ export default function Sidebar() {
     normalizedClientId === "ditbinmas" && normalizedEffectiveRole === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
-  const hasPremiumAnevAccess =
-    normalizedPremiumTier === "premium_1" || normalizedPremiumTier === "premium_3";
+  const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier);
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
