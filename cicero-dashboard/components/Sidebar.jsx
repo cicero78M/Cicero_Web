@@ -75,7 +75,7 @@ export default function Sidebar() {
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
   const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier);
-  const premiumAnevPath = hasPremiumAnevAccess ? "/anev/polres" : "/premium/anev";
+  const anevPolresPath = "/anev/polres";
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -128,14 +128,14 @@ export default function Sidebar() {
       ? [
           {
             label: "Anev Polres",
-            path: premiumAnevPath,
+            path: anevPolresPath,
             icon: FilePieChart,
           },
         ]
       : [
           {
             label: "Anev Polres (Premium)",
-            path: premiumAnevPath,
+            path: anevPolresPath,
             icon: Sparkles,
           },
         ]),
