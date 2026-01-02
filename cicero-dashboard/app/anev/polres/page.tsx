@@ -652,6 +652,18 @@ function derivePresetRange(timeRange: string) {
 
 const DEFAULT_PRESET_RANGE = derivePresetRange("7d");
 
+function resolveFiltersWithPreset(filters: FilterFormState) {
+  const safeTimeRange = filters.time_range || "custom";
+  const presetRange = derivePresetRange(safeTimeRange);
+  const isCustom = safeTimeRange.toLowerCase() === "custom";
+  return {
+    ...filters,
+    time_range: safeTimeRange,
+    start_date: isCustom ? filters.start_date : presetRange.startDate,
+    end_date: isCustom ? filters.end_date : presetRange.endDate,
+  };
+}
+
 export default function AnevPolresPage() {
   useRequireAuth();
   useRequirePremium();
@@ -679,6 +691,11 @@ export default function AnevPolresPage() {
   const isCustomIncomplete =
     isCustomRange && (!formState.start_date || !formState.end_date);
 
+  const resolvedAppliedFilters = useMemo(
+    () => resolveFiltersWithPreset(appliedFilters),
+    [appliedFilters],
+  );
+
   useEffect(() => {
     if (!token || !clientId || isHydrating) return;
 
@@ -688,12 +705,12 @@ export default function AnevPolresPage() {
     setPremiumBlocked(null);
     setBadRequest(null);
 
-    const normalizedRegional = appliedFilters.regional_id?.toUpperCase();
+    const normalizedRegional = resolvedAppliedFilters.regional_id?.toUpperCase();
 
     getDashboardAnev(
       token,
       {
-        ...appliedFilters,
+        ...resolvedAppliedFilters,
         regional_id: normalizedRegional,
         client_id: clientId,
       },
@@ -724,7 +741,7 @@ export default function AnevPolresPage() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [appliedFilters, clientId, isHydrating, premiumTier, token]);
+  }, [clientId, isHydrating, premiumTier, resolvedAppliedFilters, token]);
 
   const aggregates = data?.aggregates;
   const totals = aggregates?.totals || {};
@@ -786,30 +803,30 @@ export default function AnevPolresPage() {
 
   const handleApply = () => {
     if (isCustomRange && (!formState.start_date || !formState.end_date)) return;
-    const derived = derivePresetRange(formState.time_range);
-    const startDate = isCustomRange ? formState.start_date : derived.startDate;
-    const endDate = isCustomRange ? formState.end_date : derived.endDate;
-    setAppliedFilters({
+    const resolved = resolveFiltersWithPreset({
       ...formState,
-      start_date: startDate,
-      end_date: endDate,
       regional_id: formState.regional_id?.toUpperCase(),
     });
+
+    setAppliedFilters(resolved);
   };
 
   const FilterSnapshot = () => {
-    if (!data?.filters) return null;
-    const filters = data.filters;
+    if (!data?.filters && !resolvedAppliedFilters) return null;
+
+    const apiFilters = data?.filters as FilterFormState | undefined;
+    const filters = apiFilters ? resolveFiltersWithPreset(apiFilters) : resolvedAppliedFilters;
+    const timeRangeValue = filters?.time_range || resolvedAppliedFilters.time_range;
     const activePresetLabel =
-      TIME_RANGE_PRESETS.find((preset) => preset.value === filters.time_range)?.label || filters.time_range;
+      TIME_RANGE_PRESETS.find((preset) => preset.value === timeRangeValue)?.label || timeRangeValue;
     const entries = [
-      { label: "Time Range", value: activePresetLabel },
-      { label: "Start", value: filters.start_date },
-      { label: "End", value: filters.end_date },
-      { label: "Scope", value: filters.scope },
-      { label: "Role", value: filters.role },
-      { label: "Regional", value: filters.regional_id },
-      { label: "Client", value: filters.client_id },
+      { label: "Time Range", value: activePresetLabel, highlighted: true },
+      { label: "Start", value: filters?.start_date },
+      { label: "End", value: filters?.end_date },
+      { label: "Scope", value: filters?.scope },
+      { label: "Role", value: filters?.role },
+      { label: "Regional", value: filters?.regional_id },
+      { label: "Client", value: filters?.client_id },
     ].filter((entry) => entry.value);
 
     if (!entries.length) return null;
@@ -819,7 +836,7 @@ export default function AnevPolresPage() {
         {entries.map((entry) => (
           <span
             key={`${entry.label}-${entry.value}`}
-            className="rounded-full bg-slate-100 px-3 py-1 text-slate-700"
+            className={`${entry.highlighted ? "border border-blue-100 bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"} rounded-full px-3 py-1`}
           >
             <span className="font-medium text-slate-900">{entry.label}:</span> {entry.value}
           </span>
@@ -863,24 +880,27 @@ export default function AnevPolresPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           <div className="flex flex-col gap-2 text-sm text-slate-700">
             <span>Time range</span>
-            <div className="flex flex-wrap gap-2">
-              {TIME_RANGE_PRESETS.map((option) => {
-                const isActive = formState.time_range === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handlePresetChange(option.value)}
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      isActive
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
+            <div className="inline-flex flex-wrap gap-2">
+              <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
+                {TIME_RANGE_PRESETS.map((option) => {
+                  const isActive = formState.time_range === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handlePresetChange(option.value)}
+                      className={`min-w-[110px] rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-transparent text-slate-700 hover:text-blue-700"
+                      }`}
+                      aria-pressed={isActive}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
