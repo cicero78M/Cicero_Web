@@ -16,6 +16,8 @@ type AuthState = {
   profile: any | null;
   isHydrating: boolean;
   isProfileLoading: boolean;
+  hasResolvedPremium: boolean;
+  premiumResolutionError: boolean;
   setAuth: (
     token: string | null,
     clientId: string | null,
@@ -137,6 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [hasResolvedPremium, setHasResolvedPremium] = useState(false);
+  const [premiumResolutionError, setPremiumResolutionError] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("cicero_token");
@@ -155,24 +159,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function fetchProfile() {
+      setHasResolvedPremium(false);
+      setPremiumResolutionError(false);
+
       if (!token || !clientId) {
         setProfile(null);
         setRegionalId(null);
         setPremiumTier(null);
         setPremiumExpiry(null);
+        setIsProfileLoading(false);
+        setHasResolvedPremium(true);
         return;
       }
+
       setIsProfileLoading(true);
       try {
         const res = await getClientProfile(token, clientId, undefined, {
           role: role || undefined,
         });
         setProfile(res.client || res.profile || res);
+        setPremiumResolutionError(false);
       } catch (err) {
         console.error(err);
         setProfile(null);
+        setPremiumResolutionError(true);
       }
       setIsProfileLoading(false);
+      setHasResolvedPremium(true);
     }
     fetchProfile();
   }, [token, clientId, role]);
@@ -333,6 +346,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         isHydrating,
         isProfileLoading,
+        hasResolvedPremium,
+        premiumResolutionError,
         setAuth,
       }}
     >
