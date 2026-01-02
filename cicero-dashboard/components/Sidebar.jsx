@@ -128,7 +128,7 @@ export default function Sidebar() {
       ? [
           {
             label: "Anev Polres",
-            path: "/dashboard/anev",
+            path: "/anev/polres",
             icon: FilePieChart,
           },
         ]
