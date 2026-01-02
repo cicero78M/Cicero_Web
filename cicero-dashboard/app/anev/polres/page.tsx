@@ -176,6 +176,95 @@ function resolveUserBreakdownBySatfung(
   return [] as { label: string; count: number }[];
 }
 
+function resolveInstagramLikesBySatfung(
+  aggregates?: DashboardAnevResponse["aggregates"],
+  rawRoot?: any,
+) {
+  const raw = rawRoot ?? aggregates?.raw ?? aggregates;
+  const instagram = raw?.instagram ?? raw?.ig ?? raw?.instagram_metrics ?? raw?.ig_metrics;
+
+  const candidateSources = [
+    instagram?.likes_per_satfung,
+    instagram?.likes_per_divisi,
+    instagram?.likes_per_division,
+    instagram?.likes_breakdown,
+    instagram?.likes,
+    instagram?.breakdown?.satfung,
+    instagram?.breakdown?.division,
+    instagram?.breakdowns?.satfung,
+    instagram?.breakdowns?.division,
+    raw?.likes_per_satfung,
+    raw?.likes_per_divisi,
+    raw?.likes_per_division,
+    raw?.likes_breakdown,
+    aggregates?.totals?.likes_per_satfung,
+    aggregates?.totals?.likes_per_divisi,
+    aggregates?.totals?.likes_per_division,
+    aggregates?.totals?.likes_breakdown,
+  ];
+
+  const normalizeArrayEntries = (candidate: any[]): { label: string; likes: number }[] => {
+    return candidate
+      .map((item: any) => {
+        const label =
+          item?.satfung ||
+          item?.division ||
+          item?.divisi ||
+          item?.unit ||
+          item?.name ||
+          item?.label ||
+          item?.title ||
+          item?.category ||
+          item?.key;
+
+        if (!label) return null;
+
+        const likes = resolveNumber(item || {}, ["likes", "total_likes", "like", "value", "count", "jumlah"], 0);
+        return { label: String(label), likes };
+      })
+      .filter(Boolean) as { label: string; likes: number }[];
+  };
+
+  const normalizeObjectEntries = (candidate: Record<string, any>): { label: string; likes: number }[] => {
+    const entries = Object.entries(candidate || {}).map(([labelKey, value]) => {
+      const derivedLabel =
+        (value && typeof value === "object"
+          ? value?.satfung ||
+            value?.division ||
+            value?.divisi ||
+            value?.unit ||
+            value?.name ||
+            value?.label ||
+            value?.title
+          : null) || labelKey;
+
+      const likes =
+        typeof value === "object"
+          ? resolveNumber(value, ["likes", "total_likes", "like", "value", "count", "jumlah"], 0)
+          : resolveNumber({ value }, ["value"], 0);
+
+      if (!derivedLabel) return null;
+      return { label: String(derivedLabel), likes };
+    });
+
+    return entries.filter(Boolean) as { label: string; likes: number }[];
+  };
+
+  for (const candidate of candidateSources) {
+    if (Array.isArray(candidate)) {
+      const normalized = normalizeArrayEntries(candidate);
+      if (normalized.length) return normalized.sort((a, b) => b.likes - a.likes);
+    }
+
+    if (candidate && typeof candidate === "object") {
+      const normalized = normalizeObjectEntries(candidate);
+      if (normalized.length) return normalized.sort((a, b) => b.likes - a.likes);
+    }
+  }
+
+  return [] as { label: string; likes: number }[];
+}
+
 function computeCompletionRate(row: { assigned: number; completed: number; completion_rate?: number | null }) {
   if (typeof row.completion_rate === "number") return row.completion_rate;
   if (!row.assigned) return 0;
@@ -301,6 +390,10 @@ export default function AnevPolresPage() {
   const complianceRows = useMemo(() => resolveComplianceRows(aggregates), [aggregates]);
   const satfungBreakdown = useMemo(
     () => resolveUserBreakdownBySatfung(aggregates, data?.raw),
+    [aggregates, data?.raw],
+  );
+  const instagramLikesPerSatfung = useMemo(
+    () => resolveInstagramLikesBySatfung(aggregates, data?.raw),
     [aggregates, data?.raw],
   );
   const completionRate = resolveNumber(totals, ["completion_rate", "compliance_rate", "rate"], null as any);
@@ -609,6 +702,32 @@ export default function AnevPolresPage() {
               </div>
             ) : (
               <p className="text-sm text-slate-600">Belum ada data satfung/divisi untuk filter ini.</p>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Likes Instagram per Satfung/Divisi</h3>
+                <p className="text-sm text-slate-600">
+                  Rekap total likes Instagram yang dikelompokkan per satfung atau divisi.
+                </p>
+              </div>
+            </div>
+            {instagramLikesPerSatfung.length ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {instagramLikesPerSatfung.map((entry, idx) => (
+                  <div
+                    key={`${entry.label}-${idx}`}
+                    className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
+                  >
+                    <p className="text-sm text-slate-600">{entry.label}</p>
+                    <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.likes)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Belum ada data likes Instagram per satfung/divisi untuk filter ini.</p>
             )}
           </div>
 
