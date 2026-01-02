@@ -59,6 +59,62 @@ function resolveOptionalNumber(source: Record<string, any>, candidates: string[]
   return Number.isNaN(resolved) ? undefined : resolved;
 }
 
+type NarrativePlatformBreakdown = { platform: string; posts: number };
+
+function buildNarrative({
+  totalUsers,
+  totalLikes,
+  totalComments,
+  completionRate,
+  platformBreakdown,
+}: {
+  totalUsers?: number;
+  totalLikes?: number;
+  totalComments?: number;
+  completionRate?: number | null;
+  platformBreakdown: NarrativePlatformBreakdown[];
+}) {
+  const sentences: string[] = [];
+
+  if (typeof totalUsers === "number") {
+    sentences.push(`Tercatat ${formatNumber(totalUsers)} pengguna aktif pada periode ini`);
+  }
+
+  if (typeof totalLikes === "number" || typeof totalComments === "number") {
+    const likesText =
+      typeof totalLikes === "number" ? `${formatNumber(totalLikes)} likes` : null;
+    const commentsText =
+      typeof totalComments === "number" ? `${formatNumber(totalComments)} komentar` : null;
+    const interactionText = [likesText, commentsText].filter(Boolean).join(" dan ");
+
+    if (interactionText) {
+      sentences.push(`Interaksi mencapai ${interactionText}`);
+    }
+  }
+
+  if (typeof completionRate === "number") {
+    sentences.push(`Tingkat penyelesaian tugas tercatat di ${completionRate.toFixed(1)}%`);
+  }
+
+  const topPlatform = (platformBreakdown || []).reduce<NarrativePlatformBreakdown | null>(
+    (currentTop, entry) => {
+      if (!entry?.platform) return currentTop;
+      if (!currentTop) return entry;
+      return entry.posts > currentTop.posts ? entry : currentTop;
+    },
+    null,
+  );
+
+  if (topPlatform) {
+    sentences.push(
+      `Platform teraktif adalah ${topPlatform.platform.toUpperCase()} dengan ${formatNumber(topPlatform.posts)} posting`,
+    );
+  }
+
+  if (!sentences.length) return null;
+  return `${sentences.join(". ")}.`;
+}
+
 function resolvePlatformPosts(aggregates?: DashboardAnevResponse["aggregates"]) {
   const totals = aggregates?.totals ?? {};
   const postsMap = (totals.posts as Record<string, any>) || (totals.post as Record<string, any>) || {};
@@ -695,6 +751,21 @@ export default function AnevPolresPage() {
     [aggregates, data?.raw],
   );
   const completionRate = resolveNumber(totals, ["completion_rate", "compliance_rate", "rate"], null as any);
+  const topPlatformBreakdown = useMemo<NarrativePlatformBreakdown[]>(
+    () => platformBreakdown.map((entry) => ({ platform: entry.platform, posts: entry.posts })),
+    [platformBreakdown],
+  );
+  const narrative = useMemo(
+    () =>
+      buildNarrative({
+        totalUsers,
+        totalLikes,
+        totalComments,
+        completionRate,
+        platformBreakdown: topPlatformBreakdown,
+      }),
+    [completionRate, topPlatformBreakdown, totalComments, totalLikes, totalUsers],
+  );
 
   const handleInputChange = (field: keyof FilterFormState, value: string) => {
     setFormState((prev) => ({
@@ -958,6 +1029,17 @@ export default function AnevPolresPage() {
               <p className="text-sm text-slate-500">Expected actions</p>
               <p className="text-2xl font-semibold text-slate-900">{formatNumber(expectedActions)}</p>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="text-base font-semibold text-slate-900">Naratif</h3>
+            {narrative ? (
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">{narrative}</p>
+            ) : (
+              <p className="mt-2 text-sm text-slate-600">
+                Narasi akan muncul setelah data pengguna, interaksi, atau platform teraktif tersedia.
+              </p>
+            )}
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
