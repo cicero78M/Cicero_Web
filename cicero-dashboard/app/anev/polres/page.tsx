@@ -17,6 +17,7 @@ type FilterFormState = Pick<DashboardAnevFilters, "time_range" | "start_date" | 
   role?: string;
   scope?: string;
   regional_id?: string;
+  client_id?: string;
 };
 
 type TiktokPerformanceRow = {
