@@ -159,6 +159,13 @@ function resolveUserBreakdownBySatfung(
   rawRoot?: any,
 ) {
   const raw = rawRoot ?? aggregates?.raw ?? aggregates;
+  const nestedRaw =
+    raw?.raw ??
+    raw?.data ??
+    raw?.payload ??
+    raw?.content ??
+    raw?.response ??
+    raw?.result;
 
   const candidateSources = [
     raw?.user_per_satfung,
@@ -175,6 +182,29 @@ function resolveUserBreakdownBySatfung(
     raw?.breakdown?.division,
     raw?.breakdowns?.satfung,
     raw?.breakdowns?.division,
+    raw?.aggregates?.user_per_satfung,
+    raw?.aggregates?.users_per_satfung,
+    raw?.aggregates?.satfung_breakdown,
+    raw?.aggregates?.division_breakdown,
+    raw?.aggregates?.user_breakdown,
+    raw?.aggregates?.breakdown?.satfung,
+    raw?.aggregates?.breakdown?.division,
+    raw?.aggregates?.breakdowns?.satfung,
+    raw?.aggregates?.breakdowns?.division,
+    nestedRaw?.user_per_satfung,
+    nestedRaw?.users_per_satfung,
+    nestedRaw?.satfung_breakdown,
+    nestedRaw?.division_breakdown,
+    nestedRaw?.user_breakdown,
+    nestedRaw?.breakdown?.satfung,
+    nestedRaw?.breakdown?.division,
+    nestedRaw?.breakdowns?.satfung,
+    nestedRaw?.breakdowns?.division,
+    aggregates?.user_per_satfung,
+    aggregates?.users_per_satfung,
+    aggregates?.satfung_breakdown,
+    aggregates?.division_breakdown,
+    aggregates?.user_breakdown,
     aggregates?.totals?.user_per_satfung,
     aggregates?.totals?.users_per_satfung,
     aggregates?.totals?.satfung_breakdown,
@@ -182,6 +212,20 @@ function resolveUserBreakdownBySatfung(
     aggregates?.totals?.satfung,
     aggregates?.totals?.divisi,
     aggregates?.totals?.divisions,
+    aggregates?.raw?.data?.user_per_satfung,
+    aggregates?.raw?.data?.users_per_satfung,
+    aggregates?.raw?.data?.satfung_breakdown,
+    aggregates?.raw?.data?.division_breakdown,
+    aggregates?.raw?.data?.user_breakdown,
+    aggregates?.raw?.breakdown?.satfung,
+    aggregates?.raw?.breakdown?.division,
+    aggregates?.raw?.breakdowns?.satfung,
+    aggregates?.raw?.breakdowns?.division,
+    aggregates?.raw?.aggregates?.user_per_satfung,
+    aggregates?.raw?.aggregates?.users_per_satfung,
+    aggregates?.raw?.aggregates?.satfung_breakdown,
+    aggregates?.raw?.aggregates?.division_breakdown,
+    aggregates?.raw?.aggregates?.user_breakdown,
   ];
 
   const normalizeObjectEntries = (candidate: Record<string, any>) => {
@@ -759,6 +803,14 @@ export default function AnevPolresPage() {
     () => resolveUserBreakdownBySatfung(aggregates, data?.raw),
     [aggregates, data?.raw],
   );
+  const maxSatfungCount = useMemo(
+    () =>
+      satfungBreakdown.reduce((acc, entry) => {
+        if (!entry) return acc;
+        return Math.max(acc, entry.count ?? 0);
+      }, 0),
+    [satfungBreakdown],
+  );
   const tiktokPerformancePerSatfung = useMemo(
     () => resolveTiktokPerformanceBySatfung(aggregates, data?.raw),
     [aggregates, data?.raw],
@@ -1089,19 +1141,49 @@ export default function AnevPolresPage() {
               </div>
             </div>
             {satfungBreakdown.length ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {satfungBreakdown.map((entry, idx) => (
-                  <div
-                    key={`${entry.label}-${idx}`}
-                    className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                  >
-                    <p className="text-sm text-slate-600">{entry.label}</p>
-                    <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.count)}</p>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+                  <span className="rounded-full bg-slate-100 px-3 py-1">Total entri: {satfungBreakdown.length}</span>
+                  {maxSatfungCount > 0 && (
+                    <span className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700">
+                      Terbanyak: {formatNumber(maxSatfungCount)} user
+                    </span>
+                  )}
+                </div>
+                <div className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                  {satfungBreakdown.map((entry, idx) => {
+                    const ratio =
+                      maxSatfungCount > 0
+                        ? Math.min(100, Math.max(4, Math.round((entry.count / maxSatfungCount) * 100)))
+                        : 0;
+                    return (
+                      <div key={`${entry.label}-${idx}`} className="space-y-2 px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-900">{entry.label}</p>
+                            <p className="text-xs text-slate-500">User terdaftar</p>
+                          </div>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm">
+                            {formatNumber(entry.count)}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-white">
+                          <div
+                            className="h-full rounded-full bg-blue-500"
+                            style={{ width: `${ratio}%` }}
+                            aria-label={`Porsi ${entry.label}`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              <p className="text-sm text-slate-600">Belum ada data satfung/divisi untuk filter ini.</p>
+              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                Belum ada data satfung/divisi untuk filter ini. Pastikan payload ANEV menyertakan breakdown user per
+                satfung atau divisi pada `aggregates` ataupun `raw`.
+              </div>
             )}
           </div>
 
