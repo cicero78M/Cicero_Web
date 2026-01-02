@@ -1031,7 +1031,7 @@ export default function AnevPolresPage() {
             <p className="font-semibold">Akses premium diperlukan</p>
             <p className="text-sm leading-relaxed">{premiumBlocked}</p>
             <Link
-              href="/premium"
+              href="/premium/anev"
               className="inline-flex w-fit items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
             >
               Daftar premium
