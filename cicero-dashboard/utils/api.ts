@@ -771,6 +771,13 @@ export type DashboardAnevAggregates = {
   timeline: any[];
   platforms: any[];
   tasks: any[];
+  user_per_satfung?: any[] | Record<string, any>;
+  users_per_satfung?: any[] | Record<string, any>;
+  satfung_breakdown?: any[] | Record<string, any>;
+  division_breakdown?: any[] | Record<string, any>;
+  user_breakdown?: any[] | Record<string, any>;
+  breakdown?: { satfung?: any; division?: any; [key: string]: any };
+  breakdowns?: { satfung?: any; division?: any; [key: string]: any };
   raw: any;
 };
 
@@ -844,11 +851,51 @@ function normalizeDashboardAnevAggregates(raw: any): DashboardAnevAggregates {
     (entry) => entry,
   );
 
+  const breakdown =
+    aggregates?.breakdown && typeof aggregates.breakdown === "object"
+      ? aggregates.breakdown
+      : undefined;
+  const breakdowns =
+    aggregates?.breakdowns && typeof aggregates.breakdowns === "object"
+      ? aggregates.breakdowns
+      : undefined;
+  const user_per_satfung =
+    aggregates?.user_per_satfung ??
+    aggregates?.users_per_satfung ??
+    aggregates?.satfung_breakdown ??
+    aggregates?.division_breakdown ??
+    aggregates?.user_breakdown ??
+    breakdown?.satfung ??
+    breakdown?.division ??
+    breakdowns?.satfung ??
+    breakdowns?.division ??
+    breakdown ??
+    breakdowns;
+  const users_per_satfung =
+    aggregates?.users_per_satfung ??
+    aggregates?.user_per_satfung ??
+    breakdown?.satfung ??
+    breakdown?.division ??
+    breakdowns?.satfung ??
+    breakdowns?.division;
+  const satfung_breakdown =
+    aggregates?.satfung_breakdown ?? breakdown?.satfung ?? breakdowns?.satfung;
+  const division_breakdown =
+    aggregates?.division_breakdown ?? breakdown?.division ?? breakdowns?.division;
+  const user_breakdown = aggregates?.user_breakdown ?? breakdown ?? breakdowns;
+
   return {
     totals,
     timeline,
     platforms,
     tasks,
+    user_per_satfung,
+    users_per_satfung,
+    satfung_breakdown,
+    division_breakdown,
+    user_breakdown,
+    breakdown,
+    breakdowns,
     raw: aggregates,
   };
 }
