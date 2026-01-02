@@ -12,3 +12,4 @@ Halaman **/anev/polres** menampilkan rekap aktivitas, kepatuhan, serta performa 
 - Seksi ini tetap berada di antara rekap user per satfung/divisi dan likes Instagram per satfung/divisi agar alur membaca tetap platform-first (TikTok → Instagram → kepatuhan). Snapshot filter, kartu metrik utama, dan tabel kepatuhan tidak berubah sehingga pengalaman premium tetap konsisten.【F:cicero-dashboard/app/anev/polres/page.tsx†L926-L1103】
 
 Gunakan filter waktu, scope, role, dan regional ID di bagian atas halaman untuk memicu pengambilan ulang data ANEV dengan konteks baru. Empty state akan berguna sebagai indikator ketika backend belum mengembalikan metrik TikTok untuk kombinasi filter tertentu.
+Dashboard juga menyisipkan `client_id` dari sesi login ketika memanggil API dan menampilkannya di snapshot filter sehingga operator tahu konteks polres yang sedang aktif.【F:cicero-dashboard/app/anev/polres/page.tsx†L16-L119】【F:cicero-dashboard/app/anev/polres/page.tsx†L854-L918】
