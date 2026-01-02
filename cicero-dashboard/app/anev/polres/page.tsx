@@ -19,6 +19,17 @@ type FilterFormState = Pick<DashboardAnevFilters, "time_range" | "start_date" | 
   regional_id?: string;
 };
 
+type TiktokPerformanceRow = {
+  label: string;
+  posts: number;
+  engagement: number;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  engagementRate?: number;
+};
+
 const TIME_RANGE_PRESETS = [
   { value: "today", label: "Today" },
   { value: "7d", label: "This Week" },
@@ -41,6 +52,11 @@ function resolveNumber(source: Record<string, any>, candidates: string[], fallba
     }
   }
   return fallback;
+}
+
+function resolveOptionalNumber(source: Record<string, any>, candidates: string[]) {
+  const resolved = resolveNumber(source, candidates, Number.NaN);
+  return Number.isNaN(resolved) ? undefined : resolved;
 }
 
 function resolvePlatformPosts(aggregates?: DashboardAnevResponse["aggregates"]) {
@@ -276,25 +292,57 @@ function resolveTiktokPerformanceBySatfung(
     raw?.tiktok_metrics ??
     raw?.tiktokMetric ??
     raw?.tiktok_data ??
-    raw?.tiktokData;
+    raw?.tiktokData ??
+    raw?.anev?.tiktok ??
+    raw?.anev?.tik_tok ??
+    raw?.anev?.tiktok_metrics ??
+    raw?.anev?.tiktokMetric ??
+    raw?.anev?.tiktok_data ??
+    raw?.anev?.tiktokData;
+
+  const collectCandidateSources = (candidate: any) => {
+    if (!candidate) return [];
+    return [
+      candidate?.per_satfung,
+      candidate?.per_divisi,
+      candidate?.per_division,
+      candidate?.satfung,
+      candidate?.division,
+      candidate?.divisions,
+      candidate?.breakdown?.satfung,
+      candidate?.breakdown?.division,
+      candidate?.breakdowns?.satfung,
+      candidate?.breakdowns?.division,
+      candidate?.posts_per_satfung,
+      candidate?.posts_per_divisi,
+      candidate?.posts_per_division,
+      candidate?.engagement_per_satfung,
+      candidate?.engagement_per_divisi,
+      candidate?.engagement_per_division,
+      candidate?.performance?.per_satfung,
+      candidate?.performance?.per_divisi,
+      candidate?.performance?.per_division,
+      candidate?.performance,
+      candidate?.tiktok_performance,
+      candidate?.tiktok_performance_per_satfung,
+      candidate?.tiktok_performance_per_divisi,
+      candidate?.tiktok_performance_per_division,
+    ];
+  };
 
   const candidateSources = [
-    tiktok?.per_satfung,
-    tiktok?.per_divisi,
-    tiktok?.per_division,
-    tiktok?.satfung,
-    tiktok?.division,
-    tiktok?.divisions,
-    tiktok?.breakdown?.satfung,
-    tiktok?.breakdown?.division,
-    tiktok?.breakdowns?.satfung,
-    tiktok?.breakdowns?.division,
-    tiktok?.posts_per_satfung,
-    tiktok?.posts_per_divisi,
-    tiktok?.posts_per_division,
-    tiktok?.engagement_per_satfung,
-    tiktok?.engagement_per_divisi,
-    tiktok?.engagement_per_division,
+    ...collectCandidateSources(tiktok),
+    ...collectCandidateSources(raw?.tiktok_summary),
+    ...collectCandidateSources(raw?.anev),
+    raw?.anev?.tiktok_per_satfung,
+    raw?.anev?.tiktok_per_divisi,
+    raw?.anev?.tiktok_per_division,
+    raw?.anev?.tiktok_posts_per_satfung,
+    raw?.anev?.tiktok_posts_per_divisi,
+    raw?.anev?.tiktok_posts_per_division,
+    raw?.anev?.tiktok_engagement_per_satfung,
+    raw?.anev?.tiktok_engagement_per_divisi,
+    raw?.anev?.tiktok_engagement_per_division,
     raw?.tiktok_per_satfung,
     raw?.tiktok_per_divisi,
     raw?.tiktok_per_division,
@@ -313,11 +361,20 @@ function resolveTiktokPerformanceBySatfung(
     aggregates?.totals?.tiktok_engagement_per_satfung,
     aggregates?.totals?.tiktok_engagement_per_divisi,
     aggregates?.totals?.tiktok_engagement_per_division,
+    aggregates?.raw?.anev?.tiktok_per_satfung,
+    aggregates?.raw?.anev?.tiktok_per_divisi,
+    aggregates?.raw?.anev?.tiktok_per_division,
+    aggregates?.raw?.anev?.tiktok_posts_per_satfung,
+    aggregates?.raw?.anev?.tiktok_posts_per_divisi,
+    aggregates?.raw?.anev?.tiktok_posts_per_division,
+    aggregates?.raw?.anev?.tiktok_engagement_per_satfung,
+    aggregates?.raw?.anev?.tiktok_engagement_per_divisi,
+    aggregates?.raw?.anev?.tiktok_engagement_per_division,
   ];
 
   const normalizeArrayEntries = (
     candidate: any[],
-  ): { label: string; posts: number; engagement: number }[] => {
+  ): TiktokPerformanceRow[] => {
     return candidate
       .map((item: any) => {
         const label =
@@ -345,6 +402,30 @@ function resolveTiktokPerformanceBySatfung(
           0,
         );
         const shares = resolveNumber(item || {}, ["shares", "share_count"], 0);
+        const views = resolveOptionalNumber(item || {}, [
+          "views",
+          "view",
+          "view_count",
+          "views_count",
+          "plays",
+          "play",
+          "impressions",
+        ]);
+        const optionalLikes = resolveOptionalNumber(item || {}, [
+          "likes",
+          "like_count",
+          "total_likes",
+        ]);
+        const optionalComments = resolveOptionalNumber(item || {}, [
+          "comments",
+          "comment_count",
+          "total_comments",
+        ]);
+        const optionalShares = resolveOptionalNumber(item || {}, [
+          "shares",
+          "share_count",
+          "total_shares",
+        ]);
         const baseEngagement = likes + comments + shares;
         const engagement =
           resolveNumber(
@@ -357,21 +438,35 @@ function resolveTiktokPerformanceBySatfung(
               "interactions",
               "total_interactions",
             ],
-            0,
+            baseEngagement,
           ) || baseEngagement;
+        const engagementRate =
+          resolveOptionalNumber(item || {}, [
+            "engagement_rate",
+            "engagementRate",
+            "er",
+            "erate",
+            "engagement_rate_percent",
+          ]) ??
+          (views && views > 0 ? (engagement / views) * 100 : undefined);
 
         return {
           label: String(label),
           posts,
           engagement,
+          views,
+          likes: optionalLikes,
+          comments: optionalComments,
+          shares: optionalShares,
+          engagementRate,
         };
       })
-      .filter(Boolean) as { label: string; posts: number; engagement: number }[];
+      .filter(Boolean) as TiktokPerformanceRow[];
   };
 
   const normalizeObjectEntries = (
     candidate: Record<string, any>,
-  ): { label: string; posts: number; engagement: number }[] => {
+  ): TiktokPerformanceRow[] => {
     const entries = Object.entries(candidate || {}).map(([labelKey, value]) => {
       const derivedLabel =
         (value && typeof value === "object"
@@ -384,18 +479,18 @@ function resolveTiktokPerformanceBySatfung(
             value?.title
           : null) || labelKey;
 
-      const likes =
-        typeof value === "object"
-          ? resolveNumber(value, ["likes", "like_count"], 0)
-          : 0;
-      const comments =
-        typeof value === "object"
-          ? resolveNumber(value, ["comments", "comment_count"], 0)
-          : 0;
-      const shares =
-        typeof value === "object"
-          ? resolveNumber(value, ["shares", "share_count"], 0)
-          : 0;
+      const likes = resolveOptionalNumber(value || {}, ["likes", "like_count", "total_likes"]);
+      const comments = resolveOptionalNumber(value || {}, ["comments", "comment_count", "total_comments"]);
+      const shares = resolveOptionalNumber(value || {}, ["shares", "share_count", "total_shares"]);
+      const views = resolveOptionalNumber(value || {}, [
+        "views",
+        "view",
+        "view_count",
+        "views_count",
+        "plays",
+        "play",
+        "impressions",
+      ]);
       const posts =
         typeof value === "object"
           ? resolveNumber(
@@ -404,7 +499,7 @@ function resolveTiktokPerformanceBySatfung(
               0,
             )
           : resolveNumber({ value }, ["value"], 0);
-      const baseEngagement = likes + comments + shares;
+      const baseEngagement = (likes ?? 0) + (comments ?? 0) + (shares ?? 0);
       const engagement =
         typeof value === "object"
           ? resolveNumber(
@@ -417,15 +512,24 @@ function resolveTiktokPerformanceBySatfung(
                 "interactions",
                 "total_interactions",
               ],
-              0,
+              baseEngagement,
             ) || baseEngagement
-          : resolveNumber({ value }, ["value"], 0);
+          : resolveNumber({ value }, ["value"], baseEngagement);
+      const engagementRate =
+        resolveOptionalNumber(value || {}, [
+          "engagement_rate",
+          "engagementRate",
+          "er",
+          "erate",
+          "engagement_rate_percent",
+        ]) ??
+        (views && views > 0 ? (engagement / views) * 100 : undefined);
 
       if (!derivedLabel) return null;
-      return { label: String(derivedLabel), posts, engagement };
+      return { label: String(derivedLabel), posts, engagement, views, likes, comments, shares, engagementRate };
     });
 
-    return entries.filter(Boolean) as { label: string; posts: number; engagement: number }[];
+    return entries.filter(Boolean) as TiktokPerformanceRow[];
   };
 
   for (const candidate of candidateSources) {
@@ -452,7 +556,7 @@ function resolveTiktokPerformanceBySatfung(
     }
   }
 
-  return [] as { label: string; posts: number; engagement: number }[];
+  return [] as TiktokPerformanceRow[];
 }
 
 function computeCompletionRate(row: { assigned: number; completed: number; completion_rate?: number | null }) {
@@ -910,28 +1014,75 @@ export default function AnevPolresPage() {
             </div>
             {tiktokPerformancePerSatfung.length ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {tiktokPerformancePerSatfung.map((entry, idx) => (
-                  <div
-                    key={`${entry.label}-${idx}`}
-                    className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                  >
-                    <p className="text-sm text-slate-600">{entry.label}</p>
-                    <div className="mt-2 grid grid-cols-2 gap-3 text-sm text-slate-700">
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
-                        <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
+                {tiktokPerformancePerSatfung.map((entry, idx) => {
+                  const hasDetailMetrics =
+                    entry.views !== undefined ||
+                    entry.likes !== undefined ||
+                    entry.comments !== undefined ||
+                    entry.shares !== undefined;
+
+                  return (
+                    <div
+                      key={`${entry.label}-${idx}`}
+                      className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{entry.label}</p>
+                          <p className="text-xs text-slate-500">Ringkasan posting & interaksi</p>
+                        </div>
+                        {typeof entry.engagementRate === "number" && !Number.isNaN(entry.engagementRate) && (
+                          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                            ER: {formatNumber(entry.engagementRate)}%
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
-                        <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
+                      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
+                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
+                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
+                        </div>
                       </div>
+                      {hasDetailMetrics && (
+                        <div className="flex flex-wrap gap-2 text-xs text-slate-600 sm:text-sm">
+                          {entry.views !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                              <span className="text-[11px] font-semibold uppercase text-slate-500">Views</span>
+                              <span className="font-semibold text-slate-900">{formatNumber(entry.views)}</span>
+                            </span>
+                          )}
+                          {entry.likes !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                              <span className="text-[11px] font-semibold uppercase text-slate-500">Likes</span>
+                              <span className="font-semibold text-slate-900">{formatNumber(entry.likes)}</span>
+                            </span>
+                          )}
+                          {entry.comments !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                              <span className="text-[11px] font-semibold uppercase text-slate-500">Comments</span>
+                              <span className="font-semibold text-slate-900">{formatNumber(entry.comments)}</span>
+                            </span>
+                          )}
+                          {entry.shares !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                              <span className="text-[11px] font-semibold uppercase text-slate-500">Shares</span>
+                              <span className="font-semibold text-slate-900">{formatNumber(entry.shares)}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Belum ada data TikTok per satfung/divisi untuk filter ini.
+                Belum ada data TikTok per satfung/divisi untuk filter ini. Pastikan payload ANEV menyertakan
+                `tiktok_per_satfung`, `tiktok_posts_per_satfung`, atau breakdown TikTok serupa di aggregates/raw.
               </div>
             )}
           </div>
