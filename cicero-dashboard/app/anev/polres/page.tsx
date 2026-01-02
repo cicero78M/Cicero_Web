@@ -19,7 +19,12 @@ type FilterFormState = Pick<DashboardAnevFilters, "time_range" | "start_date" | 
   regional_id?: string;
 };
 
-const TIME_RANGE_OPTIONS = ["today", "7d", "30d", "90d", "custom", "all"];
+const TIME_RANGE_PRESETS = [
+  { value: "today", label: "Today" },
+  { value: "7d", label: "This Week" },
+  { value: "30d", label: "This Month" },
+  { value: "custom", label: "Custom" },
+];
 
 function formatNumber(value?: number) {
   if (value === undefined || value === null || Number.isNaN(Number(value))) return "0";
@@ -83,6 +88,37 @@ function computeCompletionRate(row: { assigned: number; completed: number; compl
   return (row.completed / row.assigned) * 100;
 }
 
+function formatDateInput(date: Date) {
+  const shifted = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return shifted.toISOString().split("T")[0];
+}
+
+function derivePresetRange(timeRange: string) {
+  const normalized = timeRange.toLowerCase();
+  const today = new Date();
+  const endDate = formatDateInput(today);
+
+  if (normalized === "7d") {
+    const start = new Date(today);
+    const diffToMonday = (today.getDay() + 6) % 7;
+    start.setDate(today.getDate() - diffToMonday);
+    return { startDate: formatDateInput(start), endDate };
+  }
+
+  if (normalized === "30d") {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { startDate: formatDateInput(start), endDate };
+  }
+
+  if (normalized === "today") {
+    return { startDate: endDate, endDate };
+  }
+
+  return { startDate: undefined, endDate: undefined };
+}
+
+const DEFAULT_PRESET_RANGE = derivePresetRange("7d");
+
 export default function AnevPolresPage() {
   useRequireAuth();
   useRequirePremium();
@@ -91,10 +127,14 @@ export default function AnevPolresPage() {
   const [formState, setFormState] = useState<FilterFormState>({
     time_range: "7d",
     scope: "org",
+    start_date: DEFAULT_PRESET_RANGE.startDate,
+    end_date: DEFAULT_PRESET_RANGE.endDate,
   });
   const [appliedFilters, setAppliedFilters] = useState<FilterFormState>({
     time_range: "7d",
     scope: "org",
+    start_date: DEFAULT_PRESET_RANGE.startDate,
+    end_date: DEFAULT_PRESET_RANGE.endDate,
   });
   const [data, setData] = useState<DashboardAnevResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -174,10 +214,25 @@ export default function AnevPolresPage() {
     }));
   };
 
+  const handlePresetChange = (value: string) => {
+    const derived = derivePresetRange(value);
+    setFormState((prev) => ({
+      ...prev,
+      time_range: value,
+      start_date: value === "custom" ? undefined : derived.startDate,
+      end_date: value === "custom" ? undefined : derived.endDate,
+    }));
+  };
+
   const handleApply = () => {
     if (isCustomRange && (!formState.start_date || !formState.end_date)) return;
+    const derived = derivePresetRange(formState.time_range);
+    const startDate = isCustomRange ? formState.start_date : derived.startDate;
+    const endDate = isCustomRange ? formState.end_date : derived.endDate;
     setAppliedFilters({
       ...formState,
+      start_date: startDate,
+      end_date: endDate,
       regional_id: formState.regional_id?.toUpperCase(),
     });
   };
@@ -185,8 +240,10 @@ export default function AnevPolresPage() {
   const FilterSnapshot = () => {
     if (!data?.filters) return null;
     const filters = data.filters;
+    const activePresetLabel =
+      TIME_RANGE_PRESETS.find((preset) => preset.value === filters.time_range)?.label || filters.time_range;
     const entries = [
-      { label: "Time Range", value: filters.time_range },
+      { label: "Time Range", value: activePresetLabel },
       { label: "Start", value: filters.start_date },
       { label: "End", value: filters.end_date },
       { label: "Scope", value: filters.scope },
@@ -244,20 +301,28 @@ export default function AnevPolresPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Time range
-            <select
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
-              value={formState.time_range}
-              onChange={(e) => handleInputChange("time_range", e.target.value)}
-            >
-              {TIME_RANGE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-2 text-sm text-slate-700">
+            <span>Time range</span>
+            <div className="flex flex-wrap gap-2">
+              {TIME_RANGE_PRESETS.map((option) => {
+                const isActive = formState.time_range === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handlePresetChange(option.value)}
+                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      isActive
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {isCustomRange && (
             <label className="flex flex-col gap-1 text-sm text-slate-700">
