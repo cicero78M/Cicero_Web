@@ -11,8 +11,11 @@ type AuthState = {
   effectiveRole: string | null;
   effectiveClientType: string | null;
   regionalId: string | null;
+  premiumTier: string | null;
+  premiumExpiry: string | null;
   profile: any | null;
   isHydrating: boolean;
+  isProfileLoading: boolean;
   setAuth: (
     token: string | null,
     clientId: string | null,
@@ -129,8 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     null,
   );
   const [regionalId, setRegionalId] = useState<string | null>(null);
+  const [premiumTier, setPremiumTier] = useState<string | null>(null);
+  const [premiumExpiry, setPremiumExpiry] = useState<string | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("cicero_token");
@@ -149,7 +155,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function fetchProfile() {
-      if (!token || !clientId) return;
+      if (!token || !clientId) {
+        setProfile(null);
+        setRegionalId(null);
+        setPremiumTier(null);
+        setPremiumExpiry(null);
+        return;
+      }
+      setIsProfileLoading(true);
       try {
         const res = await getClientProfile(token, clientId, undefined, {
           role: role || undefined,
@@ -157,10 +170,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(res.client || res.profile || res);
       } catch (err) {
         console.error(err);
+        setProfile(null);
       }
+      setIsProfileLoading(false);
     }
     fetchProfile();
-  }, [token, clientId]);
+  }, [token, clientId, role]);
 
   useEffect(() => {
     const resolvedRegionalId =
@@ -169,6 +184,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile?.regionalID ||
       profile?.regional;
     setRegionalId(resolvedRegionalId ? String(resolvedRegionalId) : null);
+  }, [profile]);
+
+  useEffect(() => {
+    const premiumCandidates = [
+      profile,
+      profile?.premium,
+      profile?.subscription,
+      profile?.package,
+      profile?.plan,
+      profile?.parent,
+      profile?.parent_client,
+      profile?.parentClient,
+      profile?.parent_profile,
+    ];
+
+    const tierKeys = [
+      "premium_tier",
+      "premiumTier",
+      "tier",
+      "level",
+      "package",
+      "name",
+    ];
+
+    const expiryKeys = [
+      "premium_expiry",
+      "premiumExpiry",
+      "expires_at",
+      "expiresAt",
+      "expired_at",
+      "expiredAt",
+      "expiry",
+    ];
+
+    let resolvedTier = "";
+    let resolvedExpiry = "";
+
+    for (const candidate of premiumCandidates) {
+      if (!candidate) continue;
+      if (!resolvedTier) {
+        for (const key of tierKeys) {
+          const value = candidate[key];
+          if (typeof value === "string" && value.trim()) {
+            resolvedTier = value.trim();
+            break;
+          }
+        }
+      }
+      if (!resolvedExpiry) {
+        for (const key of expiryKeys) {
+          const value = candidate[key];
+          if (typeof value === "string" && value.trim()) {
+            resolvedExpiry = value.trim();
+            break;
+          }
+        }
+      }
+      if (resolvedTier && resolvedExpiry) break;
+    }
+
+    setPremiumTier(resolvedTier || null);
+    setPremiumExpiry(resolvedExpiry || null);
   }, [profile]);
 
   useEffect(() => {
@@ -224,6 +301,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserId(resolvedUserId);
     setUsername(resolvedUsername);
     setRole(resolvedRole);
+    setProfile(null);
+    setRegionalId(null);
+    setPremiumTier(null);
+    setPremiumExpiry(null);
     if (newToken) localStorage.setItem("cicero_token", newToken);
     else localStorage.removeItem("cicero_token");
     if (resolvedClientId) localStorage.setItem("client_id", resolvedClientId);
@@ -247,8 +328,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         effectiveRole,
         effectiveClientType,
         regionalId,
+        premiumTier,
+        premiumExpiry,
         profile,
         isHydrating,
+        isProfileLoading,
         setAuth,
       }}
     >
