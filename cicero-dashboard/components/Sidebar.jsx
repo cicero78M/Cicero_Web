@@ -34,7 +34,14 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { role, effectiveRole, profile, clientId, effectiveClientType } = useAuth();
+  const {
+    role,
+    effectiveRole,
+    profile,
+    clientId,
+    effectiveClientType,
+    premiumTier,
+  } = useAuth();
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
   }
@@ -54,6 +61,7 @@ export default function Sidebar() {
   const tiktokEnabledRaw = isActive(getStatus(profile, "client_tiktok_status"));
   const normalizedEffectiveRole = effectiveRole?.toLowerCase();
   const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
+  const normalizedPremiumTier = premiumTier?.toLowerCase();
   const isOrgClient = normalizedEffectiveClientType === "org";
   const isOperator = normalizedEffectiveRole === "operator";
   const normalizedClientId = clientId?.toLowerCase();
@@ -66,6 +74,8 @@ export default function Sidebar() {
     normalizedClientId === "ditbinmas" && normalizedEffectiveRole === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
+  const hasPremiumAnevAccess =
+    normalizedPremiumTier === "premium_1" || normalizedPremiumTier === "premium_3";
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -114,6 +124,21 @@ export default function Sidebar() {
           },
         ]
       : []),
+    ...(hasPremiumAnevAccess
+      ? [
+          {
+            label: "Anev Polres",
+            path: "/dashboard/anev",
+            icon: FilePieChart,
+          },
+        ]
+      : [
+          {
+            label: "Anev Polres (Premium)",
+            path: "/premium",
+            icon: Sparkles,
+          },
+        ]),
     {
       label: "Mekanisme Sistem Absensi",
       path: "/mekanisme-absensi",
