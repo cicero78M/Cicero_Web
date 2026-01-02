@@ -82,6 +82,100 @@ function resolveComplianceRows(aggregates?: DashboardAnevResponse["aggregates"])
   }));
 }
 
+function resolveUserBreakdownBySatfung(
+  aggregates?: DashboardAnevResponse["aggregates"],
+  rawRoot?: any,
+) {
+  const raw = rawRoot ?? aggregates?.raw ?? aggregates;
+
+  const candidateSources = [
+    raw?.user_per_satfung,
+    raw?.users_per_satfung,
+    raw?.user_satfung,
+    raw?.satfung,
+    raw?.divisi,
+    raw?.division,
+    raw?.divisions,
+    raw?.user_breakdown?.satfung,
+    raw?.user_breakdown?.division,
+    raw?.user_breakdown,
+    raw?.breakdown?.satfung,
+    raw?.breakdown?.division,
+    raw?.breakdowns?.satfung,
+    raw?.breakdowns?.division,
+    aggregates?.totals?.user_per_satfung,
+    aggregates?.totals?.users_per_satfung,
+    aggregates?.totals?.satfung_breakdown,
+    aggregates?.totals?.division_breakdown,
+    aggregates?.totals?.satfung,
+    aggregates?.totals?.divisi,
+    aggregates?.totals?.divisions,
+  ];
+
+  const normalizeObjectEntries = (candidate: Record<string, any>) => {
+    const entries = Object.entries(candidate || {}).map(([labelKey, value]) => {
+      const derivedLabel =
+        (value && typeof value === "object"
+          ? value?.satfung ||
+            value?.division ||
+            value?.divisi ||
+            value?.unit ||
+            value?.name ||
+            value?.label ||
+            value?.title
+          : null) || labelKey;
+
+      const count =
+        typeof value === "object"
+          ? resolveNumber(value, ["count", "total", "users", "user", "value", "jumlah", "personel"], 0)
+          : resolveNumber({ value }, ["value"], 0);
+
+      if (!derivedLabel) return null;
+      return { label: String(derivedLabel), count };
+    });
+
+    return entries.filter(Boolean) as { label: string; count: number }[];
+  };
+
+  for (const candidate of candidateSources) {
+    if (Array.isArray(candidate)) {
+      const normalized = candidate
+        .map((item: any) => {
+          const derivedLabel =
+            item?.satfung ||
+            item?.division ||
+            item?.divisi ||
+            item?.unit ||
+            item?.name ||
+            item?.label ||
+            item?.title ||
+            item?.category ||
+            item?.key;
+
+          if (!derivedLabel) return null;
+
+          const count = resolveNumber(
+            item || {},
+            ["count", "total", "users", "user", "value", "jumlah", "personel"],
+            0,
+          );
+
+          return { label: String(derivedLabel), count };
+        })
+        .filter(Boolean) as { label: string; count: number }[];
+
+      if (normalized.length) return normalized;
+    }
+
+    if (candidate && typeof candidate === "object") {
+      const normalized = normalizeObjectEntries(candidate);
+      if (normalized.length) return normalized;
+    }
+  }
+
+  return [] as { label: string; count: number }[];
+}
+
 function computeCompletionRate(row: { assigned: number; completed: number; completion_rate?: number | null }) {
   if (typeof row.completion_rate === "number") return row.completion_rate;
   if (!row.assigned) return 0;
@@ -205,6 +299,10 @@ export default function AnevPolresPage() {
 
   const platformBreakdown = useMemo(() => resolvePlatformPosts(aggregates), [aggregates]);
   const complianceRows = useMemo(() => resolveComplianceRows(aggregates), [aggregates]);
+  const satfungBreakdown = useMemo(
+    () => resolveUserBreakdownBySatfung(aggregates, data?.raw),
+    [aggregates, data?.raw],
+  );
   const completionRate = resolveNumber(totals, ["completion_rate", "compliance_rate", "rate"], null as any);
 
   const handleInputChange = (field: keyof FilterFormState, value: string) => {
@@ -488,6 +586,30 @@ export default function AnevPolresPage() {
                 <p className="text-sm text-slate-600">Belum ada data platform untuk filter ini.</p>
               )}
             </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">User per Satfung/Divisi</h3>
+                <p className="text-sm text-slate-600">Jumlah user yang dikelompokkan per satfung atau divisi.</p>
+              </div>
+            </div>
+            {satfungBreakdown.length ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {satfungBreakdown.map((entry, idx) => (
+                  <div
+                    key={`${entry.label}-${idx}`}
+                    className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
+                  >
+                    <p className="text-sm text-slate-600">{entry.label}</p>
+                    <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.count)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Belum ada data satfung/divisi untuk filter ini.</p>
+            )}
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
