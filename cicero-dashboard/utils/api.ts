@@ -716,6 +716,143 @@ function ensureArray<T>(value: unknown, mapper: (entry: any) => T): T[] {
   return value.map((item) => mapper(item));
 }
 
+function decodeJwtPayloadSafe(token?: string | null): Record<string, any> | null {
+  if (!token || typeof token !== "string") return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  const payload = parts[1];
+  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  try {
+    const decodedString =
+      typeof atob === "function"
+        ? atob(padded)
+        : typeof Buffer !== "undefined"
+          ? Buffer.from(padded, "base64").toString("utf-8")
+          : "";
+    const parsed = JSON.parse(decodedString);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (error) {
+    console.warn("Gagal mendekode payload JWT untuk client_id", error);
+    return null;
+  }
+}
+
+function extractClientIdFromToken(token?: string | null): string {
+  const payload = decodeJwtPayloadSafe(token);
+  if (!payload) return "";
+  const keys = ["client_id", "clientId", "clientID", "cid"];
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function readStoredClientId(): string {
+  if (typeof window === "undefined") return "";
+  const stored = window.localStorage.getItem("client_id");
+  return stored && stored.trim() ? stored.trim() : "";
+}
+
+export type DashboardAnevFilters = {
+  time_range: string;
+  role?: string;
+  scope?: string;
+  regional_id?: string;
+  start_date?: string;
+  end_date?: string;
+  client_id: string;
+  clientId?: string;
+};
+
+export type DashboardAnevAggregates = {
+  totals: Record<string, any>;
+  timeline: any[];
+  platforms: any[];
+  tasks: any[];
+  raw: any;
+};
+
+export type DashboardAnevResponse = {
+  filters: DashboardAnevFilters;
+  aggregates: DashboardAnevAggregates;
+  meta?: any;
+  raw?: any;
+};
+
+function normalizeDashboardAnevFilters(
+  raw: any,
+  fallback: Pick<DashboardAnevFilters, "time_range" | "client_id"> & {
+    start_date?: string;
+    end_date?: string;
+  },
+): DashboardAnevFilters {
+  const time_range =
+    ensureString(
+      raw?.time_range ??
+        raw?.timeRange ??
+        raw?.range ??
+        raw?.periode ??
+        raw?.period,
+    ) || fallback.time_range;
+  const start_date =
+    ensureString(raw?.start_date ?? raw?.tanggal_mulai ?? raw?.startDate) ||
+    fallback.start_date;
+  const end_date =
+    ensureString(raw?.end_date ?? raw?.tanggal_selesai ?? raw?.endDate) ||
+    fallback.end_date;
+  const role = ensureString(raw?.role ?? raw?.user_role ?? raw?.userRole);
+  const scope = ensureString(raw?.scope ?? raw?.client_scope ?? raw?.clientScope);
+  const regional_id = ensureString(
+    raw?.regional_id ?? raw?.regional ?? raw?.regionalId,
+  );
+
+  return {
+    time_range,
+    start_date,
+    end_date,
+    role: role || undefined,
+    scope: scope || undefined,
+    regional_id: regional_id || undefined,
+    client_id: ensureString(raw?.client_id ?? raw?.clientId ?? fallback.client_id),
+  };
+}
+
+function normalizeDashboardAnevAggregates(raw: any): DashboardAnevAggregates {
+  const aggregates = raw?.aggregates ?? raw ?? {};
+  const totals =
+    aggregates?.totals ??
+    aggregates?.summary ??
+    aggregates?.total ??
+    aggregates?.metrics ??
+    {};
+  const timeline = ensureArray(
+    aggregates?.timeline ??
+      aggregates?.timeseries ??
+      aggregates?.series ??
+      aggregates?.activity ??
+      aggregates?.chart,
+    (entry) => entry,
+  );
+  const platforms = ensureArray(
+    aggregates?.platforms ?? aggregates?.by_platform ?? aggregates?.channels,
+    (entry) => entry,
+  );
+  const tasks = ensureArray(
+    aggregates?.tasks ?? aggregates?.reports ?? aggregates?.items,
+    (entry) => entry,
+  );
+
+  return {
+    totals,
+    timeline,
+    platforms,
+    tasks,
+    raw: aggregates,
+  };
+}
+
 function parseLocalTimestamp(value: string): Date | null {
   if (!value) return null;
   if (value.includes("T")) {
@@ -1473,6 +1610,108 @@ export async function submitReposterReportLinks(
     const text = await res.text();
     throw new Error(text || "Gagal mengirim laporan.");
   }
+}
+
+export async function getDashboardAnev(
+  token: string,
+  filters: Partial<DashboardAnevFilters> = {},
+  signal?: AbortSignal,
+): Promise<DashboardAnevResponse> {
+  const timeRange =
+    ensureString(filters.time_range ?? (filters as any)?.timeRange) || "7d";
+  const startDate =
+    ensureString(filters.start_date ?? (filters as any)?.startDate) || undefined;
+  const endDate =
+    ensureString(filters.end_date ?? (filters as any)?.endDate) || undefined;
+  const clientId =
+    ensureString(filters.client_id ?? filters.clientId) ||
+    readStoredClientId() ||
+    extractClientIdFromToken(token);
+
+  if (!clientId) {
+    const error: any = new Error(
+      "client_id wajib diisi untuk memuat Dashboard ANEV (400).",
+    );
+    error.status = 400;
+    throw error;
+  }
+
+  if (timeRange.toLowerCase() === "custom" && (!startDate || !endDate)) {
+    const error: any = new Error(
+      "Rentang waktu custom memerlukan start_date dan end_date.",
+    );
+    error.status = 400;
+    throw error;
+  }
+
+  const params = new URLSearchParams({ time_range: timeRange, client_id: clientId });
+  if (filters.role) params.append("role", filters.role);
+  if (filters.scope) params.append("scope", filters.scope);
+  if (filters.regional_id) params.append("regional_id", filters.regional_id);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
+
+  const url = `${buildApiUrl("/api/dashboard/anev")}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, {
+    signal,
+    headers: {
+      "X-Client-Id": clientId,
+    },
+  });
+
+  let parsed: any = null;
+  try {
+    parsed = await res.clone().json();
+  } catch {
+    parsed = null;
+  }
+
+  if (res.status === 403) {
+    const payload = parsed?.data ?? parsed ?? {};
+    const tier = ensureString(payload?.tier ?? payload?.premium_tier);
+    const expires_at = ensureString(
+      payload?.expires_at ?? payload?.expiry ?? payload?.expired_at,
+    );
+    const message = extractResponseMessage(
+      parsed,
+      "Akses premium diperlukan untuk membuka Dashboard ANEV.",
+    );
+    const error: any = new Error(message);
+    error.status = 403;
+    error.premiumGuard = {
+      tier: tier || undefined,
+      expires_at: expires_at || undefined,
+      expiresAt: expires_at || undefined,
+    };
+    throw error;
+  }
+
+  if (!res.ok) {
+    const text =
+      parsed && typeof parsed === "object"
+        ? extractResponseMessage(parsed, "")
+        : await res.text();
+    throw new Error(text || "Gagal memuat Dashboard ANEV.");
+  }
+
+  const json = parsed ?? (await res.json());
+  const payload = json?.data ?? json ?? {};
+  const normalizedFilters = normalizeDashboardAnevFilters(payload?.filters ?? {}, {
+    time_range: timeRange,
+    client_id: clientId,
+    start_date: startDate,
+    end_date: endDate,
+  });
+  const aggregates = normalizeDashboardAnevAggregates(
+    payload?.aggregates ?? payload?.aggregate ?? payload,
+  );
+
+  return {
+    filters: normalizedFilters,
+    aggregates,
+    meta: payload?.meta ?? payload?.pagination,
+    raw: payload,
+  };
 }
 
 export async function getDashboardStats(
