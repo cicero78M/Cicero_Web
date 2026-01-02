@@ -75,6 +75,7 @@ export default function Sidebar() {
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
   const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier);
+  const premiumAnevPath = hasPremiumAnevAccess ? "/anev/polres" : "/premium/anev";
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -127,14 +128,14 @@ export default function Sidebar() {
       ? [
           {
             label: "Anev Polres",
-            path: "/anev/polres",
+            path: premiumAnevPath,
             icon: FilePieChart,
           },
         ]
       : [
           {
             label: "Anev Polres (Premium)",
-            path: "/premium",
+            path: premiumAnevPath,
             icon: Sparkles,
           },
         ]),
@@ -148,6 +149,14 @@ export default function Sidebar() {
       : []),
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },
   ];
+
+  const isNavItemActive = (itemPath) => {
+    if (itemPath === "/premium") {
+      return pathname === "/premium" || pathname.startsWith("/premium/register");
+    }
+
+    return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+  };
 
   const navLinks = (isSheet = false, isCollapsed = false) => (
     <>
@@ -176,7 +185,7 @@ export default function Sidebar() {
               key={item.path}
               href={item.path}
               className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                pathname.startsWith(item.path)
+                isNavItemActive(item.path)
                   ? "bg-gradient-to-r from-sky-100 via-sky-200 to-indigo-100 text-sky-700 ring-1 ring-sky-200 dark:from-cyan-400/30 dark:via-sky-500/30 dark:to-indigo-500/30 dark:text-sky-100 dark:ring-cyan-400/60"
                   : isSheet
                   ? "text-slate-600 hover:bg-sky-50/80 hover:text-sky-700 dark:text-slate-100 dark:hover:bg-white/10"
@@ -188,7 +197,7 @@ export default function Sidebar() {
                 className={`${
                   isSheet
                     ? "h-7 w-7 text-sky-500 dark:text-sky-300"
-                    : pathname.startsWith(item.path)
+                    : isNavItemActive(item.path)
                     ? "h-5 w-5 text-sky-600 drop-shadow-[0_0_6px_rgba(56,189,248,0.55)] dark:text-cyan-300"
                     : "h-5 w-5 text-slate-400 group-hover:text-sky-500 dark:text-slate-400 dark:group-hover:text-cyan-200"
                 }`}
