@@ -633,13 +633,13 @@ Catatan tambahan:`;
           <div className="rounded-2xl border border-sky-50 bg-sky-50/70 p-4 text-sm text-sky-800 shadow-inner">
             <p className="font-semibold">Periode ANEV</p>
             <p className="mt-1 text-sky-700/80">
-              Sebutkan kebutuhan periode (harian, mingguan, bulanan, atau rentang kustom) untuk konfigurasi jadwal recap.
+              Menyajikan anev periode Harian, Mingguan, Bulanan dan Custom. Perangkingan berdasarkan Satfung dan Personil tertinggi.
             </p>
           </div>
           <div className="rounded-2xl border border-emerald-50 bg-emerald-50/70 p-4 text-sm text-emerald-800 shadow-inner">
             <p className="font-semibold">Operator & panduan</p>
             <p className="mt-1 text-emerald-700/80">
-              Operator menerima panduan khusus beserta link unduhan Excel agar pelaporan premium langsung siap pakai.
+              Operator menerima laporan dan data dalam format Excel langsung ke Nomor Whatsapp Operator Polres agar pelaporan premium langsung siap pakai.
             </p>
           </div>
         </div>
