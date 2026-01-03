@@ -12,12 +12,14 @@ export default function useRequirePremium() {
     isHydrating,
     isProfileLoading,
     premiumTier,
+    premiumTierReady,
     hasResolvedPremium,
     premiumResolutionError,
   } = useAuth();
 
   useEffect(() => {
-    if (isHydrating || isProfileLoading || !hasResolvedPremium) return;
+    if (isHydrating || isProfileLoading || !hasResolvedPremium || !premiumTierReady)
+      return;
 
     if (!premiumResolutionError && hasShownError.current) {
       hasShownError.current = false;
@@ -40,10 +42,11 @@ export default function useRequirePremium() {
       router.replace("/premium");
     }
   }, [
-    hasResolvedPremium,
     isHydrating,
     isProfileLoading,
     premiumResolutionError,
+    premiumTierReady,
+    hasResolvedPremium,
     premiumTier,
     router,
   ]);
