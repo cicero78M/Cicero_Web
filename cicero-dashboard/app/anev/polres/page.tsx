@@ -316,8 +316,8 @@ function resolveEngagementPerUser(
             item.username ?? item.handle ?? item.account ?? item.user ?? item.user_name,
           ) || undefined;
         const directoryMatch =
-          (userId && directoryIndex.byId.get(userId)) ||
-          (username && directoryIndex.byUsername.get(username.toLowerCase()));
+          (userId ? directoryIndex.byId.get(userId) : undefined) ??
+          (username ? directoryIndex.byUsername.get(username.toLowerCase()) : undefined);
         const fullName =
           safeString(
             item.full_name ?? item.fullName ?? item.name ?? item.display_name ?? item.displayName,
