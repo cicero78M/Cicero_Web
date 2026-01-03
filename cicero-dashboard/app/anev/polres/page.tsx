@@ -762,6 +762,10 @@ export default function AnevPolresPage() {
     }),
     [clientId, lockedRegionalId, lockedRole, lockedScope],
   );
+  const isWaitingSessionContext = useMemo(
+    () => !lockedRole || !lockedScope,
+    [lockedRole, lockedScope],
+  );
 
   const isCustomRange = formState.time_range.toLowerCase() === "custom";
   const isCustomIncomplete =
@@ -813,7 +817,17 @@ export default function AnevPolresPage() {
   }, [lockedFilters]);
 
   useEffect(() => {
-    if (!token || !clientId || isHydrating || premiumStatus !== "premium") return;
+    if (
+      !token ||
+      !clientId ||
+      !lockedRole ||
+      !lockedScope ||
+      isHydrating ||
+      premiumStatus !== "premium"
+    ) {
+      setLoading(false);
+      return;
+    }
 
     const controller = new AbortController();
     const requestKey = JSON.stringify({
@@ -868,7 +882,17 @@ export default function AnevPolresPage() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [clientId, isHydrating, lockedFilters, premiumStatus, premiumTier, resolvedAppliedFilters, token]);
+  }, [
+    clientId,
+    isHydrating,
+    lockedFilters,
+    lockedRole,
+    lockedScope,
+    premiumStatus,
+    premiumTier,
+    resolvedAppliedFilters,
+    token,
+  ]);
 
   const aggregates = data?.aggregates;
   const totals = aggregates?.totals || {};
@@ -1093,7 +1117,7 @@ export default function AnevPolresPage() {
                 type="button"
                 onClick={handleApply}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
-                disabled={loading || (isCustomRange && isCustomIncomplete)}
+                disabled={loading || isWaitingSessionContext || (isCustomRange && isCustomIncomplete)}
               >
                 Terapkan filter
               </button>
@@ -1237,6 +1261,18 @@ export default function AnevPolresPage() {
           </div>
         </div>
       </div>
+
+      {premiumStatus === "premium" && isWaitingSessionContext && (
+        <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-blue-800">
+          <AlertCircle size={20} className="mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold">Menunggu konteks sesi</p>
+            <p className="text-sm leading-relaxed">
+              Role/scope dari sesi login belum tersedia. Menunggu konteks sesi agar permintaan Dashboard ANEV tidak berakhir dengan error 400.
+            </p>
+          </div>
+        </div>
+      )}
 
       {premiumBlocked && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">

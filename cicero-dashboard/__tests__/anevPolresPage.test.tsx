@@ -91,10 +91,30 @@ describe("AnevPolresPage premium guard", () => {
       clientId: "client",
       isHydrating: false,
       premiumTier: "premium_1",
+      role: "operator",
+      effectiveClientType: "org",
     } as any);
 
     render(<Page />);
 
     await waitFor(() => expect(mockedGetDashboardAnev).toHaveBeenCalledTimes(1));
+  });
+
+  it("shows waiting context state and skips fetch when role or scope is missing", () => {
+    mockedUseRequirePremium.mockReturnValue("premium");
+    mockedUseAuth.mockReturnValue({
+      token: "token",
+      clientId: "client",
+      isHydrating: false,
+      premiumTier: "premium_1",
+      role: null,
+      effectiveClientType: null,
+    } as any);
+
+    render(<Page />);
+
+    expect(screen.getAllByText(/Menunggu konteks sesi/i)).not.toHaveLength(0);
+    expect(screen.getByText(/Role\/scope dari sesi login belum tersedia/i)).toBeInTheDocument();
+    expect(mockedGetDashboardAnev).not.toHaveBeenCalled();
   });
 });
