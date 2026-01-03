@@ -781,11 +781,45 @@ export type DashboardAnevFilters = {
   clientId?: string;
 };
 
+export type DashboardAnevDirectoryEntry = {
+  user_id?: string;
+  username?: string;
+  full_name?: string;
+  satfung?: string;
+  division?: string;
+  platform?: string;
+  unmapped?: boolean;
+};
+
+export type DashboardAnevEngagementUserRow = {
+  user_id?: string;
+  username?: string;
+  posts?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  engagement?: number;
+  platform?: string;
+  satfung?: string;
+  division?: string;
+  unmapped?: boolean;
+};
+
+export type DashboardAnevEngagementBreakdown = {
+  totals?: Record<string, any>;
+  per_user?: DashboardAnevEngagementUserRow[];
+  per_platform?: any[];
+  per_satfung?: any[];
+  raw?: any;
+};
+
 export type DashboardAnevAggregates = {
   totals: Record<string, any>;
   timeline: any[];
   platforms: any[];
   tasks: any[];
+  instagram_engagement?: DashboardAnevEngagementBreakdown;
+  tiktok_engagement?: DashboardAnevEngagementBreakdown;
   user_per_satfung?: any[] | Record<string, any>;
   users_per_satfung?: any[] | Record<string, any>;
   satfung_breakdown?: any[] | Record<string, any>;
@@ -801,6 +835,9 @@ export type DashboardAnevResponse = {
   aggregates: DashboardAnevAggregates;
   meta?: any;
   raw?: any;
+  directory?: DashboardAnevDirectoryEntry[];
+  instagram_engagement?: DashboardAnevEngagementBreakdown;
+  tiktok_engagement?: DashboardAnevEngagementBreakdown;
 };
 
 function normalizeDashboardAnevFilters(
@@ -857,6 +894,176 @@ function normalizeDashboardAnevFilters(
     regional_id: regional_id || undefined,
     permitted_time_ranges: resolvedPermittedRanges.length ? resolvedPermittedRanges : undefined,
     client_id: ensureString(raw?.client_id ?? raw?.clientId ?? fallback.client_id),
+  };
+}
+
+function normalizeDashboardAnevDirectory(raw: any): DashboardAnevDirectoryEntry[] {
+  const candidates = [
+    raw?.directory,
+    raw?.directories,
+    raw?.user_directory,
+    raw?.userDirectory,
+    raw?.users,
+    raw?.data?.directory,
+    raw?.data?.users,
+    raw?.directory?.users,
+    raw?.aggregates?.directory,
+    raw?.aggregates?.user_directory,
+  ];
+
+  const normalizeEntry = (item: any): DashboardAnevDirectoryEntry | null => {
+    if (!item || typeof item !== "object") return null;
+    const user_id =
+      ensureString(
+        item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp ?? item.user,
+      ) || undefined;
+    const username =
+      ensureString(
+        item.username ?? item.handle ?? item.user_name ?? item.account ?? item.user,
+      ) || undefined;
+    const full_name =
+      ensureString(
+        item.full_name ?? item.fullName ?? item.name ?? item.display_name ?? item.displayName,
+      ) || undefined;
+    const satfung =
+      ensureString(
+        item.satfung ?? item.division ?? item.divisi ?? item.unit ?? item.department,
+      ) || undefined;
+    const division =
+      ensureString(item.division ?? item.divisi ?? item.satfung ?? item.unit) || undefined;
+    const platform =
+      ensureString(item.platform ?? item.channel ?? item.media ?? item.account_type) ||
+      undefined;
+    const unmapped = Boolean(item.unmapped || item.is_unmapped || item.unrecognized);
+
+    if (!user_id && !username && !full_name) return null;
+    return {
+      user_id,
+      username,
+      full_name,
+      satfung,
+      division,
+      platform,
+      unmapped: unmapped || undefined,
+    };
+  };
+
+  const results: DashboardAnevDirectoryEntry[] = [];
+  const seen = new Set<string>();
+
+  const collect = (source: any) => {
+    const asArray = Array.isArray(source)
+      ? source
+      : Array.isArray(source?.users)
+        ? source.users
+        : source && typeof source === "object"
+          ? Object.values(source)
+          : [];
+
+    asArray.forEach((item) => {
+      const normalized = normalizeEntry(item);
+      if (!normalized) return;
+      const key = `${normalized.user_id || ""}-${normalized.username || normalized.full_name}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      results.push(normalized);
+    });
+  };
+
+  candidates.forEach((candidate) => collect(candidate));
+  return results;
+}
+
+function normalizeDashboardAnevEngagement(
+  raw: any,
+): DashboardAnevEngagementBreakdown | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+
+  const totals = raw?.totals ?? raw?.summary ?? raw?.metrics ?? raw;
+  const per_platform = ensureArray(
+    raw?.per_platform ?? raw?.platforms ?? raw?.platform ?? raw?.channels,
+    (entry) => entry,
+  );
+  const per_satfung = ensureArray(
+    raw?.per_satfung ?? raw?.per_divisi ?? raw?.per_division ?? raw?.satfung ?? raw?.division,
+    (entry) => entry,
+  );
+
+  const normalizeUserEntries = (value: any): DashboardAnevEngagementUserRow[] => {
+    const entries = Array.isArray(value)
+      ? value
+      : value && typeof value === "object"
+        ? Object.entries(value).map(([key, val]) =>
+            typeof val === "object" ? { user_id: key, ...val } : { user_id: key, engagement: val },
+          )
+        : [];
+
+    return entries
+      .map((item) => {
+        const user_id =
+          ensureString(item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp) || undefined;
+        const username =
+          ensureString(
+            item.username ?? item.handle ?? item.account ?? item.user ?? item.user_name,
+          ) || undefined;
+        const posts = ensureNumber(
+          item.posts ?? item.total_posts ?? item.post ?? item.count ?? item.total,
+          0,
+        );
+        const likes = ensureNumber(item.likes ?? item.like_count ?? item.total_likes, 0);
+        const comments = ensureNumber(
+          item.comments ?? item.comment_count ?? item.total_comments,
+          0,
+        );
+        const shares = ensureNumber(item.shares ?? item.share_count ?? item.total_shares, 0);
+        const baseEngagement = likes + comments + shares;
+        const engagement = ensureNumber(
+          item.engagement ?? item.engagements ?? item.total_engagement ?? item.interactions,
+          baseEngagement,
+        );
+        const platform =
+          ensureString(item.platform ?? item.channel ?? item.media ?? item.account_type) ||
+          undefined;
+        const satfung =
+          ensureString(
+            item.satfung ?? item.division ?? item.divisi ?? item.unit ?? item.department,
+          ) || undefined;
+        const division =
+          ensureString(item.division ?? item.divisi ?? item.satfung ?? item.unit) || undefined;
+        const unmapped = Boolean(item.unmapped || item.is_unmapped || item.unrecognized);
+
+        if (!user_id && !username) return null;
+        return {
+          user_id,
+          username,
+          posts,
+          likes,
+          comments,
+          shares,
+          engagement,
+          platform,
+          satfung,
+          division,
+          unmapped: unmapped || undefined,
+        };
+      })
+      .filter(Boolean) as DashboardAnevEngagementUserRow[];
+  };
+
+  const per_user_candidate =
+    raw?.per_user ?? raw?.perUser ?? raw?.users ?? raw?.user ?? raw?.per_account ?? raw?.accounts;
+  const per_user = normalizeUserEntries(per_user_candidate);
+
+  if (!per_user.length && !per_platform.length && !per_satfung.length && !totals) {
+    return undefined;
+  }
+
+  return {
+    totals,
+    per_user: per_user.length ? per_user : undefined,
+    per_platform: per_platform.length ? per_platform : undefined,
+    per_satfung: per_satfung.length ? per_satfung : undefined,
+    raw,
   };
 }
 
@@ -917,12 +1124,22 @@ function normalizeDashboardAnevAggregates(raw: any): DashboardAnevAggregates {
   const division_breakdown =
     aggregates?.division_breakdown ?? breakdown?.division ?? breakdowns?.division;
   const user_breakdown = aggregates?.user_breakdown ?? breakdown ?? breakdowns;
+  const instagram_engagement = normalizeDashboardAnevEngagement(
+    aggregates?.instagram_engagement ?? aggregates?.engagement?.instagram ?? aggregates?.ig_engagement,
+  );
+  const tiktok_engagement = normalizeDashboardAnevEngagement(
+    aggregates?.tiktok_engagement ??
+      aggregates?.engagement?.tiktok ??
+      aggregates?.tiktokEngagement,
+  );
 
   return {
     totals,
     timeline,
     platforms,
     tasks,
+    instagram_engagement,
+    tiktok_engagement,
     user_per_satfung,
     users_per_satfung,
     satfung_breakdown,
@@ -1811,11 +2028,35 @@ export async function getDashboardAnev(
   const aggregates = normalizeDashboardAnevAggregates(
     payload?.aggregates ?? payload?.aggregate ?? payload,
   );
+  const directory = normalizeDashboardAnevDirectory(payload);
+  const instagram_engagement =
+    normalizeDashboardAnevEngagement(
+      payload?.instagram_engagement ??
+        payload?.instagramEngagement ??
+        payload?.engagement?.instagram ??
+        payload?.engagements?.instagram ??
+        payload?.aggregates?.instagram_engagement ??
+        aggregates?.raw?.instagram_engagement ??
+        aggregates?.raw?.engagement?.instagram,
+    ) ?? aggregates?.instagram_engagement;
+  const tiktok_engagement =
+    normalizeDashboardAnevEngagement(
+      payload?.tiktok_engagement ??
+        payload?.tiktokEngagement ??
+        payload?.engagement?.tiktok ??
+        payload?.engagements?.tiktok ??
+        payload?.aggregates?.tiktok_engagement ??
+        aggregates?.raw?.tiktok_engagement ??
+        aggregates?.raw?.engagement?.tiktok,
+    ) ?? aggregates?.tiktok_engagement;
 
   return {
     filters: normalizedFilters,
     aggregates,
     meta: payload?.meta ?? payload?.pagination,
+    directory: directory.length ? directory : undefined,
+    instagram_engagement,
+    tiktok_engagement,
     raw: payload,
   };
 }

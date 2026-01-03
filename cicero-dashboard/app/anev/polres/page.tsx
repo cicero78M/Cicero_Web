@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, CalendarClock, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertCircle, CalendarClock, LineChart, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles, Users } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useRequirePremium from "@/hooks/useRequirePremium";
@@ -30,6 +30,36 @@ type TiktokPerformanceRow = {
   comments?: number;
   shares?: number;
   engagementRate?: number;
+};
+
+type DirectoryEntry = {
+  userId?: string;
+  username?: string;
+  fullName?: string;
+  satfung?: string;
+  division?: string;
+  platform?: string;
+  unmapped?: boolean;
+};
+
+type EngagementUserRow = {
+  userId?: string;
+  username?: string;
+  fullName?: string;
+  posts: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  engagement: number;
+  platform?: string;
+  satfung?: string;
+  division?: string;
+  unmapped?: boolean;
+};
+
+type DirectoryIndex = {
+  byId: Map<string, DirectoryEntry>;
+  byUsername: Map<string, DirectoryEntry>;
 };
 
 const TIME_RANGE_PRESETS = [
@@ -61,6 +91,12 @@ function resolveNumber(source: Record<string, any>, candidates: string[], fallba
 function resolveOptionalNumber(source: Record<string, any>, candidates: string[]) {
   const resolved = resolveNumber(source, candidates, Number.NaN);
   return Number.isNaN(resolved) ? undefined : resolved;
+}
+
+function safeString(value?: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
 }
 
 type NarrativePlatformBreakdown = { platform: string; posts: number };
@@ -156,6 +192,227 @@ function resolveComplianceRows(aggregates?: DashboardAnevResponse["aggregates"])
         ? item?.completionRate
         : null,
   }));
+}
+
+function resolveUserDirectoryEntries(data?: DashboardAnevResponse | null): DirectoryEntry[] {
+  if (!data) return [];
+
+  const candidates = [
+    (data as any)?.directory,
+    data?.raw?.directory,
+    data?.raw?.user_directory,
+    data?.raw?.userDirectory,
+    data?.raw?.users,
+    data?.aggregates?.raw?.directory,
+    data?.aggregates?.raw?.user_directory,
+    data?.aggregates?.raw?.userDirectory,
+  ];
+
+  const results: DirectoryEntry[] = [];
+  const seen = new Set<string>();
+
+  const collect = (candidate: any) => {
+    const list = Array.isArray(candidate)
+      ? candidate
+      : Array.isArray(candidate?.users)
+        ? candidate.users
+        : candidate && typeof candidate === "object"
+          ? Object.values(candidate)
+          : [];
+
+    list.forEach((item) => {
+      if (!item) return;
+      const userId =
+        safeString(item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp ?? item.user) ||
+        undefined;
+      const username =
+        safeString(item.username ?? item.handle ?? item.user_name ?? item.account ?? item.user) ||
+        undefined;
+      const fullName =
+        safeString(item.full_name ?? item.fullName ?? item.name ?? item.display_name ?? item.displayName) ||
+        undefined;
+      const satfung =
+        safeString(item.satfung ?? item.division ?? item.divisi ?? item.unit ?? item.department) ||
+        undefined;
+      const division =
+        safeString(item.division ?? item.divisi ?? item.satfung ?? item.unit ?? item.department) ||
+        undefined;
+      const platform =
+        safeString(item.platform ?? item.channel ?? item.media ?? item.account_type) ||
+        undefined;
+      const unmapped = Boolean(item.unmapped || item.is_unmapped || item.unrecognized);
+
+      if (!userId && !username && !fullName) return;
+      const key = `${userId || ""}-${username || fullName || ""}`.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      results.push({
+        userId,
+        username,
+        fullName,
+        satfung,
+        division,
+        platform,
+        unmapped,
+      });
+    });
+  };
+
+  candidates.forEach((candidate) => collect(candidate));
+  return results;
+}
+
+function buildDirectoryIndex(entries: DirectoryEntry[]): DirectoryIndex {
+  const byId = new Map<string, DirectoryEntry>();
+  const byUsername = new Map<string, DirectoryEntry>();
+
+  entries.forEach((entry) => {
+    if (entry.userId) byId.set(entry.userId, entry);
+    if (entry.username) byUsername.set(entry.username.toLowerCase(), entry);
+  });
+
+  return { byId, byUsername };
+}
+
+function resolveEngagementPerUser(
+  data: DashboardAnevResponse | null,
+  platformKey: "instagram" | "tiktok",
+  directoryIndex: DirectoryIndex,
+): EngagementUserRow[] {
+  if (!data) return [];
+
+  const rootCandidates = [
+    (data as any)?.[`${platformKey}_engagement`],
+    data?.raw?.[`${platformKey}_engagement`],
+    data?.raw?.[`${platformKey}Engagement`],
+    data?.raw?.engagement?.[platformKey],
+    data?.raw?.engagements?.[platformKey],
+    data?.aggregates?.raw?.[`${platformKey}_engagement`],
+    data?.aggregates?.raw?.engagement?.[platformKey],
+    data?.aggregates?.[`${platformKey}_engagement`],
+  ];
+
+  const engagementRoot = rootCandidates.find(
+    (candidate) => candidate && (Array.isArray(candidate) || typeof candidate === "object"),
+  );
+
+  if (!engagementRoot) return [];
+
+  const normalizeEntries = (candidate: any) => {
+    const list = Array.isArray(candidate)
+      ? candidate
+      : candidate && typeof candidate === "object"
+        ? Object.entries(candidate).map(([key, value]) =>
+            typeof value === "object" ? { user_id: key, ...value } : { user_id: key, engagement: value },
+          )
+        : [];
+
+    return list
+      .map((item) => {
+        const userId =
+          safeString(item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp) || undefined;
+        const username =
+          safeString(
+            item.username ?? item.handle ?? item.account ?? item.user ?? item.user_name,
+          ) || undefined;
+        const directoryMatch =
+          (userId && directoryIndex.byId.get(userId)) ||
+          (username && directoryIndex.byUsername.get(username.toLowerCase()));
+        const fullName =
+          safeString(
+            item.full_name ?? item.fullName ?? item.name ?? item.display_name ?? item.displayName,
+          ) || directoryMatch?.fullName;
+        const satfung =
+          safeString(
+            item.satfung ??
+              item.division ??
+              item.divisi ??
+              item.unit ??
+              item.department ??
+              directoryMatch?.satfung ??
+              directoryMatch?.division,
+          ) || directoryMatch?.satfung;
+        const division =
+          safeString(
+            item.division ??
+              item.divisi ??
+              item.satfung ??
+              item.unit ??
+              directoryMatch?.division ??
+              directoryMatch?.satfung,
+          ) || directoryMatch?.division;
+        const platform =
+          safeString(item.platform ?? item.channel ?? item.media ?? directoryMatch?.platform) ||
+          platformKey;
+        const posts = resolveNumber(
+          item || {},
+          ["posts", "total_posts", "post", "count", "total"],
+          0,
+        );
+        const likes = resolveOptionalNumber(item || {}, ["likes", "like_count", "total_likes"]);
+        const comments = resolveOptionalNumber(item || {}, [
+          "comments",
+          "comment_count",
+          "total_comments",
+        ]);
+        const shares = resolveOptionalNumber(item || {}, [
+          "shares",
+          "share_count",
+          "total_shares",
+        ]);
+        const baseEngagement = (likes ?? 0) + (comments ?? 0) + (shares ?? 0);
+        const engagement = resolveNumber(
+          item || {},
+          ["engagement", "engagements", "total_engagement", "interactions", "interaction", "total"],
+          baseEngagement,
+        );
+        const unmapped = Boolean(
+          item?.unmapped ||
+            item?.is_unmapped ||
+            item?.unrecognized ||
+            ((userId || username) && !directoryMatch),
+        );
+
+        if (!userId && !username && !fullName) return null;
+
+        return {
+          userId,
+          username: username || directoryMatch?.username,
+          fullName,
+          satfung,
+          division,
+          platform,
+          posts,
+          likes,
+          comments,
+          shares,
+          engagement,
+          unmapped,
+        };
+      })
+      .filter(Boolean) as EngagementUserRow[];
+  };
+
+  const perUserCandidates = [
+    engagementRoot.per_user,
+    engagementRoot.perUser,
+    engagementRoot.users,
+    engagementRoot.user,
+    engagementRoot.per_account,
+    engagementRoot.accounts,
+    engagementRoot.entries,
+  ];
+
+  for (const candidate of perUserCandidates) {
+    const normalized = normalizeEntries(candidate);
+    if (normalized.length) {
+      return normalized.sort((a, b) =>
+        b.engagement === a.engagement ? b.posts - a.posts : b.engagement - a.engagement,
+      );
+    }
+  }
+
+  return [];
 }
 
 function resolveUserBreakdownBySatfung(
@@ -964,6 +1221,19 @@ export default function AnevPolresPage() {
 
   const platformBreakdown = useMemo(() => resolvePlatformPosts(aggregates), [aggregates]);
   const complianceRows = useMemo(() => resolveComplianceRows(aggregates), [aggregates]);
+  const directoryEntries = useMemo(() => resolveUserDirectoryEntries(data), [data]);
+  const directoryIndex = useMemo(
+    () => buildDirectoryIndex(directoryEntries),
+    [directoryEntries],
+  );
+  const instagramEngagementPerUser = useMemo(
+    () => resolveEngagementPerUser(data, "instagram", directoryIndex),
+    [data, directoryIndex],
+  );
+  const tiktokEngagementPerUser = useMemo(
+    () => resolveEngagementPerUser(data, "tiktok", directoryIndex),
+    [data, directoryIndex],
+  );
   const satfungBreakdown = useMemo(
     () => resolveUserBreakdownBySatfung(aggregates, data?.raw),
     [aggregates, data?.raw],
@@ -1439,6 +1709,308 @@ export default function AnevPolresPage() {
                 <p className="text-sm text-slate-600">Belum ada data platform untuk filter ini.</p>
               )}
             </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Direktori user (ANEV)</h3>
+                <p className="text-sm text-slate-600">
+                  Pemetaan <code className="rounded bg-slate-100 px-1 py-0.5">user_id</code>, username, dan nama
+                  untuk menyelaraskan engagement per user. Username yang belum cocok dengan direktori ditandai
+                  sebagai unmapped agar tim backend bisa memetakan akun.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                <Users size={14} />
+                {directoryEntries.length ? `${directoryEntries.length} entri` : "Menunggu data"}
+              </span>
+            </div>
+            {directoryEntries.length ? (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {directoryEntries.map((entry, idx) => (
+                  <div
+                    key={`${entry.userId || entry.username || entry.fullName || idx}`}
+                    className="flex flex-col gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {entry.fullName || entry.username || entry.userId || "User"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {entry.username ? `@${entry.username}` : "Username belum dipetakan"}
+                        </p>
+                      </div>
+                      {entry.unmapped && (
+                        <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
+                          Unmapped
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+                      {entry.userId && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
+                          <span className="font-semibold text-slate-700">User ID</span>
+                          <span className="font-semibold text-slate-900">{entry.userId}</span>
+                        </span>
+                      )}
+                      {entry.platform && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
+                          <span className="font-semibold text-slate-700">Platform</span>
+                          <span className="font-semibold text-slate-900">{entry.platform}</span>
+                        </span>
+                      )}
+                      {entry.satfung && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
+                          <span className="font-semibold text-slate-700">Satfung</span>
+                          <span className="font-semibold text-slate-900">{entry.satfung}</span>
+                        </span>
+                      )}
+                      {entry.division && entry.division !== entry.satfung && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
+                          <span className="font-semibold text-slate-700">Divisi</span>
+                          <span className="font-semibold text-slate-900">{entry.division}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">
+                Backend dapat mengirim <code className="rounded bg-slate-100 px-1 py-0.5">directory</code> atau{" "}
+                <code className="rounded bg-slate-100 px-1 py-0.5">user_directory</code> untuk memetakan username ke{" "}
+                <code className="rounded bg-slate-100 px-1 py-0.5">user_id</code>. Jika belum tersedia, bagian ini akan
+                kosong tetapi ringkasan agregat serta breakdown satfung/divisi tetap ditampilkan sebagai fallback.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Engagement Instagram per user</h3>
+                <p className="text-sm text-slate-600">
+                  Breakdown engagement baru yang langsung terhubung ke direktori pengguna. Username yang belum cocok ditandai
+                  sebagai unmapped sehingga tim mudah menambah pemetaan.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                <LineChart size={14} />
+                {instagramEngagementPerUser.length ? `${instagramEngagementPerUser.length} user` : "Menunggu data"}
+              </span>
+            </div>
+            {instagramEngagementPerUser.length ? (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {instagramEngagementPerUser.map((entry, idx) => {
+                  const hasDetail =
+                    entry.likes !== undefined ||
+                    entry.comments !== undefined ||
+                    entry.shares !== undefined ||
+                    entry.platform;
+
+                  return (
+                    <div
+                      key={`${entry.userId || entry.username || entry.fullName || idx}`}
+                      className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {entry.fullName || entry.username || entry.userId || "User"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {entry.username ? `@${entry.username}` : "Username belum dipetakan"}
+                          </p>
+                        </div>
+                        {entry.unmapped && (
+                          <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
+                            Unmapped
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
+                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
+                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs text-slate-600 sm:text-sm">
+                        {entry.userId && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">User ID</span>
+                            <span className="font-semibold text-slate-900">{entry.userId}</span>
+                          </span>
+                        )}
+                        {entry.platform && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">Platform</span>
+                            <span className="font-semibold text-slate-900">{entry.platform}</span>
+                          </span>
+                        )}
+                        {entry.satfung && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">Satfung</span>
+                            <span className="font-semibold text-slate-900">{entry.satfung}</span>
+                          </span>
+                        )}
+                        {entry.division && entry.division !== entry.satfung && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">Divisi</span>
+                            <span className="font-semibold text-slate-900">{entry.division}</span>
+                          </span>
+                        )}
+                        {hasDetail && (
+                          <>
+                            {entry.likes !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                                <span className="text-[11px] font-semibold uppercase text-slate-500">Likes</span>
+                                <span className="font-semibold text-slate-900">{formatNumber(entry.likes)}</span>
+                              </span>
+                            )}
+                            {entry.comments !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                                <span className="text-[11px] font-semibold uppercase text-slate-500">Comments</span>
+                                <span className="font-semibold text-slate-900">{formatNumber(entry.comments)}</span>
+                              </span>
+                            )}
+                            {entry.shares !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                                <span className="text-[11px] font-semibold uppercase text-slate-500">Shares</span>
+                                <span className="font-semibold text-slate-900">{formatNumber(entry.shares)}</span>
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">
+                Data <code className="rounded bg-slate-100 px-1 py-0.5">instagram_engagement.per_user</code> akan muncul di sini.
+                Jika backend belum mengirimnya, Anda tetap bisa memakai ringkasan posting per platform dan breakdown satfung/divisi di bawah.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Engagement TikTok per user</h3>
+                <p className="text-sm text-slate-600">
+                  Breakdown engagement TikTok yang membawa <code className="rounded bg-slate-100 px-1 py-0.5">user_id</code>{" "}
+                  dan username, lengkap dengan flag unmapped untuk username yang belum cocok dengan direktori.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                <LineChart size={14} />
+                {tiktokEngagementPerUser.length ? `${tiktokEngagementPerUser.length} user` : "Menunggu data"}
+              </span>
+            </div>
+            {tiktokEngagementPerUser.length ? (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {tiktokEngagementPerUser.map((entry, idx) => {
+                  const hasDetail =
+                    entry.likes !== undefined ||
+                    entry.comments !== undefined ||
+                    entry.shares !== undefined ||
+                    entry.platform;
+
+                  return (
+                    <div
+                      key={`${entry.userId || entry.username || entry.fullName || idx}`}
+                      className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {entry.fullName || entry.username || entry.userId || "User"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {entry.username ? `@${entry.username}` : "Username belum dipetakan"}
+                          </p>
+                        </div>
+                        {entry.unmapped && (
+                          <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
+                            Unmapped
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
+                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
+                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs text-slate-600 sm:text-sm">
+                        {entry.userId && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">User ID</span>
+                            <span className="font-semibold text-slate-900">{entry.userId}</span>
+                          </span>
+                        )}
+                        {entry.platform && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">Platform</span>
+                            <span className="font-semibold text-slate-900">{entry.platform}</span>
+                          </span>
+                        )}
+                        {entry.satfung && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">Satfung</span>
+                            <span className="font-semibold text-slate-900">{entry.satfung}</span>
+                          </span>
+                        )}
+                        {entry.division && entry.division !== entry.satfung && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <span className="text-[11px] font-semibold uppercase text-slate-500">Divisi</span>
+                            <span className="font-semibold text-slate-900">{entry.division}</span>
+                          </span>
+                        )}
+                        {hasDetail && (
+                          <>
+                            {entry.likes !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                                <span className="text-[11px] font-semibold uppercase text-slate-500">Likes</span>
+                                <span className="font-semibold text-slate-900">{formatNumber(entry.likes)}</span>
+                              </span>
+                            )}
+                            {entry.comments !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                                <span className="text-[11px] font-semibold uppercase text-slate-500">Comments</span>
+                                <span className="font-semibold text-slate-900">{formatNumber(entry.comments)}</span>
+                              </span>
+                            )}
+                            {entry.shares !== undefined && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
+                                <span className="text-[11px] font-semibold uppercase text-slate-500">Shares</span>
+                                <span className="font-semibold text-slate-900">{formatNumber(entry.shares)}</span>
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">
+                Kirim payload <code className="rounded bg-slate-100 px-1 py-0.5">tiktok_engagement.per_user</code> untuk mengisi daftar ini.
+                Jika belum ada, kartu TikTok per satfung/divisi di bawah tetap menjadi fallback standar.
+              </p>
+            )}
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
