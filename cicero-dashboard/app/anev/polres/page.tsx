@@ -713,16 +713,23 @@ export default function AnevPolresPage() {
   useRequireAuth();
   const premiumStatus = useRequirePremium({ redirectOnStandard: false });
 
-  const { token, clientId, isHydrating, premiumTier } = useAuth();
+  const {
+    token,
+    clientId,
+    isHydrating,
+    premiumTier,
+    effectiveRole,
+    effectiveClientType,
+    regionalId,
+    role,
+  } = useAuth();
   const [formState, setFormState] = useState<FilterFormState>({
     time_range: "7d",
-    scope: "org",
     start_date: DEFAULT_PRESET_RANGE.startDate,
     end_date: DEFAULT_PRESET_RANGE.endDate,
   });
   const [appliedFilters, setAppliedFilters] = useState<FilterFormState>({
     time_range: "7d",
-    scope: "org",
     start_date: DEFAULT_PRESET_RANGE.startDate,
     end_date: DEFAULT_PRESET_RANGE.endDate,
   });
@@ -731,6 +738,29 @@ export default function AnevPolresPage() {
   const [error, setError] = useState<string | null>(null);
   const [premiumBlocked, setPremiumBlocked] = useState<string | null>(null);
   const [badRequest, setBadRequest] = useState<string | null>(null);
+
+  const lockedRole = useMemo(() => effectiveRole ?? role ?? undefined, [effectiveRole, role]);
+  const lockedScope = useMemo(() => {
+    const normalized = (effectiveClientType || "").toLowerCase();
+    if (!normalized) return undefined;
+    if (normalized.includes("direktorat")) return "direktorat";
+    if (normalized.includes("org")) return "org";
+    return normalized;
+  }, [effectiveClientType]);
+  const lockedRegionalId = useMemo(
+    () => (regionalId ? String(regionalId).toUpperCase() : undefined),
+    [regionalId],
+  );
+
+  const lockedFilters = useMemo(
+    () => ({
+      role: lockedRole,
+      scope: lockedScope,
+      regional_id: lockedRegionalId,
+      client_id: clientId || undefined,
+    }),
+    [clientId, lockedRegionalId, lockedRole, lockedScope],
+  );
 
   const isCustomRange = formState.time_range.toLowerCase() === "custom";
   const isCustomIncomplete =
@@ -741,6 +771,30 @@ export default function AnevPolresPage() {
     [appliedFilters],
   );
 
+  const derivedFilterEntries = useMemo(
+    () => [
+      { label: "Role", value: lockedRole ? lockedRole.toUpperCase() : "Menunggu sesi" },
+      {
+        label: "Scope",
+        value: lockedScope ? lockedScope.toUpperCase() : "Menunggu sesi",
+      },
+      { label: "Regional", value: lockedRegionalId || "Tidak tersedia" },
+      { label: "Client", value: clientId || "Tidak tersedia" },
+    ],
+    [clientId, lockedRegionalId, lockedRole, lockedScope],
+  );
+
+  useEffect(() => {
+    const mergeLocked = (prev: FilterFormState) => {
+      const next = { ...prev, ...lockedFilters } as FilterFormState;
+      const hasChanged = Object.keys(next).some((key) => (next as any)[key] !== (prev as any)[key]);
+      return hasChanged ? next : prev;
+    };
+
+    setFormState((prev) => mergeLocked(prev));
+    setAppliedFilters((prev) => mergeLocked(prev));
+  }, [lockedFilters]);
+
   useEffect(() => {
     if (!token || !clientId || isHydrating || premiumStatus !== "premium") return;
 
@@ -750,13 +804,11 @@ export default function AnevPolresPage() {
     setPremiumBlocked(null);
     setBadRequest(null);
 
-    const normalizedRegional = resolvedAppliedFilters.regional_id?.toUpperCase();
-
     getDashboardAnev(
       token,
       {
+        ...lockedFilters,
         ...resolvedAppliedFilters,
-        regional_id: normalizedRegional,
         client_id: clientId,
       },
       controller.signal,
@@ -786,7 +838,7 @@ export default function AnevPolresPage() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [clientId, isHydrating, premiumStatus, premiumTier, resolvedAppliedFilters, token]);
+  }, [clientId, isHydrating, lockedFilters, premiumStatus, premiumTier, resolvedAppliedFilters, token]);
 
   const aggregates = data?.aggregates;
   const totals = aggregates?.totals || {};
@@ -858,7 +910,7 @@ export default function AnevPolresPage() {
     if (isCustomRange && (!formState.start_date || !formState.end_date)) return;
     const resolved = resolveFiltersWithPreset({
       ...formState,
-      regional_id: formState.regional_id?.toUpperCase(),
+      ...lockedFilters,
     });
 
     setAppliedFilters(resolved);
@@ -876,10 +928,10 @@ export default function AnevPolresPage() {
       { label: "Time Range", value: activePresetLabel, highlighted: true },
       { label: "Start", value: filters?.start_date },
       { label: "End", value: filters?.end_date },
-      { label: "Scope", value: filters?.scope },
-      { label: "Role", value: filters?.role },
-      { label: "Regional", value: filters?.regional_id },
-      { label: "Client", value: filters?.client_id },
+      { label: "Scope", value: filters?.scope, highlighted: true },
+      { label: "Role", value: filters?.role, highlighted: true },
+      { label: "Regional", value: filters?.regional_id, highlighted: true },
+      { label: "Client", value: filters?.client_id, highlighted: true },
     ].filter((entry) => entry.value);
 
     if (!entries.length) return null;
@@ -965,7 +1017,7 @@ export default function AnevPolresPage() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Dashboard ANEV Polres</h1>
             <p className="text-sm text-slate-600">
-              Rekap aktivitas, kepatuhan, dan tugas pelaksana dengan filter waktu, scope, dan regional.
+              Rekap aktivitas, kepatuhan, dan tugas pelaksana dengan rentang waktu yang dapat diatur plus role/scope/regional otomatis dari sesi login.
             </p>
           </div>
         </div>
@@ -975,7 +1027,9 @@ export default function AnevPolresPage() {
         <div className="mb-3 flex items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Filter</h2>
-            <p className="text-sm text-slate-600">Sesuaikan rentang waktu, role, scope, dan regional untuk memuat data.</p>
+            <p className="text-sm text-slate-600">
+              Rentang waktu bisa diubah, sementara role, scope, dan regional mengikuti sesi login secara otomatis.
+            </p>
           </div>
           <button
             type="button"
@@ -987,7 +1041,7 @@ export default function AnevPolresPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="flex flex-col gap-2 text-sm text-slate-700">
             <span>Time range</span>
             <div className="inline-flex flex-wrap gap-2">
@@ -1038,40 +1092,31 @@ export default function AnevPolresPage() {
             </label>
           )}
 
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Role (opsional)
-            <input
-              type="text"
-              placeholder="mis. operator"
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
-              value={formState.role || ""}
-              onChange={(e) => handleInputChange("role", e.target.value)}
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Scope
-            <select
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
-              value={formState.scope || ""}
-              onChange={(e) => handleInputChange("scope", e.target.value)}
-            >
-              <option value="org">ORG</option>
-              <option value="direktorat">DIREKTORAT</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            Regional ID (opsional)
-            <input
-              type="text"
-              placeholder="contoh: jatim"
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm uppercase text-slate-900 focus:border-blue-500 focus:outline-none"
-              value={formState.regional_id || ""}
-              onChange={(e) => handleInputChange("regional_id", e.target.value.toUpperCase())}
-            />
-            <span className="text-xs text-slate-500">Nilai akan dikirim sebagai huruf besar.</span>
-          </label>
+          <div className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 lg:col-span-1 xl:col-span-1">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Role, scope, &amp; regional</p>
+                <p className="text-xs text-slate-500">Otomatis diambil dari akun Anda.</p>
+              </div>
+              <span className="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+                Locked
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {derivedFilterEntries.map((entry) => (
+                <span
+                  key={`${entry.label}-${entry.value}`}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-medium text-slate-800 shadow-sm ring-1 ring-slate-200"
+                >
+                  <span className="text-[11px] uppercase text-slate-500">{entry.label}</span>
+                  <span className="text-sm text-slate-900">{entry.value}</span>
+                </span>
+              ))}
+            </div>
+            <p className="text-xs leading-relaxed text-slate-500">
+              Nilai dikunci agar permintaan API selalu memakai konteks login (effectiveRole, effectiveClientType, dan regional).
+            </p>
+          </div>
         </div>
         {isCustomRange && isCustomIncomplete && (
           <p className="mt-3 flex items-center gap-2 text-sm text-amber-700">
@@ -1131,7 +1176,7 @@ export default function AnevPolresPage() {
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Snapshot filter</h2>
                 <p className="text-sm text-slate-600">
-                  Filter aktif dari backend, termasuk scope, role, dan regional yang diterapkan.
+                  Filter aktif dari backend, termasuk role/scope/regional yang dikunci dari sesi login.
                 </p>
               </div>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
