@@ -1,11 +1,13 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { isPremiumTierAllowedForAnev } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 
-export default function useRequirePremium() {
+export type PremiumGuardStatus = "loading" | "premium" | "standard" | "error";
+
+export default function useRequirePremium(): PremiumGuardStatus {
   const router = useRouter();
   const hasShownError = useRef(false);
   const {
@@ -17,22 +19,27 @@ export default function useRequirePremium() {
     premiumResolutionError,
   } = useAuth();
 
-  useEffect(() => {
+  const status = useMemo<PremiumGuardStatus>(() => {
     const hasEvaluatedTier = premiumTierReady || premiumTier !== null;
     const readyToGuard =
       hasResolvedPremium && (hasEvaluatedTier || premiumResolutionError);
 
-    if (isHydrating || isProfileLoading || !readyToGuard) return;
+    if (isHydrating || isProfileLoading || !readyToGuard) return "loading";
+    if (premiumResolutionError) return "error";
 
-    if (!premiumResolutionError && !hasEvaluatedTier) {
-      return;
-    }
+    const allowed = isPremiumTierAllowedForAnev(premiumTier);
+    return allowed ? "premium" : "standard";
+  }, [
+    hasResolvedPremium,
+    isHydrating,
+    isProfileLoading,
+    premiumResolutionError,
+    premiumTier,
+    premiumTierReady,
+  ]);
 
-    if (!premiumResolutionError && hasShownError.current) {
-      hasShownError.current = false;
-    }
-
-    if (premiumResolutionError) {
+  useEffect(() => {
+    if (status === "error") {
       if (!hasShownError.current) {
         showToast(
           "Gagal memuat profil premium. Coba segarkan halaman atau hubungi admin.",
@@ -43,18 +50,14 @@ export default function useRequirePremium() {
       return;
     }
 
-    const allowed = isPremiumTierAllowedForAnev(premiumTier);
+    if (hasShownError.current) {
+      hasShownError.current = false;
+    }
 
-    if (!allowed) {
+    if (status === "standard") {
       router.replace("/premium/anev");
     }
-  }, [
-    isHydrating,
-    isProfileLoading,
-    premiumResolutionError,
-    premiumTier,
-    premiumTierReady,
-    hasResolvedPremium,
-    router,
-  ]);
+  }, [router, status]);
+
+  return status;
 }

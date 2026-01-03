@@ -711,7 +711,7 @@ function resolveFiltersWithPreset(filters: FilterFormState) {
 
 export default function AnevPolresPage() {
   useRequireAuth();
-  useRequirePremium();
+  const premiumStatus = useRequirePremium();
 
   const { token, clientId, isHydrating, premiumTier } = useAuth();
   const [formState, setFormState] = useState<FilterFormState>({
@@ -742,7 +742,7 @@ export default function AnevPolresPage() {
   );
 
   useEffect(() => {
-    if (!token || !clientId || isHydrating) return;
+    if (!token || !clientId || isHydrating || premiumStatus !== "premium") return;
 
     const controller = new AbortController();
     setLoading(true);
@@ -786,7 +786,7 @@ export default function AnevPolresPage() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [clientId, isHydrating, premiumTier, resolvedAppliedFilters, token]);
+  }, [clientId, isHydrating, premiumStatus, premiumTier, resolvedAppliedFilters, token]);
 
   const aggregates = data?.aggregates;
   const totals = aggregates?.totals || {};
@@ -897,6 +897,63 @@ export default function AnevPolresPage() {
       </div>
     );
   };
+
+  if (premiumStatus === "loading") {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <Loader className="h-5 w-5" />
+          <span className="text-sm font-medium text-slate-700">Memuat status premium…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (premiumStatus === "standard") {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900 shadow-sm">
+          <div className="mb-2 flex items-center gap-2 font-semibold">
+            <ShieldAlert className="h-5 w-5" />
+            Premium diperlukan
+          </div>
+          <p className="text-sm text-amber-800">
+            Akses Dashboard ANEV Polres hanya tersedia untuk pengguna dengan paket premium aktif.
+            Tingkatkan paket untuk melanjutkan.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/premium/anev"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
+            >
+              <Sparkles className="h-4 w-4" />
+              Cek paket premium ANEV
+            </Link>
+            <Link
+              href="/premium"
+              className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:border-blue-200"
+            >
+              Pelajari manfaat premium lain
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (premiumStatus === "error") {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+          <AlertCircle className="mt-0.5 h-5 w-5" />
+          <div>
+            <div className="text-sm font-semibold">Gagal memvalidasi akses premium</div>
+            <p className="text-sm">Coba muat ulang halaman atau hubungi admin untuk memastikan akses premium Anda.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
