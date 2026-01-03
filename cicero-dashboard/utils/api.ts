@@ -960,7 +960,7 @@ function normalizeDashboardAnevDirectory(raw: any): DashboardAnevDirectoryEntry[
           ? Object.values(source)
           : [];
 
-    asArray.forEach((item) => {
+    asArray.forEach((item: unknown) => {
       const normalized = normalizeEntry(item);
       if (!normalized) return;
       const key = `${normalized.user_id || ""}-${normalized.username || normalized.full_name}`;
