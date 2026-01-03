@@ -46,7 +46,7 @@ export default function useRequirePremium() {
     const allowed = isPremiumTierAllowedForAnev(premiumTier);
 
     if (!allowed) {
-      router.replace("/premium");
+      router.replace("/premium/anev");
     }
   }, [
     isHydrating,
