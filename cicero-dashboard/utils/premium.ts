@@ -7,5 +7,5 @@ export function normalizePremiumTier(tier?: string | null) {
 export function isPremiumTierAllowedForAnev(tier?: string | null) {
   const normalized = normalizePremiumTier(tier);
 
-  return normalized === "premium1" || normalized === "premium3";
+  return normalized === "premium1" || normalized === "premium2";
 }
