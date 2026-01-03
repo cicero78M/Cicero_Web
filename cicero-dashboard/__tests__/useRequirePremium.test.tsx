@@ -30,6 +30,12 @@ function TestComponent() {
   return null;
 }
 
+function StatusConsumer({ onStatus }: { onStatus: (status: ReturnType<typeof useRequirePremium>) => void }) {
+  const status = useRequirePremium();
+  onStatus(status);
+  return null;
+}
+
 describe("useRequirePremium", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -129,5 +135,91 @@ describe("useRequirePremium", () => {
     render(<TestComponent />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/premium/anev"));
+  });
+
+  it("returns premium status when allowed and ready", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: "premium_1",
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("premium"));
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("returns loading while waiting for tier readiness", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: true,
+      premiumTier: null,
+      premiumTierReady: false,
+      hasResolvedPremium: false,
+      premiumResolutionError: false,
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("loading"));
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("returns error and avoids redirect when premium resolution fails", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: null,
+      premiumTierReady: false,
+      hasResolvedPremium: true,
+      premiumResolutionError: true,
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("error"));
+    await waitFor(() => expect(mockedShowToast).toHaveBeenCalledTimes(1));
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("returns standard and triggers redirect when tier is not allowed", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: "basic",
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("standard"));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/premium/anev"));
+  });
+
+  it("keeps standard users in place until guard finishes evaluating", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: true,
+      isProfileLoading: true,
+      premiumTier: "basic",
+      premiumTierReady: false,
+      hasResolvedPremium: false,
+      premiumResolutionError: false,
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("loading"));
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 });
