@@ -206,6 +206,29 @@ describe("useRequirePremium", () => {
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/premium/anev"));
   });
 
+  it("allows disabling redirect for standard tier via option", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: "basic",
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+    } as any);
+
+    function Consumer() {
+      const status = useRequirePremium({ redirectOnStandard: false });
+      spy(status);
+      return null;
+    }
+
+    render(<Consumer />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("standard"));
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it("keeps standard users in place until guard finishes evaluating", async () => {
     const spy = jest.fn();
     mockedUseAuth.mockReturnValue({
