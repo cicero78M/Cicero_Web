@@ -172,7 +172,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRegionalId(null);
         setIsProfileLoading(false);
         setPremiumTierReady(true);
-        setHasResolvedPremium(true);
         return;
       }
 
@@ -188,7 +187,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
         setPremiumResolutionError(true);
         setPremiumTierReady(true);
-        setHasResolvedPremium(true);
       }
       setIsProfileLoading(false);
     }
@@ -265,8 +263,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPremiumTier(resolvedTier || null);
     setPremiumExpiry(resolvedExpiry || null);
     setPremiumTierReady(true);
-    setHasResolvedPremium(true);
   }, [profile]);
+
+  useEffect(() => {
+    setHasResolvedPremium(premiumTierReady);
+  }, [premiumTierReady]);
 
   useEffect(() => {
     const normalizedClientId = clientId?.toUpperCase();
