@@ -173,14 +173,12 @@ export default function useInstagramLikesData({
       !isOperatorRole &&
       !isOrgScope &&
       (isDirectorateRoleValue || isDitbinmasRole);
-    setIsDirectorateRole(derivedDirectorateRole);
+    setIsDirectorateRole(derivedDirectorateRole || isDirectorateRoleValue);
     const normalizedClientId = String(userClientId || "").trim();
     const normalizedClientIdUpper = normalizedClientId.toUpperCase();
     const isDitbinmasClient = normalizedClientIdUpper === "DITBINMAS";
     const isDitSamaptaBidhumas =
-      normalizedClientIdUpper === "DITSAMAPTA" &&
-      roleLower === "bidhumas" &&
-      !isOrgScope;
+      normalizedClientIdUpper === "DITSAMAPTA" && roleLower === "bidhumas";
     const ditbinmasClientId = isDitSamaptaBidhumas
       ? "BIDHUMAS"
       : "DITBINMAS";
@@ -188,8 +186,11 @@ export default function useInstagramLikesData({
       !isOperatorRole && isDirectorateRoleValue && !isDitbinmasClient;
     setIsDirectorateScopedClient(directorateScopedClient);
     const shouldUseDirectorateFetcher =
+      !isOperatorRole &&
+      (derivedDirectorateRole || (isDitSamaptaBidhumas && !isOrgScope));
+    const shouldMapToDitbinmas =
       !isOperatorRole && (derivedDirectorateRole || isDitSamaptaBidhumas);
-    const dashboardClientId = !isOperatorRole && derivedDirectorateRole
+    const dashboardClientId = shouldMapToDitbinmas
       ? ditbinmasClientId
       : userClientId;
     const normalizedLoginClientId = String(userClientId || "")
@@ -278,7 +279,7 @@ export default function useInstagramLikesData({
         const totalIGPostFromStats =
           Number((statsData as any).instagramPosts) || 0;
 
-        const client_id = userClientId;
+    const client_id = shouldMapToDitbinmas ? ditbinmasClientId : userClientId;
 
         const profileClientId = client_id;
         const profileRes = await getClientProfile(
@@ -305,16 +306,16 @@ export default function useInstagramLikesData({
             profile.clientTypeName ??
             "",
         ).toUpperCase();
-        const requestScope =
-          normalizeScopePayload(normalizedEffectiveClientType) ??
-          requestScopeFromAuth;
-        const isOrg = normalizedEffectiveClientType === "ORG";
-        const dir = normalizedEffectiveClientType === "DIREKTORAT";
-        const directorate =
-          !isOperatorRole && !isOrg && (dir || derivedDirectorateRole);
-        if (controller.signal.aborted) return;
-        setIsDirectorate(directorate);
-        setIsOrgClient(isOrg);
+    const requestScope =
+      normalizeScopePayload(normalizedEffectiveClientType) ??
+      requestScopeFromAuth;
+    const isOrg = normalizedEffectiveClientType === "ORG";
+    const dir = normalizedEffectiveClientType === "DIREKTORAT";
+    const directorate =
+      isDitSamaptaBidhumas || (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
+    if (controller.signal.aborted) return;
+    setIsDirectorate(directorate);
+    setIsOrgClient(isOrg);
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -419,6 +420,23 @@ export default function useInstagramLikesData({
                 .filter(Boolean) as string[],
             ),
           ) as string[];
+          if (clientIds.length === 0) {
+            clientIds = Array.from(
+              new Set(
+                dirData
+                  .map((u: any) =>
+                    String(
+                      u.client_id ||
+                        u.clientId ||
+                        u.clientID ||
+                        u.client ||
+                        "",
+                    ),
+                  )
+                  .filter(Boolean) as string[],
+              ),
+            );
+          }
 
           const fallbackClientId = directoryClientId;
           if (!clientIds.includes(String(fallbackClientId))) {
@@ -525,7 +543,7 @@ export default function useInstagramLikesData({
         }
 
         let filteredUsers = users;
-        if (!dir) {
+        if (!dir && !directorate) {
           const normalizedClientId = String(client_id || "")
             .trim()
             .toLowerCase();
@@ -599,16 +617,18 @@ export default function useInstagramLikesData({
                 .map((u: any) => getUserIdentifier(u))
                 .filter(Boolean),
             );
-            filteredUsers = filteredUsers.filter((u: any) => {
-              const userClientId = normalizeClientId(
-                u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
-              );
-              if (userClientId && userClientId !== normalizedLoginClientId) {
-                return false;
-              }
-              const identifier = getUserIdentifier(u);
-              return identifier ? operatorIds.has(identifier) : false;
-            });
+            if (operatorIds.size > 0) {
+              filteredUsers = filteredUsers.filter((u: any) => {
+                const userClientId = normalizeClientId(
+                  u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
+                );
+                if (userClientId && userClientId !== normalizedLoginClientId) {
+                  return false;
+                }
+                const identifier = getUserIdentifier(u);
+                return identifier ? operatorIds.has(identifier) : false;
+              });
+            }
           }
         }
 

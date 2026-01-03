@@ -8,6 +8,8 @@ import { groupUsersByKelompok, buildInstagramRekap } from "@/utils/instagramEnga
 import Narrative from "@/components/Narrative";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
+import useAuth from "@/hooks/useAuth";
+import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 import {
   Camera,
@@ -25,6 +27,7 @@ import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsi
 
 export default function InstagramEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
+  const { premiumTier } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -37,12 +40,28 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     }
   }, [initialTab]);
 
-  const viewOptions = [
-    { value: "today", label: "Hari ini", periode: "harian" },
+  const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier);
+  const premiumViewOptions = [
+    { value: "today", label: "Harian (hari ini)", periode: "harian" },
+    { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
+    { value: "month", label: "Bulanan", periode: "bulanan", month: true },
+    {
+      value: "custom_range",
+      label: "Rentang Tanggal",
+      periode: "harian",
+      range: true,
+    },
   ];
+  const viewOptions = hasPremiumDateAccess
+    ? premiumViewOptions
+    : [{ value: "today", label: "Hari ini", periode: "harian" }];
 
   const {
     viewBy,
+    viewOptions: resolvedViewOptions,
+    selectorDateValue,
+    handleViewChange,
+    handleDateChange,
     normalizedCustomDate,
     normalizedRange,
     reportPeriodeLabel,
@@ -244,6 +263,15 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
         actionLabel: "Lihat Paket",
       }
     : null;
+  const viewSelectorProps = hasPremiumDateAccess
+    ? {
+        value: viewBy,
+        onChange: handleViewChange,
+        date: selectorDateValue,
+        onDateChange: handleDateChange,
+        options: resolvedViewOptions,
+      }
+    : null;
 
   return (
     <InsightLayout
@@ -256,6 +284,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     >
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
+          viewSelectorProps={viewSelectorProps}
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
@@ -338,7 +367,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           clientName={clientName}
           reportContext={{
             periodeLabel: reportPeriodeLabel,
-            viewLabel: viewOptions.find((option) => option.value === viewBy)?.label,
+            viewLabel: resolvedViewOptions.find((option) => option.value === viewBy)?.label,
           }}
           showPremiumCta={isOrgClient}
         />

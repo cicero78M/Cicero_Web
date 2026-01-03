@@ -14,16 +14,90 @@ export const VIEW_OPTIONS = [
   },
 ];
 
-export function getPeriodeDateForView(view, selectedDate) {
-  const opt = VIEW_OPTIONS.find((o) => o.value === view) || VIEW_OPTIONS[0];
-  const now = new Date();
+function formatDate(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-  function formatDate(d) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+function getIsoWeekRange(targetDate = new Date()) {
+  const date = new Date(targetDate);
+  date.setHours(0, 0, 0, 0);
+
+  const day = date.getDay() || 7; // ISO week, Monday = 1
+  const thursday = new Date(date);
+  thursday.setDate(date.getDate() + (4 - day));
+
+  const yearStart = new Date(thursday.getFullYear(), 0, 1);
+  const weekNumber = Math.ceil(((thursday - yearStart) / 86400000 + 1) / 7);
+
+  const weekStart = new Date(thursday);
+  weekStart.setDate(thursday.getDate() - (day - 1));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  return {
+    weekKey: `${thursday.getFullYear()}-W${String(weekNumber).padStart(2, "0")}`,
+    startDate: formatDate(weekStart),
+    endDate: formatDate(weekEnd),
+  };
+}
+
+export function getWeekRangeFromValue(value, fallbackDate = new Date()) {
+  const fallbackRange = getIsoWeekRange(fallbackDate);
+
+  if (!value) return fallbackRange;
+
+  if (typeof value === "string") {
+    const weekMatch = value.match(/^(\d{4})-W(\d{1,2})$/);
+    if (weekMatch) {
+      const year = Number(weekMatch[1]);
+      const weekNumber = Number(weekMatch[2]);
+      if (Number.isFinite(year) && Number.isFinite(weekNumber)) {
+        const january4 = new Date(year, 0, 4);
+        january4.setDate(january4.getDate() + (weekNumber - 1) * 7);
+        return getIsoWeekRange(january4);
+      }
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return getIsoWeekRange(parsed);
+    }
   }
+
+  if (typeof value === "object") {
+    const startCandidate = value?.startDate
+      ? new Date(value.startDate)
+      : undefined;
+    const endCandidate = value?.endDate ? new Date(value.endDate) : undefined;
+
+    const hasStart = startCandidate && !Number.isNaN(startCandidate.getTime());
+    const hasEnd = endCandidate && !Number.isNaN(endCandidate.getTime());
+    const baseDate = hasStart ? startCandidate : hasEnd ? endCandidate : null;
+
+    if (baseDate) {
+      return getIsoWeekRange(baseDate);
+    }
+  }
+
+  return fallbackRange;
+}
+
+export function getPeriodeDateForView(view, selectedDate, options = VIEW_OPTIONS) {
+  const optionList = Array.isArray(options) && options.length ? options : VIEW_OPTIONS;
+  const normalizedOptions =
+    optionList.some((option) => option.value === "week")
+      ? optionList
+      : [
+          ...optionList,
+          { value: "week", label: "Mingguan", periode: "mingguan", week: true },
+        ];
+  const opt = normalizedOptions.find((o) => o.value === view) || normalizedOptions[0];
+  const now = new Date();
+  const isWeekView = opt?.week || opt?.value === "week";
+
   function formatMonth(d) {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -48,6 +122,10 @@ export function getPeriodeDateForView(view, selectedDate) {
       : new Date(now.getFullYear(), now.getMonth(), 1);
     return { periode: opt.periode, date: formatMonth(d) };
   }
+  if (isWeekView) {
+    const { startDate, endDate } = getWeekRangeFromValue(selectedDate, now);
+    return { periode: opt.periode, startDate, endDate, date: startDate };
+  }
   return { periode: opt.periode, date: formatDate(now) };
 }
 
@@ -63,11 +141,14 @@ export default function ViewDataSelector({
   labelClassName,
 }) {
   const id = useId();
+  const activeOption = options.find((option) => option.value === value);
   const showDateInput = value === "date";
   const showRangeInput = value === "custom_range";
   const showMonthInput = value === "month";
+  const showWeekInput = Boolean(activeOption?.week);
   const dateInputId = `${id}-date`;
   const monthInputId = `${id}-month`;
+  const weekInputId = `${id}-week`;
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
   const baseContainerClass = cn(
@@ -166,6 +247,21 @@ export default function ViewDataSelector({
           <input
             id={monthInputId}
             type="month"
+            className={cn(baseControlClass, "mt-2 sm:mt-0")}
+            value={date}
+            onChange={(e) => onDateChange?.(e.target.value)}
+            disabled={disabled}
+          />
+        </>
+      )}
+      {showWeekInput && (
+        <>
+          <label htmlFor={weekInputId} className="sr-only">
+            Pilih minggu
+          </label>
+          <input
+            id={weekInputId}
+            type="week"
             className={cn(baseControlClass, "mt-2 sm:mt-0")}
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
