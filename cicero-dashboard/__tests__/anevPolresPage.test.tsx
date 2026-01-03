@@ -50,6 +50,7 @@ describe("AnevPolresPage premium guard", () => {
 
     render(<Page />);
 
+    expect(mockedUseRequirePremium).toHaveBeenCalledWith({ redirectOnStandard: false });
     expect(screen.getByText(/Memuat status premium/i)).toBeInTheDocument();
     expect(mockedGetDashboardAnev).not.toHaveBeenCalled();
   });

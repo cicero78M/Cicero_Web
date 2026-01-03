@@ -711,7 +711,7 @@ function resolveFiltersWithPreset(filters: FilterFormState) {
 
 export default function AnevPolresPage() {
   useRequireAuth();
-  const premiumStatus = useRequirePremium();
+  const premiumStatus = useRequirePremium({ redirectOnStandard: false });
 
   const { token, clientId, isHydrating, premiumTier } = useAuth();
   const [formState, setFormState] = useState<FilterFormState>({

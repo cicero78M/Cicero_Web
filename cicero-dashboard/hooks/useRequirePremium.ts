@@ -7,7 +7,13 @@ import { showToast } from "@/utils/showToast";
 
 export type PremiumGuardStatus = "loading" | "premium" | "standard" | "error";
 
-export default function useRequirePremium(): PremiumGuardStatus {
+export type UseRequirePremiumOptions = {
+  redirectOnStandard?: boolean;
+};
+
+export default function useRequirePremium({
+  redirectOnStandard = true,
+}: UseRequirePremiumOptions = {}): PremiumGuardStatus {
   const router = useRouter();
   const hasShownError = useRef(false);
   const {
@@ -54,10 +60,10 @@ export default function useRequirePremium(): PremiumGuardStatus {
       hasShownError.current = false;
     }
 
-    if (status === "standard") {
+    if (status === "standard" && redirectOnStandard) {
       router.replace("/premium/anev");
     }
-  }, [router, status]);
+  }, [redirectOnStandard, router, status]);
 
   return status;
 }
