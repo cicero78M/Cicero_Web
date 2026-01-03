@@ -220,7 +220,7 @@ function resolveUserDirectoryEntries(data?: DashboardAnevResponse | null): Direc
           ? Object.values(candidate)
           : [];
 
-    list.forEach((item) => {
+    list.forEach((item: Record<string, unknown>) => {
       if (!item) return;
       const userId =
         safeString(item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp ?? item.user) ||
