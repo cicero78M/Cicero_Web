@@ -776,6 +776,7 @@ export type DashboardAnevFilters = {
   regional_id?: string;
   start_date?: string;
   end_date?: string;
+  permitted_time_ranges?: string[];
   client_id: string;
   clientId?: string;
 };
@@ -810,6 +811,7 @@ function normalizeDashboardAnevFilters(
     role?: string;
     scope?: string;
     regional_id?: string;
+    permitted_time_ranges?: string[];
   },
 ): DashboardAnevFilters {
   const time_range =
@@ -835,6 +837,16 @@ function normalizeDashboardAnevFilters(
   const regional_id =
     ensureString(raw?.regional_id ?? raw?.regional ?? raw?.regionalId) ||
     fallback.regional_id;
+  const permitted_time_ranges = ensureArray(
+    raw?.permitted_time_ranges ??
+      raw?.permittedTimeRanges ??
+      raw?.allowed_time_ranges ??
+      raw?.allowedTimeRanges,
+    (entry) => ensureString(entry).toLowerCase(),
+  ).filter(Boolean);
+  const resolvedPermittedRanges = permitted_time_ranges.length
+    ? permitted_time_ranges
+    : (fallback.permitted_time_ranges || []).map((entry) => entry.toLowerCase()).filter(Boolean);
 
   return {
     time_range,
@@ -843,6 +855,7 @@ function normalizeDashboardAnevFilters(
     role: role || undefined,
     scope: scope || undefined,
     regional_id: regional_id || undefined,
+    permitted_time_ranges: resolvedPermittedRanges.length ? resolvedPermittedRanges : undefined,
     client_id: ensureString(raw?.client_id ?? raw?.clientId ?? fallback.client_id),
   };
 }
