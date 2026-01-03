@@ -17,9 +17,12 @@ import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
+import useAuth from "@/hooks/useAuth";
+import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
 
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
+  const { premiumTier } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -32,12 +35,28 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
   }, [initialTab]);
 
-  const viewOptions = [
-    { value: "today", label: "Hari ini", periode: "harian" },
+  const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier);
+  const premiumViewOptions = [
+    { value: "today", label: "Harian (hari ini)", periode: "harian" },
+    { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
+    { value: "month", label: "Bulanan", periode: "bulanan", month: true },
+    {
+      value: "custom_range",
+      label: "Rentang Tanggal",
+      periode: "harian",
+      range: true,
+    },
   ];
+  const viewOptions = hasPremiumDateAccess
+    ? premiumViewOptions
+    : [{ value: "today", label: "Hari ini", periode: "harian" }];
 
   const {
     viewBy,
+    viewOptions: resolvedViewOptions,
+    selectorDateValue,
+    handleViewChange,
+    handleDateChange,
     normalizedCustomDate,
     normalizedRange,
     reportPeriodeLabel,
@@ -63,8 +82,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   });
 
   const viewLabel = useMemo(
-    () => viewOptions.find((option) => option.value === viewBy)?.label,
-    [viewOptions, viewBy],
+    () => resolvedViewOptions.find((option) => option.value === viewBy)?.label,
+    [resolvedViewOptions, viewBy],
   );
 
   const handleTabChange = (value) => {
@@ -247,6 +266,15 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
         actionLabel: "Upgrade",
       }
     : null;
+  const viewSelectorProps = hasPremiumDateAccess
+    ? {
+        value: viewBy,
+        onChange: handleViewChange,
+        date: selectorDateValue,
+        onDateChange: handleDateChange,
+        options: resolvedViewOptions,
+      }
+    : null;
 
   async function handleCopyRekap() {
     const message = buildTiktokRekap(rekapSummary, chartData, {
@@ -294,6 +322,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     >
       {activeTab === "insight" && (
         <EngagementInsightMobileScaffold
+          viewSelectorProps={viewSelectorProps}
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
