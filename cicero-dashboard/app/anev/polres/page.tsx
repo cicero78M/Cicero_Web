@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertCircle, CalendarClock, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useRequirePremium from "@/hooks/useRequirePremium";
@@ -770,6 +770,22 @@ export default function AnevPolresPage() {
     () => resolveFiltersWithPreset(appliedFilters),
     [appliedFilters],
   );
+  const appliedPresetLabel = useMemo(
+    () =>
+      TIME_RANGE_PRESETS.find((preset) => preset.value === resolvedAppliedFilters.time_range)?.label ??
+      resolvedAppliedFilters.time_range ??
+      "Custom",
+    [resolvedAppliedFilters],
+  );
+  const appliedRangeLabel = useMemo(() => {
+    const start = resolvedAppliedFilters.start_date;
+    const end = resolvedAppliedFilters.end_date;
+    if (!start && !end) return "Belum diterapkan";
+    if (start && end) return `${start} → ${end}`;
+    if (start) return `${start} → (otomatis)`;
+    if (end) return `(otomatis) → ${end}`;
+    return "Rentang tidak tersedia";
+  }, [resolvedAppliedFilters]);
 
   const derivedFilterEntries = useMemo(
     () => [
@@ -915,6 +931,16 @@ export default function AnevPolresPage() {
 
     setAppliedFilters(resolved);
   };
+  const handleResetFilters = () => {
+    const resetState = {
+      ...lockedFilters,
+      time_range: "7d",
+      start_date: DEFAULT_PRESET_RANGE.startDate,
+      end_date: DEFAULT_PRESET_RANGE.endDate,
+    };
+    setFormState(resetState);
+    setAppliedFilters(resetState);
+  };
 
   const FilterSnapshot = () => {
     if (!data?.filters && !resolvedAppliedFilters) return null;
@@ -1024,106 +1050,176 @@ export default function AnevPolresPage() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Filter</h2>
-            <p className="text-sm text-slate-600">
-              Rentang waktu bisa diubah, sementara role, scope, dan regional mengikuti sesi login secara otomatis.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleApply}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-            disabled={loading || (isCustomRange && isCustomIncomplete)}
-          >
-            Terapkan filter
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="flex flex-col gap-2 text-sm text-slate-700">
-            <span>Time range</span>
-            <div className="inline-flex flex-wrap gap-2">
-              <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
-                {TIME_RANGE_PRESETS.map((option) => {
-                  const isActive = formState.time_range === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handlePresetChange(option.value)}
-                      className={`min-w-[110px] rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${
-                        isActive
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-transparent text-slate-700 hover:text-blue-700"
-                      }`}
-                      aria-pressed={isActive}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <CalendarClock className="h-5 w-5" />
               </div>
-            </div>
-          </div>
-
-          {isCustomRange && (
-            <label className="flex flex-col gap-1 text-sm text-slate-700">
-              Start date
-              <input
-                type="date"
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
-                value={formState.start_date || ""}
-                onChange={(e) => handleInputChange("start_date", e.target.value)}
-              />
-            </label>
-          )}
-
-          {isCustomRange && (
-            <label className="flex flex-col gap-1 text-sm text-slate-700">
-              End date
-              <input
-                type="date"
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
-                value={formState.end_date || ""}
-                onChange={(e) => handleInputChange("end_date", e.target.value)}
-              />
-            </label>
-          )}
-
-          <div className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 lg:col-span-1 xl:col-span-1">
-            <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm font-semibold text-slate-900">Role, scope, &amp; regional</p>
-                <p className="text-xs text-slate-500">Otomatis diambil dari akun Anda.</p>
+                <h2 className="text-lg font-semibold text-slate-900">Filter</h2>
+                <p className="text-sm text-slate-600">
+                  Pilih rentang waktu dan pastikan role, scope, serta regional mengikuti sesi login. Semua kontrol dirapikan agar mudah dibaca di layar kecil maupun besar.
+                </p>
               </div>
-              <span className="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
-                Locked
-              </span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {derivedFilterEntries.map((entry) => (
-                <span
-                  key={`${entry.label}-${entry.value}`}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-medium text-slate-800 shadow-sm ring-1 ring-slate-200"
-                >
-                  <span className="text-[11px] uppercase text-slate-500">{entry.label}</span>
-                  <span className="text-sm text-slate-900">{entry.value}</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+                disabled={loading}
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Reset ke default
+              </button>
+              <button
+                type="button"
+                onClick={handleApply}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
+                disabled={loading || (isCustomRange && isCustomIncomplete)}
+              >
+                Terapkan filter
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <div className="space-y-3 rounded-lg border border-slate-100 bg-slate-50/80 p-4 lg:col-span-8">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
+                    <CalendarClock className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Rentang waktu</p>
+                    <p className="text-xs text-slate-500">Gunakan preset ringkas atau isi tanggal custom.</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600 shadow-sm ring-1 ring-slate-200">
+                  Responsif
                 </span>
-              ))}
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="flex flex-wrap gap-2">
+                  {TIME_RANGE_PRESETS.map((option) => {
+                    const isActive = formState.time_range === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handlePresetChange(option.value)}
+                        className={`flex-1 min-w-[130px] rounded-lg border px-4 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${
+                          isActive
+                            ? "border-blue-500 bg-blue-600 text-white shadow-sm"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:text-blue-700"
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {isCustomRange ? (
+                    <>
+                      <label className="flex flex-col gap-1 text-sm text-slate-700">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Start date</span>
+                        <input
+                          type="date"
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none"
+                          value={formState.start_date || ""}
+                          onChange={(e) => handleInputChange("start_date", e.target.value)}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm text-slate-700">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">End date</span>
+                        <input
+                          type="date"
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none"
+                          value={formState.end_date || ""}
+                          onChange={(e) => handleInputChange("end_date", e.target.value)}
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Start</span>
+                        <span className="text-sm font-semibold text-slate-900">{formState.start_date}</span>
+                        <span className="text-xs text-slate-500">Preset otomatis menyesuaikan tanggal mulai.</span>
+                      </div>
+                      <div className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">End</span>
+                        <span className="text-sm font-semibold text-slate-900">{formState.end_date}</span>
+                        <span className="text-xs text-slate-500">Mengikuti preset yang dipilih.</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              {isCustomRange && isCustomIncomplete ? (
+                <p className="flex items-center gap-2 text-sm text-amber-700">
+                  <AlertCircle size={16} />
+                  Lengkapi tanggal mulai dan akhir untuk rentang custom.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  Preset Today, This Week, dan This Month otomatis mengisi tanggal mulai/akhir dengan offset lokal.
+                </p>
+              )}
             </div>
-            <p className="text-xs leading-relaxed text-slate-500">
-              Nilai dikunci agar permintaan API selalu memakai konteks login (effectiveRole, effectiveClientType, dan regional).
-            </p>
+
+            <div className="space-y-3 rounded-lg border border-slate-100 bg-slate-50/80 p-4 lg:col-span-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
+                    <MapPin className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Konteks sesi</p>
+                    <p className="text-xs text-slate-500">Role, scope, dan regional terkunci.</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700 shadow-sm ring-1 ring-slate-200">
+                  Locked
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {derivedFilterEntries.map((entry) => (
+                  <div
+                    key={`${entry.label}-${entry.value}`}
+                    className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm"
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{entry.label}</span>
+                    <span className="text-sm font-semibold text-slate-900">{entry.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-600 shadow-sm">
+                Nilai dikunci agar permintaan API selalu memakai konteks login (effectiveRole, effectiveClientType, dan regional).
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 md:flex md:items-center md:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Ringkasan terapan</p>
+                <p className="text-xs text-slate-600">
+                  {appliedPresetLabel} • {appliedRangeLabel}
+                </p>
+              </div>
+            </div>
+            <span className="mt-2 inline-flex w-fit items-center rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 shadow-sm ring-1 ring-emerald-100 md:mt-0">
+              Sinkron dengan server
+            </span>
           </div>
         </div>
-        {isCustomRange && isCustomIncomplete && (
-          <p className="mt-3 flex items-center gap-2 text-sm text-amber-700">
-            <AlertCircle size={16} />
-            Lengkapi tanggal mulai dan akhir untuk rentang custom.
-          </p>
-        )}
       </div>
 
       {premiumBlocked && (
