@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CalendarClock, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -738,6 +738,7 @@ export default function AnevPolresPage() {
   const [error, setError] = useState<string | null>(null);
   const [premiumBlocked, setPremiumBlocked] = useState<string | null>(null);
   const [badRequest, setBadRequest] = useState<string | null>(null);
+  const lastFetchKeyRef = useRef<string | null>(null);
 
   const lockedRole = useMemo(() => effectiveRole ?? role ?? undefined, [effectiveRole, role]);
   const lockedScope = useMemo(() => {
@@ -815,6 +816,19 @@ export default function AnevPolresPage() {
     if (!token || !clientId || isHydrating || premiumStatus !== "premium") return;
 
     const controller = new AbortController();
+    const requestKey = JSON.stringify({
+      clientId,
+      time_range: resolvedAppliedFilters.time_range,
+      start_date: resolvedAppliedFilters.start_date,
+      end_date: resolvedAppliedFilters.end_date,
+      role: lockedFilters.role,
+      scope: lockedFilters.scope,
+      regional_id: lockedFilters.regional_id,
+    });
+
+    if (lastFetchKeyRef.current === requestKey) return;
+    lastFetchKeyRef.current = requestKey;
+
     setLoading(true);
     setError(null);
     setPremiumBlocked(null);
@@ -924,6 +938,7 @@ export default function AnevPolresPage() {
 
   const handleApply = () => {
     if (isCustomRange && (!formState.start_date || !formState.end_date)) return;
+    lastFetchKeyRef.current = null;
     const resolved = resolveFiltersWithPreset({
       ...formState,
       ...lockedFilters,
@@ -938,6 +953,7 @@ export default function AnevPolresPage() {
       start_date: DEFAULT_PRESET_RANGE.startDate,
       end_date: DEFAULT_PRESET_RANGE.endDate,
     };
+    lastFetchKeyRef.current = null;
     setFormState(resetState);
     setAppliedFilters(resetState);
   };
