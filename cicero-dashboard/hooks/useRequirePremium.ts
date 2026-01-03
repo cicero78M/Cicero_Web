@@ -18,10 +18,15 @@ export default function useRequirePremium() {
   } = useAuth();
 
   useEffect(() => {
-    const hasResolvedTier = premiumTierReady || premiumTier !== null;
+    const hasEvaluatedTier = premiumTierReady || premiumTier !== null;
+    const readyToGuard =
+      hasResolvedPremium && (hasEvaluatedTier || premiumResolutionError);
 
-    if (isHydrating || isProfileLoading || !hasResolvedPremium || !hasResolvedTier)
+    if (isHydrating || isProfileLoading || !readyToGuard) return;
+
+    if (!premiumResolutionError && !hasEvaluatedTier) {
       return;
+    }
 
     if (!premiumResolutionError && hasShownError.current) {
       hasShownError.current = false;

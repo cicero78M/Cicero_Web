@@ -140,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [hasResolvedProfile, setHasResolvedProfile] = useState(false);
   const [premiumTierReady, setPremiumTierReady] = useState(false);
   const [hasResolvedPremium, setHasResolvedPremium] = useState(false);
   const [premiumResolutionError, setPremiumResolutionError] = useState(false);
@@ -161,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function fetchProfile() {
+      setHasResolvedProfile(false);
       setHasResolvedPremium(false);
       setPremiumResolutionError(false);
       setPremiumTierReady(false);
@@ -172,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRegionalId(null);
         setIsProfileLoading(false);
         setPremiumTierReady(true);
+        setHasResolvedProfile(true);
         return;
       }
 
@@ -186,9 +189,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error(err);
         setProfile(null);
         setPremiumResolutionError(true);
-        setPremiumTierReady(true);
+        setPremiumTierReady(false);
       }
       setIsProfileLoading(false);
+      setHasResolvedProfile(true);
     }
     fetchProfile();
   }, [token, clientId, role]);
@@ -203,6 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [profile]);
 
   useEffect(() => {
+    if (!hasResolvedProfile) return;
+
     const premiumCandidates = [
       profile,
       profile?.premium,
@@ -263,11 +269,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPremiumTier(resolvedTier || null);
     setPremiumExpiry(resolvedExpiry || null);
     setPremiumTierReady(true);
-  }, [profile]);
+  }, [hasResolvedProfile, profile]);
 
   useEffect(() => {
-    setHasResolvedPremium(premiumTierReady);
-  }, [premiumTierReady]);
+    if (!hasResolvedProfile) {
+      setHasResolvedPremium(false);
+      return;
+    }
+
+    setHasResolvedPremium(premiumTierReady || premiumResolutionError);
+  }, [hasResolvedProfile, premiumResolutionError, premiumTierReady]);
 
   useEffect(() => {
     const normalizedClientId = clientId?.toUpperCase();
