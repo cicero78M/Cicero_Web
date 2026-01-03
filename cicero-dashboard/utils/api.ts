@@ -716,6 +716,11 @@ function ensureArray<T>(value: unknown, mapper: (entry: any) => T): T[] {
   return value.map((item) => mapper(item));
 }
 
+function normalizeAccessParam(value?: unknown): string | undefined {
+  const normalized = ensureString(value, "").trim();
+  return normalized ? normalized.toUpperCase() : undefined;
+}
+
 function decodeJwtPayloadSafe(token?: string | null): Record<string, any> | null {
   if (!token || typeof token !== "string") return null;
   const parts = token.split(".");
@@ -793,6 +798,9 @@ function normalizeDashboardAnevFilters(
   fallback: Pick<DashboardAnevFilters, "time_range" | "client_id"> & {
     start_date?: string;
     end_date?: string;
+    role?: string;
+    scope?: string;
+    regional_id?: string;
   },
 ): DashboardAnevFilters {
   const time_range =
@@ -809,11 +817,15 @@ function normalizeDashboardAnevFilters(
   const end_date =
     ensureString(raw?.end_date ?? raw?.tanggal_selesai ?? raw?.endDate) ||
     fallback.end_date;
-  const role = ensureString(raw?.role ?? raw?.user_role ?? raw?.userRole);
-  const scope = ensureString(raw?.scope ?? raw?.client_scope ?? raw?.clientScope);
-  const regional_id = ensureString(
-    raw?.regional_id ?? raw?.regional ?? raw?.regionalId,
-  );
+  const role =
+    ensureString(raw?.role ?? raw?.user_role ?? raw?.userRole) ||
+    fallback.role;
+  const scope =
+    ensureString(raw?.scope ?? raw?.client_scope ?? raw?.clientScope) ||
+    fallback.scope;
+  const regional_id =
+    ensureString(raw?.regional_id ?? raw?.regional ?? raw?.regionalId) ||
+    fallback.regional_id;
 
   return {
     time_range,
@@ -1664,6 +1676,15 @@ export async function getDashboardAnev(
   filters: Partial<DashboardAnevFilters> = {},
   signal?: AbortSignal,
 ): Promise<DashboardAnevResponse> {
+  const normalizedRole = normalizeAccessParam(
+    filters.role ?? (filters as any)?.role,
+  );
+  const normalizedScope = normalizeAccessParam(
+    filters.scope ?? (filters as any)?.scope,
+  );
+  const normalizedRegionalId = normalizeAccessParam(
+    filters.regional_id ?? (filters as any)?.regional_id,
+  );
   const timeRange =
     ensureString(filters.time_range ?? (filters as any)?.timeRange) || "7d";
   const startDate =
@@ -1692,9 +1713,9 @@ export async function getDashboardAnev(
   }
 
   const params = new URLSearchParams({ time_range: timeRange, client_id: clientId });
-  if (filters.role) params.append("role", filters.role);
-  if (filters.scope) params.append("scope", filters.scope);
-  if (filters.regional_id) params.append("regional_id", filters.regional_id);
+  if (normalizedRole) params.append("role", normalizedRole);
+  if (normalizedScope) params.append("scope", normalizedScope);
+  if (normalizedRegionalId) params.append("regional_id", normalizedRegionalId);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
 
@@ -1748,6 +1769,9 @@ export async function getDashboardAnev(
     client_id: clientId,
     start_date: startDate,
     end_date: endDate,
+    role: normalizedRole,
+    scope: normalizedScope,
+    regional_id: normalizedRegionalId,
   });
   const aggregates = normalizeDashboardAnevAggregates(
     payload?.aggregates ?? payload?.aggregate ?? payload,
