@@ -12,6 +12,7 @@ import {
   type DashboardAnevResponse,
   getDashboardAnev,
 } from "@/utils/api";
+import { formatPremiumTierLabel } from "@/utils/premium";
 
 type FilterFormState = Pick<DashboardAnevFilters, "time_range" | "start_date" | "end_date"> & {
   role?: string;
@@ -762,6 +763,10 @@ export default function AnevPolresPage() {
     }),
     [clientId, lockedRegionalId, lockedRole, lockedScope],
   );
+  const premiumTierLabel = useMemo(
+    () => formatPremiumTierLabel(premiumTier || undefined),
+    [premiumTier],
+  );
   const isWaitingSessionContext = useMemo(
     () => !lockedRole || !lockedScope,
     [lockedRole, lockedScope],
@@ -863,7 +868,12 @@ export default function AnevPolresPage() {
       .catch((err: any) => {
         if (controller.signal.aborted) return;
         if (err?.status === 403) {
-          const tierLabel = err?.premiumGuard?.tier || premiumTier || "";
+          const tierLabelRaw =
+            err?.premiumGuard?.normalizedTier ||
+            err?.premiumGuard?.tier ||
+            premiumTier ||
+            "";
+          const tierLabel = formatPremiumTierLabel(tierLabelRaw) || tierLabelRaw;
           const expiry = err?.premiumGuard?.expires_at || err?.premiumGuard?.expiresAt;
           const message =
             err?.message ||
@@ -1036,8 +1046,8 @@ export default function AnevPolresPage() {
             Premium diperlukan
           </div>
           <p className="text-sm text-amber-800">
-            Akses Dashboard ANEV Polres hanya tersedia untuk pengguna dengan paket premium aktif.
-            Tingkatkan paket untuk melanjutkan.
+            Akses Dashboard ANEV Polres hanya tersedia untuk pengguna dengan paket premium aktif
+            (Tier 1 atau Tier 2). Tingkatkan paket untuk melanjutkan.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
@@ -1329,7 +1339,7 @@ export default function AnevPolresPage() {
               </div>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                 <ShieldCheck size={14} />
-                Premium aktif
+                {premiumTierLabel ? `Premium aktif (${premiumTierLabel})` : "Premium aktif"}
               </span>
             </div>
             <FilterSnapshot />
