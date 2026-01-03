@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { VIEW_OPTIONS } from "@/components/ViewDataSelector";
+import {
+  VIEW_OPTIONS,
+  getWeekRangeFromValue,
+} from "@/components/ViewDataSelector";
 
 type DateRange = { startDate?: string; endDate?: string };
 
@@ -72,6 +75,9 @@ export function useLikesDateSelector({
   const [viewBy, setViewBy] = useState<ViewValue>(defaultView);
   const [dailyDate, setDailyDate] = useState(today);
   const [monthlyDate, setMonthlyDate] = useState(currentMonth);
+  const [weeklyDate, setWeeklyDate] = useState(
+    getWeekRangeFromValue(undefined, new Date(today)).weekKey,
+  );
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: today,
     endDate: today,
@@ -100,6 +106,9 @@ export function useLikesDateSelector({
       }
       if (nextView === "month" && currentView !== "month") {
         setMonthlyDate(currentMonth);
+      }
+      if (nextView === "week" && currentView !== "week") {
+        setWeeklyDate(getWeekRangeFromValue(undefined, new Date(today)).weekKey);
       }
       if (nextView === "custom_range" && currentView !== "custom_range") {
         setDateRange({
@@ -145,11 +154,17 @@ export function useLikesDateSelector({
       setMonthlyDate((val as string) || currentMonth);
       return;
     }
+    if (normalizedViewBy === "week") {
+      setWeeklyDate((val as string) || getWeekRangeFromValue(undefined, new Date(today)).weekKey);
+      return;
+    }
     setDailyDate((val as string) || today);
   };
 
   const normalizedDailyDate = dailyDate || today;
   const normalizedMonthlyDate = monthlyDate || currentMonth;
+  const normalizedWeeklyDate =
+    weeklyDate || getWeekRangeFromValue(undefined, new Date(today)).weekKey;
   const normalizedRangeStart = dateRange.startDate || today;
   const normalizedRangeEnd = dateRange.endDate || normalizedRangeStart;
   const normalizedRange = {
@@ -158,7 +173,11 @@ export function useLikesDateSelector({
   };
 
   const normalizedCustomDate =
-    normalizedViewBy === "month" ? normalizedMonthlyDate : normalizedDailyDate;
+    normalizedViewBy === "month"
+      ? normalizedMonthlyDate
+      : normalizedViewBy === "week"
+        ? normalizedWeeklyDate
+        : normalizedDailyDate;
 
   const reportPeriodeLabel = useMemo(() => {
     if (normalizedViewBy === "custom_range") {
@@ -167,12 +186,20 @@ export function useLikesDateSelector({
     if (normalizedViewBy === "month") {
       return formatDisplayMonth(normalizedMonthlyDate);
     }
+    if (normalizedViewBy === "week") {
+      const { startDate, endDate } = getWeekRangeFromValue(
+        normalizedWeeklyDate,
+        new Date(normalizedDailyDate),
+      );
+      return formatDisplayRange(startDate, endDate);
+    }
     return formatDisplayDate(normalizedDailyDate);
   }, [
     normalizedViewBy,
     normalizedRangeStart,
     normalizedRangeEnd,
     normalizedMonthlyDate,
+    normalizedWeeklyDate,
     normalizedDailyDate,
   ]);
 
@@ -181,6 +208,8 @@ export function useLikesDateSelector({
       ? dateRange
       : normalizedViewBy === "month"
         ? monthlyDate
+        : normalizedViewBy === "week"
+          ? normalizedWeeklyDate
         : dailyDate;
 
   return {
@@ -193,6 +222,7 @@ export function useLikesDateSelector({
     normalizedRange,
     normalizedDailyDate,
     normalizedMonthlyDate,
+    normalizedWeeklyDate,
     reportPeriodeLabel,
   };
 }

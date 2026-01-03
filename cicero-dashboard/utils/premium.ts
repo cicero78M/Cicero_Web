@@ -5,9 +5,16 @@ export function normalizePremiumTier(tier?: string | null) {
 }
 
 export const ALLOWED_PREMIUM_ANEV_TIERS = ["premium1", "premium2", "premium3"] as const;
+export const ALLOWED_ENGAGEMENT_DATE_TIERS = ["premium1", "premium2"] as const;
 
 export function isPremiumTierAllowedForAnev(tier?: string | null) {
   const normalized = normalizePremiumTier(tier);
 
   return ALLOWED_PREMIUM_ANEV_TIERS.some((allowedTier) => normalized === allowedTier);
+}
+
+export function isPremiumTierAllowedForEngagementDate(tier?: string | null) {
+  const normalized = normalizePremiumTier(tier);
+
+  return ALLOWED_ENGAGEMENT_DATE_TIERS.some((allowedTier) => normalized === allowedTier);
 }

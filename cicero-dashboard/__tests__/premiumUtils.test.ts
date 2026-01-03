@@ -1,4 +1,10 @@
-import { ALLOWED_PREMIUM_ANEV_TIERS, isPremiumTierAllowedForAnev, normalizePremiumTier } from "@/utils/premium";
+import {
+  ALLOWED_PREMIUM_ANEV_TIERS,
+  ALLOWED_ENGAGEMENT_DATE_TIERS,
+  isPremiumTierAllowedForAnev,
+  isPremiumTierAllowedForEngagementDate,
+  normalizePremiumTier,
+} from "@/utils/premium";
 
 describe("premium utils", () => {
   it("normalizes tier strings by lowering case and removing separators", () => {
@@ -13,6 +19,16 @@ describe("premium utils", () => {
 
     expect(results).toEqual([true, true, true]);
     expect(ALLOWED_PREMIUM_ANEV_TIERS).toEqual(["premium1", "premium2", "premium3"]);
+  });
+
+  it("allows only premium 1 and 2 for engagement date selector", () => {
+    ["premium1", "PREMIUM 2", "premium-2"].forEach((tier) => {
+      expect(isPremiumTierAllowedForEngagementDate(tier)).toBe(true);
+    });
+    ["premium3", "basic", "standard"].forEach((tier) => {
+      expect(isPremiumTierAllowedForEngagementDate(tier)).toBe(false);
+    });
+    expect(ALLOWED_ENGAGEMENT_DATE_TIERS).toEqual(["premium1", "premium2"]);
   });
 
   it("rejects non-premium tiers", () => {

@@ -53,6 +53,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 - Rute `/likes/instagram` dan `/likes/instagram/rekap` berbagi halaman bertab yang sama sehingga tautan ke rekap langsung membuka tab rekap tanpa redirect terpisah, sementara tab insight tetap menjadi default saat membuka rute utama.
 - Selektor periode untuk insight dan rekap dibangun ulang memakai hook bersama `hooks/useLikesDateSelector.ts` yang membungkus `ViewDataSelector` serta normalisasi tanggal (today/date/month/custom range). Hook ini mencegah duplikasi state pemilihan tanggal dan menyediakan label periode siap pakai untuk laporan.
+- Selector periode di halaman `/likes/instagram` kini menampilkan opsi harian, mingguan (7 hari), bulanan, dan rentang tanggal khusus untuk pengguna dengan tier Premium 1 atau Premium 2; pengguna lain tetap melihat snapshot hari ini tanpa kontrol tambahan.
 - Tab insight dan rekap menggunakan komponen terspesialisasi di `components/likes/instagram/Insight` dan `components/likes/instagram/Rekap` sehingga blok chart (ChartBox, SummaryItem) dan tampilan daftar rekap berada dalam satu namespace halaman gabungan.
 - Tombol **Salin Rekap** kini tampil berdampingan dengan selektor periode di header halaman dan langsung memanggil utilitas `utils/instagramEngagement.ts` untuk membangkitkan teks WA. Pengguna Ditbinmas dapat men-switch cakupan data (client/all) tanpa berpindah halaman sebelum menyalin.
 - Role `ditbinmas` kini diperlakukan sebagai direktorat penuh di hook `useInstagramLikesData`, sehingga header Instagram Engagement Insight ikut menampilkan kontrol lingkup dan label direktorat yang sama seperti halaman TikTok saat pengguna Ditbinmas masuk.
@@ -182,7 +183,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 ## Insight Engagement Instagram & TikTok
 
 - Dropdown lingkup di halaman insight Instagram dan TikTok kini memakai istilah direktorat (`directorateScope`) serta menggunakan flag `isDirectorateRole` dan `isDirectorateScopedClient` dari hook terkait. Perubahan ini memastikan alur data dan pemilihan cakupan mengikuti status direktorat pengguna, bukan lagi terikat khusus pada client Ditbinmas.
-- Selektor periode pada insight Instagram dan TikTok disembunyikan; data keduanya selalu terkunci ke “Hari ini” sehingga pengguna tidak lagi memilih tanggal/bulan/rentang manual.
+- Selektor periode pada insight Instagram kini kembali tampil dengan opsi harian/mingguan/bulanan/rentang tanggal untuk pengguna Premium 1 atau Premium 2; pengguna lain tetap terkunci ke “Hari ini” tanpa kontrol tambahan. Insight TikTok masih memakai snapshot harian agar perilaku sebelumnya tetap konsisten.
 
 ## Menu khusus Ditbinmas
 
