@@ -5,7 +5,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - Rekap otomatis via WA Bot ke nomor dashboard yang terdaftar.
 - Jadwal pengiriman recap: **15:00**, **18:00**, dan **20:30** setiap hari.
 - Halaman ANEV harian, mingguan, bulanan, serta rentang kustom.
-- Halaman **Dashboard ANEV Polres** (tier **Premium 1** dan **Premium 3**) dengan filter waktu, scope ORG/DIREKTORAT, role, serta regional ID untuk meninjau kepatuhan tugas dan rekap konten per pelaksana.
+- Halaman **Dashboard ANEV Polres** (tier **Premium 1**, **Premium 2**, dan **Premium 3**) dengan filter waktu, scope ORG/DIREKTORAT, role, serta regional ID untuk meninjau kepatuhan tugas dan rekap konten per pelaksana.
 - Unduhan Excel untuk setiap periode ANEV.
 - Panduan khusus operator agar distribusi tugas dan eskalasi berjalan konsisten.
 
@@ -57,6 +57,6 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 - Suffix dikunci saat proses submit berlangsung (tidak bisa mengganti paket selama loading atau setelah berhasil terkirim).
 - Instruksi transfer ditampilkan jelas di panel informasi: gunakan rekening **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan sertakan nama pengirim pada catatan transfer agar verifikasi otomatis lebih cepat.
 - Setelah submit formulir, tim memverifikasi data pembayaran (nominal + rekening pengirim) sebelum mengaktifkan recap WA Bot sesuai paket.
-- Guard premium untuk halaman **Dashboard ANEV Polres** memakai `useRequirePremium` dan memblokir akses jika tier bukan **Premium 1** atau **Premium 3**. API `/api/dashboard/anev` akan mengembalikan 403 ketika tier tidak sesuai; UI menampilkan pesan akses premium lengkap dengan CTA daftar dan informasi tier/expiry yang dikembalikan backend. Redirect otomatis kini menuju **/premium/anev** agar pengguna langsung masuk ke alur pendaftaran khusus ANEV tanpa melewati landing premium umum.
+- Guard premium untuk halaman **Dashboard ANEV Polres** memakai `useRequirePremium` dan memblokir akses jika tier bukan **Premium 1**, **Premium 2**, atau **Premium 3**. API `/api/dashboard/anev` akan mengembalikan 403 ketika tier tidak sesuai; UI menampilkan pesan akses premium lengkap dengan CTA daftar dan informasi tier/expiry yang dikembalikan backend. Redirect otomatis kini menuju **/premium/anev** agar pengguna langsung masuk ke alur pendaftaran khusus ANEV tanpa melewati landing premium umum.
 - Guard kini menunggu kombinasi `hasResolvedPremium` **dan** indikator tier (nilai `premiumTier` yang terisi atau flag `premiumTierReady`) sebelum melakukan redirect, sehingga tier tidak dievaluasi sebagai non-premium ketika profil masih dimuat. `hasResolvedPremium` baru bernilai `true` setelah profil selesai dievaluasi (atau gagal diekstraksi) dan kalkulasi `premiumTier` tuntas, sehingga state sementara tidak memicu redirect.
-- Ketika fetch profil gagal, hook menampilkan toast error sebagai fallback dan tidak mengarahkan ke **/premium** hingga evaluasi tier berhasil; redirect hanya terjadi jika `isPremiumTierAllowedForAnev(premium_tier)` mengembalikan `false`, sementara tier **Premium 1** dan **Premium 3** tetap bertahan di halaman ANEV tanpa redirect.
+- Ketika fetch profil gagal, hook menampilkan toast error sebagai fallback dan tidak mengarahkan ke **/premium** hingga evaluasi tier berhasil; redirect hanya terjadi jika `isPremiumTierAllowedForAnev(premium_tier)` mengembalikan `false`, sementara tier **Premium 1**, **Premium 2**, dan **Premium 3** tetap bertahan di halaman ANEV tanpa redirect.
