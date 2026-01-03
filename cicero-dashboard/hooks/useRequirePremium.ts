@@ -18,7 +18,9 @@ export default function useRequirePremium() {
   } = useAuth();
 
   useEffect(() => {
-    if (isHydrating || isProfileLoading || !hasResolvedPremium || !premiumTierReady)
+    const hasResolvedTier = premiumTierReady || premiumTier !== null;
+
+    if (isHydrating || isProfileLoading || !hasResolvedPremium || !hasResolvedTier)
       return;
 
     if (!premiumResolutionError && hasShownError.current) {
@@ -45,9 +47,9 @@ export default function useRequirePremium() {
     isHydrating,
     isProfileLoading,
     premiumResolutionError,
+    premiumTier,
     premiumTierReady,
     hasResolvedPremium,
-    premiumTier,
     router,
   ]);
 }

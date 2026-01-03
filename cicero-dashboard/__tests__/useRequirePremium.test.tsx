@@ -49,12 +49,12 @@ describe("useRequirePremium", () => {
     await waitFor(() => expect(replaceMock).not.toHaveBeenCalled());
   });
 
-  it("allows premium tiers without redirect after resolution", async () => {
+  it("keeps premium navigation untouched when tier exists but readiness flag is false", async () => {
     mockedUseAuth.mockReturnValue({
       isHydrating: false,
       isProfileLoading: false,
       premiumTier: "premium_1",
-      premiumTierReady: true,
+      premiumTierReady: false,
       hasResolvedPremium: true,
       premiumResolutionError: false,
     } as any);
@@ -63,6 +63,24 @@ describe("useRequirePremium", () => {
 
     await waitFor(() => expect(replaceMock).not.toHaveBeenCalled());
   });
+
+  it.each(["premium_1", "premium_3"])(
+    "allows %s tier without redirect after resolution",
+    async (tier) => {
+      mockedUseAuth.mockReturnValue({
+        isHydrating: false,
+        isProfileLoading: false,
+        premiumTier: tier,
+        premiumTierReady: true,
+        hasResolvedPremium: true,
+        premiumResolutionError: false,
+      } as any);
+
+      render(<TestComponent />);
+
+      await waitFor(() => expect(replaceMock).not.toHaveBeenCalled());
+    },
+  );
 
   it("redirects when tier is not allowed after resolution completes", async () => {
     mockedUseAuth.mockReturnValue({
