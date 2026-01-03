@@ -902,7 +902,7 @@ export default function AnevPolresPage() {
     return (
       <div className="space-y-6 p-6">
         <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <Loader className="h-5 w-5" />
+          <Loader inline label={null} className="h-5 w-5" />
           <span className="text-sm font-medium text-slate-700">Memuat status premium…</span>
         </div>
       </div>
