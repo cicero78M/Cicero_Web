@@ -716,9 +716,16 @@ function ensureArray<T>(value: unknown, mapper: (entry: any) => T): T[] {
   return value.map((item) => mapper(item));
 }
 
-function normalizeAccessParam(value?: unknown): string | undefined {
+function normalizeAccessParam(
+  value?: unknown,
+  options?: { casing?: "upper" | "lower" },
+): string | undefined {
   const normalized = ensureString(value, "").trim();
-  return normalized ? normalized.toUpperCase() : undefined;
+  if (!normalized) return undefined;
+
+  const casing = options?.casing || "upper";
+  if (casing === "lower") return normalized.toLowerCase();
+  return normalized.toUpperCase();
 }
 
 function decodeJwtPayloadSafe(token?: string | null): Record<string, any> | null {
@@ -1681,6 +1688,7 @@ export async function getDashboardAnev(
   );
   const normalizedScope = normalizeAccessParam(
     filters.scope ?? (filters as any)?.scope,
+    { casing: "lower" },
   );
   const normalizedRegionalId = normalizeAccessParam(
     filters.regional_id ?? (filters as any)?.regional_id,
@@ -1695,6 +1703,14 @@ export async function getDashboardAnev(
     ensureString(filters.client_id ?? filters.clientId) ||
     readStoredClientId() ||
     extractClientIdFromToken(token);
+
+  if (!normalizedRole) {
+    const error: any = new Error(
+      "Role login wajib tersedia untuk memuat Dashboard ANEV (400).",
+    );
+    error.status = 400;
+    throw error;
+  }
 
   if (!clientId) {
     const error: any = new Error(
