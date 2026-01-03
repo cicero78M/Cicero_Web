@@ -16,6 +16,7 @@ type AuthState = {
   profile: any | null;
   isHydrating: boolean;
   isProfileLoading: boolean;
+  premiumTierReady: boolean;
   hasResolvedPremium: boolean;
   premiumResolutionError: boolean;
   setAuth: (
@@ -139,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [premiumTierReady, setPremiumTierReady] = useState(false);
   const [hasResolvedPremium, setHasResolvedPremium] = useState(false);
   const [premiumResolutionError, setPremiumResolutionError] = useState(false);
 
@@ -161,13 +163,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function fetchProfile() {
       setHasResolvedPremium(false);
       setPremiumResolutionError(false);
+      setPremiumTierReady(false);
+      setPremiumTier(null);
+      setPremiumExpiry(null);
 
       if (!token || !clientId) {
         setProfile(null);
         setRegionalId(null);
-        setPremiumTier(null);
-        setPremiumExpiry(null);
         setIsProfileLoading(false);
+        setPremiumTierReady(true);
         setHasResolvedPremium(true);
         return;
       }
@@ -183,9 +187,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error(err);
         setProfile(null);
         setPremiumResolutionError(true);
+        setPremiumTierReady(true);
+        setHasResolvedPremium(true);
       }
       setIsProfileLoading(false);
-      setHasResolvedPremium(true);
     }
     fetchProfile();
   }, [token, clientId, role]);
@@ -259,6 +264,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setPremiumTier(resolvedTier || null);
     setPremiumExpiry(resolvedExpiry || null);
+    setPremiumTierReady(true);
+    setHasResolvedPremium(true);
   }, [profile]);
 
   useEffect(() => {
@@ -346,6 +353,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         isHydrating,
         isProfileLoading,
+        premiumTierReady,
         hasResolvedPremium,
         premiumResolutionError,
         setAuth,
