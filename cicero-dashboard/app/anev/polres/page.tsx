@@ -36,6 +36,8 @@ const TIME_RANGE_PRESETS = [
   { value: "today", label: "Today" },
   { value: "7d", label: "This Week" },
   { value: "30d", label: "This Month" },
+  { value: "90d", label: "Last 90 Days" },
+  { value: "all", label: "All time" },
   { value: "custom", label: "Custom" },
 ];
 
@@ -689,6 +691,16 @@ function derivePresetRange(timeRange: string) {
     return { startDate: formatDateInput(start), endDate };
   }
 
+  if (normalized === "90d") {
+    const start = new Date(today);
+    start.setDate(today.getDate() - 89);
+    return { startDate: formatDateInput(start), endDate };
+  }
+
+  if (normalized === "all") {
+    return { startDate: undefined, endDate: undefined };
+  }
+
   if (normalized === "today") {
     return { startDate: endDate, endDate };
   }
@@ -741,6 +753,24 @@ export default function AnevPolresPage() {
   const [badRequest, setBadRequest] = useState<string | null>(null);
   const lastFetchKeyRef = useRef<string | null>(null);
 
+  const availableTimeRangeOptions = useMemo(() => {
+    const permitted = (data?.filters as any)?.permitted_time_ranges as string[] | undefined;
+    const normalizedPermitted = (permitted || [])
+      .map((entry) => (typeof entry === "string" ? entry.toLowerCase() : ""))
+      .filter(Boolean);
+    if (!normalizedPermitted.length) return TIME_RANGE_PRESETS;
+
+    const baseMap = new Map(TIME_RANGE_PRESETS.map((preset) => [preset.value, preset]));
+    const uniqueOptions: { value: string; label: string }[] = [];
+    normalizedPermitted.forEach((value) => {
+      const option = baseMap.get(value) ?? { value, label: value };
+      const alreadyAdded = uniqueOptions.some((item) => item.value === option.value);
+      if (!alreadyAdded) uniqueOptions.push(option);
+    });
+
+    return uniqueOptions.length ? uniqueOptions : TIME_RANGE_PRESETS;
+  }, [data?.filters]);
+
   const lockedRole = useMemo(() => effectiveRole ?? role ?? undefined, [effectiveRole, role]);
   const lockedScope = useMemo(() => {
     const normalized = (effectiveClientType || "").toLowerCase();
@@ -776,15 +806,33 @@ export default function AnevPolresPage() {
   const isCustomIncomplete =
     isCustomRange && (!formState.start_date || !formState.end_date);
 
+  useEffect(() => {
+    const allowedValues = availableTimeRangeOptions.map((option) => option.value);
+    if (!allowedValues.length) return;
+
+    setFormState((prev) => {
+      if (allowedValues.includes(prev.time_range)) return prev;
+      const fallbackValue = allowedValues[0];
+      const derived = derivePresetRange(fallbackValue);
+      return {
+        ...prev,
+        time_range: fallbackValue,
+        start_date: fallbackValue === "custom" ? prev.start_date : derived.startDate,
+        end_date: fallbackValue === "custom" ? prev.end_date : derived.endDate,
+      };
+    });
+  }, [availableTimeRangeOptions]);
+
+  const resolvePresetLabel = (value?: string) =>
+    TIME_RANGE_PRESETS.find((preset) => preset.value === value)?.label || value || "Custom";
+
   const resolvedAppliedFilters = useMemo(
     () => resolveFiltersWithPreset(appliedFilters),
     [appliedFilters],
   );
   const appliedPresetLabel = useMemo(
     () =>
-      TIME_RANGE_PRESETS.find((preset) => preset.value === resolvedAppliedFilters.time_range)?.label ??
-      resolvedAppliedFilters.time_range ??
-      "Custom",
+      resolvePresetLabel(resolvedAppliedFilters.time_range),
     [resolvedAppliedFilters],
   );
   const appliedRangeLabel = useMemo(() => {
@@ -998,8 +1046,7 @@ export default function AnevPolresPage() {
     const apiFilters = data?.filters as FilterFormState | undefined;
     const filters = apiFilters ? resolveFiltersWithPreset(apiFilters) : resolvedAppliedFilters;
     const timeRangeValue = filters?.time_range || resolvedAppliedFilters.time_range;
-    const activePresetLabel =
-      TIME_RANGE_PRESETS.find((preset) => preset.value === timeRangeValue)?.label || timeRangeValue;
+    const activePresetLabel = resolvePresetLabel(timeRangeValue);
     const entries = [
       { label: "Time Range", value: activePresetLabel, highlighted: true },
       { label: "Start", value: filters?.start_date },
@@ -1152,7 +1199,7 @@ export default function AnevPolresPage() {
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="flex flex-wrap gap-2">
-                  {TIME_RANGE_PRESETS.map((option) => {
+                  {availableTimeRangeOptions.map((option) => {
                     const isActive = formState.time_range === option.value;
                     return (
                       <button
