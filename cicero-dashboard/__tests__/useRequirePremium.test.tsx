@@ -88,7 +88,7 @@ describe("useRequirePremium", () => {
     await waitFor(() => expect(replaceMock).not.toHaveBeenCalled());
   });
 
-  it.each(["premium_1", "premium_2", "premium_3"])(
+  it.each(["tier1", "tier2", "premium_1", "premium_2"])(
     "allows %s tier without redirect after resolution",
     async (tier) => {
       mockedUseAuth.mockReturnValue({

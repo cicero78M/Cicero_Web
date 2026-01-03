@@ -1,3 +1,5 @@
+import { formatPremiumTierLabel, normalizePremiumTierKey } from "@/utils/premium";
+
 // utils/api.ts
 let cachedApiBaseUrl: string | null = null;
 let hasLoggedMissingApiBase = false;
@@ -1752,7 +1754,9 @@ export async function getDashboardAnev(
 
   if (res.status === 403) {
     const payload = parsed?.data ?? parsed ?? {};
-    const tier = ensureString(payload?.tier ?? payload?.premium_tier);
+    const rawTier = ensureString(payload?.tier ?? payload?.premium_tier);
+    const normalizedTier = normalizePremiumTierKey(rawTier);
+    const formattedTier = formatPremiumTierLabel(normalizedTier || rawTier);
     const expires_at = ensureString(
       payload?.expires_at ?? payload?.expiry ?? payload?.expired_at,
     );
@@ -1763,7 +1767,9 @@ export async function getDashboardAnev(
     const error: any = new Error(message);
     error.status = 403;
     error.premiumGuard = {
-      tier: tier || undefined,
+      tier: formattedTier || normalizedTier || rawTier || undefined,
+      normalizedTier: normalizedTier || undefined,
+      rawTier: rawTier || undefined,
       expires_at: expires_at || undefined,
       expiresAt: expires_at || undefined,
     };
