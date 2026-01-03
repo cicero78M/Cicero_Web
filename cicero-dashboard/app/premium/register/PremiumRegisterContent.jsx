@@ -35,7 +35,7 @@ const premiumTiers = [
     value: "premium_3",
     label: "Premium 3",
     description: "Prioritas WA Bot dengan rekap otomatis terjadwal.",
-    basePrice: 100000,
+    basePrice: 200000,
     benefits: [
       "Rekap file Excel ANEV Harian, Mingguan dan Bulanan",
     ],

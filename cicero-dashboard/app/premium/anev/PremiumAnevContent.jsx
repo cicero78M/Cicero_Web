@@ -69,7 +69,7 @@ export default function PremiumAnevContent() {
               </div>
             </div>
             <div className="mt-4 space-y-2 text-sm text-slate-600">
-              <p>• Tier Premium 1 atau Premium 3 membuka dashboard ANEV secara penuh.</p>
+              <p>• Tier Premium 1 atau Premium 2 membuka dashboard ANEV secara penuh.</p>
               <p>• Pengguna lain diarahkan ke halaman CTA premium tanpa menumpuk tautan /premium.</p>
               <p>• Ekspor Excel dan filter waktu tetap tersedia setelah guard lolos.</p>
             </div>
@@ -112,7 +112,7 @@ export default function PremiumAnevContent() {
               href="/premium/register"
               className="inline-flex items-center justify-center rounded-xl border border-indigo-100/70 bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_-14px_rgba(99,102,241,0.65)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
             >
-              Ajukan paket Premium 1/3
+              Ajukan paket Premium 1/2
             </Link>
             <Link
               href="/anev/polres"
