@@ -32,6 +32,7 @@ export const PANGKAT_OPTIONS = [
   "PEMBINA UTAMA MADYA",
   "PEMBINA UTAMA",
   "PPPK",
+  "PHL",
 ];
 
 export const SATFUNG_OPTIONS = [
@@ -109,4 +110,3 @@ export function validateNewUser({ nama, pangkat, nrpNip, satfung, polsekName }: 
   }
   return { nrpNip: sanitizedNrpNip, satfungValue };
 }
-

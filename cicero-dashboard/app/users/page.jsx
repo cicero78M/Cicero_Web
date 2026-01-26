@@ -226,6 +226,14 @@ export default function UserDirectoryPage() {
     return { total, aktif, nonaktif, insta, tiktok };
   }, [rekapUsers]);
 
+  const pangkatOptions = useMemo(
+    () => ({
+      main: PANGKAT_OPTIONS.filter((option) => option !== "PHL"),
+      hasPHL: PANGKAT_OPTIONS.includes("PHL"),
+    }),
+    [],
+  );
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitError("");
@@ -595,11 +603,21 @@ export default function UserDirectoryPage() {
                   <option value="" className="bg-white text-slate-700">
                     Pilih Pangkat
                   </option>
-                  {PANGKAT_OPTIONS.map((p) => (
+                  {pangkatOptions.main.map((p) => (
                     <option key={p} value={p} className="bg-white text-slate-700">
                       {p}
                     </option>
                   ))}
+                  {pangkatOptions.hasPHL && (
+                    <>
+                      <option value="__separator" disabled className="bg-white text-slate-400">
+                        ─────────────
+                      </option>
+                      <option value="PHL" className="bg-white text-slate-700">
+                        PHL
+                      </option>
+                    </>
+                  )}
                 </select>
                 <input
                   type="text"
