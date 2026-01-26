@@ -38,6 +38,7 @@ export const PANGKAT_ORDER = [
   "BRIPDA",
   ...EXTRA_RANKS,
   "PPPK",
+  "PHL",
   "LAINNYA",
 ];
 
