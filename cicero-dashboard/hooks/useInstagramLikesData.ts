@@ -108,14 +108,14 @@ export default function useInstagramLikesData({
     totalTanpaUsername: 0,
     totalIGPost: 0,
   });
-  const [isDirectorate, setIsDirectorate] = useState(false);
+  const [isDirectorateData, setIsDirectorateData] = useState(false);
+  const [isDirectorateLayout, setIsDirectorateLayout] = useState(false);
   const [isOrgClient, setIsOrgClient] = useState(false);
   const [clientName, setClientName] = useState("");
   const [isDirectorateScopedClient, setIsDirectorateScopedClient] =
     useState(false);
   const [isDirectorateRole, setIsDirectorateRole] = useState(false);
   const [canSelectScope, setCanSelectScope] = useState(false);
-  const [useDirectorateLayout, setUseDirectorateLayout] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -247,9 +247,9 @@ export default function useInstagramLikesData({
           setRekapSummary(summary);
           setIgPosts(posts || []);
           setClientName(clientName || "");
-          setIsDirectorate(true);
+          setIsDirectorateData(true);
+          setIsDirectorateLayout(true);
           setIsDirectorateRole(true);
-          setUseDirectorateLayout(false);
           setCanSelectScope(
             !isOrgClient && allowedScopeClients.has(normalizedClientIdUpper),
           );
@@ -313,14 +313,17 @@ export default function useInstagramLikesData({
       requestScopeFromAuth;
     const isOrg = normalizedEffectiveClientType === "ORG";
     const dir = normalizedEffectiveClientType === "DIREKTORAT";
-    const directorate =
-      isDitSamaptaBidhumas || (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
+    const directorateData =
+      isDitSamaptaBidhumas ||
+      (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
     const shouldUseDirectorateLayout =
-      normalizedEffectiveRoleLower === "operator" && normalizedEffectiveClientType === "ORG";
+      normalizedEffectiveRoleLower === "operator" &&
+      normalizedEffectiveClientType === "ORG";
+    const directorateLayout = directorateData || shouldUseDirectorateLayout;
     if (controller.signal.aborted) return;
-    setIsDirectorate(directorate);
+    setIsDirectorateData(directorateData);
+    setIsDirectorateLayout(directorateLayout);
     setIsOrgClient(isOrg);
-    setUseDirectorateLayout(shouldUseDirectorateLayout);
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -330,18 +333,18 @@ export default function useInstagramLikesData({
         );
         setCanSelectScope(
           !isOperatorRole &&
-            directorate &&
+            directorateData &&
             !isOrg &&
             allowedScopeClients.has(normalizedClientIdUpper),
         );
 
         const hasDifferentRoleClient =
           !isOperatorRole &&
-          directorate &&
+          directorateData &&
           normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
         setIsDirectorateScopedClient(hasDifferentRoleClient);
         setIsDirectorateRole(
-          !isOperatorRole && (directorate || isDirectorateRoleValue),
+          !isOperatorRole && (directorateData || isDirectorateRoleValue),
         );
 
         const requestContext = {
@@ -358,7 +361,7 @@ export default function useInstagramLikesData({
           totalBelumLike?: number;
           totalTanpaUsername?: number;
         } = {};
-        if (directorate) {
+        if (directorateData) {
           const directoryClientId = client_id;
           const directoryRes = await getUserDirectory(
             token,
@@ -548,7 +551,7 @@ export default function useInstagramLikesData({
         }
 
         let filteredUsers = users;
-        if (!dir && !directorate) {
+        if (!dir && !directorateData) {
           const normalizedClientId = String(client_id || "")
             .trim()
             .toLowerCase();
@@ -570,7 +573,11 @@ export default function useInstagramLikesData({
           }
         }
 
-        if (isOperatorRole && normalizedLoginClientId) {
+        if (
+          isOperatorRole &&
+          normalizedLoginClientId &&
+          normalizedEffectiveClientType !== "ORG"
+        ) {
           const normalizeRole = (value: unknown) =>
             String(value || "").trim().toLowerCase();
           const normalizeClientId = (value: unknown) =>
@@ -718,11 +725,11 @@ export default function useInstagramLikesData({
     chartData,
     igPosts,
     rekapSummary,
-    isDirectorate,
+    isDirectorateData,
+    isDirectorateLayout,
     isOrgClient,
     isDirectorateScopedClient,
     isDirectorateRole,
-    useDirectorateLayout,
     clientName,
     canSelectScope,
     loading,

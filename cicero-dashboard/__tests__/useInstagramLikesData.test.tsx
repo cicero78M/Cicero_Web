@@ -248,7 +248,7 @@ describe("useInstagramLikesData", () => {
       expect.anything(),
       { role: "operator", scope: "DIREKTORAT", regional_id: undefined },
     );
-    expect(result.current.isDirectorate).toBe(true);
+    expect(result.current.isDirectorateData).toBe(true);
     expect(result.current.isOrgClient).toBe(false);
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.rekapSummary.totalUser).toBe(1);
