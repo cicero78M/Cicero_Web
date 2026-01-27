@@ -72,14 +72,13 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     loading,
     error,
     rekapSummary,
-    isDirectorate,
+    isDirectorateLayout,
     isOrgClient,
     clientName,
     isDirectorateScopedClient,
     isDirectorateRole,
     canSelectScope,
     igPosts,
-    useDirectorateLayout,
   } = useInstagramLikesData({
     viewBy,
     customDate: normalizedCustomDate,
@@ -98,7 +97,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       </div>
     );
 
-  const shouldUseDirectorateLayout = isDirectorate || useDirectorateLayout;
+  const shouldUseDirectorateLayout = isDirectorateLayout;
   const kelompok = shouldUseDirectorateLayout
     ? null
     : groupUsersByKelompok(chartData);
