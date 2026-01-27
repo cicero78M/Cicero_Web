@@ -542,6 +542,7 @@ export default function LoginPage() {
                         <datalist id="role-options">
                           <option value="OPERATOR" />
                           <option value="DITBINMAS" />
+                          <option value="DITINTELKAM" />
                           <option value="DITLANTAS" />
                           <option value="BIDHUMAS" />
                         </datalist>
@@ -562,6 +563,7 @@ export default function LoginPage() {
                         />
                         <datalist id="client-options">
                           <option value="DITBINMAS" />
+                          <option value="DITINTELKAM" />
                           <option value="DITLANTAS" />
                           <option value="DITSAMAPTA" />
                           <option value="BIDHUMAS" />
