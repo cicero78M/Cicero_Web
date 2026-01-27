@@ -115,6 +115,7 @@ export default function useInstagramLikesData({
     useState(false);
   const [isDirectorateRole, setIsDirectorateRole] = useState(false);
   const [canSelectScope, setCanSelectScope] = useState(false);
+  const [useDirectorateLayout, setUseDirectorateLayout] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -248,6 +249,7 @@ export default function useInstagramLikesData({
           setClientName(clientName || "");
           setIsDirectorate(true);
           setIsDirectorateRole(true);
+          setUseDirectorateLayout(false);
           setCanSelectScope(
             !isOrgClient && allowedScopeClients.has(normalizedClientIdUpper),
           );
@@ -313,9 +315,12 @@ export default function useInstagramLikesData({
     const dir = normalizedEffectiveClientType === "DIREKTORAT";
     const directorate =
       isDitSamaptaBidhumas || (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
+    const shouldUseDirectorateLayout =
+      normalizedEffectiveRoleLower === "operator" && normalizedEffectiveClientType === "ORG";
     if (controller.signal.aborted) return;
     setIsDirectorate(directorate);
     setIsOrgClient(isOrg);
+    setUseDirectorateLayout(shouldUseDirectorateLayout);
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -717,6 +722,7 @@ export default function useInstagramLikesData({
     isOrgClient,
     isDirectorateScopedClient,
     isDirectorateRole,
+    useDirectorateLayout,
     clientName,
     canSelectScope,
     loading,
