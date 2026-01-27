@@ -79,6 +79,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     isDirectorateRole,
     canSelectScope,
     igPosts,
+    useDirectorateLayout,
   } = useInstagramLikesData({
     viewBy,
     customDate: normalizedCustomDate,
@@ -97,9 +98,12 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       </div>
     );
 
-  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
+  const shouldUseDirectorateLayout = isDirectorate || useDirectorateLayout;
+  const kelompok = shouldUseDirectorateLayout
+    ? null
+    : groupUsersByKelompok(chartData);
   const shouldGroupByClient =
-    isDirectorate && !isDirectorateScopedClient && !isDirectorateRole;
+    shouldUseDirectorateLayout && !isDirectorateScopedClient && !isDirectorateRole;
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
@@ -292,7 +296,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           quickInsights={quickInsights}
           quickInsightTone="blue"
         >
-          {isDirectorate ? (
+          {shouldUseDirectorateLayout ? (
             <ChartBox
               title={directorateTitle}
               users={chartData}
