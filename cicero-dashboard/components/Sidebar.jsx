@@ -67,7 +67,7 @@ export default function Sidebar() {
   const normalizedClientId = clientId?.toLowerCase();
   const hasEngagementAccessOverride =
     normalizedEffectiveClientType === "org" &&
-    normalizedEffectiveRole === "bidhumas";
+    (normalizedEffectiveRole === "bidhumas" || normalizedEffectiveRole === "operator");
   const instagramEnabled = instagramEnabledRaw || hasEngagementAccessOverride;
   const tiktokEnabled = tiktokEnabledRaw || hasEngagementAccessOverride;
   const hasDitbinmasAccess =
