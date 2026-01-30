@@ -28,6 +28,12 @@ const USER_IDENTIFIER_FIELDS = [
   "NIP",
   "NRP_NIP",
 ];
+const COMMENT_METRIC_FIELDS = [
+  "comments",
+  "comment_count",
+  "jumlah_komentar",
+  "missingComments",
+];
 
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
@@ -49,6 +55,59 @@ function getUserIdentifier(user: any): string {
     const value = normalizeString(user?.[field]);
     return value || acc;
   }, "");
+}
+
+function getMergeKey(user: any): string {
+  const identifier = getUserIdentifier(user);
+  const label = normalizeString(user?.label || user?.nama || user?.name);
+  const title = normalizeString(user?.title);
+  const clientId = normalizeString(
+    user?.client_id || user?.clientId || user?.clientID || user?.client,
+  );
+  const key = [clientId, identifier || label || title].filter(Boolean).join("::");
+
+  return key;
+}
+
+function hasCommentMetrics(user: any): boolean {
+  return COMMENT_METRIC_FIELDS.some((field) => user?.[field] !== undefined);
+}
+
+function arrayHasCommentMetrics(users: any[]): boolean {
+  return Array.isArray(users) && users.some((user) => hasCommentMetrics(user));
+}
+
+function mergeUsersByKey(
+  primary: any[],
+  secondary: any[],
+  options: { preferPrimary?: boolean } = {},
+) {
+  const { preferPrimary = true } = options;
+  const secondaryMap = new Map<string, any>();
+  const seenKeys = new Set<string>();
+
+  secondary.forEach((user) => {
+    const key = getMergeKey(user);
+    if (key) secondaryMap.set(key, user);
+  });
+
+  const merged = primary.map((user) => {
+    const key = getMergeKey(user);
+    const match = key ? secondaryMap.get(key) : undefined;
+
+    if (!key || !match) return user;
+    seenKeys.add(key);
+    return preferPrimary ? { ...match, ...user } : { ...user, ...match };
+  });
+
+  secondary.forEach((user) => {
+    const key = getMergeKey(user);
+    if (key && seenKeys.has(key)) return;
+    if (!hasCommentMetrics(user)) return;
+    merged.push(user);
+  });
+
+  return merged;
 }
 
 function deduplicateUsers(users: any[]) {
@@ -122,13 +181,28 @@ function extractRekapPayload(payload: any) {
     return { users: payload, summary: {} as Record<string, any> };
   }
 
-  const users = Array.isArray(payload.data)
+  const data = Array.isArray(payload.data)
     ? payload.data
     : Array.isArray(payload.users)
       ? payload.users
-      : Array.isArray(payload.chartData)
-        ? payload.chartData
-        : [];
+      : [];
+  const chartData = Array.isArray(payload.chartData) ? payload.chartData : [];
+  const chartHasComments = arrayHasCommentMetrics(chartData);
+  const dataHasComments = arrayHasCommentMetrics(data);
+
+  let users: any[] = [];
+
+  if (chartHasComments) {
+    users =
+      data.length > 0
+        ? mergeUsersByKey(chartData, data, { preferPrimary: true })
+        : chartData;
+  } else if (dataHasComments) {
+    users = data;
+  } else if (chartData.length > 0) {
+    users = chartData;
+  }
+
   const summary = payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
   return { users, summary };
 }
