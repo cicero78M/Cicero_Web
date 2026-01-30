@@ -167,7 +167,6 @@ export default function useTiktokCommentsData({
     [auth?.clientId],
   );
   const [chartData, setChartData] = useState<any[]>([]);
-  const [summaryChartData, setSummaryChartData] = useState<any[]>([]);
   const [rekapSummary, setRekapSummary] = useState<RekapSummary>({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -425,9 +424,9 @@ export default function useTiktokCommentsData({
               regional_id: normalizedRegionalId,
             },
           );
-          const { users: payloadUsers } = extractRekapPayload(rekapRes);
+          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
           users = payloadUsers;
-          rekapSummaryPayload = (rekapRes as any)?.data ?? rekapRes ?? {};
+          rekapSummaryPayload = summary;
         } else {
           const rekapRes = await getRekapKomentarTiktok(
             token,
@@ -443,9 +442,9 @@ export default function useTiktokCommentsData({
               regional_id: normalizedRegionalId,
             },
           );
-          const { users: payloadUsers } = extractRekapPayload(rekapRes);
+          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
           users = payloadUsers;
-          rekapSummaryPayload = (rekapRes as any)?.data ?? rekapRes ?? {};
+          rekapSummaryPayload = summary;
         }
 
         let filteredUsers = users;
@@ -530,7 +529,8 @@ export default function useTiktokCommentsData({
           [...uniqueUsers].sort(compareUsersByPangkatAndNrp),
           normalizedLoginClientId || normalizedClientIdLower,
         );
-        const summaryPayload = rekapSummaryPayload?.summary ?? {};
+        const summaryPayload =
+          rekapSummaryPayload?.summary ?? rekapSummaryPayload ?? {};
         const distribution =
           summaryPayload?.distribution ??
           summaryPayload?.distribusi ??
@@ -550,6 +550,12 @@ export default function useTiktokCommentsData({
           summaryPayload?.total_tiktok_posts ??
           summaryPayload?.totalTiktokPost ??
           summaryPayload?.totalTiktokPosts ??
+          (statsData as any)?.ttPosts ??
+          (statsData as any)?.tiktokPosts ??
+          (statsData as any)?.totalTiktokPost ??
+          (statsData as any)?.totalTiktokPosts ??
+          (statsData as any)?.tt_posts ??
+          (statsData as any)?.tiktok_posts ??
           0;
         const totalTiktokPost = Number(totalTiktokPostRaw) || 0;
         const totalSudahKomentar = Number(distribution?.sudah ?? 0) || 0;
@@ -564,12 +570,6 @@ export default function useTiktokCommentsData({
               distribution?.noUsernameCount ??
               0,
           ) || 0;
-        const summaryChartPayload =
-          summaryPayload?.chartData ??
-          summaryPayload?.chart_data ??
-          summaryPayload?.rekapChartData ??
-          summaryPayload?.summaryChartData ??
-          [];
 
         if (controller.signal.aborted) return;
         setRekapSummary({
@@ -581,9 +581,6 @@ export default function useTiktokCommentsData({
           totalTiktokPost,
         });
         setChartData(sortedUsers);
-        setSummaryChartData(
-          Array.isArray(summaryChartPayload) ? summaryChartPayload : [],
-        );
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err?.message || err));
@@ -613,7 +610,6 @@ export default function useTiktokCommentsData({
 
   return {
     chartData,
-    summaryChartData,
     rekapSummary,
     isDirectorate,
     isOrgClient,

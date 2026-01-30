@@ -64,7 +64,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const {
     chartData,
-    summaryChartData,
     rekapSummary,
     isDirectorate,
     clientName,
@@ -251,31 +250,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     showTotalUser: true,
     titleClassName: "text-slate-700",
   };
-  const normalizedSummaryChartData = useMemo(() => {
-    if (!summaryChartData?.length) return [];
-    return summaryChartData.map((entry) => ({
-      ...entry,
-      divisi:
-        entry?.divisi ??
-        entry?.label ??
-        entry?.name ??
-        entry?.satfung ??
-        entry?.unit ??
-        entry?.client_name ??
-        entry?.nama_client ??
-        entry?.clientName ??
-        entry?.client ??
-        entry?.client_id ??
-        "",
-    }));
-  }, [summaryChartData]);
-  const summaryKelompok = useMemo(() => {
-    if (!normalizedSummaryChartData.length) return null;
-    return groupUsersByKelompok(normalizedSummaryChartData);
-  }, [normalizedSummaryChartData]);
-  const chartSummaryData = normalizedSummaryChartData.length
-    ? normalizedSummaryChartData
-    : null;
 
   const scopeSelectorProps = {
     value: directorateScope,
@@ -361,7 +335,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
               {...chartBoxCommonProps}
               title={directorateTitle}
               users={chartData}
-              summaryData={chartSummaryData}
               totalPost={rekapSummary.totalTiktokPost}
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
@@ -378,7 +351,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                 {...chartBoxCommonProps}
                 title="BAG"
                 users={kelompok.BAG}
-                summaryData={summaryKelompok?.BAG}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
                 sortBy="percentage"
@@ -387,7 +359,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                 {...chartBoxCommonProps}
                 title="SAT"
                 users={kelompok.SAT}
-                summaryData={summaryKelompok?.SAT}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
                 sortBy="percentage"
@@ -396,7 +367,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                 {...chartBoxCommonProps}
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
-                summaryData={summaryKelompok?.["SI & SPKT"]}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
                 sortBy="percentage"
@@ -405,7 +375,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                 {...chartBoxCommonProps}
                 title="LAINNYA"
                 users={kelompok.LAINNYA}
-                summaryData={summaryKelompok?.LAINNYA}
                 totalPost={rekapSummary.totalTiktokPost}
                 narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
                 sortBy="percentage"
@@ -413,7 +382,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
-                summaryData={summaryKelompok?.POLSEK}
                 totalPost={rekapSummary.totalTiktokPost}
                 fieldJumlah="jumlah_komentar"
                 labelSudah="User Sudah Komentar"
@@ -439,7 +407,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
         <RekapKomentarTiktok
           users={chartData}
           totalTiktokPost={rekapSummary.totalTiktokPost}
-          summaryTotals={rekapSummary}
           showCopyButton={false}
           clientName={clientName}
           reportContext={reportContext}
