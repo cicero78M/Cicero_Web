@@ -31,78 +31,10 @@ function bersihkanSatfung(divisi = "") {
     .trim();
 }
 
-function normalizeStatusKey(rawStatus) {
-  const normalized = String(rawStatus || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_");
-
-  if (!normalized) return undefined;
-
-  if (
-    [
-      "no_username",
-      "tanpa_username",
-      "tanpausername",
-      "no-username",
-      "no_username_tiktok",
-    ].includes(normalized)
-  )
-    return "tanpaUsername";
-
-  if (["no_posts", "no_post", "tanpa_post", "tanpa_konten", "no_content"].includes(normalized)) {
-    return "no_posts";
-  }
-
-  if (["sudah", "complete", "completed", "done", "finish", "finished"].includes(normalized)) {
-    return "sudah";
-  }
-
-  if (["kurang", "partial", "incomplete", "kurang_lengkap"].includes(normalized)) {
-    return "kurang";
-  }
-
-  if (["belum", "pending", "not_started", "notstarted", "none"].includes(normalized)) {
-    return "belum";
-  }
-
-  return undefined;
-}
-
-function getKomentarStatus({
-  user,
-  jumlahKomentar = 0,
-  totalPostCount = 0,
-  hasUsername,
-}) {
+function getKomentarStatus({ jumlahKomentar = 0, totalPostCount = 0, hasUsername }) {
   if (!hasUsername) return "tanpaUsername";
 
-  const totalKonten = Number(user?.total_konten ?? user?.totalKonten);
-  if (Number.isFinite(totalKonten) && totalKonten === 0) return "no_posts";
-
-  const payloadStatus = normalizeStatusKey(user?.status);
-  if (payloadStatus) return payloadStatus;
-
-  const completionPercentageRaw =
-    user?.completionPercentage ??
-    user?.completion_percentage ??
-    user?.completionPercent ??
-    user?.completion_percent ??
-    user?.performa ??
-    user?.performance;
-  if (completionPercentageRaw !== undefined && completionPercentageRaw !== null) {
-    const completionPercentage = Number(completionPercentageRaw);
-    if (Number.isFinite(completionPercentage)) {
-      if (completionPercentage >= 100) return "sudah";
-      if (completionPercentage > 0) return "kurang";
-      return "belum";
-    }
-  }
-
-  const safeTotalPost = Math.max(
-    0,
-    Number.isFinite(totalKonten) ? totalKonten : Number(totalPostCount) || 0,
-  );
+  const safeTotalPost = Math.max(0, Number(totalPostCount) || 0);
   const safeJumlahKomentar = clampEngagementCompleted({
     completed: jumlahKomentar,
     totalTarget: safeTotalPost,
@@ -242,22 +174,14 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
 
   const classifyStatus = (user) =>
     getKomentarStatus({
-      user,
       jumlahKomentar: user.jumlah_komentar,
       totalPostCount: totalTiktokPostCount,
       hasUsername: true,
     });
 
-  const normalizeSummaryStatus = (statusKey) => (statusKey === "no_posts" ? "belum" : statusKey);
-  const totalSudahKomentar = validUsers.filter(
-    (u) => normalizeSummaryStatus(classifyStatus(u)) === "sudah",
-  ).length;
-  const totalKurangKomentar = validUsers.filter(
-    (u) => normalizeSummaryStatus(classifyStatus(u)) === "kurang",
-  ).length;
-  const totalBelumKomentar = validUsers.filter(
-    (u) => normalizeSummaryStatus(classifyStatus(u)) === "belum",
-  ).length;
+  const totalSudahKomentar = validUsers.filter((u) => classifyStatus(u) === "sudah").length;
+  const totalKurangKomentar = validUsers.filter((u) => classifyStatus(u) === "kurang").length;
+  const totalBelumKomentar = validUsers.filter((u) => classifyStatus(u) === "belum").length;
   const totalTanpaUsername = tanpaUsernameUsers.length;
   const validUserCount = validUsers.length;
 
@@ -344,7 +268,6 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       const username = String(u.username || "").trim();
       const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
       const statusKey = getKomentarStatus({
-        user: u,
         jumlahKomentar,
         totalPostCount: totalTiktokPostCount,
         hasUsername: Boolean(username),
@@ -430,7 +353,6 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       const username = String(u.username || "").trim();
       const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
       const statusKey = getKomentarStatus({
-        user: u,
         jumlahKomentar,
         totalPostCount: totalTiktokPostCount,
         hasUsername: Boolean(username),
@@ -707,12 +629,6 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                           icon: <X className="h-3 w-3" />,
                           label: "Belum",
                         },
-                        no_posts: {
-                          row: "bg-rose-50",
-                          badge: "border border-rose-200 bg-rose-50 text-rose-700",
-                          icon: <X className="h-3 w-3" />,
-                          label: "Tidak ada konten",
-                        },
                         kurang: {
                           row: "bg-amber-50",
                           badge: "border border-amber-200 bg-amber-50 text-amber-700",
@@ -734,15 +650,11 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                       };
 
                       const statusKey = getKomentarStatus({
-                        user: u,
                         jumlahKomentar,
                         totalPostCount: totalTiktokPostCount,
                         hasUsername: Boolean(username),
                       });
-                      const jumlahDisplay =
-                        statusKey === "tanpaUsername" || statusKey === "no_posts"
-                          ? 0
-                          : jumlahKomentar;
+                      const jumlahDisplay = statusKey === "tanpaUsername" ? 0 : jumlahKomentar;
 
                       const status = statusStyles[statusKey];
 

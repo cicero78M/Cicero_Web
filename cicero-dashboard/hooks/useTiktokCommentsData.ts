@@ -273,41 +273,6 @@ function normalizeUserRecord(user: any) {
   const normalizedDivisi = user?.divisi ?? user?.satfung ?? user?.unit ?? user?.division ?? "";
   const normalizedClientId =
     user?.client_id ?? user?.clientId ?? user?.clientID ?? user?.client ?? "";
-  const status = user?.status ?? user?.Status ?? user?.engagement_status ?? user?.engagementStatus;
-  const completionPercentageRaw =
-    user?.completionPercentage ??
-    user?.completion_percentage ??
-    user?.completionPercent ??
-    user?.completion_percent ??
-    user?.performa ??
-    user?.performance;
-  const missingCommentsRaw =
-    user?.missingComments ?? user?.missing_comments ?? user?.missingComment ?? user?.missing_comment;
-  const totalKontenRaw =
-    user?.total_konten ??
-    user?.totalKonten ??
-    user?.total_content ??
-    user?.totalContent ??
-    user?.total_posts ??
-    user?.totalPosts;
-  const completionPercentage =
-    completionPercentageRaw === undefined || completionPercentageRaw === null
-      ? undefined
-      : Number.isFinite(Number(completionPercentageRaw))
-        ? Number(completionPercentageRaw)
-        : completionPercentageRaw;
-  const missingComments =
-    missingCommentsRaw === undefined || missingCommentsRaw === null
-      ? undefined
-      : Number.isFinite(Number(missingCommentsRaw))
-        ? Number(missingCommentsRaw)
-        : missingCommentsRaw;
-  const total_konten =
-    totalKontenRaw === undefined || totalKontenRaw === null
-      ? undefined
-      : Number.isFinite(Number(totalKontenRaw))
-        ? Number(totalKontenRaw)
-        : totalKontenRaw;
 
   return {
     ...user,
@@ -317,10 +282,6 @@ function normalizeUserRecord(user: any) {
     divisi: normalizedDivisi || user?.divisi,
     username: String(normalizedUsername || user?.username || "").trim(),
     jumlah_komentar: Number(jumlahKomentarRaw) || 0,
-    status,
-    completionPercentage,
-    missingComments,
-    total_konten,
   };
 }
 
