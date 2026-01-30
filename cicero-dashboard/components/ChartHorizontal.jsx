@@ -19,7 +19,8 @@ function bersihkanSatfung(divisi = "") {
 }
 
 export default function ChartHorizontal({
-  users,
+  users = [],
+  summaryData,
   title = "POLSEK - Absensi Likes",
   totalPost = 1,
   totalIGPost,
@@ -37,35 +38,115 @@ export default function ChartHorizontal({
 
   // Jika tidak ada post, semua user masuk belum (termasuk exception)
   const isZeroPost = (effectiveTotal || 0) === 0;
+  const hasSummaryData = Array.isArray(summaryData) && summaryData.length > 0;
+
+  const normalizeSummaryEntry = (entry, index) => {
+    const distribution =
+      entry?.distribution ?? entry?.distribusi ?? entry?.statusDistribution ?? {};
+    const totalUser =
+      Number(
+        entry?.total_user ??
+          entry?.totalUser ??
+          entry?.totalUsers ??
+          entry?.userTotal ??
+          entry?.total ??
+          distribution?.totalUsers ??
+          0,
+      ) || 0;
+    const userSudah =
+      Number(entry?.user_sudah ?? entry?.sudah ?? distribution?.sudah ?? 0) || 0;
+    const userKurang =
+      Number(entry?.user_kurang ?? entry?.kurang ?? distribution?.kurang ?? 0) || 0;
+    const userBelum =
+      (Number(entry?.user_belum ?? entry?.belum ?? distribution?.belum ?? 0) || 0) +
+      (Number(
+        entry?.noPosts ??
+          entry?.no_posts ??
+          distribution?.noPosts ??
+          distribution?.no_posts ??
+          0,
+      ) || 0);
+    const totalValue =
+      Number(
+        entry?.total_value ??
+          entry?.totalValue ??
+          entry?.totalKomentar ??
+          entry?.totalComments ??
+          0,
+      ) || 0;
+    const divisiLabel =
+      entry?.divisi ??
+      entry?.name ??
+      entry?.label ??
+      entry?.satfung ??
+      entry?.unit ??
+      entry?.client_name ??
+      entry?.nama_client ??
+      entry?.clientName ??
+      entry?.client ??
+      entry?.client_id ??
+      `Item ${index + 1}`;
+
+    return {
+      divisi: bersihkanSatfung(String(divisiLabel || "LAINNYA")),
+      total_user: totalUser,
+      user_sudah: userSudah,
+      user_kurang: userKurang,
+      user_belum: userBelum,
+      total_value: totalValue,
+    };
+  };
 
   // Matrix 3 metrik per polsek
   const divisiMap = {};
-  users.forEach((u) => {
-    const key = bersihkanSatfung(u.divisi || "LAINNYA");
-    // Logic: sudahLike hanya berlaku kalau ada post
-    const jumlah = Number(u[fieldJumlah] || 0);
-    const sudah = !isZeroPost && jumlah >= effectiveTotal;
-    const kurang = !sudah && !isZeroPost && jumlah > 0;
-    const nilai = jumlah;
-    if (!divisiMap[key])
-      divisiMap[key] = {
-        divisi: key,
-        total_user: 0,
-        user_sudah: 0,
-        user_kurang: 0,
-        user_belum: 0,
-        total_value: 0,
-      };
-    divisiMap[key].total_user += 1;
-    divisiMap[key].total_value += nilai;
-    if (sudah) {
-      divisiMap[key].user_sudah += 1;
-    } else if (kurang) {
-      divisiMap[key].user_kurang += 1;
-    } else {
-      divisiMap[key].user_belum += 1;
-    }
-  });
+  if (hasSummaryData) {
+    summaryData.forEach((entry, index) => {
+      const normalized = normalizeSummaryEntry(entry, index);
+      const key = normalized.divisi || "LAINNYA";
+      if (!divisiMap[key]) {
+        divisiMap[key] = {
+          divisi: key,
+          total_user: 0,
+          user_sudah: 0,
+          user_kurang: 0,
+          user_belum: 0,
+          total_value: 0,
+        };
+      }
+      divisiMap[key].total_user += normalized.total_user || 0;
+      divisiMap[key].user_sudah += normalized.user_sudah || 0;
+      divisiMap[key].user_kurang += normalized.user_kurang || 0;
+      divisiMap[key].user_belum += normalized.user_belum || 0;
+      divisiMap[key].total_value += normalized.total_value || 0;
+    });
+  } else {
+    users.forEach((u) => {
+      const key = bersihkanSatfung(u.divisi || "LAINNYA");
+      // Logic: sudahLike hanya berlaku kalau ada post
+      const jumlah = Number(u[fieldJumlah] || 0);
+      const sudah = !isZeroPost && jumlah >= effectiveTotal;
+      const kurang = !sudah && !isZeroPost && jumlah > 0;
+      const nilai = jumlah;
+      if (!divisiMap[key])
+        divisiMap[key] = {
+          divisi: key,
+          total_user: 0,
+          user_sudah: 0,
+          user_kurang: 0,
+          user_belum: 0,
+          total_value: 0,
+        };
+      divisiMap[key].total_user += 1;
+      divisiMap[key].total_value += nilai;
+      if (sudah) {
+        divisiMap[key].user_sudah += 1;
+      } else if (kurang) {
+        divisiMap[key].user_kurang += 1;
+      } else {
+        divisiMap[key].user_belum += 1;
+      }
+    });
+  }
   const dataChart = Object.values(divisiMap).sort((a, b) => {
     if (sortBy === "percentage") {
       const percA = a.total_user ? a.user_sudah / a.total_user : 0;

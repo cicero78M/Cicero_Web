@@ -53,6 +53,7 @@ function getKomentarStatus({ jumlahKomentar = 0, totalPostCount = 0, hasUsername
  * @param {boolean} showRekapButton tampilkan panel aksi rekap
  * @param {boolean} showCopyButton tampilkan tombol salin rekap standar
  * @param {string} clientName label client/direktorat manual (opsional)
+ * @param {{ totalUser?: number, totalSudahKomentar?: number, totalKurangKomentar?: number, totalBelumKomentar?: number, totalTanpaUsername?: number, totalTiktokPost?: number }} summaryTotals ringkasan agregat agar kartu ringkasan tidak menghitung ulang dari daftar user
  * @param {{ periodeLabel?: string, viewLabel?: string, directorateName?: string }} reportContext konteks laporan
  * @param {boolean} showPremiumCta tampilkan CTA Premium di samping tombol salin rekap
  */
@@ -63,13 +64,15 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     showRekapButton = true,
     showCopyButton = true,
     clientName = "",
+    summaryTotals,
     reportContext = {},
     showPremiumCta = false,
   },
   ref,
 ) {
   const { periodeLabel, viewLabel, directorateName } = reportContext || {};
-  const totalTiktokPostCount = Number(totalTiktokPost) || 0;
+  const totalTiktokPostCount =
+    Number(summaryTotals?.totalTiktokPost ?? totalTiktokPost) || 0;
   const clampKomentarToTask = (jumlahKomentar = 0) =>
     clampEngagementCompleted({ completed: jumlahKomentar, totalTarget: totalTiktokPostCount });
 
@@ -154,7 +157,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     return prioritizeUsersForClient(sorted, inferredClientId);
   }, [users, inferredClientId]);
 
-  const totalUser = sortedUsers.length;
+  const computedTotalUser = sortedUsers.length;
   const hasClient = useMemo(
     () =>
       sortedUsers.some(
@@ -179,11 +182,20 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       hasUsername: true,
     });
 
-  const totalSudahKomentar = validUsers.filter((u) => classifyStatus(u) === "sudah").length;
-  const totalKurangKomentar = validUsers.filter((u) => classifyStatus(u) === "kurang").length;
-  const totalBelumKomentar = validUsers.filter((u) => classifyStatus(u) === "belum").length;
-  const totalTanpaUsername = tanpaUsernameUsers.length;
-  const validUserCount = validUsers.length;
+  const computedTotalSudah = validUsers.filter((u) => classifyStatus(u) === "sudah").length;
+  const computedTotalKurang = validUsers.filter((u) => classifyStatus(u) === "kurang").length;
+  const computedTotalBelum = validUsers.filter((u) => classifyStatus(u) === "belum").length;
+  const computedTotalTanpaUsername = tanpaUsernameUsers.length;
+  const totalUser = Number(summaryTotals?.totalUser ?? computedTotalUser) || 0;
+  const totalSudahKomentar =
+    Number(summaryTotals?.totalSudahKomentar ?? computedTotalSudah) || 0;
+  const totalKurangKomentar =
+    Number(summaryTotals?.totalKurangKomentar ?? computedTotalKurang) || 0;
+  const totalBelumKomentar =
+    Number(summaryTotals?.totalBelumKomentar ?? computedTotalBelum) || 0;
+  const totalTanpaUsername =
+    Number(summaryTotals?.totalTanpaUsername ?? computedTotalTanpaUsername) || 0;
+  const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
 
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
