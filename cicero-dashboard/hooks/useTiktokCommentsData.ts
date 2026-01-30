@@ -34,27 +34,6 @@ const COMMENT_METRIC_FIELDS = [
   "jumlah_komentar",
   "missingComments",
 ];
-const SUMMARY_COUNT_FIELDS = {
-  sudah: ["sudahUsersCount", "sudah_users_count"],
-  kurang: ["kurangUsersCount", "kurang_users_count"],
-  belum: ["belumUsersCount", "belum_users_count"],
-  tanpaUsername: [
-    "noUsernameUsersCount",
-    "no_username_users_count",
-    "tanpaUsernameUsersCount",
-    "tanpa_username_users_count",
-  ],
-  totalPosts: [
-    "totalPosts",
-    "total_posts",
-    "totalPost",
-    "total_post",
-    "total_tiktok_post",
-    "total_tiktok_posts",
-    "totalTiktokPost",
-    "totalTiktokPosts",
-  ],
-} as const;
 
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
@@ -68,49 +47,6 @@ function normalizeRolePayload(value?: unknown): string | undefined {
 function normalizeScopePayload(value?: unknown): string | undefined {
   const normalized = String(value || "").trim().toUpperCase();
   return normalized || undefined;
-}
-
-function parseSummaryMetric(
-  summary: Record<string, any>,
-  keys: readonly string[],
-): number | undefined {
-  for (const key of keys) {
-    if (summary?.[key] === undefined || summary?.[key] === null) continue;
-    const value = Number(summary[key]);
-    if (Number.isFinite(value)) return value;
-  }
-  return undefined;
-}
-
-function parseSummaryMetrics(summary: Record<string, any>) {
-  const sudah = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.sudah);
-  const kurang = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.kurang);
-  const belum = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.belum);
-  const tanpaUsername = parseSummaryMetric(
-    summary,
-    SUMMARY_COUNT_FIELDS.tanpaUsername,
-  );
-  const totalPosts = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.totalPosts);
-  const values = [sudah, kurang, belum, tanpaUsername, totalPosts];
-  const isComplete = values.every(
-    (value) => Number.isFinite(value) && (value as number) >= 0,
-  );
-  const totalUser = isComplete
-    ? (sudah as number) +
-      (kurang as number) +
-      (belum as number) +
-      (tanpaUsername as number)
-    : undefined;
-
-  return {
-    sudah,
-    kurang,
-    belum,
-    tanpaUsername,
-    totalPosts,
-    totalUser,
-    isComplete,
-  };
 }
 
 function getUserIdentifier(user: any): string {
@@ -671,13 +607,13 @@ export default function useTiktokCommentsData({
           normalizedLoginClientId || normalizedClientIdLower,
         );
         const totalUser = sortedUsers.length;
-        const summaryMetrics = parseSummaryMetrics(rekapSummaryPayload);
         const totalTiktokPostRaw =
-          summaryMetrics.totalPosts !== undefined &&
-          summaryMetrics.totalPosts >= 0
-            ? summaryMetrics.totalPosts
-            : undefined;
-        const totalTiktokPostFallback =
+          rekapSummaryPayload?.totalPosts ??
+          rekapSummaryPayload?.totalPost ??
+          rekapSummaryPayload?.total_tiktok_post ??
+          rekapSummaryPayload?.total_tiktok_posts ??
+          rekapSummaryPayload?.totalTiktokPost ??
+          rekapSummaryPayload?.totalTiktokPosts ??
           (statsData as any)?.ttPosts ??
           (statsData as any)?.tiktokPosts ??
           (statsData as any)?.totalTiktokPost ??
@@ -685,9 +621,7 @@ export default function useTiktokCommentsData({
           (statsData as any)?.tt_posts ??
           (statsData as any)?.tiktok_posts ??
           0;
-        const totalTiktokPost = Number(
-          totalTiktokPostRaw ?? totalTiktokPostFallback,
-        ) || 0;
+        const totalTiktokPost = Number(totalTiktokPostRaw) || 0;
         let totalSudahKomentar = 0;
         let totalKurangKomentar = 0;
         let totalBelumKomentar = 0;
@@ -711,24 +645,12 @@ export default function useTiktokCommentsData({
         });
 
         if (controller.signal.aborted) return;
-        const canUseSummary =
-          summaryMetrics.isComplete &&
-          summaryMetrics.totalUser === totalUser &&
-          summaryMetrics.totalPosts === totalTiktokPost;
         setRekapSummary({
           totalUser,
-          totalSudahKomentar: canUseSummary
-            ? summaryMetrics.sudah || 0
-            : totalSudahKomentar,
-          totalKurangKomentar: canUseSummary
-            ? summaryMetrics.kurang || 0
-            : totalKurangKomentar,
-          totalBelumKomentar: canUseSummary
-            ? summaryMetrics.belum || 0
-            : totalBelumKomentar,
-          totalTanpaUsername: canUseSummary
-            ? summaryMetrics.tanpaUsername || 0
-            : totalTanpaUsername,
+          totalSudahKomentar,
+          totalKurangKomentar,
+          totalBelumKomentar,
+          totalTanpaUsername,
           totalTiktokPost,
         });
         setChartData(sortedUsers);
