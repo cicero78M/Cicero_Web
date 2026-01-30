@@ -156,9 +156,7 @@ function normalizeUserRecord(user: any) {
     user?.handle ??
     user?.user_handle ??
     "";
-  const rawName = user?.nama ?? user?.name ?? user?.full_name ?? user?.fullName;
-  const rawLabel = user?.label ?? user?.Label;
-  const normalizedName = String(rawName ?? "").trim() || String(rawLabel ?? "").trim();
+  const normalizedName = user?.nama ?? user?.name ?? user?.full_name ?? user?.fullName ?? "";
   const normalizedTitle = user?.title ?? user?.pangkat ?? user?.rank ?? "";
   const normalizedDivisi = user?.divisi ?? user?.satfung ?? user?.unit ?? user?.division ?? "";
   const normalizedClientId =
