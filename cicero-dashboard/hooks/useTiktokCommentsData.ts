@@ -57,14 +57,6 @@ const SUMMARY_COUNT_FIELDS = {
   ],
 } as const;
 
-const SUMMARY_PRIMARY_KEYS = {
-  sudah: SUMMARY_COUNT_FIELDS.sudah[0],
-  kurang: SUMMARY_COUNT_FIELDS.kurang[0],
-  belum: SUMMARY_COUNT_FIELDS.belum[0],
-  tanpaUsername: SUMMARY_COUNT_FIELDS.tanpaUsername[0],
-  totalPosts: SUMMARY_COUNT_FIELDS.totalPosts[0],
-} as const;
-
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
 }
@@ -91,52 +83,15 @@ function parseSummaryMetric(
   return undefined;
 }
 
-function isEmptySummary(summary?: Record<string, any>): boolean {
-  return !summary || Object.keys(summary).length === 0;
-}
-
-function buildSummaryFromPayload(payload?: Record<string, any>) {
-  if (!payload) return {};
-  const summary: Record<string, any> = {};
-  const sudah = parseSummaryMetric(payload, SUMMARY_COUNT_FIELDS.sudah);
-  const kurang = parseSummaryMetric(payload, SUMMARY_COUNT_FIELDS.kurang);
-  const belum = parseSummaryMetric(payload, SUMMARY_COUNT_FIELDS.belum);
+function parseSummaryMetrics(summary: Record<string, any>) {
+  const sudah = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.sudah);
+  const kurang = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.kurang);
+  const belum = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.belum);
   const tanpaUsername = parseSummaryMetric(
-    payload,
+    summary,
     SUMMARY_COUNT_FIELDS.tanpaUsername,
   );
-  const totalPosts = parseSummaryMetric(payload, SUMMARY_COUNT_FIELDS.totalPosts);
-
-  if (sudah !== undefined) summary[SUMMARY_PRIMARY_KEYS.sudah] = sudah;
-  if (kurang !== undefined) summary[SUMMARY_PRIMARY_KEYS.kurang] = kurang;
-  if (belum !== undefined) summary[SUMMARY_PRIMARY_KEYS.belum] = belum;
-  if (tanpaUsername !== undefined)
-    summary[SUMMARY_PRIMARY_KEYS.tanpaUsername] = tanpaUsername;
-  if (totalPosts !== undefined)
-    summary[SUMMARY_PRIMARY_KEYS.totalPosts] = totalPosts;
-
-  return summary;
-}
-
-function parseSummaryMetrics(
-  summary: Record<string, any>,
-  payload?: Record<string, any>,
-) {
-  const resolvedSummary =
-    isEmptySummary(summary) && payload
-      ? buildSummaryFromPayload(payload)
-      : summary;
-  const sudah = parseSummaryMetric(resolvedSummary, SUMMARY_COUNT_FIELDS.sudah);
-  const kurang = parseSummaryMetric(resolvedSummary, SUMMARY_COUNT_FIELDS.kurang);
-  const belum = parseSummaryMetric(resolvedSummary, SUMMARY_COUNT_FIELDS.belum);
-  const tanpaUsername = parseSummaryMetric(
-    resolvedSummary,
-    SUMMARY_COUNT_FIELDS.tanpaUsername,
-  );
-  const totalPosts = parseSummaryMetric(
-    resolvedSummary,
-    SUMMARY_COUNT_FIELDS.totalPosts,
-  );
+  const totalPosts = parseSummaryMetric(summary, SUMMARY_COUNT_FIELDS.totalPosts);
   const values = [sudah, kurang, belum, tanpaUsername, totalPosts];
   const isComplete = values.every(
     (value) => Number.isFinite(value) && (value as number) >= 0,
@@ -315,11 +270,7 @@ function extractRekapPayload(payload: any) {
     users = chartData;
   }
 
-  const summarySource =
-    payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
-  const summary = isEmptySummary(summarySource)
-    ? buildSummaryFromPayload(payload)
-    : summarySource;
+  const summary = payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
   return { users, summary };
 }
 
@@ -731,10 +682,7 @@ export default function useTiktokCommentsData({
           normalizedLoginClientId || normalizedClientIdLower,
         );
         const totalUser = sortedUsers.length;
-        const summaryMetrics = parseSummaryMetrics(
-          rekapSummaryPayload,
-          rekapRes as Record<string, any>,
-        );
+        const summaryMetrics = parseSummaryMetrics(rekapSummaryPayload);
         const summaryTotalPosts =
           summaryMetrics.totalPosts !== undefined &&
           summaryMetrics.totalPosts >= 0
