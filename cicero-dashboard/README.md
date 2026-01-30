@@ -65,6 +65,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Narasi pada ChartBox utama kini hanya muncul ketika data tidak lagi digrup per client, sehingga build Next.js tidak gagal karena prop JSX yang belum dibungkus ekspresi.
 - Prop `narrative` pada ChartBox utama kini dibungkus ekspresi JSX sehingga kondisi `shouldGroupByClient` tidak lagi memicu sintaks error saat build production.
 - Tab insight menambahkan blok **Quick Insight** tiga poin untuk menyoroti kepatuhan likes, prioritas perbaikan, dan kebersihan data username secara ringkas tanpa menggulir ke grafik.
+- Total IG post untuk rekap engagement direktorat kini memakai fallback panjang array posting (`ig_posts`/`instagram_posts`) ketika field total tidak tersedia, sehingga perhitungan kepatuhan tetap akurat saat payload hanya mengirim daftar posting.
 - Komponen `InstagramEngagementInsightView` diekstrak ke `app/likes/instagram/InstagramEngagementInsightView.jsx` dan dipakai ulang oleh `page.jsx` serta `rekap/page.jsx` sehingga berkas page hanya mengekspor Page component default sesuai aturan Next.js.
 - Header halaman insight menggunakan prop `heroContent` standar yang sama seperti halaman TikTok sehingga komponen hero (selektor periode, pemilih lingkup Ditbinmas, dan tombol salin rekap) mengikuti penamaan konsisten di `InsightLayout`.
 - Hook `useInstagramLikesData` kini mendefinisikan konstanta `allowedScopeClients` satu kali di awal efek sehingga tidak ada deklarasi ganda yang memicu kegagalan build Next.js.

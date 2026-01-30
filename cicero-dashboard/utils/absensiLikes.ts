@@ -46,7 +46,19 @@ export async function fetchDitbinmasAbsensiLikes(
     statsData.igPosts ||
     statsData.instagram_posts ||
     [];
-  const totalIGPost = Number(statsData.instagramPosts) || 0;
+  const parsedInstagramPosts = Number(statsData.instagramPosts);
+  const fallbackPostCounts = [
+    Array.isArray(posts) ? posts.length : undefined,
+    Array.isArray(statsData.ig_posts) ? statsData.ig_posts.length : undefined,
+    Array.isArray(statsData.igPosts) ? statsData.igPosts.length : undefined,
+    Array.isArray(statsData.instagram_posts)
+      ? statsData.instagram_posts.length
+      : undefined,
+  ].filter((count) => typeof count === "number" && count > 0);
+  const totalIGPost =
+    Number.isFinite(parsedInstagramPosts) && parsedInstagramPosts > 0
+      ? parsedInstagramPosts
+      : fallbackPostCounts[0] || 0;
 
   // gather user directory
   const profileRes = await getClientProfile(
