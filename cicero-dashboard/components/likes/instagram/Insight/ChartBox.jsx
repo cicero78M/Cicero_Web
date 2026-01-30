@@ -13,7 +13,6 @@ const defaultDecorations = (
 export default function ChartBox({
   title,
   users,
-  summaryData,
   orientation = "vertical",
   totalPost,
   narrative,
@@ -32,10 +31,6 @@ export default function ChartBox({
   decorations = defaultDecorations,
   titleClassName = "text-sky-600",
 }) {
-  const hasData =
-    (Array.isArray(summaryData) && summaryData.length > 0) ||
-    (Array.isArray(users) && users.length > 0);
-
   return (
     <div
       className={cn(
@@ -54,10 +49,9 @@ export default function ChartBox({
       >
         {title}
       </div>
-      {hasData ? (
+      {users && users.length > 0 ? (
         <ChartDivisiAbsensi
           users={users}
-          summaryData={summaryData}
           title={title}
           orientation={orientation}
           totalPost={totalPost}

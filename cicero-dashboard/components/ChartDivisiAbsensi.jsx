@@ -23,8 +23,7 @@ function bersihkanSatfung(divisi = "") {
 }
 
 export default function ChartDivisiAbsensi({
-  users = [],
-  summaryData,
+  users,
   title = "Absensi Komentar TikTok per Divisi/Satfung",
   totalPost, // jumlah post untuk perbandingan, generic
   totalIGPost, // fallback untuk instagram (kompatibilitas lama)
@@ -41,24 +40,18 @@ export default function ChartDivisiAbsensi({
   sortBy = "total_value",
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
-  const hasSummaryData = Array.isArray(summaryData) && summaryData.length > 0;
 
   // Enrich user data with client names when grouping by client_id.
   useEffect(() => {
     async function enrich() {
-      if (hasSummaryData) {
-        setEnrichedUsers([]);
-        return;
-      }
-
       if (groupBy !== "client_id") {
         setEnrichedUsers(users);
         return;
       }
 
-      const needsName = users.some(
-        (u) => !(u.nama_client || u.client_name || u.client),
-      );
+        const needsName = users.some(
+          (u) => !(u.nama_client || u.client_name || u.client)
+        );
       if (!needsName) {
         setEnrichedUsers(users);
         return;
@@ -75,7 +68,9 @@ export default function ChartDivisiAbsensi({
 
       try {
         const ids = users.map((u) =>
-          String(u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""),
+          String(
+            u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
+          )
         );
         const nameMap = await getClientNames(token, ids);
         const mapped = users.map((u) => ({
@@ -83,7 +78,9 @@ export default function ChartDivisiAbsensi({
           nama_client:
             u.nama_client ||
             nameMap[
-              String(u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "")
+              String(
+                u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
+              )
             ] ||
             u.client_name ||
             u.client,
@@ -95,7 +92,7 @@ export default function ChartDivisiAbsensi({
     }
 
     enrich();
-  }, [users, groupBy, hasSummaryData]);
+  }, [users, groupBy]);
 
   // Fallback backward compatibility
   const effectiveTotal =
@@ -108,169 +105,52 @@ export default function ChartDivisiAbsensi({
   // Jika tidak ada post, semua user dianggap belum
   const isZeroPost = (effectiveTotal || 0) === 0;
 
-  const normalizeSummaryEntry = (entry, index) => {
-    const distribution =
-      entry?.distribution ?? entry?.distribusi ?? entry?.statusDistribution ?? {};
-    const totalUser =
-      Number(
-        entry?.total_user ??
-          entry?.totalUser ??
-          entry?.totalUsers ??
-          entry?.userTotal ??
-          entry?.total ??
-          distribution?.totalUsers ??
-          0,
-      ) || 0;
-    const userSudah =
-      Number(entry?.user_sudah ?? entry?.sudah ?? distribution?.sudah ?? 0) || 0;
-    const userKurang =
-      Number(entry?.user_kurang ?? entry?.kurang ?? distribution?.kurang ?? 0) || 0;
-    const userBelum =
-      (Number(entry?.user_belum ?? entry?.belum ?? distribution?.belum ?? 0) || 0) +
-      (Number(
-        entry?.noPosts ??
-          entry?.no_posts ??
-          distribution?.noPosts ??
-          distribution?.no_posts ??
-          0,
-      ) || 0);
-    const userWithoutUsername =
-      Number(
-        entry?.user_without_username ??
-          entry?.userWithoutUsername ??
-          entry?.tanpaUsername ??
-          entry?.noUsername ??
-          distribution?.noUsername ??
-          distribution?.no_username ??
-          0,
-      ) || 0;
-    const userWithUsername =
-      Number(
-        entry?.user_with_username ??
-          entry?.userWithUsername ??
-          (totalUser ? totalUser - userWithoutUsername : 0),
-      ) || 0;
-    const totalValue =
-      Number(
-        entry?.total_value ??
-          entry?.totalValue ??
-          entry?.totalKomentar ??
-          entry?.totalComments ??
-          0,
-      ) || 0;
-    const clientId =
-      entry?.client_id ?? entry?.clientId ?? entry?.clientID ?? entry?.client ?? "";
-    const clientName =
-      entry?.nama_client ??
-      entry?.client_name ??
-      entry?.clientName ??
-      entry?.client ??
-      clientId;
-    const divisiLabel =
-      entry?.divisi ??
-      entry?.name ??
-      entry?.label ??
-      entry?.satfung ??
-      entry?.unit ??
-      clientName ??
-      clientId ??
-      `Item ${index + 1}`;
-
-    return {
-      labelKey:
-        groupBy === "client_id"
-          ? clientName || clientId || divisiLabel
-          : divisiLabel,
-      total_user: totalUser,
-      user_sudah: userSudah,
-      user_kurang: userKurang,
-      user_belum: userBelum,
-      total_value: totalValue,
-      user_with_username: userWithUsername,
-      user_without_username: userWithoutUsername,
-      client_id: clientId,
-    };
-  };
-
   // Group by divisi atau client_id jika diminta
   const divisiMap = {};
   const labelKey = groupBy === "client_id" ? "client_name" : "divisi";
-  if (hasSummaryData) {
-    summaryData.forEach((entry, index) => {
-      const normalizedEntry = normalizeSummaryEntry(entry, index);
-      const key =
-        groupBy === "client_id"
-          ? String(normalizedEntry.client_id || normalizedEntry.labelKey)
-          : bersihkanSatfung(normalizedEntry.labelKey || "LAINNYA");
-      const display =
-        groupBy === "client_id"
-          ? normalizedEntry.labelKey || key
-          : key;
-      if (!divisiMap[key]) {
-        divisiMap[key] = {
-          [labelKey]: display,
-          total_user: 0,
-          user_sudah: 0,
-          user_kurang: 0,
-          user_belum: 0,
-          total_value: 0,
-          user_with_username: 0,
-          user_without_username: 0,
-        };
-      }
-      divisiMap[key].total_user += normalizedEntry.total_user || 0;
-      divisiMap[key].user_sudah += normalizedEntry.user_sudah || 0;
-      divisiMap[key].user_kurang += normalizedEntry.user_kurang || 0;
-      divisiMap[key].user_belum += normalizedEntry.user_belum || 0;
-      divisiMap[key].total_value += normalizedEntry.total_value || 0;
-      divisiMap[key].user_with_username += normalizedEntry.user_with_username || 0;
-      divisiMap[key].user_without_username += normalizedEntry.user_without_username || 0;
-    });
-  } else {
-    enrichedUsers.forEach((u) => {
-      const idKey = String(
-        u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
-      );
-      const key =
-        groupBy === "client_id"
-          ? idKey
-          : bersihkanSatfung(u.divisi || "LAINNYA");
-      const display =
-        groupBy === "client_id"
-          ? u.nama_client || u.client_name || u.client || idKey
-          : key;
-      const jumlah = Number(u[fieldJumlah] || 0);
-      const hasUsername = Boolean(String(u.username || "").trim());
-      const sudah = !isZeroPost && jumlah >= effectiveTotal;
-      const kurang = !sudah && !isZeroPost && jumlah > 0;
-      const nilai = jumlah;
-      if (!divisiMap[key])
-        divisiMap[key] = {
-          [labelKey]: display,
-          total_user: 0,
-          user_sudah: 0,
-          user_kurang: 0,
-          user_belum: 0,
-          total_value: 0,
-          user_with_username: 0,
-          user_without_username: 0,
-        };
-      divisiMap[key].total_user += 1;
-      divisiMap[key].total_value += nilai;
-      if (hasUsername) {
-        divisiMap[key].user_with_username += 1;
-      } else {
-        divisiMap[key].user_without_username += 1;
-      }
-      if (sudah) {
-        divisiMap[key].user_sudah += 1;
-      } else if (kurang) {
-        divisiMap[key].user_kurang += 1;
-      } else {
-        divisiMap[key].user_belum += 1;
-      }
-    });
-  }
+  enrichedUsers.forEach((u) => {
+    const idKey = String(
+      u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
+    );
+    const key =
+      groupBy === "client_id"
+        ? idKey
+        : bersihkanSatfung(u.divisi || "LAINNYA");
+    const display =
+      groupBy === "client_id"
+        ? u.nama_client || u.client_name || u.client || idKey
+        : key;
+    const jumlah = Number(u[fieldJumlah] || 0);
+    const hasUsername = Boolean(String(u.username || "").trim());
+    const sudah = !isZeroPost && jumlah >= effectiveTotal;
+    const kurang = !sudah && !isZeroPost && jumlah > 0;
+    const nilai = jumlah;
+    if (!divisiMap[key])
+      divisiMap[key] = {
+        [labelKey]: display,
+        total_user: 0,
+        user_sudah: 0,
+        user_kurang: 0,
+        user_belum: 0,
+        total_value: 0,
+        user_with_username: 0,
+        user_without_username: 0,
+      };
+    divisiMap[key].total_user += 1;
+    divisiMap[key].total_value += nilai;
+    if (hasUsername) {
+      divisiMap[key].user_with_username += 1;
+    } else {
+      divisiMap[key].user_without_username += 1;
+    }
+    if (sudah) {
+      divisiMap[key].user_sudah += 1;
+    } else if (kurang) {
+      divisiMap[key].user_kurang += 1;
+    } else {
+      divisiMap[key].user_belum += 1;
+    }
+  });
 
   const DIRECTORATE_NAME = "direktorat binmas";
   const normalizeClientName = (name = "") =>
