@@ -15,7 +15,6 @@ import {
   getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
-import { fetchDitbinmasAbsensiKomentarTiktok } from "@/utils/absensiKomentarTiktok";
 
 const USER_IDENTIFIER_FIELDS = [
   "nrp",
@@ -549,55 +548,45 @@ export default function useTiktokCommentsData({
             allowedScopeClients.has(normalizedClientIdUpper),
         );
 
-        const requestContext = {
-          role: requestRole,
-          scope: requestScope,
-          regional_id: normalizedRegionalId,
-        };
-        if (directorate || scope === "all") {
-          const { users, summary, clientName: aggregatedClientName } =
-            await fetchDitbinmasAbsensiKomentarTiktok(
-              token,
-              {
-                periode,
-                date,
-                startDate,
-                endDate,
-              },
-              controller.signal,
-              userClientId,
-              scope,
-              effectiveDirectorateClientId,
-              requestContext,
-            );
-          if (controller.signal.aborted) return;
-          const sortedUsers = prioritizeUsersForClient(
-            [...users].sort(compareUsersByPangkatAndNrp),
-            normalizedLoginClientId || normalizedClientIdLower,
-          );
-          setChartData(sortedUsers);
-          setRekapSummary(summary as RekapSummary);
-          if (aggregatedClientName) {
-            setClientName(aggregatedClientName);
-          }
-          return;
-        }
-
         let users: any[] = [];
         let rekapSummaryPayload: Record<string, any> = {};
-        const rekapRes = await getRekapKomentarTiktok(
-          token,
-          userClientId,
-          periode,
-          date,
-          startDate,
-          endDate,
-          controller.signal,
-          requestContext,
-        );
-        const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
-        users = payloadUsers;
-        rekapSummaryPayload = summary;
+        if (directorate) {
+          const rekapRes = await getRekapKomentarTiktok(
+            token,
+            normalizedClientId,
+            periode,
+            date,
+            startDate,
+            endDate,
+            controller.signal,
+            {
+              role: requestRole,
+              scope: requestScope,
+              regional_id: normalizedRegionalId,
+            },
+          );
+          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
+          users = payloadUsers;
+          rekapSummaryPayload = summary;
+        } else {
+          const rekapRes = await getRekapKomentarTiktok(
+            token,
+            userClientId,
+            periode,
+            date,
+            startDate,
+            endDate,
+            controller.signal,
+            {
+              role: requestRole,
+              scope: requestScope,
+              regional_id: normalizedRegionalId,
+            },
+          );
+          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
+          users = payloadUsers;
+          rekapSummaryPayload = summary;
+        }
 
         let filteredUsers = users;
         const shouldFilterByClient = Boolean(normalizedClientIdLower);
