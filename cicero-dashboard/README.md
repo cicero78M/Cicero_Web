@@ -151,7 +151,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
   }
   ```
   Alur pengguna: pilih paket (nominal unik dikalkulasi otomatis) → isi rekening & nama pengirim → submit (nominal unik terkunci dan dikirim bersama identifier login) → verifikasi pembayaran/nominal oleh tim dengan instruksi transfer ke **0891758684 (BCA a.n Rizqa Febryan Prastyo)** dan catatan nama pengirim untuk mempercepat verifikasi. QA tidak perlu mencari field `username`/`Client ID` karena sudah dihapus dari form dan payload.
-- Menu **Premium** di sidebar/dashboard serta tombol **Premium** pada header insight Instagram dan TikTok hanya muncul untuk pengguna dengan `client_type` **ORG**, sehingga akun direktorat tidak melihat CTA paket premium.
+- Menu **Premium** di sidebar/dashboard serta tombol **Premium** pada header insight Instagram dan TikTok hanya muncul untuk pengguna dengan `client_type` **ORG** selain role **Operator**, sehingga akun direktorat dan operator ORG tidak melihat CTA paket premium.
 
 ## Dashboard Utama
 

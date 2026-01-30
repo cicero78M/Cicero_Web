@@ -13,7 +13,7 @@ Halaman **/premium** menyediakan ringkasan paket premium Cicero dengan CTA ke fo
 
 - **/premium**: Halaman ringkasan fitur + tombol **Daftar Sekarang** menuju formulir pendaftaran.
 - **/premium/register**: Formulir pendaftaran dengan template pesan WA Bot yang dapat dikirim langsung (target `https://wa.me/+6281235114745`) sekaligus mengirim permintaan ke backend.
-- Sidebar menambahkan menu **Premium** sehingga halaman dapat diakses dari navigasi utama dashboard.
+- Sidebar menambahkan menu **Premium** untuk klien ORG non-operator sehingga halaman dapat diakses dari navigasi utama dashboard.
 - CTA pada halaman insight Instagram dan TikTok ditempatkan di area aksi rekap (sticky bottom) agar mudah dijangkau setelah menyalin laporan.
 - Form `/premium/register` kini mengirim POST ke endpoint backend **`/api/premium/request`** dengan field yang disetujui backend:
   - `premium_tier`, `bank_name`, `sender_name`, `account_number`.

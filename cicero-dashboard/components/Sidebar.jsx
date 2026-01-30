@@ -64,6 +64,7 @@ export default function Sidebar() {
   const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
   const isOrgClient = normalizedEffectiveClientType === "org";
   const isOperator = normalizedEffectiveRole === "operator";
+  const isOrgOperator = isOrgClient && isOperator;
   const normalizedClientId = clientId?.toLowerCase();
   const hasEngagementAccessOverride =
     normalizedEffectiveClientType === "org" &&
@@ -83,7 +84,7 @@ export default function Sidebar() {
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
     ...(instagramEnabled
       ? [
-          ...(isOperator
+          ...(!isOrgOperator && isOperator
             ? [{
                 label: "Instagram Post Analysis",
                 path: "/instagram",
@@ -98,7 +99,7 @@ export default function Sidebar() {
       : []),
     ...(tiktokEnabled
       ? [
-          ...(isOperator
+          ...(!isOrgOperator && isOperator
             ? [{
                 label: "TikTok Post Analysis",
                 path: "/tiktok",
@@ -144,7 +145,7 @@ export default function Sidebar() {
       path: "/mekanisme-absensi",
       icon: Workflow,
     },
-    ...(isOrgClient
+    ...(isOrgClient && !isOrgOperator
       ? [{ label: "Premium", path: "/premium", icon: Sparkles }]
       : []),
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },
