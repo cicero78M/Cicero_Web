@@ -4,7 +4,7 @@
 This document describes the implementation of menu functionality for clients with `client_type='Org'` and `role='Operator'`.
 
 ## Problem Statement
-We needed to add a mechanism for clients with 'client_type' of 'Org' and a 'role' of 'Operator' to see specific menu items, while ensuring existing mechanisms for other client/role combinations remained unchanged.
+We needed to ensure clients with `client_type='Org'` and `role='Operator'` only see engagement insight entries (and keep the rest of the menu stable), while hiding operator-only post analysis items and the Premium menu for that combination.
 
 ## Solution
 
@@ -35,15 +35,15 @@ When a user has `client_type='Org'` and `role='Operator'`, they now see:
 1. **Dashboard** - `/dashboard`
 2. **User Directory** - `/users`
 3. **User Insight** - `/user-insight`
-4. **Instagram Post Analysis** - `/instagram` (operator-specific)
-5. **Instagram Engagement Insight** - `/likes/instagram` ⭐ (new)
-6. **TikTok Post Analysis** - `/tiktok` (operator-specific)
-7. **TikTok Engagement Insight** - `/comments/tiktok` ⭐ (new)
-8. **Mekanisme Sistem Absensi** - `/mekanisme-absensi`
-9. **Premium** - `/premium` (org-specific)
-10. **Panduan & SOP** - `/panduan-sop`
+4. **Instagram Engagement Insight** - `/likes/instagram`
+5. **TikTok Engagement Insight** - `/comments/tiktok`
+6. **Mekanisme Sistem Absensi** - `/mekanisme-absensi`
+7. **Panduan & SOP** - `/panduan-sop`
 
-*Note: Items marked with ⭐ are the key additions enabled by this change.*
+**Not shown for Org + Operator:**
+- Instagram Post Analysis (`/instagram`)
+- TikTok Post Analysis (`/tiktok`)
+- Premium (`/premium`)
 
 ### Behavior Preserved
 
@@ -72,10 +72,10 @@ The implementation ensures that existing menu behavior for other client/role com
 Created comprehensive test suite with 14 test cases:
 
 #### Org + Operator Menu Tests (6 tests)
-- ✅ Shows all 7 required menu items
-- ✅ Shows Instagram Post Analysis for operators
-- ✅ Shows TikTok Post Analysis for operators
-- ✅ Shows Premium menu for Org clients
+- ✅ Shows required menu items
+- ✅ Hides Instagram Post Analysis for Org operator
+- ✅ Hides TikTok Post Analysis for Org operator
+- ✅ Hides Premium menu for Org operator
 - ✅ Does not show Post Analysis for non-operators
 - ✅ Properly filters by role
 
@@ -124,14 +124,14 @@ Menu items conditionally rendered based on:
   - instagramEnabled
   - tiktokEnabled
   - isOperator (for Post Analysis items)
-  - isOrgClient (for Premium item)
+  - isOrgClient (for Premium item, excluding Org + Operator)
 ```
 
 ### Key Design Decisions
 
 1. **Override Pattern**: Used existing `hasEngagementAccessOverride` pattern instead of creating separate logic
 2. **Minimal Change**: Modified only 3 lines to achieve the requirement
-3. **Role-Based Filtering**: Operators see Post Analysis items in addition to Engagement Insights
+3. **Role-Based Filtering**: Org operators see only engagement insights (post analysis and Premium are hidden)
 4. **Type Safety**: All logic uses normalized, lowercase comparisons for reliability
 
 ## Endpoints Verified

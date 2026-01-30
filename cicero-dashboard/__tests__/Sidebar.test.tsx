@@ -74,7 +74,7 @@ describe("Sidebar", () => {
       expect(screen.getByText("Panduan & SOP")).toBeInTheDocument();
     });
 
-    it("shows Instagram Post Analysis for Org Operator", () => {
+    it("does not show Instagram Post Analysis for Org Operator", () => {
       const authValue = createAuthValue({
         effectiveClientType: "ORG",
         effectiveRole: "OPERATOR",
@@ -86,10 +86,10 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      expect(screen.getByText("Instagram Post Analysis")).toBeInTheDocument();
+      expect(screen.queryByText("Instagram Post Analysis")).not.toBeInTheDocument();
     });
 
-    it("shows TikTok Post Analysis for Org Operator", () => {
+    it("does not show TikTok Post Analysis for Org Operator", () => {
       const authValue = createAuthValue({
         effectiveClientType: "ORG",
         effectiveRole: "OPERATOR",
@@ -101,10 +101,10 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      expect(screen.getByText("TikTok Post Analysis")).toBeInTheDocument();
+      expect(screen.queryByText("TikTok Post Analysis")).not.toBeInTheDocument();
     });
 
-    it("shows Premium menu for Org clients", () => {
+    it("does not show Premium menu for Org Operator", () => {
       const authValue = createAuthValue({
         effectiveClientType: "ORG",
         effectiveRole: "OPERATOR",
@@ -116,7 +116,7 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      expect(screen.getByText("Premium")).toBeInTheDocument();
+      expect(screen.queryByText("Premium")).not.toBeInTheDocument();
     });
 
     it("does not show Instagram Post Analysis for non-Operator Org clients", () => {
