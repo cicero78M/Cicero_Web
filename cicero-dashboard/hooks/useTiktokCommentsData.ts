@@ -683,51 +683,22 @@ export default function useTiktokCommentsData({
         );
         const totalUser = sortedUsers.length;
         const summaryMetrics = parseSummaryMetrics(rekapSummaryPayload);
-        const summaryTotalPosts =
+        const totalTiktokPostRaw =
           summaryMetrics.totalPosts !== undefined &&
           summaryMetrics.totalPosts >= 0
             ? summaryMetrics.totalPosts
             : undefined;
-        let statsPayloadForRekap = statsPayload;
-        if (
-          summaryTotalPosts === undefined &&
-          normalizedClientIdLower &&
-          normalizedClientIdLower !==
-            String(dashboardClientId || "").trim().toLowerCase()
-        ) {
-          const rekapStatsData = await getDashboardStats(
-            token,
-            periode,
-            date,
-            startDate,
-            endDate,
-            normalizedClientId,
-            requestContext,
-            controller.signal,
-          );
-          statsPayloadForRekap = (rekapStatsData as any)?.data || rekapStatsData;
-        }
         const totalTiktokPostFallback =
-          (statsPayloadForRekap as any)?.ttPosts ??
-          (statsPayloadForRekap as any)?.tiktokPosts ??
-          (statsPayloadForRekap as any)?.totalTiktokPost ??
-          (statsPayloadForRekap as any)?.totalTiktokPosts ??
-          (statsPayloadForRekap as any)?.tt_posts ??
-          (statsPayloadForRekap as any)?.tiktok_posts ??
+          (statsData as any)?.ttPosts ??
+          (statsData as any)?.tiktokPosts ??
+          (statsData as any)?.totalTiktokPost ??
+          (statsData as any)?.totalTiktokPosts ??
+          (statsData as any)?.tt_posts ??
+          (statsData as any)?.tiktok_posts ??
           0;
-        let totalTiktokPost = Number(
-          summaryTotalPosts ?? totalTiktokPostFallback,
-        );
-        if (!Number.isFinite(totalTiktokPost)) {
-          totalTiktokPost = 0;
-        }
-        if (
-          totalTiktokPost === 0 &&
-          summaryTotalPosts !== undefined &&
-          summaryTotalPosts > 0
-        ) {
-          totalTiktokPost = summaryTotalPosts;
-        }
+        const totalTiktokPost = Number(
+          totalTiktokPostRaw ?? totalTiktokPostFallback,
+        ) || 0;
         let totalSudahKomentar = 0;
         let totalKurangKomentar = 0;
         let totalBelumKomentar = 0;
