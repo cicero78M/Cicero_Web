@@ -60,6 +60,17 @@ describe("useTiktokCommentsData", () => {
         { client_id: "CLIENT_A", username: "user-a", jumlah_komentar: 6 },
         { client_id: "CLIENT_B", username: "user-b", jumlah_komentar: 2 },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 10,
+      },
     } as any);
 
     const { result } = renderHook(() =>
@@ -92,6 +103,17 @@ describe("useTiktokCommentsData", () => {
         { client_id: "CLIENT_ROOT", username: "root-user", jumlah_komentar: 4 },
         { client_id: "CLIENT_OTHER", username: "other-user", jumlah_komentar: 1 },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 10,
+      },
     } as any);
 
     const { result } = renderHook(() =>
@@ -123,6 +145,17 @@ describe("useTiktokCommentsData", () => {
       data: [
         { client_id: "DITBINMAS", username: "root-user", jumlah_komentar: 5 },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 10,
+      },
     } as any);
 
     const { result } = renderHook(() =>
@@ -155,6 +188,17 @@ describe("useTiktokCommentsData", () => {
       data: [
         { client_id: "DIRECT_A", username: "alpha", jumlah_komentar: 5 },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 10,
+      },
     } as any);
 
     const { result } = renderHook(() =>
@@ -191,6 +235,17 @@ describe("useTiktokCommentsData", () => {
           jumlah_komentar: 5,
         },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 8,
+      },
     } as any);
 
     const { result } = renderHook(() =>
@@ -248,6 +303,17 @@ describe("useTiktokCommentsData", () => {
           jumlah_komentar: 3,
         },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 5,
+      },
     } as any);
 
     const { result } = renderHook(() =>
@@ -302,6 +368,17 @@ describe("useTiktokCommentsData", () => {
           jumlah_komentar: 2,
         },
       ],
+      summary: {
+        totalUsers: 1,
+        distribution: {
+          sudah: 1,
+          kurang: 0,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 4,
+      },
     } as any);
 
     const { result } = renderHook(() =>

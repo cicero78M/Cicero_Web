@@ -10,7 +10,6 @@ import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { AuthContext } from "@/context/AuthContext";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
-import { getEngagementStatus } from "@/utils/engagementStatus";
 import {
   getUserDirectoryFetchScope,
   normalizeDirectoryRole,
@@ -530,14 +529,27 @@ export default function useTiktokCommentsData({
           [...uniqueUsers].sort(compareUsersByPangkatAndNrp),
           normalizedLoginClientId || normalizedClientIdLower,
         );
-        const totalUser = sortedUsers.length;
+        const summaryPayload =
+          rekapSummaryPayload?.summary ?? rekapSummaryPayload ?? {};
+        const distribution =
+          summaryPayload?.distribution ??
+          summaryPayload?.distribusi ??
+          summaryPayload?.statusDistribution ??
+          {};
+        const totalUserRaw =
+          summaryPayload?.totalUsers ??
+          summaryPayload?.totalUser ??
+          summaryPayload?.total_users ??
+          summaryPayload?.total_user ??
+          0;
+        const totalUser = Number(totalUserRaw) || 0;
         const totalTiktokPostRaw =
-          rekapSummaryPayload?.totalPosts ??
-          rekapSummaryPayload?.totalPost ??
-          rekapSummaryPayload?.total_tiktok_post ??
-          rekapSummaryPayload?.total_tiktok_posts ??
-          rekapSummaryPayload?.totalTiktokPost ??
-          rekapSummaryPayload?.totalTiktokPosts ??
+          summaryPayload?.totalPosts ??
+          summaryPayload?.totalPost ??
+          summaryPayload?.total_tiktok_post ??
+          summaryPayload?.total_tiktok_posts ??
+          summaryPayload?.totalTiktokPost ??
+          summaryPayload?.totalTiktokPosts ??
           (statsData as any)?.ttPosts ??
           (statsData as any)?.tiktokPosts ??
           (statsData as any)?.totalTiktokPost ??
@@ -546,27 +558,18 @@ export default function useTiktokCommentsData({
           (statsData as any)?.tiktok_posts ??
           0;
         const totalTiktokPost = Number(totalTiktokPostRaw) || 0;
-        let totalSudahKomentar = 0;
-        let totalKurangKomentar = 0;
-        let totalBelumKomentar = 0;
-        let totalTanpaUsername = 0;
-
-        sortedUsers.forEach((u: any) => {
-          const username = String(u.username || "").trim();
-          if (!username) {
-            totalTanpaUsername += 1;
-            return;
-          }
-          const jumlah = Number(u.jumlah_komentar) || 0;
-          const status = getEngagementStatus({
-            completed: jumlah,
-            totalTarget: totalTiktokPost,
-          });
-
-          if (status === "sudah") totalSudahKomentar += 1;
-          else if (status === "kurang") totalKurangKomentar += 1;
-          else totalBelumKomentar += 1;
-        });
+        const totalSudahKomentar = Number(distribution?.sudah ?? 0) || 0;
+        const totalKurangKomentar = Number(distribution?.kurang ?? 0) || 0;
+        const totalBelumKomentar =
+          (Number(distribution?.belum ?? 0) || 0) +
+          (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0);
+        const totalTanpaUsername =
+          Number(
+            distribution?.noUsername ??
+              distribution?.no_username ??
+              distribution?.noUsernameCount ??
+              0,
+          ) || 0;
 
         if (controller.signal.aborted) return;
         setRekapSummary({
