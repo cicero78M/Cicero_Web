@@ -43,6 +43,18 @@ function normalizeScopePayload(value?: unknown): string | undefined {
   return normalized || undefined;
 }
 
+function getUserClientKey(user: any) {
+  return normalizeString(
+    user?.client_id ||
+      user?.clientId ||
+      user?.clientID ||
+      user?.client ||
+      user?.client_name ||
+      user?.nama_client ||
+      "",
+  );
+}
+
 function getUserIdentifier(user: any): string {
   return USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
     if (acc) return acc;
@@ -623,22 +635,24 @@ export default function useTiktokCommentsData({
         const shouldApplyScopeFilter =
           shouldFilterByClient && (!directorate || scope === "client");
         if (shouldApplyScopeFilter) {
-          filteredUsers = users.filter((u: any) => {
-            const userClient = normalizeString(
-              u.client_id || u.clientId || u.clientID || u.client || "",
-            );
-            return userClient === normalizedClientIdLower;
-          });
+          const hasClientKey = users.some((u: any) => Boolean(getUserClientKey(u)));
+          filteredUsers = hasClientKey
+            ? users.filter((u: any) => getUserClientKey(u) === normalizedClientIdLower)
+            : users;
         }
 
         let filteredChartData = chartDataEntries;
         if (shouldApplyScopeFilter && chartDataEntries.length > 0) {
-          filteredChartData = chartDataEntries.filter((u: any) => {
-            const userClient = normalizeString(
-              u.client_id || u.clientId || u.clientID || u.client || "",
-            );
-            return !userClient || userClient === normalizedClientIdLower;
-          });
+          const hasClientKey = chartDataEntries.some((u: any) =>
+            Boolean(getUserClientKey(u)),
+          );
+          filteredChartData = hasClientKey
+            ? chartDataEntries.filter(
+                (u: any) =>
+                  !getUserClientKey(u) ||
+                  getUserClientKey(u) === normalizedClientIdLower,
+              )
+            : chartDataEntries;
         }
 
         if (isOperatorRole && normalizedClientIdLower) {
