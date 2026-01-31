@@ -153,22 +153,18 @@ function extractRekapPayload(payload: any) {
   if (!payload) {
     return { users: [], chartData: [], summary: {} as Record<string, any> };
   }
-  if (Array.isArray(payload)) {
-    return {
-      users: payload,
-      chartData: payload,
-      summary: {} as Record<string, any>,
-    };
-  }
-
-  const dataPayload = payload.data ?? payload;
-  const users = Array.isArray(payload.data)
-    ? payload.data
-    : Array.isArray(payload.users)
-      ? payload.users
-      : Array.isArray(dataPayload?.users)
-        ? dataPayload.users
-        : [];
+  const isArrayPayload = Array.isArray(payload);
+  const dataPayload = payload?.data ?? payload;
+  const hasArrayData = Array.isArray(payload?.data);
+  const users = isArrayPayload
+    ? payload
+    : hasArrayData
+      ? payload.data
+      : Array.isArray(payload?.users)
+        ? payload.users
+        : Array.isArray(dataPayload?.users)
+          ? dataPayload.users
+          : [];
   const chartData =
     users.length > 0
       ? users.map((entry: Record<string, any>) =>
@@ -188,6 +184,13 @@ function extractRekapPayload(payload: any) {
           }),
         )
       : [];
+  if (isArrayPayload) {
+    return {
+      users,
+      chartData,
+      summary: {} as Record<string, any>,
+    };
+  }
   const summaryPayload =
     payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
   const distributionPayload =
