@@ -170,6 +170,7 @@ export default function useInstagramLikesData({
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
     const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
     const isOrgScope = requestScopeFromAuth === "ORG";
+    const isDirectorateScope = requestScopeFromAuth === "DIREKTORAT";
     const derivedDirectorateRole =
       !isOperatorRole &&
       !isOrgScope &&
@@ -190,7 +191,9 @@ export default function useInstagramLikesData({
       !isOperatorRole &&
       (derivedDirectorateRole || (isDitSamaptaBidhumas && !isOrgScope));
     const shouldMapToDitbinmas =
-      !isOperatorRole && (isDitbinmasRole || isDitSamaptaBidhumas);
+      !isOperatorRole &&
+      (isDitbinmasRole ||
+        (isDitSamaptaBidhumas && !isDirectorateScope));
     const dashboardClientId = shouldMapToDitbinmas
       ? ditbinmasClientId
       : userClientId;
