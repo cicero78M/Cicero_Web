@@ -69,9 +69,12 @@ export async function fetchDitbinmasAbsensiLikes(
   );
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
-  const normalizedRole = normalizeDirectoryRole(clientId);
+  const normalizedRole = normalizeDirectoryRole(
+    requestContext?.role || clientId,
+  );
   const directoryScope = getUserDirectoryFetchScope({
     role: normalizedRole || undefined,
+    effectiveClientType: requestContext?.scope,
   });
   const directoryRes = await getUserDirectory(
     token,
@@ -84,15 +87,15 @@ export async function fetchDitbinmasAbsensiLikes(
     signal,
   );
   const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
-  const expectedRole = clientId.toLowerCase();
+  const expectedRole = normalizedRole || clientId.toLowerCase();
   const clientIds: string[] = Array.from(
     new Set<string>(
       dirData
         .filter(
           (u: any) =>
-            String(
+            normalizeDirectoryRole(
               u.role || u.user_role || u.userRole || u.roleName || "",
-            ).toLowerCase() === expectedRole,
+            ) === expectedRole,
         )
         .map((u: any) =>
           String(
