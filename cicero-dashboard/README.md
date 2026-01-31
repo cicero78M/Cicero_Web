@@ -71,6 +71,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Rekap `/likes/instagram` untuk akun direktorat kini memakai role login aktif ketika menyusun daftar satker (dari user directory maupun request scope), sehingga scope DIREKTORAT dengan role Ditbinmas tidak lagi menghasilkan rekap kosong ketika data backend tersedia.
 - Komponen `InstagramEngagementInsightView` diekstrak ke `app/likes/instagram/InstagramEngagementInsightView.jsx` dan dipakai ulang oleh `page.jsx` serta `rekap/page.jsx` sehingga berkas page hanya mengekspor Page component default sesuai aturan Next.js.
 - Header halaman insight menggunakan prop `heroContent` standar yang sama seperti halaman TikTok sehingga komponen hero (selektor periode, pemilih lingkup Ditbinmas, dan tombol salin rekap) mengikuti penamaan konsisten di `InsightLayout`.
+- Rekap likes Instagram kini menambahkan aksi **Komplain** per pengguna yang memanggil helper `postComplaintInstagram` (`utils/api.ts`) ke endpoint `/api/dashboard/komplain/insta`, lengkap dengan status loading per user dan validasi username agar operator bisa mengirim tindak lanjut langsung dari tabel rekap.
 - Hook `useInstagramLikesData` kini mendefinisikan konstanta `allowedScopeClients` satu kali di awal efek sehingga tidak ada deklarasi ganda yang memicu kegagalan build Next.js.
 - Perhitungan flag ORG pada `useInstagramLikesData` kini dijalankan sebelum evaluasi direktorat agar penentuan scope tidak memakai variabel yang belum dideklarasikan.
 
