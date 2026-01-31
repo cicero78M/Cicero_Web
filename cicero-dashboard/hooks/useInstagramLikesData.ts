@@ -138,6 +138,10 @@ export default function useInstagramLikesData({
     const role = effectiveRole ?? authRole ?? fallbackRole;
     const requestRole = normalizeRolePayload(role);
     const requestScopeFromAuth = normalizeScopePayload(effectiveClientType);
+    const requestRoleForContext =
+      requestScopeFromAuth === "DIREKTORAT"
+        ? normalizeRolePayload(effectiveRole ?? authRole ?? role)
+        : requestRole;
     const normalizedRegionalIdFromAuth = authRegionalId
       ? String(authRegionalId)
       : undefined;
@@ -159,7 +163,7 @@ export default function useInstagramLikesData({
       .trim()
       .toLowerCase();
     const normalizedDirectoryRole = normalizeDirectoryRole(
-      effectiveRole ?? role ?? "",
+      requestRoleForContext ?? effectiveRole ?? role ?? "",
     );
     const directoryScope = getUserDirectoryFetchScope({
       role: normalizedDirectoryRole || undefined,
@@ -220,7 +224,7 @@ export default function useInstagramLikesData({
         );
         if (shouldUseDirectorateFetcher) {
           const requestContext = {
-            role: requestRole,
+            role: requestRoleForContext,
             scope: requestScopeFromAuth,
             ...(normalizedRegionalIdFromAuth
               ? { regional_id: normalizedRegionalIdFromAuth }
@@ -267,7 +271,7 @@ export default function useInstagramLikesData({
           endDate,
           dashboardClientId,
           {
-            role: requestRole,
+            role: requestRoleForContext,
             scope: requestScopeFromAuth,
             regional_id: normalizedRegionalIdFromAuth,
           },
@@ -351,7 +355,7 @@ export default function useInstagramLikesData({
         );
 
         const requestContext = {
-          role: requestRole,
+          role: requestRoleForContext,
           scope: requestScope,
           ...(normalizedRegionalId ? { regional_id: normalizedRegionalId } : {}),
         };
@@ -405,19 +409,15 @@ export default function useInstagramLikesData({
 
           const expectedRole = directorateScopedClient
             ? normalizedLoginClientId
-            : normalizedEffectiveRoleLower || normalizedLoginClientId;
+            : normalizedDirectoryRole || normalizedLoginClientId;
           clientIds = Array.from(
             new Set(
               dirData
                 .filter(
                   (u: any) =>
-                    String(
-                      u.role ||
-                        u.user_role ||
-                        u.userRole ||
-                        u.roleName ||
-                        "",
-                    ).toLowerCase() === expectedRole,
+                    normalizeDirectoryRole(
+                      u.role || u.user_role || u.userRole || u.roleName || "",
+                    ) === expectedRole,
                 )
                 .map((u: any) =>
                   String(
