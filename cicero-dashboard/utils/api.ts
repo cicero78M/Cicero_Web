@@ -2100,6 +2100,104 @@ export async function getDashboardStats(
   return { ...raw, client_id: clientId, instagramPosts };
 }
 
+export type InstagramComplaintPayload = {
+  nrp?: string;
+  user_id?: string;
+  nrp_nip?: string;
+  nrpNip?: string;
+  username?: string;
+  instagram?: string;
+  insta?: string;
+  username_ig?: string;
+  username_instagram?: string;
+  client_id?: string;
+  clientId?: string;
+  clientID?: string;
+  nama?: string;
+  name?: string;
+  issue?: string;
+  kendala?: string;
+  message?: string;
+};
+
+export async function postComplaintInstagram(
+  token: string,
+  payload: InstagramComplaintPayload,
+  signal?: AbortSignal,
+): Promise<ApiMessageResponse> {
+  const nrp =
+    ensureString(payload.nrp).trim() ||
+    ensureString(payload.user_id).trim() ||
+    ensureString(payload.nrp_nip).trim() ||
+    ensureString(payload.nrpNip).trim();
+  if (!nrp) {
+    throw new Error("NRP/NIP wajib tersedia untuk mengirim komplain.");
+  }
+
+  const username =
+    ensureString(payload.username).trim() ||
+    ensureString(payload.instagram).trim() ||
+    ensureString(payload.insta).trim() ||
+    ensureString(payload.username_ig).trim() ||
+    ensureString(payload.username_instagram).trim();
+  const clientId =
+    ensureString(payload.client_id).trim() ||
+    ensureString(payload.clientId).trim() ||
+    ensureString(payload.clientID).trim();
+  const issue =
+    ensureString(payload.issue).trim() ||
+    ensureString(payload.kendala).trim() ||
+    ensureString(payload.message).trim();
+
+  const body: Record<string, string> = { nrp };
+  if (username) {
+    body.username_ig = username;
+    body.instagram = username;
+  }
+  if (clientId) {
+    body.client_id = clientId;
+  }
+  if (issue) {
+    body.issue = issue;
+  }
+  const reporterName = ensureString(payload.nama).trim() || ensureString(payload.name).trim();
+  if (reporterName) {
+    body.nama = reporterName;
+  }
+
+  const url = buildApiUrl("/api/dashboard/komplain/insta");
+  const res = await fetchWithAuth(url, token, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  let parsed: any = null;
+  try {
+    parsed = await res.clone().json();
+  } catch {
+    parsed = null;
+  }
+
+  if (!res.ok) {
+    const message =
+      parsed && typeof parsed === "object"
+        ? extractResponseMessage(parsed, "")
+        : await res.text();
+    throw new Error(message || "Gagal mengirim komplain Instagram.");
+  }
+
+  const json = parsed ?? (await res.json());
+  const payloadData = json?.data ?? json ?? {};
+  return {
+    success: Boolean(payloadData?.success ?? true),
+    message: extractResponseMessage(payloadData, "Komplain Instagram berhasil dikirim."),
+  };
+}
+
 // Ambil rekap absensi instagram harian
 export type RoleScopeRegionalOptions = {
   role?: string;

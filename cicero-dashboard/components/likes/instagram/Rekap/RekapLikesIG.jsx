@@ -21,6 +21,8 @@ import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { showToast } from "@/utils/showToast";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import { clampEngagementCompleted } from "@/utils/engagementStatus";
+import useAuth from "@/hooks/useAuth";
+import { postComplaintInstagram } from "@/utils/api";
 
 const PAGE_SIZE = 25;
 
@@ -72,6 +74,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   ref,
 ) {
   const { periodeLabel, viewLabel } = reportContext || {};
+  const { token, clientId } = useAuth();
+  const [komplainLoadingMap, setKomplainLoadingMap] = useState({});
   const getClientIdentifier = (user) => {
     const rawClientId =
       user.client_id ??
@@ -182,6 +186,78 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const totalIGPostCount = Number(totalIGPost) || 0;
   const clampLikesToTask = (jumlahLike = 0) =>
     clampEngagementCompleted({ completed: jumlahLike, totalTarget: totalIGPostCount });
+
+  const resolveUserIdentifier = (user) => {
+    const rawId =
+      user.user_id ||
+      user.nrp ||
+      user.nrp_nip ||
+      user.nrpNip ||
+      user.id ||
+      "";
+    return String(rawId || "").trim();
+  };
+
+  const resolveKomplainLoadingKey = (user) => {
+    const id = resolveUserIdentifier(user);
+    if (id) return id;
+    const username = String(user.username || "").trim();
+    if (username) return username;
+    return String(user.nama || user.name || "").trim() || "unknown-user";
+  };
+
+  const resolveKomplainPayload = (user) => {
+    const clientIdentifier = getClientIdentifier(user);
+    return {
+      nrp: resolveUserIdentifier(user),
+      username: String(user.username || "").trim(),
+      client_id:
+        clientIdentifier.stringValue ||
+        String(
+          user.client_id ||
+            user.clientId ||
+            user.clientID ||
+            clientId ||
+            "",
+        ).trim(),
+      nama: user.nama || user.name || "",
+      issue: "Sudah melaksanakan Instagram belum terdata.",
+    };
+  };
+
+  const handleKomplainInstagram = async (user) => {
+    const userId = resolveUserIdentifier(user);
+    const username = String(user.username || "").trim();
+    const loadingKey = resolveKomplainLoadingKey(user);
+    if (!username) {
+      showToast("Username IG belum tersedia, komplain tidak dapat dikirim.", "warning");
+      return;
+    }
+    if (!token) {
+      showToast("Token login tidak ditemukan. Silakan login ulang.", "error");
+      return;
+    }
+    if (!userId) {
+      showToast("NRP/NIP tidak ditemukan untuk komplain.", "warning");
+      return;
+    }
+
+    setKomplainLoadingMap((prev) => ({ ...prev, [loadingKey]: true }));
+    try {
+      const payload = resolveKomplainPayload(user);
+      const result = await postComplaintInstagram(token, payload);
+      showToast(result.message || "Komplain Instagram berhasil dikirim.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Komplain Instagram gagal dikirim.",
+        "error",
+      );
+    } finally {
+      setKomplainLoadingMap((prev) => ({ ...prev, [loadingKey]: false }));
+    }
+  };
 
   const classifyStatus = (user) =>
     getLikesStatus({
@@ -606,13 +682,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                     <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Jumlah Like
                     </th>
+                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-blue-50">
                   {currentRows.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={hasClient ? 7 : 6}
+                        colSpan={hasClient ? 8 : 7}
                         className="h-48 px-4 text-center text-sm text-blue-700"
                       >
                         <div className="flex flex-col items-center gap-3">
@@ -635,6 +714,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                     currentRows.map((u, i) => {
                       const username = String(u.username || "").trim();
                       const jumlahLike = clampLikesToTask(u.jumlah_like);
+                      const loadingKey = resolveKomplainLoadingKey(u);
+                      const isKomplainLoading = Boolean(komplainLoadingMap[loadingKey]);
+                      const isKomplainDisabled = !username || isKomplainLoading;
 
                       const baseCellClass = "px-4 py-3 align-top";
                       const statusStyles = {
@@ -719,6 +801,28 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                           </td>
                           <td className={`${baseCellClass} text-center text-sm font-semibold text-blue-900`}>
                             {jumlahDisplay}
+                          </td>
+                          <td className={`${baseCellClass} text-center`}>
+                            <div className="flex flex-col items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleKomplainInstagram(u)}
+                                disabled={isKomplainDisabled}
+                                className="rounded-lg border border-sky-200 bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-600 transition hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-sky-100"
+                                title={
+                                  !username
+                                    ? "Username IG belum tersedia"
+                                    : "Kirim komplain Instagram"
+                                }
+                              >
+                                {isKomplainLoading ? "Mengirim..." : "Komplain"}
+                              </button>
+                              {!username && (
+                                <span className="text-[11px] text-slate-400">
+                                  Username kosong
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
