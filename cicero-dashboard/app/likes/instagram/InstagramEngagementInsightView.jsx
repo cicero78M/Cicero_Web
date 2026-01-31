@@ -101,8 +101,21 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const kelompok = shouldUseDirectorateLayout
     ? null
     : groupUsersByKelompok(chartData);
+  const hasClientMetadata = chartData.some(
+    (entry) =>
+      entry?.client_id ||
+      entry?.clientId ||
+      entry?.clientID ||
+      entry?.client ||
+      entry?.client_name ||
+      entry?.nama_client,
+  );
+  const hasDivisiMetadata = chartData.some((entry) => entry?.divisi);
   const shouldGroupByClient =
-    shouldUseDirectorateLayout && !isDirectorateScopedClient && !isDirectorateRole;
+    shouldUseDirectorateLayout &&
+    (directorateScope === "all" ||
+      (!hasDivisiMetadata && hasClientMetadata) ||
+      (!isDirectorateScopedClient && !isDirectorateRole));
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
