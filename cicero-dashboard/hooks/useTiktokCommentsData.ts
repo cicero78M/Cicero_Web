@@ -14,7 +14,6 @@ import {
   getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
-import { getEngagementStatus } from "@/utils/engagementStatus";
 
 const USER_IDENTIFIER_FIELDS = [
   "nrp",
@@ -572,12 +571,12 @@ export default function useTiktokCommentsData({
           (statsData as any)?.tiktok_posts ??
           0;
         const totalTiktokPost = Number(totalTiktokPostRaw) || 0;
-        let totalSudahKomentar = Number(distribution?.sudah ?? 0) || 0;
-        let totalKurangKomentar = Number(distribution?.kurang ?? 0) || 0;
-        let totalBelumKomentar =
+        const totalSudahKomentar = Number(distribution?.sudah ?? 0) || 0;
+        const totalKurangKomentar = Number(distribution?.kurang ?? 0) || 0;
+        const totalBelumKomentar =
           (Number(distribution?.belum ?? 0) || 0) +
           (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0);
-        let totalTanpaUsername =
+        const totalTanpaUsername =
           Number(
             distribution?.noUsername ??
               distribution?.no_username ??
@@ -585,38 +584,9 @@ export default function useTiktokCommentsData({
               0,
           ) || 0;
 
-        const shouldRecalculateSummary = isOperatorRole || shouldApplyScopeFilter;
-        let recalculatedTotalUser = totalUser;
-        if (shouldRecalculateSummary) {
-          recalculatedTotalUser = uniqueUsers.length;
-          totalSudahKomentar = 0;
-          totalKurangKomentar = 0;
-          totalBelumKomentar = 0;
-          totalTanpaUsername = 0;
-
-          uniqueUsers.forEach((user) => {
-            const hasUsername = Boolean(String(user?.username || "").trim());
-            if (!hasUsername) {
-              totalTanpaUsername += 1;
-              return;
-            }
-            const status = getEngagementStatus({
-              completed: user?.jumlah_komentar ?? 0,
-              totalTarget: totalTiktokPost,
-            });
-            if (status === "sudah") {
-              totalSudahKomentar += 1;
-            } else if (status === "kurang") {
-              totalKurangKomentar += 1;
-            } else {
-              totalBelumKomentar += 1;
-            }
-          });
-        }
-
         if (controller.signal.aborted) return;
         setRekapSummary({
-          totalUser: recalculatedTotalUser,
+          totalUser,
           totalSudahKomentar,
           totalKurangKomentar,
           totalBelumKomentar,
