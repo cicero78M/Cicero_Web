@@ -262,9 +262,6 @@ export default function useInstagramLikesData({
     const isOperatorRole = normalizedEffectiveRoleLower === "operator";
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
     const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
-    const normalizedEffectiveClientType = String(effectiveClientType || "")
-      .trim()
-      .toUpperCase();
     const isOrgScope = requestScopeFromAuth === "ORG";
     const isDirectorateScope = requestScopeFromAuth === "DIREKTORAT";
     const derivedDirectorateRole =
