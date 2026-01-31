@@ -154,8 +154,8 @@ function extractRekapPayload(payload: any) {
     return { users: [], chartData: [], summary: {} as Record<string, any> };
   }
   const isArrayPayload = Array.isArray(payload);
-  const dataPayload = payload?.data ?? payload;
   const hasArrayData = Array.isArray(payload?.data);
+  const dataPayload = hasArrayData ? payload : payload?.data ?? payload;
   const users = isArrayPayload
     ? payload
     : hasArrayData
@@ -165,25 +165,31 @@ function extractRekapPayload(payload: any) {
         : Array.isArray(dataPayload?.users)
           ? dataPayload.users
           : [];
-  const chartData =
-    users.length > 0
-      ? users.map((entry: Record<string, any>) =>
-          normalizeChartRecord({
-            ...entry,
-            divisi:
-              entry?.divisi ??
-              entry?.satfung ??
-              entry?.unit ??
-              entry?.division ??
-              entry?.nama_divisi ??
-              entry?.namaDivisi ??
-              entry?.label ??
-              entry?.nama ??
-              entry?.name ??
-              "",
-          }),
-        )
-      : [];
+  const rawChartData =
+    payload?.chartData ??
+    payload?.chart_data ??
+    dataPayload?.chartData ??
+    dataPayload?.chart_data;
+  const normalizedChartData = (entries: Record<string, any>[]) =>
+    entries.map((entry: Record<string, any>) =>
+      normalizeChartRecord({
+        ...entry,
+        divisi:
+          entry?.divisi ??
+          entry?.satfung ??
+          entry?.unit ??
+          entry?.division ??
+          entry?.nama_divisi ??
+          entry?.namaDivisi ??
+          entry?.label ??
+          entry?.nama ??
+          entry?.name ??
+          "",
+      }),
+    );
+  const chartData = Array.isArray(rawChartData)
+    ? normalizedChartData(rawChartData)
+    : normalizedChartData(users);
   if (isArrayPayload) {
     return {
       users,
