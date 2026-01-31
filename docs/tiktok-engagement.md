@@ -10,6 +10,13 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Jumlah pelaksanaan per personel kini dikunci ke total tugas (jumlah konten TikTok pada periode) sehingga tabel tidak lagi menampilkan angka komentar yang melebihi target harian.
 - Komponen `RekapKomentarTiktok` dipindahkan ke folder `components/comments/tiktok/Rekap` dan disusun ulang mengikuti struktur, workflow, dan API `RekapLikesIG` (sorting pangkat/client, pagination persistent, tombol salin rekap serta teks siap kirim) untuk mempermudah reuse lintas platform.
 
+## Flow komplain per user (IG/TikTok)
+- Tabel rekap insight Instagram dan TikTok kini menyediakan tombol **Komplain** per user untuk eskalasi langsung dari tabel rekap.
+- Aksi **Komplain** memanggil endpoint backend berikut dengan payload minimal:
+  - Instagram: `POST /api/dashboard/komplain/insta` dengan `{ user_id, username, client_id }`.
+  - TikTok: `POST /api/dashboard/komplain/tiktok` dengan `{ user_id, username, client_id }`.
+- Tombol **Komplain** otomatis dinonaktifkan ketika `username` kosong agar komplain tidak dikirim tanpa identitas akun.
+
 ## Pola tab dan CTA konsisten
 - Header memakai tab **Dashboard Insight** dan **Rekap Detail** via `DEFAULT_INSIGHT_TABS` pada `InsightLayout` dengan `activeTab` dan `handleTabChange`, menyamakan pola dengan halaman Instagram.
 - Tombol **Buka Rekap Detail** otomatis menggulir ke section rekap ketika tab rekap dipilih, menjaga konteks halaman.
