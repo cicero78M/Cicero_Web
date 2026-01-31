@@ -71,6 +71,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Header halaman insight menggunakan prop `heroContent` standar yang sama seperti halaman TikTok sehingga komponen hero (selektor periode, pemilih lingkup Ditbinmas, dan tombol salin rekap) mengikuti penamaan konsisten di `InsightLayout`.
 - Hook `useInstagramLikesData` kini mendefinisikan konstanta `allowedScopeClients` satu kali di awal efek sehingga tidak ada deklarasi ganda yang memicu kegagalan build Next.js.
 - Perhitungan flag ORG pada `useInstagramLikesData` kini dijalankan sebelum evaluasi direktorat agar penentuan scope tidak memakai variabel yang belum dideklarasikan.
+- Hook `useInstagramLikesData` kini menetapkan `normalizedEffectiveClientType` lebih awal agar filter operator memakai tipe klien yang valid dan tidak memicu error TypeScript saat build.
 
 ## Layout Insight TikTok & Instagram
 
