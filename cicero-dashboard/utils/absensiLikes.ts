@@ -87,7 +87,7 @@ export async function fetchDitbinmasAbsensiLikes(
     signal,
   );
   const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
-  const expectedRole = normalizedRole || clientId.toLowerCase();
+  const expectedRole = normalizedRole;
   const clientIds: string[] = Array.from(
     new Set<string>(
       dirData
