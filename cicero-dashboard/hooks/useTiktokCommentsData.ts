@@ -709,8 +709,15 @@ export default function useTiktokCommentsData({
             )
           : computedTotals.totalTanpaUsername;
 
+        const chartDataFromUsers = sortedUsers.map((entry) =>
+          normalizeChartRecord(entry),
+        );
         const resolvedChartData =
-          filteredChartData.length > 0 ? filteredChartData : sortedUsers;
+          shouldApplyScopeFilter || isOperatorRole
+            ? chartDataFromUsers
+            : filteredChartData.length > 0
+              ? filteredChartData
+              : chartDataFromUsers;
 
         if (controller.signal.aborted) return;
         setRekapSummary({
