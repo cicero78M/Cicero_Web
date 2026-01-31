@@ -166,17 +166,12 @@ function extractRekapPayload(payload: any) {
     return { users: [], chartData: [], summary: {} as Record<string, any> };
   }
   const isArrayPayload = Array.isArray(payload);
-  const dataPayload = payload?.data ?? payload;
   const hasArrayData = Array.isArray(payload?.data);
   const users = isArrayPayload
     ? payload
     : hasArrayData
       ? payload.data
-      : Array.isArray(payload?.users)
-        ? payload.users
-        : Array.isArray(dataPayload?.users)
-          ? dataPayload.users
-          : [];
+      : [];
   const chartData =
     users.length > 0
       ? users.map((entry: Record<string, any>) =>
