@@ -63,6 +63,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   } = useLikesDateSelector({ options: viewOptions });
 
   const {
+    users,
     chartData,
     rekapSummary,
     isDirectorate,
@@ -405,7 +406,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
         showContent={activeTab === "rekap"}
       >
         <RekapKomentarTiktok
-          users={chartData}
+          users={users}
           totalTiktokPost={rekapSummary.totalTiktokPost}
           showCopyButton={false}
           clientName={clientName}
