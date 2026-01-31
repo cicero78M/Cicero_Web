@@ -114,21 +114,68 @@ function normalizeUserRecord(user: any) {
   };
 }
 
+function normalizeChartRecord(entry: any) {
+  const jumlahKomentarRaw =
+    entry?.jumlah_komentar ??
+    entry?.jumlahKomentar ??
+    entry?.comments ??
+    entry?.comment_count ??
+    entry?.commentCount ??
+    entry?.total_comments ??
+    entry?.totalComments ??
+    entry?.total_comment ??
+    entry?.totalComment ??
+    0;
+  const normalizedLabel = String(
+    entry?.label ?? entry?.nama ?? entry?.name ?? entry?.title ?? "",
+  ).trim();
+  const normalizedDivisi = String(
+    entry?.divisi ??
+      entry?.satfung ??
+      entry?.unit ??
+      entry?.division ??
+      entry?.nama_divisi ??
+      entry?.namaDivisi ??
+      normalizedLabel ??
+      "",
+  ).trim();
+
+  return {
+    ...entry,
+    nama: entry?.nama ?? entry?.name ?? normalizedLabel,
+    label: entry?.label ?? normalizedLabel,
+    divisi: normalizedDivisi || "LAINNYA",
+    jumlah_komentar: Number(jumlahKomentarRaw) || 0,
+  };
+}
+
 function extractRekapPayload(payload: any) {
   if (!payload) {
-    return { users: [], summary: {} as Record<string, any> };
+    return { users: [], chartData: [], summary: {} as Record<string, any> };
   }
   if (Array.isArray(payload)) {
-    return { users: payload, summary: {} as Record<string, any> };
+    return {
+      users: payload,
+      chartData: payload,
+      summary: {} as Record<string, any>,
+    };
   }
 
-  const users = Array.isArray(payload.data)
-    ? payload.data
-    : Array.isArray(payload.users)
-      ? payload.users
-      : Array.isArray(payload.chartData)
-        ? payload.chartData
+  const dataPayload = payload.data ?? payload;
+  const users = Array.isArray(dataPayload?.users)
+    ? dataPayload.users
+    : Array.isArray(dataPayload)
+      ? dataPayload
+      : Array.isArray(payload.users)
+        ? payload.users
         : [];
+  const rawChartData = Array.isArray(payload.chartData)
+    ? payload.chartData
+    : Array.isArray(dataPayload?.chartData)
+      ? dataPayload.chartData
+      : [];
+  const chartData =
+    rawChartData.length > 0 ? rawChartData.map(normalizeChartRecord) : [];
   const summaryPayload =
     payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
   const distributionPayload =
@@ -170,7 +217,7 @@ function extractRekapPayload(payload: any) {
       : summaryPayload?.totalPosts,
     distribution,
   };
-  return { users, summary };
+  return { users, chartData, summary };
 }
 
 function inferTotalTiktokPostFromUsers(users: any[]) {
@@ -269,6 +316,7 @@ export default function useTiktokCommentsData({
     () => String(auth?.clientId || "").trim().toLowerCase(),
     [auth?.clientId],
   );
+  const [users, setUsers] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [rekapSummary, setRekapSummary] = useState<RekapSummary>({
     totalUser: 0,
@@ -511,6 +559,7 @@ export default function useTiktokCommentsData({
         );
 
         let users: any[] = [];
+        let chartDataEntries: any[] = [];
         let rekapSummaryPayload: Record<string, any> = {};
         if (directorate) {
           const rekapRes = await getRekapKomentarTiktok(
@@ -527,8 +576,10 @@ export default function useTiktokCommentsData({
               regional_id: normalizedRegionalId,
             },
           );
-          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
+          const { users: payloadUsers, chartData, summary } =
+            extractRekapPayload(rekapRes);
           users = payloadUsers;
+          chartDataEntries = chartData;
           rekapSummaryPayload = summary;
         } else {
           const rekapRes = await getRekapKomentarTiktok(
@@ -545,8 +596,10 @@ export default function useTiktokCommentsData({
               regional_id: normalizedRegionalId,
             },
           );
-          const { users: payloadUsers, summary } = extractRekapPayload(rekapRes);
+          const { users: payloadUsers, chartData, summary } =
+            extractRekapPayload(rekapRes);
           users = payloadUsers;
+          chartDataEntries = chartData;
           rekapSummaryPayload = summary;
         }
 
@@ -560,6 +613,16 @@ export default function useTiktokCommentsData({
               u.client_id || u.clientId || u.clientID || u.client || "",
             );
             return userClient === normalizedClientIdLower;
+          });
+        }
+
+        let filteredChartData = chartDataEntries;
+        if (shouldApplyScopeFilter && chartDataEntries.length > 0) {
+          filteredChartData = chartDataEntries.filter((u: any) => {
+            const userClient = normalizeString(
+              u.client_id || u.clientId || u.clientID || u.client || "",
+            );
+            return !userClient || userClient === normalizedClientIdLower;
           });
         }
 
@@ -693,6 +756,9 @@ export default function useTiktokCommentsData({
             )
           : computedTotals.totalTanpaUsername;
 
+        const resolvedChartData =
+          filteredChartData.length > 0 ? filteredChartData : sortedUsers;
+
         if (controller.signal.aborted) return;
         setRekapSummary({
           totalUser,
@@ -702,7 +768,8 @@ export default function useTiktokCommentsData({
           totalTanpaUsername,
           totalTiktokPost,
         });
-        setChartData(sortedUsers);
+        setUsers(sortedUsers);
+        setChartData(resolvedChartData);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err?.message || err));
@@ -731,6 +798,7 @@ export default function useTiktokCommentsData({
   ]);
 
   return {
+    users,
     chartData,
     rekapSummary,
     isDirectorate,
