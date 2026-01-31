@@ -162,20 +162,33 @@ function extractRekapPayload(payload: any) {
   }
 
   const dataPayload = payload.data ?? payload;
-  const users = Array.isArray(dataPayload?.users)
-    ? dataPayload.users
-    : Array.isArray(dataPayload)
-      ? dataPayload
-      : Array.isArray(payload.users)
-        ? payload.users
-        : [];
-  const rawChartData = Array.isArray(payload.chartData)
-    ? payload.chartData
-    : Array.isArray(dataPayload?.chartData)
-      ? dataPayload.chartData
-      : [];
+  const dataUsers = Array.isArray(payload.data) ? payload.data : [];
+  const fallbackUsers = Array.isArray(payload.users) ? payload.users : [];
+  const users =
+    dataUsers.length > 0
+      ? dataUsers
+      : Array.isArray(dataPayload?.users)
+        ? dataPayload.users
+        : fallbackUsers;
   const chartData =
-    rawChartData.length > 0 ? rawChartData.map(normalizeChartRecord) : [];
+    users.length > 0
+      ? users.map((entry) =>
+          normalizeChartRecord({
+            ...entry,
+            divisi:
+              entry?.divisi ??
+              entry?.satfung ??
+              entry?.unit ??
+              entry?.division ??
+              entry?.nama_divisi ??
+              entry?.namaDivisi ??
+              entry?.label ??
+              entry?.nama ??
+              entry?.name ??
+              "",
+          }),
+        )
+      : [];
   const summaryPayload =
     payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
   const distributionPayload =
