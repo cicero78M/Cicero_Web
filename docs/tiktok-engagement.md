@@ -23,6 +23,7 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Kartu ringkasan memakai gaya bawaan `SummaryItem` (border biru lembut, glow gradasi) seperti halaman **Rekap Likes IG**, dengan enam metrik tetap: jumlah post TikTok, total user, sudah/kurang/belum komentar, dan tanpa username.
 - Ikon dan warna mengikuti palet likes Instagram agar navigasi lintas halaman terasa mulus, sekaligus menampilkan persentase kepatuhan untuk status sudah/kurang/belum komentar serta kualitas data username.
 - Tiga kartu insight singkat tetap hadir, kini memakai aksen biru standar dan menyertakan persentase aksi yang dibutuhkan maupun kelengkapan username agar narasi selaras dengan halaman rekap likes.
+- `RekapKomentarTiktok` kini menerima `rekapSummary` dari backend (misalnya `summary.totalUsers`, `summary.totalPosts`, dan `summary.distribution.sudah/kurang/belum/no_posts/no_username`) untuk mengisi kartu ringkasan dan persentase; jika ringkasan tidak tersedia, komponen akan menghitung ulang dari daftar user lokal agar tampilan tetap konsisten.【F:cicero-dashboard/components/comments/tiktok/Rekap/RekapKomentarTiktok.jsx†L59-L202】
 
 ## Pengaturan periode
 - Komponen `ViewDataSelector` dipakai untuk memilih periode dan tanggal terkait dan kini dikelola oleh hook bersama `useLikesDateSelector` agar logika pemilihan tanggal tetap konsisten dengan halaman Instagram.

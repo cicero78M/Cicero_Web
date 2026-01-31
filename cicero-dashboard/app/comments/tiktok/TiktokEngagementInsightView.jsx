@@ -411,6 +411,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           showCopyButton={false}
           clientName={clientName}
           reportContext={reportContext}
+          rekapSummary={rekapSummary}
           showPremiumCta={isOrgClient}
         />
       </DetailRekapSection>
