@@ -46,6 +46,8 @@ Per Mei 2025, pemanggilan `/api/tiktok/rekap-komentar` tidak lagi di-fan-out ber
 
 Per November 2024, jalur bertipe klien **DIREKTORAT** tidak lagi memaksa `client_id` Ditbinmas untuk mengambil data statistik atau tugas. Untuk tipe klien ini, hook mempertahankan `client_id` login ketika menghitung metrik dashboard maupun daftar tugas sehingga satker direktorat non-Ditbinmas tidak lagi melihat data dari Ditbinmas.
 
+Per September 2025, filter operator tanpa field `role` kini memakai indeks direktori berbasis identifier dengan fallback ke username/nama (semua dinormalisasi). Jika record sudah cocok `client_id` namun tidak memiliki identifier/username yang match, data tetap dipertahankan agar tabel tidak kosong, lalu deduplikasi tetap dijalankan untuk mencegah duplikasi baris operator.
+
 ## Kompatibilitas rute lama
 Rute lama `/comments/tiktok/rekap` kini mengalihkan ke halaman utama `/comments/tiktok` untuk menjaga tautan eksisting tanpa menggandakan UI.
 
