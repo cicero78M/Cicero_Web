@@ -172,7 +172,7 @@ function extractRekapPayload(payload: any) {
         : fallbackUsers;
   const chartData =
     users.length > 0
-      ? users.map((entry) =>
+      ? users.map((entry: Record<string, any>) =>
           normalizeChartRecord({
             ...entry,
             divisi:
