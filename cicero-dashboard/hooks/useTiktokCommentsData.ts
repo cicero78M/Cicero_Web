@@ -4,16 +4,11 @@ import {
   getDashboardStats,
   getRekapKomentarTiktok,
   getClientProfile,
-  getUserDirectory,
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { AuthContext } from "@/context/AuthContext";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
-import {
-  getUserDirectoryFetchScope,
-  normalizeDirectoryRole,
-} from "@/utils/userDirectoryScope";
 import { getEngagementStatus } from "@/utils/engagementStatus";
 
 const USER_IDENTIFIER_FIELDS = [
@@ -53,14 +48,6 @@ function getUserClientKey(user: any) {
       user?.nama_client ||
       "",
   );
-}
-
-function getUserIdentifier(user: any): string {
-  return USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
-    if (acc) return acc;
-    const value = normalizeString(user?.[field]);
-    return value || acc;
-  }, "");
 }
 
 function deduplicateUsers(users: any[]) {
@@ -383,11 +370,6 @@ export default function useTiktokCommentsData({
     const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
     const requestScopeFromAuth = normalizeScopePayload(effectiveClientTypeFromAuth);
-    const normalizedDirectoryRole = normalizeDirectoryRole(role);
-    const directoryScope = getUserDirectoryFetchScope({
-      role: normalizedDirectoryRole || undefined,
-      effectiveClientType: effectiveClientTypeFromAuth ?? undefined,
-    });
     const profileRequestContext = {
       role: requestRole,
       scope: requestScopeFromAuth,
@@ -651,65 +633,12 @@ export default function useTiktokCommentsData({
         }
 
         if (isOperatorRole && normalizedClientIdLower) {
-          const normalizeRole = (value: unknown) =>
-            String(value || "").trim().toLowerCase();
-          const hasRoleField = filteredUsers.some((u: any) =>
-            Boolean(
-              normalizeRole(
-                u.role || u.user_role || u.userRole || u.roleName || "",
-              ),
-            ),
-          );
-          if (hasRoleField) {
-            filteredUsers = filteredUsers.filter((u: any) => {
-              const roleValue = normalizeRole(
-                u.role || u.user_role || u.userRole || u.roleName || "",
-              );
-              if (roleValue !== "operator") return false;
-              const userClient = normalizeString(
-                u.client_id || u.clientId || u.clientID || u.client || "",
-              );
-              return userClient === normalizedClientIdLower;
-            });
-          } else {
-            const directoryRes = await getUserDirectory(
-              token,
-              userClientId,
-              {
-                role: normalizedDirectoryRole || undefined,
-                scope: directoryScope,
-                regional_id: normalizedRegionalId,
-              },
-              controller.signal,
+          filteredUsers = filteredUsers.filter((u: any) => {
+            const userClient = normalizeString(
+              u.client_id || u.clientId || u.clientID || u.client || "",
             );
-            const dirData =
-              directoryRes.data || directoryRes.users || directoryRes || [];
-            const operatorIds = new Set(
-              (dirData as any[])
-                .filter((u: any) => {
-                  const roleValue = normalizeRole(
-                    u.role || u.user_role || u.userRole || u.roleName || "",
-                  );
-                  if (roleValue !== "operator") return false;
-                  const userClient = normalizeString(
-                    u.client_id || u.clientId || u.clientID || u.client || "",
-                  );
-                  return userClient === normalizedClientIdLower;
-                })
-                .map((u: any) => getUserIdentifier(u))
-                .filter(Boolean),
-            );
-            filteredUsers = filteredUsers.filter((u: any) => {
-              const userClient = normalizeString(
-                u.client_id || u.clientId || u.clientID || u.client || "",
-              );
-              if (userClient && userClient !== normalizedClientIdLower) {
-                return false;
-              }
-              const identifier = getUserIdentifier(u);
-              return identifier ? operatorIds.has(identifier) : false;
-            });
-          }
+            return userClient === normalizedClientIdLower;
+          });
         }
 
         const normalizedUsers = filteredUsers.map(normalizeUserRecord);
