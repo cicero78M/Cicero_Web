@@ -49,9 +49,9 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Filter waktu **/anev/polres** kini berbentuk segmented pill (Today, This Week, This Month, Custom). Kalkulasi `start_date`/`end_date` untuk preset mingguan/bulanan dilakukan tepat sebelum `getDashboardAnev` dipanggil sambil tetap mengirim `time_range` ke API. Snapshot filter selalu menyorot preset aktif (termasuk fallback ke filter terapan saat API tidak mengembalikan label) dan tombol apply dinonaktifkan saat rentang custom belum lengkap.
 - Segmen filter **/anev/polres** dirapikan dengan grid responsif: header menambahkan aksi reset, ringkasan terapan, badge konteks sesi (role/scope/regional) berbentuk kartu, dan informasi preset aktif sehingga hierarki visual lebih jelas, whitespace lebih lapang, serta input tanggal custom mudah diakses di desktop maupun mobile.
 - Parameter `regional_id` kini ikut dikirim oleh `getUserDirectory` saat tersedia agar endpoint `/api/users/list` dapat menyaring direktori personil berdasarkan wilayah aktif.
-- Pemanggilan `getUserDirectory` di hook insight Instagram/TikTok, ringkasan eksekutif, dan agregasi absensi likes selalu membawa `role` + `scope` agar data direktori yang ditarik sudah selaras dengan permintaan role maupun client.
-- Pemanggilan `getClientProfile` kini dapat menyertakan `role`, `scope`, dan `regional_id` (jika tersedia) agar endpoint `/api/clients/profile` mengembalikan profil yang selaras dengan cakupan data login, termasuk untuk client Ditbinmas.
-- Type guard `isAbortSignal` di `utils/api.ts` kini menolak nilai `null` supaya pemilihan `AbortSignal` untuk `getUserDirectory` tidak memicu error tipe saat opsi bersifat opsional.
+- Insight engagement Instagram sekarang mengandalkan payload `/api/insta/rekap-likes` sebagai satu-satunya sumber data untuk chart, kartu ringkasan, dan tabel rekap, termasuk metadata client/divisi yang dibaca langsung dari rekap tanpa lookup tambahan.
+- Hook `useInstagramLikesData` kini menyertakan fallback label aman ketika metadata client/divisi tidak tersedia di payload rekap, sehingga UI tetap informatif tanpa memanggil endpoint lain.
+- Ringkasan engagement (total post, total user, sudah/kurang/belum like, tanpa username) selalu berasal dari field ringkasan rekap atau dihitung ulang dari daftar user rekap yang sama agar konsisten dengan data `/api/insta/rekap-likes`.
 
 ## Dashboard Likes Instagram
 

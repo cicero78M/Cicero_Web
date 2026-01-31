@@ -98,6 +98,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     );
 
   const shouldUseDirectorateLayout = isDirectorateLayout;
+  const resolvedClientLabel = clientName?.trim() ? clientName : "Unknown Client";
   const kelompok = shouldUseDirectorateLayout
     ? null
     : groupUsersByKelompok(chartData);
@@ -119,8 +120,15 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
-    ? "POLRES JAJARAN"
-    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
+    ? `POLRES JAJARAN${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}`
+    : `DIVISI / SATFUNG${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}${
+        hasDivisiMetadata ? "" : " (Unknown Divisi)"
+      }`;
+  const directorateNarrative = shouldGroupByClient
+    ? undefined
+    : hasDivisiMetadata
+      ? "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
+      : "Grafik dan tabel ini menampilkan perbandingan capaian likes dengan metadata divisi yang terbatas.";
 
   const totalUser = Number(rekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
@@ -179,8 +187,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   };
 
   const directorateScopeOptions = [
-    { value: "client", label: clientName },
-    { value: "all", label: `Satker Jajaran ${clientName}` },
+    { value: "client", label: resolvedClientLabel },
+    { value: "all", label: `Satker Jajaran ${resolvedClientLabel}` },
   ];
 
   const quickInsights = [
@@ -316,11 +324,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
               sortBy="percentage"
-              narrative={
-                shouldGroupByClient
-                  ? undefined
-                  : "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
-              }
+              narrative={directorateNarrative}
             />
           ) : (
             <div className="flex flex-col gap-6">

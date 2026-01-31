@@ -1,38 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapLikesIG, getClientProfile, getUserDirectory } from "@/utils/api";
-import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
+import { getRekapLikesIG } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
 import { getEngagementStatus } from "@/utils/engagementStatus";
-import {
-  getUserDirectoryFetchScope,
-  normalizeDirectoryRole,
-} from "@/utils/userDirectoryScope";
-
-const USER_IDENTIFIER_FIELDS = [
-  "nrp",
-  "nip",
-  "nrp_nip",
-  "nrpNip",
-  "user_id",
-  "userId",
-  "userID",
-  "NRP",
-  "NIP",
-  "NRP_NIP",
-];
 const REKAP_TOTAL_POST_FIELDS = [
   "totalPosts",
   "totalIGPost",
   "total_ig_post",
 ];
-
-function normalizeString(value?: unknown): string {
-  return String(value || "").trim().toLowerCase();
-}
 
 function normalizeNumber(value?: unknown): number | undefined {
   const numericValue = Number(value);
@@ -55,6 +33,68 @@ function extractRekapClients(payload: any): any[] {
   if (Array.isArray(payload?.metadata?.clients)) return payload.metadata.clients;
   if (Array.isArray(payload?.summary?.clients)) return payload.summary.clients;
   return [];
+}
+
+function extractRekapPosts(payload: any): any[] {
+  const posts =
+    payload?.posts ||
+    payload?.ig_posts ||
+    payload?.igPosts ||
+    payload?.instagram_posts ||
+    [];
+  return Array.isArray(posts) ? posts : [];
+}
+
+function extractRekapClientName(payload: any, clientId?: string): string {
+  const directName =
+    payload?.client_name ||
+    payload?.clientName ||
+    payload?.nama_client ||
+    payload?.client ||
+    payload?.name ||
+    payload?.meta?.client_name ||
+    payload?.meta?.clientName ||
+    payload?.meta?.nama_client ||
+    payload?.metadata?.client_name ||
+    payload?.metadata?.clientName ||
+    payload?.metadata?.nama_client;
+  if (directName) return String(directName);
+  if (!clientId) return "";
+  const clients = extractRekapClients(payload);
+  const match = clients.find((entry: any) => {
+    const id = String(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        entry?.id ||
+        "",
+    ).trim();
+    return id && id.toLowerCase() === String(clientId).trim().toLowerCase();
+  });
+  return (
+    match?.nama_client ||
+    match?.client_name ||
+    match?.client ||
+    match?.nama ||
+    match?.name ||
+    ""
+  );
+}
+
+function extractRekapScope(payload: any): string | undefined {
+  return normalizeScopePayload(
+    payload?.scope ||
+      payload?.meta?.scope ||
+      payload?.meta?.client_type ||
+      payload?.meta?.clientType ||
+      payload?.metadata?.scope ||
+      payload?.metadata?.client_type ||
+      payload?.metadata?.clientType ||
+      payload?.summary?.scope ||
+      payload?.summary?.client_type ||
+      payload?.summary?.clientType,
+  );
 }
 
 function buildClientNameMap(
@@ -123,14 +163,6 @@ function normalizeRolePayload(value?: unknown): string | undefined {
 function normalizeScopePayload(value?: unknown): string | undefined {
   const normalized = String(value || "").trim().toUpperCase();
   return normalized || undefined;
-}
-
-function getUserIdentifier(user: any): string {
-  return USER_IDENTIFIER_FIELDS.reduce((acc, field) => {
-    if (acc) return acc;
-    const value = normalizeString(user?.[field]);
-    return value || acc;
-  }, "");
 }
 
 interface Options {
@@ -214,11 +246,6 @@ export default function useInstagramLikesData({
     const normalizedRegionalIdFromAuth = authRegionalId
       ? String(authRegionalId)
       : undefined;
-    const profileRequestContext = {
-      role: requestRole,
-      scope: requestScopeFromAuth,
-      regional_id: normalizedRegionalIdFromAuth,
-    };
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -231,13 +258,6 @@ export default function useInstagramLikesData({
     )
       .trim()
       .toLowerCase();
-    const normalizedDirectoryRole = normalizeDirectoryRole(
-      requestRoleForContext ?? effectiveRole ?? role ?? "",
-    );
-    const directoryScope = getUserDirectoryFetchScope({
-      role: normalizedDirectoryRole || undefined,
-      effectiveClientType: effectiveClientType ?? undefined,
-    });
     const normalizedEffectiveRoleUpper = normalizedEffectiveRoleLower.toUpperCase();
     const isOperatorRole = normalizedEffectiveRoleLower === "operator";
     const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
@@ -260,9 +280,6 @@ export default function useInstagramLikesData({
     const directorateScopedClient =
       !isOperatorRole && isDirectorateRoleValue && !isDitbinmasClient;
     setIsDirectorateScopedClient(directorateScopedClient);
-    const shouldUseDirectorateFetcher =
-      !isOperatorRole &&
-      (derivedDirectorateRole || (isDitSamaptaBidhumas && !isOrgScope));
     const shouldMapToDitbinmas =
       !isOperatorRole &&
       (isDitbinmasRole ||
@@ -288,121 +305,67 @@ export default function useInstagramLikesData({
           viewBy,
           selectedDate,
         );
-        if (shouldUseDirectorateFetcher) {
-          const requestContext = {
-            role: requestRoleForContext,
-            scope: requestScopeFromAuth,
-            ...(normalizedRegionalIdFromAuth
-              ? { regional_id: normalizedRegionalIdFromAuth }
-              : {}),
-          };
-          const { users, summary, posts, clientName } =
-            await fetchDitbinmasAbsensiLikes(
-              token,
-              {
-                periode,
-                date,
-                startDate,
-                endDate,
-              },
-              controller.signal,
-              userClientId,
-              scope,
-              ditbinmasClientId,
-              requestContext,
-            );
-          if (controller.signal.aborted) return;
-          const sortedUsers = prioritizeUsersForClient(
-            [...users].sort(compareUsersByPangkatAndNrp),
-            userClientId,
-          );
-          setChartData(sortedUsers);
-          setRekapSummary(summary);
-          setIgPosts(posts || []);
-          setClientName(clientName || "");
-          setIsDirectorateData(true);
-          setIsDirectorateLayout(true);
-          setIsDirectorateRole(true);
-          setCanSelectScope(
-            !isOrgClient && allowedScopeClients.has(normalizedClientIdUpper),
-          );
-          return;
-        }
-
         let postsFromRekap: any[] = [];
 
         const client_id = shouldMapToDitbinmas ? ditbinmasClientId : userClientId;
-
-        const profileClientId = client_id;
-        const profileRes = await getClientProfile(
+        const requestContext = {
+          role: requestRoleForContext,
+          scope: requestScopeFromAuth,
+          ...(normalizedRegionalIdFromAuth
+            ? { regional_id: normalizedRegionalIdFromAuth }
+            : {}),
+        };
+        const rekapRes = await getRekapLikesIG(
           token,
-          profileClientId,
+          client_id,
+          periode,
+          date,
+          startDate,
+          endDate,
           controller.signal,
-          profileRequestContext,
+          requestContext,
         );
-        const profile = profileRes.client || profileRes.profile || profileRes || {};
-        const resolvedRegionalId =
-          normalizedRegionalIdFromAuth ??
-          profile?.regional_id ??
-          profile?.regionalId ??
-          profile?.regionalID ??
-          profile?.regional;
-        const normalizedRegionalId = resolvedRegionalId
-          ? String(resolvedRegionalId)
-          : undefined;
-        const normalizedEffectiveClientType = String(
-          effectiveClientType ??
-            profile.client_type ??
-            profile.clientType ??
-            profile.client_type_code ??
-            profile.clientTypeName ??
-            "",
-        ).toUpperCase();
-        const requestScope =
-          normalizeScopePayload(normalizedEffectiveClientType) ??
-          requestScopeFromAuth;
-        const isOrg = normalizedEffectiveClientType === "ORG";
-        const dir = normalizedEffectiveClientType === "DIREKTORAT";
+        let users = extractRekapUsers(rekapRes);
+        const rekapClients = extractRekapClients(rekapRes);
+        const directoryNameMap = buildClientNameMap(rekapClients, users);
+        postsFromRekap = extractRekapPosts(rekapRes);
+        setIgPosts(postsFromRekap);
+
+        const resolvedScope = requestScopeFromAuth ?? extractRekapScope(rekapRes);
+        const isOrg = resolvedScope === "ORG";
+        const dir = resolvedScope === "DIREKTORAT";
         const directorateData =
-          isDitSamaptaBidhumas ||
-          (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
+          !isOrg &&
+          (dir ||
+            derivedDirectorateRole ||
+            isDitSamaptaBidhumas ||
+            isDirectorateRoleValue);
         const shouldUseDirectorateLayout =
-          normalizedEffectiveRoleLower === "operator" &&
-          normalizedEffectiveClientType === "ORG";
+          normalizedEffectiveRoleLower === "operator" && isOrg;
         const directorateLayout = directorateData || shouldUseDirectorateLayout;
+
+        const resolvedClientName = extractRekapClientName(rekapRes, client_id);
+        const isDirectorateScopedValue =
+          !isOperatorRole &&
+          directorateData &&
+          normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
+
         if (controller.signal.aborted) return;
         setIsDirectorateData(directorateData);
         setIsDirectorateLayout(directorateLayout);
         setIsOrgClient(isOrg);
-        setClientName(
-          profile.nama ||
-            profile.nama_client ||
-            profile.client_name ||
-            profile.client ||
-            "",
-        );
+        setClientName(resolvedClientName || "Unknown Client");
         setCanSelectScope(
           !isOperatorRole &&
             directorateData &&
             !isOrg &&
             allowedScopeClients.has(normalizedClientIdUpper),
         );
-
-        const hasDifferentRoleClient =
-          !isOperatorRole &&
-          directorateData &&
-          normalizedEffectiveRoleUpper !== normalizedClientIdUpper;
-        setIsDirectorateScopedClient(hasDifferentRoleClient);
+        setIsDirectorateScopedClient(isDirectorateScopedValue);
         setIsDirectorateRole(
           !isOperatorRole && (directorateData || isDirectorateRoleValue),
         );
 
-        const requestContext = {
-          role: requestRoleForContext,
-          scope: requestScope,
-          ...(normalizedRegionalId ? { regional_id: normalizedRegionalId } : {}),
-        };
-        let users: any[] = [];
         let rekapMeta: {
           totalIGPost?: number;
           totalUser?: number;
@@ -410,63 +373,42 @@ export default function useInstagramLikesData({
           totalKurangLike?: number;
           totalBelumLike?: number;
           totalTanpaUsername?: number;
-        } = {};
+        } = {
+          totalIGPost: getTotalPostsFromRekap(rekapRes, postsFromRekap),
+          totalUser:
+            normalizeNumber(
+              rekapRes?.usersCount ??
+                rekapRes?.summary?.totalUsers ??
+                rekapRes?.summary?.totalUser ??
+                rekapRes?.summary?.total_users,
+            ) ?? undefined,
+          totalSudahLike: normalizeNumber(
+            rekapRes?.sudahUsersCount ??
+              rekapRes?.summary?.totalSudahLike ??
+              rekapRes?.summary?.total_sudah_like ??
+              rekapRes?.summary?.total_sudah,
+          ),
+          totalKurangLike: normalizeNumber(
+            rekapRes?.kurangUsersCount ??
+              rekapRes?.summary?.totalKurangLike ??
+              rekapRes?.summary?.total_kurang_like ??
+              rekapRes?.summary?.total_kurang,
+          ),
+          totalBelumLike: normalizeNumber(
+            rekapRes?.belumUsersCount ??
+              rekapRes?.summary?.totalBelumLike ??
+              rekapRes?.summary?.total_belum_like ??
+              rekapRes?.summary?.total_belum,
+          ),
+          totalTanpaUsername: normalizeNumber(
+            rekapRes?.noUsernameUsersCount ??
+              rekapRes?.summary?.totalTanpaUsername ??
+              rekapRes?.summary?.total_tanpa_username ??
+              rekapRes?.summary?.total_tanpa,
+          ),
+        };
+
         if (directorateData) {
-          const rekapRes = await getRekapLikesIG(
-            token,
-            client_id,
-            periode,
-            date,
-            startDate,
-            endDate,
-            controller.signal,
-            requestContext,
-          );
-          users = extractRekapUsers(rekapRes);
-          const rekapClients = extractRekapClients(rekapRes);
-          const directoryNameMap = buildClientNameMap(rekapClients, users);
-          const posts =
-            rekapRes?.posts ||
-            rekapRes?.ig_posts ||
-            rekapRes?.igPosts ||
-            rekapRes?.instagram_posts ||
-            [];
-          postsFromRekap = Array.isArray(posts) ? posts : [];
-          setIgPosts(postsFromRekap);
-          rekapMeta = {
-            totalIGPost: getTotalPostsFromRekap(rekapRes, postsFromRekap),
-            totalUser:
-              normalizeNumber(
-                rekapRes?.usersCount ??
-                  rekapRes?.summary?.totalUsers ??
-                  rekapRes?.summary?.totalUser ??
-                  rekapRes?.summary?.total_users,
-              ) ?? undefined,
-            totalSudahLike: normalizeNumber(
-              rekapRes?.sudahUsersCount ??
-                rekapRes?.summary?.totalSudahLike ??
-                rekapRes?.summary?.total_sudah_like ??
-                rekapRes?.summary?.total_sudah,
-            ),
-            totalKurangLike: normalizeNumber(
-              rekapRes?.kurangUsersCount ??
-                rekapRes?.summary?.totalKurangLike ??
-                rekapRes?.summary?.total_kurang_like ??
-                rekapRes?.summary?.total_kurang,
-            ),
-            totalBelumLike: normalizeNumber(
-              rekapRes?.belumUsersCount ??
-                rekapRes?.summary?.totalBelumLike ??
-                rekapRes?.summary?.total_belum_like ??
-                rekapRes?.summary?.total_belum,
-            ),
-            totalTanpaUsername: normalizeNumber(
-              rekapRes?.noUsernameUsersCount ??
-                rekapRes?.summary?.totalTanpaUsername ??
-                rekapRes?.summary?.total_tanpa_username ??
-                rekapRes?.summary?.total_tanpa,
-            ),
-          };
           if (scope === "client" && normalizedLoginClientId) {
             const normalizeValue = (value: unknown) =>
               String(value || "")
@@ -492,60 +434,6 @@ export default function useInstagramLikesData({
                 }
               : u;
           });
-        } else {
-          const rekapRes = await getRekapLikesIG(
-            token,
-            client_id,
-            periode,
-            date,
-            startDate,
-            endDate,
-            controller.signal,
-            requestContext,
-          );
-          users = extractRekapUsers(rekapRes);
-          const posts =
-            rekapRes?.posts ||
-            rekapRes?.ig_posts ||
-            rekapRes?.igPosts ||
-            rekapRes?.instagram_posts ||
-            [];
-          postsFromRekap = Array.isArray(posts) ? posts : [];
-          setIgPosts(postsFromRekap);
-          rekapMeta = {
-            totalIGPost: getTotalPostsFromRekap(rekapRes, postsFromRekap),
-            totalUser:
-              normalizeNumber(
-                rekapRes?.usersCount ??
-                  rekapRes?.summary?.totalUsers ??
-                  rekapRes?.summary?.totalUser ??
-                  rekapRes?.summary?.total_users,
-              ) ?? undefined,
-            totalSudahLike: normalizeNumber(
-              rekapRes?.sudahUsersCount ??
-                rekapRes?.summary?.totalSudahLike ??
-                rekapRes?.summary?.total_sudah_like ??
-                rekapRes?.summary?.total_sudah,
-            ),
-            totalKurangLike: normalizeNumber(
-              rekapRes?.kurangUsersCount ??
-                rekapRes?.summary?.totalKurangLike ??
-                rekapRes?.summary?.total_kurang_like ??
-                rekapRes?.summary?.total_kurang,
-            ),
-            totalBelumLike: normalizeNumber(
-              rekapRes?.belumUsersCount ??
-                rekapRes?.summary?.totalBelumLike ??
-                rekapRes?.summary?.total_belum_like ??
-                rekapRes?.summary?.total_belum,
-            ),
-            totalTanpaUsername: normalizeNumber(
-              rekapRes?.noUsernameUsersCount ??
-                rekapRes?.summary?.totalTanpaUsername ??
-                rekapRes?.summary?.total_tanpa_username ??
-                rekapRes?.summary?.total_tanpa,
-            ),
-          };
         }
 
         let filteredUsers = users;
@@ -599,46 +487,6 @@ export default function useInstagramLikesData({
               );
               return userClientId === normalizedLoginClientId;
             });
-          } else {
-            const directoryRes = await getUserDirectory(
-              token,
-              userClientId,
-              {
-                role: normalizedDirectoryRole || undefined,
-                scope: directoryScope,
-                regional_id: normalizedRegionalId,
-              },
-              controller.signal,
-            );
-            const dirData =
-              directoryRes.data || directoryRes.users || directoryRes || [];
-            const operatorIds = new Set(
-              (dirData as any[])
-                .filter((u: any) => {
-                  const roleValue = normalizeRole(
-                    u.role || u.user_role || u.userRole || u.roleName || "",
-                  );
-                  if (roleValue !== "operator") return false;
-                  const userClientId = normalizeClientId(
-                    u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
-                  );
-                  return userClientId === normalizedLoginClientId;
-                })
-                .map((u: any) => getUserIdentifier(u))
-                .filter(Boolean),
-            );
-            if (operatorIds.size > 0) {
-              filteredUsers = filteredUsers.filter((u: any) => {
-                const userClientId = normalizeClientId(
-                  u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "",
-                );
-                if (userClientId && userClientId !== normalizedLoginClientId) {
-                  return false;
-                }
-                const identifier = getUserIdentifier(u);
-                return identifier ? operatorIds.has(identifier) : false;
-              });
-            }
           }
         }
 
