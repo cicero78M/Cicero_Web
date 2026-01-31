@@ -25,6 +25,25 @@ function extractRekapUsers(payload: any): any[] {
   return [];
 }
 
+function applyUsernameFallback(users: any[]): any[] {
+  return users.map((user) => {
+    if (!user || typeof user !== "object") return user;
+    const existingUsername = String(user.username || "").trim();
+    if (existingUsername) return user;
+    const fallbackUsername =
+      user.ig_username ||
+      user.igUsername ||
+      user.instagram_username ||
+      user.instagramUsername ||
+      user.user_ig ||
+      user.userIg ||
+      "";
+    const normalizedFallback = String(fallbackUsername || "").trim();
+    if (!normalizedFallback) return user;
+    return { ...user, username: normalizedFallback };
+  });
+}
+
 function extractRekapClients(payload: any): any[] {
   if (Array.isArray(payload?.clients)) return payload.clients;
   if (Array.isArray(payload?.directory)) return payload.directory;
@@ -133,7 +152,7 @@ export async function fetchDitbinmasAbsensiLikes(
   );
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
-  let users = extractRekapUsers(rekapRes);
+  let users = applyUsernameFallback(extractRekapUsers(rekapRes));
   const clients = extractRekapClients(rekapRes);
 
   const normalizedLoginClientId = String(loginClientId || "")
