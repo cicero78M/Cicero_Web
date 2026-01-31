@@ -21,6 +21,8 @@ import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import { showToast } from "@/utils/showToast";
 import { clampEngagementCompleted } from "@/utils/engagementStatus";
+import useAuth from "@/hooks/useAuth";
+import { postComplaintTiktok } from "@/utils/api";
 
 const PAGE_SIZE = 25;
 
@@ -71,6 +73,8 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   ref,
 ) {
   const { periodeLabel, viewLabel, directorateName } = reportContext || {};
+  const { token, clientId } = useAuth();
+  const [komplainLoadingMap, setKomplainLoadingMap] = useState({});
   const resolveNumber = (value, fallback) => {
     if (value === undefined || value === null || value === "") return fallback;
     const normalized = Number(value);
@@ -161,6 +165,19 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   const clampKomentarToTask = (jumlahKomentar = 0) =>
     clampEngagementCompleted({ completed: jumlahKomentar, totalTarget: totalTiktokPostCount });
 
+  const resolveUserIdentifier = (user) => {
+    const rawId = user.user_id || user.nrp || user.nrp_nip || user.nrpNip || user.id || "";
+    return String(rawId || "").trim();
+  };
+
+  const resolveKomplainLoadingKey = (user) => {
+    const id = resolveUserIdentifier(user);
+    if (id) return id;
+    const username = String(user.username || "").trim();
+    if (username) return username;
+    return String(user.nama || user.name || "").trim() || "unknown-user";
+  };
+
   const getClientIdentifier = (user) => {
     const rawClientId =
       user.client_id ??
@@ -220,6 +237,59 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     }
 
     return 0;
+  };
+
+  const resolveKomplainPayload = (user) => {
+    const clientIdentifier = getClientIdentifier(user);
+    const userId = resolveUserIdentifier(user);
+    return {
+      nrp: userId,
+      user_id: user.user_id || userId,
+      username: String(user.username || "").trim(),
+      client_id:
+        clientIdentifier.stringValue ||
+        String(
+          user.client_id ||
+            user.clientId ||
+            user.clientID ||
+            clientId ||
+            "",
+        ).trim(),
+      nama: user.nama || user.name || "",
+      issue: "Sudah komentar TikTok belum terdata.",
+    };
+  };
+
+  const handleKomplainTiktok = async (user) => {
+    const userId = resolveUserIdentifier(user);
+    const username = String(user.username || "").trim();
+    const loadingKey = resolveKomplainLoadingKey(user);
+    if (!username) {
+      showToast("Username TikTok belum tersedia, komplain tidak dapat dikirim.", "warning");
+      return;
+    }
+    if (!token) {
+      showToast("Token login tidak ditemukan. Silakan login ulang.", "error");
+      return;
+    }
+    if (!userId) {
+      showToast("NRP/NIP tidak ditemukan untuk komplain.", "warning");
+      return;
+    }
+
+    setKomplainLoadingMap((prev) => ({ ...prev, [loadingKey]: true }));
+    try {
+      const payload = resolveKomplainPayload(user);
+      const result = await postComplaintTiktok(token, payload);
+      showToast(result.message || "Komplain TikTok berhasil dikirim.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Komplain TikTok gagal dikirim.",
+        "error",
+      );
+    } finally {
+      setKomplainLoadingMap((prev) => ({ ...prev, [loadingKey]: false }));
+    }
   };
 
   const inferredClientId = useMemo(() => {
@@ -693,13 +763,16 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                     <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Jumlah Komentar
                     </th>
+                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-blue-50">
                   {currentRows.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={hasClient ? 7 : 6}
+                        colSpan={hasClient ? 8 : 7}
                         className="h-48 px-4 text-center text-sm text-blue-700"
                       >
                         <div className="flex flex-col items-center gap-3">
@@ -722,6 +795,9 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                     currentRows.map((u, i) => {
                       const username = String(u.username || "").trim();
                       const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
+                      const loadingKey = resolveKomplainLoadingKey(u);
+                      const isKomplainLoading = Boolean(komplainLoadingMap[loadingKey]);
+                      const isKomplainDisabled = !username || isKomplainLoading;
 
                       const baseCellClass = "px-4 py-3 align-top";
                       const statusStyles = {
@@ -811,6 +887,28 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                           </td>
                           <td className={`${baseCellClass} text-center text-sm font-semibold text-blue-900`}>
                             {jumlahDisplay}
+                          </td>
+                          <td className={`${baseCellClass} text-center`}>
+                            <div className="flex flex-col items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleKomplainTiktok(u)}
+                                disabled={isKomplainDisabled}
+                                className="rounded-lg border border-sky-200 bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-600 transition hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-sky-100"
+                                title={
+                                  !username
+                                    ? "Username TikTok belum tersedia"
+                                    : "Kirim komplain TikTok"
+                                }
+                              >
+                                {isKomplainLoading ? "Mengirim..." : "Komplain"}
+                              </button>
+                              {!username && (
+                                <span className="text-[11px] text-slate-400">
+                                  Username kosong
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
