@@ -18,6 +18,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Dropdown **Satfung/Divisi** untuk pengguna baru menambahkan opsi **SUBDIT DALMAS** dan **SUBDIT GASUM** agar unit terkait dapat dipilih langsung tanpa input manual.
 - Pilihan **Satfung/Divisi** juga mencakup **UNIT POLSATWA** sehingga kesatuan tersebut tersedia di dropdown tambah dan edit pengguna tanpa perlu input manual, kini dibaca langsung dari daftar opsi terpusat `utils/validateUserForm` agar validasi dan tampilan selalu selaras.
 - Aksi **Nonaktifkan** pada User Directory kini memakai modal konfirmasi yang mewajibkan input NRP/NIP sesuai user sebelum status diubah menjadi nonaktif (soft delete), sementara user nonaktif dapat diaktifkan kembali lewat tombol **Aktifkan kembali**.
+- Tabel User Directory sekarang membungkus konten kolom sehingga data panjang tetap terbaca tanpa perlu horizontal scroll.
 
 ### User directory scope & role normalization
 

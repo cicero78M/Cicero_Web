@@ -750,18 +750,18 @@ export default function UserDirectoryPage() {
             )}
           </div>
 
-          <div className="relative mt-6 overflow-x-auto overflow-y-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl backdrop-blur">
-            <table className="min-w-full text-sm text-slate-700">
+          <div className="relative mt-6 overflow-x-hidden overflow-y-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl backdrop-blur">
+            <table className="w-full table-fixed text-sm text-slate-700">
               <thead className="bg-sky-50 text-slate-600">
                 <tr className="text-left text-xs uppercase tracking-wider">
-                  <th className="px-4 py-3 font-medium">No</th>
-                  <th className="px-4 py-3 font-medium">Nama</th>
-                  <th className="px-4 py-3 font-medium">NRP/NIP</th>
-                  <th className="px-4 py-3 font-medium">{columnLabel}</th>
-                  <th className="px-4 py-3 font-medium">Instagram</th>
-                  <th className="px-4 py-3 font-medium">TikTok</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Aksi</th>
+                  <th className="w-10 px-4 py-3 font-medium whitespace-normal break-words">No</th>
+                  <th className="w-48 px-4 py-3 font-medium whitespace-normal break-words">Nama</th>
+                  <th className="w-36 px-4 py-3 font-medium whitespace-normal break-words">NRP/NIP</th>
+                  <th className="w-48 px-4 py-3 font-medium whitespace-normal break-words">{columnLabel}</th>
+                  <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">Instagram</th>
+                  <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">TikTok</th>
+                  <th className="w-32 px-4 py-3 font-medium whitespace-normal break-words">Status</th>
+                  <th className="w-32 px-4 py-3 font-medium whitespace-normal break-words">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -770,8 +770,10 @@ export default function UserDirectoryPage() {
                     key={u.user_id || idx}
                     className={`border-t border-slate-200 transition hover:bg-sky-50 ${editingRowId === u.user_id ? "bg-sky-100/60" : "bg-transparent"}`}
                   >
-                    <td className="px-4 py-3 text-slate-600">{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
+                      {(page - 1) * PAGE_SIZE + idx + 1}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700 whitespace-normal break-words">
                       {editingRowId === u.user_id ? (
                         <div className="flex gap-2">
                           <input
@@ -791,7 +793,7 @@ export default function UserDirectoryPage() {
                         (u.title ? `${u.title} ` : "") + (u.nama || "-")
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-slate-600">
+                    <td className="px-4 py-3 font-mono text-slate-600 whitespace-normal break-words">
                       {editingRowId === u.user_id ? (
                         <input
                           value={editNrpNip}
@@ -805,7 +807,7 @@ export default function UserDirectoryPage() {
                         u.user_id || "-"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
                       {showKesatuanColumn ? (
                         u.nama_client || u.client_name || u.client || u.nama || "-"
                       ) : editingRowId === u.user_id ? (
@@ -819,9 +821,13 @@ export default function UserDirectoryPage() {
                         u.divisi || "-"
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-sky-500">{u.insta ? `@${u.insta}` : "-"}</td>
-                    <td className="px-4 py-3 font-mono text-purple-500">{u.tiktok || "-"}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 font-mono text-sky-500 whitespace-normal break-words">
+                      {u.insta ? `@${u.insta}` : "-"}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-purple-500 whitespace-normal break-words">
+                      {u.tiktok || "-"}
+                    </td>
+                    <td className="px-4 py-3 whitespace-normal break-words">
                       {isUserActive(u) ? (
                         <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
                           Aktif
@@ -832,7 +838,7 @@ export default function UserDirectoryPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-normal break-words">
                       {editingRowId === u.user_id ? (
                         <div className="flex gap-2">
                           <button
