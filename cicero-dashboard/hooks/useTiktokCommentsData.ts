@@ -162,14 +162,13 @@ function extractRekapPayload(payload: any) {
   }
 
   const dataPayload = payload.data ?? payload;
-  const dataUsers = Array.isArray(payload.data) ? payload.data : [];
-  const fallbackUsers = Array.isArray(payload.users) ? payload.users : [];
-  const users =
-    dataUsers.length > 0
-      ? dataUsers
+  const users = Array.isArray(payload.data)
+    ? payload.data
+    : Array.isArray(payload.users)
+      ? payload.users
       : Array.isArray(dataPayload?.users)
         ? dataPayload.users
-        : fallbackUsers;
+        : [];
   const chartData =
     users.length > 0
       ? users.map((entry: Record<string, any>) =>
