@@ -14,6 +14,7 @@ import {
   getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
+import { getEngagementStatus } from "@/utils/engagementStatus";
 
 const USER_IDENTIFIER_FIELDS = [
   "nrp",
@@ -130,6 +131,68 @@ function extractRekapPayload(payload: any) {
         : [];
   const summary = payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
   return { users, summary };
+}
+
+function inferTotalTiktokPostFromUsers(users: any[]) {
+  const totals = users
+    .map((user) => {
+      const raw =
+        user?.total_posts ??
+        user?.totalPosts ??
+        user?.total_post ??
+        user?.totalPost ??
+        user?.total_tiktok_posts ??
+        user?.total_tiktok_post ??
+        user?.tiktokPosts ??
+        user?.tiktok_posts ??
+        user?.ttPosts ??
+        user?.tt_posts ??
+        user?.post_count ??
+        user?.postCount ??
+        0;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : 0;
+    })
+    .filter((value) => value > 0);
+
+  return totals.length > 0 ? Math.max(...totals) : 0;
+}
+
+function computeSummaryFromUsers(users: any[], totalTiktokPost: number) {
+  let totalSudahKomentar = 0;
+  let totalKurangKomentar = 0;
+  let totalBelumKomentar = 0;
+  let totalTanpaUsername = 0;
+
+  users.forEach((user) => {
+    const username = String(user?.username || "").trim();
+    if (!username) {
+      totalTanpaUsername += 1;
+      return;
+    }
+    const jumlahKomentar = Number(user?.jumlah_komentar) || 0;
+    const status = getEngagementStatus({
+      completed: jumlahKomentar,
+      totalTarget: totalTiktokPost,
+    });
+    if (status === "sudah") totalSudahKomentar += 1;
+    else if (status === "kurang") totalKurangKomentar += 1;
+    else totalBelumKomentar += 1;
+  });
+
+  return {
+    totalUser: users.length,
+    totalSudahKomentar,
+    totalKurangKomentar,
+    totalBelumKomentar,
+    totalTanpaUsername,
+  };
+}
+
+function resolveNumber(value: unknown, fallback: number) {
+  if (value === undefined || value === null || value === "") return fallback;
+  const normalized = Number(value);
+  return Number.isNaN(normalized) ? fallback : normalized;
 }
 
 interface Options {
@@ -536,40 +599,59 @@ export default function useTiktokCommentsData({
           summaryPayload?.distribusi ??
           summaryPayload?.statusDistribution ??
           {};
+        const hasDistribution =
+          distribution && Object.keys(distribution).length > 0;
         const totalUserRaw =
           summaryPayload?.totalUsers ??
           summaryPayload?.totalUser ??
           summaryPayload?.total_users ??
-          summaryPayload?.total_user ??
-          0;
-        const totalUser = Number(totalUserRaw) || 0;
+          summaryPayload?.total_user;
         const totalTiktokPostRaw =
           summaryPayload?.totalPosts ??
           summaryPayload?.totalPost ??
           summaryPayload?.total_tiktok_post ??
           summaryPayload?.total_tiktok_posts ??
           summaryPayload?.totalTiktokPost ??
-          summaryPayload?.totalTiktokPosts ??
-          (statsData as any)?.ttPosts ??
-          (statsData as any)?.tiktokPosts ??
-          (statsData as any)?.totalTiktokPost ??
-          (statsData as any)?.totalTiktokPosts ??
-          (statsData as any)?.tt_posts ??
-          (statsData as any)?.tiktok_posts ??
-          0;
-        const totalTiktokPost = Number(totalTiktokPostRaw) || 0;
-        const totalSudahKomentar = Number(distribution?.sudah ?? 0) || 0;
-        const totalKurangKomentar = Number(distribution?.kurang ?? 0) || 0;
-        const totalBelumKomentar =
-          (Number(distribution?.belum ?? 0) || 0) +
-          (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0);
-        const totalTanpaUsername =
-          Number(
-            distribution?.noUsername ??
-              distribution?.no_username ??
-              distribution?.noUsernameCount ??
-              0,
-          ) || 0;
+          summaryPayload?.totalTiktokPosts;
+        const inferredTotalTiktokPost = inferTotalTiktokPostFromUsers(
+          sortedUsers,
+        );
+        const hasTotalTiktokPost =
+          totalTiktokPostRaw !== undefined &&
+          totalTiktokPostRaw !== null &&
+          totalTiktokPostRaw !== "";
+        const totalTiktokPost = hasTotalTiktokPost
+          ? resolveNumber(totalTiktokPostRaw, 0)
+          : inferredTotalTiktokPost;
+        const computedTotals = computeSummaryFromUsers(
+          sortedUsers,
+          totalTiktokPost,
+        );
+        const totalUser = resolveNumber(
+          totalUserRaw,
+          computedTotals.totalUser,
+        );
+        const totalSudahKomentar = hasDistribution
+          ? resolveNumber(distribution?.sudah, computedTotals.totalSudahKomentar)
+          : computedTotals.totalSudahKomentar;
+        const totalKurangKomentar = hasDistribution
+          ? resolveNumber(distribution?.kurang, computedTotals.totalKurangKomentar)
+          : computedTotals.totalKurangKomentar;
+        const totalBelumKomentar = hasDistribution
+          ? resolveNumber(
+              (Number(distribution?.belum ?? 0) || 0) +
+                (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0),
+              computedTotals.totalBelumKomentar,
+            )
+          : computedTotals.totalBelumKomentar;
+        const totalTanpaUsername = hasDistribution
+          ? resolveNumber(
+              distribution?.noUsername ??
+                distribution?.no_username ??
+                distribution?.noUsernameCount,
+              computedTotals.totalTanpaUsername,
+            )
+          : computedTotals.totalTanpaUsername;
 
         if (controller.signal.aborted) return;
         setRekapSummary({

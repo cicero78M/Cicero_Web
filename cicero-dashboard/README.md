@@ -169,6 +169,7 @@ Sidebar sekarang secara eksplisit mengambil `effectiveClientType` dari konteks a
 - Deteksi direktorat pada `useTiktokCommentsData` mengikuti `effectiveClientType`: akun ORG tidak lagi memakai jalur direktorat walau role bertipe direktorat, sehingga scope dan pemanggilan profil klien terkunci ke `client_id` login.
 - Data komentar TikTok untuk klien bertipe **ORG** kini dideduplikasi berdasarkan kombinasi `client_id`, identifier (NRP/NIP/user id), maupun username/nama sehingga total user serta grafik kepatuhan tidak berlipat ganda.
 - Flag `isOrgClient` diturunkan dari `effectiveClientType` agar antarmuka dapat menyembunyikan kontrol perubahan cakupan bagi pengguna bertipe ORG.
+- Chart dan ringkasan rekap TikTok Engagement Insight kini sepenuhnya bersumber dari endpoint `/api/tiktok/rekap-komentar` (termasuk parameter `role`, `scope`, dan `regional_id`), sehingga total user/distribusi status serta total post tidak lagi mengambil fallback dari dashboard stats.
 - Endpoint `/api/tiktok/rekap-komentar` kini menerima filter rentang tanggal melalui `tanggal_mulai`/`tanggal_selesai` berikut alias `start_date`/`end_date`, sehingga penyaringan periode mengikuti pola rekap likes Instagram dan dashboard stats tanpa memutus integrasi adapter yang masih memakai nama field lama.
 
 ## Dashboard Amplify
