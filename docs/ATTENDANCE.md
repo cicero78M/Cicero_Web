@@ -12,18 +12,6 @@ Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bag
 6. Untuk role **operator**, hook tetap menggunakan `client_id` login saat meminta rekap. Penyaringan user operator hanya dilakukan ketika payload rekap sudah membawa atribut role; jika tidak tersedia maka seluruh daftar rekap ditampilkan apa adanya demi menjaga sumber data tetap tunggal dari `/api/insta/rekap-likes`.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L428-L602】
 7. Fungsi `getRekapLikesIG` kini menggunakan helper `resolveRoleScopeRegionalOptions` yang menggabungkan `AbortSignal` dan opsi `role`/`scope`/`regional_id` (termasuk bila sinyal disematkan di objek opsi). Dengan begitu setiap pemanggilan `/api/insta/rekap-likes` otomatis menambahkan parameter `scope` dan `regional_id` di query string ketika tersedia, meskipun pemanggil hanya menyuplai `signal` atau opsi terpisah, sehingga mekanisme filter regional tetap konsisten di seluruh jalur hook dan utilitas absensi.【F:cicero-dashboard/utils/api.ts†L1177-L1217】
 
-### Field wajib dari endpoint `/api/insta/rekap-likes`
-
-Payload rekap likes wajib memuat data personel dengan field berikut agar tabel rekap dan ringkasan berjalan konsisten:
-
-- `username` (username IG utama; jika backend mengirimkan alias seperti `ig_username`, UI akan melakukan fallback sebelum data dipakai).
-- `nama` (nama personel).
-- `divisi` (satker/divisi atau label unit).
-- `jumlah_like` (jumlah like yang sudah dilakukan).
-- `client_id` (kode client/satker untuk grouping dan filter).
-
-Field ini dipakai langsung pada hook `useInstagramLikesData`, utilitas `fetchDitbinmasAbsensiLikes`, dan komponen `RekapLikesIG` untuk kalkulasi status dan penampilan tabel rekap.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L15-L545】【F:cicero-dashboard/utils/absensiLikes.ts†L1-L198】【F:cicero-dashboard/components/likes/instagram/Rekap/RekapLikesIG.jsx†L1-L360】
-
 ## Perhitungan Ringkasan Absensi
 
 - Baik pada mode Ditbinmas maupun klien biasa, ringkasan **Sudah Like**, **Kurang Like**, **Belum Like**, serta **Tanpa Username** sekarang langsung memakai field rekap backend: `summary.*`, `usersCount`, `sudahUsersCount`, `kurangUsersCount`, `belumUsersCount`, `noUsernameUsersCount`, serta `totalPosts` (atau alias setara) dari payload `/api/insta/rekap-likes` tanpa menghitung ulang status di frontend. Total posting tetap diambil dari payload rekap (misalnya `summary.totalPosts`/`totalPosts`) agar kartu ringkasan selalu sinkron dengan perhitungan backend.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L300-L520】
