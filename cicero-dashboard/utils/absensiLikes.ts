@@ -1,20 +1,97 @@
-import {
-  getDashboardStats,
-  getRekapLikesIG,
-  getClientProfile,
-  getClientNames,
-  getUserDirectory,
-} from "@/utils/api";
-import {
-  getUserDirectoryFetchScope,
-  normalizeDirectoryRole,
-} from "@/utils/userDirectoryScope";
+import { getRekapLikesIG, getClientProfile } from "@/utils/api";
 
 interface FetchParams {
   periode: string;
   date?: string;
   startDate?: string;
   endDate?: string;
+}
+
+const REKAP_TOTAL_POST_FIELDS = [
+  "totalPosts",
+  "totalIGPost",
+  "total_ig_post",
+];
+
+function normalizeNumber(value?: unknown): number | undefined {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : undefined;
+}
+
+function extractRekapUsers(payload: any): any[] {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.users)) return payload.users;
+  if (Array.isArray(payload)) return payload;
+  return [];
+}
+
+function extractRekapClients(payload: any): any[] {
+  if (Array.isArray(payload?.clients)) return payload.clients;
+  if (Array.isArray(payload?.directory)) return payload.directory;
+  if (Array.isArray(payload?.client_directory)) return payload.client_directory;
+  if (Array.isArray(payload?.clientDirectory)) return payload.clientDirectory;
+  if (Array.isArray(payload?.meta?.clients)) return payload.meta.clients;
+  if (Array.isArray(payload?.metadata?.clients)) return payload.metadata.clients;
+  if (Array.isArray(payload?.summary?.clients)) return payload.summary.clients;
+  return [];
+}
+
+function buildClientNameMap(
+  clients: any[],
+  users: any[],
+): Record<string, string> {
+  const entries = new Map<string, string>();
+  clients.forEach((entry) => {
+    const id = String(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        entry?.id ||
+        "",
+    );
+    if (!id) return;
+    const name =
+      entry?.nama_client ||
+      entry?.client_name ||
+      entry?.client ||
+      entry?.nama ||
+      entry?.name;
+    if (name) entries.set(id, name);
+  });
+  users.forEach((entry) => {
+    const id = String(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        "",
+    );
+    if (!id || entries.has(id)) return;
+    const name =
+      entry?.nama_client ||
+      entry?.client_name ||
+      entry?.client ||
+      entry?.nama ||
+      entry?.name;
+    if (name) entries.set(id, name);
+  });
+  return Object.fromEntries(entries);
+}
+
+function getTotalPostsFromRekap(payload: any, posts: any[]): number {
+  const summary = payload?.summary ?? {};
+  const summaryValue = REKAP_TOTAL_POST_FIELDS.reduce((acc, key) => {
+    if (acc !== undefined) return acc;
+    return normalizeNumber(summary?.[key]);
+  }, undefined as number | undefined);
+  const rootValue = REKAP_TOTAL_POST_FIELDS.reduce((acc, key) => {
+    if (acc !== undefined) return acc;
+    return normalizeNumber(payload?.[key]);
+  }, undefined as number | undefined);
+  if (summaryValue !== undefined) return summaryValue;
+  if (rootValue !== undefined) return rootValue;
+  return Array.isArray(posts) ? posts.length : 0;
 }
 
 export async function fetchDitbinmasAbsensiLikes(
@@ -30,37 +107,24 @@ export async function fetchDitbinmasAbsensiLikes(
   // effectiveClientId allows alternate Ditbinmas-style coordinators (e.g.
   // DITSAMAPTA with role BIDHUMAS) to reuse this aggregator without
   // hard-coding the root Ditbinmas client ID.
-
-  const statsData = await getDashboardStats(
+  const rekapRes = await getRekapLikesIG(
     token,
+    clientId,
     periode,
     date,
     startDate,
     endDate,
-    clientId,
-    requestContext,
     signal,
+    requestContext,
   );
   const posts =
-    statsData.ig_posts ||
-    statsData.igPosts ||
-    statsData.instagram_posts ||
+    rekapRes?.posts ||
+    rekapRes?.ig_posts ||
+    rekapRes?.igPosts ||
+    rekapRes?.instagram_posts ||
     [];
-  const parsedInstagramPosts = Number(statsData.instagramPosts);
-  const fallbackPostCounts = [
-    Array.isArray(posts) ? posts.length : undefined,
-    Array.isArray(statsData.ig_posts) ? statsData.ig_posts.length : undefined,
-    Array.isArray(statsData.igPosts) ? statsData.igPosts.length : undefined,
-    Array.isArray(statsData.instagram_posts)
-      ? statsData.instagram_posts.length
-      : undefined,
-  ].filter((count) => typeof count === "number" && count > 0);
-  const totalIGPost =
-    Number.isFinite(parsedInstagramPosts) && parsedInstagramPosts > 0
-      ? parsedInstagramPosts
-      : fallbackPostCounts[0] || 0;
+  const totalIGPost = getTotalPostsFromRekap(rekapRes, posts);
 
-  // gather user directory
   const profileRes = await getClientProfile(
     token,
     clientId,
@@ -69,66 +133,8 @@ export async function fetchDitbinmasAbsensiLikes(
   );
   const profile = profileRes.client || profileRes.profile || profileRes || {};
 
-  const normalizedRole = normalizeDirectoryRole(
-    requestContext?.role || clientId,
-  );
-  const directoryScope = getUserDirectoryFetchScope({
-    role: normalizedRole || undefined,
-    effectiveClientType: requestContext?.scope,
-  });
-  const directoryRes = await getUserDirectory(
-    token,
-    clientId,
-    {
-      role: normalizedRole || undefined,
-      scope: directoryScope,
-      regional_id: requestContext?.regional_id,
-    },
-    signal,
-  );
-  const dirData = directoryRes.data || directoryRes.users || directoryRes || [];
-  const expectedRole = normalizedRole;
-  const clientIds: string[] = Array.from(
-    new Set<string>(
-      dirData
-        .filter(
-          (u: any) =>
-            normalizeDirectoryRole(
-              u.role || u.user_role || u.userRole || u.roleName || "",
-            ) === expectedRole,
-        )
-        .map((u: any) =>
-          String(
-            u.client_id || u.clientId || u.clientID || u.client || "",
-          ),
-        )
-        .filter(Boolean),
-    ),
-  );
-  if (!clientIds.includes(clientId)) clientIds.push(clientId);
-
-  const rekapAll = await Promise.all(
-    clientIds.map((cid) =>
-      getRekapLikesIG(
-        token,
-        cid,
-        periode,
-        date,
-        startDate,
-        endDate,
-        signal,
-        requestContext,
-      ).catch(() => ({ data: [] })),
-    ),
-  );
-
-  let users = rekapAll.flatMap((res) =>
-    Array.isArray(res?.data)
-      ? res.data
-      : Array.isArray(res)
-      ? res
-      : [],
-  );
+  let users = extractRekapUsers(rekapRes);
+  const clients = extractRekapClients(rekapRes);
 
   const normalizedLoginClientId = String(loginClientId || "")
     .trim()
@@ -145,15 +151,7 @@ export async function fetchDitbinmasAbsensiLikes(
       return userClientId === normalizedLoginClientId;
     });
   }
-
-  const nameMap = await getClientNames(
-    token,
-    users.map((u) =>
-      String(u.client_id || u.clientId || u.clientID || u.client || ""),
-    ),
-    signal,
-    requestContext,
-  );
+  const nameMap = buildClientNameMap(clients, users);
 
   users = users.map((u) => {
     const clientName =
