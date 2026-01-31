@@ -54,6 +54,7 @@ function getKomentarStatus({ jumlahKomentar = 0, totalPostCount = 0, hasUsername
  * @param {boolean} showCopyButton tampilkan tombol salin rekap standar
  * @param {string} clientName label client/direktorat manual (opsional)
  * @param {{ periodeLabel?: string, viewLabel?: string, directorateName?: string }} reportContext konteks laporan
+ * @param {object} rekapSummary ringkasan backend untuk metrik rekap (opsional)
  * @param {boolean} showPremiumCta tampilkan CTA Premium di samping tombol salin rekap
  */
 const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
@@ -64,12 +65,99 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     showCopyButton = true,
     clientName = "",
     reportContext = {},
+    rekapSummary = {},
     showPremiumCta = false,
   },
   ref,
 ) {
   const { periodeLabel, viewLabel, directorateName } = reportContext || {};
-  const totalTiktokPostCount = Number(totalTiktokPost) || 0;
+  const resolveNumber = (value, fallback) => {
+    if (value === undefined || value === null || value === "") return fallback;
+    const normalized = Number(value);
+    return Number.isNaN(normalized) ? fallback : normalized;
+  };
+
+  const normalizedSummary = useMemo(() => {
+    const summaryPayload = rekapSummary?.summary ?? rekapSummary ?? {};
+    const distribution =
+      summaryPayload?.distribution ??
+      summaryPayload?.distribusi ??
+      summaryPayload?.statusDistribution ??
+      {};
+    const hasDistribution = distribution && Object.keys(distribution).length > 0;
+
+    const totalUsers = resolveNumber(
+      summaryPayload?.totalUsers ??
+        summaryPayload?.totalUser ??
+        summaryPayload?.total_users ??
+        summaryPayload?.total_user,
+      undefined,
+    );
+    const totalPosts = resolveNumber(
+      summaryPayload?.totalPosts ??
+        summaryPayload?.totalPost ??
+        summaryPayload?.total_tiktok_post ??
+        summaryPayload?.total_tiktok_posts ??
+        summaryPayload?.totalTiktokPost ??
+        summaryPayload?.totalTiktokPosts,
+      undefined,
+    );
+    const totalSudahKomentar = hasDistribution
+      ? resolveNumber(distribution?.sudah, undefined)
+      : resolveNumber(
+          summaryPayload?.totalSudahKomentar ??
+            summaryPayload?.total_sudah_komentar ??
+            summaryPayload?.totalSudah,
+          undefined,
+        );
+    const totalKurangKomentar = hasDistribution
+      ? resolveNumber(distribution?.kurang, undefined)
+      : resolveNumber(
+          summaryPayload?.totalKurangKomentar ??
+            summaryPayload?.total_kurang_komentar ??
+            summaryPayload?.totalKurang,
+          undefined,
+        );
+    const totalBelumKomentar = hasDistribution
+      ? resolveNumber(
+          (Number(distribution?.belum ?? 0) || 0) +
+            (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0),
+          undefined,
+        )
+      : resolveNumber(
+          summaryPayload?.totalBelumKomentar ??
+            summaryPayload?.total_belum_komentar ??
+            summaryPayload?.totalBelum,
+          undefined,
+        );
+    const totalTanpaUsername = hasDistribution
+      ? resolveNumber(
+          distribution?.noUsername ??
+            distribution?.no_username ??
+            distribution?.noUsernameCount,
+          undefined,
+        )
+      : resolveNumber(
+          summaryPayload?.totalTanpaUsername ??
+            summaryPayload?.total_tanpa_username ??
+            summaryPayload?.totalTanpa,
+          undefined,
+        );
+
+    return {
+      totalUsers,
+      totalPosts,
+      totalSudahKomentar,
+      totalKurangKomentar,
+      totalBelumKomentar,
+      totalTanpaUsername,
+    };
+  }, [rekapSummary]);
+
+  const totalTiktokPostCount = Number.isFinite(normalizedSummary.totalPosts)
+    ? normalizedSummary.totalPosts
+    : Number(totalTiktokPost) || 0;
+
   const clampKomentarToTask = (jumlahKomentar = 0) =>
     clampEngagementCompleted({ completed: jumlahKomentar, totalTarget: totalTiktokPostCount });
 
@@ -154,7 +242,9 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     return prioritizeUsersForClient(sorted, inferredClientId);
   }, [users, inferredClientId]);
 
-  const totalUser = sortedUsers.length;
+  const totalUser = Number.isFinite(normalizedSummary.totalUsers)
+    ? normalizedSummary.totalUsers
+    : sortedUsers.length;
   const hasClient = useMemo(
     () =>
       sortedUsers.some(
@@ -179,11 +269,23 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       hasUsername: true,
     });
 
-  const totalSudahKomentar = validUsers.filter((u) => classifyStatus(u) === "sudah").length;
-  const totalKurangKomentar = validUsers.filter((u) => classifyStatus(u) === "kurang").length;
-  const totalBelumKomentar = validUsers.filter((u) => classifyStatus(u) === "belum").length;
-  const totalTanpaUsername = tanpaUsernameUsers.length;
-  const validUserCount = validUsers.length;
+  const totalSudahKomentar = Number.isFinite(normalizedSummary.totalSudahKomentar)
+    ? normalizedSummary.totalSudahKomentar
+    : validUsers.filter((u) => classifyStatus(u) === "sudah").length;
+  const totalKurangKomentar = Number.isFinite(normalizedSummary.totalKurangKomentar)
+    ? normalizedSummary.totalKurangKomentar
+    : validUsers.filter((u) => classifyStatus(u) === "kurang").length;
+  const totalBelumKomentar = Number.isFinite(normalizedSummary.totalBelumKomentar)
+    ? normalizedSummary.totalBelumKomentar
+    : validUsers.filter((u) => classifyStatus(u) === "belum").length;
+  const totalTanpaUsername = Number.isFinite(normalizedSummary.totalTanpaUsername)
+    ? normalizedSummary.totalTanpaUsername
+    : tanpaUsernameUsers.length;
+  const validUserCount =
+    Number.isFinite(normalizedSummary.totalUsers) &&
+    Number.isFinite(normalizedSummary.totalTanpaUsername)
+      ? Math.max(0, normalizedSummary.totalUsers - normalizedSummary.totalTanpaUsername)
+      : validUsers.length;
 
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
