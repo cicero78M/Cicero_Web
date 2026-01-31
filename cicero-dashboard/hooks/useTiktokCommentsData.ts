@@ -494,7 +494,7 @@ export default function useTiktokCommentsData({
             );
             const dirData =
               directoryRes.data || directoryRes.users || directoryRes || [];
-            const operatorDirectoryKeys = new Set(
+            const operatorIds = new Set(
               (dirData as any[])
                 .filter((u: any) => {
                   const roleValue = normalizeRole(
@@ -506,11 +506,7 @@ export default function useTiktokCommentsData({
                   );
                   return userClient === normalizedClientIdLower;
                 })
-                .map((u: any) => {
-                  const identifier = getUserIdentifier(u);
-                  if (identifier) return identifier;
-                  return normalizeString(u?.username || u?.nama || u?.name || "");
-                })
+                .map((u: any) => getUserIdentifier(u))
                 .filter(Boolean),
             );
             filteredUsers = filteredUsers.filter((u: any) => {
@@ -521,16 +517,7 @@ export default function useTiktokCommentsData({
                 return false;
               }
               const identifier = getUserIdentifier(u);
-              if (identifier) {
-                return operatorDirectoryKeys.has(identifier);
-              }
-              const nameKey = normalizeString(
-                u?.username || u?.nama || u?.name || "",
-              );
-              if (nameKey && operatorDirectoryKeys.has(nameKey)) {
-                return true;
-              }
-              return userClient === normalizedClientIdLower;
+              return identifier ? operatorIds.has(identifier) : false;
             });
           }
         }
