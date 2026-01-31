@@ -129,7 +129,47 @@ function extractRekapPayload(payload: any) {
       : Array.isArray(payload.chartData)
         ? payload.chartData
         : [];
-  const summary = payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
+  const summaryPayload =
+    payload.summary ?? payload.rekapSummary ?? payload.resume ?? {};
+  const distributionPayload =
+    summaryPayload?.distribution ??
+    summaryPayload?.distribusi ??
+    summaryPayload?.statusDistribution ??
+    {};
+  const fallbackDistribution = {
+    sudah: payload?.sudahUsersCount ?? payload?.usersWithCommentsCount,
+    kurang: payload?.kurangUsersCount,
+    belum: payload?.belumUsersCount ?? payload?.usersWithoutCommentsCount,
+    noUsername: payload?.noUsernameUsersCount,
+  };
+  const shouldFillValue = (value: unknown) =>
+    value === undefined || value === null || value === "";
+  const distribution = {
+    ...fallbackDistribution,
+    ...distributionPayload,
+  };
+  if (shouldFillValue(distribution.sudah)) {
+    distribution.sudah = fallbackDistribution.sudah;
+  }
+  if (shouldFillValue(distribution.kurang)) {
+    distribution.kurang = fallbackDistribution.kurang;
+  }
+  if (shouldFillValue(distribution.belum)) {
+    distribution.belum = fallbackDistribution.belum;
+  }
+  if (shouldFillValue(distribution.noUsername)) {
+    distribution.noUsername = fallbackDistribution.noUsername;
+  }
+  const summary = {
+    ...summaryPayload,
+    totalUsers: shouldFillValue(summaryPayload?.totalUsers)
+      ? payload?.usersCount ?? summaryPayload?.totalUsers
+      : summaryPayload?.totalUsers,
+    totalPosts: shouldFillValue(summaryPayload?.totalPosts)
+      ? payload?.totalPosts ?? summaryPayload?.totalPosts
+      : summaryPayload?.totalPosts,
+    distribution,
+  };
   return { users, summary };
 }
 
