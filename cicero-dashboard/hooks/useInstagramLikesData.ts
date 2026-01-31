@@ -190,7 +190,7 @@ export default function useInstagramLikesData({
       !isOperatorRole &&
       (derivedDirectorateRole || (isDitSamaptaBidhumas && !isOrgScope));
     const shouldMapToDitbinmas =
-      !isOperatorRole && (derivedDirectorateRole || isDitSamaptaBidhumas);
+      !isOperatorRole && (isDitbinmasRole || isDitSamaptaBidhumas);
     const dashboardClientId = shouldMapToDitbinmas
       ? ditbinmasClientId
       : userClientId;
