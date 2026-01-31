@@ -196,6 +196,7 @@ export default function useInstagramLikesData({
     effectiveRole,
     effectiveClientType,
     regionalId: authRegionalId,
+    isProfileLoading,
   } = useAuth();
   const [chartData, setChartData] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
@@ -237,6 +238,11 @@ export default function useInstagramLikesData({
     const token = authToken ?? fallbackToken;
     const userClientId = authClientId ?? fallbackClientId;
     const role = effectiveRole ?? authRole ?? fallbackRole;
+    const profileLoading = Boolean(isProfileLoading);
+    if (profileLoading && (!effectiveClientType || !authRegionalId)) {
+      setLoading(true);
+      return () => controller.abort();
+    }
     const requestRole = normalizeRolePayload(role);
     const requestScopeFromAuth = normalizeScopePayload(effectiveClientType);
     const requestRoleForContext =
@@ -565,6 +571,8 @@ export default function useInstagramLikesData({
     authRole,
     effectiveRole,
     effectiveClientType,
+    authRegionalId,
+    isProfileLoading,
   ]);
 
   return {
