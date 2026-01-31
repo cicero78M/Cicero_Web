@@ -59,6 +59,12 @@ export default function UserDirectoryPage() {
   const [editSatfung, setEditSatfung] = useState("");
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
+  const [deactivateTarget, setDeactivateTarget] = useState(null);
+  const [confirmNrpInput, setConfirmNrpInput] = useState("");
+  const [deactivateError, setDeactivateError] = useState("");
+  const [deactivateLoading, setDeactivateLoading] = useState(false);
+  const [toggleStatusLoadingId, setToggleStatusLoadingId] = useState(null);
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -300,6 +306,56 @@ export default function UserDirectoryPage() {
     setUpdateLoading(false);
   }
 
+  function openDeactivateModal(user) {
+    setDeactivateTarget(user);
+    setConfirmNrpInput("");
+    setDeactivateError("");
+    setIsDeactivateOpen(true);
+  }
+
+  function closeDeactivateModal() {
+    setIsDeactivateOpen(false);
+    setDeactivateTarget(null);
+    setConfirmNrpInput("");
+    setDeactivateError("");
+  }
+
+  async function handleConfirmDeactivate() {
+    const targetId = String(deactivateTarget?.user_id || "").replace(/\D/g, "");
+    const normalizedInput = confirmNrpInput.replace(/\D/g, "");
+    if (!normalizedInput) {
+      setDeactivateError("NRP/NIP wajib diisi untuk konfirmasi.");
+      return;
+    }
+    if (normalizedInput !== targetId) {
+      setDeactivateError("NRP/NIP tidak cocok dengan user yang dipilih.");
+      return;
+    }
+    setDeactivateLoading(true);
+    setDeactivateError("");
+    try {
+      await updateUser(token || "", deactivateTarget.user_id, { status: false });
+      await mutate();
+      showToast("User berhasil dinonaktifkan", "success");
+      closeDeactivateModal();
+    } catch (err) {
+      setDeactivateError(err.message || "Gagal menonaktifkan user");
+    }
+    setDeactivateLoading(false);
+  }
+
+  async function handleActivateUser(user) {
+    setToggleStatusLoadingId(user.user_id);
+    try {
+      await updateUser(token || "", user.user_id, { status: true });
+      await mutate();
+      showToast("User berhasil diaktifkan kembali", "success");
+    } catch (err) {
+      showToast(err.message || "Gagal mengaktifkan user", "error");
+    }
+    setToggleStatusLoadingId(null);
+  }
+
   async function handleCopyRekap() {
     const now = new Date();
     const day = now.toLocaleDateString("id-ID", { weekday: "long" });
@@ -449,6 +505,9 @@ export default function UserDirectoryPage() {
   );
 
   const sorted = filtered;
+
+  const isUserActive = (user) =>
+    user.status === true || String(user.status).toLowerCase() === "true";
 
   // Paging logic menggunakan data yang sudah diurutkan
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
@@ -763,7 +822,7 @@ export default function UserDirectoryPage() {
                     <td className="px-4 py-3 font-mono text-sky-500">{u.insta ? `@${u.insta}` : "-"}</td>
                     <td className="px-4 py-3 font-mono text-purple-500">{u.tiktok || "-"}</td>
                     <td className="px-4 py-3">
-                      {u.status === true || u.status === "true" ? (
+                      {isUserActive(u) ? (
                         <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
                           Aktif
                         </span>
@@ -795,14 +854,38 @@ export default function UserDirectoryPage() {
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => handleEditClick(u)}
-                          className="rounded-lg border border-sky-200 bg-sky-100 p-2 text-sky-600 transition hover:bg-sky-200"
-                          type="button"
-                          aria-label={`Edit data ${u.nama || "user"}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => handleEditClick(u)}
+                            className="rounded-lg border border-sky-200 bg-sky-100 p-2 text-sky-600 transition hover:bg-sky-200"
+                            type="button"
+                            aria-label={`Edit data ${u.nama || "user"}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          {isUserActive(u) ? (
+                            <button
+                              onClick={() => openDeactivateModal(u)}
+                              className="rounded-lg border border-rose-200 bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:bg-rose-200"
+                              type="button"
+                              aria-label={`Nonaktifkan ${u.nama || "user"}`}
+                            >
+                              Nonaktifkan
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleActivateUser(u)}
+                              className="rounded-lg border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+                              type="button"
+                              disabled={toggleStatusLoadingId === u.user_id}
+                              aria-label={`Aktifkan kembali ${u.nama || "user"}`}
+                            >
+                              {toggleStatusLoadingId === u.user_id
+                                ? "Mengaktifkan..."
+                                : "Aktifkan kembali"}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -854,6 +937,81 @@ export default function UserDirectoryPage() {
           )}
         </div>
       </div>
+      {isDeactivateOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="deactivate-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="deactivate-title"
+                  className="text-lg font-semibold text-slate-900"
+                >
+                  Konfirmasi Nonaktifkan User
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Masukkan NRP/NIP{" "}
+                  <span className="font-semibold text-slate-900">
+                    {deactivateTarget?.user_id || "-"}
+                  </span>{" "}
+                  untuk menonaktifkan {deactivateTarget?.nama || "user"}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeactivateModal}
+                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-100"
+                aria-label="Tutup konfirmasi"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-4">
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                NRP/NIP
+              </label>
+              <input
+                type="text"
+                value={confirmNrpInput}
+                onChange={(e) =>
+                  setConfirmNrpInput(e.target.value.replace(/\D/g, ""))
+                }
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                placeholder="Masukkan NRP/NIP"
+              />
+              {deactivateError && (
+                <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600">
+                  {deactivateError}
+                </p>
+              )}
+            </div>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeDeactivateModal}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                disabled={deactivateLoading}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeactivate}
+                className="rounded-xl bg-gradient-to-r from-rose-400 via-rose-500 to-red-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:from-rose-500 hover:via-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={deactivateLoading}
+              >
+                {deactivateLoading ? "Memproses..." : "Nonaktifkan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
