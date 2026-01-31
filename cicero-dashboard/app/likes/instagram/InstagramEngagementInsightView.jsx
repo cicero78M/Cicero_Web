@@ -98,10 +98,29 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     );
 
   const shouldUseDirectorateLayout = isDirectorateLayout;
-  const resolvedClientLabel = clientName?.trim() ? clientName : "Unknown Client";
-  const kelompok = shouldUseDirectorateLayout
-    ? null
-    : groupUsersByKelompok(chartData);
+  const normalizeValue = (value) => String(value || "").trim();
+  const findRekapValue = (resolver) =>
+    chartData.reduce((acc, entry) => {
+      if (acc) return acc;
+      const value = normalizeValue(resolver(entry));
+      return value || acc;
+    }, "");
+  const rekapClientName = findRekapValue(
+    (entry) => entry?.nama_client || entry?.client_name || entry?.client,
+  );
+  const rekapClientId = findRekapValue(
+    (entry) =>
+      entry?.client_id || entry?.clientId || entry?.clientID || entry?.client,
+  );
+  const normalizedClientName = normalizeValue(clientName);
+  const resolvedClientName =
+    normalizedClientName &&
+    normalizedClientName.toLowerCase() !== "unknown client"
+      ? normalizedClientName
+      : rekapClientName;
+  const resolvedClientLabel =
+    resolvedClientName ||
+    (rekapClientId ? `Client ${rekapClientId}` : "Client tidak diketahui");
   const hasClientMetadata = chartData.some(
     (entry) =>
       entry?.client_id ||
@@ -112,6 +131,11 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       entry?.nama_client,
   );
   const hasDivisiMetadata = chartData.some((entry) => entry?.divisi);
+  const shouldUseKelompokGrouping =
+    !shouldUseDirectorateLayout && hasDivisiMetadata;
+  const kelompok = shouldUseKelompokGrouping
+    ? groupUsersByKelompok(chartData)
+    : null;
   const shouldGroupByClient =
     shouldUseDirectorateLayout &&
     (directorateScope === "all" ||
@@ -122,13 +146,20 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const directorateTitle = shouldGroupByClient
     ? `POLRES JAJARAN${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}`
     : `DIVISI / SATFUNG${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}${
-        hasDivisiMetadata ? "" : " (Unknown Divisi)"
+        hasDivisiMetadata ? "" : " (metadata divisi terbatas)"
       }`;
   const directorateNarrative = shouldGroupByClient
     ? undefined
     : hasDivisiMetadata
       ? "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
-      : "Grafik dan tabel ini menampilkan perbandingan capaian likes dengan metadata divisi yang terbatas.";
+      : "Grafik dan tabel ini menampilkan perbandingan capaian likes saat metadata divisi terbatas.";
+  const fallbackGroupBy = hasClientMetadata ? "client_id" : "divisi";
+  const fallbackTitle = hasClientMetadata
+    ? `Ringkasan Likes${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}`
+    : "Ringkasan Likes (metadata divisi terbatas)";
+  const fallbackNarrative = hasClientMetadata
+    ? "Metadata divisi belum tersedia, ringkasan ditampilkan berdasarkan client."
+    : "Metadata divisi dan client belum tersedia, ringkasan ditampilkan apa adanya.";
 
   const totalUser = Number(rekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
@@ -148,7 +179,11 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
   async function handleCopyRekap() {
-    const message = buildInstagramRekap(rekapSummary, chartData, clientName);
+    const message = buildInstagramRekap(
+      rekapSummary,
+      chartData,
+      resolvedClientName || (rekapClientId ? `Client ${rekapClientId}` : ""),
+    );
 
     if (navigator?.clipboard?.writeText) {
       try {
@@ -325,8 +360,9 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               orientation={directorateOrientation}
               sortBy="percentage"
               narrative={directorateNarrative}
+              disableClientLookup={directorateGroupBy === "client_id"}
             />
-          ) : (
+          ) : shouldUseKelompokGrouping ? (
             <div className="flex flex-col gap-6">
               <ChartBox
                 title="BAG"
@@ -368,6 +404,16 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                 polsek dan membandingkan partisipasi pengguna.
               </Narrative>
             </div>
+          ) : (
+            <ChartBox
+              title={fallbackTitle}
+              users={chartData}
+              totalPost={rekapSummary.totalIGPost}
+              groupBy={fallbackGroupBy}
+              sortBy="percentage"
+              narrative={fallbackNarrative}
+              disableClientLookup={fallbackGroupBy === "client_id"}
+            />
           )}
         </EngagementInsightMobileScaffold>
       )}
@@ -384,7 +430,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           posts={igPosts}
           showRekapButton
           showCopyButton={false}
-          clientName={clientName}
+          clientName={resolvedClientLabel}
           reportContext={{
             periodeLabel: reportPeriodeLabel,
             viewLabel: resolvedViewOptions.find((option) => option.value === viewBy)?.label,

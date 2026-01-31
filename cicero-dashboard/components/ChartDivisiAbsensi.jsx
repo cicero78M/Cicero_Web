@@ -38,20 +38,21 @@ export default function ChartDivisiAbsensi({
   showTotalUser = false,
   labelTotalUser = "Jumlah User",
   sortBy = "total_value",
+  disableClientLookup = false,
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
 
   // Enrich user data with client names when grouping by client_id.
   useEffect(() => {
     async function enrich() {
-      if (groupBy !== "client_id") {
+      if (groupBy !== "client_id" || disableClientLookup) {
         setEnrichedUsers(users);
         return;
       }
 
-        const needsName = users.some(
-          (u) => !(u.nama_client || u.client_name || u.client)
-        );
+      const needsName = users.some(
+        (u) => !(u.nama_client || u.client_name || u.client),
+      );
       if (!needsName) {
         setEnrichedUsers(users);
         return;
@@ -92,7 +93,7 @@ export default function ChartDivisiAbsensi({
     }
 
     enrich();
-  }, [users, groupBy]);
+  }, [users, groupBy, disableClientLookup]);
 
   // Fallback backward compatibility
   const effectiveTotal =
