@@ -17,6 +17,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - User directory consumers now normalize API payloads with `extractUserDirectoryUsers` (`cicero-dashboard/utils/api.ts`) so nested response shapes like `{ data: { users: [] } }` still render on `/users`, `/user-insight`, and executive summary pages.
 - Dropdown **Satfung/Divisi** untuk pengguna baru menambahkan opsi **SUBDIT DALMAS** dan **SUBDIT GASUM** agar unit terkait dapat dipilih langsung tanpa input manual.
 - Pilihan **Satfung/Divisi** juga mencakup **UNIT POLSATWA** sehingga kesatuan tersebut tersedia di dropdown tambah dan edit pengguna tanpa perlu input manual, kini dibaca langsung dari daftar opsi terpusat `utils/validateUserForm` agar validasi dan tampilan selalu selaras.
+- Aksi **Nonaktifkan** pada User Directory kini memakai modal konfirmasi yang mewajibkan input NRP/NIP sesuai user sebelum status diubah menjadi nonaktif (soft delete), sementara user nonaktif dapat diaktifkan kembali lewat tombol **Aktifkan kembali**.
 
 ### User directory scope & role normalization
 
