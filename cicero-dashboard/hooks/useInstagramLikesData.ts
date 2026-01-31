@@ -446,25 +446,32 @@ export default function useInstagramLikesData({
         }
 
         let filteredUsers = users;
+        const shouldBypassOrgDirectorateFilter =
+          isOrgScope &&
+          (isDirectorateRoleValue || isDitbinmasRole || derivedDirectorateRole);
         if (!dir && !directorateData) {
-          const normalizedClientId = String(client_id || "")
-            .trim()
-            .toLowerCase();
-          if (normalizedClientId) {
-            const normalizeValue = (value: unknown) =>
-              String(value || "")
-                .trim()
-                .toLowerCase();
-            filteredUsers = users.filter((u: any) => {
-              const userClientId = normalizeValue(
-                u.client_id ??
-                  u.clientId ??
-                  u.clientID ??
-                  u.client ??
-                  "",
-              );
-              return userClientId === normalizedClientId;
-            });
+          if (shouldBypassOrgDirectorateFilter) {
+            filteredUsers = users;
+          } else {
+            const normalizedClientId = String(client_id || "")
+              .trim()
+              .toLowerCase();
+            if (normalizedClientId) {
+              const normalizeValue = (value: unknown) =>
+                String(value || "")
+                  .trim()
+                  .toLowerCase();
+              filteredUsers = users.filter((u: any) => {
+                const userClientId = normalizeValue(
+                  u.client_id ??
+                    u.clientId ??
+                    u.clientID ??
+                    u.client ??
+                    "",
+                );
+                return userClientId === normalizedClientId;
+              });
+            }
           }
         }
 
@@ -537,17 +544,24 @@ export default function useInstagramLikesData({
         computedTotals.totalTanpaUsername = totalTanpaUsername;
 
         if (controller.signal.aborted) return;
+        const useComputedSummary = shouldBypassOrgDirectorateFilter;
         setRekapSummary({
-          totalUser: rekapMeta.totalUser ?? computedTotals.totalUser,
-          totalSudahLike:
-            rekapMeta.totalSudahLike ?? computedTotals.totalSudahLike,
-          totalKurangLike:
-            rekapMeta.totalKurangLike ?? computedTotals.totalKurangLike,
-          totalBelumLike:
-            rekapMeta.totalBelumLike ?? computedTotals.totalBelumLike,
-          totalTanpaUsername:
-            rekapMeta.totalTanpaUsername ??
-            computedTotals.totalTanpaUsername,
+          totalUser: useComputedSummary
+            ? computedTotals.totalUser
+            : rekapMeta.totalUser ?? computedTotals.totalUser,
+          totalSudahLike: useComputedSummary
+            ? computedTotals.totalSudahLike
+            : rekapMeta.totalSudahLike ?? computedTotals.totalSudahLike,
+          totalKurangLike: useComputedSummary
+            ? computedTotals.totalKurangLike
+            : rekapMeta.totalKurangLike ?? computedTotals.totalKurangLike,
+          totalBelumLike: useComputedSummary
+            ? computedTotals.totalBelumLike
+            : rekapMeta.totalBelumLike ?? computedTotals.totalBelumLike,
+          totalTanpaUsername: useComputedSummary
+            ? computedTotals.totalTanpaUsername
+            : rekapMeta.totalTanpaUsername ??
+              computedTotals.totalTanpaUsername,
           totalIGPost,
         });
         setChartData(sortedUsers);
