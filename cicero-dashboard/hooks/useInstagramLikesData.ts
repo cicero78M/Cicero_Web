@@ -1,11 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  getDashboardStats,
-  getRekapLikesIG,
-  getClientProfile,
-  getUserDirectory,
-} from "@/utils/api";
+import { getRekapLikesIG, getClientProfile, getUserDirectory } from "@/utils/api";
 import { fetchDitbinmasAbsensiLikes } from "@/utils/absensiLikes";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
@@ -272,9 +267,6 @@ export default function useInstagramLikesData({
       !isOperatorRole &&
       (isDitbinmasRole ||
         (isDitSamaptaBidhumas && !isDirectorateScope));
-    const dashboardClientId = shouldMapToDitbinmas
-      ? ditbinmasClientId
-      : userClientId;
     const normalizedLoginClientId = String(userClientId || "")
       .trim()
       .toLowerCase();
@@ -337,7 +329,6 @@ export default function useInstagramLikesData({
           return;
         }
 
-        let totalIGPostFromStats: number | undefined;
         let postsFromRekap: any[] = [];
 
         const client_id = shouldMapToDitbinmas ? ditbinmasClientId : userClientId;
@@ -502,30 +493,6 @@ export default function useInstagramLikesData({
               : u;
           });
         } else {
-          const statsData = await getDashboardStats(
-            token,
-            periode,
-            date,
-            startDate,
-            endDate,
-            dashboardClientId,
-            {
-              role: requestRoleForContext,
-              scope: requestScopeFromAuth,
-              regional_id: normalizedRegionalIdFromAuth,
-            },
-            controller.signal,
-          );
-          const posts = Array.isArray((statsData as any).ig_posts)
-            ? (statsData as any).ig_posts
-            : Array.isArray((statsData as any).igPosts)
-            ? (statsData as any).igPosts
-            : Array.isArray((statsData as any).instagram_posts)
-            ? (statsData as any).instagram_posts
-            : [];
-          setIgPosts(posts);
-          totalIGPostFromStats =
-            Number((statsData as any).instagramPosts) || 0;
           const rekapRes = await getRekapLikesIG(
             token,
             client_id,
@@ -537,14 +504,16 @@ export default function useInstagramLikesData({
             requestContext,
           );
           users = extractRekapUsers(rekapRes);
+          const posts =
+            rekapRes?.posts ||
+            rekapRes?.ig_posts ||
+            rekapRes?.igPosts ||
+            rekapRes?.instagram_posts ||
+            [];
+          postsFromRekap = Array.isArray(posts) ? posts : [];
+          setIgPosts(postsFromRekap);
           rekapMeta = {
-            totalIGPost:
-              normalizeNumber(
-                rekapRes?.totalPosts ??
-                  rekapRes?.summary?.totalPosts ??
-                  rekapRes?.summary?.totalIGPost ??
-                  rekapRes?.summary?.total_ig_post,
-              ) ?? undefined,
+            totalIGPost: getTotalPostsFromRekap(rekapRes, postsFromRekap),
             totalUser:
               normalizeNumber(
                 rekapRes?.usersCount ??
@@ -678,10 +647,7 @@ export default function useInstagramLikesData({
           client_id,
         );
         const totalIGPost =
-          normalizeNumber(rekapMeta.totalIGPost) ??
-          (directorateData
-            ? postsFromRekap.length
-            : totalIGPostFromStats ?? 0);
+          normalizeNumber(rekapMeta.totalIGPost) ?? postsFromRekap.length;
         const computedTotals = {
           totalUser: sortedUsers.length,
           totalSudahLike: 0,
