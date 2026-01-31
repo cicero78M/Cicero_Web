@@ -29,6 +29,11 @@ const USER_IDENTIFIER_FIELDS = [
   "NIP",
   "NRP_NIP",
 ];
+const REKAP_TOTAL_POST_FIELDS = [
+  "totalPosts",
+  "totalIGPost",
+  "total_ig_post",
+];
 
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
@@ -44,6 +49,75 @@ function extractRekapUsers(payload: any): any[] {
   if (Array.isArray(payload?.users)) return payload.users;
   if (Array.isArray(payload)) return payload;
   return [];
+}
+
+function extractRekapClients(payload: any): any[] {
+  if (Array.isArray(payload?.clients)) return payload.clients;
+  if (Array.isArray(payload?.directory)) return payload.directory;
+  if (Array.isArray(payload?.client_directory)) return payload.client_directory;
+  if (Array.isArray(payload?.clientDirectory)) return payload.clientDirectory;
+  if (Array.isArray(payload?.meta?.clients)) return payload.meta.clients;
+  if (Array.isArray(payload?.metadata?.clients)) return payload.metadata.clients;
+  if (Array.isArray(payload?.summary?.clients)) return payload.summary.clients;
+  return [];
+}
+
+function buildClientNameMap(
+  clients: any[],
+  users: any[],
+): Record<string, string> {
+  const entries = new Map<string, string>();
+  clients.forEach((entry) => {
+    const id = String(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        entry?.id ||
+        "",
+    );
+    if (!id) return;
+    const name =
+      entry?.nama_client ||
+      entry?.client_name ||
+      entry?.client ||
+      entry?.nama ||
+      entry?.name;
+    if (name) entries.set(id, name);
+  });
+  users.forEach((entry) => {
+    const id = String(
+      entry?.client_id ||
+        entry?.clientId ||
+        entry?.clientID ||
+        entry?.client ||
+        "",
+    );
+    if (!id || entries.has(id)) return;
+    const name =
+      entry?.nama_client ||
+      entry?.client_name ||
+      entry?.client ||
+      entry?.nama ||
+      entry?.name;
+    if (name) entries.set(id, name);
+  });
+  return Object.fromEntries(entries);
+}
+
+function getTotalPostsFromRekap(payload: any, posts: any[]): number | undefined {
+  const summary = payload?.summary ?? {};
+  const summaryValue = REKAP_TOTAL_POST_FIELDS.reduce((acc, key) => {
+    if (acc !== undefined) return acc;
+    return normalizeNumber(summary?.[key]);
+  }, undefined as number | undefined);
+  const rootValue = REKAP_TOTAL_POST_FIELDS.reduce((acc, key) => {
+    if (acc !== undefined) return acc;
+    return normalizeNumber(payload?.[key]);
+  }, undefined as number | undefined);
+  if (summaryValue !== undefined) return summaryValue;
+  if (rootValue !== undefined) return rootValue;
+  return Array.isArray(posts) ? posts.length : undefined;
 }
 
 function normalizeRolePayload(value?: unknown): string | undefined {
@@ -263,32 +337,10 @@ export default function useInstagramLikesData({
           return;
         }
 
-        const statsData = await getDashboardStats(
-          token,
-          periode,
-          date,
-          startDate,
-          endDate,
-          dashboardClientId,
-          {
-            role: requestRoleForContext,
-            scope: requestScopeFromAuth,
-            regional_id: normalizedRegionalIdFromAuth,
-          },
-          controller.signal,
-        );
-        const posts = Array.isArray((statsData as any).ig_posts)
-          ? (statsData as any).ig_posts
-          : Array.isArray((statsData as any).igPosts)
-          ? (statsData as any).igPosts
-          : Array.isArray((statsData as any).instagram_posts)
-          ? (statsData as any).instagram_posts
-          : [];
-        setIgPosts(posts);
-        const totalIGPostFromStats =
-          Number((statsData as any).instagramPosts) || 0;
+        let totalIGPostFromStats: number | undefined;
+        let postsFromRekap: any[] = [];
 
-    const client_id = shouldMapToDitbinmas ? ditbinmasClientId : userClientId;
+        const client_id = shouldMapToDitbinmas ? ditbinmasClientId : userClientId;
 
         const profileClientId = client_id;
         const profileRes = await getClientProfile(
@@ -315,22 +367,22 @@ export default function useInstagramLikesData({
             profile.clientTypeName ??
             "",
         ).toUpperCase();
-    const requestScope =
-      normalizeScopePayload(normalizedEffectiveClientType) ??
-      requestScopeFromAuth;
-    const isOrg = normalizedEffectiveClientType === "ORG";
-    const dir = normalizedEffectiveClientType === "DIREKTORAT";
-    const directorateData =
-      isDitSamaptaBidhumas ||
-      (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
-    const shouldUseDirectorateLayout =
-      normalizedEffectiveRoleLower === "operator" &&
-      normalizedEffectiveClientType === "ORG";
-    const directorateLayout = directorateData || shouldUseDirectorateLayout;
-    if (controller.signal.aborted) return;
-    setIsDirectorateData(directorateData);
-    setIsDirectorateLayout(directorateLayout);
-    setIsOrgClient(isOrg);
+        const requestScope =
+          normalizeScopePayload(normalizedEffectiveClientType) ??
+          requestScopeFromAuth;
+        const isOrg = normalizedEffectiveClientType === "ORG";
+        const dir = normalizedEffectiveClientType === "DIREKTORAT";
+        const directorateData =
+          isDitSamaptaBidhumas ||
+          (!isOrg && (dir || (!isOperatorRole && derivedDirectorateRole)));
+        const shouldUseDirectorateLayout =
+          normalizedEffectiveRoleLower === "operator" &&
+          normalizedEffectiveClientType === "ORG";
+        const directorateLayout = directorateData || shouldUseDirectorateLayout;
+        if (controller.signal.aborted) return;
+        setIsDirectorateData(directorateData);
+        setIsDirectorateLayout(directorateLayout);
+        setIsOrgClient(isOrg);
         setClientName(
           profile.nama ||
             profile.nama_client ||
@@ -369,111 +421,61 @@ export default function useInstagramLikesData({
           totalTanpaUsername?: number;
         } = {};
         if (directorateData) {
-          const directoryClientId = client_id;
-          const directoryRes = await getUserDirectory(
+          const rekapRes = await getRekapLikesIG(
             token,
-            directoryClientId,
-            {
-              role: normalizedDirectoryRole || undefined,
-              scope: directoryScope,
-              regional_id: normalizedRegionalId,
-            },
+            client_id,
+            periode,
+            date,
+            startDate,
+            endDate,
             controller.signal,
+            requestContext,
           );
-          const dirData =
-            directoryRes.data || directoryRes.users || directoryRes || [];
-          const directoryNameMap = (dirData as any[]).reduce(
-            (acc, entry) => {
-              const clientId = String(
-                entry?.client_id ||
-                  entry?.clientId ||
-                  entry?.clientID ||
-                  entry?.client ||
-                  "",
-              );
-              if (!clientId) return acc;
-              const name =
-                entry?.nama_client ||
-                entry?.client_name ||
-                entry?.client ||
-                entry?.nama ||
-                entry?.name;
-              if (name) {
-                acc[clientId] = name;
-              }
-              return acc;
-            },
-            {} as Record<string, string>,
-          );
-          let clientIds: string[] = [];
-
-          const expectedRole = directorateScopedClient
-            ? normalizedLoginClientId
-            : normalizedDirectoryRole || normalizedLoginClientId;
-          clientIds = Array.from(
-            new Set(
-              dirData
-                .filter(
-                  (u: any) =>
-                    normalizeDirectoryRole(
-                      u.role || u.user_role || u.userRole || u.roleName || "",
-                    ) === expectedRole,
-                )
-                .map((u: any) =>
-                  String(
-                    u.client_id ||
-                      u.clientId ||
-                      u.clientID ||
-                      u.client ||
-                      "",
-                  ),
-                )
-                .filter(Boolean) as string[],
+          users = extractRekapUsers(rekapRes);
+          const rekapClients = extractRekapClients(rekapRes);
+          const directoryNameMap = buildClientNameMap(rekapClients, users);
+          const posts =
+            rekapRes?.posts ||
+            rekapRes?.ig_posts ||
+            rekapRes?.igPosts ||
+            rekapRes?.instagram_posts ||
+            [];
+          postsFromRekap = Array.isArray(posts) ? posts : [];
+          setIgPosts(postsFromRekap);
+          rekapMeta = {
+            totalIGPost: getTotalPostsFromRekap(rekapRes, postsFromRekap),
+            totalUser:
+              normalizeNumber(
+                rekapRes?.usersCount ??
+                  rekapRes?.summary?.totalUsers ??
+                  rekapRes?.summary?.totalUser ??
+                  rekapRes?.summary?.total_users,
+              ) ?? undefined,
+            totalSudahLike: normalizeNumber(
+              rekapRes?.sudahUsersCount ??
+                rekapRes?.summary?.totalSudahLike ??
+                rekapRes?.summary?.total_sudah_like ??
+                rekapRes?.summary?.total_sudah,
             ),
-          ) as string[];
-          if (clientIds.length === 0) {
-            clientIds = Array.from(
-              new Set(
-                dirData
-                  .map((u: any) =>
-                    String(
-                      u.client_id ||
-                        u.clientId ||
-                        u.clientID ||
-                        u.client ||
-                        "",
-                    ),
-                  )
-                  .filter(Boolean) as string[],
-              ),
-            );
-          }
-
-          const fallbackClientId = directoryClientId;
-          if (!clientIds.includes(String(fallbackClientId))) {
-            clientIds.push(String(fallbackClientId));
-          }
-          const rekapAll = await Promise.all(
-            clientIds.map((cid: string) =>
-              getRekapLikesIG(
-                token,
-                cid,
-                periode,
-                date,
-                startDate,
-                endDate,
-                controller.signal,
-                requestContext,
-              ).catch(() => ({ data: [] })),
+            totalKurangLike: normalizeNumber(
+              rekapRes?.kurangUsersCount ??
+                rekapRes?.summary?.totalKurangLike ??
+                rekapRes?.summary?.total_kurang_like ??
+                rekapRes?.summary?.total_kurang,
             ),
-          );
-          users = rekapAll.flatMap((res: any) =>
-            Array.isArray(res?.data)
-              ? res.data
-              : Array.isArray(res)
-              ? res
-              : [],
-          );
+            totalBelumLike: normalizeNumber(
+              rekapRes?.belumUsersCount ??
+                rekapRes?.summary?.totalBelumLike ??
+                rekapRes?.summary?.total_belum_like ??
+                rekapRes?.summary?.total_belum,
+            ),
+            totalTanpaUsername: normalizeNumber(
+              rekapRes?.noUsernameUsersCount ??
+                rekapRes?.summary?.totalTanpaUsername ??
+                rekapRes?.summary?.total_tanpa_username ??
+                rekapRes?.summary?.total_tanpa,
+            ),
+          };
           if (scope === "client" && normalizedLoginClientId) {
             const normalizeValue = (value: unknown) =>
               String(value || "")
@@ -496,10 +498,34 @@ export default function useInstagramLikesData({
                   ...u,
                   nama_client: mappedName,
                   client_name: mappedName,
-            }
+                }
               : u;
           });
         } else {
+          const statsData = await getDashboardStats(
+            token,
+            periode,
+            date,
+            startDate,
+            endDate,
+            dashboardClientId,
+            {
+              role: requestRoleForContext,
+              scope: requestScopeFromAuth,
+              regional_id: normalizedRegionalIdFromAuth,
+            },
+            controller.signal,
+          );
+          const posts = Array.isArray((statsData as any).ig_posts)
+            ? (statsData as any).ig_posts
+            : Array.isArray((statsData as any).igPosts)
+            ? (statsData as any).igPosts
+            : Array.isArray((statsData as any).instagram_posts)
+            ? (statsData as any).instagram_posts
+            : [];
+          setIgPosts(posts);
+          totalIGPostFromStats =
+            Number((statsData as any).instagramPosts) || 0;
           const rekapRes = await getRekapLikesIG(
             token,
             client_id,
@@ -652,7 +678,10 @@ export default function useInstagramLikesData({
           client_id,
         );
         const totalIGPost =
-          normalizeNumber(rekapMeta.totalIGPost) ?? totalIGPostFromStats;
+          normalizeNumber(rekapMeta.totalIGPost) ??
+          (directorateData
+            ? postsFromRekap.length
+            : totalIGPostFromStats ?? 0);
         const computedTotals = {
           totalUser: sortedUsers.length,
           totalSudahLike: 0,
