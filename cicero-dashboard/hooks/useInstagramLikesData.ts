@@ -511,9 +511,8 @@ export default function useInstagramLikesData({
           }
         }
 
-        const normalizedUsers = applyUsernameFallback(filteredUsers);
         const sortedUsers = prioritizeUsersForClient(
-          [...normalizedUsers].sort(compareUsersByPangkatAndNrp),
+          [...filteredUsers].sort(compareUsersByPangkatAndNrp),
           client_id,
         );
         const totalIGPost =
@@ -530,7 +529,7 @@ export default function useInstagramLikesData({
         });
         const chartPayload = Array.isArray(rekapRes?.chartData)
           ? applyUsernameFallback(rekapRes.chartData)
-          : applyUsernameFallback(sortedUsers);
+          : sortedUsers;
         setChartData(chartPayload);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
