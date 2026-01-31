@@ -30,7 +30,6 @@ export default function ChartBox({
   useDefaultContainerStyle = true,
   decorations = defaultDecorations,
   titleClassName = "text-sky-600",
-  disableClientLookup = false,
 }) {
   return (
     <div
@@ -65,7 +64,6 @@ export default function ChartBox({
           showTotalUser={showTotalUser}
           labelTotalUser={labelTotalUser}
           sortBy={sortBy}
-          disableClientLookup={disableClientLookup}
         />
       ) : (
         <div
