@@ -5,7 +5,6 @@ import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
-import { getEngagementStatus } from "@/utils/engagementStatus";
 const REKAP_TOTAL_POST_FIELDS = [
   "totalPosts",
   "totalIGPost",
@@ -499,52 +498,20 @@ export default function useInstagramLikesData({
         );
         const totalIGPost =
           normalizeNumber(rekapMeta.totalIGPost) ?? postsFromRekap.length;
-        const computedTotals = {
-          totalUser: sortedUsers.length,
-          totalSudahLike: 0,
-          totalKurangLike: 0,
-          totalBelumLike: 0,
-          totalTanpaUsername: 0,
-        };
-        let totalSudahLike = 0;
-        let totalKurangLike = 0;
-        let totalBelumLike = 0;
-        let totalTanpaUsername = 0;
-        sortedUsers.forEach((u: any) => {
-          const username = String(u.username || "").trim();
-          if (!username) {
-            totalTanpaUsername += 1;
-            return;
-          }
-          const jumlah = Number(u.jumlah_like) || 0;
-          const status = getEngagementStatus({
-            completed: jumlah,
-            totalTarget: totalIGPost,
-          });
-          if (status === "sudah") totalSudahLike += 1;
-          else if (status === "kurang") totalKurangLike += 1;
-          else totalBelumLike += 1;
-        });
-        computedTotals.totalSudahLike = totalSudahLike;
-        computedTotals.totalKurangLike = totalKurangLike;
-        computedTotals.totalBelumLike = totalBelumLike;
-        computedTotals.totalTanpaUsername = totalTanpaUsername;
 
         if (controller.signal.aborted) return;
         setRekapSummary({
-          totalUser: rekapMeta.totalUser ?? computedTotals.totalUser,
-          totalSudahLike:
-            rekapMeta.totalSudahLike ?? computedTotals.totalSudahLike,
-          totalKurangLike:
-            rekapMeta.totalKurangLike ?? computedTotals.totalKurangLike,
-          totalBelumLike:
-            rekapMeta.totalBelumLike ?? computedTotals.totalBelumLike,
-          totalTanpaUsername:
-            rekapMeta.totalTanpaUsername ??
-            computedTotals.totalTanpaUsername,
+          totalUser: rekapMeta.totalUser ?? 0,
+          totalSudahLike: rekapMeta.totalSudahLike ?? 0,
+          totalKurangLike: rekapMeta.totalKurangLike ?? 0,
+          totalBelumLike: rekapMeta.totalBelumLike ?? 0,
+          totalTanpaUsername: rekapMeta.totalTanpaUsername ?? 0,
           totalIGPost,
         });
-        setChartData(sortedUsers);
+        const chartPayload = Array.isArray(rekapRes?.chartData)
+          ? rekapRes.chartData
+          : sortedUsers;
+        setChartData(chartPayload);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err.message || err));
