@@ -371,7 +371,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                 sortBy="percentage"
               />
               <Narrative>
-                Grafik POLSEK menggambarkan distribusi likes antar user dari setiap polsek serta total likes yang berhasil dikumpulkan.
+                Grafik ini menampilkan distribusi likes antar user dari setiap polsek serta total likes yang berhasil dikumpulkan.
               </Narrative>
             </div>
           )}
