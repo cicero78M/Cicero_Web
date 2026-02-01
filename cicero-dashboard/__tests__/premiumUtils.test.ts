@@ -6,6 +6,7 @@ import {
   isPremiumTierAllowedForEngagementDate,
   normalizePremiumTier,
   normalizePremiumTierKey,
+  isOrgOperator,
 } from "@/utils/premium";
 
 describe("premium utils", () => {
@@ -27,6 +28,21 @@ describe("premium utils", () => {
     expect(formatPremiumTierLabel("premium_3")).toBe("Premium 3");
   });
 
+  it("detects ORG Operator users correctly", () => {
+    expect(isOrgOperator("ORG", "Operator")).toBe(true);
+    expect(isOrgOperator("org", "operator")).toBe(true);
+    expect(isOrgOperator("ORG", "OPERATOR")).toBe(true);
+    expect(isOrgOperator("DIREKTORAT", "Operator")).toBe(false);
+    expect(isOrgOperator("ORG", "BIDHUMAS")).toBe(false);
+    expect(isOrgOperator(null, null)).toBe(false);
+  });
+
+  it("allows ORG Operators for ANEV regardless of tier", () => {
+    expect(isPremiumTierAllowedForAnev(null, "ORG", "Operator")).toBe(true);
+    expect(isPremiumTierAllowedForAnev("", "ORG", "OPERATOR")).toBe(true);
+    expect(isPremiumTierAllowedForAnev("free", "org", "operator")).toBe(true);
+  });
+
   it("allows backend tiers for ANEV guard after normalization", () => {
     const allowed = ["tier1", "Tier 2", "premium_1"];
     const results = allowed.map((tier) => isPremiumTierAllowedForAnev(tier));
@@ -45,7 +61,9 @@ describe("premium utils", () => {
     expect(ALLOWED_ENGAGEMENT_DATE_TIERS).toEqual(["tier1", "tier2"]);
   });
 
-  it("rejects non-premium tiers", () => {
+  it("rejects non-premium tiers for non-ORG Operators", () => {
+    expect(isPremiumTierAllowedForAnev("free", "DIREKTORAT", "Operator")).toBe(false);
+    expect(isPremiumTierAllowedForAnev("premium4", "ORG", "BIDHUMAS")).toBe(false);
     expect(isPremiumTierAllowedForAnev("free")).toBe(false);
     expect(isPremiumTierAllowedForAnev("premium4")).toBe(false);
   });
