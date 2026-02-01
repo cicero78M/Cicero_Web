@@ -327,52 +327,64 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             />
           ) : (
             <div className="flex flex-col gap-6">
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="BAG"
-                users={kelompok.BAG}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi BAG."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="SAT"
-                users={kelompok.SAT}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SAT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="SI & SPKT"
-                users={kelompok["SI & SPKT"]}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SI & SPKT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="LAINNYA"
-                users={kelompok.LAINNYA}
-                totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi lainnya."
-                sortBy="percentage"
-              />
-              <ChartHorizontal
-                title="POLSEK"
-                users={kelompok.POLSEK}
-                totalPost={rekapSummary.totalIGPost}
-                fieldJumlah="jumlah_like"
-                labelSudah="User Sudah Likes"
-                labelBelum="User Belum Likes"
-                labelTotal="Total Likes"
-                showTotalUser
-                sortBy="percentage"
-              />
-              <Narrative>
-                Grafik ini menampilkan distribusi likes antar user dari setiap polsek serta total likes yang berhasil dikumpulkan.
-              </Narrative>
+              {kelompok.BAG && kelompok.BAG.length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="BAG"
+                  users={kelompok.BAG}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi BAG."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok.SAT && kelompok.SAT.length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="SAT"
+                  users={kelompok.SAT}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SAT."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok["SI & SPKT"] && kelompok["SI & SPKT"].length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="SI & SPKT"
+                  users={kelompok["SI & SPKT"]}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SI & SPKT."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok.LAINNYA && kelompok.LAINNYA.length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="LAINNYA"
+                  users={kelompok.LAINNYA}
+                  totalPost={rekapSummary.totalIGPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi lainnya."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok.POLSEK && kelompok.POLSEK.length > 0 && (
+                <>
+                  <ChartHorizontal
+                    title="POLSEK"
+                    users={kelompok.POLSEK}
+                    totalPost={rekapSummary.totalIGPost}
+                    fieldJumlah="jumlah_like"
+                    labelSudah="User Sudah Likes"
+                    labelBelum="User Belum Likes"
+                    labelTotal="Total Likes"
+                    showTotalUser
+                    sortBy="percentage"
+                  />
+                  <Narrative>
+                    Grafik ini menampilkan distribusi likes antar user dari setiap polsek serta total likes yang berhasil dikumpulkan.
+                  </Narrative>
+                </>
+              )}
             </div>
           )}
         </EngagementInsightMobileScaffold>

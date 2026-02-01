@@ -348,52 +348,64 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
             />
           ) : (
             <div className="flex flex-col gap-6">
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="BAG"
-                users={kelompok.BAG}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="SAT"
-                users={kelompok.SAT}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="SI & SPKT"
-                users={kelompok["SI & SPKT"]}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                {...chartBoxCommonProps}
-                title="LAINNYA"
-                users={kelompok.LAINNYA}
-                totalPost={rekapSummary.totalTiktokPost}
-                narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
-                sortBy="percentage"
-              />
-              <ChartHorizontal
-                title="POLSEK"
-                users={kelompok.POLSEK}
-                totalPost={rekapSummary.totalTiktokPost}
-                fieldJumlah="jumlah_komentar"
-                labelSudah="User Sudah Komentar"
-                labelBelum="User Belum Komentar"
-                labelTotal="Total Komentar"
-                showTotalUser
-                sortBy="percentage"
-              />
-              <Narrative>
-                Grafik POLSEK menggambarkan distribusi komentar antar user dari setiap polsek serta total komentar yang berhasil dikumpulkan.
-              </Narrative>
+              {kelompok.BAG && kelompok.BAG.length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="BAG"
+                  users={kelompok.BAG}
+                  totalPost={rekapSummary.totalTiktokPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok.SAT && kelompok.SAT.length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="SAT"
+                  users={kelompok.SAT}
+                  totalPost={rekapSummary.totalTiktokPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok["SI & SPKT"] && kelompok["SI & SPKT"].length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="SI & SPKT"
+                  users={kelompok["SI & SPKT"]}
+                  totalPost={rekapSummary.totalTiktokPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok.LAINNYA && kelompok.LAINNYA.length > 0 && (
+                <ChartBox
+                  {...chartBoxCommonProps}
+                  title="LAINNYA"
+                  users={kelompok.LAINNYA}
+                  totalPost={rekapSummary.totalTiktokPost}
+                  narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
+                  sortBy="percentage"
+                />
+              )}
+              {kelompok.POLSEK && kelompok.POLSEK.length > 0 && (
+                <>
+                  <ChartHorizontal
+                    title="POLSEK"
+                    users={kelompok.POLSEK}
+                    totalPost={rekapSummary.totalTiktokPost}
+                    fieldJumlah="jumlah_komentar"
+                    labelSudah="User Sudah Komentar"
+                    labelBelum="User Belum Komentar"
+                    labelTotal="Total Komentar"
+                    showTotalUser
+                    sortBy="percentage"
+                  />
+                  <Narrative>
+                    Grafik POLSEK menggambarkan distribusi komentar antar user dari setiap polsek serta total komentar yang berhasil dikumpulkan.
+                  </Narrative>
+                </>
+              )}
             </div>
           )}
         </EngagementInsightMobileScaffold>
