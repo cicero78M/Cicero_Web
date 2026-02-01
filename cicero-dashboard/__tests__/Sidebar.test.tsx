@@ -52,10 +52,16 @@ describe("Sidebar", () => {
   });
 
   describe("Org + Operator Menu", () => {
-    it("shows all required menu items for Org client with Operator role", () => {
+    it("shows all required menu items for Org client with Operator role when status and service statuses are true", () => {
       const authValue = createAuthValue({
         effectiveClientType: "ORG",
         effectiveRole: "OPERATOR",
+        profile: {
+          status: "1",
+          client_insta_status: "1",
+          client_tiktok_status: "1",
+          client_amplify_status: "1",
+        },
       });
 
       render(
@@ -70,6 +76,7 @@ describe("Sidebar", () => {
       expect(screen.getByText("User Insight")).toBeInTheDocument();
       expect(screen.getByText("Instagram Engagement Insight")).toBeInTheDocument();
       expect(screen.getByText("TikTok Engagement Insight")).toBeInTheDocument();
+      expect(screen.getByText("Diseminasi Insight")).toBeInTheDocument();
       expect(screen.getByText("Mekanisme Sistem Absensi")).toBeInTheDocument();
       expect(screen.getByText("Panduan & SOP")).toBeInTheDocument();
     });
@@ -147,6 +154,120 @@ describe("Sidebar", () => {
       );
 
       expect(screen.queryByText("TikTok Post Analysis")).not.toBeInTheDocument();
+    });
+
+    it("hides Instagram Engagement Insight when client status is false", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          status: "0",
+          client_insta_status: "1",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("Instagram Engagement Insight")).not.toBeInTheDocument();
+    });
+
+    it("hides Instagram Engagement Insight when Instagram status is false", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          status: "1",
+          client_insta_status: "0",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("Instagram Engagement Insight")).not.toBeInTheDocument();
+    });
+
+    it("hides TikTok Engagement Insight when client status is false", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          status: "0",
+          client_tiktok_status: "1",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("TikTok Engagement Insight")).not.toBeInTheDocument();
+    });
+
+    it("hides TikTok Engagement Insight when TikTok status is false", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          status: "1",
+          client_tiktok_status: "0",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("TikTok Engagement Insight")).not.toBeInTheDocument();
+    });
+
+    it("hides Diseminasi Insight when client status is false", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          status: "0",
+          client_amplify_status: "1",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("Diseminasi Insight")).not.toBeInTheDocument();
+    });
+
+    it("hides Diseminasi Insight when amplifikasi status is false", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          status: "1",
+          client_amplify_status: "0",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("Diseminasi Insight")).not.toBeInTheDocument();
     });
   });
 
@@ -267,8 +388,10 @@ describe("Sidebar", () => {
   });
 
   describe("Amplify access (existing behavior preserved)", () => {
-    it("shows Diseminasi Insight when amplify is enabled", () => {
+    it("shows Diseminasi Insight when amplify is enabled for non-Org-Operator", () => {
       const authValue = createAuthValue({
+        effectiveClientType: "DIREKTORAT",
+        effectiveRole: "OPERATOR",
         profile: {
           client_amplify_status: "1",
         },

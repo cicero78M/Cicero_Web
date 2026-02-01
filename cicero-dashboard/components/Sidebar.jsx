@@ -57,8 +57,10 @@ export default function Sidebar() {
     );
   }
 
+  const clientStatusRaw = getStatus(profile, "status");
+  const clientStatus = isActive(clientStatusRaw);
   const instagramEnabledRaw = isActive(getStatus(profile, "client_insta_status"));
-  const amplifyEnabled = isActive(getStatus(profile, "client_amplify_status"));
+  const amplifyEnabledRaw = isActive(getStatus(profile, "client_amplify_status"));
   const tiktokEnabledRaw = isActive(getStatus(profile, "client_tiktok_status"));
   const normalizedEffectiveRole = effectiveRole?.toLowerCase();
   const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
@@ -69,8 +71,17 @@ export default function Sidebar() {
   const hasEngagementAccessOverride =
     normalizedEffectiveClientType === "org" &&
     (normalizedEffectiveRole === "bidhumas" || normalizedEffectiveRole === "operator");
-  const instagramEnabled = instagramEnabledRaw || hasEngagementAccessOverride;
-  const tiktokEnabled = tiktokEnabledRaw || hasEngagementAccessOverride;
+  
+  // For ORG+Operator, require both client status and service status to be true
+  const instagramEnabled = isOrgOperator 
+    ? (clientStatus && instagramEnabledRaw)
+    : (instagramEnabledRaw || hasEngagementAccessOverride);
+  const tiktokEnabled = isOrgOperator
+    ? (clientStatus && tiktokEnabledRaw)
+    : (tiktokEnabledRaw || hasEngagementAccessOverride);
+  const amplifyEnabled = isOrgOperator
+    ? (clientStatus && amplifyEnabledRaw)
+    : amplifyEnabledRaw;
   const hasDitbinmasAccess =
     normalizedClientId === "ditbinmas" && normalizedEffectiveRole === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
