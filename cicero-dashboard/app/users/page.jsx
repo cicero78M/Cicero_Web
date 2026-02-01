@@ -419,6 +419,7 @@ export default function UserDirectoryPage() {
       { header: columnLabel, key: "kesatuan", width: 30 },
       { header: "Username IG", key: "ig", width: 20 },
       { header: "Username TikTok", key: "tiktok", width: 20 },
+      { header: "Email", key: "email", width: 30 },
       { header: "Status", key: "status", width: 10 },
     ];
 
@@ -431,6 +432,7 @@ export default function UserDirectoryPage() {
           : u.divisi || "",
         ig: u.insta || "",
         tiktok: u.tiktok || "",
+        email: u.email || "",
         status:
           u.status === true || u.status === "true" ? "Aktif" : "Nonaktif",
       })),
@@ -492,6 +494,7 @@ export default function UserDirectoryPage() {
               .includes(term) ||
             (u.insta || "").toLowerCase().includes(term) ||
             (u.tiktok || "").toLowerCase().includes(term) ||
+            (u.email || "").toLowerCase().includes(term) ||
             String(u.status).toLowerCase().includes(term)
           );
         }),
@@ -760,6 +763,7 @@ export default function UserDirectoryPage() {
                   <th className="w-48 px-4 py-3 font-medium whitespace-normal break-words">{columnLabel}</th>
                   <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">Instagram</th>
                   <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">TikTok</th>
+                  <th className="w-48 px-4 py-3 font-medium whitespace-normal break-words">Email</th>
                   <th className="w-32 px-4 py-3 font-medium whitespace-normal break-words">Status</th>
                   <th className="w-32 px-4 py-3 font-medium whitespace-normal break-words">Aksi</th>
                 </tr>
@@ -826,6 +830,9 @@ export default function UserDirectoryPage() {
                     </td>
                     <td className="px-4 py-3 font-mono text-purple-500 whitespace-normal break-words">
                       {u.tiktok || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
+                      {u.email || "-"}
                     </td>
                     <td className="px-4 py-3 whitespace-normal break-words">
                       {isUserActive(u) ? (
@@ -899,7 +906,7 @@ export default function UserDirectoryPage() {
                 {editingRowId && updateError && (
                   <tr>
                     <td
-                      colSpan="8"
+                      colSpan="9"
                       className="px-4 py-3 text-sm text-rose-500"
                       role="alert"
                     >
@@ -909,7 +916,7 @@ export default function UserDirectoryPage() {
                 )}
                 {currentRows.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan="9" className="px-4 py-8 text-center text-slate-500">
                       Tidak ada pengguna
                     </td>
                   </tr>
