@@ -52,10 +52,11 @@ describe("Sidebar", () => {
   });
 
   describe("Org + Operator Menu", () => {
-    it("shows all required menu items for Org client with Operator role", () => {
+    it("shows menu items for Org Operator without status flags", () => {
       const authValue = createAuthValue({
         effectiveClientType: "ORG",
         effectiveRole: "OPERATOR",
+        profile: {},
       });
 
       render(
@@ -64,14 +65,68 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      // Required menu items for Org + Operator
+      // Required menu items for Org + Operator without status
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
       expect(screen.getByText("User Directory")).toBeInTheDocument();
       expect(screen.getByText("User Insight")).toBeInTheDocument();
-      expect(screen.getByText("Instagram Engagement Insight")).toBeInTheDocument();
-      expect(screen.getByText("TikTok Engagement Insight")).toBeInTheDocument();
+      expect(screen.queryByText("Instagram Engagement Insight")).not.toBeInTheDocument();
+      expect(screen.queryByText("TikTok Engagement Insight")).not.toBeInTheDocument();
       expect(screen.getByText("Mekanisme Sistem Absensi")).toBeInTheDocument();
       expect(screen.getByText("Panduan & SOP")).toBeInTheDocument();
+    });
+
+    it("shows Instagram Engagement Insight for Org Operator with instagram status enabled", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          client_insta_status: "1",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.getByText("Instagram Engagement Insight")).toBeInTheDocument();
+    });
+
+    it("hides Instagram Engagement Insight for Org Operator when instagram status is disabled", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          client_insta_status: "0",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.queryByText("Instagram Engagement Insight")).not.toBeInTheDocument();
+    });
+
+    it("shows TikTok Engagement Insight for Org Operator with tiktok status enabled", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+        profile: {
+          client_tiktok_status: "1",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      expect(screen.getByText("TikTok Engagement Insight")).toBeInTheDocument();
     });
 
     it("does not show Instagram Post Analysis for Org Operator", () => {

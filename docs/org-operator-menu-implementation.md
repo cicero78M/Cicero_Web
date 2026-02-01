@@ -4,7 +4,7 @@
 This document describes the implementation of menu functionality for clients with `client_type='Org'` and `role='Operator'`.
 
 ## Problem Statement
-We needed to ensure clients with `client_type='Org'` and `role='Operator'` only see engagement insight entries (and keep the rest of the menu stable), while hiding operator-only post analysis items and the Premium menu for that combination.
+We needed to ensure clients with `client_type='Org'` and `role='Operator'` only see engagement insight entries when status flags are enabled (respecting `client_insta_status` and `client_tiktok_status`), while hiding operator-only post analysis items and the Premium menu for that combination.
 
 ## Solution
 
@@ -12,33 +12,36 @@ We needed to ensure clients with `client_type='Org'` and `role='Operator'` only 
 
 #### File Modified: `cicero-dashboard/components/Sidebar.jsx`
 
-**Change Made (Lines 68-72):**
+**Change Made (Lines 69-73):**
 
 ```javascript
 // Before:
 const hasEngagementAccessOverride =
   normalizedEffectiveClientType === "org" &&
-  normalizedEffectiveRole === "bidhumas";
+  (normalizedEffectiveRole === "bidhumas" || normalizedEffectiveRole === "operator");
 
 // After:
 const hasEngagementAccessOverride =
   normalizedEffectiveClientType === "org" &&
-  (normalizedEffectiveRole === "bidhumas" || normalizedEffectiveRole === "operator");
+  normalizedEffectiveRole === "bidhumas";
 ```
 
-This minimal change extends the engagement access override to include "operator" role alongside the existing "bidhumas" role for Org clients.
+This minimal change removes "operator" from the engagement access override logic. Now, Org Operator users must have proper status flags (`client_insta_status` and `client_tiktok_status`) enabled to see the respective engagement insight menus, while Org Bidhumas users retain automatic access.
 
 ### Menu Items for Org + Operator
 
-When a user has `client_type='Org'` and `role='Operator'`, they now see:
+When a user has `client_type='Org'` and `role='Operator'`, they see:
 
+**Always visible:**
 1. **Dashboard** - `/dashboard`
 2. **User Directory** - `/users`
 3. **User Insight** - `/user-insight`
-4. **Instagram Engagement Insight** - `/likes/instagram`
-5. **TikTok Engagement Insight** - `/comments/tiktok`
-6. **Mekanisme Sistem Absensi** - `/mekanisme-absensi`
-7. **Panduan & SOP** - `/panduan-sop`
+4. **Mekanisme Sistem Absensi** - `/mekanisme-absensi`
+5. **Panduan & SOP** - `/panduan-sop`
+
+**Conditionally visible (requires status flags):**
+- **Instagram Engagement Insight** - `/likes/instagram` (only if `client_insta_status` is true)
+- **TikTok Engagement Insight** - `/comments/tiktok` (only if `client_tiktok_status` is true)
 
 **Not shown for Org + Operator:**
 - Instagram Post Analysis (`/instagram`)
@@ -65,14 +68,22 @@ The implementation ensures that existing menu behavior for other client/role com
 - Does NOT automatically get engagement access
 - Requires status flags to be set
 
+#### Org + Operator
+- Does NOT get automatic engagement access override (changed from previous behavior)
+- Requires status flags (`client_insta_status`, `client_tiktok_status`) to see engagement insights
+- Does NOT see Post Analysis items (not accessible for Org Operator)
+
 ## Testing
 
 ### Test Suite: `cicero-dashboard/__tests__/Sidebar.test.tsx`
 
-Created comprehensive test suite with 14 test cases:
+Created comprehensive test suite with 17 test cases:
 
-#### Org + Operator Menu Tests (6 tests)
-- ✅ Shows required menu items
+#### Org + Operator Menu Tests (9 tests)
+- ✅ Shows menu items without status flags (engagement insights hidden)
+- ✅ Shows Instagram Engagement Insight with instagram status enabled
+- ✅ Hides Instagram Engagement Insight when instagram status disabled
+- ✅ Shows TikTok Engagement Insight with tiktok status enabled
 - ✅ Hides Instagram Post Analysis for Org operator
 - ✅ Hides TikTok Post Analysis for Org operator
 - ✅ Hides Premium menu for Org operator
@@ -80,7 +91,7 @@ Created comprehensive test suite with 14 test cases:
 - ✅ Properly filters by role
 
 #### Existing Behavior Tests (8 tests)
-- ✅ Org + Bidhumas behavior preserved
+- ✅ Org + Bidhumas behavior preserved (automatic access)
 - ✅ Non-Org clients behavior preserved
 - ✅ DIREKTORAT operator behavior preserved
 - ✅ Status flag behavior preserved
@@ -90,7 +101,7 @@ Created comprehensive test suite with 14 test cases:
 ### Test Results
 ```
 Test Suites: 1 passed, 1 total
-Tests:       14 passed, 14 total
+Tests:       17 passed, 17 total
 ```
 
 ## Security Review
@@ -116,9 +127,10 @@ AuthContext extracts:
   - effectiveRole (e.g., "OPERATOR", "BIDHUMAS")
     ↓
 Sidebar.jsx evaluates:
-  - hasEngagementAccessOverride = (Org + Bidhumas) OR (Org + Operator)
+  - hasEngagementAccessOverride = (Org + Bidhumas) only
   - instagramEnabled = statusFlag OR hasEngagementAccessOverride
   - tiktokEnabled = statusFlag OR hasEngagementAccessOverride
+  - Org + Operator now requires status flags to see engagement insights
     ↓
 Menu items conditionally rendered based on:
   - instagramEnabled
@@ -129,9 +141,9 @@ Menu items conditionally rendered based on:
 
 ### Key Design Decisions
 
-1. **Override Pattern**: Used existing `hasEngagementAccessOverride` pattern instead of creating separate logic
-2. **Minimal Change**: Modified only 3 lines to achieve the requirement
-3. **Role-Based Filtering**: Org operators see only engagement insights (post analysis and Premium are hidden)
+1. **Override Pattern**: Modified existing `hasEngagementAccessOverride` pattern to exclude Operator role
+2. **Minimal Change**: Modified only 1 line to achieve the requirement (removed "operator" from override)
+3. **Role-Based Filtering**: Org operators now require status flags to see engagement insights (Bidhumas retains automatic access)
 4. **Type Safety**: All logic uses normalized, lowercase comparisons for reliability
 
 ## Endpoints Verified
@@ -148,9 +160,9 @@ All required endpoints are implemented and accessible:
 
 ## Conclusion
 
-The implementation successfully adds menu functionality for Org+Operator clients with:
-- Minimal code changes (3 lines modified)
-- Comprehensive test coverage (14 tests)
+The implementation successfully updates menu functionality for Org+Operator clients to require status flags with:
+- Minimal code changes (1 line modified)
+- Comprehensive test coverage (17 tests)
 - Zero security vulnerabilities
-- Full preservation of existing behavior
+- Full preservation of existing behavior for other roles
 - Clean integration with existing patterns
