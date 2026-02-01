@@ -102,33 +102,20 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const kelompok = shouldUseDirectorateLayout
     ? null
     : groupUsersByKelompok(chartData);
-  const hasClientMetadata = chartData.some(
-    (entry) =>
-      entry?.client_id ||
-      entry?.clientId ||
-      entry?.clientID ||
-      entry?.client ||
-      entry?.client_name ||
-      entry?.nama_client,
-  );
-  const hasDivisiMetadata = chartData.some((entry) => entry?.divisi);
+  
+  // Standardized directorate logic matching TikTok engagement insight
   const shouldGroupByClient =
     shouldUseDirectorateLayout &&
     (directorateScope === "all" ||
-      (!hasDivisiMetadata && hasClientMetadata) ||
       (!isDirectorateScopedClient && !isDirectorateRole));
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
-    ? `POLRES JAJARAN${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}`
-    : `DIVISI / SATFUNG${resolvedClientLabel ? ` - ${resolvedClientLabel}` : ""}${
-        hasDivisiMetadata ? "" : " (Unknown Divisi)"
-      }`;
+    ? "POLRES JAJARAN"
+    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
   const directorateNarrative = shouldGroupByClient
     ? undefined
-    : hasDivisiMetadata
-      ? "Grafik dan tabel ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung."
-      : "Grafik dan tabel ini menampilkan perbandingan capaian likes dengan metadata divisi yang terbatas.";
+    : "Grafik ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung.";
 
   const totalUser = Number(rekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
@@ -229,29 +216,29 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       label: "Jumlah IG Post",
       value: rekapSummary.totalIGPost,
       color: "blue",
-      icon: <Camera className="h-6 w-6" />, 
+      icon: <Camera className="h-6 w-6" />,
     },
     {
       key: "total-user",
       label: "Total User",
       value: rekapSummary.totalUser,
       color: "gray",
-      icon: <User className="h-6 w-6" />, 
+      icon: <User className="h-6 w-6" />,
     },
     {
       key: "sudah",
       label: "Sudah Likes",
       value: rekapSummary.totalSudahLike,
       color: "green",
-      icon: <ThumbsUp className="h-6 w-6" />, 
+      icon: <ThumbsUp className="h-6 w-6" />,
       percentage: getPercentage(rekapSummary.totalSudahLike),
     },
     {
       key: "kurang",
       label: "Kurang Likes",
       value: rekapSummary.totalKurangLike,
-      color: "orange",
-      icon: <ThumbsDown className="h-6 w-6" />, 
+      color: "amber",
+      icon: <ThumbsDown className="h-6 w-6" />,
       percentage: getPercentage(rekapSummary.totalKurangLike),
     },
     {
@@ -259,18 +246,29 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       label: "Belum Likes",
       value: rekapSummary.totalBelumLike,
       color: "red",
-      icon: <ThumbsDown className="h-6 w-6" />, 
+      icon: <ThumbsDown className="h-6 w-6" />,
       percentage: getPercentage(rekapSummary.totalBelumLike),
     },
     {
       key: "tanpa",
       label: "Tanpa Username",
       value: rekapSummary.totalTanpaUsername,
-      color: "gray",
-      icon: <UserX className="h-6 w-6" />, 
+      color: "violet",
+      icon: <UserX className="h-6 w-6" />,
       percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
     },
   ];
+
+  // Common props for all ChartBox components to match TikTok standard
+  const chartBoxCommonProps = {
+    fieldJumlah: "jumlah_like",
+    labelSudah: "User Sudah Likes",
+    labelKurang: "User Kurang Likes",
+    labelBelum: "User Belum Likes",
+    labelTotal: "Total Likes",
+    showTotalUser: true,
+    titleClassName: "text-slate-700",
+  };
 
   const scopeSelectorProps = {
     value: directorateScope,
@@ -318,6 +316,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
         >
           {shouldUseDirectorateLayout ? (
             <ChartBox
+              {...chartBoxCommonProps}
               title={directorateTitle}
               users={chartData}
               totalPost={rekapSummary.totalIGPost}
@@ -329,43 +328,50 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           ) : (
             <div className="flex flex-col gap-6">
               <ChartBox
+                {...chartBoxCommonProps}
                 title="BAG"
                 users={kelompok.BAG}
                 totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi BAG."
+                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi BAG."
                 sortBy="percentage"
               />
               <ChartBox
+                {...chartBoxCommonProps}
                 title="SAT"
                 users={kelompok.SAT}
                 totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SAT."
+                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SAT."
                 sortBy="percentage"
               />
               <ChartBox
+                {...chartBoxCommonProps}
                 title="SI & SPKT"
                 users={kelompok["SI & SPKT"]}
                 totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi SI & SPKT."
+                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SI & SPKT."
                 sortBy="percentage"
               />
               <ChartBox
+                {...chartBoxCommonProps}
                 title="LAINNYA"
                 users={kelompok.LAINNYA}
                 totalPost={rekapSummary.totalIGPost}
-                narrative="Grafik ini menunjukkan perbandingan jumlah like dari user di divisi lainnya."
+                narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi lainnya."
                 sortBy="percentage"
               />
               <ChartHorizontal
                 title="POLSEK"
                 users={kelompok.POLSEK}
                 totalPost={rekapSummary.totalIGPost}
+                fieldJumlah="jumlah_like"
+                labelSudah="User Sudah Likes"
+                labelBelum="User Belum Likes"
+                labelTotal="Total Likes"
                 showTotalUser
                 sortBy="percentage"
               />
               <Narrative>
-                Grafik POLSEK memperlihatkan jumlah like Instagram dari setiap
-                polsek dan membandingkan partisipasi pengguna.
+                Grafik ini menampilkan distribusi likes antar user dari setiap polsek serta total likes yang berhasil dikumpulkan.
               </Narrative>
             </div>
           )}
