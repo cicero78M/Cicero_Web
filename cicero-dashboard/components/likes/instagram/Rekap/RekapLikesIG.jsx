@@ -208,8 +208,10 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   const resolveKomplainPayload = (user) => {
     const clientIdentifier = getClientIdentifier(user);
+    const userId = resolveUserIdentifier(user);
     return {
-      nrp: resolveUserIdentifier(user),
+      nrp: userId,
+      user_id: user.user_id || userId,
       username: String(user.username || "").trim(),
       client_id:
         clientIdentifier.stringValue ||

@@ -2150,6 +2150,10 @@ export async function postComplaintInstagram(
     ensureString(payload.message).trim();
 
   const body: Record<string, string> = { nrp };
+  const userId = ensureString(payload.user_id).trim();
+  if (userId && userId !== nrp) {
+    body.user_id = userId;
+  }
   if (username) {
     body.username_ig = username;
     body.instagram = username;
