@@ -98,7 +98,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     );
 
   const shouldUseDirectorateLayout = isDirectorateLayout;
-  const resolvedClientLabel = clientName;
+  const resolvedClientLabel = clientName || "Client";
   const kelompok = shouldUseDirectorateLayout
     ? null
     : groupUsersByKelompok(chartData);
