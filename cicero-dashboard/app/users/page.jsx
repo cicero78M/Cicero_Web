@@ -646,8 +646,8 @@ export default function UserDirectoryPage() {
                     type="button"
                   >
                     {showAllDitbinmas 
-                      ? `Hanya ${normalizedRole.toUpperCase()}` 
-                      : `Semua ${clientName}`}
+                      ? `Hanya ${(normalizedRole || client_id || "").toUpperCase()}` 
+                      : `Semua ${clientName || client_id || ""}`}
                   </button>
                 )}
                 <label className="ml-auto flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-200">
