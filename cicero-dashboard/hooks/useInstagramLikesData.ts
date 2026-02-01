@@ -544,7 +544,11 @@ export default function useInstagramLikesData({
         computedTotals.totalTanpaUsername = totalTanpaUsername;
 
         if (controller.signal.aborted) return;
-        const useComputedSummary = shouldBypassOrgDirectorateFilter;
+        // Use computed summary when filtering by client (directorate scope="client" or ORG directorate role)
+        const shouldUseClientFilteredSummary =
+          directorateData && scope === "client" && normalizedLoginClientId;
+        const useComputedSummary =
+          shouldBypassOrgDirectorateFilter || shouldUseClientFilteredSummary;
         setRekapSummary({
           totalUser: useComputedSummary
             ? computedTotals.totalUser

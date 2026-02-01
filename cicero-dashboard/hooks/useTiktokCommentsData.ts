@@ -683,31 +683,40 @@ export default function useTiktokCommentsData({
           sortedUsers,
           totalTiktokPost,
         );
-        const totalUser = resolveNumber(
-          totalUserRaw,
-          computedTotals.totalUser,
-        );
-        const totalSudahKomentar = hasDistribution
-          ? resolveNumber(distribution?.sudah, computedTotals.totalSudahKomentar)
-          : computedTotals.totalSudahKomentar;
-        const totalKurangKomentar = hasDistribution
-          ? resolveNumber(distribution?.kurang, computedTotals.totalKurangKomentar)
-          : computedTotals.totalKurangKomentar;
-        const totalBelumKomentar = hasDistribution
-          ? resolveNumber(
-              (Number(distribution?.belum ?? 0) || 0) +
-                (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0),
-              computedTotals.totalBelumKomentar,
-            )
-          : computedTotals.totalBelumKomentar;
-        const totalTanpaUsername = hasDistribution
-          ? resolveNumber(
-              distribution?.noUsername ??
-                distribution?.no_username ??
-                distribution?.noUsernameCount,
-              computedTotals.totalTanpaUsername,
-            )
-          : computedTotals.totalTanpaUsername;
+        // When shouldApplyScopeFilter is true (e.g., directorate with scope="client"),
+        // use computed totals from filtered users instead of backend summary
+        const totalUser = shouldApplyScopeFilter
+          ? computedTotals.totalUser
+          : resolveNumber(totalUserRaw, computedTotals.totalUser);
+        const totalSudahKomentar = shouldApplyScopeFilter
+          ? computedTotals.totalSudahKomentar
+          : hasDistribution
+            ? resolveNumber(distribution?.sudah, computedTotals.totalSudahKomentar)
+            : computedTotals.totalSudahKomentar;
+        const totalKurangKomentar = shouldApplyScopeFilter
+          ? computedTotals.totalKurangKomentar
+          : hasDistribution
+            ? resolveNumber(distribution?.kurang, computedTotals.totalKurangKomentar)
+            : computedTotals.totalKurangKomentar;
+        const totalBelumKomentar = shouldApplyScopeFilter
+          ? computedTotals.totalBelumKomentar
+          : hasDistribution
+            ? resolveNumber(
+                (Number(distribution?.belum ?? 0) || 0) +
+                  (Number(distribution?.noPosts ?? distribution?.no_posts ?? 0) || 0),
+                computedTotals.totalBelumKomentar,
+              )
+            : computedTotals.totalBelumKomentar;
+        const totalTanpaUsername = shouldApplyScopeFilter
+          ? computedTotals.totalTanpaUsername
+          : hasDistribution
+            ? resolveNumber(
+                distribution?.noUsername ??
+                  distribution?.no_username ??
+                  distribution?.noUsernameCount,
+                computedTotals.totalTanpaUsername,
+              )
+            : computedTotals.totalTanpaUsername;
 
         const chartDataFromUsers = sortedUsers.map((entry) =>
           normalizeChartRecord(entry),
