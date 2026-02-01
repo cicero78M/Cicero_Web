@@ -660,7 +660,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
               <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-800">
                 <thead className="sticky top-0 z-10 bg-blue-50/90 backdrop-blur">
                   <tr>
-                    <th className="w-[5%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[5%]' : 'w-[6%]'} border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       No
                     </th>
                     {hasClient && (
@@ -668,22 +668,22 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                         Client
                       </th>
                     )}
-                    <th className="w-[18%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[18%]' : 'w-[20%]'} border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Nama
                     </th>
-                    <th className="w-[15%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[15%]' : 'w-[17%]'} border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Username IG
                     </th>
-                    <th className="w-[20%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[20%]' : 'w-[22%]'} border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Divisi/Satfung
                     </th>
-                    <th className="w-[13%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[13%]' : 'w-[15%]'} border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Status
                     </th>
-                    <th className="w-[12%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[12%]' : 'w-[14%]'} border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Jumlah Like
                     </th>
-                    <th className="w-[5%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className={`${hasClient ? 'w-[5%]' : 'w-[6%]'} border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Aksi
                     </th>
                   </tr>
@@ -780,7 +780,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                             </div>
                           </td>
                           <td className={`${baseCellClass} overflow-hidden text-sm font-mono text-blue-900`}>
-                            <span className="truncate block">{username || "-"}</span>
+                            <span className="truncate">{username || "-"}</span>
                           </td>
                           <td className={`${baseCellClass} text-sm text-blue-900`}>
                             <div className="flex flex-col overflow-hidden">
