@@ -358,12 +358,12 @@ export default function UserDirectoryPage() {
   }
 
   async function handleDeleteEmail(user) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus email untuk ${user.nama || "user ini"}?`)) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus email "${user.email}" untuk ${user.nama || "user ini"}?`)) {
       return;
     }
     setDeleteEmailLoadingId(user.user_id);
     try {
-      await updateUser(token || "", user.user_id, { email: "" });
+      await updateUser(token || "", user.user_id, { email: null });
       await mutate();
       showToast("Email berhasil dihapus", "success");
     } catch (err) {
