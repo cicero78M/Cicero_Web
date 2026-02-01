@@ -444,7 +444,7 @@ export default function UserDirectoryPage() {
         nama: (u.title ? `${u.title} ` : "") + (u.nama || "-"),
         nrp: u.user_id || "",
         kesatuan: showKesatuanColumn
-          ? u.nama_client || u.client_name || u.client || u.nama || "-"
+          ? u.client_id || u.clientId || u.clientID || u.client || "-"
           : u.divisi || "",
         ig: u.insta || "",
         tiktok: u.tiktok || "",
@@ -831,7 +831,7 @@ export default function UserDirectoryPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
                       {showKesatuanColumn ? (
-                        u.nama_client || u.client_name || u.client || u.nama || "-"
+                        u.client_id || u.clientId || u.clientID || u.client || "-"
                       ) : editingRowId === u.user_id ? (
                         <input
                           value={editSatfung}
