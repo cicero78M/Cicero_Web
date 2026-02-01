@@ -349,9 +349,8 @@ export default function useInstagramLikesData({
             derivedDirectorateRole ||
             isDitSamaptaBidhumas ||
             isDirectorateRoleValue);
-        const shouldUseDirectorateLayout =
-          normalizedEffectiveRoleLower === "operator" && isOrg;
-        const directorateLayout = directorateData || shouldUseDirectorateLayout;
+        // Match TikTok behavior: operator + ORG scope uses kelompok grouping (divisi-based), not directorate layout
+        const directorateLayout = directorateData;
 
         const resolvedClientName = extractRekapClientName(rekapRes, client_id);
         const isDirectorateScopedValue =
