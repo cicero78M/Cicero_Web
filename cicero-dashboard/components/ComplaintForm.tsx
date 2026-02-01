@@ -8,7 +8,7 @@ import { showToast } from "@/utils/showToast";
 type Platform = "instagram" | "tiktok";
 
 export default function ComplaintForm() {
-  const { token } = useAuth();
+  const { token, clientId } = useAuth();
   const [nrp, setNrp] = useState("");
   const [platform, setPlatform] = useState<Platform>("instagram");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +29,12 @@ export default function ComplaintForm() {
     setIsSubmitting(true);
 
     try {
-      const payload = { nrp: nrp.trim() };
+      const payload = { 
+        nrp: nrp.trim(),
+        user_id: nrp.trim(),
+        client_id: clientId || undefined,
+        issue: "Kendala akses atau data tidak sesuai"
+      };
 
       if (platform === "instagram") {
         const result = await postComplaintInstagram(token, payload);
