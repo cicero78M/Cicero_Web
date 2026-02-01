@@ -646,7 +646,7 @@ export default function UserDirectoryPage() {
                     type="button"
                   >
                     {showAllDitbinmas 
-                      ? `Hanya ${(normalizedRole || client_id || "")?.toUpperCase() || ""}` 
+                      ? `Hanya ${(normalizedRole || client_id || "").toUpperCase()}` 
                       : `Semua ${clientName || client_id || ""}`}
                   </button>
                 )}
