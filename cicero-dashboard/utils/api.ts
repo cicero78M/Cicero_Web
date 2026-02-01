@@ -2175,6 +2175,7 @@ export async function postComplaintInstagram(
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify(body),
     signal,
   });
@@ -2191,6 +2192,15 @@ export async function postComplaintInstagram(
       parsed && typeof parsed === "object"
         ? extractResponseMessage(parsed, "")
         : await res.text();
+    
+    // Special handling for 403 errors
+    if (res.status === 403) {
+      throw new Error(
+        message || 
+        "Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?"
+      );
+    }
+    
     throw new Error(message || "Gagal mengirim komplain Instagram.");
   }
 
@@ -2275,6 +2285,7 @@ export async function postComplaintTiktok(
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify(body),
     signal,
   });
@@ -2291,6 +2302,15 @@ export async function postComplaintTiktok(
       parsed && typeof parsed === "object"
         ? extractResponseMessage(parsed, "")
         : await res.text();
+    
+    // Special handling for 403 errors
+    if (res.status === 403) {
+      throw new Error(
+        message || 
+        "Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?"
+      );
+    }
+    
     throw new Error(message || "Gagal mengirim komplain TikTok.");
   }
 
