@@ -544,7 +544,10 @@ export default function useInstagramLikesData({
         computedTotals.totalTanpaUsername = totalTanpaUsername;
 
         if (controller.signal.aborted) return;
-        // Use computed summary when filtering by client (directorate scope="client" or ORG directorate role)
+        // Use computed summary when filtering by client ID:
+        // 1. shouldBypassOrgDirectorateFilter: ORG scope with directorate role
+        // 2. shouldUseClientFilteredSummary: DIREKTORAT scope with scope="client" filter
+        // Both cases filter users by client_id, so backend summary (all role users) is not accurate
         const shouldUseClientFilteredSummary =
           directorateData && scope === "client" && normalizedLoginClientId;
         const useComputedSummary =
