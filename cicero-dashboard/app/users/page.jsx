@@ -645,7 +645,9 @@ export default function UserDirectoryPage() {
                     className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
                     type="button"
                   >
-                    {showAllDitbinmas ? "Hanya DITBINMAS" : "Semua Ditbinmas"}
+                    {showAllDitbinmas 
+                      ? `Hanya ${(normalizedRole || client_id || "").toUpperCase()}` 
+                      : `Semua ${clientName || client_id || ""}`}
                   </button>
                 )}
                 <label className="ml-auto flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-200">
