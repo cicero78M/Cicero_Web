@@ -499,7 +499,7 @@ export default function ProfileClient() {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-500/20"
-                placeholder="Masukkan NRP"
+                placeholder="Masukkan NRP (hanya angka)"
               />
               {deleteEmailError && (
                 <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
