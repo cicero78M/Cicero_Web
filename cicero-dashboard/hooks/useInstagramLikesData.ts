@@ -363,7 +363,7 @@ export default function useInstagramLikesData({
         setIsDirectorateData(directorateData);
         setIsDirectorateLayout(directorateLayout);
         setIsOrgClient(isOrg);
-        setClientName(resolvedClientName || "Unknown Client");
+        setClientName(resolvedClientName || client_id);
         setCanSelectScope(
           !isOperatorRole &&
             directorateData &&
