@@ -736,34 +736,33 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95 shadow-inner">
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-separate border-spacing-0 text-left text-sm text-slate-800">
+              <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-800">
                 <thead className="sticky top-0 z-10 bg-blue-50/90 backdrop-blur">
                   <tr>
-                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[5%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       No
                     </th>
                     {hasClient && (
-                      <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      <th className="w-[12%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                         Client
                       </th>
                     )}
-                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[18%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Nama
                     </th>
-                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[15%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Username TikTok
                     </th>
-                    <th className="border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[20%] border-b border-blue-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Divisi/Satfung
                     </th>
-                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[13%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Status
                     </th>
-                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[12%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Jumlah Komentar
                     </th>
-                    <th className="border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                    <th className="w-[5%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
                       Aksi
                     </th>
                   </tr>
@@ -846,34 +845,34 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                           </td>
                           {hasClient && (
                             <td className={`${baseCellClass} text-sm text-blue-900`}>
-                              <div className="flex flex-col">
-                                <span className="font-semibold">
+                              <div className="flex flex-col overflow-hidden">
+                                <span className="truncate font-semibold">
                                   {u.nama_client || u.client_name || u.client || "-"}
                                 </span>
-                                <span className="text-xs text-blue-600">
+                                <span className="truncate text-xs text-blue-600">
                                   {u.client_id || u.clientId || ""}
                                 </span>
                               </div>
                             </td>
                           )}
                           <td className={`${baseCellClass} text-sm text-blue-900`}>
-                            <div className="flex flex-col">
-                              <span className="font-semibold">{u.nama || "-"}</span>
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="truncate font-semibold">{u.nama || "-"}</span>
                               {u.title && (
-                                <span className="text-xs text-blue-600">{u.title}</span>
+                                <span className="truncate text-xs text-blue-600">{u.title}</span>
                               )}
                             </div>
                           </td>
-                          <td className={`${baseCellClass} text-sm font-mono text-blue-900`}>
-                            {username || "-"}
+                          <td className={`${baseCellClass} overflow-hidden text-sm font-mono text-blue-900`}>
+                            <span className="truncate block">{username || "-"}</span>
                           </td>
                           <td className={`${baseCellClass} text-sm text-blue-900`}>
-                            <div className="flex flex-col">
-                              <span className="font-semibold">
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="truncate font-semibold">
                                 {bersihkanSatfung(u.divisi || "-")}
                               </span>
                               {u.divisi && (
-                                <span className="text-xs text-blue-600">{u.divisi}</span>
+                                <span className="truncate text-xs text-blue-600">{u.divisi}</span>
                               )}
                             </div>
                           </td>
@@ -916,7 +915,6 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                   )}
                 </tbody>
               </table>
-            </div>
 
             {totalPages > 1 && (
               <div className="flex flex-col items-center gap-3 border-t border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-800 md:flex-row md:justify-between">
