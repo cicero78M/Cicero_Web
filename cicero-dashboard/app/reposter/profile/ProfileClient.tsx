@@ -13,6 +13,7 @@ import {
   normalizeReposterProfile,
   ReposterProfile,
 } from "@/utils/reposterProfile";
+import { X } from "lucide-react";
 
 const fallbackInitials = (value: string) =>
   value
@@ -69,6 +70,12 @@ export default function ProfileClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
+  
+  // Delete email modal state
+  const [isDeleteEmailOpen, setIsDeleteEmailOpen] = useState(false);
+  const [confirmNrpInput, setConfirmNrpInput] = useState("");
+  const [deleteEmailError, setDeleteEmailError] = useState("");
+  const [deleteEmailLoading, setDeleteEmailLoading] = useState(false);
 
   const sessionProfile = useMemo(() => {
     const tokenProfile = token ? decodeJwtPayload(token) : null;
@@ -206,6 +213,70 @@ export default function ProfileClient() {
     }
   };
 
+  const openDeleteEmailModal = () => {
+    setIsDeleteEmailOpen(true);
+    setConfirmNrpInput("");
+    setDeleteEmailError("");
+  };
+
+  const closeDeleteEmailModal = () => {
+    setIsDeleteEmailOpen(false);
+    setConfirmNrpInput("");
+    setDeleteEmailError("");
+  };
+
+  const handleConfirmDeleteEmail = async () => {
+    if (!token || !combinedProfile.nrp) return;
+    
+    // Validate NRP matches
+    if (confirmNrpInput !== combinedProfile.nrp) {
+      setDeleteEmailError("NRP yang dimasukkan tidak sesuai.");
+      return;
+    }
+    
+    setDeleteEmailLoading(true);
+    setDeleteEmailError("");
+    
+    try {
+      const payload = {
+        nama: formState.name.trim(),
+        title: formState.rank.trim(),
+        divisi: formState.satfung.trim(),
+        jabatan: formState.jabatan.trim(),
+        insta: sanitizeUsername(formState.instagramUsername),
+        tiktok: sanitizeUsername(formState.tiktokUsername),
+        email: "", // Clear the email
+      };
+      
+      const res = await updateUser(token, combinedProfile.nrp, payload);
+      const normalized = normalizeReposterProfile([
+        res?.data?.user,
+        res?.data?.profile,
+        res?.data,
+        res?.user,
+        res?.profile,
+        res,
+        payload,
+      ]);
+      
+      if (normalized) {
+        setRemoteProfile(normalized);
+        setFormState(buildFormState(normalized));
+        setInitialFormState(buildFormState(normalized));
+        setAuth(token, normalized.rawSources[0] ?? profile ?? null);
+      }
+      
+      setSaveMessage("Email berhasil dihapus.");
+      closeDeleteEmailModal();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Gagal menghapus email.";
+      setDeleteEmailError(message);
+    } finally {
+      setDeleteEmailLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/40 md:flex-row md:items-center">
@@ -331,12 +402,23 @@ export default function ProfileClient() {
           <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
             Alamat email
           </label>
-          <input
-            type="email"
-            className={inputClassName}
-            value={formState.email}
-            onChange={(event) => handleChange("email", event.target.value)}
-          />
+          <div className="flex gap-2">
+            <input
+              type="email"
+              className={inputClassName}
+              value={formState.email}
+              onChange={(event) => handleChange("email", event.target.value)}
+            />
+            {formState.email && (
+              <button
+                type="button"
+                onClick={openDeleteEmailModal}
+                className="rounded-2xl bg-gradient-to-r from-rose-400 via-rose-500 to-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-rose-500 hover:via-rose-600 hover:to-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+              >
+                Hapus Email
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -371,6 +453,81 @@ export default function ProfileClient() {
           Data profil diambil dari tabel user pada endpoint Cicero_V2.
         </span>
       </div>
+
+      {/* Delete Email Confirmation Modal */}
+      {isDeleteEmailOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-email-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="delete-email-title"
+                  className="text-lg font-semibold text-slate-900 dark:text-white"
+                >
+                  Konfirmasi Hapus Email
+                </h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  Masukkan NRP{" "}
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {combinedProfile.nrp || "-"}
+                  </span>{" "}
+                  untuk menghapus email dari profil Anda.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeleteEmailModal}
+                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+                aria-label="Tutup konfirmasi"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-4">
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                NRP
+              </label>
+              <input
+                type="text"
+                value={confirmNrpInput}
+                onChange={(e) => setConfirmNrpInput(e.target.value.replace(/\D/g, ""))}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-500/20"
+                placeholder="Masukkan NRP (hanya angka)"
+              />
+              {deleteEmailError && (
+                <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                  {deleteEmailError}
+                </p>
+              )}
+            </div>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeDeleteEmailModal}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                disabled={deleteEmailLoading}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteEmail}
+                className="rounded-xl bg-gradient-to-r from-rose-400 via-rose-500 to-red-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:from-rose-500 hover:via-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={deleteEmailLoading}
+              >
+                {deleteEmailLoading ? "Memproses..." : "Hapus Email"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
