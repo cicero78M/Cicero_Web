@@ -245,4 +245,80 @@ describe("useRequirePremium", () => {
     await waitFor(() => expect(spy).toHaveBeenCalledWith("loading"));
     expect(replaceMock).not.toHaveBeenCalled();
   });
+
+  it("treats ORG Operator as premium without tier", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: null,
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+      effectiveClientType: "ORG",
+      effectiveRole: "OPERATOR",
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("premium"));
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("treats ORG Operator as premium with basic tier", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: "basic",
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+      effectiveClientType: "ORG",
+      effectiveRole: "OPERATOR",
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("premium"));
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("does not treat non-ORG Operator as premium without tier", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: null,
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+      effectiveClientType: "DIREKTORAT",
+      effectiveRole: "OPERATOR",
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("standard"));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/premium/anev"));
+  });
+
+  it("does not treat ORG non-Operator as premium without tier", async () => {
+    const spy = jest.fn();
+    mockedUseAuth.mockReturnValue({
+      isHydrating: false,
+      isProfileLoading: false,
+      premiumTier: null,
+      premiumTierReady: true,
+      hasResolvedPremium: true,
+      premiumResolutionError: false,
+      effectiveClientType: "ORG",
+      effectiveRole: "BIDHUMAS",
+    } as any);
+
+    render(<StatusConsumer onStatus={spy} />);
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("standard"));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/premium/anev"));
+  });
 });

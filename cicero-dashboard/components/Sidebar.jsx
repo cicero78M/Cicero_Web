@@ -75,7 +75,7 @@ export default function Sidebar() {
     normalizedClientId === "ditbinmas" && normalizedEffectiveRole === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
-  const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier);
+  const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
   const anevPolresPath = "/anev/polres";
 
   const menu = [

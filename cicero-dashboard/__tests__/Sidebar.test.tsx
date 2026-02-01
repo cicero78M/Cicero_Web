@@ -25,9 +25,16 @@ jest.mock("@/components/ui/sheet", () => ({
 }));
 
 // Mock premium utils
-jest.mock("@/utils/premium", () => ({
-  isPremiumTierAllowedForAnev: jest.fn(() => false),
-}));
+jest.mock("@/utils/premium", () => {
+  const actual = jest.requireActual("@/utils/premium");
+  return {
+    ...actual,
+    isPremiumTierAllowedForAnev: jest.fn((tier, clientType, role) => {
+      // Use actual implementation
+      return actual.isPremiumTierAllowedForAnev(tier, clientType, role);
+    }),
+  };
+});
 
 describe("Sidebar", () => {
   const createAuthValue = (overrides: any = {}) => ({
@@ -172,6 +179,23 @@ describe("Sidebar", () => {
       );
 
       expect(screen.queryByText("Premium")).not.toBeInTheDocument();
+    });
+
+    it("shows Anev Polres without Premium label for Org Operator", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "OPERATOR",
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // Should show "Anev Polres" without "(Premium)" label
+      expect(screen.getByText("Anev Polres")).toBeInTheDocument();
+      expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
     });
 
     it("does not show Instagram Post Analysis for non-Operator Org clients", () => {

@@ -34,7 +34,17 @@ export function formatPremiumTierLabel(tier?: string | null) {
 export const ALLOWED_PREMIUM_ANEV_TIERS = ["tier1", "tier2"] as const;
 export const ALLOWED_ENGAGEMENT_DATE_TIERS = ["tier1", "tier2"] as const;
 
-export function isPremiumTierAllowedForAnev(tier?: string | null) {
+export function isOrgOperator(effectiveClientType?: string | null, effectiveRole?: string | null) {
+  const normalizedClientType = effectiveClientType?.toLowerCase();
+  const normalizedRole = effectiveRole?.toLowerCase();
+  return normalizedClientType === "org" && normalizedRole === "operator";
+}
+
+export function isPremiumTierAllowedForAnev(tier?: string | null, effectiveClientType?: string | null, effectiveRole?: string | null) {
+  if (isOrgOperator(effectiveClientType, effectiveRole)) {
+    return true;
+  }
+
   const normalized = normalizePremiumTierKey(tier);
 
   return ALLOWED_PREMIUM_ANEV_TIERS.some((allowedTier) => normalized === allowedTier);

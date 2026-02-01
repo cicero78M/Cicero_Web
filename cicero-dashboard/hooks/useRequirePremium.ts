@@ -23,6 +23,8 @@ export default function useRequirePremium({
     premiumTierReady,
     hasResolvedPremium,
     premiumResolutionError,
+    effectiveClientType,
+    effectiveRole,
   } = useAuth();
 
   const status = useMemo<PremiumGuardStatus>(() => {
@@ -33,7 +35,7 @@ export default function useRequirePremium({
     if (isHydrating || isProfileLoading || !readyToGuard) return "loading";
     if (premiumResolutionError) return "error";
 
-    const allowed = isPremiumTierAllowedForAnev(premiumTier);
+    const allowed = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
     return allowed ? "premium" : "standard";
   }, [
     hasResolvedPremium,
@@ -42,6 +44,8 @@ export default function useRequirePremium({
     premiumResolutionError,
     premiumTier,
     premiumTierReady,
+    effectiveClientType,
+    effectiveRole,
   ]);
 
   useEffect(() => {
