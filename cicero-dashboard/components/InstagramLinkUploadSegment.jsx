@@ -13,12 +13,10 @@ import { showToast } from "@/utils/showToast";
  * directly from the Amplifikasi Khusus Insight page.
  */
 export default function InstagramLinkUploadSegment() {
-  const { token, profile, clientId } = useAuth();
+  const { token, userId, clientId } = useAuth();
   const [instagramLink, setInstagramLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const userId = profile?.user_id || profile?.userId || profile?.id || profile?.nrp || "";
 
   /**
    * Extract Instagram shortcode from URL
