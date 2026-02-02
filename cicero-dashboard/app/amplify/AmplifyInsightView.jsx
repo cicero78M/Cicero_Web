@@ -308,7 +308,10 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     },
   ];
 
-  const premiumCta = isOrgClient
+  const isOrgOperator = String(effectiveClientType || "").toUpperCase() === "ORG" && 
+                        String(effectiveRole || "").toUpperCase() === "OPERATOR";
+
+  const premiumCta = isOrgClient && !isOrgOperator
     ? {
         label: "Premium CICERO",
         description: "Aktifkan rekap otomatis & reminder WA Bot amplifikasi.",

@@ -22,7 +22,7 @@ import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
 
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const { premiumTier } = useAuth();
+  const { premiumTier, effectiveRole, effectiveClientType } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -35,7 +35,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
   }, [initialTab]);
 
-  const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier);
+  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
+  const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const premiumViewOptions = [
     { value: "today", label: "Harian (hari ini)", periode: "harian" },
     { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
@@ -259,7 +260,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     canSelectScope,
   };
 
-  const premiumCta = isOrgClient
+  const premiumCta = isOrgClient && !isOrgOperator
     ? {
         label: "Premium CICERO",
         description: "Dapatkan rekap otomatis & notifikasi WA Bot komentar.",
