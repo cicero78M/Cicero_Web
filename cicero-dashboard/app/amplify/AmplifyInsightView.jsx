@@ -308,8 +308,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     },
   ];
 
-  const isOrgOperator = String(effectiveClientType || "").toUpperCase() === "ORG" && 
-                        String(effectiveRole || "").toUpperCase() === "OPERATOR";
+  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
 
   const premiumCta = isOrgClient && !isOrgOperator
     ? {
