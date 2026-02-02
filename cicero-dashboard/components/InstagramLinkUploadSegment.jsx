@@ -140,7 +140,7 @@ export default function InstagramLinkUploadSegment() {
           </label>
           <input
             id="instagram-link"
-            type="url"
+            type="text"
             value={instagramLink}
             onChange={(e) => setInstagramLink(e.target.value)}
             placeholder="https://www.instagram.com/p/ABC123xyz/"
