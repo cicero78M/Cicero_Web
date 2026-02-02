@@ -117,6 +117,7 @@ export default function RekapAmplifikasi({ users = [] }) {
           <tbody>
             {currentRows.map((u, i) => {
               const sudahPost = Number(u.jumlah_link) > 0;
+              const instagramLink = u.instagram_link || u.instagramLink || u.link_instagram;
               return (
                 <tr
                   key={u.user_id}
@@ -152,16 +153,16 @@ export default function RekapAmplifikasi({ users = [] }) {
                   </td>
                   <td className="py-1 px-2 text-center font-bold">{u.jumlah_link}</td>
                   <td className="py-1 px-2">
-                    {u.instagram_link || u.instagramLink || u.link_instagram ? (
+                    {instagramLink ? (
                       <a
-                        href={u.instagram_link || u.instagramLink || u.link_instagram}
+                        href={instagramLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-medium break-all"
                       >
-                        {(u.instagram_link || u.instagramLink || u.link_instagram).length > 40
-                          ? `${(u.instagram_link || u.instagramLink || u.link_instagram).substring(0, 40)}...`
-                          : u.instagram_link || u.instagramLink || u.link_instagram}
+                        {instagramLink.length > 40
+                          ? `${instagramLink.substring(0, 40)}...`
+                          : instagramLink}
                       </a>
                     ) : (
                       <span className="text-gray-400 text-xs italic">Belum ada link</span>
