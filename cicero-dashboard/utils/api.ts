@@ -3689,3 +3689,85 @@ export async function updateUserViaClaim(
   }
   return res.json();
 }
+
+
+/**
+ * Upload special tasks data file (CSV, Excel, or JSON)
+ * 
+ * Expected backend endpoint: POST /api/tasks/special/upload or POST /api/amplify/upload-khusus
+ * 
+ * The backend should accept multipart/form-data with:
+ * - file: The uploaded file (CSV, Excel, or JSON)
+ * - client_id: The client identifier
+ * 
+ * Expected file formats:
+ * - CSV/Excel columns: judul, deskripsi, link_konten, tanggal_mulai, tanggal_selesai
+ * - JSON: Array of objects with: title, description, content_link, start_date, end_date
+ * 
+ * @param token - Authentication token
+ * @param clientId - Client identifier
+ * @param file - File to upload
+ * @returns Promise<void>
+ * @throws Error if upload fails
+ */
+export async function uploadTugasKhusus(
+  token: string,
+  clientId: string,
+  file: File,
+): Promise<void> {
+  if (!token) {
+    throw new Error("Token autentikasi diperlukan untuk upload tugas khusus.");
+  }
+  if (!clientId) {
+    throw new Error("Client ID diperlukan untuk upload tugas khusus.");
+  }
+  if (!file) {
+    throw new Error("File wajib diisi.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("client_id", clientId);
+
+  // Try both potential endpoints - the backend team should implement one of these
+  const endpoints = [
+    "/api/tasks/special/upload",
+    "/api/amplify/upload-khusus",
+  ];
+
+  let lastError: Error | null = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetchWithAuth(buildApiUrl(endpoint), token, {
+        method: "POST",
+        body: formData,
+        // Note: Don't set Content-Type header for FormData - browser will set it with boundary
+      });
+
+      if (res.ok) {
+        return; // Success
+      }
+
+      const errorText = await res.text();
+      lastError = new Error(errorText || `Upload gagal (status ${res.status})`);
+    } catch (error: any) {
+      // If this is a 404, try the next endpoint
+      if (error?.status === 404 || error?.message?.includes("404")) {
+        continue;
+      }
+      // For other errors, throw immediately
+      throw error;
+    }
+  }
+
+  // If we get here, all endpoints failed
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error(
+    "Endpoint upload tugas khusus belum tersedia di backend. " +
+    "Backend perlu mengimplementasikan POST /api/tasks/special/upload atau POST /api/amplify/upload-khusus"
+  );
+}

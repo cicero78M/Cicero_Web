@@ -15,9 +15,10 @@ import InsightLayout from "@/components/InsightLayout";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
-import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
+import { AMPLIFY_KHUSUS_TABS } from "@/components/insight/tabs";
 import Loader from "@/components/Loader";
 import RekapAmplifikasi from "@/components/RekapAmplifikasi";
+import UploadTugasKhususForm from "@/components/UploadTugasKhususForm";
 import useAuth from "@/hooks/useAuth";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -50,7 +51,7 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
   } = useAuth();
   const isOrgClient = String(effectiveClientType || "").toUpperCase() === "ORG";
   const [activeTab, setActiveTab] = useState(
-    initialTab === "rekap" ? "rekap" : "insight",
+    initialTab === "rekap" ? "rekap" : initialTab === "upload" ? "upload" : "insight",
   );
   const rekapSectionRef = useRef(null);
   const [chartData, setChartData] = useState([]);
@@ -371,11 +372,20 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     </Link>
   );
 
+  const handleUploadSuccess = () => {
+    // Refresh data after successful upload
+    showToast("Data akan direfresh...", "info");
+    // Trigger data refresh by switching back to insight tab
+    setTimeout(() => {
+      setActiveTab("insight");
+    }, 1000);
+  };
+
   return (
     <InsightLayout
       title="Amplifikasi Tugas Khusus Insight"
       description="Pantau progres amplifikasi tugas khusus dengan ringkasan cepat dan visualisasi per divisi."
-      tabs={DEFAULT_INSIGHT_TABS}
+      tabs={AMPLIFY_KHUSUS_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
       heroContent={null}
@@ -476,6 +486,16 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
             </div>
           )}
         </EngagementInsightMobileScaffold>
+      )}
+
+      {activeTab === "upload" && (
+        <div className="py-8">
+          <UploadTugasKhususForm
+            token={token}
+            clientId={clientId}
+            onUploadSuccess={handleUploadSuccess}
+          />
+        </div>
       )}
 
       <DetailRekapSection

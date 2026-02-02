@@ -1,10 +1,10 @@
 # Amplifikasi Tugas Khusus
 
-Dokumen ini menjelaskan fitur baru amplifikasi tugas khusus yang ditambahkan pada halaman Diseminasi Insight.
+Dokumen ini menjelaskan fitur amplifikasi tugas khusus yang ditambahkan pada halaman Diseminasi Insight, termasuk fitur upload tugas khusus yang baru.
 
 ## Ringkasan
 
-Fitur ini menambahkan halaman baru untuk melihat data amplifikasi tugas khusus, mengikuti standar halaman amplifikasi yang sudah ada.
+Fitur ini menambahkan halaman baru untuk melihat data amplifikasi tugas khusus, mengikuti standar halaman amplifikasi yang sudah ada. **Update terbaru** menambahkan tab "Upload Tugas Khusus" untuk mengunggah data tugas dalam format CSV, Excel, atau JSON.
 
 ## Halaman Baru
 
@@ -15,6 +15,7 @@ Halaman ini menampilkan insight amplifikasi untuk tugas khusus dengan fitur:
 - Filter periode (harian, mingguan, bulanan, custom range)
 - Quick insights untuk kepatuhan amplifikasi
 - Tombol salin rekap untuk berbagi via WhatsApp
+- **[NEW]** Tab Upload untuk mengunggah data tugas khusus
 
 ### 2. `/amplify/khusus/rekap` - Halaman Rekap Amplifikasi Tugas Khusus
 Halaman ini menampilkan tabel rekap detail dengan:
@@ -88,8 +89,53 @@ Response format yang sama dengan endpoint regular:
 4. Pilih periode yang diinginkan menggunakan selector di atas
 5. Lihat insight dan visualisasi amplifikasi tugas khusus
 6. Klik tab "Rekap Detail" untuk melihat tabel detail per user
-7. Gunakan tombol "Salin Rekap" untuk menyalin ringkasan ke clipboard
-8. Untuk kembali ke amplifikasi rutin, klik tombol "Tugas Rutin"
+7. **[NEW]** Klik tab "Upload Tugas Khusus" untuk mengunggah data tugas baru
+8. Gunakan tombol "Salin Rekap" untuk menyalin ringkasan ke clipboard
+9. Untuk kembali ke amplifikasi rutin, klik tombol "Tugas Rutin"
+
+## Upload Tugas Khusus (New Feature)
+
+### Overview
+Tab "Upload Tugas Khusus" memungkinkan pengguna untuk mengunggah data tugas khusus secara bulk menggunakan file CSV, Excel, atau JSON.
+
+### Supported File Formats
+1. **CSV** - Comma-separated values
+2. **Excel** - .xlsx atau .xls
+3. **JSON** - JavaScript Object Notation
+
+### Required Fields
+- `judul` / `title` - Judul tugas khusus
+- `deskripsi` / `description` - Deskripsi tugas (optional)
+- `link_konten` / `content_link` - URL konten untuk diamplifikasi
+- `tanggal_mulai` / `start_date` - Tanggal mulai (format: YYYY-MM-DD)
+- `tanggal_selesai` / `end_date` - Tanggal selesai (format: YYYY-MM-DD)
+
+### File Example (CSV)
+```csv
+judul,deskripsi,link_konten,tanggal_mulai,tanggal_selesai
+Kampanye HUT RI,Amplifikasi konten HUT RI ke-78,https://instagram.com/p/abc123,2024-08-01,2024-08-17
+Sosialisasi Vaksin,Kampanye awareness vaksinasi,https://instagram.com/p/def456,2024-09-01,2024-09-30
+```
+
+### Upload Process
+1. Click the upload area or drag & drop file
+2. File will be validated (type and size)
+3. Review file details
+4. Click "Upload File" button
+5. Wait for upload to complete
+6. Data will be automatically refreshed
+
+### Validations
+- Maximum file size: 10MB
+- Valid URL format required for content links
+- Date format must be YYYY-MM-DD
+- All required fields must be filled
+
+### Backend Implementation
+Backend harus mengimplementasikan endpoint upload. Lihat dokumentasi lengkap di:
+- [Upload Tugas Khusus Implementation Guide](./upload-tugas-khusus.md)
+
+**Expected Endpoint:** `POST /api/tasks/special/upload` atau `POST /api/amplify/upload-khusus`
 
 ## Perbedaan dengan Amplifikasi Rutin
 
