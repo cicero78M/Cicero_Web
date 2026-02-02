@@ -256,7 +256,7 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
   const summaryCards = [
     {
       key: "total-link",
-      label: "Total Link Amplifikasi Khusus",
+      label: "Total Link Tugas Khusus",
       value: formatNumber(totalLink),
       color: "indigo",
       icon: <LinkIcon className="h-6 w-6" />,
@@ -310,9 +310,7 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     },
   ];
 
-  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
-
-  const premiumCta = isOrgClient && !isOrgOperator
+  const premiumCta = isOrgClient && effectiveRole !== "OPERATOR"
     ? {
         label: "Premium CICERO",
         description: "Aktifkan rekap otomatis & reminder WA Bot amplifikasi.",

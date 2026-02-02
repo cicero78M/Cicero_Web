@@ -30,7 +30,7 @@ export function buildAmplifyRekap(
     : "-";
 
   const title = titlePrefix 
-    ? `${titlePrefix}Rekap Amplifikasi Link Insight`
+    ? `${titlePrefix} Rekap Amplifikasi Link Insight`
     : "Rekap Amplifikasi Link Insight";
   const headerLines = [title];
   if (clientName) {
