@@ -1,7 +1,10 @@
 "use client";
 import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
-import { Link as LinkIcon, Users, Check, X } from "lucide-react";
+import { Link as LinkIcon, Users, Check, X, Edit2, Save, XCircle } from "lucide-react";
+import useAuth from "@/hooks/useAuth";
+import { submitReposterReportLinks } from "@/utils/api";
+import { showToast } from "@/utils/showToast";
 
 function bersihkanSatfung(divisi = "") {
   return divisi.replace(/polsek\s*/i, "").replace(/^[0-9.\-\s]+/, "").trim();
@@ -11,6 +14,7 @@ const PAGE_SIZE = 25;
 const MAX_LINK_DISPLAY_LENGTH = 40;
 
 export default function RekapAmplifikasi({ users = [] }) {
+  const { token } = useAuth();
   const totalUser = users.length;
   const totalSudahPost = users.filter((u) => Number(u.jumlah_link) > 0).length;
   const totalBelumPost = totalUser - totalSudahPost;
@@ -23,6 +27,12 @@ export default function RekapAmplifikasi({ users = [] }) {
     () => users.some((u) => u.nama_client || u.client_name || u.client),
     [users],
   );
+
+  // State for inline editing
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editedLink, setEditedLink] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updatedLinks, setUpdatedLinks] = useState({});
 
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
@@ -57,6 +67,106 @@ export default function RekapAmplifikasi({ users = [] }) {
       setPage(totalPages || 1);
     }
   }, [page, totalPages, setPage]);
+
+  // Helper functions for inline editing
+  const handleEditClick = (user) => {
+    setEditingUserId(user.user_id);
+    const currentLink = user.instagram_link || user.instagramLink || user.link_instagram || "";
+    setEditedLink(currentLink);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+    setEditedLink("");
+  };
+
+  const extractInstagramShortcode = (url) => {
+    const trimmed = url.trim();
+    if (!trimmed) return "";
+    try {
+      const urlObj = new URL(trimmed);
+      const match = urlObj.pathname.match(/\/(p|reel|reels|tv)\/([^/?#]+)/i);
+      return match?.[2] ?? "";
+    } catch {
+      return "";
+    }
+  };
+
+  const validateInstagramLink = (url) => {
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    if (!trimmed.startsWith("http")) return false;
+    try {
+      const urlObj = new URL(trimmed);
+      const host = urlObj.hostname.toLowerCase();
+      // Ensure the host is exactly instagram.com or a subdomain of instagram.com
+      // or one of the official Instagram short domains
+      return (
+        host === "instagram.com" ||
+        host.endsWith(".instagram.com") ||
+        host === "instagr.am" ||
+        host.endsWith(".instagr.am") ||
+        host === "ig.me" ||
+        host.endsWith(".ig.me")
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSaveLink = async (user) => {
+    if (!token) {
+      showToast("Token tidak tersedia. Silakan login ulang.", "error");
+      return;
+    }
+
+    const trimmedLink = editedLink.trim();
+    if (!trimmedLink) {
+      showToast("Link Instagram tidak boleh kosong.", "error");
+      return;
+    }
+
+    if (!validateInstagramLink(trimmedLink)) {
+      showToast("Format link Instagram tidak valid. Pastikan link berasal dari instagram.com", "error");
+      return;
+    }
+
+    const shortcode = extractInstagramShortcode(trimmedLink);
+    if (!shortcode) {
+      showToast("Tidak dapat mengekstrak shortcode dari link Instagram.", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitReposterReportLinks(
+        token,
+        {
+          shortcode: shortcode,
+          userId: user.user_id,
+          clientId: user.client_id || user.clientId || null,
+          instagramLink: trimmedLink,
+          facebookLink: "",
+          twitterLink: "",
+        },
+        { isSpecial: true }
+      );
+
+      // Update the link in local state without mutating props
+      setUpdatedLinks(prev => ({
+        ...prev,
+        [user.user_id]: trimmedLink
+      }));
+
+      showToast("Link Instagram berhasil disimpan.", "success");
+      setEditingUserId(null);
+      setEditedLink("");
+    } catch (error) {
+      showToast(error.message || "Gagal menyimpan link Instagram.", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 mt-8">
@@ -118,7 +228,8 @@ export default function RekapAmplifikasi({ users = [] }) {
           <tbody>
             {currentRows.map((u, i) => {
               const sudahPost = Number(u.jumlah_link) > 0;
-              const instagramLink = u.instagram_link || u.instagramLink || u.link_instagram;
+              // Use updated link from state if available, otherwise use original
+              const instagramLink = updatedLinks[u.user_id] || u.instagram_link || u.instagramLink || u.link_instagram;
               return (
                 <tr
                   key={u.user_id}
@@ -154,19 +265,57 @@ export default function RekapAmplifikasi({ users = [] }) {
                   </td>
                   <td className="py-1 px-2 text-center font-bold">{u.jumlah_link}</td>
                   <td className="py-1 px-2">
-                    {instagramLink ? (
-                      <a
-                        href={instagramLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-medium break-all"
-                      >
-                        {instagramLink.length > MAX_LINK_DISPLAY_LENGTH
-                          ? `${instagramLink.substring(0, MAX_LINK_DISPLAY_LENGTH)}...`
-                          : instagramLink}
-                      </a>
+                    {editingUserId === u.user_id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="url"
+                          value={editedLink}
+                          onChange={(e) => setEditedLink(e.target.value)}
+                          placeholder="https://instagram.com/p/..."
+                          className="flex-1 px-2 py-1 text-xs border border-indigo-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                          disabled={isSubmitting}
+                        />
+                        <button
+                          onClick={() => handleSaveLink(u)}
+                          disabled={isSubmitting}
+                          className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                          title="Simpan"
+                        >
+                          <Save className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          disabled={isSubmitting}
+                          className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                          title="Batal"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
                     ) : (
-                      <span className="text-gray-400 text-xs italic">Belum ada link</span>
+                      <div className="flex items-center gap-2">
+                        {instagramLink ? (
+                          <a
+                            href={instagramLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-medium break-all flex-1"
+                          >
+                            {instagramLink.length > MAX_LINK_DISPLAY_LENGTH
+                              ? `${instagramLink.substring(0, MAX_LINK_DISPLAY_LENGTH)}...`
+                              : instagramLink}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs italic flex-1">Belum ada link</span>
+                        )}
+                        <button
+                          onClick={() => handleEditClick(u)}
+                          className="p-1 text-indigo-600 hover:text-indigo-800"
+                          title="Edit link Instagram"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
