@@ -2888,7 +2888,7 @@ export async function getRekapAmplify(
     
     const message = parsed && typeof parsed === "object"
       ? extractResponseMessage(parsed, "")
-      : await res.text();
+      : await res.clone().text();
     
     // Special handling for 403 errors
     if (res.status === 403) {
@@ -2939,7 +2939,7 @@ export async function getRekapAmplifyKhusus(
     
     const message = parsed && typeof parsed === "object"
       ? extractResponseMessage(parsed, "")
-      : await res.text();
+      : await res.clone().text();
     
     // Special handling for 403 errors
     if (res.status === 403) {

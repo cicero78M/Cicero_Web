@@ -204,7 +204,8 @@ test("getRekapAmplify handles 403 errors with backend message", async () => {
     status: 403,
     clone: function() {
       return {
-        json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" })
+        json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
+        text: () => Promise.resolve("Anda tidak memiliki akses ke data ini")
       };
     },
     json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
@@ -222,7 +223,8 @@ test("getRekapAmplify handles 403 errors with fallback message", async () => {
     status: 403,
     clone: function() {
       return {
-        json: () => Promise.resolve({})
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve("")
       };
     },
     json: () => Promise.resolve({}),
@@ -240,7 +242,8 @@ test("getRekapAmplifyKhusus handles 403 errors with backend message", async () =
     status: 403,
     clone: function() {
       return {
-        json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" })
+        json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
+        text: () => Promise.resolve("Anda tidak memiliki akses ke data ini")
       };
     },
     json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
@@ -258,7 +261,8 @@ test("getRekapAmplifyKhusus handles 403 errors with fallback message", async () 
     status: 403,
     clone: function() {
       return {
-        json: () => Promise.resolve({})
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve("")
       };
     },
     json: () => Promise.resolve({}),
