@@ -7,7 +7,7 @@ import {
   Link as LinkIcon,
   User,
   X,
-  Star,
+  Home,
 } from "lucide-react";
 
 import ChartHorizontal from "@/components/ChartHorizontal";
@@ -21,7 +21,7 @@ import RekapAmplifikasi from "@/components/RekapAmplifikasi";
 import useAuth from "@/hooks/useAuth";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { getClientNames, getClientProfile, getRekapAmplify } from "@/utils/api";
+import { getClientNames, getClientProfile, getRekapAmplifyKhusus } from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
 import { buildAmplifyRekap } from "@/utils/amplifyRekap";
@@ -37,7 +37,7 @@ const normalizeRolePayload = (value) =>
 const normalizeScopePayload = (value) =>
   String(value || "").trim().toUpperCase() || undefined;
 
-export default function AmplifyInsightView({ initialTab = "insight" }) {
+export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
   useRequireAuth();
   const {
     token,
@@ -115,7 +115,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
 
     async function fetchData() {
       try {
-        const rekapRes = await getRekapAmplify(
+        const rekapRes = await getRekapAmplifyKhusus(
           token,
           clientId,
           periode,
@@ -256,7 +256,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
   const summaryCards = [
     {
       key: "total-link",
-      label: "Total Link Amplifikasi",
+      label: "Total Link Tugas Khusus",
       value: formatNumber(totalLink),
       color: "indigo",
       icon: <LinkIcon className="h-6 w-6" />,
@@ -288,31 +288,29 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
 
   const quickInsights = [
     {
-      title: "Kepatuhan amplifikasi",
+      title: "Kepatuhan amplifikasi khusus",
       detail:
         completionRate !== undefined
-          ? `${Math.round(completionRate)}% akun sudah membagikan link pada periode ini.`
-          : "Menunggu data kepatuhan amplifikasi.",
+          ? `${Math.round(completionRate)}% akun sudah membagikan link tugas khusus pada periode ini.`
+          : "Menunggu data kepatuhan amplifikasi khusus.",
     },
     {
       title: "Prioritas tindak lanjut",
       detail:
         totalBelumPost > 0
-          ? `${formatNumber(totalBelumPost)} akun belum melakukan amplifikasi dan perlu follow up.`
-          : "Seluruh akun sudah melakukan amplifikasi.",
+          ? `${formatNumber(totalBelumPost)} akun belum melakukan amplifikasi tugas khusus dan perlu follow up.`
+          : "Seluruh akun sudah melakukan amplifikasi tugas khusus.",
     },
     {
       title: "Rata-rata distribusi",
       detail:
         totalLink > 0
-          ? `Rata-rata ${averageLink.toFixed(1)} link dibagikan per user pada periode ini.`
-          : "Belum ada link yang terdistribusi di periode ini.",
+          ? `Rata-rata ${averageLink.toFixed(1)} link tugas khusus dibagikan per user pada periode ini.`
+          : "Belum ada link tugas khusus yang terdistribusi di periode ini.",
     },
   ];
 
-  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
-
-  const premiumCta = isOrgClient && !isOrgOperator
+  const premiumCta = isOrgClient && effectiveRole !== "OPERATOR"
     ? {
         label: "Premium CICERO",
         description: "Aktifkan rekap otomatis & reminder WA Bot amplifikasi.",
@@ -334,6 +332,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
       clientName,
       periodeLabel: reportPeriodeLabel,
       viewLabel,
+      titlePrefix: "Tugas Khusus - ",
     });
 
     if (navigator?.clipboard?.writeText) {
@@ -350,7 +349,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     }
 
     if (typeof window !== "undefined") {
-      window.prompt("Salin rekap amplifikasi secara manual:", message);
+      window.prompt("Salin rekap amplifikasi khusus secara manual:", message);
       showToast(
         "Clipboard tidak tersedia. Silakan salin rekap secara manual.",
         "info",
@@ -364,18 +363,18 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
 
   const headerAction = (
     <Link
-      href="/amplify/khusus"
-      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(251,146,60,0.3)] transition hover:shadow-[0_8px_24px_rgba(251,146,60,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+      href="/amplify"
+      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-400 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(56,189,248,0.3)] transition hover:shadow-[0_8px_24px_rgba(56,189,248,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
     >
-      <Star className="h-4 w-4" />
-      Tugas Khusus
+      <Home className="h-4 w-4" />
+      Tugas Rutin
     </Link>
   );
 
   return (
     <InsightLayout
-      title="Amplifikasi Link Insight"
-      description="Pantau progres amplifikasi link harian dengan ringkasan cepat dan visualisasi per divisi."
+      title="Amplifikasi Tugas Khusus Insight"
+      description="Pantau progres amplifikasi tugas khusus dengan ringkasan cepat dan visualisasi per divisi."
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
@@ -408,9 +407,9 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
               labelSudah="User Sudah Post"
               labelKurang="User Kurang Post"
               labelBelum="User Belum Post"
-              labelTotal="Total Link Amplifikasi"
+              labelTotal="Total Link Amplifikasi Khusus"
               sortBy="percentage"
-              narrative="Ringkasan ini memperlihatkan kepatuhan amplifikasi link antar polres jajaran."
+              narrative="Ringkasan ini memperlihatkan kepatuhan amplifikasi tugas khusus antar polres jajaran."
             />
           ) : (
             <div className="flex flex-col gap-6">
@@ -422,8 +421,8 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
                 labelSudah="User Sudah Post"
                 labelKurang="User Kurang Post"
                 labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Perbandingan jumlah link dari user di divisi BAG."
+                labelTotal="Total Link Amplifikasi Khusus"
+                narrative="Perbandingan jumlah link tugas khusus dari user di divisi BAG."
                 sortBy="percentage"
               />
               <ChartBox
@@ -434,8 +433,8 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
                 labelSudah="User Sudah Post"
                 labelKurang="User Kurang Post"
                 labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Capaian amplifikasi link untuk divisi SAT."
+                labelTotal="Total Link Amplifikasi Khusus"
+                narrative="Capaian amplifikasi tugas khusus untuk divisi SAT."
                 sortBy="percentage"
               />
               <ChartBox
@@ -446,8 +445,8 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
                 labelSudah="User Sudah Post"
                 labelKurang="User Kurang Post"
                 labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Distribusi link amplifikasi di divisi SI & SPKT."
+                labelTotal="Total Link Amplifikasi Khusus"
+                narrative="Distribusi link amplifikasi tugas khusus di divisi SI & SPKT."
                 sortBy="percentage"
               />
               <ChartBox
@@ -458,8 +457,8 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
                 labelSudah="User Sudah Post"
                 labelKurang="User Kurang Post"
                 labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Rangkuman divisi lainnya untuk distribusi link."
+                labelTotal="Total Link Amplifikasi Khusus"
+                narrative="Rangkuman divisi lainnya untuk distribusi link tugas khusus."
                 sortBy="percentage"
               />
               <ChartHorizontal
@@ -470,7 +469,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
                 labelSudah="User Sudah Post"
                 labelKurang="User Kurang Post"
                 labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
+                labelTotal="Total Link Amplifikasi Khusus"
                 labelTotalUser="Jumlah User"
                 sortBy="percentage"
               />
@@ -481,8 +480,8 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
 
       <DetailRekapSection
         sectionRef={rekapSectionRef}
-        title="Rekapitulasi Amplifikasi Link"
-        description="Rekap detail siap dipantau tanpa berpindah halaman."
+        title="Rekapitulasi Amplifikasi Tugas Khusus"
+        description="Rekap detail tugas khusus siap dipantau tanpa berpindah halaman."
         showContent={activeTab === "rekap"}
       >
         <RekapAmplifikasi users={chartData} />

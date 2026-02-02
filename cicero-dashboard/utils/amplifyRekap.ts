@@ -9,6 +9,7 @@ type AmplifyRekapOptions = {
   clientName?: string;
   periodeLabel?: string;
   viewLabel?: string;
+  titlePrefix?: string;
 };
 
 const numberFormatter = new Intl.NumberFormat("id-ID");
@@ -18,7 +19,7 @@ const formatNumber = (value?: number) =>
 
 export function buildAmplifyRekap(
   summary: AmplifyRekapSummary,
-  { clientName, periodeLabel, viewLabel }: AmplifyRekapOptions = {},
+  { clientName, periodeLabel, viewLabel, titlePrefix }: AmplifyRekapOptions = {},
 ) {
   const totalUser = Number(summary?.totalUser) || 0;
   const totalSudahPost = Number(summary?.totalSudahPost) || 0;
@@ -28,7 +29,10 @@ export function buildAmplifyRekap(
     ? `${Math.round((totalSudahPost / totalUser) * 100)}%`
     : "-";
 
-  const headerLines = ["Rekap Amplifikasi Link Insight"];
+  const title = titlePrefix 
+    ? `${titlePrefix} Rekap Amplifikasi Link Insight`
+    : "Rekap Amplifikasi Link Insight";
+  const headerLines = [title];
   if (clientName) {
     headerLines.push(`Client: ${clientName}`);
   }
