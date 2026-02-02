@@ -1,6 +1,7 @@
 import {
   getDashboardStats,
   getRekapAmplify,
+  getRekapAmplifyKhusus,
   getRekapLikesIG,
   getRekapKomentarTiktok,
   getTiktokPosts,
@@ -195,4 +196,80 @@ test("updateUserViaClaim throws backend validation messages", async () => {
   await expect(
     updateUserViaClaim({ nrp: "1", email: "user@example.com", insta: "bad" }),
   ).rejects.toThrow("Link Instagram tidak valid");
+});
+
+test("getRekapAmplify handles 403 errors with backend message", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    status: 403,
+    clone: function() {
+      return {
+        json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
+        text: () => Promise.resolve("Anda tidak memiliki akses ke data ini")
+      };
+    },
+    json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
+    text: () => Promise.resolve("Anda tidak memiliki akses ke data ini"),
+  });
+
+  await expect(
+    getRekapAmplify("tok", "c1", "harian"),
+  ).rejects.toThrow("Anda tidak memiliki akses ke data ini");
+});
+
+test("getRekapAmplify handles 403 errors with fallback message", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    status: 403,
+    clone: function() {
+      return {
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve("")
+      };
+    },
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(""),
+  });
+
+  await expect(
+    getRekapAmplify("tok", "c1", "harian"),
+  ).rejects.toThrow("Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?");
+});
+
+test("getRekapAmplifyKhusus handles 403 errors with backend message", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    status: 403,
+    clone: function() {
+      return {
+        json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
+        text: () => Promise.resolve("Anda tidak memiliki akses ke data ini")
+      };
+    },
+    json: () => Promise.resolve({ message: "Anda tidak memiliki akses ke data ini" }),
+    text: () => Promise.resolve("Anda tidak memiliki akses ke data ini"),
+  });
+
+  await expect(
+    getRekapAmplifyKhusus("tok", "c1", "harian"),
+  ).rejects.toThrow("Anda tidak memiliki akses ke data ini");
+});
+
+test("getRekapAmplifyKhusus handles 403 errors with fallback message", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    status: 403,
+    clone: function() {
+      return {
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve("")
+      };
+    },
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(""),
+  });
+
+  await expect(
+    getRekapAmplifyKhusus("tok", "c1", "harian"),
+  ).rejects.toThrow("Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?");
 });

@@ -2877,7 +2877,30 @@ export async function getRekapAmplify(
   const url = `${buildApiUrl("/api/amplify/rekap")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal: options?.signal });
-  if (!res.ok) throw new Error("Failed to fetch rekap amplifikasi");
+  
+  if (!res.ok) {
+    let parsed: any = null;
+    try {
+      parsed = await res.clone().json();
+    } catch {
+      parsed = null;
+    }
+    
+    const message = parsed && typeof parsed === "object"
+      ? extractResponseMessage(parsed, "")
+      : await res.clone().text();
+    
+    // Special handling for 403 errors
+    if (res.status === 403) {
+      throw new Error(
+        message || 
+        "Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?"
+      );
+    }
+    
+    throw new Error(message || "Failed to fetch rekap amplifikasi");
+  }
+  
   return res.json();
 }
 
@@ -2905,7 +2928,30 @@ export async function getRekapAmplifyKhusus(
   const url = `${buildApiUrl("/api/amplify/rekap-khusus")}?${params.toString()}`;
 
   const res = await fetchWithAuth(url, token, { signal: options?.signal });
-  if (!res.ok) throw new Error("Failed to fetch rekap amplifikasi khusus");
+  
+  if (!res.ok) {
+    let parsed: any = null;
+    try {
+      parsed = await res.clone().json();
+    } catch {
+      parsed = null;
+    }
+    
+    const message = parsed && typeof parsed === "object"
+      ? extractResponseMessage(parsed, "")
+      : await res.clone().text();
+    
+    // Special handling for 403 errors
+    if (res.status === 403) {
+      throw new Error(
+        message || 
+        "Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?"
+      );
+    }
+    
+    throw new Error(message || "Failed to fetch rekap amplifikasi khusus");
+  }
+  
   return res.json();
 }
 
