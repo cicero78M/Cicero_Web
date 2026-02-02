@@ -32,6 +32,7 @@ export default function RekapAmplifikasi({ users = [] }) {
   const [editingUserId, setEditingUserId] = useState(null);
   const [editedLink, setEditedLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updatedLinks, setUpdatedLinks] = useState({});
 
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
@@ -134,22 +135,19 @@ export default function RekapAmplifikasi({ users = [] }) {
         {
           shortcode: shortcode,
           userId: user.user_id,
-          postId: undefined,
-          clientId: user.client_id || user.clientId,
+          clientId: user.client_id || user.clientId || null,
           instagramLink: trimmedLink,
           facebookLink: "",
           twitterLink: "",
-          tiktokLink: "",
-          youtubeLink: "",
         },
         { isSpecial: true }
       );
 
-      // Update the user's link in the local state
-      const userIndex = users.findIndex(u => u.user_id === user.user_id);
-      if (userIndex !== -1) {
-        users[userIndex].instagram_link = trimmedLink;
-      }
+      // Update the link in local state without mutating props
+      setUpdatedLinks(prev => ({
+        ...prev,
+        [user.user_id]: trimmedLink
+      }));
 
       showToast("Link Instagram berhasil disimpan.", "success");
       setEditingUserId(null);
@@ -221,7 +219,8 @@ export default function RekapAmplifikasi({ users = [] }) {
           <tbody>
             {currentRows.map((u, i) => {
               const sudahPost = Number(u.jumlah_link) > 0;
-              const instagramLink = u.instagram_link || u.instagramLink || u.link_instagram;
+              // Use updated link from state if available, otherwise use original
+              const instagramLink = updatedLinks[u.user_id] || u.instagram_link || u.instagramLink || u.link_instagram;
               return (
                 <tr
                   key={u.user_id}
