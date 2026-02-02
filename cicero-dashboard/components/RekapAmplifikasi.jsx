@@ -98,8 +98,17 @@ export default function RekapAmplifikasi({ users = [] }) {
     if (!trimmed.startsWith("http")) return false;
     try {
       const urlObj = new URL(trimmed);
-      const host = urlObj.host.toLowerCase();
-      return host.includes("instagram.com") || host.includes("instagr.am") || host.includes("ig.me");
+      const host = urlObj.hostname.toLowerCase();
+      // Ensure the host is exactly instagram.com or a subdomain of instagram.com
+      // or one of the official Instagram short domains
+      return (
+        host === "instagram.com" ||
+        host.endsWith(".instagram.com") ||
+        host === "instagr.am" ||
+        host.endsWith(".instagr.am") ||
+        host === "ig.me" ||
+        host.endsWith(".ig.me")
+      );
     } catch {
       return false;
     }
