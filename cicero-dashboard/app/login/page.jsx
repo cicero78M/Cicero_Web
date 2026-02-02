@@ -278,7 +278,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-10">
-        <div className="grid w-full max-w-6xl items-start gap-10 lg:grid-cols-[1.05fr_1fr]">
+        <div className="grid w-full max-w-7xl items-start gap-10 lg:grid-cols-[1.05fr_1fr]">
           <section className="relative flex h-full flex-col justify-between gap-10 rounded-[32px] border border-sky-200/60 bg-white/40 p-8 text-slate-700 backdrop-blur-xl">
             <div className="space-y-7">
               <motion.span

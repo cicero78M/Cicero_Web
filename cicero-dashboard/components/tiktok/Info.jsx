@@ -376,7 +376,7 @@ export default function TiktokInfoPage({ embedded = false, hideHeader = false })
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
-      <div className="w-full max-w-5xl flex flex-col gap-8">
+      <div className="w-full max-w-7xl flex flex-col gap-8">
         {content}
       </div>
     </div>

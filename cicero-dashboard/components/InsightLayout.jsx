@@ -15,7 +15,7 @@ export default function InsightLayout({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.3),_transparent_65%)]" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,_rgba(165,243,252,0.35),_transparent_70%)]" />
       <div className="relative flex min-h-screen items-start justify-center">
-        <div className="w-full max-w-6xl px-4 py-12 md:px-10">
+        <div className="w-full max-w-7xl px-4 py-12 md:px-10">
           <div className="flex flex-col gap-10">
             <div className="relative overflow-hidden rounded-3xl border border-sky-200/60 bg-white/70 p-6 shadow-[0_0_48px_rgba(96,165,250,0.25)] backdrop-blur">
               <div className="pointer-events-none absolute -top-10 left-8 h-32 w-32 rounded-full bg-sky-200/50 blur-3xl" />

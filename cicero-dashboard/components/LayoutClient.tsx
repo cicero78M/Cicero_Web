@@ -42,7 +42,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         <aside aria-label="Sidebar navigation" className="md:sticky md:top-16">
           <SidebarWrapper />
         </aside>
-        <main id="main-content" className="flex-1 p-4 md:p-8">
+        <main id="main-content" className="flex-1 p-2 md:p-4">
           {children}
         </main>
       </div>

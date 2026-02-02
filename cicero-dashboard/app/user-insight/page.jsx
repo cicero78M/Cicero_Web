@@ -362,7 +362,7 @@ export default function UserInsightPage() {
         </div>
         <div className="relative flex min-h-screen flex-col">
           <div className="flex-1">
-            <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-12">
+            <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-12">
               <div className="flex flex-col gap-10">
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                   <div>

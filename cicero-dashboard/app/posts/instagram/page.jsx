@@ -333,7 +333,7 @@ export default function InstagramPostAnalysisPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8">
-      <div className="w-full max-w-5xl flex flex-col gap-8">
+      <div className="w-full max-w-7xl flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-blue-700">
             Instagram Post Analysis
