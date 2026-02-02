@@ -2881,6 +2881,34 @@ export async function getRekapAmplify(
   return res.json();
 }
 
+export async function getRekapAmplifyKhusus(
+  token: string,
+  client_id: string,
+  periode: string = "harian",
+  tanggal?: string,
+  startDate?: string,
+  endDate?: string,
+  options?: {
+    role?: string;
+    scope?: string;
+    regional_id?: string;
+    signal?: AbortSignal;
+  },
+): Promise<any> {
+  const params = new URLSearchParams({ client_id, periode });
+  if (tanggal) params.append("tanggal", tanggal);
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
+  if (options?.role) params.append("role", options.role);
+  if (options?.scope) params.append("scope", options.scope);
+  if (options?.regional_id) params.append("regional_id", options.regional_id);
+  const url = `${buildApiUrl("/api/amplify/rekap-khusus")}?${params.toString()}`;
+
+  const res = await fetchWithAuth(url, token, { signal: options?.signal });
+  if (!res.ok) throw new Error("Failed to fetch rekap amplifikasi khusus");
+  return res.json();
+}
+
 type InstagramPostFetchOptions = {
   startDate?: string;
   endDate?: string;
