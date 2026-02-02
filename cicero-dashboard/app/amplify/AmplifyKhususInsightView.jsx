@@ -18,6 +18,7 @@ import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsi
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import Loader from "@/components/Loader";
 import RekapAmplifikasi from "@/components/RekapAmplifikasi";
+import InstagramLinkUploadSegment from "@/components/InstagramLinkUploadSegment";
 import useAuth from "@/hooks/useAuth";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -396,6 +397,11 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
           quickInsights={quickInsights}
           quickInsightTone="indigo"
         >
+          {/* Instagram Link Upload Segment */}
+          <div className="mb-6">
+            <InstagramLinkUploadSegment />
+          </div>
+
           {isDirectorate ? (
             <ChartBox
               title={directorateTitle}
