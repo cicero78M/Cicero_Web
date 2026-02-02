@@ -8,6 +8,7 @@ function bersihkanSatfung(divisi = "") {
 }
 
 const PAGE_SIZE = 25;
+const MAX_LINK_DISPLAY_LENGTH = 40;
 
 export default function RekapAmplifikasi({ users = [] }) {
   const totalUser = users.length;
@@ -160,8 +161,8 @@ export default function RekapAmplifikasi({ users = [] }) {
                         rel="noopener noreferrer"
                         className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-medium break-all"
                       >
-                        {instagramLink.length > 40
-                          ? `${instagramLink.substring(0, 40)}...`
+                        {instagramLink.length > MAX_LINK_DISPLAY_LENGTH
+                          ? `${instagramLink.substring(0, MAX_LINK_DISPLAY_LENGTH)}...`
                           : instagramLink}
                       </a>
                     ) : (
