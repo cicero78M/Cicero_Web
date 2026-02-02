@@ -111,6 +111,7 @@ export default function RekapAmplifikasi({ users = [] }) {
               <th className="py-2 px-2">Divisi/Satfung</th>
               <th className="py-2 px-2 text-center">Status</th>
               <th className="py-2 px-2 text-center">Jumlah Link</th>
+              <th className="py-2 px-2">Link Instagram</th>
             </tr>
           </thead>
           <tbody>
@@ -150,6 +151,22 @@ export default function RekapAmplifikasi({ users = [] }) {
                     )}
                   </td>
                   <td className="py-1 px-2 text-center font-bold">{u.jumlah_link}</td>
+                  <td className="py-1 px-2">
+                    {u.instagram_link || u.instagramLink || u.link_instagram ? (
+                      <a
+                        href={u.instagram_link || u.instagramLink || u.link_instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-medium break-all"
+                      >
+                        {(u.instagram_link || u.instagramLink || u.link_instagram).length > 40
+                          ? `${(u.instagram_link || u.instagramLink || u.link_instagram).substring(0, 40)}...`
+                          : u.instagram_link || u.instagramLink || u.link_instagram}
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 text-xs italic">Belum ada link</span>
+                    )}
+                  </td>
                 </tr>
               );
             })}
