@@ -42,7 +42,7 @@ export default function PanduanSOPPage() {
         <div className="absolute inset-x-20 bottom-10 h-64 rounded-full bg-[radial-gradient(circle_at_center,_rgba(224,242,254,0.5),_rgba(255,255,255,0))] blur-2xl" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-6 py-16">
+      <div className="relative mx-auto max-w-7xl px-6 py-16">
         <header className="mb-12 space-y-4 text-center">
           <div className="badge-soft inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]">
             <Sparkles className="icon-soft-sky h-4 w-4" /> Panduan Operasional

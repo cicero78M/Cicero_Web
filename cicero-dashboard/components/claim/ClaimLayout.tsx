@@ -58,7 +58,7 @@ export default function ClaimLayout({
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-trust-50 via-consistency-50 to-spirit-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_minmax(0,1fr)]">
         <aside className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/80 via-trust-50/90 to-consistency-50/80 p-8 text-neutral-navy shadow-xl ring-1 ring-white/50">
           <div className="absolute -left-16 -top-20 h-48 w-48 rounded-full bg-trust-200/40 blur-3xl" aria-hidden />
           <div className="absolute -right-10 -bottom-24 h-52 w-52 rounded-full bg-spirit-200/40 blur-3xl" aria-hidden />

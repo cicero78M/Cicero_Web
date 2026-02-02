@@ -150,7 +150,7 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="relative z-10 w-full border-b border-indigo-200/40 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-300 via-indigo-200 to-violet-300 shadow-lg shadow-violet-200/60">
               <Sparkles className="h-6 w-6" aria-hidden="true" />
@@ -181,7 +181,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <main className="relative z-10 flex flex-grow flex-col items-center">
         <section className="w-full border-b border-indigo-200/30 bg-gradient-to-b from-white/80 via-indigo-50/50 to-transparent pb-20 pt-16">
-          <div className="container mx-auto flex max-w-6xl flex-col gap-12 px-6 text-center md:flex-row md:text-left">
+          <div className="container mx-auto flex max-w-7xl flex-col gap-12 px-6 text-center md:flex-row md:text-left">
             <div className="flex-1 space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full border border-indigo-300/60 bg-indigo-100/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-600">
                 Omnichannel Upgrade
@@ -285,7 +285,7 @@ export default function LandingPage() {
 
         {/* Interactive Features */}
         <section className="w-full border-b border-indigo-200/40 bg-gradient-to-br from-sky-100/70 via-white/80 to-teal-100/70 py-16">
-          <div className="container mx-auto flex max-w-6xl flex-col gap-12 px-6 lg:flex-row">
+          <div className="container mx-auto flex max-w-7xl flex-col gap-12 px-6 lg:flex-row">
             <div className="flex-1 space-y-5">
               <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Kenapa Cicero Dibuat?</h2>
               <p className="text-slate-600">
@@ -355,7 +355,7 @@ export default function LandingPage() {
 
         {/* Workflow Timeline */}
         <section className="w-full bg-gradient-to-b from-indigo-50 via-sky-100 to-violet-100 py-16">
-          <div className="container mx-auto max-w-5xl px-6 text-center">
+          <div className="container mx-auto max-w-6xl px-6 text-center">
             <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Workflow Terpadu dalam 10 Menit</h2>
             <p className="mt-4 text-slate-600">
               Dari agregasi lintas kanal, insight prediktif, hingga orkestrasi bot WA, setiap langkah mengikuti SOP terbaru tanpa perlu switching platform.
@@ -377,7 +377,7 @@ export default function LandingPage() {
 
         {/* Pricing Section */}
         <section className="w-full border-y border-indigo-200/40 bg-gradient-to-br from-indigo-50 via-sky-100 to-violet-100 py-16">
-          <div className="container mx-auto max-w-6xl px-6">
+          <div className="container mx-auto max-w-7xl px-6">
             <h2 className="text-center text-3xl font-bold text-slate-900 md:text-4xl">Paket Cicero</h2>
             <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">
               Pilih paket yang menyelaraskan agregator lintas kanal, insight prediktif, dan orkestrasi bot WA dengan kebutuhan workflow tim Anda. Komitmen jangka menengah maupun panjang mendapat potongan 10%.
@@ -477,7 +477,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-indigo-200/40 bg-white/80 py-6 text-center text-xs text-slate-500">
-        <div className="container mx-auto flex max-w-5xl flex-col items-center gap-2 px-6 md:flex-row md:justify-between">
+        <div className="container mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 md:flex-row md:justify-between">
           <p>&copy; {new Date().getFullYear()} Cicero. Semua hak cipta dilindungi.</p>
           <div className="flex gap-4">
             <Link href="/terms-of-service" className="transition hover:text-violet-500">

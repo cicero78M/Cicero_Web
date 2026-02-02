@@ -245,7 +245,7 @@ export default function MekanismeAbsensiPage() {
         <div className="absolute inset-x-20 bottom-10 h-64 rounded-full bg-gradient-to-r from-sky-200/40 via-transparent to-pink-200/40 blur-2xl" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-6 py-16">
+      <div className="relative mx-auto max-w-7xl px-6 py-16">
         <header className="mb-12 space-y-4 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-sky-700 shadow-lg shadow-sky-200/70">
             <Sparkles className="h-4 w-4 text-sky-500" /> Blueprint Absensi

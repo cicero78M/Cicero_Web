@@ -687,7 +687,7 @@ export default function SatbinmasOfficialPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 pt-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 pt-10">
         <header className="flex flex-col gap-2">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Ditbinmas</p>
           <h1 className="text-3xl font-bold text-slate-900">Satbinmas Official</h1>
