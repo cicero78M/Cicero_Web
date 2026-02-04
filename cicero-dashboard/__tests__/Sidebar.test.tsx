@@ -378,4 +378,137 @@ describe("Sidebar", () => {
       expect(screen.queryByText("Diseminasi Insight")).not.toBeInTheDocument();
     });
   });
+
+  describe("Anev Polres menu visibility for original directorate scope", () => {
+    it("hides Anev Polres (Premium) for DIREKTORAT client type with directorate role", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "DIREKTORAT",
+        effectiveRole: "DITBINMAS",
+        premiumTier: null,
+        profile: {
+          client_type: "DIREKTORAT",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // Should not show "Anev Polres (Premium)" for original directorate scope
+      expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
+      // Should also not show regular "Anev Polres" without premium access
+      expect(screen.queryByText("Anev Polres")).not.toBeInTheDocument();
+    });
+
+    it("hides Anev Polres (Premium) for DIREKTORAT client type with BIDHUMAS role", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "DIREKTORAT",
+        effectiveRole: "BIDHUMAS",
+        premiumTier: null,
+        profile: {
+          client_type: "DIREKTORAT",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // Should not show "Anev Polres (Premium)" for original directorate scope
+      expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
+      // Should also not show regular "Anev Polres" without premium access
+      expect(screen.queryByText("Anev Polres")).not.toBeInTheDocument();
+    });
+
+    it("shows Anev Polres (Premium) for ORG client type even with directorate role", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "ORG",
+        effectiveRole: "BIDHUMAS",
+        premiumTier: null,
+        profile: {
+          client_type: "ORG",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // Should show "Anev Polres (Premium)" for ORG clients (not original directorate scope)
+      expect(screen.getByText("Anev Polres (Premium)")).toBeInTheDocument();
+    });
+
+    it("hides Anev Polres (Premium) when profile has parent.client_type = DIREKTORAT", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "DIREKTORAT",
+        effectiveRole: "DITSAMAPTA",
+        premiumTier: null,
+        profile: {
+          parent: {
+            client_type: "DIREKTORAT",
+          },
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // Should not show "Anev Polres (Premium)" for original directorate scope
+      expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
+      // Should also not show regular "Anev Polres" without premium access
+      expect(screen.queryByText("Anev Polres")).not.toBeInTheDocument();
+    });
+
+    it("shows Anev Polres for DIREKTORAT with premium tier1", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "DIREKTORAT",
+        effectiveRole: "DITBINMAS",
+        premiumTier: "tier1",
+        profile: {
+          client_type: "DIREKTORAT",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // Should show "Anev Polres" without Premium label when user has premium access
+      expect(screen.getByText("Anev Polres")).toBeInTheDocument();
+      expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
+    });
+
+    it("hides Anev Polres menu for DIREKTORAT operator without premium (original directorate scope)", () => {
+      const authValue = createAuthValue({
+        effectiveClientType: "DIREKTORAT",
+        effectiveRole: "OPERATOR",
+        premiumTier: null,
+        profile: {
+          client_type: "DIREKTORAT",
+        },
+      });
+
+      render(
+        <AuthContext.Provider value={authValue}>
+          <Sidebar />
+        </AuthContext.Provider>
+      );
+
+      // DIREKTORAT operators without premium tier should not see any Anev Polres menu
+      // because they are original directorate scope (not ORG operator)
+      expect(screen.queryByText("Anev Polres")).not.toBeInTheDocument();
+      expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
+    });
+  });
 });

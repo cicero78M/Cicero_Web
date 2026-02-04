@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/sheet";
 import useAuth from "@/hooks/useAuth";
 import { isPremiumTierAllowedForAnev } from "@/utils/premium";
+import { getUserDirectoryFetchScope } from "@/utils/userDirectoryScope";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -77,6 +78,14 @@ export default function Sidebar() {
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
   const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
   const anevPolresPath = "/anev/polres";
+  
+  // Get client_type from profile to determine original directorate scope
+  const rawClientType = profile?.client_type || profile?.parent?.client_type || profile?.parent_client?.client_type;
+  const userDirectoryScope = getUserDirectoryFetchScope({
+    role: effectiveRole,
+    clientType: rawClientType,
+  });
+  const isOriginalDirectorateScope = userDirectoryScope === "DIREKTORAT";
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: Home },
@@ -133,13 +142,15 @@ export default function Sidebar() {
             icon: FilePieChart,
           },
         ]
-      : [
+      : !isOriginalDirectorateScope
+      ? [
           {
             label: "Anev Polres (Premium)",
             path: anevPolresPath,
             icon: Sparkles,
           },
-        ]),
+        ]
+      : []),
     {
       label: "Mekanisme Sistem Absensi",
       path: "/mekanisme-absensi",
