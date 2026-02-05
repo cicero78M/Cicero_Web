@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useId } from "react";
+import { useEffect, useState, useId, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -68,9 +68,18 @@ export default function UserInsightPage() {
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [chartPolres, setChartPolres] = useState([]);
+  const [allUsers, setAllUsers] = useState([]); // Store all users before filtering
   // Directorate client selector state
   const [selectedClientId, setSelectedClientId] = useState("");
   const [availableClients, setAvailableClients] = useState([]);
+
+  // Apply client filter using useMemo for consistency with users page
+  const filteredUsers = useMemo(() => {
+    if (!isDirectorate || !selectedClientId) {
+      return allUsers;
+    }
+    return filterUsersByClientId(allUsers, selectedClientId);
+  }, [allUsers, isDirectorate, selectedClientId]);
 
   const getHighestFillRatio = (entry) => {
     if (!entry || !entry.total) {
@@ -126,7 +135,7 @@ export default function UserInsightPage() {
 
   useEffect(() => {
     fetchData();
-  }, [token, clientId, effectiveClientType, selectedClientId]);
+  }, [token, clientId, effectiveClientType]);
 
   async function fetchData() {
       if (!token || !clientId) {
@@ -159,30 +168,6 @@ export default function UserInsightPage() {
         ]);
         const users = extractUserDirectoryUsers(usersRes);
 
-        // helper untuk membuat data chart per divisi
-        const generateChartData = (arr) => {
-          const map = {};
-          arr.forEach((u) => {
-            const div = (u.divisi || "LAINNYA").toUpperCase();
-            const key = div.replace(/POLSEK\s*/i, "").trim();
-            if (!map[key]) {
-              map[key] = {
-                divisi: key,
-                total: 0,
-                instagramFilled: 0,
-                instagramEmpty: 0,
-                tiktokFilled: 0,
-                tiktokEmpty: 0,
-              };
-            }
-            map[key].total += 1;
-            const hasIG = u.insta && String(u.insta).trim() !== "";
-            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            accumulateContactStats(map[key], hasIG, hasTT);
-          });
-          const result = Object.values(map);
-          return result.sort(compareByFillRatio);
-        };
         // Cek tipe client
         const profile =
           profileRes.client || profileRes.profile || profileRes || {};
@@ -225,16 +210,49 @@ export default function UserInsightPage() {
           // Extract available clients for the selector
           const clients = extractClientOptions(processedUsers);
           setAvailableClients(clients);
-
-          // Apply client filter if a specific client is selected
-          if (selectedClientId) {
-            processedUsers = filterUsersByClientId(processedUsers, selectedClientId);
-          }
         } else {
           setAvailableClients([]);
         }
 
-        const summaryCounts = processedUsers.reduce(
+        // Store all processed users (filtering will be done in useMemo)
+        setAllUsers(processedUsers);
+        setLoading(false);
+      } catch (err) {
+        setError("Gagal mengambil data: " + (err.message || err));
+        setLoading(false);
+      }
+    }
+
+  // Process charts and summary when filtered users change
+  useEffect(() => {
+    if (allUsers.length === 0) return;
+
+    // helper untuk membuat data chart per divisi
+    const generateChartData = (arr) => {
+      const map = {};
+      arr.forEach((u) => {
+        const div = (u.divisi || "LAINNYA").toUpperCase();
+        const key = div.replace(/POLSEK\s*/i, "").trim();
+        if (!map[key]) {
+          map[key] = {
+            divisi: key,
+            total: 0,
+            instagramFilled: 0,
+            instagramEmpty: 0,
+            tiktokFilled: 0,
+            tiktokEmpty: 0,
+          };
+        }
+        map[key].total += 1;
+        const hasIG = u.insta && String(u.insta).trim() !== "";
+        const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+        accumulateContactStats(map[key], hasIG, hasTT);
+      });
+      const result = Object.values(map);
+      return result.sort(compareByFillRatio);
+    };
+
+    const summaryCounts = filteredUsers.reduce(
           (acc, u) => {
             const hasIG = u.insta && String(u.insta).trim() !== "";
             const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
@@ -250,70 +268,65 @@ export default function UserInsightPage() {
             tiktokFilled: 0,
             tiktokEmpty: 0,
           },
-        );
-        const totalUsers = summaryCounts.total || 0;
-        const safeRatio = (count) =>
-          totalUsers > 0 ? Math.min(100, Math.max(0, (count / totalUsers) * 100)) : 0;
-        setSummary({
-          ...summaryCounts,
-          instagramFilledPercent: safeRatio(summaryCounts.instagramFilled),
-          instagramEmptyPercent: safeRatio(summaryCounts.instagramEmpty),
-          tiktokFilledPercent: safeRatio(summaryCounts.tiktokFilled),
-          tiktokEmptyPercent: safeRatio(summaryCounts.tiktokEmpty),
-        });
+      );
+    const totalUsers = summaryCounts.total || 0;
+    const safeRatio = (count) =>
+      totalUsers > 0 ? Math.min(100, Math.max(0, (count / totalUsers) * 100)) : 0;
+    setSummary({
+      ...summaryCounts,
+      instagramFilledPercent: safeRatio(summaryCounts.instagramFilled),
+      instagramEmptyPercent: safeRatio(summaryCounts.instagramEmpty),
+      tiktokFilledPercent: safeRatio(summaryCounts.tiktokFilled),
+      tiktokEmptyPercent: safeRatio(summaryCounts.tiktokEmpty),
+    });
 
-        if (dir) {
-          const clientMap = {};
-          processedUsers.forEach((u) => {
-            const id = String(
-              u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
-            );
-            const name = (
-              u.nama_client ||
-              u.client_name ||
-              u.client ||
-              id
-            ).toUpperCase();
-            if (!clientMap[id]) {
-              clientMap[id] = {
-                divisi: name,
-                total: 0,
-                instagramFilled: 0,
-                instagramEmpty: 0,
-                tiktokFilled: 0,
-                tiktokEmpty: 0,
-              };
-            }
-            clientMap[id].total += 1;
-            const hasIG = u.insta && String(u.insta).trim() !== "";
-            const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
-            accumulateContactStats(clientMap[id], hasIG, hasTT);
-          });
-          const sortedClients = Object.values(clientMap).sort((a, b) => {
-            const priorityDiff =
-              getDirectoratePriority(a) - getDirectoratePriority(b);
-            if (priorityDiff !== 0) {
-              return priorityDiff;
-            }
-            return compareByFillRatio(a, b);
-          });
-          setChartPolres(sortedClients);
-        } else {
-          const grouped = groupUsersByKelompok(processedUsers);
-          setChartKelompok({
-            BAG: generateChartData(grouped.BAG),
-            SAT: generateChartData(grouped.SAT),
-            "SI & SPKT": generateChartData(grouped["SI & SPKT"]),
-            POLSEK: generateChartData(grouped.POLSEK),
-            LAINNYA: generateChartData(grouped.LAINNYA),
-          });
-        }
-      } catch (err) {
-        setError("Gagal mengambil data: " + (err.message || err));
-      } finally {
-        setLoading(false);
+    if (isDirectorate) {
+      const clientMap = {};
+      filteredUsers.forEach((u) => {
+        const id = String(
+          u.client_id || u.clientId || u.clientID || u.id || "LAINNYA",
+        );
+        const name = (
+          u.nama_client ||
+          u.client_name ||
+          u.client ||
+          id
+        ).toUpperCase();
+        if (!clientMap[id]) {
+          clientMap[id] = {
+            divisi: name,
+            total: 0,
+            instagramFilled: 0,
+            instagramEmpty: 0,
+            tiktokFilled: 0,
+            tiktokEmpty: 0,
+          };
       }
-    }
+      clientMap[id].total += 1;
+      const hasIG = u.insta && String(u.insta).trim() !== "";
+      const hasTT = u.tiktok && String(u.tiktok).trim() !== "";
+      accumulateContactStats(clientMap[id], hasIG, hasTT);
+    });
+    const sortedClients = Object.values(clientMap).sort((a, b) => {
+      const priorityDiff =
+        getDirectoratePriority(a) - getDirectoratePriority(b);
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+      return compareByFillRatio(a, b);
+    });
+    setChartPolres(sortedClients);
+  } else {
+    const grouped = groupUsersByKelompok(filteredUsers);
+    setChartKelompok({
+      BAG: generateChartData(grouped.BAG),
+      SAT: generateChartData(grouped.SAT),
+      "SI & SPKT": generateChartData(grouped["SI & SPKT"]),
+      POLSEK: generateChartData(grouped.POLSEK),
+      LAINNYA: generateChartData(grouped.LAINNYA),
+    });
+  }
+}, [filteredUsers, isDirectorate]);
 
   function handleCopyRekap() {
     const now = new Date();
