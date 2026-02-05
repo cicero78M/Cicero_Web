@@ -76,5 +76,15 @@ Validasi menerima seluruh opsi yang muncul di form, termasuk entri Dit Humas, Di
 - POLSEK (dengan nama polsek)
 - SUBDIT DALMAS
 - SUBDIT GASUM
+- SUBDIT 1
+- SUBDIT 2
+- SUBDIT 3
+- SUBDIT 4
+- BAG RENMIN
+- BAG ANALIS
+- SIE INTELTEK
+- SIE YANMIN
+- SIE SANDI
+- UNIT POLSATWA
 
 Tambahkan entri baru ke array `SATFUNG_OPTIONS` jika form menampilkan satfung tambahan agar proses penyimpanan pengguna tetap sinkron.

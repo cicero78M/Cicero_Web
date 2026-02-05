@@ -32,6 +32,15 @@ describe("validateNewUser", () => {
       "SUBDIT DALMAS",
       "SUBDIT GASUM",
       "SUB BAG RENMIN",
+      "SUBDIT 1",
+      "SUBDIT 2",
+      "SUBDIT 3",
+      "SUBDIT 4",
+      "BAG RENMIN",
+      "BAG ANALIS",
+      "SIE INTELTEK",
+      "SIE YANMIN",
+      "SIE SANDI",
     ];
 
     satfungValues.forEach((satfung) => {
