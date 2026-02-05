@@ -383,10 +383,6 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     }
   };
 
-  const directorateTitle = isDirectorate
-    ? "POLRES JAJARAN"
-    : "Divisi / Satfung";
-
   const headerAction = (
     <Link
       href="/amplify"
