@@ -16,6 +16,10 @@ import {
   getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
+import {
+  extractClientOptions,
+  filterUsersByClientId,
+} from "@/utils/directorateClientSelector";
 import { Pencil, Check, X, RefreshCw, Trash2 } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -29,6 +33,7 @@ import {
   SATFUNG_OPTIONS,
   validateNewUser,
 } from "@/utils/validateUserForm";
+import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 
 const PAGE_SIZE = 50;
 
@@ -69,6 +74,9 @@ export default function UserDirectoryPage() {
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
+  // Directorate client selector state
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [availableClients, setAvailableClients] = useState([]);
   const {
     token,
     clientId,
@@ -175,6 +183,12 @@ export default function UserDirectoryPage() {
               u.client_name ||
               u.client,
           }));
+
+          // Extract available clients for the selector
+          const clients = extractClientOptions(arr);
+          setAvailableClients(clients);
+        } else {
+          setAvailableClients([]);
         }
 
         setUsers(arr);
@@ -202,7 +216,13 @@ export default function UserDirectoryPage() {
 
   const rekapUsers = useMemo(() => {
     const grouped = {};
-    sortedUsers
+    
+    // Apply client filter for directorate scope
+    const clientFilteredUsers = isDirectorate
+      ? filterUsersByClientId(sortedUsers, selectedClientId)
+      : sortedUsers;
+    
+    clientFilteredUsers
       .filter((u) => {
         if (isDitbinmasClient && !showAllDitbinmas) {
           const cid = String(
@@ -218,7 +238,7 @@ export default function UserDirectoryPage() {
         grouped[key].push(u);
     });
     return grouped;
-  }, [sortedUsers, isDitbinmasClient, showAllDitbinmas]);
+  }, [sortedUsers, isDitbinmasClient, showAllDitbinmas, isDirectorate, selectedClientId]);
 
   const summaryStats = useMemo(() => {
     const list = Object.values(rekapUsers).flat();
@@ -612,6 +632,17 @@ export default function UserDirectoryPage() {
             <SummaryCard label="Update Instagram" value={summaryStats.insta} tone="info" />
             <SummaryCard label="Update TikTok" value={summaryStats.tiktok} tone="pink" />
           </div>
+
+          {isDirectorate && !isDitbinmas && (
+            <div className="relative mt-4">
+              <DirectorateClientSelector
+                clients={availableClients}
+                selectedClientId={selectedClientId}
+                onClientChange={setSelectedClientId}
+                label="Pilih Client Direktorat / Satker"
+              />
+            </div>
+          )}
 
           <div className="relative mt-6 flex flex-col gap-4">
             <div className="flex flex-col gap-3 rounded-2xl border border-sky-200 bg-white/95 p-4 text-slate-700 shadow-sm backdrop-blur">

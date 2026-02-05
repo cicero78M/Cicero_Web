@@ -28,6 +28,11 @@ import {
   getUserDirectoryFetchScope,
   normalizeDirectoryRole,
 } from "@/utils/userDirectoryScope";
+import {
+  extractClientOptions,
+  filterUsersByClientId,
+} from "@/utils/directorateClientSelector";
+import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 
 export default function UserInsightPage() {
   useRequireAuth();
@@ -63,6 +68,9 @@ export default function UserInsightPage() {
   });
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [chartPolres, setChartPolres] = useState([]);
+  // Directorate client selector state
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [availableClients, setAvailableClients] = useState([]);
 
   const getHighestFillRatio = (entry) => {
     if (!entry || !entry.total) {
@@ -118,7 +126,7 @@ export default function UserInsightPage() {
 
   useEffect(() => {
     fetchData();
-  }, [token, clientId, effectiveClientType]);
+  }, [token, clientId, effectiveClientType, selectedClientId]);
 
   async function fetchData() {
       if (!token || !clientId) {
@@ -213,6 +221,17 @@ export default function UserInsightPage() {
                 u.client,
             };
           });
+
+          // Extract available clients for the selector
+          const clients = extractClientOptions(processedUsers);
+          setAvailableClients(clients);
+
+          // Apply client filter if a specific client is selected
+          if (selectedClientId) {
+            processedUsers = filterUsersByClientId(processedUsers, selectedClientId);
+          }
+        } else {
+          setAvailableClients([]);
         }
 
         const summaryCounts = processedUsers.reduce(
@@ -389,6 +408,17 @@ export default function UserInsightPage() {
                     </button>
                   </div>
                 </div>
+
+                {isDirectorate && (
+                  <div className="self-start">
+                    <DirectorateClientSelector
+                      clients={availableClients}
+                      selectedClientId={selectedClientId}
+                      onClientChange={setSelectedClientId}
+                      label="Pilih Client Direktorat / Satker"
+                    />
+                  </div>
+                )}
 
                 {!isDirectorate && (
                   <div className="self-start">
