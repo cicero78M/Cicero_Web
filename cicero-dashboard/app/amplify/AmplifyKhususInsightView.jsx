@@ -243,7 +243,8 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     normalizedCustomDate,
     normalizedRange?.startDate,
     normalizedRange?.endDate,
-    directorateScope,
+    // Note: directorateScope is intentionally excluded from dependencies
+    // as it only affects client-side grouping, not data fetching
   ]);
 
   if (loading) return <Loader />;
