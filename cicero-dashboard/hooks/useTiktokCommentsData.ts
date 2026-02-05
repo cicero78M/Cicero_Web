@@ -559,7 +559,7 @@ export default function useTiktokCommentsData({
           !isOperatorRole &&
             directorate &&
             !orgClient &&
-            allowedScopeClients.has(normalizedClientIdUpper),
+            (allowedScopeClients.has(normalizedClientIdUpper) || isDirectorateClientType),
         );
 
         let users: any[] = [];
