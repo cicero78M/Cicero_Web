@@ -367,7 +367,7 @@ export default function useInstagramLikesData({
           !isOperatorRole &&
             directorateData &&
             !isOrg &&
-            allowedScopeClients.has(normalizedClientIdUpper),
+            (allowedScopeClients.has(normalizedClientIdUpper) || dir),
         );
         setIsDirectorateScopedClient(isDirectorateScopedValue);
         setIsDirectorateRole(

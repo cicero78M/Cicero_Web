@@ -58,6 +58,8 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDirectorate, setIsDirectorate] = useState(false);
+  const [canSelectScope, setCanSelectScope] = useState(false);
+  const [directorateScope, setDirectorateScope] = useState("client");
   const [clientName, setClientName] = useState("");
   const [rekapSummary, setRekapSummary] = useState({
     totalUser: 0,
@@ -76,6 +78,13 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     normalizedRange,
     reportPeriodeLabel,
   } = useLikesDateSelector();
+
+  const handleDirectorateScopeChange = (event) => {
+    const { value } = event.target || {};
+    if (value === "client" || value === "all") {
+      setDirectorateScope(value);
+    }
+  };
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
@@ -152,6 +161,11 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
         const dir =
           (profile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
+        
+        // Enable scope selector for directorate users (not org)
+        const normalizedRole = String(effectiveRole || role || "").trim().toLowerCase();
+        const isOperatorRole = normalizedRole === "operator";
+        setCanSelectScope(!isOperatorRole && dir && !isOrgClient);
 
         let enrichedUsers = users;
         if (dir) {
@@ -229,6 +243,8 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     normalizedCustomDate,
     normalizedRange?.startDate,
     normalizedRange?.endDate,
+    // Note: directorateScope is intentionally excluded from dependencies
+    // as it only affects client-side grouping, not data fetching
   ]);
 
   if (loading) return <Loader />;
@@ -241,6 +257,15 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
       </div>
     );
 
+  // Determine grouping strategy for directorate scope
+  const shouldGroupByClient =
+    isDirectorate &&
+    directorateScope === "all";
+  const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
+  const directorateTitle = shouldGroupByClient
+    ? "POLRES JAJARAN"
+    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
+  
   const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
 
   const totalUser = Number(rekapSummary.totalUser) || 0;
@@ -391,6 +416,15 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
             date: selectorDateValue,
             onDateChange: handleDateChange,
           }}
+          scopeSelectorProps={{
+            value: directorateScope,
+            onChange: handleDirectorateScopeChange,
+            options: [
+              { value: "client", label: clientName || "Client" },
+              { value: "all", label: `Satker Jajaran ${clientName || ""}`.trim() },
+            ],
+            canSelectScope,
+          }}
           premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
           summaryCards={summaryCards}
@@ -407,15 +441,19 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
               title={directorateTitle}
               users={chartData}
               totalPost={1}
-              groupBy="client_id"
-              orientation="horizontal"
+              groupBy={directorateGroupBy}
+              orientation={shouldGroupByClient ? "horizontal" : "vertical"}
               fieldJumlah="jumlah_link"
               labelSudah="User Sudah Post"
               labelKurang="User Kurang Post"
               labelBelum="User Belum Post"
               labelTotal="Total Link Amplifikasi Khusus"
               sortBy="percentage"
-              narrative="Ringkasan ini memperlihatkan kepatuhan amplifikasi tugas khusus antar polres jajaran."
+              narrative={
+                shouldGroupByClient
+                  ? "Ringkasan ini memperlihatkan kepatuhan amplifikasi tugas khusus antar polres jajaran."
+                  : "Grafik ini menampilkan perbandingan capaian amplifikasi tugas khusus berdasarkan divisi/satfung."
+              }
             />
           ) : (
             <div className="flex flex-col gap-6">
