@@ -496,8 +496,13 @@ export default function UserDirectoryPage() {
   // Data fetching handled by SWR
 
   const filtered = useMemo(
-    () =>
-      sortedUsers
+    () => {
+      // Apply client filter for directorate scope
+      const clientFiltered = isDirectorate
+        ? filterUsersByClientId(sortedUsers, selectedClientId)
+        : sortedUsers;
+      
+      return clientFiltered
         .filter((u) => {
           if (isDitbinmasClient && !showAllDitbinmas) {
             return (
@@ -533,13 +538,16 @@ export default function UserDirectoryPage() {
             (u.email || "").toLowerCase().includes(term) ||
             String(u.status).toLowerCase().includes(term)
           );
-        }),
+        });
+    },
     [
       sortedUsers,
       debouncedSearch,
       isDitbinmasClient,
       showAllDitbinmas,
       statusFilter,
+      isDirectorate,
+      selectedClientId,
     ],
   );
 
