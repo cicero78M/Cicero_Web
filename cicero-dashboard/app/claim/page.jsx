@@ -69,11 +69,11 @@ export default function ClaimPage() {
 
     try {
       const res = await requestClaimOtp(trimmedNrp, trimmedEmail);
-      // Redirect if success is not explicitly false
-      // Note: The API function ensures res.success is always either true or false (never undefined)
-      // - true: when backend returns 200 OK (with or without success field)
+      // The API function ensures res.success is always boolean (never undefined):
+      // - true: when backend returns 200 OK (with success: true OR no success field)
       // - false: when backend returns 200 OK with explicit success: false
-      if (res.success !== false) {
+      // Only redirect on true (successful OTP send)
+      if (res.success === true) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("claim_nrp", trimmedNrp);
           sessionStorage.setItem("claim_email", trimmedEmail);
