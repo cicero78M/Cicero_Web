@@ -69,7 +69,9 @@ export default function ClaimPage() {
 
     try {
       const res = await requestClaimOtp(trimmedNrp, trimmedEmail);
-      if (res.success) {
+      // Redirect if success is true or not explicitly false
+      // This handles cases where backend sends OTP successfully but doesn't return success: true
+      if (res.success !== false) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("claim_nrp", trimmedNrp);
           sessionStorage.setItem("claim_email", trimmedEmail);
