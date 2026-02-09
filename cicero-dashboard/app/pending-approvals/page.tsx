@@ -7,7 +7,7 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { getPendingApprovals, approveUser, rejectUser } from "@/utils/api";
 import { showToast } from "@/utils/showToast";
-import { notifyAdminNewUser, isTelegramConfigured } from "@/utils/telegram";
+import { isTelegramConfigured } from "@/utils/telegram";
 
 interface PendingUser {
   user_id: string;

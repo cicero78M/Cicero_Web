@@ -1,11 +1,21 @@
 // utils/telegram.ts
 // Utility functions for Telegram Bot integration
 
+interface TelegramInlineKeyboardButton {
+  text: string;
+  url?: string;
+  callback_data?: string;
+}
+
+interface TelegramInlineKeyboardMarkup {
+  inline_keyboard: TelegramInlineKeyboardButton[][];
+}
+
 export interface TelegramMessage {
   chat_id: string;
   text: string;
   parse_mode?: "Markdown" | "HTML";
-  reply_markup?: any;
+  reply_markup?: TelegramInlineKeyboardMarkup;
 }
 
 export function getTelegramBotToken(): string | null {
