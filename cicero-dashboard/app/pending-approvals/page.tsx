@@ -38,7 +38,7 @@ export default function PendingApprovalsPage() {
     mutate,
   } = useSWR(
     token ? ["pending-approvals", clientId] : null,
-    () => getPendingApprovals(token!, clientId),
+    () => getPendingApprovals(token!, clientId || undefined),
     {
       refreshInterval: 30000,
       revalidateOnFocus: true,
