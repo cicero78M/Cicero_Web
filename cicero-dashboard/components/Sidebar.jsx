@@ -21,7 +21,6 @@ import {
   Workflow,
   Shield,
   Sparkles,
-  ClipboardList,
 } from "lucide-react";
 import {
   Sheet,
@@ -92,7 +91,6 @@ export default function Sidebar() {
     { label: "Dashboard", path: "/dashboard", icon: Home },
     { label: "User Directory", path: "/users", icon: Users },
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
-    { label: "Rekap Data User", path: "/user-data-recap", icon: ClipboardList },
     ...(instagramEnabled
       ? [
           ...(!isOrgOperator && isOperator
