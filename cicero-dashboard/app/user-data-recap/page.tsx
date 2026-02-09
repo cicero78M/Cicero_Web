@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import {
@@ -27,8 +27,7 @@ import { Users, CheckCircle, AlertCircle, ClipboardList } from "lucide-react";
 
 type TabType = "semua" | "lengkap" | "kurang";
 
-export default function UserDataRecapPage() {
-  useRequireAuth();
+function UserDataRecapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -51,7 +50,7 @@ export default function UserDataRecapPage() {
     }
   }, [searchParams]);
 
-  const normalizedRole = normalizeDirectoryRole(effectiveRole || role);
+  const normalizedRole = normalizeDirectoryRole(effectiveRole || role || undefined);
   const normalizedScope = String(effectiveClientType || "")
     .trim()
     .toUpperCase();
@@ -387,5 +386,15 @@ export default function UserDataRecapPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function UserDataRecapPage() {
+  useRequireAuth();
+  
+  return (
+    <Suspense fallback={<Loader />}>
+      <UserDataRecapContent />
+    </Suspense>
   );
 }
