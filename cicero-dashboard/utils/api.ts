@@ -3689,3 +3689,73 @@ export async function updateUserViaClaim(
   }
   return res.json();
 }
+
+/**
+ * Get list of users pending approval
+ */
+export async function getPendingApprovals(
+  token: string,
+  clientId?: string
+): Promise<any> {
+  const params = new URLSearchParams();
+  if (clientId) {
+    params.set("client_id", clientId);
+  }
+  const url = buildApiUrl(`/api/users/pending?${params.toString()}`);
+  const res = await fetchWithAuth(url, token);
+  const payload = await res.json();
+  if (!res.ok) {
+    throw new Error(payload.error || "Failed to fetch pending approvals");
+  }
+  return payload;
+}
+
+/**
+ * Approve a user
+ */
+export async function approveUser(
+  token: string,
+  userId: string,
+  approverNotes?: string
+): Promise<{ success: boolean; error?: string; user?: any }> {
+  const url = buildApiUrl(`/api/users/${userId}/approve`);
+  try {
+    const res = await fetchWithAuth(url, token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: approverNotes }),
+    });
+    const payload = await res.json();
+    if (!res.ok) {
+      return { success: false, error: payload.error || res.statusText };
+    }
+    return { success: true, user: payload };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Reject a user
+ */
+export async function rejectUser(
+  token: string,
+  userId: string,
+  reason?: string
+): Promise<{ success: boolean; error?: string }> {
+  const url = buildApiUrl(`/api/users/${userId}/reject`);
+  try {
+    const res = await fetchWithAuth(url, token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    });
+    const payload = await res.json();
+    if (!res.ok) {
+      return { success: false, error: payload.error || res.statusText };
+    }
+    return { success: true };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
