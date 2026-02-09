@@ -34,7 +34,6 @@ import {
   validateNewUser,
 } from "@/utils/validateUserForm";
 import DirectorateClientSelector from "@/components/DirectorateClientSelector";
-import { notifyAdminNewUser, isTelegramConfigured } from "@/utils/telegram";
 
 const PAGE_SIZE = 50;
 
@@ -279,21 +278,6 @@ export default function UserDirectoryPage() {
         user_id: sanitizedNrpNip,
         divisi: satfungValue,
       });
-      
-      // Send Telegram notification to admin about new user pending approval
-      if (isTelegramConfigured()) {
-        notifyAdminNewUser({
-          nama,
-          pangkat,
-          nrpNip: sanitizedNrpNip,
-          satfung: satfungValue,
-          clientName: clientName || client_id,
-        }).catch(err => {
-          console.error("Failed to send Telegram notification:", err);
-          // Don't fail the whole operation if notification fails
-        });
-      }
-      
       setNama("");
       setPangkat("");
       setNrpNip("");
