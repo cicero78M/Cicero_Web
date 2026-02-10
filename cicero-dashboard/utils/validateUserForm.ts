@@ -78,6 +78,7 @@ export const SATFUNG_OPTIONS = [
   "SIE SANDI",
   "SIE HUMAS",
   "SIE KUM",
+  "SIE KEU"
   "UNIT POLSATWA",
   "POLSEK",
 ];
