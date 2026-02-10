@@ -43,6 +43,7 @@ describe("validateNewUser", () => {
       "SIE SANDI",
       "SIE HUMAS",
       "SIE KUM",
+      "SIE KEU"
     ];
 
     satfungValues.forEach((satfung) => {
