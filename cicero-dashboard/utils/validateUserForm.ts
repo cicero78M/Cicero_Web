@@ -50,6 +50,7 @@ export const SATFUNG_OPTIONS = [
   "SAT NARKOBA",
   "SAT BINMAS",
   "SAT LANTAS",
+  "SAT PPA",
   "SI UM",
   "SI TIK",
   "SI WAS",
@@ -77,7 +78,9 @@ export const SATFUNG_OPTIONS = [
   "SIE YANMIN",
   "SIE SANDI",
   "SIE HUMAS",
+  "SIE KEU",
   "SIE KUM",
+  "PAM OBVIT",
   "UNIT POLSATWA",
   "POLSEK",
 ];
