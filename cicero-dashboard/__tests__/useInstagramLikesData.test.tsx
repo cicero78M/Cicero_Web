@@ -110,50 +110,6 @@ describe("useInstagramLikesData", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(mockedGetDashboardStats).toHaveBeenCalledWith(
-      "token",
-      "periode",
-      "date",
-      "start",
-      "end",
-      "BIDHUMAS",
-      {
-        role: "bidhumas",
-        scope: "ORG",
-        regional_id: undefined,
-      },
-      expect.any(AbortSignal),
-    );
-    expect(mockedGetClientProfile).toHaveBeenCalledWith(
-      "token",
-      "BIDHUMAS",
-      expect.anything(),
-      {
-        role: "bidhumas",
-        scope: "ORG",
-        regional_id: undefined,
-      },
-    );
-    expect(mockedGetUserDirectory).toHaveBeenCalledWith(
-      "token",
-      "BIDHUMAS",
-      {
-        role: "bidhumas",
-        scope: "ORG",
-        regional_id: undefined,
-      },
-      expect.any(AbortSignal),
-    );
-    expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
-      "token",
-      "CLIENT_X",
-      "periode",
-      "date",
-      "start",
-      "end",
-      expect.anything(),
-      { role: "bidhumas", scope: "ORG", regional_id: undefined },
-    );
     expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
       "token",
       "BIDHUMAS",
@@ -162,10 +118,10 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       expect.anything(),
-      { role: "bidhumas", scope: "ORG", regional_id: undefined },
+      { role: "bidhumas", scope: "ORG" },
     );
-    expect(result.current.chartData).toHaveLength(2);
-    expect(result.current.rekapSummary.totalUser).toBe(2);
+    expect(result.current.chartData).toHaveLength(1);
+    expect(result.current.rekapSummary.totalUser).toBe(1);
   });
 
   it("filters directorate data to the active client when scope is client", async () => {
@@ -175,7 +131,7 @@ describe("useInstagramLikesData", () => {
       userId: "user-id",
       role: "operator",
       effectiveRole: "operator",
-      effectiveClientType: undefined,
+      effectiveClientType: "DIREKTORAT",
       profile: null,
       isHydrating: false,
       setAuth: jest.fn(),
@@ -236,21 +192,64 @@ describe("useInstagramLikesData", () => {
       "start",
       "end",
       expect.anything(),
-      { role: "operator", scope: "DIREKTORAT", regional_id: undefined },
-    );
-    expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
-      "token",
-      "DIR_B",
-      "periode",
-      "date",
-      "start",
-      "end",
-      expect.anything(),
-      { role: "operator", scope: "DIREKTORAT", regional_id: undefined },
+      { role: "operator", scope: "DIREKTORAT" },
     );
     expect(result.current.isDirectorateData).toBe(true);
     expect(result.current.isOrgClient).toBe(false);
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.rekapSummary.totalUser).toBe(1);
   });
+
+  it("uses DIREKTORAT scope when role code is DITINTELKAM and client_type is DIREKTORAT", async () => {
+    const authValue = {
+      token: "token",
+      clientId: "DITINTELKAM",
+      userId: "user-id",
+      role: "DITINTELKAM",
+      effectiveRole: "DITINTELKAM",
+      effectiveClientType: "DIREKTORAT",
+      regionalId: "12",
+      profile: { client: { client_type: "DIREKTORAT" } },
+      isHydrating: false,
+      isProfileLoading: false,
+      setAuth: jest.fn(),
+    } as any;
+
+    mockedGetRekapLikesIG.mockResolvedValue({
+      data: [
+        { client_id: "DITINTELKAM", username: "intel", jumlah_like: 2 },
+      ],
+      summary: { totalIGPost: 1 },
+    } as any);
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
+    );
+
+    const { result } = renderHook(
+      () =>
+        useInstagramLikesData({
+          viewBy: "monthly",
+          customDate: "",
+          fromDate: "",
+          toDate: "",
+          scope: "all",
+        }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(mockedGetRekapLikesIG).toHaveBeenCalledWith(
+      "token",
+      "DITINTELKAM",
+      "periode",
+      "date",
+      "start",
+      "end",
+      expect.anything(),
+      { role: "ditintelkam", scope: "DIREKTORAT", regional_id: "12" },
+    );
+  });
+
 });

@@ -12,6 +12,15 @@ const REKAP_TOTAL_POST_FIELDS = [
   "total_ig_post",
 ];
 
+const DIREKTORAT_ROLE_CODES = new Set([
+  "DIREKTORAT",
+  "DITBINMAS",
+  "DITINTELKAM",
+  "DITLANTAS",
+  "DITSAMAPTA",
+  "BIDHUMAS",
+]);
+
 function normalizeNumber(value?: unknown): number | undefined {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : undefined;
@@ -195,6 +204,7 @@ export default function useInstagramLikesData({
     role: authRole,
     effectiveRole,
     effectiveClientType,
+    profile,
     regionalId: authRegionalId,
     isProfileLoading,
   } = useAuth();
@@ -244,7 +254,23 @@ export default function useInstagramLikesData({
       return () => controller.abort();
     }
     const requestRole = normalizeRolePayload(role);
-    const requestScopeFromAuth = normalizeScopePayload(effectiveClientType);
+    const normalizedRoleUpper = String(effectiveRole ?? authRole ?? role ?? "")
+      .trim()
+      .toUpperCase();
+    const profileClientType = normalizeScopePayload(
+      profile?.client?.client_type ?? profile?.client_type,
+    );
+    const hasValidClientType =
+      normalizeScopePayload(effectiveClientType) === "ORG" ||
+      normalizeScopePayload(effectiveClientType) === "DIREKTORAT";
+    const inferredScopeFromRole = DIREKTORAT_ROLE_CODES.has(normalizedRoleUpper)
+      ? "DIREKTORAT"
+      : "ORG";
+    const requestScopeFromAuth = hasValidClientType
+      ? normalizeScopePayload(effectiveClientType)
+      : profileClientType === "ORG" || profileClientType === "DIREKTORAT"
+        ? profileClientType
+        : inferredScopeFromRole;
     const requestRoleForContext =
       requestScopeFromAuth === "DIREKTORAT"
         ? normalizeRolePayload(effectiveRole ?? authRole ?? role)
@@ -266,7 +292,9 @@ export default function useInstagramLikesData({
       .toLowerCase();
     const normalizedEffectiveRoleUpper = normalizedEffectiveRoleLower.toUpperCase();
     const isOperatorRole = normalizedEffectiveRoleLower === "operator";
-    const isDirectorateRoleValue = normalizedEffectiveRoleUpper === "DIREKTORAT";
+    const isDirectorateRoleValue =
+      normalizedEffectiveRoleUpper === "DIREKTORAT" ||
+      DIREKTORAT_ROLE_CODES.has(normalizedEffectiveRoleUpper);
     const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
     const normalizedEffectiveClientType = String(effectiveClientType ?? "")
       .trim()
