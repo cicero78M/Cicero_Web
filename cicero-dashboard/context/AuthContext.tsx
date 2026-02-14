@@ -32,6 +32,7 @@ export const AuthContext = createContext<AuthState | undefined>(undefined);
 
 const DIRECTORATE_ROLE_KEYS = new Set([
   "ditbinmas",
+  "ditintelkam",
   "ditsamapta",
   "ditlantas",
   "bidhumas",
@@ -54,6 +55,7 @@ function normalizeRoleValue(value?: string | null) {
   let mapped = "";
 
   if (compact.includes("ditbinmas")) mapped = "DITBINMAS";
+  else if (compact.includes("ditintelkam")) mapped = "DITINTELKAM";
   else if (compact.includes("bidhumas")) mapped = "BIDHUMAS";
   else if (compact.includes("ditsamapta")) mapped = "DITSAMAPTA";
   else if (compact.includes("ditlantas")) mapped = "DITLANTAS";
@@ -304,8 +306,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const effectiveRoleValue = normalizedRole.upper || normalizedRole.raw;
     const isOperatorRole = normalizedRole.lower === "operator";
     const isDirectorateRole = DIRECTORATE_ROLE_KEYS.has(normalizedRole.lower);
+    const isDirectorateClientType = normalizedClientType === "DIREKTORAT";
+    const isDitintelkamDirectorate =
+      isDirectorateClientType && normalizedRole.upper === "DITINTELKAM";
     const resolvedClientType =
-      normalizedClientType === "DIREKTORAT" && !isOperatorRole && isDirectorateRole
+      (isDirectorateClientType && !isOperatorRole && isDirectorateRole) ||
+      isDitintelkamDirectorate
         ? "DIREKTORAT"
         : normalizedClientType
         ? "ORG"
