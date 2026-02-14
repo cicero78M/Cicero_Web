@@ -24,7 +24,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 
 - Mapping role yang distandardkan untuk halaman personil berada di `utils/userDirectoryScope.ts`: `ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`, dan `operator`. Nilai role dari token maupun data user akan dinormalisasi ke bentuk tersebut sebelum proses filter.
 - Filter role juga mempertimbangkan flag boolean pada payload user (contoh `ditbinmas: true`) agar data personil yang hanya mengirimkan indikator role tetap terpetakan ke role kanonik di `filterUserDirectoryByScope`.
-- `AuthContext` menormalkan role login ke bentuk kanonik (uppercase/lowercase) lewat pemetaan: `DITBINMAS`, `BIDHUMAS`, `DITSAMAPTA`, `DITLANTAS`, `OPERATOR`, dan `DIREKTORAT`, sehingga `effectiveRole` menjadi sumber kebenaran untuk filter personil.
+- `AuthContext` menormalkan role login ke bentuk kanonik (uppercase/lowercase) lewat pemetaan: `DITBINMAS`, `DITINTELKAM`, `BIDHUMAS`, `DITSAMAPTA`, `DITLANTAS`, `OPERATOR`, dan `DIREKTORAT`, sehingga `effectiveRole` menjadi sumber kebenaran untuk filter personil.
 - Normalisasi role di `AuthContext` kini aman saat nilai role belum tersedia (null) sehingga efek derivasi tetap berjalan tanpa error tipe.
 - `client_type` efektif menentukan scope data:
   - **DIREKTORAT:** tampilkan personil dengan role yang sama lintas `client_id`.
@@ -32,8 +32,8 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Helper `getUserDirectoryFetchScope` memastikan permintaan data user mengikuti `client_type` efektif: ORG selalu memakai scope **ORG** walau role login direktorat, sedangkan scope **DIREKTORAT** hanya dipakai saat `client_type` memang direktorat.
 - Halaman User Directory menentukan scope request dari `client_type` asli pada profil client dan memastikan role `operator` tetap difilter berdasarkan `client_id` peminta.
 - Filter role pada `filterUserDirectoryByScope` otomatis di-skip bila payload user tidak memiliki sinyal role sama sekali, sehingga daftar personil ORG tetap tampil walau API hanya mengirim data dasar tanpa atribut role.
-- Role direktorat (`ditbinmas`, `bidhumas`, `ditsamapta`, `ditlantas`) hanya mengaktifkan scope **DIREKTORAT** di `filterUserDirectoryByScope` ketika `client_type` login memang direktorat; akun ORG tetap terkunci ke scope **ORG**.
-- `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat hanya dianggap **DIREKTORAT** bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
+- Role direktorat (`ditbinmas`, `ditintelkam`, `bidhumas`, `ditsamapta`, `ditlantas`) hanya mengaktifkan scope **DIREKTORAT** di `filterUserDirectoryByScope` ketika `client_type` login memang direktorat; akun ORG tetap terkunci ke scope **ORG**.
+- `effectiveClientType` di `AuthContext` konsisten dengan workflow directorate vs org: role operator selalu diperlakukan sebagai **ORG**, role direktorat (termasuk `DITINTELKAM`) dianggap **DIREKTORAT** hanya bila `client_type` juga direktorat, sementara kombinasi khusus DITSAMAPTA + BIDHUMAS dipaksa menjadi **ORG** agar alur data memakai role BIDHUMAS.
 - Helper `filterUserDirectoryByScope` dipakai sebelum perhitungan ringkasan/chart pada halaman personil untuk memastikan summary dan visualisasi mengikuti scope yang sama.
 - Halaman `/users` tidak lagi melakukan fan-out `getClientProfile` untuk seluruh `client_id` ketika login Ditbinmas; label kesatuan mengandalkan field `nama_client`/`client_name` dari payload direktori.
 - Fungsi `getUserDirectory` di `utils/api.ts` sekarang menerima parameter opsional `role` dan `scope` agar backend dapat melakukan filter server-side bila tersedia. Jika backend belum mendukung, hasil tetap difilter kembali di client agar konsisten.
