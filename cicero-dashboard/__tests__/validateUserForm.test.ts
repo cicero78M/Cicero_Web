@@ -42,7 +42,10 @@ describe("validateNewUser", () => {
       "SIE YANMIN",
       "SIE SANDI",
       "SIE HUMAS",
+      "SIE KEU",
       "SIE KUM",
+      "PAM OBVIT",
+      "SAT PPA",
     ];
 
     satfungValues.forEach((satfung) => {
