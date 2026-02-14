@@ -54,6 +54,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Insight engagement Instagram sekarang mengandalkan payload `/api/insta/rekap-likes` sebagai satu-satunya sumber data untuk chart, kartu ringkasan, dan tabel rekap, termasuk metadata client/divisi yang dibaca langsung dari rekap tanpa lookup tambahan.
 - Hook `useInstagramLikesData` kini menyertakan fallback label aman ketika metadata client/divisi tidak tersedia di payload rekap, sehingga UI tetap informatif tanpa memanggil endpoint lain.
 - Ringkasan engagement (total post, total user, sudah/kurang/belum like, tanpa username) selalu berasal dari field ringkasan rekap atau dihitung ulang dari daftar user rekap yang sama agar konsisten dengan data `/api/insta/rekap-likes`.
+- Prioritas scope request Instagram engagement kini memihak tipe client direktorat: jika `effectiveClientType` **atau** `profile.client_type` bernilai `DIREKTORAT`, hook `useInstagramLikesData` selalu mengirim `scope=DIREKTORAT` (meski fallback sebelumnya mengembalikan ORG) agar akun direktorat seperti Ditintelkam tidak lagi menembak endpoint dengan `scope=ORG`.
 
 ## Dashboard Likes Instagram
 

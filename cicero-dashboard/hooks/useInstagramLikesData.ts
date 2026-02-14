@@ -260,17 +260,24 @@ export default function useInstagramLikesData({
     const profileClientType = normalizeScopePayload(
       profile?.client?.client_type ?? profile?.client_type,
     );
+    const normalizedEffectiveClientType = normalizeScopePayload(effectiveClientType);
+    const normalizedProfileClientType =
+      profileClientType === "ORG" || profileClientType === "DIREKTORAT"
+        ? profileClientType
+        : undefined;
     const hasValidClientType =
-      normalizeScopePayload(effectiveClientType) === "ORG" ||
-      normalizeScopePayload(effectiveClientType) === "DIREKTORAT";
+      normalizedEffectiveClientType === "ORG" ||
+      normalizedEffectiveClientType === "DIREKTORAT";
     const inferredScopeFromRole = DIREKTORAT_ROLE_CODES.has(normalizedRoleUpper)
       ? "DIREKTORAT"
       : "ORG";
-    const requestScopeFromAuth = hasValidClientType
-      ? normalizeScopePayload(effectiveClientType)
-      : profileClientType === "ORG" || profileClientType === "DIREKTORAT"
-        ? profileClientType
-        : inferredScopeFromRole;
+    const requestScopeFromAuth =
+      normalizedEffectiveClientType === "DIREKTORAT" ||
+      normalizedProfileClientType === "DIREKTORAT"
+        ? "DIREKTORAT"
+        : hasValidClientType
+          ? normalizedEffectiveClientType
+          : normalizedProfileClientType || inferredScopeFromRole;
     const requestRoleForContext =
       requestScopeFromAuth === "DIREKTORAT"
         ? normalizeRolePayload(effectiveRole ?? authRole ?? role)
@@ -296,7 +303,7 @@ export default function useInstagramLikesData({
       normalizedEffectiveRoleUpper === "DIREKTORAT" ||
       DIREKTORAT_ROLE_CODES.has(normalizedEffectiveRoleUpper);
     const isDitbinmasRole = normalizedEffectiveRoleLower === "ditbinmas";
-    const normalizedEffectiveClientType = String(effectiveClientType ?? "")
+    const normalizedClientTypeForFilter = String(effectiveClientType ?? "")
       .trim()
       .toUpperCase();
     const isOrgScope = requestScopeFromAuth === "ORG";
@@ -505,7 +512,7 @@ export default function useInstagramLikesData({
         if (
           isOperatorRole &&
           normalizedLoginClientId &&
-          normalizedEffectiveClientType !== "ORG"
+          normalizedClientTypeForFilter !== "ORG"
         ) {
           const normalizeRole = (value: unknown) =>
             String(value || "").trim().toLowerCase();
