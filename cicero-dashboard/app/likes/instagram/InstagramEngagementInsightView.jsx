@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Loader from "@/components/Loader";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok, buildInstagramRekap } from "@/utils/instagramEngagement";
+import { getEngagementStatus } from "@/utils/engagementStatus";
+import {
+  extractClientOptions,
+  filterUsersByClientId,
+} from "@/utils/directorateClientSelector";
 import Narrative from "@/components/Narrative";
+import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import useAuth from "@/hooks/useAuth";
@@ -25,6 +31,37 @@ import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
 
+function buildSummaryFromUsers(users, totalIGPost, fallbackSummary) {
+  const totalPost = Number(totalIGPost) || 0;
+  const summary = {
+    totalUser: users.length,
+    totalSudahLike: 0,
+    totalKurangLike: 0,
+    totalBelumLike: 0,
+    totalTanpaUsername: 0,
+    totalIGPost: totalPost || Number(fallbackSummary?.totalIGPost) || 0,
+  };
+
+  users.forEach((u) => {
+    const username = String(u?.username || "").trim();
+    if (!username) {
+      summary.totalTanpaUsername += 1;
+      return;
+    }
+
+    const status = getEngagementStatus({
+      completed: Number(u?.jumlah_like) || 0,
+      totalTarget: summary.totalIGPost,
+    });
+
+    if (status === "sudah") summary.totalSudahLike += 1;
+    else if (status === "kurang") summary.totalKurangLike += 1;
+    else summary.totalBelumLike += 1;
+  });
+
+  return summary;
+}
+
 export default function InstagramEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
   const { premiumTier, effectiveRole, effectiveClientType } = useAuth();
@@ -32,7 +69,11 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     initialTab === "rekap" ? "rekap" : "insight",
   );
   const [directorateScope, setDirectorateScope] = useState("client");
+  const [selectedClientId, setSelectedClientId] = useState("");
   const rekapSectionRef = useRef(null);
+
+  const isOriginalDirectorateClient =
+    String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
@@ -40,8 +81,15 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     }
   }, [initialTab]);
 
+  useEffect(() => {
+    if (isOriginalDirectorateClient) {
+      setDirectorateScope("all");
+    }
+  }, [isOriginalDirectorateClient]);
+
   const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
-  const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
+  const hasPremiumDateAccess =
+    isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const premiumViewOptions = [
     { value: "today", label: "Harian (hari ini)", periode: "harian" },
     { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
@@ -88,6 +136,37 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     scope: directorateScope,
   });
 
+  const shouldUseDirectorateLayout = isDirectorateLayout;
+
+  const directorateClientOptions = useMemo(() => {
+    if (!shouldUseDirectorateLayout || !isOriginalDirectorateClient) return [];
+    return extractClientOptions(chartData);
+  }, [chartData, shouldUseDirectorateLayout, isOriginalDirectorateClient]);
+
+  useEffect(() => {
+    if (!directorateClientOptions.length) {
+      if (selectedClientId) setSelectedClientId("");
+      return;
+    }
+
+    const hasSelected = directorateClientOptions.some(
+      (entry) => entry.client_id === selectedClientId,
+    );
+    if (!hasSelected) {
+      setSelectedClientId("");
+    }
+  }, [directorateClientOptions, selectedClientId]);
+
+  const shouldShowClientSelector =
+    shouldUseDirectorateLayout &&
+    isOriginalDirectorateClient &&
+    directorateClientOptions.length > 0;
+
+  const displayedUsers =
+    shouldShowClientSelector && selectedClientId
+      ? filterUsersByClientId(chartData, selectedClientId)
+      : chartData;
+
   if (loading) return <Loader />;
   if (error)
     return (
@@ -98,13 +177,11 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       </div>
     );
 
-  const shouldUseDirectorateLayout = isDirectorateLayout;
   const resolvedClientLabel = clientName || "";
-  const kelompok = shouldUseDirectorateLayout
-    ? null
-    : groupUsersByKelompok(chartData);
-  
-  // Standardized directorate logic matching TikTok engagement insight
+  const selectedClientName =
+    directorateClientOptions.find((entry) => entry.client_id === selectedClientId)
+      ?.nama_client || resolvedClientLabel;
+
   const shouldGroupByClient =
     shouldUseDirectorateLayout &&
     (directorateScope === "all" ||
@@ -113,13 +190,22 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
     ? "POLRES JAJARAN"
-    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
+    : `DIVISI / SATFUNG${selectedClientName ? ` - ${selectedClientName}` : ""}`;
   const directorateNarrative = shouldGroupByClient
     ? undefined
     : "Grafik ini menampilkan perbandingan capaian likes berdasarkan divisi/satfung.";
 
-  const totalUser = Number(rekapSummary.totalUser) || 0;
-  const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
+  const effectiveRekapSummary =
+    shouldShowClientSelector && selectedClientId
+      ? buildSummaryFromUsers(displayedUsers, rekapSummary.totalIGPost, rekapSummary)
+      : rekapSummary;
+
+  const kelompok = shouldUseDirectorateLayout
+    ? null
+    : groupUsersByKelompok(displayedUsers);
+
+  const totalUser = Number(effectiveRekapSummary.totalUser) || 0;
+  const totalTanpaUsername = Number(effectiveRekapSummary.totalTanpaUsername) || 0;
   const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
@@ -128,22 +214,26 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     return (numerator / denominator) * 100;
   };
 
-  const complianceRate = getPercentage(rekapSummary.totalSudahLike);
+  const complianceRate = getPercentage(effectiveRekapSummary.totalSudahLike);
   const actionNeededCount =
-    (Number(rekapSummary.totalKurangLike) || 0) +
-    (Number(rekapSummary.totalBelumLike) || 0);
+    (Number(effectiveRekapSummary.totalKurangLike) || 0) +
+    (Number(effectiveRekapSummary.totalBelumLike) || 0);
   const actionNeededRate = getPercentage(actionNeededCount);
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
   async function handleCopyRekap() {
-    const message = buildInstagramRekap(rekapSummary, chartData, clientName);
+    const message = buildInstagramRekap(
+      effectiveRekapSummary,
+      displayedUsers,
+      selectedClientName,
+    );
 
     if (navigator?.clipboard?.writeText) {
       try {
         await navigator.clipboard.writeText(message);
         showToast("Rekap disalin ke clipboard.", "success");
         return;
-      } catch (error) {
+      } catch {
         showToast(
           "Gagal menyalin rekap. Izinkan akses clipboard di browser Anda.",
           "error",
@@ -171,6 +261,9 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     const { value } = event.target || {};
     if (value === "client" || value === "all") {
       setDirectorateScope(value);
+      if (value === "client") {
+        setSelectedClientId("");
+      }
     }
   };
 
@@ -195,7 +288,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               actionNeededRate !== undefined
                 ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
                 : ""
-            }, termasuk ${rekapSummary.totalBelumLike} yang belum memberi likes sama sekali.`
+            }, termasuk ${effectiveRekapSummary.totalBelumLike} yang belum memberi likes sama sekali.`
           : "Seluruh akun aktif sudah memenuhi target likes.",
     },
     {
@@ -205,62 +298,61 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan (kelengkapan ${
               usernameCompletionPercent !== undefined
                 ? `${Math.round(usernameCompletionPercent)}%`
-                : "sedang diproses"
+                : "n/a"
             }).`
-          : "Seluruh akun sudah memiliki username yang valid.",
+          : "Semua akun sudah memiliki username. Data siap dipantau tanpa blindspot.",
     },
   ];
 
   const summaryCards = [
     {
-      key: "ig-post",
+      key: "posts",
       label: "Jumlah IG Post",
-      value: rekapSummary.totalIGPost,
+      value: effectiveRekapSummary.totalIGPost,
       color: "blue",
       icon: <Camera className="h-6 w-6" />,
     },
     {
-      key: "total-user",
+      key: "user",
       label: "Total User",
-      value: rekapSummary.totalUser,
-      color: "gray",
+      value: effectiveRekapSummary.totalUser,
+      color: "sky",
       icon: <User className="h-6 w-6" />,
     },
     {
       key: "sudah",
       label: "Sudah Likes",
-      value: rekapSummary.totalSudahLike,
+      value: effectiveRekapSummary.totalSudahLike,
       color: "green",
       icon: <ThumbsUp className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalSudahLike),
+      percentage: getPercentage(effectiveRekapSummary.totalSudahLike),
     },
     {
       key: "kurang",
       label: "Kurang Likes",
-      value: rekapSummary.totalKurangLike,
+      value: effectiveRekapSummary.totalKurangLike,
       color: "amber",
       icon: <ThumbsDown className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalKurangLike),
+      percentage: getPercentage(effectiveRekapSummary.totalKurangLike),
     },
     {
       key: "belum",
       label: "Belum Likes",
-      value: rekapSummary.totalBelumLike,
+      value: effectiveRekapSummary.totalBelumLike,
       color: "red",
       icon: <ThumbsDown className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalBelumLike),
+      percentage: getPercentage(effectiveRekapSummary.totalBelumLike),
     },
     {
       key: "tanpa",
       label: "Tanpa Username",
-      value: rekapSummary.totalTanpaUsername,
+      value: effectiveRekapSummary.totalTanpaUsername,
       color: "violet",
       icon: <UserX className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
+      percentage: getPercentage(effectiveRekapSummary.totalTanpaUsername, totalUser),
     },
   ];
 
-  // Common props for all ChartBox components to match TikTok standard
   const chartBoxCommonProps = {
     fieldJumlah: "jumlah_like",
     labelSudah: "User Sudah Likes",
@@ -315,12 +407,23 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           quickInsights={quickInsights}
           quickInsightTone="blue"
         >
+          {shouldShowClientSelector ? (
+            <div className="rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
+              <DirectorateClientSelector
+                clients={directorateClientOptions}
+                selectedClientId={selectedClientId}
+                onClientChange={setSelectedClientId}
+                label="Filter Polres"
+              />
+            </div>
+          ) : null}
+
           {shouldUseDirectorateLayout ? (
             <ChartBox
               {...chartBoxCommonProps}
               title={directorateTitle}
-              users={chartData}
-              totalPost={rekapSummary.totalIGPost}
+              users={displayedUsers}
+              totalPost={effectiveRekapSummary.totalIGPost}
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
               sortBy="percentage"
@@ -333,7 +436,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                   {...chartBoxCommonProps}
                   title="BAG"
                   users={kelompok.BAG}
-                  totalPost={rekapSummary.totalIGPost}
+                  totalPost={effectiveRekapSummary.totalIGPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi BAG."
                   sortBy="percentage"
                 />
@@ -343,7 +446,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                   {...chartBoxCommonProps}
                   title="SAT"
                   users={kelompok.SAT}
-                  totalPost={rekapSummary.totalIGPost}
+                  totalPost={effectiveRekapSummary.totalIGPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SAT."
                   sortBy="percentage"
                 />
@@ -353,7 +456,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                   {...chartBoxCommonProps}
                   title="SI & SPKT"
                   users={kelompok["SI & SPKT"]}
-                  totalPost={rekapSummary.totalIGPost}
+                  totalPost={effectiveRekapSummary.totalIGPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi SI & SPKT."
                   sortBy="percentage"
                 />
@@ -363,7 +466,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                   {...chartBoxCommonProps}
                   title="LAINNYA"
                   users={kelompok.LAINNYA}
-                  totalPost={rekapSummary.totalIGPost}
+                  totalPost={effectiveRekapSummary.totalIGPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah likes Instagram dari user di divisi lainnya."
                   sortBy="percentage"
                 />
@@ -373,7 +476,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                   <ChartHorizontal
                     title="POLSEK"
                     users={kelompok.POLSEK}
-                    totalPost={rekapSummary.totalIGPost}
+                    totalPost={effectiveRekapSummary.totalIGPost}
                     fieldJumlah="jumlah_like"
                     labelSudah="User Sudah Likes"
                     labelBelum="User Belum Likes"
@@ -397,13 +500,24 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
         description="Rekap detail keterlibatan likes dan komentar tersedia tanpa perlu pindah halaman."
         showContent={activeTab === "rekap"}
       >
+        {shouldShowClientSelector ? (
+          <div className="mb-4 rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
+            <DirectorateClientSelector
+              clients={directorateClientOptions}
+              selectedClientId={selectedClientId}
+              onClientChange={setSelectedClientId}
+              label="Filter Polres"
+            />
+          </div>
+        ) : null}
+
         <RekapLikesIG
-          users={chartData}
-          totalIGPost={rekapSummary.totalIGPost}
+          users={displayedUsers}
+          totalIGPost={effectiveRekapSummary.totalIGPost}
           posts={igPosts}
           showRekapButton
           showCopyButton={false}
-          clientName={clientName}
+          clientName={selectedClientName}
           reportContext={{
             periodeLabel: reportPeriodeLabel,
             viewLabel: resolvedViewOptions.find((option) => option.value === viewBy)?.label,
