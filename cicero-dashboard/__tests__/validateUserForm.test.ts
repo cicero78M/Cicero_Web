@@ -60,6 +60,21 @@ describe("validateNewUser", () => {
     });
   });
 
+  it("accepts new satfung options: KA POLRES, WAKA POLRES, SAT POLAIR", () => {
+    const newOptions = ["KA POLRES", "WAKA POLRES", "SAT POLAIR"];
+
+    newOptions.forEach((satfung) => {
+      const res = validateNewUser({
+        nama: "John",
+        pangkat: "BRIPDA",
+        nrpNip: "11111",
+        satfung,
+        polsekName: "",
+      });
+      expect(res).toEqual({ nrpNip: "11111", satfungValue: satfung });
+    });
+  });
+
   it("returns error for non numeric nrp", () => {
     const res = validateNewUser({
       nama: "Jane",
