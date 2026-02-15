@@ -21,6 +21,12 @@ Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bag
 
 - Segment **Rekap Personel Instagram** menyamakan desain dengan halaman TikTok: status baris memakai `clampEngagementCompleted` agar jumlah like tidak melampaui target posting, pencarian ikut membersihkan label satfung/polsek serta `client_id`, dan tabel zebra menampilkan badge status, detail client + ID, serta footer pagination Prev/Reset/Next yang menyatu dengan tabel seperti standar TikTok Engagement Insight.【F:cicero-dashboard/components/likes/instagram/Rekap/RekapLikesIG.jsx†L1-L360】
 
+## Standarisasi Selector Client Direktorat (mengikuti User Directory)
+
+- Pada scope **DIREKTORAT asli** (nilai `effectiveClientType === "DIREKTORAT"`), halaman Instagram Engagement Insight sekarang mengikuti pola User Directory untuk penyajian label client: daftar `client_id` dari payload rekap dipetakan ke nama client kanonik via `getClientNames`, lalu dinormalisasi menggunakan utilitas bersama `normalizeUsersWithClientLabel`.
+- Dengan pola ini, dropdown `DirectorateClientSelector` dan list user pada insight/rekap memakai sumber label yang sama seperti User Directory, termasuk fallback aman ketika backend hanya mengirim `client_id`.
+- Implementasi berada di hook `useInstagramLikesData` agar seluruh komponen turunan (`ChartBox`, `RekapLikesIG`, dan narasi copy rekap) otomatis menerima data yang sudah distandarkan tanpa duplikasi logika di layer UI.
+
 ## Pengelompokan dan Visualisasi
 
 - Hook mengembalikan flag `isDirectorateData`, `isDirectorateLayout`, `isOrgClient`, `isDirectorateScopedClient`, serta `clientName`. Informasi ini menentukan apakah chart akan digrup berdasarkan divisi, kelompok (menggunakan `groupUsersByKelompok` dari `utils/instagramEngagement.ts`), atau langsung per Polres saat memvisualisasikan data. Pada mode direktorat, pemilihan grouping (client vs divisi), judul, dan orientasi chart mengikuti metadata yang tersedia di payload `/api/insta/rekap-likes` sehingga UI DIREKTORAT sepenuhnya mengandalkan rekap tersebut.【F:cicero-dashboard/app/likes/instagram/InstagramEngagementInsightView.jsx†L89-L245】【F:cicero-dashboard/app/likes/instagram/page.jsx†L21-L160】【F:cicero-dashboard/utils/instagramEngagement.ts†L1-L69】

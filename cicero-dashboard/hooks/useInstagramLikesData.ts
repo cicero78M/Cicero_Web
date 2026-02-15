@@ -1,11 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getRekapLikesIG } from "@/utils/api";
+import { getClientNames, getRekapLikesIG } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
 import { getEngagementStatus } from "@/utils/engagementStatus";
+import {
+  normalizeClientId,
+  normalizeUsersWithClientLabel,
+} from "@/utils/directorateClientSelector";
 const REKAP_TOTAL_POST_FIELDS = [
   "totalPosts",
   "totalIGPost",
@@ -371,7 +375,22 @@ export default function useInstagramLikesData({
         );
         let users = extractRekapUsers(rekapRes);
         const rekapClients = extractRekapClients(rekapRes);
-        const directoryNameMap = buildClientNameMap(rekapClients, users);
+        let directoryNameMap = buildClientNameMap(rekapClients, users);
+        const directoryClientIds = users
+          .map((entry: any) => normalizeClientId(entry))
+          .filter(Boolean);
+        if (token && directoryClientIds.length > 0) {
+          const canonicalClientNames = await getClientNames(
+            token,
+            directoryClientIds,
+            controller.signal,
+            undefined,
+          );
+          directoryNameMap = {
+            ...directoryNameMap,
+            ...canonicalClientNames,
+          };
+        }
         postsFromRekap = extractRekapPosts(rekapRes);
         setIgPosts(postsFromRekap);
 
@@ -464,18 +483,8 @@ export default function useInstagramLikesData({
               return userClientId === normalizedLoginClientId;
             });
           }
-          users = users.map((u: any) => {
-            const key = String(
-              u.client_id || u.clientId || u.clientID || u.client || "",
-            );
-            const mappedName = directoryNameMap[key];
-            return mappedName
-              ? {
-                  ...u,
-                  nama_client: mappedName,
-                  client_name: mappedName,
-                }
-              : u;
+          users = normalizeUsersWithClientLabel(users, {
+            fallbackNameByClientId: directoryNameMap,
           });
         }
 
