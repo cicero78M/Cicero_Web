@@ -19,6 +19,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Pilihan **Satfung/Divisi** juga mencakup **UNIT POLSATWA** sehingga kesatuan tersebut tersedia di dropdown tambah dan edit pengguna tanpa perlu input manual, kini dibaca langsung dari daftar opsi terpusat `utils/validateUserForm` agar validasi dan tampilan selalu selaras.
 - Aksi **Nonaktifkan** pada User Directory kini memakai modal konfirmasi yang mewajibkan input NRP/NIP sesuai user sebelum status diubah menjadi nonaktif (soft delete), sementara user nonaktif dapat diaktifkan kembali lewat tombol **Aktifkan kembali**.
 - Tabel User Directory sekarang membungkus konten kolom sehingga data panjang tetap terbaca tanpa perlu horizontal scroll.
+- Dropdown klien untuk pengguna scope direktorat kini memvalidasi label `nama_client`/`client_name`: label kosong atau generik (mis. memuat kata "DIREKTORAT") otomatis fallback ke `client_id`, dan jika label eksplisit yang sama dipakai oleh beberapa `client_id` maka label ditampilkan sebagai `nama_client (client_id)` agar setiap opsi tetap unik serta representatif satker.
 
 ### User directory scope & role normalization
 
