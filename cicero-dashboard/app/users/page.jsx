@@ -171,7 +171,6 @@ export default function UserDirectoryPage() {
               String(u.client_id || u.clientId || u.clientID || u.client || ""),
             ),
             undefined,
-            profileRequestContext,
           );
           arr = arr.map((u) => ({
             ...u,
