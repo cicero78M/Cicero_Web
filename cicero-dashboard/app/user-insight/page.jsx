@@ -330,62 +330,14 @@ export default function UserInsightPage() {
 
   function handleCopyRekap() {
     const now = new Date();
-    const day = now.toLocaleDateString("id-ID", { weekday: "long" });
-    const tanggal = now.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    const waktu = now.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    const hour = now.getHours();
-    const sapaan =
-      hour < 11
-        ? "pagi"
-        : hour < 15
-          ? "siang"
-          : hour < 18
-            ? "sore"
-            : "malam";
-
-    const reportTarget = (() => {
-      if (!isDirectorate) {
-        return "kesatuan";
-      }
-      if (!selectedClientId) {
-        return "kategori SEMUA";
-      }
-      const selectedClient = availableClients.find(
-        (client) => String(client.id) === String(selectedClientId),
-      );
-      return `kategori ${String(selectedClient?.name || selectedClientId).toUpperCase()}`;
-    })();
-
-    const totalLengkap = filteredUsers.filter(
-      (u) => Boolean(String(u.insta || "").trim()) && Boolean(String(u.tiktok || "").trim()),
-    ).length;
-    const totalKurangLengkap = filteredUsers.filter((u) => {
-      const hasIG = Boolean(String(u.insta || "").trim());
-      const hasTiktok = Boolean(String(u.tiktok || "").trim());
-      return (hasIG && !hasTiktok) || (!hasIG && hasTiktok);
-    }).length;
-    const totalBelumUpdate = filteredUsers.filter(
-      (u) => !String(u.insta || "").trim() && !String(u.tiktok || "").trim(),
-    ).length;
-
+    const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
     const lines = [
-      `Selamat ${sapaan},`,
-      "",
-      `Mohon ijin Komandan, melaporkan progres pembaruan data username personil ${reportTarget} pada ${day}, ${tanggal}, pukul ${waktu} WIB.`,
-      "",
-      "📊 Ringkasan Status Update Username:",
-      `* Total User: ${filteredUsers.length}`,
-      `* Username Sudah Lengkap: ${totalLengkap}`,
-      `* Username Kurang Lengkap: ${totalKurangLengkap}`,
-      `* Belum Melakukan Update: ${totalBelumUpdate}`,
+      `Rekap User Insight (${tanggal})`,
+      `Total User: ${summary.total}`,
+      `Instagram Terisi: ${summary.instagramFilled}`,
+      `Instagram Belum Diisi: ${summary.instagramEmpty}`,
+      `TikTok Terisi: ${summary.tiktokFilled}`,
+      `TikTok Belum Diisi: ${summary.tiktokEmpty}`,
       "",
     ];
     if (isDirectorate) {
