@@ -5,22 +5,54 @@ export interface ClientOption {
   nama_client: string;
 }
 
+export interface ClientLabelResolverOptions {
+  fallbackNameByClientId?: Record<string, string>;
+}
+
 function isGenericDirectorateLabel(label: string): boolean {
   return label.toUpperCase().includes("DIREKTORAT");
 }
 
-function getClientId(user: Record<string, unknown>): string {
+export function normalizeClientId(user: Record<string, unknown>): string {
   return String(
     user.client_id || user.clientId || user.clientID || user.client || ""
   ).trim();
 }
 
-function getExplicitClientName(user: Record<string, unknown>): string {
-  return String(user.nama_client || user.client_name || "").trim();
+function getRawClientName(user: Record<string, unknown>): string {
+  return String(user.nama_client || user.client_name || user.client || "").trim();
 }
 
 function isSpecificSatkerLabel(label: string): boolean {
   return label !== "" && !isGenericDirectorateLabel(label);
+}
+
+export function resolveClientLabel(
+  user: Record<string, unknown>,
+  options: ClientLabelResolverOptions = {}
+): string {
+  const clientId = normalizeClientId(user);
+  const rawName = getRawClientName(user);
+  const explicitName = isSpecificSatkerLabel(rawName) ? rawName : "";
+  const fallbackByMap =
+    clientId && options.fallbackNameByClientId
+      ? String(options.fallbackNameByClientId[clientId] || "").trim()
+      : "";
+  const fallbackFromMap = isSpecificSatkerLabel(fallbackByMap)
+    ? fallbackByMap
+    : "";
+
+  return explicitName || fallbackFromMap || clientId;
+}
+
+export function normalizeUsersWithClientLabel(
+  users: Array<Record<string, unknown>>,
+  options: ClientLabelResolverOptions = {}
+): Array<Record<string, unknown>> {
+  return users.map((user) => ({
+    ...user,
+    nama_client: resolveClientLabel(user, options),
+  }));
 }
 
 /**
@@ -29,16 +61,16 @@ function isSpecificSatkerLabel(label: string): boolean {
  * @returns Array of unique client options sorted by name
  */
 export function extractClientOptions(
-  users: Array<Record<string, unknown>>
+  users: Array<Record<string, unknown>>,
+  options: ClientLabelResolverOptions = {}
 ): ClientOption[] {
   const labelByClientId = new Map<string, string>();
 
   users.forEach((user) => {
-    const clientId = getClientId(user);
+    const clientId = normalizeClientId(user);
     if (!clientId) return;
 
-    const explicitName = getExplicitClientName(user);
-    const nextLabel = isSpecificSatkerLabel(explicitName) ? explicitName : clientId;
+    const nextLabel = resolveClientLabel(user, options);
     const currentLabel = labelByClientId.get(clientId);
 
     if (!currentLabel) {
@@ -46,12 +78,8 @@ export function extractClientOptions(
       return;
     }
 
-    // Upgrade fallback label to explicit satker label when later payloads are more specific.
-    if (
-      currentLabel === clientId &&
-      isSpecificSatkerLabel(explicitName)
-    ) {
-      labelByClientId.set(clientId, explicitName);
+    if (currentLabel === clientId && nextLabel !== clientId) {
+      labelByClientId.set(clientId, nextLabel);
     }
   });
 
@@ -61,7 +89,7 @@ export function extractClientOptions(
     normalizedLabelUsage.set(normalized, (normalizedLabelUsage.get(normalized) || 0) + 1);
   });
 
-  const options = Array.from(labelByClientId.entries()).map(([client_id, baseLabel]) => {
+  const extractedOptions = Array.from(labelByClientId.entries()).map(([client_id, baseLabel]) => {
     const hasDuplicateLabel =
       (normalizedLabelUsage.get(baseLabel.toLocaleLowerCase("id")) || 0) > 1;
 
@@ -72,7 +100,7 @@ export function extractClientOptions(
   });
 
   // Sort by name
-  return options.sort((a, b) =>
+  return extractedOptions.sort((a, b) =>
     a.nama_client.localeCompare(b.nama_client, "id", { sensitivity: "base" })
   );
 }
@@ -91,10 +119,5 @@ export function filterUsersByClientId(
     return users;
   }
 
-  return users.filter((u) => {
-    const userClientId = String(
-      u.client_id || u.clientId || u.clientID || u.client || ""
-    ).trim();
-    return userClientId === selectedClientId;
-  });
+  return users.filter((u) => normalizeClientId(u) === selectedClientId);
 }

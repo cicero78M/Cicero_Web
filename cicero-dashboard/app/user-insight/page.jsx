@@ -31,6 +31,7 @@ import {
 import {
   extractClientOptions,
   filterUsersByClientId,
+  normalizeUsersWithClientLabel,
 } from "@/utils/directorateClientSelector";
 import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 
@@ -187,28 +188,18 @@ export default function UserInsightPage() {
         let processedUsers = scopedUsers;
         if (dir) {
           const activeClientName =
-            profile.nama_client ||
-            profile.client_name ||
-            profile.client ||
-            "";
-          processedUsers = users.map((u) => {
-            const userClientId = String(
-              u.client_id || u.clientId || u.clientID || u.id || "",
-            );
-            const isActiveClient =
-              String(clientId) !== "" && String(clientId) === userClientId;
-            return {
-              ...u,
-              nama_client:
-                u.nama_client ||
-                u.client_name ||
-                (isActiveClient ? activeClientName : "") ||
-                u.client,
-            };
+            profile.nama_client || profile.client_name || profile.client || "";
+          const fallbackNameByClientId = String(clientId)
+            ? { [String(clientId)]: activeClientName }
+            : {};
+          processedUsers = normalizeUsersWithClientLabel(scopedUsers, {
+            fallbackNameByClientId,
           });
 
           // Extract available clients for the selector
-          const clients = extractClientOptions(processedUsers);
+          const clients = extractClientOptions(processedUsers, {
+            fallbackNameByClientId,
+          });
           setAvailableClients(clients);
         } else {
           setAvailableClients([]);

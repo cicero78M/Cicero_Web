@@ -1,6 +1,9 @@
 import {
   extractClientOptions,
   filterUsersByClientId,
+  normalizeClientId,
+  normalizeUsersWithClientLabel,
+  resolveClientLabel,
 } from "@/utils/directorateClientSelector";
 
 describe("directorateClientSelector", () => {
@@ -156,4 +159,44 @@ describe("directorateClientSelector", () => {
       expect(result).toHaveLength(2);
     });
   });
+
+  describe("client label helpers", () => {
+    it("should normalize client id from common field variants", () => {
+      expect(normalizeClientId({ clientId: "POLDA_JABAR" })).toBe("POLDA_JABAR");
+      expect(normalizeClientId({ clientID: "POLDA_JATIM" })).toBe("POLDA_JATIM");
+      expect(normalizeClientId({ client_id: " POLDA_BALI " })).toBe("POLDA_BALI");
+    });
+
+    it("should resolve label using explicit name, fallback map, then client id", () => {
+      expect(resolveClientLabel({ client_id: "CID_A", nama_client: "Polres A" })).toBe(
+        "Polres A"
+      );
+      expect(
+        resolveClientLabel(
+          { client_id: "CID_A", nama_client: "DIREKTORAT INTELKAM" },
+          { fallbackNameByClientId: { CID_A: "Polres Fallback" } }
+        )
+      ).toBe("Polres Fallback");
+      expect(resolveClientLabel({ client_id: "CID_A", nama_client: "DIREKTORAT INTELKAM" })).toBe(
+        "CID_A"
+      );
+    });
+
+    it("should normalize users with resolved nama_client", () => {
+      const users = [
+        { client_id: "CID_A", nama_client: "DIREKTORAT BINMAS" },
+        { client_id: "CID_B", client_name: "Polres B" },
+      ];
+
+      const normalized = normalizeUsersWithClientLabel(users, {
+        fallbackNameByClientId: { CID_A: "Polres A" },
+      });
+
+      expect(normalized).toEqual([
+        { client_id: "CID_A", nama_client: "Polres A" },
+        { client_id: "CID_B", client_name: "Polres B", nama_client: "Polres B" },
+      ]);
+    });
+  });
+
 });
