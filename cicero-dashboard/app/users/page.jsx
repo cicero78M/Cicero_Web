@@ -19,6 +19,8 @@ import {
 import {
   extractClientOptions,
   filterUsersByClientId,
+  normalizeClientId,
+  normalizeUsersWithClientLabel,
 } from "@/utils/directorateClientSelector";
 import { Pencil, Check, X, RefreshCw, Trash2 } from "lucide-react";
 import Loader from "@/components/Loader";
@@ -165,26 +167,18 @@ export default function UserDirectoryPage() {
         );
 
         if (dir && !isDitbinmas) {
-          const nameMap = await getClientNames(
-            token,
-            arr.map((u) =>
-              String(u.client_id || u.clientId || u.clientID || u.client || ""),
-            ),
-            undefined,
-          );
-          arr = arr.map((u) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(u.client_id || u.clientId || u.clientID || u.client || "")
-              ] ||
-              u.nama_client ||
-              u.client_name ||
-              u.client,
-          }));
+          const clientIds = arr
+            .map((u) => normalizeClientId(u))
+            .filter((cid) => cid !== "");
+          const nameMap = await getClientNames(token, clientIds, undefined);
+          arr = normalizeUsersWithClientLabel(arr, {
+            fallbackNameByClientId: nameMap,
+          });
 
           // Extract available clients for the selector
-          const clients = extractClientOptions(arr);
+          const clients = extractClientOptions(arr, {
+            fallbackNameByClientId: nameMap,
+          });
           setAvailableClients(clients);
         } else {
           setAvailableClients([]);
