@@ -27,7 +27,7 @@ npm install
 #### 2. Clear Build Cache
 ```bash
 cd cicero-dashboard
-npm run clean  # This removes .next directory
+npm run clean  # This removes .next directory (or run: rm -rf .next)
 npm run build
 ```
 
