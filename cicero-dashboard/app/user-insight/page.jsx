@@ -70,17 +70,31 @@ export default function UserInsightPage() {
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [chartPolres, setChartPolres] = useState([]);
   const [allUsers, setAllUsers] = useState([]); // Store all users before filtering
+  const [directorateScope, setDirectorateScope] = useState("client");
   // Directorate client selector state
   const [selectedClientId, setSelectedClientId] = useState("");
   const [availableClients, setAvailableClients] = useState([]);
 
+  const isOriginalDirectorateClient =
+    String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
+
+  useEffect(() => {
+    if (isOriginalDirectorateClient) {
+      setDirectorateScope("all");
+    }
+  }, [isOriginalDirectorateClient]);
+
   // Apply client filter using useMemo for consistency with users page
   const filteredUsers = useMemo(() => {
-    if (!isDirectorate || !selectedClientId) {
+    if (
+      !isDirectorate ||
+      directorateScope !== "all" ||
+      !selectedClientId
+    ) {
       return allUsers;
     }
     return filterUsersByClientId(allUsers, selectedClientId);
-  }, [allUsers, isDirectorate, selectedClientId]);
+  }, [allUsers, isDirectorate, directorateScope, selectedClientId]);
 
   const getHighestFillRatio = (entry) => {
     if (!entry || !entry.total) {
@@ -136,7 +150,13 @@ export default function UserInsightPage() {
 
   useEffect(() => {
     fetchData();
-  }, [token, clientId, effectiveClientType]);
+  }, [
+    token,
+    clientId,
+    effectiveClientType,
+    directorateScope,
+    isOriginalDirectorateClient,
+  ]);
 
   async function fetchData() {
       if (!token || !clientId) {
@@ -192,15 +212,28 @@ export default function UserInsightPage() {
           const fallbackNameByClientId = String(clientId)
             ? { [String(clientId)]: activeClientName }
             : {};
-          processedUsers = normalizeUsersWithClientLabel(scopedUsers, {
+          const normalizedUsers = normalizeUsersWithClientLabel(scopedUsers, {
             fallbackNameByClientId,
           });
 
           // Extract available clients for the selector
-          const clients = extractClientOptions(processedUsers, {
+          const clients = extractClientOptions(normalizedUsers, {
             fallbackNameByClientId,
           });
           setAvailableClients(clients);
+
+          if (
+            isOriginalDirectorateClient &&
+            directorateScope === "client" &&
+            String(clientId || "").trim()
+          ) {
+            processedUsers = filterUsersByClientId(
+              normalizedUsers,
+              String(clientId).trim(),
+            );
+          } else {
+            processedUsers = normalizedUsers;
+          }
         } else {
           setAvailableClients([]);
         }
@@ -213,6 +246,22 @@ export default function UserInsightPage() {
         setLoading(false);
       }
     }
+
+  useEffect(() => {
+    if (!availableClients.length) {
+      if (selectedClientId) {
+        setSelectedClientId("");
+      }
+      return;
+    }
+
+    const hasSelected = availableClients.some(
+      (entry) => entry.client_id === selectedClientId,
+    );
+    if (!hasSelected) {
+      setSelectedClientId("");
+    }
+  }, [availableClients, selectedClientId]);
 
   // Process charts and summary when filtered users change
   useEffect(() => {
@@ -413,14 +462,36 @@ export default function UserInsightPage() {
                   </div>
                 </div>
 
-                {isDirectorate && (
-                  <div className="self-start">
-                    <DirectorateClientSelector
-                      clients={availableClients}
-                      selectedClientId={selectedClientId}
-                      onClientChange={setSelectedClientId}
-                      label="Pilih Client Direktorat / Satker"
-                    />
+                {isDirectorate && isOriginalDirectorateClient && (
+                  <div className="self-start space-y-3">
+                    <div className="flex w-full min-w-[min(100%,22rem)] flex-wrap items-center gap-2 rounded-xl border border-sky-100/80 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-inner sm:w-auto">
+                      <span className="font-semibold text-slate-800">Lingkup:</span>
+                      <select
+                        value={directorateScope}
+                        onChange={(event) => {
+                          const { value } = event.target || {};
+                          if (value === "client" || value === "all") {
+                            setDirectorateScope(value);
+                            if (value === "client") {
+                              setSelectedClientId("");
+                            }
+                          }
+                        }}
+                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200 sm:w-auto"
+                      >
+                        <option value="client">Client Aktif</option>
+                        <option value="all">Satker Jajaran</option>
+                      </select>
+                    </div>
+
+                    {directorateScope === "all" && availableClients.length > 0 ? (
+                      <DirectorateClientSelector
+                        clients={availableClients}
+                        selectedClientId={selectedClientId}
+                        onClientChange={setSelectedClientId}
+                        label="Pilih Client Direktorat / Satker"
+                      />
+                    ) : null}
                   </div>
                 )}
 
