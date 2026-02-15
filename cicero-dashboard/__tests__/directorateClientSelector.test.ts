@@ -74,6 +74,20 @@ describe("directorateClientSelector", () => {
       expect(result).toHaveLength(1);
       expect(result[0].nama_client).toBe("CLIENT_A");
     });
+
+    it("should not use client field as name when it contains role information", () => {
+      const users = [
+        { client_id: "POLDA_LAMPUNG", client: "DIREKTORAT INTELKAM" },
+        { client_id: "POLDA_JATIM", client: "DIREKTORAT INTELKAM" },
+      ];
+
+      const result = extractClientOptions(users);
+
+      expect(result).toHaveLength(2);
+      // Should use client_id as fallback, not the client field with role info
+      expect(result[0].nama_client).toBe("POLDA_JATIM");
+      expect(result[1].nama_client).toBe("POLDA_LAMPUNG");
+    });
   });
 
   describe("filterUsersByClientId", () => {

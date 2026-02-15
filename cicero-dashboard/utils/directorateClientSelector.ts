@@ -23,7 +23,7 @@ export function extractClientOptions(
     if (!id) return;
 
     const name = String(
-      u.nama_client || u.client_name || u.client || id
+      u.nama_client || u.client_name || id
     ).trim();
 
     if (!clientMap.has(id)) {
