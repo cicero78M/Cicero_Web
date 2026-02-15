@@ -75,6 +75,22 @@ describe("directorateClientSelector", () => {
       expect(result[0].nama_client).toBe("CLIENT_A");
     });
 
+
+    it("should fallback to unique satker identifiers when directorate labels are generic and duplicated", () => {
+      const users = [
+        { client_id: "POLDA_LAMPUNG", nama_client: "DIREKTORAT INTELKAM" },
+        { client_id: "POLDA_JATIM", nama_client: "DIREKTORAT INTELKAM" },
+        { client_id: "POLDA_JABAR", nama_client: "DIREKTORAT INTELKAM" },
+      ];
+
+      const result = extractClientOptions(users);
+
+      expect(result).toEqual([
+        { client_id: "POLDA_JABAR", nama_client: "POLDA_JABAR" },
+        { client_id: "POLDA_JATIM", nama_client: "POLDA_JATIM" },
+        { client_id: "POLDA_LAMPUNG", nama_client: "POLDA_LAMPUNG" },
+      ]);
+    });
     it("should not use client field as name when it contains role information", () => {
       const users = [
         { client_id: "POLDA_LAMPUNG", client: "DIREKTORAT INTELKAM" },

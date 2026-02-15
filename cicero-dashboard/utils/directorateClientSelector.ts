@@ -5,6 +5,24 @@ export interface ClientOption {
   nama_client: string;
 }
 
+function isGenericDirectorateLabel(label: string): boolean {
+  return label.toUpperCase().includes("DIREKTORAT");
+}
+
+function getClientId(user: Record<string, unknown>): string {
+  return String(
+    user.client_id || user.clientId || user.clientID || user.client || ""
+  ).trim();
+}
+
+function getExplicitClientName(user: Record<string, unknown>): string {
+  return String(user.nama_client || user.client_name || "").trim();
+}
+
+function isSpecificSatkerLabel(label: string): boolean {
+  return label !== "" && !isGenericDirectorateLabel(label);
+}
+
 /**
  * Extract unique client options from users data for directorate scope
  * @param users Array of user records
@@ -13,31 +31,48 @@ export interface ClientOption {
 export function extractClientOptions(
   users: Array<Record<string, unknown>>
 ): ClientOption[] {
-  const clientMap = new Map<string, string>();
+  const labelByClientId = new Map<string, string>();
 
-  users.forEach((u) => {
-    const id = String(
-      u.client_id || u.clientId || u.clientID || u.client || ""
-    ).trim();
-    
-    if (!id) return;
+  users.forEach((user) => {
+    const clientId = getClientId(user);
+    if (!clientId) return;
 
-    const name = String(
-      u.nama_client || u.client_name || id
-    ).trim();
+    const explicitName = getExplicitClientName(user);
+    const nextLabel = isSpecificSatkerLabel(explicitName) ? explicitName : clientId;
+    const currentLabel = labelByClientId.get(clientId);
 
-    if (!clientMap.has(id)) {
-      clientMap.set(id, name);
+    if (!currentLabel) {
+      labelByClientId.set(clientId, nextLabel);
+      return;
+    }
+
+    // Upgrade fallback label to explicit satker label when later payloads are more specific.
+    if (
+      currentLabel === clientId &&
+      isSpecificSatkerLabel(explicitName)
+    ) {
+      labelByClientId.set(clientId, explicitName);
     }
   });
 
-  const options = Array.from(clientMap.entries()).map(([client_id, nama_client]) => ({
-    client_id,
-    nama_client,
-  }));
+  const normalizedLabelUsage = new Map<string, number>();
+  labelByClientId.forEach((label) => {
+    const normalized = label.toLocaleLowerCase("id");
+    normalizedLabelUsage.set(normalized, (normalizedLabelUsage.get(normalized) || 0) + 1);
+  });
+
+  const options = Array.from(labelByClientId.entries()).map(([client_id, baseLabel]) => {
+    const hasDuplicateLabel =
+      (normalizedLabelUsage.get(baseLabel.toLocaleLowerCase("id")) || 0) > 1;
+
+    return {
+      client_id,
+      nama_client: hasDuplicateLabel ? `${baseLabel} (${client_id})` : baseLabel,
+    };
+  });
 
   // Sort by name
-  return options.sort((a, b) => 
+  return options.sort((a, b) =>
     a.nama_client.localeCompare(b.nama_client, "id", { sensitivity: "base" })
   );
 }
