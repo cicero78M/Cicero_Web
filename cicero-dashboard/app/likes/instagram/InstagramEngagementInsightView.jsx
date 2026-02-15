@@ -363,6 +363,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     titleClassName: "text-slate-700",
   };
 
+  const directorateClientSelectorLabel = "Pilih Client Direktorat / Satker";
+
   const scopeSelectorProps = {
     value: directorateScope,
     onChange: handleDirectorateScopeChange,
@@ -413,7 +415,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
                 clients={directorateClientOptions}
                 selectedClientId={selectedClientId}
                 onClientChange={setSelectedClientId}
-                label="Filter Polres"
+                label={directorateClientSelectorLabel}
               />
             </div>
           ) : null}
@@ -506,7 +508,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               clients={directorateClientOptions}
               selectedClientId={selectedClientId}
               onClientChange={setSelectedClientId}
-              label="Filter Polres"
+              label={directorateClientSelectorLabel}
             />
           </div>
         ) : null}
