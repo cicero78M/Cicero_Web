@@ -2657,7 +2657,8 @@ export async function getClientProfile(
   );
 }
 
-// Ambil nama-nama client berdasarkan daftar client_id
+// Ambil nama canonical client berdasarkan daftar client_id untuk kebutuhan display label.
+// Jangan ikat lookup ini ke scope direktorat saat target label berasal dari satker ORG.
 export async function getClientNames(
   token: string,
   clientIds: string[],
