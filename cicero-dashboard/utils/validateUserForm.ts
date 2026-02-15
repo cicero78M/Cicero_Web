@@ -83,6 +83,9 @@ export const SATFUNG_OPTIONS = [
   "PAM OBVIT",
   "UNIT POLSATWA",
   "POLSEK",
+  "KA POLRES",
+  "WAKA POLRES",
+  "SAT POLAIR",
 ];
 
 interface NewUserData {
