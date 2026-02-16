@@ -2,6 +2,10 @@
 
 Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bagaimana halaman knowledge base mendukung operator di lapangan.
 
+## Baseline lintas platform engagement
+
+- Untuk standar bersama halaman **Instagram Engagement Insight** dan **TikTok Engagement Insight**, rujuk dokumen baseline [`docs/engagement-insight-standard.md`](./engagement-insight-standard.md). Dokumen ini menjadi acuan parity untuk struktur halaman, data flow, UX action, visual/copy, serta checklist acceptance criteria PR.
+
 ## Alur Pengambilan Data
 
 1. Halaman **Instagram Engagement Insight** menjalankan hook `useInstagramLikesData` untuk mengambil data berdasarkan mode tampilan yang dipilih (today, yesterday, weekly, monthly, custom range). Hook ini memanfaatkan `useAuth` untuk memperoleh token, `client_id`, role, serta nilai override `effectiveRole`/`effectiveClientType` (dengan fallback `localStorage`) sebelum memutuskan cakupan data. Saat profil masih dimuat, hook menunggu hingga scope/regional dari profil tersedia agar pemanggilan `/api/insta/rekap-likes` tidak terjadi tanpa parameter `scope`/`regional_id`. Seluruh data chart, kartu ringkasan, dan tabel rekap sekarang **100% bersumber dari `/api/insta/rekap-likes`** tanpa pemanggilan endpoint lain untuk melengkapi metadata.【F:cicero-dashboard/hooks/useInstagramLikesData.ts†L79-L481】
