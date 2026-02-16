@@ -5,8 +5,14 @@ import Loader from "@/components/Loader";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
+import { getEngagementStatus } from "@/utils/engagementStatus";
+import {
+  extractClientOptions,
+  filterUsersByClientId,
+} from "@/utils/directorateClientSelector";
 import { showToast } from "@/utils/showToast";
 import Narrative from "@/components/Narrative";
+import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { Music, MessageCircle, UserX, Users } from "lucide-react";
 import useTiktokCommentsData from "@/hooks/useTiktokCommentsData";
@@ -20,6 +26,37 @@ import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsi
 import useAuth from "@/hooks/useAuth";
 import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
 
+function buildSummaryFromUsers(users, totalTiktokPost, fallbackSummary) {
+  const totalPost = Number(totalTiktokPost) || 0;
+  const summary = {
+    totalUser: users.length,
+    totalSudahKomentar: 0,
+    totalKurangKomentar: 0,
+    totalBelumKomentar: 0,
+    totalTanpaUsername: 0,
+    totalTiktokPost: totalPost || Number(fallbackSummary?.totalTiktokPost) || 0,
+  };
+
+  users.forEach((u) => {
+    const username = String(u?.username || "").trim();
+    if (!username) {
+      summary.totalTanpaUsername += 1;
+      return;
+    }
+
+    const status = getEngagementStatus({
+      completed: Number(u?.jumlah_komentar) || 0,
+      totalTarget: summary.totalTiktokPost,
+    });
+
+    if (status === "sudah") summary.totalSudahKomentar += 1;
+    else if (status === "kurang") summary.totalKurangKomentar += 1;
+    else summary.totalBelumKomentar += 1;
+  });
+
+  return summary;
+}
+
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
   const { premiumTier, effectiveRole, effectiveClientType } = useAuth();
@@ -27,7 +64,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     initialTab === "rekap" ? "rekap" : "insight",
   );
   const [directorateScope, setDirectorateScope] = useState("client");
+  const [selectedClientId, setSelectedClientId] = useState("");
   const rekapSectionRef = useRef(null);
+
+  const isOriginalDirectorateClient =
+    String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
@@ -88,6 +129,50 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     [resolvedViewOptions, viewBy],
   );
 
+  const directorateClientOptions = useMemo(() => {
+    if (!isDirectorate || !isOriginalDirectorateClient) return [];
+    return extractClientOptions(users);
+  }, [isDirectorate, isOriginalDirectorateClient, users]);
+
+  useEffect(() => {
+    if (!directorateClientOptions.length) {
+      if (selectedClientId) setSelectedClientId("");
+      return;
+    }
+
+    const hasSelected = directorateClientOptions.some(
+      (entry) => entry.client_id === selectedClientId,
+    );
+    if (!hasSelected) {
+      setSelectedClientId("");
+    }
+  }, [directorateClientOptions, selectedClientId]);
+
+  const shouldShowClientSelector =
+    isDirectorate && isOriginalDirectorateClient && directorateClientOptions.length > 0;
+
+  const displayedUsers =
+    shouldShowClientSelector && selectedClientId
+      ? filterUsersByClientId(users, selectedClientId)
+      : users;
+  const displayedChartData =
+    shouldShowClientSelector && selectedClientId
+      ? filterUsersByClientId(chartData, selectedClientId)
+      : chartData;
+
+  const selectedClientName =
+    directorateClientOptions.find((entry) => entry.client_id === selectedClientId)
+      ?.nama_client || clientName;
+
+  const effectiveRekapSummary =
+    shouldShowClientSelector && selectedClientId
+      ? buildSummaryFromUsers(
+          displayedUsers,
+          rekapSummary.totalTiktokPost,
+          rekapSummary,
+        )
+      : rekapSummary;
+
   const handleTabChange = (value) => {
     setActiveTab(value);
     if (value === "rekap" && rekapSectionRef.current) {
@@ -99,6 +184,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     const { value } = event.target || {};
     if (value === "client" || value === "all") {
       setDirectorateScope(value);
+      if (value === "client") {
+        setSelectedClientId("");
+      }
     }
   };
 
@@ -118,8 +206,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       </div>
     );
 
-  const totalUser = Number(rekapSummary.totalUser) || 0;
-  const totalTanpaUsername = Number(rekapSummary.totalTanpaUsername) || 0;
+  const totalUser = Number(effectiveRekapSummary.totalUser) || 0;
+  const totalTanpaUsername = Number(effectiveRekapSummary.totalTanpaUsername) || 0;
   const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
@@ -128,10 +216,10 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     return (numerator / denominator) * 100;
   };
 
-  const complianceRate = getPercentage(rekapSummary.totalSudahKomentar);
+  const complianceRate = getPercentage(effectiveRekapSummary.totalSudahKomentar);
   const actionNeededCount =
-    (Number(rekapSummary.totalKurangKomentar) || 0) +
-    (Number(rekapSummary.totalBelumKomentar) || 0);
+    (Number(effectiveRekapSummary.totalKurangKomentar) || 0) +
+    (Number(effectiveRekapSummary.totalBelumKomentar) || 0);
   const actionNeededRate = getPercentage(actionNeededCount);
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
@@ -139,7 +227,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     {
       key: "posts",
       label: "Jumlah TikTok Post",
-      value: rekapSummary.totalTiktokPost,
+      value: effectiveRekapSummary.totalTiktokPost,
       color: "fuchsia",
       icon: <Music className="h-6 w-6" />,
     },
@@ -153,7 +241,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     {
       key: "sudah",
       label: "Sudah Komentar",
-      value: rekapSummary.totalSudahKomentar,
+      value: effectiveRekapSummary.totalSudahKomentar,
       color: "green",
       icon: <MessageCircle className="h-6 w-6" />,
       percentage: complianceRate,
@@ -161,26 +249,26 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     {
       key: "kurang",
       label: "Kurang Komentar",
-      value: rekapSummary.totalKurangKomentar,
+      value: effectiveRekapSummary.totalKurangKomentar,
       color: "amber",
       icon: <MessageCircle className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalKurangKomentar),
+      percentage: getPercentage(effectiveRekapSummary.totalKurangKomentar),
     },
     {
       key: "belum",
       label: "Belum Komentar",
-      value: rekapSummary.totalBelumKomentar,
+      value: effectiveRekapSummary.totalBelumKomentar,
       color: "red",
       icon: <MessageCircle className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalBelumKomentar),
+      percentage: getPercentage(effectiveRekapSummary.totalBelumKomentar),
     },
     {
       key: "tanpa",
       label: "Tanpa Username",
-      value: rekapSummary.totalTanpaUsername,
+      value: effectiveRekapSummary.totalTanpaUsername,
       color: "violet",
       icon: <UserX className="h-6 w-6" />,
-      percentage: getPercentage(rekapSummary.totalTanpaUsername, totalUser),
+      percentage: getPercentage(effectiveRekapSummary.totalTanpaUsername, totalUser),
     },
   ];
 
@@ -204,7 +292,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
               actionNeededRate !== undefined
                 ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
                 : ""
-            }, termasuk ${rekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
+            }, termasuk ${effectiveRekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
           : "Seluruh akun aktif sudah memenuhi target komentar.",
     },
     {
@@ -228,9 +316,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
     ? "POLRES JAJARAN"
-    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
+    : `DIVISI / SATFUNG${selectedClientName ? ` - ${selectedClientName}` : ""}`;
 
-  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
+  const kelompok = isDirectorate ? null : groupUsersByKelompok(displayedChartData);
   const DIRECTORATE_NAME = "direktorat binmas";
   const normalizeClientName = (name = "") =>
     String(name).toLowerCase().replace(/\s+/g, " ").trim();
@@ -279,8 +367,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     : null;
 
   async function handleCopyRekap() {
-    const message = buildTiktokRekap(rekapSummary, chartData, {
-      clientName,
+    const message = buildTiktokRekap(effectiveRekapSummary, displayedChartData, {
+      clientName: selectedClientName,
       isDirektoratBinmas,
     });
 
@@ -309,9 +397,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const reportContext = {
     periodeLabel: reportPeriodeLabel,
     viewLabel,
-    directorateName: clientName || "Satker",
-    directorateOfficialName: clientName || "Satker",
+    directorateName: selectedClientName || "Satker",
+    directorateOfficialName: selectedClientName || "Satker",
   };
+
+  const directorateClientSelectorLabel = "Pilih Client Direktorat / Satker";
 
   return (
     <InsightLayout
@@ -332,12 +422,23 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           quickInsights={quickInsights}
           quickInsightTone="indigo"
         >
+          {shouldShowClientSelector ? (
+            <div className="rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
+              <DirectorateClientSelector
+                clients={directorateClientOptions}
+                selectedClientId={selectedClientId}
+                onClientChange={setSelectedClientId}
+                label={directorateClientSelectorLabel}
+              />
+            </div>
+          ) : null}
+
           {isDirectorate ? (
             <ChartBox
               {...chartBoxCommonProps}
               title={directorateTitle}
-              users={chartData}
-              totalPost={rekapSummary.totalTiktokPost}
+              users={displayedChartData}
+              totalPost={effectiveRekapSummary.totalTiktokPost}
               groupBy={directorateGroupBy}
               orientation={directorateOrientation}
               sortBy="percentage"
@@ -354,7 +455,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                   {...chartBoxCommonProps}
                   title="BAG"
                   users={kelompok.BAG}
-                  totalPost={rekapSummary.totalTiktokPost}
+                  totalPost={effectiveRekapSummary.totalTiktokPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi BAG."
                   sortBy="percentage"
                 />
@@ -364,7 +465,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                   {...chartBoxCommonProps}
                   title="SAT"
                   users={kelompok.SAT}
-                  totalPost={rekapSummary.totalTiktokPost}
+                  totalPost={effectiveRekapSummary.totalTiktokPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SAT."
                   sortBy="percentage"
                 />
@@ -374,7 +475,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                   {...chartBoxCommonProps}
                   title="SI & SPKT"
                   users={kelompok["SI & SPKT"]}
-                  totalPost={rekapSummary.totalTiktokPost}
+                  totalPost={effectiveRekapSummary.totalTiktokPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi SI & SPKT."
                   sortBy="percentage"
                 />
@@ -384,7 +485,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                   {...chartBoxCommonProps}
                   title="LAINNYA"
                   users={kelompok.LAINNYA}
-                  totalPost={rekapSummary.totalTiktokPost}
+                  totalPost={effectiveRekapSummary.totalTiktokPost}
                   narrative="Grafik ini menampilkan perbandingan jumlah komentar TikTok dari user di divisi lainnya."
                   sortBy="percentage"
                 />
@@ -394,7 +495,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
                   <ChartHorizontal
                     title="POLSEK"
                     users={kelompok.POLSEK}
-                    totalPost={rekapSummary.totalTiktokPost}
+                    totalPost={effectiveRekapSummary.totalTiktokPost}
                     fieldJumlah="jumlah_komentar"
                     labelSudah="User Sudah Komentar"
                     labelBelum="User Belum Komentar"
@@ -418,13 +519,24 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
         description="Rekap detail keterlibatan komentar TikTok tersedia tanpa perlu pindah halaman."
         showContent={activeTab === "rekap"}
       >
+        {shouldShowClientSelector ? (
+          <div className="mb-4 rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
+            <DirectorateClientSelector
+              clients={directorateClientOptions}
+              selectedClientId={selectedClientId}
+              onClientChange={setSelectedClientId}
+              label={directorateClientSelectorLabel}
+            />
+          </div>
+        ) : null}
+
         <RekapKomentarTiktok
-          users={users}
-          totalTiktokPost={rekapSummary.totalTiktokPost}
+          users={displayedUsers}
+          totalTiktokPost={effectiveRekapSummary.totalTiktokPost}
           showCopyButton={false}
-          clientName={clientName}
+          clientName={selectedClientName}
           reportContext={reportContext}
-          rekapSummary={rekapSummary}
+          rekapSummary={effectiveRekapSummary}
           showPremiumCta={isOrgClient}
         />
       </DetailRekapSection>
