@@ -22,8 +22,8 @@ Halaman **/comments/tiktok** kini menggabungkan wawasan grafik dan rekap komenta
 - Tombol **Buka Rekap Detail** otomatis menggulir ke section rekap ketika tab rekap dipilih, menjaga konteks halaman.
 - Tombol **Salin Rekap** dipindahkan ke header bersama filter agar saluran tindakan utama konsisten dengan halaman Instagram Engagement Insight.
 - Header, filter tanggal, dan kontrol lingkup kini dibungkus `heroContent` yang diberikan ke `InsightLayout` sehingga struktur halaman TikTok dan Instagram identik dan tidak lagi memakai layout khusus untuk TikTok.
-- Segmen `heroContent` (selector periode dengan label uppercase, kontrol lingkup Ditbinmas, tombol **Salin Rekap** berwarna teal, serta fallback prompt ketika clipboard diblokir) menjadi standar konsesi: pola dari TikTok Engagement Insight kini dipakai ulang pada halaman Instagram Engagement Insight agar alur filter dan penyalinan rekap benar-benar seragam di kedua platform.
-- Header insight kini menambahkan CTA **Premium** di sisi kanan (prop `headerAction` pada `InsightLayout`). Tombol ini memakai gaya gradasi biru–ungu dan mengarah ke rute **/premium** untuk membuka detail paket premium serta formulir pendaftaran. CTA disejajarkan dengan grup tab agar tetap terbaca di desktop maupun mobile.
+- Panel CTA premium pada tab insight TikTok kini diseragamkan dengan Instagram: label **Premium CICERO**, deskripsi **“Jadwalkan rekap otomatis & briefing WA Bot tiap hari.”**, dan tombol aksi **Lihat Paket** yang menuju `/premium`.
+- Ringkasan cepat (`quickInsights`) memakai tone **blue** seperti Instagram, dengan frasa aksi yang diparalelkan (mis. “masih perlu aksi komentar”, “belum memberi komentar sama sekali”, serta fallback kelengkapan data **n/a**).
 - Panel CTA lengket di bagian bawah (tombol salin rekap dan link Premium) tidak lagi dibatasi `max-w-4xl`; lebar bar mengikuti kontainer induk sehingga panel di `RekapLikesIG` dan `RekapKomentarTiktok` selaras dengan tabel dan tidak terpotong pada layar lebar.
 
 ## Ringkasan mengikuti standar rekap likes

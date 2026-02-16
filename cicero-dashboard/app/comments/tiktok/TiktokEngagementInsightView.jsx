@@ -286,11 +286,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       title: "Prioritas perbaikan",
       detail:
         actionNeededCount > 0
-          ? `${actionNeededCount} akun masih membutuhkan aksi${
+          ? `${actionNeededCount} akun masih perlu aksi komentar${
               actionNeededRate !== undefined
                 ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
                 : ""
-            }, termasuk ${effectiveRekapSummary.totalBelumKomentar} yang belum berkomentar sama sekali.`
+            }, termasuk ${effectiveRekapSummary.totalBelumKomentar} yang belum memberi komentar sama sekali.`
           : "Seluruh akun aktif sudah memenuhi target komentar.",
     },
     {
@@ -300,9 +300,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           ? `${totalTanpaUsername} akun belum memiliki username dan tidak ikut dihitung dalam persentase kepatuhan (kelengkapan ${
               usernameCompletionPercent !== undefined
                 ? `${Math.round(usernameCompletionPercent)}%`
-                : "sedang diproses"
+                : "n/a"
             }).`
-          : "Seluruh akun sudah memiliki username yang valid.",
+          : "Semua akun sudah memiliki username. Data siap dipantau tanpa blindspot.",
     },
   ];
 
@@ -349,9 +349,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const premiumCta = isOrgClient && !isOrgOperator
     ? {
         label: "Premium CICERO",
-        description: "Dapatkan rekap otomatis & notifikasi WA Bot komentar.",
+        description: "Jadwalkan rekap otomatis & briefing WA Bot tiap hari.",
         href: "/premium",
-        actionLabel: "Upgrade",
+        actionLabel: "Lihat Paket",
       }
     : null;
   const viewSelectorProps = hasPremiumDateAccess
@@ -404,7 +404,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   return (
     <InsightLayout
       title="TikTok Engagement Insight"
-      description="Pantau performa engagement TikTok."
+      description="Pantau performa komentar harian."
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
@@ -418,7 +418,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           onCopyRekap={handleCopyRekap}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
-          quickInsightTone="indigo"
+          quickInsightTone="blue"
         >
           {shouldShowClientSelector ? (
             <div className="rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
@@ -514,7 +514,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       <DetailRekapSection
         sectionRef={rekapSectionRef}
         title="Rekapitulasi Engagement TikTok"
-        description="Rekap detail keterlibatan komentar TikTok tersedia tanpa perlu pindah halaman."
+        description="Rekap detail keterlibatan komentar tersedia tanpa perlu pindah halaman."
         showContent={activeTab === "rekap"}
       >
         {shouldShowClientSelector ? (
