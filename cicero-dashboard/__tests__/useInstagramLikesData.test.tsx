@@ -198,6 +198,14 @@ describe("useInstagramLikesData", () => {
     expect(result.current.isOrgClient).toBe(false);
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.rekapSummary.totalUser).toBe(1);
+    expect(mockedGetUserDirectory).toHaveBeenCalledWith("token", "DIR_A", {
+      role: "operator",
+      scope: "DIREKTORAT",
+    });
+    expect(result.current.clientOptions).toContainEqual({
+      client_id: "DIR_A",
+      nama_client: "Ditres",
+    });
   });
 
   it("uses DIREKTORAT scope when role code is DITINTELKAM and client_type is DIREKTORAT", async () => {

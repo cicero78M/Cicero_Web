@@ -6,10 +6,7 @@ import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import ChartHorizontal from "@/components/ChartHorizontal";
 import { groupUsersByKelompok, buildInstagramRekap } from "@/utils/instagramEngagement";
 import { getEngagementStatus } from "@/utils/engagementStatus";
-import {
-  extractClientOptions,
-  filterUsersByClientId,
-} from "@/utils/directorateClientSelector";
+import { filterUsersByClientId } from "@/utils/directorateClientSelector";
 import Narrative from "@/components/Narrative";
 import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
@@ -128,6 +125,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     isDirectorateRole,
     canSelectScope,
     igPosts,
+    clientOptions,
   } = useInstagramLikesData({
     viewBy,
     customDate: normalizedCustomDate,
@@ -140,8 +138,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
 
   const directorateClientOptions = useMemo(() => {
     if (!shouldUseDirectorateLayout || !isOriginalDirectorateClient) return [];
-    return extractClientOptions(chartData);
-  }, [chartData, shouldUseDirectorateLayout, isOriginalDirectorateClient]);
+    return clientOptions;
+  }, [clientOptions, shouldUseDirectorateLayout, isOriginalDirectorateClient]);
 
   useEffect(() => {
     if (!directorateClientOptions.length) {
