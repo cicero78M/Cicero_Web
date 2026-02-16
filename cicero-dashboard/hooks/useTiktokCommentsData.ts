@@ -50,6 +50,73 @@ function getUserClientKey(user: any) {
   );
 }
 
+function normalizeClientOptionItem(rawClient: any) {
+  const clientId = String(
+    rawClient?.client_id ||
+      rawClient?.clientId ||
+      rawClient?.clientID ||
+      rawClient?.client ||
+      rawClient?.id ||
+      "",
+  ).trim();
+  if (!clientId) return null;
+
+  const namaClient = String(
+    rawClient?.nama_client ||
+      rawClient?.client_name ||
+      rawClient?.clientName ||
+      rawClient?.nama ||
+      rawClient?.name ||
+      rawClient?.client ||
+      clientId,
+  ).trim();
+
+  return {
+    client_id: clientId,
+    nama_client: namaClient || clientId,
+  };
+}
+
+function extractRekapClients(payload: any) {
+  if (Array.isArray(payload?.clients)) return payload.clients;
+  if (Array.isArray(payload?.directory)) return payload.directory;
+  if (Array.isArray(payload?.client_directory)) return payload.client_directory;
+  if (Array.isArray(payload?.clientDirectory)) return payload.clientDirectory;
+  if (Array.isArray(payload?.meta?.clients)) return payload.meta.clients;
+  if (Array.isArray(payload?.metadata?.clients)) return payload.metadata.clients;
+  if (Array.isArray(payload?.summary?.clients)) return payload.summary.clients;
+  return [];
+}
+
+function deduplicateClientOptions(clientEntries: any[]) {
+  const optionsByClientId = new Map<string, { client_id: string; nama_client: string }>();
+
+  clientEntries.forEach((entry) => {
+    const normalized = normalizeClientOptionItem(entry);
+    if (!normalized) return;
+
+    const key = normalizeString(normalized.client_id);
+    const existing = optionsByClientId.get(key);
+    if (!existing) {
+      optionsByClientId.set(key, normalized);
+      return;
+    }
+
+    const existingName = normalizeString(existing.nama_client);
+    const nextName = normalizeString(normalized.nama_client);
+    const existingIsIdOnly = existingName === key;
+    const nextHasBetterLabel = nextName !== "" && nextName !== key;
+
+    if (existingIsIdOnly && nextHasBetterLabel) {
+      optionsByClientId.set(key, normalized);
+    }
+  });
+
+  return Array.from(optionsByClientId.values()).sort((a, b) =>
+    a.nama_client.localeCompare(b.nama_client, "id", { sensitivity: "base" }),
+  );
+}
+
 function deduplicateUsers(users: any[]) {
   const seen = new Set<string>();
 
@@ -327,6 +394,7 @@ export default function useTiktokCommentsData({
   );
   const [users, setUsers] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [clientOptions, setClientOptions] = useState<any[]>([]);
   const [rekapSummary, setRekapSummary] = useState<RekapSummary>({
     totalUser: 0,
     totalSudahKomentar: 0,
@@ -565,6 +633,7 @@ export default function useTiktokCommentsData({
         let users: any[] = [];
         let chartDataEntries: any[] = [];
         let rekapSummaryPayload: Record<string, any> = {};
+        let rekapClients: any[] = [];
         if (directorate) {
           const rekapRes = await getRekapKomentarTiktok(
             token,
@@ -585,6 +654,7 @@ export default function useTiktokCommentsData({
           users = payloadUsers;
           chartDataEntries = chartData;
           rekapSummaryPayload = summary;
+          rekapClients = extractRekapClients(rekapRes);
         } else {
           const rekapRes = await getRekapKomentarTiktok(
             token,
@@ -605,7 +675,27 @@ export default function useTiktokCommentsData({
           users = payloadUsers;
           chartDataEntries = chartData;
           rekapSummaryPayload = summary;
+          rekapClients = extractRekapClients(rekapRes);
         }
+
+        const fallbackClientsFromUsers = users
+          .map((user) =>
+            normalizeClientOptionItem({
+              client_id:
+                user?.client_id ?? user?.clientId ?? user?.clientID ?? user?.client,
+              nama_client:
+                user?.nama_client ??
+                user?.client_name ??
+                user?.clientName ??
+                user?.client ??
+                user?.nama,
+            }),
+          )
+          .filter(Boolean);
+        const normalizedClientOptions = deduplicateClientOptions([
+          ...rekapClients,
+          ...fallbackClientsFromUsers,
+        ]);
 
         let filteredUsers = users;
         const shouldFilterByClient = Boolean(normalizedClientIdLower);
@@ -739,6 +829,7 @@ export default function useTiktokCommentsData({
         });
         setUsers(sortedUsers);
         setChartData(resolvedChartData);
+        setClientOptions(normalizedClientOptions);
       } catch (err: any) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError("Gagal mengambil data: " + (err?.message || err));
@@ -769,6 +860,7 @@ export default function useTiktokCommentsData({
   return {
     users,
     chartData,
+    clientOptions,
     rekapSummary,
     isDirectorate,
     isOrgClient,

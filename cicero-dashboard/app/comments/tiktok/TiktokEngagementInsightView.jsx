@@ -6,10 +6,7 @@ import ChartHorizontal from "@/components/ChartHorizontal";
 import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { getEngagementStatus } from "@/utils/engagementStatus";
-import {
-  extractClientOptions,
-  filterUsersByClientId,
-} from "@/utils/directorateClientSelector";
+import { filterUsersByClientId } from "@/utils/directorateClientSelector";
 import { showToast } from "@/utils/showToast";
 import Narrative from "@/components/Narrative";
 import DirectorateClientSelector from "@/components/DirectorateClientSelector";
@@ -114,6 +111,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     isDirectorateScopedClient,
     canSelectScope,
     isOrgClient,
+    clientOptions,
     loading,
     error,
   } = useTiktokCommentsData({
@@ -131,8 +129,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const directorateClientOptions = useMemo(() => {
     if (!isDirectorate || !isOriginalDirectorateClient) return [];
-    return extractClientOptions(users);
-  }, [isDirectorate, isOriginalDirectorateClient, users]);
+    return clientOptions;
+  }, [clientOptions, isDirectorate, isOriginalDirectorateClient]);
 
   useEffect(() => {
     if (!directorateClientOptions.length) {
