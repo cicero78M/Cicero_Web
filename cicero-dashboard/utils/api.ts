@@ -2609,7 +2609,15 @@ export async function getRekapLikesIG(
 ): Promise<any> {
   const { options: resolvedOptions, signal: resolvedSignal } =
     resolveRoleScopeRegionalOptions(signalOrOptions, options);
-  const params = new URLSearchParams({ client_id, periode });
+  const normalizedScope = String(resolvedOptions.scope || "")
+    .trim()
+    .toUpperCase();
+  const shouldUseRoleWideDirectorateQuery =
+    normalizedScope === "DIREKTORAT" && Boolean(resolvedOptions.role);
+  const params = new URLSearchParams({ periode });
+  if (!shouldUseRoleWideDirectorateQuery && client_id) {
+    params.append("client_id", client_id);
+  }
   if (tanggal) params.append("tanggal", tanggal);
   if (startDate) params.append("tanggal_mulai", startDate);
   if (endDate) params.append("tanggal_selesai", endDate);

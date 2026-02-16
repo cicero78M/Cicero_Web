@@ -79,6 +79,28 @@ test("getRekapLikesIG supports date range params", async () => {
   expect(url).toContain("regional_id=R-02");
 });
 
+
+
+test("getRekapLikesIG omits client_id for directorate role-wide queries", async () => {
+  await getRekapLikesIG(
+    "tok",
+    "DITINTELKAM",
+    "harian",
+    "2026-02-15",
+    undefined,
+    undefined,
+    undefined,
+    { role: "ditintelkam", scope: "DIREKTORAT", regional_id: "JATIM" },
+  );
+  const url = (global.fetch as jest.Mock).mock.calls[0][0];
+  expect(url).toContain("/api/insta/rekap-likes");
+  expect(url).toContain("periode=harian");
+  expect(url).toContain("tanggal=2026-02-15");
+  expect(url).toContain("role=ditintelkam");
+  expect(url).toContain("scope=DIREKTORAT");
+  expect(url).toContain("regional_id=JATIM");
+  expect(url).not.toContain("client_id=");
+});
 test("getRekapKomentarTiktok supports date range params", async () => {
   await getRekapKomentarTiktok(
     "tok",

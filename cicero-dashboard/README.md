@@ -57,6 +57,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Hook `useInstagramLikesData` kini menyertakan fallback label aman ketika metadata client/divisi tidak tersedia di payload rekap, sehingga UI tetap informatif tanpa memanggil endpoint lain.
 - Ringkasan engagement (total post, total user, sudah/kurang/belum like, tanpa username) selalu berasal dari field ringkasan rekap atau dihitung ulang dari daftar user rekap yang sama agar konsisten dengan data `/api/insta/rekap-likes`.
 - Prioritas scope request Instagram engagement kini memihak tipe client direktorat: jika `effectiveClientType` **atau** `profile.client_type` bernilai `DIREKTORAT`, hook `useInstagramLikesData` selalu mengirim `scope=DIREKTORAT` (meski fallback sebelumnya mengembalikan ORG) agar akun direktorat seperti Ditintelkam tidak lagi menembak endpoint dengan `scope=ORG`.
+- Adapter `getRekapLikesIG` kini otomatis **tidak** menyertakan `client_id` ketika request memakai kombinasi `scope=DIREKTORAT` + `role` (contoh Ditintelkam), sehingga endpoint `/api/insta/rekap-likes` dapat mengembalikan agregasi lintas client dalam role yang sama tanpa mengubah mekanisme pengambilan daftar post.
 
 ## Dashboard Likes Instagram
 
