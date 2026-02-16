@@ -13,7 +13,7 @@ Dokumen ini menjadi baseline bersama untuk halaman **Instagram Engagement Insigh
 - Struktur minimum tab rekap:
   - Ringkasan metrik (kartu summary).
   - Quick insights (narasi singkat prioritas aksi).
-  - Tabel rekap personel (search, status badge, pagination).
+  - Tabel rekap personel (search, filter status Sudah/Kurang/Belum/Username Kosong, status badge, pagination).
 
 ## 2) Standar Data Flow
 
@@ -62,5 +62,6 @@ Gunakan checklist ini untuk review setiap PR yang menyentuh insight engagement I
 - [ ] Tombol **Copy Rekap** tetap tersedia dan menghasilkan format copy siap kirim.
 - [ ] Premium CTA masih tampil dan mengarah ke `/premium`.
 - [ ] Visual kartu ringkasan + quick insights tetap parity lintas Instagram/TikTok (tone, spacing, hierarchy).
+- [ ] Filter status tabel tetap tersedia (Semua Status, Sudah, Kurang, Belum, Username Kosong) dan sinkron dengan search + pagination.
 - [ ] Status badge dan copy aksi tabel tetap konsisten (Sudah/Kurang/Belum/Tanpa Username/Tidak ada posting).
 - [ ] Tidak ada regresi UX penting (loading, empty state, disabled state pada aksi utama).

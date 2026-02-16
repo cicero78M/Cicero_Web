@@ -26,6 +26,14 @@ import { postComplaintTiktok } from "@/utils/api";
 
 const PAGE_SIZE = 25;
 
+const STATUS_FILTER_OPTIONS = [
+  { value: "all", label: "Semua Status" },
+  { value: "sudah", label: "Sudah" },
+  { value: "kurang", label: "Kurang" },
+  { value: "belum", label: "Belum" },
+  { value: "tanpaUsername", label: "Username Kosong" },
+];
+
 function bersihkanSatfung(divisi = "") {
   return divisi
     .replace(/polsek\s*/i, "")
@@ -365,11 +373,20 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   };
 
   const [search, setSearch] = useState("");
-  const sorted = useMemo(
+  const [statusFilter, setStatusFilter] = useState("all");
+  const filteredUsers = useMemo(
     () =>
       sortedUsers.filter((u) => {
         const term = search.toLowerCase();
-        return (
+        const username = String(u.username || "").trim();
+        const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
+        const statusKey = getKomentarStatus({
+          jumlahKomentar,
+          totalPostCount: totalTiktokPostCount,
+          hasUsername: Boolean(username),
+        });
+
+        const matchesSearch = (
           (u.nama || "").toLowerCase().includes(term) ||
           (u.username || "").toLowerCase().includes(term) ||
           bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
@@ -378,19 +395,29 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
             .toLowerCase()
             .includes(term)
         );
+
+        const matchesStatus = statusFilter === "all" || statusKey === statusFilter;
+
+        return matchesSearch && matchesStatus;
       }),
-    [sortedUsers, search],
+    [
+      sortedUsers,
+      search,
+      statusFilter,
+      totalTiktokPostCount,
+      clampKomentarToTask,
+    ],
   );
 
   const [page, setPage] = usePersistentState("rekapKomentarTiktok_page", 1);
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const currentRows = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
   }, [users, setPage]);
 
-  useEffect(() => setPage(1), [search, setPage]);
+  useEffect(() => setPage(1), [search, statusFilter, setPage]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -708,7 +735,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
         <div className="pointer-events-none absolute -left-24 top-0 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl" />
         <div className="relative flex flex-col gap-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold text-blue-900">
                 Rekap Personel TikTok
@@ -717,22 +744,45 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                 Filter dan telusuri status komentar setiap personel pada periode terpilih.
               </p>
             </div>
-            <label
-              className="flex w-full max-w-xs flex-col gap-2 text-blue-900 md:max-w-sm"
-              htmlFor="rekap-komentar-tiktok-search"
-            >
-              <span className="text-[11px] uppercase tracking-[0.35em] text-blue-500">
-                Cari personel TikTok
-              </span>
-              <input
-                id="rekap-komentar-tiktok-search"
-                type="text"
-                placeholder="Cari nama, username, divisi, atau client"
-                className="w-full rounded-xl border border-blue-200/70 bg-white px-3 py-2 text-sm text-blue-900 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </label>
+            <div className="grid w-full gap-3 md:max-w-2xl md:grid-cols-2">
+              <label
+                className="flex w-full flex-col gap-2 text-blue-900"
+                htmlFor="rekap-komentar-tiktok-search"
+              >
+                <span className="text-[11px] uppercase tracking-[0.35em] text-blue-500">
+                  Cari personel TikTok
+                </span>
+                <input
+                  id="rekap-komentar-tiktok-search"
+                  type="text"
+                  placeholder="Cari nama, username, divisi, atau client"
+                  className="w-full rounded-xl border border-blue-200/70 bg-white px-3 py-2 text-sm text-blue-900 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </label>
+
+              <label
+                className="flex w-full flex-col gap-2 text-blue-900"
+                htmlFor="rekap-komentar-tiktok-status-filter"
+              >
+                <span className="text-[11px] uppercase tracking-[0.35em] text-blue-500">
+                  Tampilkan status
+                </span>
+                <select
+                  id="rekap-komentar-tiktok-status-filter"
+                  className="w-full rounded-xl border border-blue-200/70 bg-white px-3 py-2 text-sm text-blue-900 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  {STATUS_FILTER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95 shadow-inner">
@@ -778,13 +828,16 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                           <p className="font-semibold text-blue-900">
                             Data tidak ditemukan untuk filter saat ini.
                           </p>
-                          {search && (
+                          {(search || statusFilter !== "all") && (
                             <button
                               type="button"
-                              onClick={() => setSearch("")}
+                              onClick={() => {
+                                setSearch("");
+                                setStatusFilter("all");
+                              }}
                               className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
                             >
-                              Reset pencarian
+                              Reset filter
                             </button>
                           )}
                         </div>
