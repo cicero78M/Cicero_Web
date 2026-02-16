@@ -84,6 +84,10 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.chartData[0].client_id).toBe("CLIENT_A");
     expect(result.current.rekapSummary.totalUser).toBe(1);
+    expect(result.current.clientOptions).toEqual([
+      { client_id: "CLIENT_A", nama_client: "CLIENT_A" },
+      { client_id: "CLIENT_B", nama_client: "CLIENT_B" },
+    ]);
   });
 
   it("keeps scope locked to the active client for directorate users when scope is not 'all'", async () => {
@@ -126,6 +130,10 @@ describe("useTiktokCommentsData", () => {
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.chartData[0].client_id).toBe("CLIENT_ROOT");
     expect(result.current.rekapSummary.totalUser).toBe(1);
+    expect(result.current.clientOptions).toEqual([
+      { client_id: "CLIENT_OTHER", nama_client: "CLIENT_OTHER" },
+      { client_id: "CLIENT_ROOT", nama_client: "CLIENT_ROOT" },
+    ]);
     expect(result.current.isOrgClient).toBe(false);
   });
 
@@ -279,7 +287,8 @@ describe("useTiktokCommentsData", () => {
       },
     );
     expect(result.current.rekapSummary.totalTiktokPost).toBe(8);
-    expect(result.current.rekapSummary.totalSudahKomentar).toBe(1);
+    expect(result.current.rekapSummary.totalSudahKomentar).toBe(0);
+    expect(result.current.rekapSummary.totalKurangKomentar).toBe(1);
     expect(result.current.rekapSummary.totalBelumKomentar).toBe(0);
   });
 
@@ -389,7 +398,62 @@ describe("useTiktokCommentsData", () => {
 
     expect(result.current.chartData).toHaveLength(1);
     expect(result.current.rekapSummary.totalUser).toBe(1);
-    expect(result.current.rekapSummary.totalSudahKomentar).toBe(1);
+    expect(result.current.rekapSummary.totalSudahKomentar).toBe(0);
+    expect(result.current.rekapSummary.totalKurangKomentar).toBe(1);
     expect(result.current.rekapSummary.totalBelumKomentar).toBe(0);
   });
+
+  it("builds fallback clientOptions from user data when backend omits clients list", async () => {
+    localStorage.setItem("cicero_token", "token");
+    localStorage.setItem("client_id", "DITBINMAS");
+    localStorage.setItem("user_role", "ditbinmas");
+
+    mockedGetClientProfile.mockResolvedValue({ client_type: "DIREKTORAT" } as any);
+    mockedGetRekapKomentarTiktok.mockResolvedValue({
+      data: [
+        {
+          client_id: "CLIENT_B",
+          nama_client: "Satker Bravo",
+          username: "bravo-user",
+          jumlah_komentar: 3,
+        },
+        {
+          client_id: "CLIENT_A",
+          client_name: "Satker Alpha",
+          username: "alpha-user",
+          jumlah_komentar: 5,
+        },
+        {
+          client_id: "CLIENT_A",
+          username: "alpha-user-2",
+          jumlah_komentar: 1,
+        },
+      ],
+      summary: {
+        totalUsers: 3,
+        distribution: {
+          sudah: 0,
+          kurang: 3,
+          belum: 0,
+          noUsername: 0,
+          noPosts: 0,
+        },
+        totalPosts: 10,
+      },
+    } as any);
+
+    const { result } = renderHook(() =>
+      useTiktokCommentsData({ viewBy: "monthly", customDate: "", fromDate: "", toDate: "", scope: "all" }),
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.clientOptions).toEqual([
+      { client_id: "CLIENT_A", nama_client: "Satker Alpha" },
+      { client_id: "CLIENT_B", nama_client: "Satker Bravo" },
+    ]);
+    expect(result.current.users).toHaveLength(3);
+    expect(result.current.rekapSummary.totalUser).toBe(3);
+  });
+
 });
