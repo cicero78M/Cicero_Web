@@ -1,12 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getClientNames, getRekapLikesIG } from "@/utils/api";
+import {
+  extractUserDirectoryUsers,
+  getClientNames,
+  getRekapLikesIG,
+  getUserDirectory,
+} from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
 import useAuth from "@/hooks/useAuth";
 import { getEngagementStatus } from "@/utils/engagementStatus";
 import {
+  extractClientOptions,
   normalizeClientId,
   normalizeUsersWithClientLabel,
 } from "@/utils/directorateClientSelector";
@@ -213,6 +219,10 @@ export default function useInstagramLikesData({
     isProfileLoading,
   } = useAuth();
   const [chartData, setChartData] = useState<any[]>([]);
+  // Canonical client selector options for directorate scope.
+  // This is intentionally decoupled from chartData so filtering/rekap data
+  // does not reduce available satker options in selector UI.
+  const [clientOptions, setClientOptions] = useState<any[]>([]);
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -471,6 +481,63 @@ export default function useInstagramLikesData({
         };
 
         if (directorateData) {
+          try {
+            const directoryRes = await getUserDirectory(token, userClientId, {
+              ...(requestRoleForContext ? { role: requestRoleForContext } : {}),
+              ...(resolvedScope ? { scope: resolvedScope } : {}),
+              ...(normalizedRegionalIdFromAuth
+                ? { regional_id: normalizedRegionalIdFromAuth }
+                : {}),
+            });
+            const directoryUsers = extractUserDirectoryUsers(directoryRes);
+            const normalizedDirectoryUsers = normalizeUsersWithClientLabel(
+              directoryUsers,
+              { fallbackNameByClientId: directoryNameMap },
+            );
+            const directoryClientIds = normalizedDirectoryUsers
+              .map((entry: any) => normalizeClientId(entry))
+              .filter(Boolean);
+            let canonicalDirectoryNameMap = { ...directoryNameMap };
+            if (directoryClientIds.length > 0) {
+              const canonicalDirectoryNames = await getClientNames(
+                token,
+                directoryClientIds,
+                controller.signal,
+                undefined,
+              );
+              canonicalDirectoryNameMap = {
+                ...canonicalDirectoryNameMap,
+                ...canonicalDirectoryNames,
+              };
+            }
+            const canonicalDirectoryUsers = normalizeUsersWithClientLabel(
+              normalizedDirectoryUsers,
+              { fallbackNameByClientId: canonicalDirectoryNameMap },
+            );
+            if (!controller.signal.aborted) {
+              setClientOptions(
+                extractClientOptions(canonicalDirectoryUsers, {
+                  fallbackNameByClientId: canonicalDirectoryNameMap,
+                }),
+              );
+            }
+          } catch {
+            if (!controller.signal.aborted) {
+              setClientOptions(
+                extractClientOptions(
+                  normalizeUsersWithClientLabel(users, {
+                    fallbackNameByClientId: directoryNameMap,
+                  }),
+                  { fallbackNameByClientId: directoryNameMap },
+                ),
+              );
+            }
+          }
+        } else if (!controller.signal.aborted) {
+          setClientOptions([]);
+        }
+
+        if (directorateData) {
           if (scope === "client" && normalizedLoginClientId) {
             const normalizeValue = (value: unknown) =>
               String(value || "")
@@ -644,6 +711,7 @@ export default function useInstagramLikesData({
 
   return {
     chartData,
+    clientOptions,
     igPosts,
     rekapSummary,
     isDirectorateData,
