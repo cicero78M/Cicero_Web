@@ -22,6 +22,8 @@ export default function EditUserPage() {
   const [satfung, setSatfung] = useState("");
   const [jabatan, setJabatan] = useState("");
   const [desa, setDesa] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [insta, setInsta] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,6 +59,8 @@ export default function EditUserPage() {
       setSatfung(user.divisi || "");
       setJabatan(user.jabatan || "");
       setDesa(user.desa || "");
+      setWhatsapp(user.whatsapp || user.no_wa || user.phone || user.telp || "");
+      setEmail(user.email || user.mail || user.email_address || "");
       const instaUsername = extractInstagramUsername(user.insta);
       setInsta(
         instaUsername ? `https://www.instagram.com/${instaUsername}` : "",
@@ -108,6 +112,8 @@ export default function EditUserPage() {
         divisi: satfung.trim(),
         jabatan: jabatan.trim(),
         desa: desa.trim(),
+        whatsapp: whatsapp.trim(),
+        email: email.trim(),
         insta: instaUsername,
         tiktok: tiktokUsername,
       });
@@ -255,6 +261,37 @@ export default function EditUserPage() {
               onChange={(e) => setDesa(e.target.value)}
               className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
             />
+          </div>
+
+          <section className="rounded-2xl border border-spirit-200/80 bg-spirit-50/70 px-4 py-4 text-sm text-neutral-navy shadow-inner">
+            silahkan isi / perbaiki no whatsapp dan email agar kami dapat lebih mudah mengirimkan informasi terbaru kepada anda.
+          </section>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">No WhatsApp</label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={whatsapp}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setWhatsapp(value.replace(/[^\d+]/g, ""));
+                }}
+                placeholder="08xxxxxxxxxx"
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@email.com"
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

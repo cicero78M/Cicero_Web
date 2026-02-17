@@ -3639,6 +3639,8 @@ export async function updateUserViaClaim(
     divisi?: string;
     jabatan?: string;
     desa?: string;
+    whatsapp?: string;
+    email?: string;
     insta?: string;
     tiktok?: string;
   },
