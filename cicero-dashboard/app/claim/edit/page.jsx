@@ -22,6 +22,7 @@ export default function EditUserPage() {
   const [satfung, setSatfung] = useState("");
   const [jabatan, setJabatan] = useState("");
   const [desa, setDesa] = useState("");
+  const [role, setRole] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [insta, setInsta] = useState("");
@@ -53,6 +54,7 @@ export default function EditUserPage() {
     try {
       const res = await getClaimUserData(n, w);
       const user = res.data || res.user || res;
+      setRole(user.role || user.user_role || user.userRole || "");
       setKesatuan(user.nama_client || user.client_name || user.client_id || "");
       setNama(user.nama || "");
       setPangkat(user.title || "");
@@ -102,6 +104,7 @@ export default function EditUserPage() {
     }
     const instaUsername = extractInstagramUsername(insta);
     const tiktokUsername = extractTiktokUsername(tiktok);
+    const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
       const res = await updateUserViaClaim({
@@ -111,7 +114,8 @@ export default function EditUserPage() {
         title: pangkat.trim(),
         divisi: satfung.trim(),
         jabatan: jabatan.trim(),
-        desa: desa.trim(),
+        // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
+        desa: isDitbinmasRole ? desa.trim() : "",
         whatsapp: whatsapp.trim(),
         email: email.trim(),
         insta: instaUsername,
@@ -135,6 +139,8 @@ export default function EditUserPage() {
       setLoading(false);
     }
   }
+
+  const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
 
   return (
     <ClaimLayout
@@ -253,15 +259,18 @@ export default function EditUserPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-navy">Desa Binaan</label>
-            <input
-              type="text"
-              value={desa}
-              onChange={(e) => setDesa(e.target.value)}
-              className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
-            />
-          </div>
+          {/* Aturan bisnis: Desa Binaan hanya relevan/ditampilkan untuk role Ditbinmas. */}
+          {isDitbinmasRole && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">Desa Binaan</label>
+              <input
+                type="text"
+                value={desa}
+                onChange={(e) => setDesa(e.target.value)}
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+            </div>
+          )}
 
           <section className="rounded-2xl border border-spirit-200/80 bg-spirit-50/70 px-4 py-4 text-sm text-neutral-navy shadow-inner">
             silahkan isi / perbaiki no whatsapp dan email agar kami dapat lebih mudah mengirimkan informasi terbaru kepada anda.
