@@ -152,7 +152,7 @@ export default function ViewDataSelector({
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
   const baseContainerClass = cn(
-    "flex w-full flex-col gap-4 rounded-xl border border-sky-200/70 bg-white/90 px-5 py-4 shadow-sm sm:gap-3",
+    "flex w-full flex-col gap-4 rounded-xl border border-sky-200/70 bg-white/90 px-5 py-4 shadow-sm",
     disabled && "opacity-60",
     className,
   );
