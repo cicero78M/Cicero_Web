@@ -15,16 +15,19 @@ export const metadata = {
 export default function PanduanSOPPage() {
   const sections = [
     {
-      title: "Panduan Update Data via Web OTP",
+      title: "Panduan Update Data via Registrasi & Login NRP",
       content: (
         <div className="space-y-3 text-sm leading-relaxed text-slate-700">
           <p>
-            Manfaatkan portal Web OTP Cicero untuk memperbarui profil personil secara mandiri dengan validasi berlapis sebelum data disinkronkan ke dashboard.
+            Manfaatkan portal claim Cicero untuk memperbarui profil personil secara mandiri menggunakan registrasi dan login NRP + password sebelum data disinkronkan ke dashboard.
           </p>
           <ol className="list-decimal space-y-2 pl-5">
-            <li>Buka <span className="font-semibold text-slate-900">https://papiqo.com/claim</span> dan pilih tombol <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Masuk dengan OTP</span>.</li>
-            <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> serta alamat email aktif, lalu ketuk <span className="font-semibold text-slate-900">Kirim Kode</span>.</li>
-            <li>Input kode OTP enam digit yang diterima melalui email resmi Cicero, kemudian tekan <span className="font-semibold text-slate-900">Verifikasi</span>.</li>
+            <li>Buka <span className="font-semibold text-slate-900">https://papiqo.com/claim</span>, lalu pilih <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Registrasi</span> jika belum memiliki akun atau <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">Login</span> jika sudah terdaftar.</li>
+            <li>Masukkan <span className="font-semibold text-[color:var(--cicero-soft-emerald-ink)]">NRP/NIP</span> dan password. Untuk registrasi awal, buat password kuat minimal 8 karakter yang memuat huruf, angka, dan karakter khusus.</li>
+            <li>Klik <span className="font-semibold text-slate-900">Daftar</span> untuk menyimpan kredensial baru, lalu login dengan NRP + password untuk masuk ke halaman pembaruan profil.</li>
+            <li>
+              Pastikan password menggunakan kombinasi <span className="font-semibold text-slate-900">huruf + angka + karakter khusus</span> (contoh: <span className="font-mono">Cicero@2026</span>) agar memenuhi standar keamanan sistem.
+            </li>
             <li>Tinjau ringkasan data saat ini pada panel <span className="font-semibold text-slate-900">Profil Personil</span> dan pilih bidang yang ingin diperbarui (Nama, Pangkat, Satfung, Jabatan, Instagram, TikTok, atau nomor kontak).</li>
             <li>Perbarui informasi dengan format terbaru—cantumkan tautan penuh untuk akun media sosial dan pastikan penulisan pangkat sesuai standar.</li>
             <li>Setelah selesai, klik <span className="font-semibold text-slate-900">Simpan Perubahan</span>; sistem akan menampilkan notifikasi hijau ketika pembaruan berhasil.</li>
@@ -84,16 +87,16 @@ export default function PanduanSOPPage() {
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-[color:var(--cicero-soft-emerald-ink)]">
                   <MessageCircle className="icon-soft-emerald h-5 w-5" />
                 </span>
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tips Keamanan Web OTP</span>
+                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tips Keamanan Login Claim</span>
               </div>
               <p className="text-sm text-slate-600">
-                Lindungi proses autentikasi Web OTP Cicero dengan menerapkan kebiasaan aman berikut agar kredensial dashboard tetap terjaga dari penyalahgunaan pihak lain.
+                Lindungi proses autentikasi claim Cicero dengan menerapkan kebiasaan aman berikut agar kredensial dashboard tetap terjaga dari penyalahgunaan pihak lain.
               </p>
               <ul className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
                 <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
                   <span className="text-lg">🔒</span>
                   <span>
-                    Jangan pernah membagikan kode OTP kepada siap pun, termasuk pihak yang mengaku admin. Sistem resmi tidak akan meminta kode OTP secara manual.
+                    Jangan pernah membagikan password akun claim kepada siapa pun, termasuk pihak yang mengaku admin. Sistem resmi tidak akan meminta password melalui chat pribadi.
                   </span>
                 </li>
                 <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
@@ -105,12 +108,12 @@ export default function PanduanSOPPage() {
                 <li className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 sm:col-span-2">
                   <span className="text-lg">🛡️</span>
                   <span>
-                    Segera laporkan ke tim support jika menerima OTP mencurigakan tanpa melakukan permintaan login. Hubungi <span className="font-semibold text-slate-900">cicero@papiqo.com</span> atau WA <span className="font-semibold text-slate-900">0812-3511-4745</span> untuk penanganan.
+                    Segera laporkan ke tim support jika ada aktivitas login mencurigakan atau gagal akses berulang. Hubungi <span className="font-semibold text-slate-900">cicero@papiqo.com</span> atau WA <span className="font-semibold text-slate-900">0812-3511-4745</span> untuk penanganan.
                   </span>
                 </li>
               </ul>
               <p className="text-sm text-slate-600">
-                Terapkan verifikasi OTP hanya melalui laman resmi dashboard dan logout setelah sesi selesai untuk menjaga integritas data organisasi.
+                Gunakan hanya laman resmi dashboard, perbarui password secara berkala, dan logout setelah sesi selesai untuk menjaga integritas data organisasi.
               </p>
             </div>
           </div>
