@@ -316,28 +316,24 @@ Nilai `NEXT_PUBLIC_API_URL` wajib diisi. Jika kosong, dashboard akan menghentika
 
 - Helper query Satbinmas (`buildSatbinmasQuery`) dan fungsi fetch terkait berada di `utils/api.ts`. Data filter (periode, platform, `client_id`, rentang tanggal) diteruskan dari komponen filter utama di halaman `app/satbinmas-official/page.jsx` ke helper ini sebelum memukul endpoint terkait, memastikan semua seksi (ringkasan coverage, aktivitas, engagement, hashtag, dan detail akun) memakai parameter yang sama.
 
-## Alur klaim & validasi email
+## Alur klaim berbasis NRP + password
 
-Klaim data pengguna dilakukan melalui halaman `app/claim/page.jsx` dengan langkah berikut:
+Flow claim sekarang mengikuti update backend terbaru (tanpa OTP email). Halaman `app/claim/page.jsx` menyediakan dua mode dalam satu tempat:
 
-1. Pengguna memasukkan **NRP** dan **email** lalu menekan tombol **Kirim Kode OTP**.
-2. Frontend memanggil fungsi `checkClaimEmailStatus` (`utils/api.ts`) yang menembak endpoint `POST /api/claim/validate-email` untuk memastikan alamat email dapat menerima pesan.
-3. Hanya status **`deliverable`** yang diperbolehkan melanjutkan permintaan OTP. Jika status lain diterima, proses dihentikan dan pesan berikut ditampilkan kepada pengguna:
-   - `inactive`: email tidak aktif atau sudah tidak bisa menerima pesan.
-   - `domain_not_found`: domain email salah/ tidak ditemukan.
-   - `mailbox_full`: kotak masuk penuh sehingga OTP tidak bisa dikirim.
-   - Status tak dikenal: pengguna diminta memeriksa kembali alamat email atau mencoba lagi.
-4. Jika validasi berhasil, aplikasi memanggil `requestClaimOtp` untuk mengirim kode verifikasi dan menyimpan NRP/email di `sessionStorage` sebelum mengarahkan ke halaman OTP.
+1. **Registrasi claim** (`POST /api/claim/register`) dengan payload `nrp` + `password`.
+2. **Login claim** (`POST /api/auth/user-login`) dengan payload `nrp` + `password`.
+3. Setelah login sukses, frontend menyimpan `claim_nrp` + `claim_password` di `sessionStorage` lalu mengarahkan pengguna ke `app/claim/edit/page.jsx`.
+4. Halaman edit mengambil data melalui `getClaimUserData(nrp, password)` (`POST /api/claim/user-data`) dan menyimpan perubahan via `updateUserViaClaim` (`PUT /api/claim/update`) menggunakan kredensial yang sama.
 
-### Penanganan pesan error di halaman klaim
+### Aturan password strength di UI registrasi claim
 
-- Ketika backend mengembalikan respons error (misalnya kombinasi NRP/email tidak cocok atau permintaan OTP ditolak), pesan dari backend diteruskan apa adanya ke pengguna agar lebih mudah dipahami.
-- Kesalahan jaringan atau respons tanpa pesan akan menampilkan fallback berbahasa Indonesia seperti "Gagal terhubung ke server" atau "Gagal mengirim OTP".
+Form registrasi claim mewajibkan password:
+- minimal 8 karakter,
+- mengandung huruf,
+- mengandung angka,
+- mengandung karakter khusus.
 
-Catatan untuk pengembang:
-
-- Endpoint `POST /api/claim/validate-email` diharapkan mengembalikan `status` (`deliverable`, `inactive`, `domain_not_found`, `mailbox_full`, dll), `success`, dan `message` opsional.
-- Jika endpoint gagal dihubungi atau mengembalikan error, pengguna akan melihat pesan fallback “Validasi email gagal…”.
+Validasi dijalankan di sisi klien sebelum request dikirim, agar sesuai dengan validasi backend claim credential.
 
 ## Prioritas urutan personel pada rekap engagement
 

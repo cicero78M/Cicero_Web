@@ -216,7 +216,7 @@ test("updateUserViaClaim throws backend validation messages", async () => {
   });
 
   await expect(
-    updateUserViaClaim({ nrp: "1", email: "user@example.com", insta: "bad" }),
+    updateUserViaClaim({ nrp: "1", password: "Abcd1234!", insta: "bad" }),
   ).rejects.toThrow("Link Instagram tidak valid");
 });
 

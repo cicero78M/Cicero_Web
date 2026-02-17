@@ -3515,6 +3515,84 @@ export async function getTiktokPosts(
 
 // === Claim & User Update without auth token ===
 
+export type ClaimAuthResponse = {
+  success: boolean;
+  message?: string;
+  token?: string;
+  user?: any;
+};
+
+export type ClaimCredentialPayload = {
+  nrp: string;
+  password: string;
+};
+
+export async function registerClaimCredential(
+  payload: ClaimCredentialPayload,
+): Promise<ClaimAuthResponse> {
+  const url = buildApiUrl("/api/claim/register");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ nrp: payload.nrp, password: payload.password }),
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  const message = extractResponseMessage(
+    data,
+    "Registrasi claim gagal. Pastikan NRP dan password valid.",
+  );
+
+  if (!res.ok) {
+    throw new Error(message);
+  }
+
+  return { ...data, success: data?.success ?? res.ok, message };
+}
+
+export async function loginClaimUser(
+  payload: ClaimCredentialPayload,
+): Promise<ClaimAuthResponse> {
+  const url = buildApiUrl("/api/auth/user-login");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ nrp: payload.nrp, password: payload.password }),
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  const message = extractResponseMessage(
+    data,
+    "Login claim gagal. Periksa kembali NRP dan password.",
+  );
+
+  if (!res.ok) {
+    throw new Error(message);
+  }
+
+  return {
+    ...data,
+    success: data?.success ?? res.ok,
+    message,
+    token: data?.token,
+    user: data?.user,
+  };
+}
+
 // Fetch user data by NRP without requiring auth
 export async function getUserById(nrp: string): Promise<any> {
   const url = buildApiUrl(`/api/users/${encodeURIComponent(nrp)}`);
@@ -3523,38 +3601,17 @@ export async function getUserById(nrp: string): Promise<any> {
   return res.json();
 }
 
-// Fetch user data in claim flow after OTP verification
+// Fetch user data in claim flow after credential verification
 export async function getClaimUserData(
   nrp: string,
-  email: string,
+  password: string,
 ): Promise<any> {
   const url = buildApiUrl("/api/claim/user-data");
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ nrp, email }),
-  });
-  if (!res.ok) throw new Error("Failed to fetch user");
-  return res.json();
-}
-
-export type ClaimEmailValidationResponse = {
-  status: string;
-  success: boolean;
-  message?: string;
-};
-
-// Validate email deliverability status before requesting an OTP
-export async function checkClaimEmailStatus(
-  email: string,
-): Promise<ClaimEmailValidationResponse> {
-  const url = buildApiUrl("/api/claim/validate-email");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ nrp, password }),
   });
 
   let data: any = null;
@@ -3564,82 +3621,19 @@ export async function checkClaimEmailStatus(
     data = null;
   }
 
-  const status =
-    data?.status ||
-    data?.data?.status ||
-    (res.ok ? "deliverable" : "unknown");
-  const message = extractResponseMessage(
-    data,
-    "Failed to validate email. Please check the address.",
-  );
-
   if (!res.ok) {
+    const message = extractResponseMessage(data, "Gagal mengambil data user");
     throw new Error(message);
   }
 
-  return {
-    status,
-    success: data?.success ?? res.ok,
-    message: message || undefined,
-  };
+  return data;
 }
 
-// Request OTP to be sent via email
-export async function requestClaimOtp(
-  nrp: string,
-  email: string,
-): Promise<any> {
-  const url = buildApiUrl("/api/claim/request-otp");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ nrp, email }),
-  });
-
-  let data: any = null;
-  try {
-    data = await res.json();
-  } catch (error) {
-    data = null;
-  }
-
-  const message = extractResponseMessage(
-    data,
-    "Gagal mengirim OTP. Silakan periksa kembali NRP dan email kamu.",
-  );
-
-  if (!res.ok) {
-    throw new Error(message);
-  }
-
-  const success = data?.success ?? res.ok;
-  return { ...data, success, message };
-}
-
-// Verify OTP provided by user
-export async function verifyClaimOtp(
-  nrp: string,
-  email: string,
-  otp: string,
-): Promise<any> {
-  const url = buildApiUrl("/api/claim/verify-otp");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ nrp, email, otp }),
-  });
-  if (!res.ok) throw new Error("Failed to verify OTP");
-  const data = await res.json();
-  return { ...data, verified: data.verified ?? data.data?.verified };
-}
-
-// Update user data after OTP verification
+// Update user data after credential verification
 export async function updateUserViaClaim(
   data: {
     nrp: string;
-    email: string;
+    password: string;
     nama?: string;
     title?: string;
     divisi?: string;
