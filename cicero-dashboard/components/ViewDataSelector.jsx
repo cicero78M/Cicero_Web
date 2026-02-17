@@ -152,27 +152,27 @@ export default function ViewDataSelector({
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
   const baseContainerClass = cn(
-    "flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-white px-4 py-3 shadow-sm sm:justify-start",
+    "flex w-full flex-col gap-4 rounded-xl border border-sky-200/70 bg-white/90 px-5 py-4 shadow-sm sm:gap-3",
     disabled && "opacity-60",
     className,
   );
   const baseLabelClass = cn(
-    "w-full text-sm font-semibold tracking-tight text-slate-800 sm:w-auto",
+    "text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 md:tracking-[0.28em]",
     labelClassName,
   );
   const baseControlClass = cn(
-    "w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 shadow-inner transition focus:border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200/60 sm:w-auto",
+    "w-full rounded-lg border border-sky-200/70 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 sm:w-auto",
     controlClassName,
   );
   const segmentedButtonBaseClass =
-    "rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-inner transition hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/60";
+    "rounded-lg border border-sky-200/70 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-sky-300 hover:bg-sky-50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 active:scale-[0.98]";
 
   return (
     <div className={baseContainerClass} aria-disabled={disabled}>
       <label htmlFor={id} className={baseLabelClass}>
         Tampilan data berdasarkan
       </label>
-      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="hidden w-full flex-wrap gap-2 sm:flex">
           {options.map((opt) => {
             const isActive = opt.value === value;
@@ -185,7 +185,7 @@ export default function ViewDataSelector({
                 className={cn(
                   segmentedButtonBaseClass,
                   isActive &&
-                    "border-sky-200 bg-sky-50 text-slate-800 shadow-sm",
+                    "border-sky-400/70 bg-gradient-to-br from-sky-50 to-blue-50 text-slate-800 font-semibold shadow-md ring-2 ring-sky-400/20",
                   disabled && "cursor-not-allowed opacity-70",
                 )}
               >
@@ -232,7 +232,7 @@ export default function ViewDataSelector({
           <input
             id={dateInputId}
             type="date"
-            className={cn(baseControlClass, "mt-2 sm:mt-0")}
+            className={baseControlClass}
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -247,7 +247,7 @@ export default function ViewDataSelector({
           <input
             id={monthInputId}
             type="month"
-            className={cn(baseControlClass, "mt-2 sm:mt-0")}
+            className={baseControlClass}
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -262,7 +262,7 @@ export default function ViewDataSelector({
           <input
             id={weekInputId}
             type="week"
-            className={cn(baseControlClass, "mt-2 sm:mt-0")}
+            className={baseControlClass}
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
@@ -270,34 +270,35 @@ export default function ViewDataSelector({
         </>
       )}
       {showRangeInput && (
-        <>
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
           <label htmlFor={rangeStartId} className="sr-only">
             Mulai
           </label>
           <input
             id={rangeStartId}
             type="date"
-            className={cn(baseControlClass, "mt-2 sm:mt-0")}
+            className={baseControlClass}
             value={date?.startDate || ""}
             onChange={(e) =>
               onDateChange?.({ ...date, startDate: e.target.value })
             }
             disabled={disabled}
           />
+          <span className="hidden text-sm text-slate-500 sm:inline">—</span>
           <label htmlFor={rangeEndId} className="sr-only">
             Selesai
           </label>
           <input
             id={rangeEndId}
             type="date"
-            className={cn(baseControlClass, "mt-2 sm:mt-0")}
+            className={baseControlClass}
             value={date?.endDate || ""}
             onChange={(e) =>
               onDateChange?.({ ...date, endDate: e.target.value })
             }
             disabled={disabled}
           />
-        </>
+        </div>
       )}
     </div>
   );
