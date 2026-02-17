@@ -6,6 +6,9 @@ import {
   getRekapKomentarTiktok,
   getTiktokPosts,
   getUserDirectory,
+  loginClaimUser,
+  registerClaimCredential,
+  getClaimUserData,
   updateUserViaClaim,
 } from "../utils/api";
 
@@ -294,4 +297,48 @@ test("getRekapAmplifyKhusus handles 403 errors with fallback message", async () 
   await expect(
     getRekapAmplifyKhusus("tok", "c1", "harian"),
   ).rejects.toThrow("Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?");
+});
+
+
+test("registerClaimCredential calls claim register endpoint", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve({ success: true, message: "ok" }),
+  });
+
+  const response = await registerClaimCredential({ nrp: "123", password: "Abcd1234!" });
+
+  const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(url).toContain("/api/claim/register");
+  expect(options.method).toBe("POST");
+  expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
+  expect(response.success).toBe(true);
+});
+
+test("loginClaimUser calls user-login endpoint", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve({ success: true, token: "jwt-token", user: { nrp: "123" } }),
+  });
+
+  const response = await loginClaimUser({ nrp: "123", password: "Abcd1234!" });
+
+  const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(url).toContain("/api/auth/user-login");
+  expect(options.method).toBe("POST");
+  expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
+  expect(response.token).toBe("jwt-token");
+});
+
+test("getClaimUserData sends password credential instead of email", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve({ success: true, data: { nrp: "123" } }),
+  });
+
+  await getClaimUserData("123", "Abcd1234!");
+
+  const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(url).toContain("/api/claim/user-data");
+  expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
 });
