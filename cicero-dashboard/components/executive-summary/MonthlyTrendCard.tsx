@@ -165,22 +165,32 @@ const renderMetricsList = (
   }
 
   return (
-    <div className="mt-3 space-y-2 text-sm">
-      {metrics.map((metric) => (
-        <div
-          key={metric.key}
-          className="flex items-baseline justify-between text-slate-100"
-        >
-          <span className="text-slate-400">{metric.label}</span>
-          <span className="text-lg font-semibold text-slate-100">
-            {formatNumber(metric.value, {
-              maximumFractionDigits: 0,
-              ...(metric.formatOptions ?? {}),
-            })}
-            {metric.suffix ?? ""}
-          </span>
-        </div>
-      ))}
+    <div className="mt-3 overflow-hidden rounded-lg border border-slate-700/50">
+      <table className="w-full text-sm">
+        <tbody className="divide-y divide-slate-700/50">
+          {metrics.map((metric, index) => (
+            <tr
+              key={metric.key}
+              className={`${
+                index % 2 === 0 ? "bg-slate-800/30" : "bg-slate-800/10"
+              } transition-colors hover:bg-slate-700/30`}
+            >
+              <td className="px-4 py-3 text-left font-medium text-slate-300">
+                {metric.label}
+              </td>
+              <td className="px-4 py-3 text-right">
+                <span className="text-lg font-bold text-slate-50">
+                  {formatNumber(metric.value, {
+                    maximumFractionDigits: 0,
+                    ...(metric.formatOptions ?? {}),
+                  })}
+                  {metric.suffix ?? ""}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
