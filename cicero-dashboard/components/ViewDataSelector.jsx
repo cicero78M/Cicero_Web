@@ -164,8 +164,13 @@ export default function ViewDataSelector({
     "w-full rounded-lg border border-sky-200/70 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40 sm:w-auto",
     controlClassName,
   );
-  const segmentedButtonBaseClass =
-    "rounded-lg border border-sky-200/70 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-sky-300 hover:bg-sky-50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 active:scale-[0.98]";
+  const segmentedButtonBaseClass = cn(
+    "rounded-lg border border-sky-200/70 bg-white px-4 py-2",
+    "text-sm font-medium text-slate-700 shadow-sm",
+    "transition-all hover:border-sky-300 hover:bg-sky-50 hover:shadow-md",
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60",
+    "active:scale-[0.98]"
+  );
 
   return (
     <div className={baseContainerClass} aria-disabled={disabled}>
