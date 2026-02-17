@@ -111,13 +111,14 @@ export default function ClaimPage() {
     <ClaimLayout
       stepLabel="Langkah 1 dari 2"
       title="Login atau Registrasi Claim"
-      description="Flow OTP email telah diganti. Gunakan NRP + password untuk akses dan pembaruan data profil."
+      description="Update terbaru: flow OTP email sudah tidak digunakan. Akses claim sekarang memakai registrasi dan login dengan NRP + password."
       icon={<ShieldCheck className="h-5 w-5" />}
       infoTitle="Autentikasi claim berbasis kredensial"
-      infoDescription="Backend kini memakai NRP dan password untuk registrasi, login, serta update data agar proses lebih cepat dan konsisten."
+      infoDescription="Mulai saat ini, proses registrasi, login, dan update profil claim dilakukan menggunakan NRP dan password tanpa request OTP."
       infoHighlights={[
-        "Registrasi awal: NRP + password kuat.",
-        "Login berikutnya: cukup NRP + password.",
+        "Tidak perlu request OTP email lagi pada halaman claim.",
+        "Registrasi awal: NRP + password kuat (huruf, angka, karakter khusus).",
+        "Login berikutnya: cukup NRP + password yang sudah didaftarkan.",
         "Kredensial yang sama digunakan saat simpan perubahan profil.",
       ]}
       cardAccent="trust"
