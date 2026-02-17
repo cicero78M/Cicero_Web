@@ -61,3 +61,15 @@ Body request tetap meneruskan seluruh objek `data` ke endpoint `/api/claim/updat
 - Pengguna claim bisa memperbarui data kontak langsung dari halaman edit claim.
 - Backend menerima data kontak terbaru pada request update.
 - Frontend lebih robust terhadap variasi struktur response backend untuk field kontak.
+
+## Update aturan role untuk field Desa Binaan
+
+Flow claim edit di `cicero-dashboard/app/claim/edit/page.jsx` kini menambahkan guard berbasis role untuk field **Desa Binaan**:
+
+- State baru `role` ditambahkan agar role user tersimpan saat load data claim.
+- Pada `loadUser`, role dibaca dengan fallback key: `role` → `user_role` → `userRole`.
+- Role dinormalisasi menggunakan `trim().toLowerCase()` lalu dibandingkan ke nilai `ditbinmas`.
+- Field **Desa Binaan** hanya dirender jika role ter-normalisasi adalah `ditbinmas`.
+- Saat submit, payload `desa` hanya mengirim nilai input untuk role `ditbinmas`; untuk role lain dikirim string kosong (`""`) agar backend tidak memproses data desa yang tidak relevan.
+
+Tujuan bisnis dari aturan ini adalah menjaga agar data desa binaan hanya diisi oleh unit yang memang memiliki konteks operasional terhadap desa binaan, sekaligus mencegah data tidak valid dari role lain.
