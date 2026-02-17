@@ -1751,26 +1751,26 @@ export default function AnevPolresPage() {
                     <div className="flex flex-wrap gap-2 text-xs text-slate-600">
                       {entry.userId && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="font-semibold text-slate-700">User ID</span>
-                          <span className="font-semibold text-slate-900">{entry.userId}</span>
+                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">User ID</span>
+                          <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.userId}</span>
                         </span>
                       )}
                       {entry.platform && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="font-semibold text-slate-700">Platform</span>
-                          <span className="font-semibold text-slate-900">{entry.platform}</span>
+                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">Platform</span>
+                          <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.platform}</span>
                         </span>
                       )}
                       {entry.satfung && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="font-semibold text-slate-700">Satfung</span>
-                          <span className="font-semibold text-slate-900">{entry.satfung}</span>
+                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">Satfung</span>
+                          <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.satfung}</span>
                         </span>
                       )}
                       {entry.division && entry.division !== entry.satfung && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="font-semibold text-slate-700">Divisi</span>
-                          <span className="font-semibold text-slate-900">{entry.division}</span>
+                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">Divisi</span>
+                          <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.division}</span>
                         </span>
                       )}
                     </div>
@@ -1840,49 +1840,49 @@ export default function AnevPolresPage() {
                           <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-600 sm:text-sm">
+                      <div className="flex flex-wrap gap-2 text-xs text-slate-600">
                         {entry.userId && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">User ID</span>
-                            <span className="font-semibold text-slate-900">{entry.userId}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">User ID</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.userId}</span>
                           </span>
                         )}
                         {entry.platform && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Platform</span>
-                            <span className="font-semibold text-slate-900">{entry.platform}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Platform</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.platform}</span>
                           </span>
                         )}
                         {entry.satfung && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Satfung</span>
-                            <span className="font-semibold text-slate-900">{entry.satfung}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Satfung</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.satfung}</span>
                           </span>
                         )}
                         {entry.division && entry.division !== entry.satfung && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Divisi</span>
-                            <span className="font-semibold text-slate-900">{entry.division}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Divisi</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.division}</span>
                           </span>
                         )}
                         {hasDetail && (
                           <>
                             {entry.likes !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-[11px] font-semibold uppercase text-slate-500">Likes</span>
-                                <span className="font-semibold text-slate-900">{formatNumber(entry.likes)}</span>
+                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Likes</span>
+                                <span className="text-xs font-semibold text-slate-900 md:text-xs">{formatNumber(entry.likes)}</span>
                               </span>
                             )}
                             {entry.comments !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-[11px] font-semibold uppercase text-slate-500">Comments</span>
-                                <span className="font-semibold text-slate-900">{formatNumber(entry.comments)}</span>
+                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Comments</span>
+                                <span className="text-xs font-semibold text-slate-900 md:text-xs">{formatNumber(entry.comments)}</span>
                               </span>
                             )}
                             {entry.shares !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-[11px] font-semibold uppercase text-slate-500">Shares</span>
-                                <span className="font-semibold text-slate-900">{formatNumber(entry.shares)}</span>
+                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Shares</span>
+                                <span className="text-xs font-semibold text-slate-900 md:text-xs">{formatNumber(entry.shares)}</span>
                               </span>
                             )}
                           </>
@@ -1953,49 +1953,49 @@ export default function AnevPolresPage() {
                           <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-600 sm:text-sm">
+                      <div className="flex flex-wrap gap-2 text-xs text-slate-600">
                         {entry.userId && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">User ID</span>
-                            <span className="font-semibold text-slate-900">{entry.userId}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">User ID</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.userId}</span>
                           </span>
                         )}
                         {entry.platform && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Platform</span>
-                            <span className="font-semibold text-slate-900">{entry.platform}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Platform</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.platform}</span>
                           </span>
                         )}
                         {entry.satfung && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Satfung</span>
-                            <span className="font-semibold text-slate-900">{entry.satfung}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Satfung</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.satfung}</span>
                           </span>
                         )}
                         {entry.division && entry.division !== entry.satfung && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Divisi</span>
-                            <span className="font-semibold text-slate-900">{entry.division}</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Divisi</span>
+                            <span className="text-xs font-semibold text-slate-900 md:text-xs">{entry.division}</span>
                           </span>
                         )}
                         {hasDetail && (
                           <>
                             {entry.likes !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-[11px] font-semibold uppercase text-slate-500">Likes</span>
-                                <span className="font-semibold text-slate-900">{formatNumber(entry.likes)}</span>
+                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Likes</span>
+                                <span className="text-xs font-semibold text-slate-900 md:text-xs">{formatNumber(entry.likes)}</span>
                               </span>
                             )}
                             {entry.comments !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-[11px] font-semibold uppercase text-slate-500">Comments</span>
-                                <span className="font-semibold text-slate-900">{formatNumber(entry.comments)}</span>
+                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Comments</span>
+                                <span className="text-xs font-semibold text-slate-900 md:text-xs">{formatNumber(entry.comments)}</span>
                               </span>
                             )}
                             {entry.shares !== undefined && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-[11px] font-semibold uppercase text-slate-500">Shares</span>
-                                <span className="font-semibold text-slate-900">{formatNumber(entry.shares)}</span>
+                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Shares</span>
+                                <span className="text-xs font-semibold text-slate-900 md:text-xs">{formatNumber(entry.shares)}</span>
                               </span>
                             )}
                           </>
