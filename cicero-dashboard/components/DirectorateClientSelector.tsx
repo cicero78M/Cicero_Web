@@ -31,31 +31,39 @@ export default function DirectorateClientSelector({
   }
 
   return (
-    <div className="mb-4 flex items-center gap-3">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
       <label
         htmlFor="client-selector"
-        className="text-sm font-semibold text-gray-700"
+        className="text-sm font-semibold text-blue-900 whitespace-nowrap"
       >
-        {label}:
+        {label}
       </label>
-      <div className="relative">
+      <div className="relative flex-1 sm:max-w-md">
         <select
           id="client-selector"
           value={selectedClientId}
           onChange={(e) => onClientChange(e.target.value)}
-          className="appearance-none rounded-lg border border-gray-300 bg-white px-4 py-2 pr-10 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full appearance-none rounded-xl border-2 border-blue-200/60 bg-gradient-to-br from-white to-blue-50/30 px-4 py-2.5 pr-11 text-sm font-medium text-blue-900 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-blue-300 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:shadow-lg"
         >
-          <option value="">Semua Client / Satker</option>
+          <option value="" className="bg-white">
+            Semua Client / Satker
+          </option>
           {sortedClients.map((client) => (
-            <option key={client.client_id} value={client.client_id}>
+            <option
+              key={client.client_id}
+              value={client.client_id}
+              className="bg-white"
+            >
               {client.nama_client}
             </option>
           ))}
         </select>
-        <ChevronDown
-          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
-          strokeWidth={2}
-        />
+        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center rounded-lg bg-blue-500/10 p-1">
+          <ChevronDown
+            className="h-4 w-4 text-blue-600"
+            strokeWidth={2.5}
+          />
+        </div>
       </div>
     </div>
   );
