@@ -422,13 +422,17 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           quickInsightTone="blue"
         >
           {shouldShowClientSelector ? (
-            <div className="rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
-              <DirectorateClientSelector
-                clients={directorateClientOptions}
-                selectedClientId={selectedClientId}
-                onClientChange={setSelectedClientId}
-                label={directorateClientSelectorLabel}
-              />
+            <div className="relative overflow-hidden rounded-2xl border-2 border-blue-100/80 bg-gradient-to-br from-white via-blue-50/20 to-white p-4 shadow-md backdrop-blur-sm">
+              <div className="pointer-events-none absolute -top-8 -left-8 h-24 w-24 rounded-full bg-blue-200/20 blur-2xl" />
+              <div className="pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-sky-200/20 blur-2xl" />
+              <div className="relative">
+                <DirectorateClientSelector
+                  clients={directorateClientOptions}
+                  selectedClientId={selectedClientId}
+                  onClientChange={setSelectedClientId}
+                  label={directorateClientSelectorLabel}
+                />
+              </div>
             </div>
           ) : null}
 
@@ -519,13 +523,17 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
         showContent={activeTab === "rekap"}
       >
         {shouldShowClientSelector ? (
-          <div className="mb-4 rounded-2xl border border-sky-100/70 bg-white/80 p-3 shadow-sm">
-            <DirectorateClientSelector
-              clients={directorateClientOptions}
-              selectedClientId={selectedClientId}
-              onClientChange={setSelectedClientId}
-              label={directorateClientSelectorLabel}
-            />
+          <div className="relative overflow-hidden rounded-2xl border-2 border-blue-100/80 bg-gradient-to-br from-white via-blue-50/20 to-white p-4 shadow-md backdrop-blur-sm mb-4">
+            <div className="pointer-events-none absolute -top-8 -left-8 h-24 w-24 rounded-full bg-blue-200/20 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-sky-200/20 blur-2xl" />
+            <div className="relative">
+              <DirectorateClientSelector
+                clients={directorateClientOptions}
+                selectedClientId={selectedClientId}
+                onClientChange={setSelectedClientId}
+                label={directorateClientSelectorLabel}
+              />
+            </div>
           </div>
         ) : null}
 
