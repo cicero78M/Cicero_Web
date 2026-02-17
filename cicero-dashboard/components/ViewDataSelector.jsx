@@ -177,8 +177,8 @@ export default function ViewDataSelector({
       <label htmlFor={id} className={baseLabelClass}>
         Tampilan data berdasarkan
       </label>
-      <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="hidden w-full flex-wrap gap-2 sm:flex">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="hidden w-full gap-2 sm:flex sm:flex-wrap">
           {options.map((opt) => {
             const isActive = opt.value === value;
             return (
@@ -190,7 +190,7 @@ export default function ViewDataSelector({
                 className={cn(
                   segmentedButtonBaseClass,
                   isActive &&
-                    "border-sky-400/70 bg-gradient-to-br from-sky-50 to-blue-50 text-slate-800 font-semibold shadow-md ring-2 ring-sky-400/20",
+                    "border-sky-400/70 bg-gradient-to-br from-sky-50 to-blue-50 text-slate-800 shadow-md ring-2 ring-sky-400/20",
                   disabled && "cursor-not-allowed opacity-70",
                 )}
               >
