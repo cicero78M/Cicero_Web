@@ -87,6 +87,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
   const hasPremiumDateAccess =
     isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
+  const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
   const premiumViewOptions = [
     { value: "today", label: "Harian (hari ini)", periode: "harian" },
     { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
@@ -98,7 +99,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       range: true,
     },
   ];
-  const viewOptions = hasPremiumDateAccess
+  const viewOptions = showDateSelector
     ? premiumViewOptions
     : [{ value: "today", label: "Hari ini", periode: "harian" }];
 
@@ -378,7 +379,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
         actionLabel: "Lihat Paket",
       }
     : null;
-  const viewSelectorProps = hasPremiumDateAccess
+  const viewSelectorProps = showDateSelector
     ? {
         value: viewBy,
         onChange: handleViewChange,
