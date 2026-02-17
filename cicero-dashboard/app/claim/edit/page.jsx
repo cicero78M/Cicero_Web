@@ -15,7 +15,7 @@ import {
 
 export default function EditUserPage() {
   const [nrp, setNrp] = useState("");
-  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [kesatuan, setKesatuan] = useState("");
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
@@ -36,13 +36,13 @@ export default function EditUserPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const n = sessionStorage.getItem("claim_nrp");
-      const w = sessionStorage.getItem("claim_email");
+      const w = sessionStorage.getItem("claim_password");
       if (!n || !w) {
         router.replace("/claim");
         return;
       }
       setNrp(n);
-      setEmail(w);
+      setPassword(w);
       loadUser(n, w);
     }
   }, [router]);
@@ -102,7 +102,7 @@ export default function EditUserPage() {
     try {
       const res = await updateUserViaClaim({
         nrp,
-        email,
+        password,
         nama: nama.trim(),
         title: pangkat.trim(),
         divisi: satfung.trim(),

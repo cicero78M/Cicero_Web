@@ -1,167 +1,226 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import { LockKeyhole, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
-import { checkClaimEmailStatus, requestClaimOtp } from "@/utils/api";
+import { loginClaimUser, registerClaimCredential } from "@/utils/api";
+
+const PASSWORD_RULE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 export default function ClaimPage() {
+  const [mode, setMode] = useState("login");
   const [nrp, setNrp] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [validationStatus, setValidationStatus] = useState("");
-  const [validationMessage, setValidationMessage] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const router = useRouter();
 
-  async function handleSubmit(e) {
+  const passwordChecks = useMemo(
+    () => ({
+      minLength: password.length >= 8,
+      hasLetter: /[A-Za-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecial: /[^A-Za-z0-9]/.test(password),
+    }),
+    [password],
+  );
+
+  const saveClaimSession = (trimmedNrp, trimmedPassword) => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem("claim_nrp", trimmedNrp);
+    sessionStorage.setItem("claim_password", trimmedPassword);
+  };
+
+  const clearForm = () => {
+    setPassword("");
+    setConfirmPassword("");
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
-    setValidationStatus("");
-    setValidationMessage("");
-    setLoading(true);
+    setMessage("");
+
     const trimmedNrp = nrp.trim();
-    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
 
-    try {
-      const validation = await checkClaimEmailStatus(trimmedEmail);
-      const status = (validation?.status || "").toLowerCase();
-      const statusMessages = {
-        inactive:
-          "Email tampaknya tidak aktif atau sudah tidak bisa menerima pesan. Coba gunakan alamat lain yang aktif.",
-        domain_not_found:
-          "Domain email tidak ditemukan atau salah ketik. Periksa kembali alamat email kamu.",
-        mailbox_full:
-          "Kotak masuk email penuh sehingga kode OTP tidak dapat dikirim. Kosongkan kotak masuk atau gunakan email lain.",
-      };
-
-      if (!validation?.success && status === "deliverable") {
-        setValidationStatus("error");
-        setValidationMessage(
-          validation?.message ||
-            "Email tidak dapat diverifikasi saat ini. Pastikan alamat sudah benar dan coba lagi.",
-        );
-        setLoading(false);
-        return;
-      }
-
-      if (status !== "deliverable") {
-        const message =
-          statusMessages[status] ||
-          validation?.message ||
-          "Email tidak dapat diverifikasi. Pastikan alamat sudah benar dan coba lagi.";
-        setValidationStatus(status || "unknown");
-        setValidationMessage(message);
-        setLoading(false);
-        return;
-      }
-    } catch (err) {
-      setValidationStatus("error");
-      const message = err?.message?.trim()
-        ? err.message
-        : "Validasi email gagal. Silakan coba lagi atau gunakan alamat email berbeda.";
-      setValidationMessage(message);
-      setLoading(false);
+    if (!PASSWORD_RULE.test(trimmedPassword)) {
+      setError(
+        "Password minimal 8 karakter dan wajib mengandung huruf, angka, serta karakter khusus.",
+      );
       return;
     }
 
+    if (trimmedPassword !== trimmedConfirmPassword) {
+      setError("Konfirmasi password tidak sesuai.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await requestClaimOtp(trimmedNrp, trimmedEmail);
-      // The API function ensures res.success is always boolean (never undefined):
-      // - true: when backend returns 200 OK (with success: true OR no success field)
-      // - false: when backend returns 200 OK with explicit success: false
-      // Only redirect on true (successful OTP send)
-      if (res.success === true) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("claim_nrp", trimmedNrp);
-          sessionStorage.setItem("claim_email", trimmedEmail);
-        }
-        router.push("/claim/otp");
+      const res = await registerClaimCredential({
+        nrp: trimmedNrp,
+        password: trimmedPassword,
+      });
+      if (res.success !== false) {
+        setMessage("Registrasi berhasil. Silakan login dengan NRP dan password baru.");
+        setMode("login");
+        clearForm();
       } else {
-        setError(res.message || "Gagal mengirim OTP");
+        setError(res.message || "Registrasi gagal.");
       }
     } catch (err) {
-      const message = err?.message?.trim()
-        ? err.message
-        : "Gagal terhubung ke server";
-      setError(message);
+      setError(err?.message?.trim() || "Registrasi gagal.");
     }
     setLoading(false);
-  }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+
+    const trimmedNrp = nrp.trim();
+    const trimmedPassword = password.trim();
+    if (!trimmedNrp || !trimmedPassword) {
+      setError("NRP dan password wajib diisi.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await loginClaimUser({ nrp: trimmedNrp, password: trimmedPassword });
+      if (res.success !== false) {
+        saveClaimSession(trimmedNrp, trimmedPassword);
+        router.push("/claim/edit");
+      } else {
+        setError(res.message || "Login gagal.");
+      }
+    } catch (err) {
+      setError(err?.message?.trim() || "Login gagal.");
+    }
+    setLoading(false);
+  };
 
   return (
     <ClaimLayout
-      stepLabel="Langkah 1 dari 3"
-      title="Klaim & Edit Data User"
-      description="Masukkan NRP dan email aktif untuk menerima kode verifikasi ke akunmu."
+      stepLabel="Langkah 1 dari 2"
+      title="Login atau Registrasi Claim"
+      description="Flow OTP email telah diganti. Gunakan NRP + password untuk akses dan pembaruan data profil."
       icon={<ShieldCheck className="h-5 w-5" />}
-      infoTitle="Mulai proses update data dengan percaya diri"
-      infoDescription="Kami memverifikasi identitasmu menggunakan data resmi agar perubahan profil tetap aman dan terkontrol."
+      infoTitle="Autentikasi claim berbasis kredensial"
+      infoDescription="Backend kini memakai NRP dan password untuk registrasi, login, serta update data agar proses lebih cepat dan konsisten."
       infoHighlights={[
-        "Gunakan email aktif agar OTP dapat diterima dengan cepat.",
-        "Kami hanya membutuhkan beberapa detik untuk mengirim kode verifikasi.",
-        "Data pribadi terlindungi oleh sistem keamanan internal kami.",
+        "Registrasi awal: NRP + password kuat.",
+        "Login berikutnya: cukup NRP + password.",
+        "Kredensial yang sama digunakan saat simpan perubahan profil.",
       ]}
       cardAccent="trust"
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {validationMessage && (
-          <div
-            className={`rounded-xl px-4 py-3 text-sm ${
-              validationStatus === "error"
-                ? "border border-red-200 bg-red-50 text-red-700"
-                : "border border-amber-200 bg-amber-50 text-neutral-navy"
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 rounded-2xl bg-neutral-100 p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setError("");
+              setMessage("");
+            }}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              mode === "login" ? "bg-white text-neutral-navy shadow" : "text-neutral-slate"
             }`}
           >
-            {validationMessage}
-          </div>
-        )}
-        {error && (
-          <div className="rounded-xl border border-red-200/80 bg-red-50/70 px-4 py-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-        <div className="space-y-2">
-          <label htmlFor="nrp" className="text-sm font-medium text-neutral-navy">
-            NRP
-          </label>
-          <input
-            id="nrp"
-            type="text"
-            placeholder="Masukkan NRP kamu"
-            value={nrp}
-            onChange={(e) => setNrp(e.target.value)}
-            required
-            className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
-          />
+            <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("register");
+              setError("");
+              setMessage("");
+            }}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              mode === "register" ? "bg-white text-neutral-navy shadow" : "text-neutral-slate"
+            }`}
+          >
+            <span className="inline-flex items-center gap-2"><UserPlus className="h-4 w-4" /> Registrasi</span>
+          </button>
         </div>
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-neutral-navy">
-            Email Pribadi
-          </label>
-          <input
-            id="email"
-            type="email"
-            placeholder="user@gmail.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-2xl bg-gradient-to-r from-trust-400 via-consistency-300 to-spirit-400 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-consistency-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Mengirim..." : "Kirim Kode OTP"}
-        </button>
-        <p className="text-xs text-neutral-slate">
-          Pastikan kamu memiliki akses ke email tersebut karena OTP hanya berlaku selama 5 menit.
-        </p>
-      </form>
+
+        <form onSubmit={mode === "register" ? handleRegister : handleLogin} className="space-y-4">
+          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+          {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
+
+          <div className="space-y-2">
+            <label htmlFor="nrp" className="text-sm font-medium text-neutral-navy">NRP</label>
+            <input
+              id="nrp"
+              type="text"
+              value={nrp}
+              onChange={(e) => setNrp(e.target.value)}
+              placeholder="Masukkan NRP"
+              required
+              className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium text-neutral-navy">Password</label>
+            <div className="relative">
+              <LockKeyhole className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-neutral-slate" />
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan password"
+                required
+                className="w-full rounded-2xl border border-trust-200/80 bg-white py-3 pl-10 pr-4 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
+              />
+            </div>
+          </div>
+
+          {mode === "register" && (
+            <>
+              <div className="space-y-2">
+                <label htmlFor="confirm_password" className="text-sm font-medium text-neutral-navy">Konfirmasi Password</label>
+                <input
+                  id="confirm_password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Ulangi password"
+                  required
+                  className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
+                />
+              </div>
+
+              <div className="rounded-xl border border-trust-100 bg-trust-50/70 px-4 py-3 text-xs text-neutral-slate">
+                <p className="mb-2 font-semibold text-neutral-navy">Password Strength (wajib):</p>
+                <ul className="space-y-1">
+                  <li className={passwordChecks.minLength ? "text-emerald-600" : "text-neutral-slate"}>• Minimal 8 karakter</li>
+                  <li className={passwordChecks.hasLetter ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung huruf</li>
+                  <li className={passwordChecks.hasNumber ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung angka</li>
+                  <li className={passwordChecks.hasSpecial ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung karakter khusus</li>
+                </ul>
+              </div>
+            </>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-2xl bg-gradient-to-r from-trust-300 via-consistency-300 to-spirit-300 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-trust-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Memproses..." : mode === "register" ? "Daftar" : "Login & Lanjutkan"}
+          </button>
+        </form>
+      </div>
     </ClaimLayout>
   );
 }
