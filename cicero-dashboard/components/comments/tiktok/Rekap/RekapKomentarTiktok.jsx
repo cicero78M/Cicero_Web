@@ -444,7 +444,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
 
     const satkerMap = {};
-    sortedUsers.forEach((u) => {
+    filteredUsers.forEach((u) => {
       const client = (
         u.nama_client ||
         u.client_name ||
@@ -545,7 +545,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     const jam = now.toLocaleTimeString("id-ID", { hour12: false });
 
     const clients = {};
-    sortedUsers.forEach((u) => {
+    filteredUsers.forEach((u) => {
       const client = u.nama_client || u.client_name || u.client || "Lainnya";
       if (!clients[client])
         clients[client] = { Sudah: [], Kurang: [], Belum: [], UsernameKosong: [] };

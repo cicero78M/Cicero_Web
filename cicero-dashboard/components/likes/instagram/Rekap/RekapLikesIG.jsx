@@ -353,7 +353,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     const tanggal = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
 
     const satkerMap = {};
-    sortedUsers.forEach((u) => {
+    filteredUsers.forEach((u) => {
       const client = (
         u.nama_client ||
         u.client_name ||
@@ -435,7 +435,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   function handleDownloadRekap() {
     const clients = {};
-    sortedUsers.forEach((u) => {
+    filteredUsers.forEach((u) => {
       const client = u.nama_client || u.client_name || u.client || "Lainnya";
       if (!clients[client])
         clients[client] = { Sudah: [], Kurang: [], Belum: [], UsernameKosong: [] };
