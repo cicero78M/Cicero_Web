@@ -132,11 +132,13 @@ export default function ClaimPage() {
               setError("");
               setMessage("");
             }}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-              mode === "login" ? "bg-white text-neutral-navy shadow" : "text-neutral-slate"
+            className={`w-full cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-95 ${
+              mode === "login" ? "bg-white text-neutral-navy shadow" : "text-neutral-slate hover:text-neutral-navy"
             }`}
           >
-            <span className="inline-flex items-center gap-2"><LogIn className="h-4 w-4" /> Login</span>
+            <span className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap">
+              <LogIn className="h-4 w-4 shrink-0" /> Login
+            </span>
           </button>
           <button
             type="button"
@@ -145,11 +147,13 @@ export default function ClaimPage() {
               setError("");
               setMessage("");
             }}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-              mode === "register" ? "bg-white text-neutral-navy shadow" : "text-neutral-slate"
+            className={`w-full cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-95 ${
+              mode === "register" ? "bg-white text-neutral-navy shadow" : "text-neutral-slate hover:text-neutral-navy"
             }`}
           >
-            <span className="inline-flex items-center gap-2"><UserPlus className="h-4 w-4" /> Registrasi</span>
+            <span className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap">
+              <UserPlus className="h-4 w-4 shrink-0" /> Registrasi
+            </span>
           </button>
         </div>
 
