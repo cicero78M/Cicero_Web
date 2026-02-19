@@ -397,7 +397,7 @@ export default function UserDirectoryPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const allUsers = filtered;
+    const allUsers = rekapFilteredUsers;
     const totalUser = allUsers.length;
     const totalUpdateIG = allUsers.filter((u) => u.insta).length;
     const totalUpdateTiktok = allUsers.filter((u) => u.tiktok).length;
@@ -551,6 +551,40 @@ export default function UserDirectoryPage() {
       selectedClientId,
     ],
   );
+
+  const rekapFilteredUsers = useMemo(() => {
+    const clientFiltered = isDirectorate
+      ? filterUsersByClientId(sortedUsers, selectedClientId)
+      : sortedUsers;
+
+    return clientFiltered
+      .filter((u) => {
+        if (statusFilter === "ALL") return true;
+        const isActive =
+          u.status === true || String(u.status).toLowerCase() === "true";
+        if (statusFilter === "ACTIVE") return isActive;
+        if (statusFilter === "INACTIVE") return !isActive;
+        return true;
+      })
+      .filter((u) => {
+        if (!debouncedSearch) return true;
+        const term = debouncedSearch.toLowerCase();
+        return (
+          (u.nama_client || u.nama || "")
+            .toLowerCase()
+            .includes(term) ||
+          (u.title || "").toLowerCase().includes(term) ||
+          (u.user_id || "").toLowerCase().includes(term) ||
+          (u.divisi || "")
+            .toLowerCase()
+            .includes(term) ||
+          (u.insta || "").toLowerCase().includes(term) ||
+          (u.tiktok || "").toLowerCase().includes(term) ||
+          (u.email || "").toLowerCase().includes(term) ||
+          String(u.status).toLowerCase().includes(term)
+        );
+      });
+  }, [sortedUsers, debouncedSearch, statusFilter, isDirectorate, selectedClientId]);
 
   const sorted = filtered;
 
