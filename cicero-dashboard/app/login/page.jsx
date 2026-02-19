@@ -32,7 +32,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [forgotUsername, setForgotUsername] = useState("");
   const [recoveryContact, setRecoveryContact] = useState("");
   const router = useRouter();
@@ -150,7 +150,6 @@ export default function LoginPage() {
       const apiUrl = getApiBaseUrl();
       const trimmedRole = role.trim();
       const trimmedClientId = client_id.trim();
-      const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
       const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,7 +158,7 @@ export default function LoginPage() {
           password: trimmedPassword,
           role: trimmedRole ? trimmedRole.toLowerCase() : undefined,
           client_id: trimmedClientId || undefined,
-          whatsapp: normalizedWhatsapp,
+          email: email.trim(),
         }),
       });
       const data = await res.json();
@@ -175,7 +174,7 @@ export default function LoginPage() {
         setConfirmPassword("");
         setRole("");
         setClientId("");
-        setWhatsapp("");
+        setEmail("");
       } else {
         setError(data.message || "Registrasi gagal");
       }
@@ -508,19 +507,18 @@ export default function LoginPage() {
                       </button>
                     </div>
                     <div>
-                      <label htmlFor="whatsapp" className="sr-only">
-                        Nomor WhatsApp
+                      <label htmlFor="email" className="sr-only">
+                        Email Dinas
                       </label>
                       <input
-                        id="whatsapp"
-                        type="tel"
-                        placeholder="Nomor WhatsApp aktif"
-                        value={whatsapp}
-                        onChange={(e) => setWhatsapp(e.target.value)}
-                        onBlur={handleTrim(setWhatsapp)}
+                        id="email"
+                        type="email"
+                        placeholder="Email dinas aktif"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onBlur={handleTrim(setEmail)}
                         required
-                        inputMode="tel"
-                        autoComplete="tel"
+                        autoComplete="email"
                         className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
                       />
                     </div>
@@ -664,7 +662,7 @@ export default function LoginPage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-600/90">Onboarding Terarah</p>
                 <h3 className="text-lg font-semibold text-slate-800">Verifikasi akses dalam 1×24 jam</h3>
                 <p className="text-sm leading-relaxed text-slate-600">
-                  Tim Cicero akan menyapa lewat WhatsApp untuk memvalidasi mandat, memastikan akses diberikan secara tepat dan konsisten bagi seluruh tim.
+                  Tim Cicero akan mengirim notifikasi ke email dinas Anda untuk memvalidasi mandat, memastikan akses diberikan secara tepat dan konsisten bagi seluruh tim.
                 </p>
               </div>
             </motion.div>
