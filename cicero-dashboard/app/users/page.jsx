@@ -397,13 +397,21 @@ export default function UserDirectoryPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const allUsers = Object.values(rekapUsers).flat();
+    const allUsers = filtered;
     const totalUser = allUsers.length;
     const totalUpdateIG = allUsers.filter((u) => u.insta).length;
     const totalUpdateTiktok = allUsers.filter((u) => u.tiktok).length;
     const totalBelumUpdate = allUsers.filter(
       (u) => !u.insta && !u.tiktok,
     ).length;
+
+    // Group filtered users by divisi for detail section
+    const groupedByDivisi = {};
+    allUsers.forEach((u) => {
+      const key = u.divisi || "-";
+      if (!groupedByDivisi[key]) groupedByDivisi[key] = [];
+      groupedByDivisi[key].push(u);
+    });
 
     const lines = [
       `Client Name: ${clientName || "-"}`,
@@ -417,7 +425,7 @@ export default function UserDirectoryPage() {
       "Rincian",
       "",
     ];
-    Object.entries(rekapUsers).forEach(([sf, list]) => {
+    Object.entries(groupedByDivisi).forEach(([sf, list]) => {
       lines.push(`*${sf}*`);
       list.forEach((u) => {
         lines.push(
