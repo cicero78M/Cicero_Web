@@ -71,11 +71,12 @@ Gunakan checklist ini untuk review setiap PR yang menyentuh insight engagement I
 ## 6) Catatan Export JPG Chart Insight (Direktorat/Divisi)
 
 - Lokasi tombol: area chart card `ChartDivisiAbsensi`, tepat di atas komponen tabel collapsible **Tampilkan data tabel**.
+- Cakupan capture: yang diexport hanya area tabel `ChartDataTable` (bukan area visual chart bar).
 - Trigger tampil: tombol hanya muncul jika data chart tersedia (bukan empty state).
 - Format nama file: `instagram-engagement-direktorat-<grouping>-<yyyy-mm-dd>.jpg`.
   - `grouping=polres-jajaran` saat `groupBy === "client_id"` (label metadata: **POLRES JAJARAN**).
   - `grouping=divisi-satfung` saat `groupBy === "divisi"` (label metadata: **divisi-satfung**).
 - Batasan teknis export:
-  - Data sangat panjang (bar banyak) meningkatkan tinggi canvas dan ukuran file JPG.
-  - Label satker/divisi yang sangat panjang berpotensi terpotong tergantung lebar chart aktif.
+  - Data tabel sangat panjang meningkatkan tinggi canvas dan ukuran file JPG.
+  - Label satker/divisi yang sangat panjang berpotensi terpotong sesuai lebar tabel yang diexport.
   - Kegagalan render canvas/browser akan memunculkan toast error yang user-friendly; user dianjurkan mencoba ulang dengan data lebih kecil atau browser terbaru.

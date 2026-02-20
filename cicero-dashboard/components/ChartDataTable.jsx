@@ -15,6 +15,7 @@ export default function ChartDataTable({
   onDownloadJpg,
   downloadLabel = "Download JPG",
   isDownloading = false,
+  exportRef,
 }) {
   if (!rows || rows.length === 0) {
     return null;
@@ -54,6 +55,7 @@ export default function ChartDataTable({
         </div>
       ) : null}
       <details
+        ref={exportRef}
         className="group rounded-2xl border border-sky-100/60 bg-white/70 p-4 text-slate-700 shadow-inner backdrop-blur"
         open={initialOpen}
       >

@@ -43,7 +43,7 @@ export default function ChartDivisiAbsensi({
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
   const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
-  const exportRef = useRef(null);
+  const exportTableRef = useRef(null);
 
   // Enrich user data with client names when grouping by client_id.
   useEffect(() => {
@@ -294,13 +294,18 @@ export default function ChartDivisiAbsensi({
   const fileName = `instagram-engagement-direktorat-${fileGrouping}-${exportDate}.jpg`;
 
   const handleDownloadJpg = async () => {
-    if (!exportRef.current || dataChart.length === 0) {
+    if (!exportTableRef.current || dataChart.length === 0) {
       return;
     }
 
+    const detailsWasOpen = exportTableRef.current.hasAttribute("open");
     setIsDownloadingJpg(true);
     try {
-      const dataUrl = await toJpeg(exportRef.current, {
+      if (!detailsWasOpen) {
+        exportTableRef.current.setAttribute("open", "open");
+      }
+
+      const dataUrl = await toJpeg(exportTableRef.current, {
         quality: 0.95,
         cacheBust: true,
         backgroundColor: "#ffffff",
@@ -313,11 +318,14 @@ export default function ChartDivisiAbsensi({
       showToast(`Berhasil mengunduh JPG ${groupByLabel}.`, "success");
     } catch (error) {
       showToast(
-        "Gagal mengekspor JPG. Silakan coba lagi dengan data lebih sedikit atau gunakan browser terbaru.",
+        "Gagal mengekspor JPG tabel. Silakan coba lagi dengan data lebih sedikit atau gunakan browser terbaru.",
         "error",
       );
       console.error("[ChartDivisiAbsensi] JPG export failed", error);
     } finally {
+      if (exportTableRef.current && !detailsWasOpen) {
+        exportTableRef.current.removeAttribute("open");
+      }
       setIsDownloadingJpg(false);
     }
   };
@@ -494,6 +502,7 @@ export default function ChartDivisiAbsensi({
           onDownloadJpg={dataChart.length > 0 ? handleDownloadJpg : undefined}
           downloadLabel={`Download JPG ${groupByLabel}`}
           isDownloading={isDownloadingJpg}
+          exportRef={exportTableRef}
         />
       </div>
     </div>
