@@ -436,7 +436,12 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
-  function handleDownloadRekap() {
+  /**
+   * Menyalin laporan teks rekap format WA ke clipboard.
+   *
+   * Catatan: format pesan WA dijaga agar tetap konsisten dengan versi sebelumnya.
+   */
+  function handleCopyTextReport() {
     const clients = {};
     filteredUsers.forEach((u) => {
       const client = u.nama_client || u.client_name || u.client || "Lainnya";
@@ -641,9 +646,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
+  /**
+   * API imperative untuk parent:
+   * - copyRekap: salin ringkasan rekap singkat.
+   * - downloadRekap: unduh tabel rekap sebagai JPG (penyesuaian nama aksi).
+   * - downloadRekapJpg: alias eksplisit untuk unduh tabel JPG.
+   */
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
-    downloadRekap: handleDownloadRekap,
+    downloadRekap: handleDownloadTableAsJpg,
+    downloadRekapJpg: handleDownloadTableAsJpg,
   }));
 
   return (
@@ -1008,7 +1020,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             )}
             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
               <button
-                onClick={handleDownloadRekap}
+                onClick={handleCopyTextReport}
                 className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 md:w-auto"
               >
                 Salin Teks Rekap
@@ -1019,7 +1031,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                 disabled={isDownloadingJpg}
                 className="w-full rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
               >
-                {isDownloadingJpg ? "Mempersiapkan JPG..." : "Download JPG"}
+                {isDownloadingJpg ? "Mempersiapkan JPG..." : "Download Tabel JPG"}
               </button>
               {showCopyButton && (
                 <button
