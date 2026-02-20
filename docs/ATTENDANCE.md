@@ -24,6 +24,7 @@ Dokumen ini merangkum cara dashboard mengelola absensi likes Instagram serta bag
 ## Standarisasi Rekap Personel
 
 - Segment **Rekap Personel Instagram** menyamakan desain dengan halaman TikTok: status baris memakai `clampEngagementCompleted` agar jumlah like tidak melampaui target posting, pencarian ikut membersihkan label satfung/polsek serta `client_id`, dan tabel zebra menampilkan badge status, detail client + ID, serta footer pagination Prev/Reset/Next yang menyatu dengan tabel seperti standar TikTok Engagement Insight.【F:cicero-dashboard/components/likes/instagram/Rekap/RekapLikesIG.jsx†L1-L360】
+- Panel aksi sticky kini memiliki tombol **Download JPG** untuk mengekspor area rekap tabel sebagai gambar siap kirim. Area export dibungkus kontainer khusus (`exportContainerRef`) dengan latar putih, header “Data Pelaksanaan Engagement Instagram Satker Jajaran”, serta metadata periode/mode dari `reportContext` agar hasil gambar tetap informatif. Proses export berjalan client-side via `html-to-image`, menonaktifkan tombol saat rendering, dan menampilkan toast sukses/gagal agar UX tetap jelas bagi operator.
 
 ## Standarisasi Selector Client Direktorat (mengikuti User Directory)
 
