@@ -88,3 +88,4 @@ Gunakan checklist ini untuk review setiap PR yang menyentuh insight engagement I
 - Utility selector client (`utils/directorateClientSelector.ts`) wajib **null-safe** terhadap data list yang tidak valid (misalnya `null`, `undefined`, atau record non-object) sebelum membaca field `client_id`/`nama_client`.
 - `filterUsersByClientId` harus selalu mengembalikan array yang aman dirender, termasuk saat data dari hook belum lengkap/hydration awal.
 - Perubahan pada pipeline data selector harus menjaga konsistensi ini untuk mencegah error runtime klien pada halaman insight (`/likes/instagram` dan `/comments/tiktok`).
+- Shim kompatibilitas API DOM non-standar `document.selector` harus diinisialisasi sedini mungkin (script inline di root `<head>`/before interactive) agar skrip pihak ketiga/extension yang berjalan sebelum hydration tidak menyebabkan crash di halaman insight.
