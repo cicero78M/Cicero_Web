@@ -83,6 +83,10 @@ Header ini menjadi identitas standar laporan saat dibagikan lintas kanal (mis. g
 - Untuk kebutuhan arsip formal, lakukan verifikasi cepat pada hasil JPG (header, periode, dan jumlah baris penting).
 - Untuk dataset besar, pertimbangkan export bertahap per halaman/periode agar hasil tetap terbaca.
 
+## Standar Lintas Platform (Rujukan Wajib)
+
+Implementasi export JPG chart pada komponen shared **tidak boleh mengasumsikan hardcoded Instagram**. Gunakan standar bersama di [`docs/engagement-insight-standard.md`](./engagement-insight-standard.md) untuk aturan capture area `ChartDataTable`, pola nama file platform-aware (Instagram/TikTok), serta batasan teknis dan error handling lintas platform.
+
 ## 6) Update Fitur: Export JPG pada Chart Insight Divisi/Polres
 
 Selain tombol **Download Tabel JPG** di tab rekap, insight chart Instagram berbasis `ChartDivisiAbsensi` kini menyediakan tombol **Download JPG** di atas blok **Tampilkan data tabel** (tetap collapsible).
