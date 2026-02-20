@@ -3,6 +3,7 @@ import {
   useMemo,
   useEffect,
   useState,
+  useRef,
   forwardRef,
   useImperativeHandle,
 } from "react";
@@ -84,6 +85,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
   const { periodeLabel, viewLabel } = reportContext || {};
   const { token, clientId } = useAuth();
   const [komplainLoadingMap, setKomplainLoadingMap] = useState({});
+  const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
+  const exportContainerRef = useRef(null);
   const getClientIdentifier = (user) => {
     const rawClientId =
       user.client_id ??
@@ -577,6 +580,67 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     }
   }
 
+  async function handleDownloadTableAsJpg() {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
+    if (!exportContainerRef.current) {
+      showToast("Area tabel tidak ditemukan untuk diexport.", "error");
+      return;
+    }
+
+    setIsDownloadingJpg(true);
+    try {
+      const { toCanvas } = await import("html-to-image");
+      const canvas = await toCanvas(exportContainerRef.current, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+        cacheBust: true,
+      });
+
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (result) => {
+            if (result) {
+              resolve(result);
+              return;
+            }
+            reject(new Error("Gagal membuat file JPG dari tabel."));
+          },
+          "image/jpeg",
+          0.95,
+        );
+      });
+
+      const now = new Date();
+      const pad = (value) => String(value).padStart(2, "0");
+      const filename = `engagement-instagram-satker-jajaran-${now.getFullYear()}${pad(
+        now.getMonth() + 1,
+      )}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.jpg`;
+
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+
+      showToast("Berhasil mengunduh tabel rekap sebagai JPG.", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Gagal mengunduh tabel rekap sebagai JPG.",
+        "error",
+      );
+    } finally {
+      setIsDownloadingJpg(false);
+    }
+  }
+
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
     downloadRekap: handleDownloadRekap,
@@ -693,7 +757,21 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95 shadow-inner">
+          <div
+            ref={exportContainerRef}
+            className="overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-inner md:p-6"
+          >
+            <div className="mb-4 space-y-1 text-slate-900">
+              <h3 className="text-base font-semibold md:text-lg">
+                Data Pelaksanaan Engagement Instagram Satker Jajaran
+              </h3>
+              <p className="text-xs text-slate-600 md:text-sm">
+                {periodeLabel ? `Periode: ${periodeLabel}` : "Periode: Seluruh data"}
+                {viewLabel ? ` • Mode: ${viewLabel}` : ""}
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95">
               <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-800">
                 <thead className="sticky top-0 z-10 bg-blue-50/90 backdrop-blur">
                   <tr>
@@ -872,8 +950,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                 </tbody>
               </table>
 
-            {totalPages > 1 && (
-              <div className="flex flex-col items-center gap-3 border-t border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-800 md:flex-row md:justify-between">
+              {totalPages > 1 && (
+                <div className="flex flex-col items-center gap-3 border-t border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-800 md:flex-row md:justify-between">
                 <div className="text-[13px] font-semibold uppercase tracking-[0.28em] text-blue-500">
                   Halaman {page} dari {totalPages}
                 </div>
@@ -902,8 +980,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                     Next
                   </button>
                 </div>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -933,6 +1012,14 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                 className="w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 md:w-auto"
               >
                 Salin Teks Rekap
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadTableAsJpg}
+                disabled={isDownloadingJpg}
+                className="w-full rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
+              >
+                {isDownloadingJpg ? "Mempersiapkan JPG..." : "Download JPG"}
               </button>
               {showCopyButton && (
                 <button
