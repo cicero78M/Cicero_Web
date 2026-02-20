@@ -30,7 +30,8 @@ export default function ChartBox({
   useDefaultContainerStyle = true,
   decorations = defaultDecorations,
   titleClassName = "text-sky-600",
-  exportPlatform = "instagram",
+  exportFilePrefix,
+  exportSuccessLabel,
 }) {
   return (
     <div
@@ -65,7 +66,8 @@ export default function ChartBox({
           showTotalUser={showTotalUser}
           labelTotalUser={labelTotalUser}
           sortBy={sortBy}
-          exportPlatform={exportPlatform}
+          exportFilePrefix={exportFilePrefix}
+          exportSuccessLabel={exportSuccessLabel}
         />
       ) : (
         <div

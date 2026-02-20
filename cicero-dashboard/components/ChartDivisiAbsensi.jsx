@@ -15,12 +15,6 @@ import { getClientNames } from "@/utils/api";
 import ChartDataTable from "@/components/ChartDataTable";
 import { toJpeg } from "html-to-image";
 import { showToast } from "@/utils/showToast";
-import {
-  buildEngagementChartJpgFilename,
-  ENGAGEMENT_CHART_EXPORT_OPTIONS,
-  getEngagementChartGroupingLabels,
-  resolveEngagementChartPlatformProfile,
-} from "@/utils/engagementChartExport";
 
 // Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
@@ -46,7 +40,8 @@ export default function ChartDivisiAbsensi({
   showTotalUser = false,
   labelTotalUser = "Jumlah User",
   sortBy = "total_value",
-  exportPlatform = "instagram",
+  exportFilePrefix = "instagram-engagement-direktorat",
+  exportSuccessLabel = "Instagram",
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
   const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
@@ -293,14 +288,12 @@ export default function ChartDivisiAbsensi({
     };
   });
 
-  const { groupByLabel } = getEngagementChartGroupingLabels(groupBy);
-  const { successLabel: exportSuccessLabel } =
-    resolveEngagementChartPlatformProfile(exportPlatform);
-  const fileName = buildEngagementChartJpgFilename({
-    platform: exportPlatform,
-    groupBy,
-    date: new Date(),
-  });
+  const groupByLabel =
+    groupBy === "client_id" ? "POLRES JAJARAN" : "divisi-satfung";
+  const fileGrouping =
+    groupBy === "client_id" ? "polres-jajaran" : "divisi-satfung";
+  const exportDate = new Date().toISOString().split("T")[0];
+  const fileName = `${exportFilePrefix}-${fileGrouping}-${exportDate}.jpg`;
 
   const handleDownloadJpg = async () => {
     if (!exportTableRef.current || dataChart.length === 0) {
@@ -314,10 +307,12 @@ export default function ChartDivisiAbsensi({
         exportTableRef.current.setAttribute("open", "open");
       }
 
-      const dataUrl = await toJpeg(
-        exportTableRef.current,
-        ENGAGEMENT_CHART_EXPORT_OPTIONS,
-      );
+      const dataUrl = await toJpeg(exportTableRef.current, {
+        quality: 0.95,
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
       const link = document.createElement("a");
       link.download = fileName;
       link.href = dataUrl;
