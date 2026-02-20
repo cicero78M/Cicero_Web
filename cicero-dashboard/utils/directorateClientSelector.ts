@@ -9,18 +9,26 @@ export interface ClientLabelResolverOptions {
   fallbackNameByClientId?: Record<string, string>;
 }
 
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
 function isGenericDirectorateLabel(label: string): boolean {
   return label.toUpperCase().includes("DIREKTORAT");
 }
 
-export function normalizeClientId(user: Record<string, unknown>): string {
+export function normalizeClientId(user: Record<string, unknown> | null | undefined): string {
+  const safeUser = toRecord(user);
   return String(
-    user.client_id || user.clientId || user.clientID || user.client || ""
+    safeUser.client_id || safeUser.clientId || safeUser.clientID || safeUser.client || ""
   ).trim();
 }
 
 function getRawClientName(user: Record<string, unknown>): string {
-  return String(user.nama_client || user.client_name || user.client || "").trim();
+  const safeUser = toRecord(user);
+  return String(safeUser.nama_client || safeUser.client_name || safeUser.client || "").trim();
 }
 
 function isSpecificSatkerLabel(label: string): boolean {
@@ -31,8 +39,9 @@ export function resolveClientLabel(
   user: Record<string, unknown>,
   options: ClientLabelResolverOptions = {}
 ): string {
-  const clientId = normalizeClientId(user);
-  const rawName = getRawClientName(user);
+  const safeUser = toRecord(user);
+  const clientId = normalizeClientId(safeUser);
+  const rawName = getRawClientName(safeUser);
   const explicitName = isSpecificSatkerLabel(rawName) ? rawName : "";
   const fallbackByMap =
     clientId && options.fallbackNameByClientId
@@ -49,10 +58,12 @@ export function normalizeUsersWithClientLabel(
   users: Array<Record<string, unknown>>,
   options: ClientLabelResolverOptions = {}
 ): Array<Record<string, unknown>> {
-  return users.map((user) => ({
-    ...user,
-    nama_client: resolveClientLabel(user, options),
-  }));
+  return users
+    .map((user) => toRecord(user))
+    .map((user) => ({
+      ...user,
+      nama_client: resolveClientLabel(user, options),
+    }));
 }
 
 /**
@@ -67,10 +78,11 @@ export function extractClientOptions(
   const labelByClientId = new Map<string, string>();
 
   users.forEach((user) => {
-    const clientId = normalizeClientId(user);
+    const safeUser = toRecord(user);
+    const clientId = normalizeClientId(safeUser);
     if (!clientId) return;
 
-    const nextLabel = resolveClientLabel(user, options);
+    const nextLabel = resolveClientLabel(safeUser, options);
     const currentLabel = labelByClientId.get(clientId);
 
     if (!currentLabel) {
@@ -115,9 +127,15 @@ export function filterUsersByClientId(
   users: Array<Record<string, unknown>>,
   selectedClientId: string
 ): Array<Record<string, unknown>> {
+  const safeUsers = Array.isArray(users)
+    ? users
+        .map((entry) => toRecord(entry))
+        .filter((entry) => Object.keys(entry).length > 0)
+    : [];
+
   if (!selectedClientId || selectedClientId === "") {
-    return users;
+    return safeUsers;
   }
 
-  return users.filter((u) => normalizeClientId(u) === selectedClientId);
+  return safeUsers.filter((u) => normalizeClientId(u) === selectedClientId);
 }
