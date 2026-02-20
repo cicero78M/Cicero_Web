@@ -89,14 +89,10 @@ Selain tombol **Download Tabel JPG** di tab rekap, insight chart Instagram berba
 
 - Area yang di-capture: hanya area `ChartDataTable` (ringkasan tabel data chart), tidak termasuk visual bar chart.
 - Tombol hanya muncul jika ada data chart (`dataChart.length > 0`).
-- Format file output: `<exportFilePrefix>-<grouping>-<yyyy-mm-dd>.jpg`.
-  - Default kompatibilitas lama (jika prop belum diisi): `instagram-engagement-direktorat`.
-  - Instagram insight mengirim `exportFilePrefix=instagram-engagement-direktorat`.
-  - TikTok insight mengirim `exportFilePrefix=tiktok-engagement-direktorat`.
+- Format file output: `instagram-engagement-direktorat-<grouping>-<yyyy-mm-dd>.jpg`.
   - `grouping=polres-jajaran` untuk mode direktorat (`groupBy=client_id`, metadata label: `POLRES JAJARAN`).
   - `grouping=divisi-satfung` untuk mode divisi (`groupBy=divisi`).
 - Error export (canvas/security/render) ditangani dengan toast yang menjelaskan langkah lanjut (coba ulang dengan data lebih kecil/browser terbaru).
-- Label sukses toast kini mengikuti metadata channel (`exportSuccessLabel`, mis. `Instagram`/`TikTok`) agar pesan unduhan tidak hardcoded.
 - Saat tabel dalam kondisi collapse, sistem membuka tabel sementara saat proses capture lalu mengembalikannya ke state semula.
 
 ### Batasan Tambahan
