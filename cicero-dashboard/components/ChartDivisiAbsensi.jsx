@@ -10,9 +10,11 @@ import {
   CartesianGrid,
   LabelList,
 } from "recharts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getClientNames } from "@/utils/api";
 import ChartDataTable from "@/components/ChartDataTable";
+import { toJpeg } from "html-to-image";
+import { showToast } from "@/utils/showToast";
 
 // Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
@@ -40,6 +42,8 @@ export default function ChartDivisiAbsensi({
   sortBy = "total_value",
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
+  const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
+  const exportRef = useRef(null);
 
   // Enrich user data with client names when grouping by client_id.
   useEffect(() => {
@@ -49,9 +53,9 @@ export default function ChartDivisiAbsensi({
         return;
       }
 
-        const needsName = users.some(
-          (u) => !(u.nama_client || u.client_name || u.client)
-        );
+      const needsName = users.some(
+        (u) => !(u.nama_client || u.client_name || u.client),
+      );
       if (!needsName) {
         setEnrichedUsers(users);
         return;
@@ -68,9 +72,7 @@ export default function ChartDivisiAbsensi({
 
       try {
         const ids = users.map((u) =>
-          String(
-            u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
-          )
+          String(u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""),
         );
         const nameMap = await getClientNames(token, ids);
         const mapped = users.map((u) => ({
@@ -78,9 +80,7 @@ export default function ChartDivisiAbsensi({
           nama_client:
             u.nama_client ||
             nameMap[
-              String(
-                u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? ""
-              )
+              String(u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "")
             ] ||
             u.client_name ||
             u.client,
@@ -99,8 +99,8 @@ export default function ChartDivisiAbsensi({
     typeof totalPost !== "undefined"
       ? totalPost
       : typeof totalTiktokPost !== "undefined"
-      ? totalTiktokPost
-      : totalIGPost;
+        ? totalTiktokPost
+        : totalIGPost;
 
   // Jika tidak ada post, semua user dianggap belum
   const isZeroPost = (effectiveTotal || 0) === 0;
@@ -113,9 +113,7 @@ export default function ChartDivisiAbsensi({
       u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
     );
     const key =
-      groupBy === "client_id"
-        ? idKey
-        : bersihkanSatfung(u.divisi || "LAINNYA");
+      groupBy === "client_id" ? idKey : bersihkanSatfung(u.divisi || "LAINNYA");
     const display =
       groupBy === "client_id"
         ? u.nama_client || u.client_name || u.client || idKey
@@ -288,11 +286,47 @@ export default function ChartDivisiAbsensi({
     };
   });
 
+  const groupByLabel =
+    groupBy === "client_id" ? "POLRES JAJARAN" : "divisi-satfung";
+  const fileGrouping =
+    groupBy === "client_id" ? "polres-jajaran" : "divisi-satfung";
+  const exportDate = new Date().toISOString().split("T")[0];
+  const fileName = `instagram-engagement-direktorat-${fileGrouping}-${exportDate}.jpg`;
+
+  const handleDownloadJpg = async () => {
+    if (!exportRef.current || dataChart.length === 0) {
+      return;
+    }
+
+    setIsDownloadingJpg(true);
+    try {
+      const dataUrl = await toJpeg(exportRef.current, {
+        quality: 0.95,
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
+      const link = document.createElement("a");
+      link.download = fileName;
+      link.href = dataUrl;
+      link.click();
+      showToast(`Berhasil mengunduh JPG ${groupByLabel}.`, "success");
+    } catch (error) {
+      showToast(
+        "Gagal mengekspor JPG. Silakan coba lagi dengan data lebih sedikit atau gunakan browser terbaru.",
+        "error",
+      );
+      console.error("[ChartDivisiAbsensi] JPG export failed", error);
+    } finally {
+      setIsDownloadingJpg(false);
+    }
+  };
+
   return (
     <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-sky-100/60 bg-white/70 p-6 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur">
       <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/60 to-transparent blur-2xl" />
-      <div className="relative w-full px-2 pb-4">
+      <div ref={exportRef} className="relative w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
@@ -305,7 +339,10 @@ export default function ChartDivisiAbsensi({
             }}
             barCategoryGap={isHorizontal ? "30%" : "16%"}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.35)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(148,163,184,0.35)"
+            />
             {isHorizontal ? (
               <XAxis
                 type="number"
@@ -359,22 +396,20 @@ export default function ChartDivisiAbsensi({
               />
             )}
             <Tooltip
-              formatter={(value, name) =>
-                [
-                  value,
-                  name === "total_user"
-                    ? labelTotalUser
-                    : name === "user_sudah"
+              formatter={(value, name) => [
+                value,
+                name === "total_user"
+                  ? labelTotalUser
+                  : name === "user_sudah"
                     ? labelSudah
                     : name === "user_kurang"
-                    ? labelKurang
-                    : name === "user_belum"
-                    ? labelBelum
-                    : name === "total_value"
-                    ? labelTotal
-                    : name,
-                ]
-              }
+                      ? labelKurang
+                      : name === "user_belum"
+                        ? labelBelum
+                        : name === "total_value"
+                          ? labelTotal
+                          : name,
+              ]}
               labelFormatter={(label) =>
                 `${labelKey === "client_name" ? "Client" : "Divisi"}: ${label}`
               }
@@ -456,6 +491,9 @@ export default function ChartDivisiAbsensi({
           title={title}
           columns={tableColumns}
           rows={tableRows}
+          onDownloadJpg={dataChart.length > 0 ? handleDownloadJpg : undefined}
+          downloadLabel={`Download JPG ${groupByLabel}`}
+          isDownloading={isDownloadingJpg}
         />
       </div>
     </div>

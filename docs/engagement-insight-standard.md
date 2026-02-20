@@ -33,6 +33,7 @@ Dokumen ini menjadi baseline bersama untuk halaman **Instagram Engagement Insigh
 
 - **Copy Rekap** harus tersedia pada area aksi utama (header/hero) dan menghasilkan copy siap kirim (WhatsApp-friendly).
 - Rekap Instagram/TikTok tidak menjadikan unduh tabel JPG sebagai baseline wajib; aksi utama diutamakan pada copy teks rekap yang siap dikirim.
+- Untuk chart insight Instagram berbasis `ChartDivisiAbsensi`, tombol **Download JPG** dapat ditampilkan di atas area **Tampilkan data tabel** saat data chart tersedia (`dataChart.length > 0`) untuk kebutuhan diseminasi visual cepat.
 - **Scroll-to-Rekap** harus terhubung dengan tab/CTA (`Rekap Detail` / `Buka Rekap Detail`) dan menggunakan anchor yang konsisten.
 - **Premium CTA** wajib hadir dengan pola yang seragam lintas platform:
   - Label premium yang konsisten.
@@ -66,3 +67,15 @@ Gunakan checklist ini untuk review setiap PR yang menyentuh insight engagement I
 - [ ] Filter status tabel tetap tersedia (Semua Status, Sudah, Kurang, Belum, Username Kosong) dan sinkron dengan search + pagination.
 - [ ] Status badge dan copy aksi tabel tetap konsisten (Sudah/Kurang/Belum/Tanpa Username/Tidak ada posting).
 - [ ] Tidak ada regresi UX penting (loading, empty state, disabled state pada aksi utama).
+
+## 6) Catatan Export JPG Chart Insight (Direktorat/Divisi)
+
+- Lokasi tombol: area chart card `ChartDivisiAbsensi`, tepat di atas komponen tabel collapsible **Tampilkan data tabel**.
+- Trigger tampil: tombol hanya muncul jika data chart tersedia (bukan empty state).
+- Format nama file: `instagram-engagement-direktorat-<grouping>-<yyyy-mm-dd>.jpg`.
+  - `grouping=polres-jajaran` saat `groupBy === "client_id"` (label metadata: **POLRES JAJARAN**).
+  - `grouping=divisi-satfung` saat `groupBy === "divisi"` (label metadata: **divisi-satfung**).
+- Batasan teknis export:
+  - Data sangat panjang (bar banyak) meningkatkan tinggi canvas dan ukuran file JPG.
+  - Label satker/divisi yang sangat panjang berpotensi terpotong tergantung lebar chart aktif.
+  - Kegagalan render canvas/browser akan memunculkan toast error yang user-friendly; user dianjurkan mencoba ulang dengan data lebih kecil atau browser terbaru.
