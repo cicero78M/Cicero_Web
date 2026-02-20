@@ -63,21 +63,6 @@ Per Mei 2025, pemanggilan `/api/tiktok/rekap-komentar` tidak lagi di-fan-out ber
 
 Per November 2024, jalur bertipe klien **DIREKTORAT** tidak lagi memaksa `client_id` Ditbinmas untuk mengambil data statistik atau tugas. Untuk tipe klien ini, hook mempertahankan `client_id` login ketika menghitung metrik dashboard maupun daftar tugas sehingga satker direktorat non-Ditbinmas tidak lagi melihat data dari Ditbinmas.
 
-
-## Export JPG Chart Insight (Direktorat/Divisi)
-
-Subsection ini menyelaraskan perilaku TikTok dengan standar lintas platform pada dokumen utama: [`docs/engagement-insight-standard.md`](./engagement-insight-standard.md).
-
-- **Lokasi tombol Download JPG**: berada di dalam card `ChartDivisiAbsensi`, tepat di atas area collapsible **Tampilkan data tabel**. Tombol hanya ditampilkan jika data chart tersedia (`dataChart.length > 0`).
-- **Pola nama file TikTok**: `tiktok-engagement-direktorat-<grouping>-<yyyy-mm-dd>.jpg`, dengan mapping grouping yang sama lintas platform:
-  - `grouping=polres-jajaran` saat `groupBy === "client_id"` (label metadata: **POLRES JAJARAN**).
-  - `grouping=divisi-satfung` saat `groupBy === "divisi"`.
-- **Perilaku saat tabel collapse**: ketika export dipicu saat panel tabel masih tertutup, sistem akan membuka panel `ChartDataTable` secara otomatis untuk proses capture, kemudian mengembalikannya ke state semula setelah proses selesai/gagal.
-- **Batasan teknis & error handling**:
-  - Dataset panjang meningkatkan tinggi canvas dan ukuran file JPG, sehingga proses render dapat lebih lambat.
-  - Label entitas yang sangat panjang dapat terpotong sesuai lebar tabel yang diexport.
-  - Jika terjadi kegagalan render/canvas/browser, sistem menampilkan toast error yang user-friendly dan menganjurkan mencoba ulang (mis. dengan data lebih kecil atau browser terbaru).
-
 ## Kompatibilitas rute lama
 Rute lama `/comments/tiktok/rekap` kini mengalihkan ke halaman utama `/comments/tiktok` untuk menjaga tautan eksisting tanpa menggandakan UI.
 
