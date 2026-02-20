@@ -26,6 +26,19 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     }
   }, [pathname]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    type SelectorDocument = Document & {
+      selector?: (selectors: string) => Element | null;
+    };
+
+    const doc = document as SelectorDocument;
+    if (typeof doc.selector !== "function") {
+      doc.selector = doc.querySelector.bind(doc);
+    }
+  }, []);
+
   // Landing, login, and claim-related pages render without sidebar or header
   if (isStandalone) {
     return (
