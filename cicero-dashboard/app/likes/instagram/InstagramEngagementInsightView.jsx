@@ -360,8 +360,6 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     labelTotal: "Total Likes",
     showTotalUser: true,
     titleClassName: "text-slate-700",
-    exportFilePrefix: "instagram-engagement-direktorat",
-    exportSuccessLabel: "Instagram",
   };
 
   const directorateClientSelectorLabel = "Pilih Client Direktorat / Satker";

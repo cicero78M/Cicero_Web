@@ -344,8 +344,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     labelTotal: "Total Komentar",
     showTotalUser: true,
     titleClassName: "text-slate-700",
-    exportFilePrefix: "tiktok-engagement-direktorat",
-    exportSuccessLabel: "TikTok",
   };
 
   const scopeSelectorProps = {
