@@ -40,6 +40,8 @@ export default function ChartDivisiAbsensi({
   showTotalUser = false,
   labelTotalUser = "Jumlah User",
   sortBy = "total_value",
+  exportFilePrefix = "instagram-engagement-direktorat",
+  exportSuccessLabel = "Instagram",
 }) {
   const [enrichedUsers, setEnrichedUsers] = useState(users);
   const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
@@ -291,7 +293,7 @@ export default function ChartDivisiAbsensi({
   const fileGrouping =
     groupBy === "client_id" ? "polres-jajaran" : "divisi-satfung";
   const exportDate = new Date().toISOString().split("T")[0];
-  const fileName = `instagram-engagement-direktorat-${fileGrouping}-${exportDate}.jpg`;
+  const fileName = `${exportFilePrefix}-${fileGrouping}-${exportDate}.jpg`;
 
   const handleDownloadJpg = async () => {
     if (!exportTableRef.current || dataChart.length === 0) {
@@ -315,7 +317,10 @@ export default function ChartDivisiAbsensi({
       link.download = fileName;
       link.href = dataUrl;
       link.click();
-      showToast(`Berhasil mengunduh JPG ${groupByLabel}.`, "success");
+      showToast(
+        `Berhasil mengunduh JPG ${exportSuccessLabel} ${groupByLabel}.`,
+        "success",
+      );
     } catch (error) {
       showToast(
         "Gagal mengekspor JPG tabel. Silakan coba lagi dengan data lebih sedikit atau gunakan browser terbaru.",
