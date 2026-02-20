@@ -32,6 +32,7 @@ Dokumen ini menjadi baseline bersama untuk halaman **Instagram Engagement Insigh
 ## 3) Standar UX Actions
 
 - **Copy Rekap** harus tersedia pada area aksi utama (header/hero) dan menghasilkan copy siap kirim (WhatsApp-friendly).
+- Rekap Instagram/TikTok tidak menjadikan unduh tabel JPG sebagai baseline wajib; aksi utama diutamakan pada copy teks rekap yang siap dikirim.
 - **Scroll-to-Rekap** harus terhubung dengan tab/CTA (`Rekap Detail` / `Buka Rekap Detail`) dan menggunakan anchor yang konsisten.
 - **Premium CTA** wajib hadir dengan pola yang seragam lintas platform:
   - Label premium yang konsisten.
