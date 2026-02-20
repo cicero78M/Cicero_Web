@@ -95,7 +95,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Hero, ringkasan, dan kartu quick insight pada Instagram/TikTok sekarang dirender lewat scaffold bersama `components/insight/EngagementInsightMobileScaffold.jsx` sehingga padding, tipografi, dan jarak kontrol di layar sempit seragam tanpa duplikasi markup.
 - `EngagementInsightMobileScaffold` kini menerima `premiumCta` agar tombol ajakan Premium bergradasi dapat memenuhi ruang kosong di header kontrol, tetap tertata rapi berdampingan dengan selector periode, lingkup, dan tombol salin rekap.
 - ChartBox bawaan mendapat padding responsif (p-4 → p-6) plus judul bertacking normal di mobile dan border empty state agar ruang baca tetap lega pada perangkat kecil.
-- Shim kompatibilitas `document.selector` (mengarah ke `document.querySelector`) kini dipasang sedini mungkin di `app/layout.tsx` lewat script inline di `<head>` agar dieksekusi sebelum hydration, lalu tetap dipertahankan sebagai fallback di `LayoutClient`, sehingga skrip eksternal/browser extension yang memanggil API non-standar (contoh `document.selector("#comm1")`) tidak lagi memicu error `Uncaught TypeError` pada halaman insight seperti `/likes/instagram` dan `/comments/tiktok`.
+- `LayoutClient` kini menambahkan shim kompatibilitas `document.selector` (mengarah ke `document.querySelector`) pada sisi klien agar skrip eksternal/browser extension yang memanggil API non-standar tersebut tidak lagi memicu error `Uncaught TypeError: document.selector is not a function` pada halaman insight seperti `/likes/instagram` dan `/comments/tiktok`.
 
 ## Modul Reposter
 
