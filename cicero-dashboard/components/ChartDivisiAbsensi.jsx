@@ -334,7 +334,7 @@ export default function ChartDivisiAbsensi({
     <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-sky-100/60 bg-white/70 p-6 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur">
       <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/60 to-transparent blur-2xl" />
-      <div className="relative w-full px-2 pb-4">
+      <div ref={exportRef} className="relative w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
