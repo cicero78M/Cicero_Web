@@ -320,7 +320,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     },
     {
       key: "sudah",
-      label: "Sudah Likes",
+      label: "Likes Lengkap",
       value: effectiveRekapSummary.totalSudahLike,
       color: "green",
       icon: <ThumbsUp className="h-6 w-6" />,

@@ -73,6 +73,12 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
   }, [initialTab]);
 
+  useEffect(() => {
+    if (isOriginalDirectorateClient) {
+      setDirectorateScope("all");
+    }
+  }, [isOriginalDirectorateClient]);
+
   const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
   const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
@@ -239,7 +245,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     },
     {
       key: "sudah",
-      label: "Sudah Komentar",
+      label: "Komentar Lengkap",
       value: effectiveRekapSummary.totalSudahKomentar,
       color: "green",
       icon: <MessageCircle className="h-6 w-6" />,
