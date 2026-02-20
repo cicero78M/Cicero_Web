@@ -87,13 +87,12 @@ Header ini menjadi identitas standar laporan saat dibagikan lintas kanal (mis. g
 
 Selain tombol **Download Tabel JPG** di tab rekap, insight chart Instagram berbasis `ChartDivisiAbsensi` kini menyediakan tombol **Download JPG** di atas blok **Tampilkan data tabel** (tetap collapsible).
 
-- Area yang di-capture: hanya area `ChartDataTable` (ringkasan tabel data chart), tidak termasuk visual bar chart.
+- Area yang di-capture: chart + ringkasan tabel data chart pada card yang sama.
 - Tombol hanya muncul jika ada data chart (`dataChart.length > 0`).
 - Format file output: `instagram-engagement-direktorat-<grouping>-<yyyy-mm-dd>.jpg`.
   - `grouping=polres-jajaran` untuk mode direktorat (`groupBy=client_id`, metadata label: `POLRES JAJARAN`).
   - `grouping=divisi-satfung` untuk mode divisi (`groupBy=divisi`).
 - Error export (canvas/security/render) ditangani dengan toast yang menjelaskan langkah lanjut (coba ulang dengan data lebih kecil/browser terbaru).
-- Saat tabel dalam kondisi collapse, sistem membuka tabel sementara saat proses capture lalu mengembalikannya ke state semula.
 
 ### Batasan Tambahan
 
