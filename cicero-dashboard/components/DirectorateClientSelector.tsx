@@ -31,10 +31,10 @@ export default function DirectorateClientSelector({
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
       <label
         htmlFor="client-selector"
-        className="text-sm font-semibold text-blue-900 whitespace-nowrap"
+        className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.14em] text-slate-500"
       >
         {label}
       </label>
@@ -43,7 +43,7 @@ export default function DirectorateClientSelector({
           id="client-selector"
           value={selectedClientId}
           onChange={(e) => onClientChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border-2 border-blue-200/60 bg-gradient-to-br from-white to-blue-50/30 px-4 py-2.5 pr-11 text-sm font-medium text-blue-900 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-blue-300 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:shadow-lg"
+          className="w-full appearance-none rounded-xl border border-sky-200/80 bg-white px-4 py-2.5 pr-11 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-sky-300 hover:shadow-md focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100 focus:shadow-md"
         >
           <option value="" className="bg-white">
             Semua Client / Satker
@@ -58,9 +58,9 @@ export default function DirectorateClientSelector({
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center rounded-lg bg-blue-500/10 p-1">
+        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center rounded-md bg-sky-500/10 p-1">
           <ChevronDown
-            className="h-4 w-4 text-blue-600"
+            className="h-4 w-4 text-sky-600"
             strokeWidth={2.5}
           />
         </div>

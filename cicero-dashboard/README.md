@@ -22,6 +22,7 @@ The repository includes multiple package managers, so lockfiles from the monorep
 - Tabel User Directory memindahkan kolom **Aksi** tepat setelah kolom **Satfung/Divisi** dan menghapus kolom **Status** serta **Email** untuk merapikan alur operasi edit/aktivasi langsung sebelum kolom akun sosial.
 - Kartu ringkasan **Update Instagram** dan **Update TikTok** kini menampilkan catatan persentase terhadap **Total User** agar capaian update akun sosial lebih mudah dibaca sekilas.
 - Halaman **User Directory** (`/users`) dan **User Insight** (`/user-insight`) kini memakai helper bersama `utils/directorateClientSelector.ts` untuk aturan label satker yang konsisten: normalisasi `client_id` dari seluruh variasi field (`client_id`/`clientId`/`clientID`/`client`), prioritas nama dari `nama_client`/`client_name` bila spesifik (bukan label generik seperti "DIREKTORAT"), fallback ke peta nama `fallbackNameByClientId` bila tersedia, lalu fallback terakhir ke `client_id`. Opsi selector tetap deduplikasi per `client_id`, dan label duplikat antar satker akan ditampilkan sebagai `nama_client (client_id)` agar tetap unik.
+- Segmen **Lingkup** di halaman **User Insight** kini ditata ulang dengan kontainer kontrol khusus, gaya dropdown yang seragam, dan penekanan visual pada selector **"Pilih Client Direktorat / Satker"** serta opsi **"Semua Client / Satker"** agar tampilan filter direktorat lebih rapi dan profesional.
 
 ### User directory scope & role normalization
 

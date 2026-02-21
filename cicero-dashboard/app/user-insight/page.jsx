@@ -22,7 +22,7 @@ import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { showToast } from "@/utils/showToast";
-import { User, Instagram, Music, RefreshCw } from "lucide-react";
+import { User, Instagram, Music, RefreshCw, ChevronDown } from "lucide-react";
 import {
   filterUserDirectoryByScope,
   getUserDirectoryFetchScope,
@@ -463,35 +463,44 @@ export default function UserInsightPage() {
                 </div>
 
                 {isDirectorate && isOriginalDirectorateClient && (
-                  <div className="self-start space-y-3">
-                    <div className="flex w-full min-w-[min(100%,22rem)] flex-wrap items-center gap-2 rounded-xl border border-sky-100/80 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-inner sm:w-auto">
-                      <span className="font-semibold text-slate-800">Lingkup:</span>
-                      <select
-                        value={directorateScope}
-                        onChange={(event) => {
-                          const { value } = event.target || {};
-                          if (value === "client" || value === "all") {
-                            setDirectorateScope(value);
-                            if (value === "client") {
-                              setSelectedClientId("");
-                            }
-                          }
-                        }}
-                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200 sm:w-auto"
-                      >
-                        <option value="client">Client Aktif</option>
-                        <option value="all">Satker Jajaran</option>
-                      </select>
-                    </div>
+                  <div className="self-start w-full max-w-3xl rounded-2xl border border-sky-100/80 bg-white/90 p-4 shadow-[0_16px_32px_rgba(14,165,233,0.12)] backdrop-blur-sm md:p-5">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          Lingkup
+                        </span>
+                        <div className="relative w-full sm:w-auto sm:min-w-[14rem]">
+                          <select
+                            value={directorateScope}
+                            onChange={(event) => {
+                              const { value } = event.target || {};
+                              if (value === "client" || value === "all") {
+                                setDirectorateScope(value);
+                                if (value === "client") {
+                                  setSelectedClientId("");
+                                }
+                              }
+                            }}
+                            className="w-full appearance-none rounded-xl border border-sky-200/80 bg-gradient-to-br from-white to-sky-50 px-4 py-2.5 pr-10 text-sm font-medium text-slate-700 shadow-sm transition duration-200 hover:border-sky-300 hover:shadow-md focus:border-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-100"
+                          >
+                            <option value="client">Client Aktif</option>
+                            <option value="all">Satker Jajaran</option>
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-500" />
+                        </div>
+                      </div>
 
-                    {directorateScope === "all" && availableClients.length > 0 ? (
-                      <DirectorateClientSelector
-                        clients={availableClients}
-                        selectedClientId={selectedClientId}
-                        onClientChange={setSelectedClientId}
-                        label="Pilih Client Direktorat / Satker"
-                      />
-                    ) : null}
+                      {directorateScope === "all" && availableClients.length > 0 ? (
+                        <div className="rounded-xl border border-slate-100 bg-sky-50/40 p-3">
+                          <DirectorateClientSelector
+                            clients={availableClients}
+                            selectedClientId={selectedClientId}
+                            onClientChange={setSelectedClientId}
+                            label="Pilih Client Direktorat / Satker"
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 )}
 
