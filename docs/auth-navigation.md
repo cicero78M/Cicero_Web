@@ -22,14 +22,3 @@ The dashboard now tracks authentication hydration status and remembers the last 
 
 - Landing page menampilkan tiga CTA login: `Login Dashboard` ke `/login`, `Login Update` ke `/login-update`, dan `Login Reposter` ke `/reposter/login`.
 - Halaman `/login-update` memberi pilihan eksplisit menuju login claim (`/claim`) dan login reposter (`/reposter/login`).
-
-## Optimasi performa halaman login dashboard
-
-Perubahan pada `cicero-dashboard/app/login/page.jsx` untuk meningkatkan responsivitas UI dan mengurangi beban render:
-
-- Komponen dekoratif berat (backdrop blur besar dan panel onboarding tambahan) disembunyikan pada layar kecil (`< lg`) agar interaksi form login lebih ringan di perangkat mobile.
-- Kartu promosi sisi kiri hanya ditampilkan di desktop (`lg`) sehingga layout mobile fokus pada form utama dan lebih cepat diproses browser.
-- Animasi Framer Motion kini mempertimbangkan `useReducedMotion()`. Saat preferensi reduced motion aktif, animasi masuk dan animasi berulang berjalan tanpa transisi.
-- Padding dan efek blur pada kartu form login disesuaikan untuk viewport kecil agar rendering lebih hemat tanpa mengubah alur autentikasi.
-
-Dampak utama: waktu interaksi awal terasa lebih cepat pada perangkat menengah/bawah, scroll/layout shift berkurang pada mobile, dan pengalaman aksesibilitas meningkat untuk pengguna dengan preferensi reduced motion.

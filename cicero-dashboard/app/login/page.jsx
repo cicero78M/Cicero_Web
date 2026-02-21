@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Eye,
@@ -36,7 +36,6 @@ export default function LoginPage() {
   const [forgotUsername, setForgotUsername] = useState("");
   const [recoveryContact, setRecoveryContact] = useState("");
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
   const handleTrim = (setter) => (e) => setter(e.target.value.trim());
   const networkErrorMessage =
     "Server tidak merespons. Silakan hubungi admin Cicero.";
@@ -267,7 +266,7 @@ export default function LoginPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#e9f3ff,_#cde9ff_58%)] text-slate-900">
-      <div className="pointer-events-none absolute inset-0 hidden opacity-60 md:block">
+      <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-300/40 blur-[160px]" />
         <div className="absolute -left-32 top-[18%] h-64 w-64 rounded-full bg-indigo-300/35 blur-[130px]" />
         <div className="absolute -right-20 bottom-[10%] h-72 w-72 rounded-full bg-teal-300/35 blur-[140px]" />
@@ -278,30 +277,30 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-10">
-        <div className="grid w-full max-w-7xl items-start gap-6 lg:gap-10 lg:grid-cols-[1.05fr_1fr]">
-          <section className="relative hidden h-full flex-col justify-between gap-10 rounded-[32px] border border-sky-200/60 bg-white/40 p-8 text-slate-700 backdrop-blur-xl lg:flex">
+        <div className="grid w-full max-w-7xl items-start gap-10 lg:grid-cols-[1.05fr_1fr]">
+          <section className="relative flex h-full flex-col justify-between gap-10 rounded-[32px] border border-sky-200/60 bg-white/40 p-8 text-slate-700 backdrop-blur-xl">
             <div className="space-y-7">
               <motion.span
                 className="inline-flex items-center rounded-full border border-sky-200/60 bg-white/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-sky-600"
-                initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.6 }}
+                transition={{ duration: 0.6 }}
               >
                 Cicero Operations Hub
               </motion.span>
               <motion.h1
                 className="text-4xl font-bold leading-tight text-slate-900 md:text-5xl"
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, delay: 0.1 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
               >
                 Cicero — Kendali Terpadu, Data Akurat, Kinerja Selaras.
               </motion.h1>
               <motion.p
                 className="max-w-xl text-balance text-sm leading-relaxed text-slate-700 md:text-base"
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, delay: 0.2 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
               >
                 Cicero mengintegrasikan laporan, performa digital, dan koordinasi satker dalam satu sistem yang memastikan keputusan lebih cepat dan pelaksanaan lebih tertib.              </motion.p>
             </div>
@@ -311,9 +310,9 @@ export default function LoginPage() {
                 <motion.div
                   key={item.title}
                   className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-sky-200/60 bg-gradient-to-b from-white/70 via-white/50 to-transparent p-4 shadow-lg backdrop-blur-xl"
-                  initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.6, delay: 0.15 * index }}
+                  transition={{ duration: 0.6, delay: 0.15 * index }}
                 >
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-[0.7rem] font-semibold text-slate-700">
                     {item.icon}
@@ -324,8 +323,8 @@ export default function LoginPage() {
                   </p>
                   <motion.div
                     className="absolute -bottom-24 -right-20 h-32 w-32 rounded-full bg-sky-300/30 blur-3xl transition-transform duration-500 group-hover:translate-y-12"
-                    animate={shouldReduceMotion ? { scale: 1 } : { scale: [1, 1.1, 1] }}
-                    transition={shouldReduceMotion ? { duration: 0 } : { duration: 6, repeat: Infinity }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 6, repeat: Infinity }}
                   />
                 </motion.div>
               ))}
@@ -336,14 +335,14 @@ export default function LoginPage() {
           <div className="relative flex flex-col gap-6">
             <motion.div
               className="absolute -right-6 -top-6 hidden h-32 w-32 rounded-full border border-sky-300/50 lg:block"
-              animate={shouldReduceMotion ? { rotate: 0 } : { rotate: [0, 12, -8, 0] }}
-              transition={shouldReduceMotion ? { duration: 0 } : { duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ rotate: [0, 12, -8, 0] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
-              className="relative z-20 rounded-[28px] border border-sky-200/60 bg-white/50 p-5 text-slate-700 shadow-xl backdrop-blur-xl sm:rounded-[32px] sm:p-8 sm:shadow-2xl sm:backdrop-blur-2xl"
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 20, scale: 0.95 }}
+              className="relative z-20 rounded-[32px] border border-sky-200/60 bg-white/40 p-8 text-slate-700 shadow-2xl backdrop-blur-2xl"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
@@ -651,10 +650,10 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div
-              className="relative z-10 hidden items-start gap-4 rounded-[28px] border border-sky-200/60 bg-white/50 p-6 text-slate-700 backdrop-blur-xl lg:flex"
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+              className="relative z-10 flex items-start gap-4 rounded-[28px] border border-sky-200/60 bg-white/50 p-6 text-slate-700 backdrop-blur-xl"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.6, delay: 0.45 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-200 via-cyan-200 to-indigo-200 text-sky-600">
                 <ArrowRight className="h-5 w-5" />
@@ -669,10 +668,10 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.div
-              className="absolute inset-x-6 top-6 -z-10 hidden h-[92%] rounded-[36px] bg-gradient-to-br from-white/60 via-white/30 to-transparent blur-2xl lg:block"
-              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              className="absolute inset-x-6 top-6 -z-10 h-[92%] rounded-[36px] bg-gradient-to-br from-white/60 via-white/30 to-transparent blur-2xl"
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={shouldReduceMotion ? { duration: 0 } : { duration: 1, delay: 0.3 }}
+              transition={{ duration: 1, delay: 0.3 }}
             />
           </div>
         </div>
