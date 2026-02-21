@@ -22,7 +22,7 @@ import {
   normalizeClientId,
   normalizeUsersWithClientLabel,
 } from "@/utils/directorateClientSelector";
-import { Pencil, Check, X, RefreshCw, Trash2 } from "lucide-react";
+import { Pencil, Check, X, RefreshCw } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
@@ -72,7 +72,6 @@ export default function UserDirectoryPage() {
   const [deactivateError, setDeactivateError] = useState("");
   const [deactivateLoading, setDeactivateLoading] = useState(false);
   const [toggleStatusLoadingId, setToggleStatusLoadingId] = useState(null);
-  const [deleteEmailLoadingId, setDeleteEmailLoadingId] = useState(null);
   const [isDirectorate, setIsDirectorate] = useState(false);
   const [clientName, setClientName] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -368,21 +367,6 @@ export default function UserDirectoryPage() {
       showToast(err.message || "Gagal mengaktifkan user", "error");
     }
     setToggleStatusLoadingId(null);
-  }
-
-  async function handleDeleteEmail(user) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus email "${user.email}" untuk ${user.nama || "user ini"}?`)) {
-      return;
-    }
-    setDeleteEmailLoadingId(user.user_id);
-    try {
-      await updateUser(token || "", user.user_id, { email: null });
-      await mutate();
-      showToast("Email berhasil dihapus", "success");
-    } catch (err) {
-      showToast(err.message || "Gagal menghapus email", "error");
-    }
-    setDeleteEmailLoadingId(null);
   }
 
   async function handleCopyRekap() {
@@ -866,7 +850,6 @@ export default function UserDirectoryPage() {
                   <th className="w-32 px-4 py-3 font-medium whitespace-normal break-words">Aksi</th>
                   <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">Instagram</th>
                   <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">TikTok</th>
-                  <th className="w-56 px-4 py-3 font-medium whitespace-normal break-words">Email</th>
                 </tr>
               </thead>
               <tbody>
@@ -988,29 +971,12 @@ export default function UserDirectoryPage() {
                     <td className="px-4 py-3 font-mono text-purple-500 whitespace-normal break-words">
                       {u.tiktok || "-"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="flex-1 truncate">{u.email || "-"}</span>
-                        {u.email && (
-                          <button
-                            onClick={() => handleDeleteEmail(u)}
-                            disabled={deleteEmailLoadingId === u.user_id}
-                            className="rounded-lg border border-rose-200 bg-rose-100 p-1.5 text-rose-600 transition hover:bg-rose-200 disabled:cursor-not-allowed disabled:opacity-60"
-                            type="button"
-                            aria-label={`Hapus email ${u.nama || "user"}`}
-                            title="Hapus email"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
                   </tr>
                 ))}
                 {editingRowId && updateError && (
                   <tr>
                     <td
-                      colSpan="8"
+                      colSpan="7"
                       className="px-4 py-3 text-sm text-rose-500"
                       role="alert"
                     >
@@ -1020,7 +986,7 @@ export default function UserDirectoryPage() {
                 )}
                 {currentRows.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
                       Tidak ada pengguna
                     </td>
                   </tr>
