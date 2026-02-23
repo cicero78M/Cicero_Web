@@ -214,6 +214,20 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const totalUser = Number(effectiveRekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(effectiveRekapSummary.totalTanpaUsername) || 0;
   const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
+  const totalSudahKomentar = Math.max(
+    0,
+    Math.min(validUserCount, Number(effectiveRekapSummary.totalSudahKomentar) || 0),
+  );
+  const totalKurangKomentar = Math.max(
+    0,
+    Math.min(validUserCount, Number(effectiveRekapSummary.totalKurangKomentar) || 0),
+  );
+  const totalBelumKomentarRaw = Number(effectiveRekapSummary.totalBelumKomentar) || 0;
+  const maxBelumKomentarFromActiveUsers = Math.max(0, validUserCount - totalSudahKomentar - totalKurangKomentar);
+  const totalBelumKomentar = Math.min(
+    maxBelumKomentarFromActiveUsers,
+    Math.max(0, totalBelumKomentarRaw),
+  );
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
     if (!denominator) return undefined;
@@ -221,10 +235,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     return (numerator / denominator) * 100;
   };
 
-  const complianceRate = getPercentage(effectiveRekapSummary.totalSudahKomentar);
-  const actionNeededCount =
-    (Number(effectiveRekapSummary.totalKurangKomentar) || 0) +
-    (Number(effectiveRekapSummary.totalBelumKomentar) || 0);
+  const complianceRate = getPercentage(totalSudahKomentar);
+  const actionNeededCount = totalKurangKomentar + totalBelumKomentar;
   const actionNeededRate = getPercentage(actionNeededCount);
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
@@ -246,7 +258,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     {
       key: "sudah",
       label: "Komentar Lengkap",
-      value: effectiveRekapSummary.totalSudahKomentar,
+      value: totalSudahKomentar,
       color: "green",
       icon: <MessageCircle className="h-6 w-6" />,
       percentage: complianceRate,
@@ -254,18 +266,18 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     {
       key: "kurang",
       label: "Kurang Komentar",
-      value: effectiveRekapSummary.totalKurangKomentar,
+      value: totalKurangKomentar,
       color: "amber",
       icon: <MessageCircle className="h-6 w-6" />,
-      percentage: getPercentage(effectiveRekapSummary.totalKurangKomentar),
+      percentage: getPercentage(totalKurangKomentar),
     },
     {
       key: "belum",
       label: "Belum Komentar",
-      value: effectiveRekapSummary.totalBelumKomentar,
+      value: totalBelumKomentar,
       color: "red",
       icon: <MessageCircle className="h-6 w-6" />,
-      percentage: getPercentage(effectiveRekapSummary.totalBelumKomentar),
+      percentage: getPercentage(totalBelumKomentar),
     },
     {
       key: "tanpa",
@@ -293,11 +305,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       title: "Prioritas perbaikan",
       detail:
         actionNeededCount > 0
-          ? `${actionNeededCount} akun masih perlu aksi komentar${
+          ? `${actionNeededCount} akun ber-username masih perlu aksi komentar${
               actionNeededRate !== undefined
                 ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
                 : ""
-            }, termasuk ${effectiveRekapSummary.totalBelumKomentar} yang belum memberi komentar sama sekali.`
+            }, terdiri dari ${totalKurangKomentar} kurang lengkap dan ${totalBelumKomentar} belum melaksanakan sama sekali. ${totalTanpaUsername > 0 ? `${totalTanpaUsername} akun tanpa username dipisahkan dari prioritas aksi.` : ""}`
           : "Seluruh akun aktif sudah memenuhi target komentar.",
     },
     {

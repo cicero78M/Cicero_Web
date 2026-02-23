@@ -206,6 +206,17 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const totalUser = Number(effectiveRekapSummary.totalUser) || 0;
   const totalTanpaUsername = Number(effectiveRekapSummary.totalTanpaUsername) || 0;
   const validUserCount = Math.max(0, totalUser - totalTanpaUsername);
+  const totalSudahLike = Math.max(
+    0,
+    Math.min(validUserCount, Number(effectiveRekapSummary.totalSudahLike) || 0),
+  );
+  const totalKurangLike = Math.max(
+    0,
+    Math.min(validUserCount, Number(effectiveRekapSummary.totalKurangLike) || 0),
+  );
+  const totalBelumLikeRaw = Number(effectiveRekapSummary.totalBelumLike) || 0;
+  const maxBelumLikeFromActiveUsers = Math.max(0, validUserCount - totalSudahLike - totalKurangLike);
+  const totalBelumLike = Math.min(maxBelumLikeFromActiveUsers, Math.max(0, totalBelumLikeRaw));
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
     if (!denominator) return undefined;
@@ -213,10 +224,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     return (numerator / denominator) * 100;
   };
 
-  const complianceRate = getPercentage(effectiveRekapSummary.totalSudahLike);
-  const actionNeededCount =
-    (Number(effectiveRekapSummary.totalKurangLike) || 0) +
-    (Number(effectiveRekapSummary.totalBelumLike) || 0);
+  const complianceRate = getPercentage(totalSudahLike);
+  const actionNeededCount = totalKurangLike + totalBelumLike;
   const actionNeededRate = getPercentage(actionNeededCount);
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
@@ -283,11 +292,11 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       title: "Prioritas perbaikan",
       detail:
         actionNeededCount > 0
-          ? `${actionNeededCount} akun masih perlu aksi likes${
+          ? `${actionNeededCount} akun ber-username masih perlu aksi likes${
               actionNeededRate !== undefined
                 ? ` (${Math.round(actionNeededRate)}% dari pengguna aktif)`
                 : ""
-            }, termasuk ${effectiveRekapSummary.totalBelumLike} yang belum memberi likes sama sekali.`
+            }, terdiri dari ${totalKurangLike} kurang lengkap dan ${totalBelumLike} belum melaksanakan sama sekali. ${totalTanpaUsername > 0 ? `${totalTanpaUsername} akun tanpa username dipisahkan dari prioritas aksi.` : ""}`
           : "Seluruh akun aktif sudah memenuhi target likes.",
     },
     {
@@ -321,26 +330,26 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     {
       key: "sudah",
       label: "Likes Lengkap",
-      value: effectiveRekapSummary.totalSudahLike,
+      value: totalSudahLike,
       color: "green",
       icon: <ThumbsUp className="h-6 w-6" />,
-      percentage: getPercentage(effectiveRekapSummary.totalSudahLike),
+      percentage: getPercentage(totalSudahLike),
     },
     {
       key: "kurang",
       label: "Kurang Likes",
-      value: effectiveRekapSummary.totalKurangLike,
+      value: totalKurangLike,
       color: "amber",
       icon: <ThumbsDown className="h-6 w-6" />,
-      percentage: getPercentage(effectiveRekapSummary.totalKurangLike),
+      percentage: getPercentage(totalKurangLike),
     },
     {
       key: "belum",
       label: "Belum Likes",
-      value: effectiveRekapSummary.totalBelumLike,
+      value: totalBelumLike,
       color: "red",
       icon: <ThumbsDown className="h-6 w-6" />,
-      percentage: getPercentage(effectiveRekapSummary.totalBelumLike),
+      percentage: getPercentage(totalBelumLike),
     },
     {
       key: "tanpa",
