@@ -148,6 +148,10 @@ const normalizeAggregatorPayload = (
   instagramPosts: any[];
   tiktokProfile: any;
   tiktokPosts: any[];
+  taskLinksToday: {
+    instagram: string[];
+    tiktok: string[];
+  };
 } => {
   const data = payload?.data ?? payload ?? {};
   const profiles = pickNestedValue(data, ["profiles"]) || {};
@@ -233,6 +237,14 @@ const normalizeAggregatorPayload = (
     ]) ?? pickNestedValue(postsContainer, ["tiktok", "tt"]),
   );
 
+  const taskLinksToday =
+    pickNestedValue(data, [
+      "taskLinksToday",
+      "task_links_today",
+      "task_links",
+      "tasks.links",
+    ]) || {};
+
   const mergeProfile = (profile: any, statsData: any) => {
     if (profile || statsData) {
       return { ...(statsData || {}), ...(profile || {}) };
@@ -245,6 +257,10 @@ const normalizeAggregatorPayload = (
     instagramPosts,
     tiktokProfile: mergeProfile(tiktokProfile, tiktokStats),
     tiktokPosts,
+    taskLinksToday: {
+      instagram: ensureArray(taskLinksToday?.instagram).filter((value) => typeof value === "string"),
+      tiktok: ensureArray(taskLinksToday?.tiktok).filter((value) => typeof value === "string"),
+    },
   };
 };
 
@@ -254,6 +270,11 @@ export default function DashboardPage() {
   const [igPosts, setIgPosts] = useState<any[]>([]);
   const [tiktokProfile, setTiktokProfile] = useState<any>(null);
   const [tiktokPosts, setTiktokPosts] = useState<any[]>([]);
+  const [taskLinksToday, setTaskLinksToday] = useState<{ instagram: string[]; tiktok: string[] }>({
+    instagram: [],
+    tiktok: [],
+  });
+  const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">("idle");
   const [apiBaseError, setApiBaseError] = useState<string | null>(null);
 
   const clientUsernames = useMemo(() => {
@@ -311,6 +332,10 @@ export default function DashboardPage() {
               instagramPosts: any[];
               tiktokProfile: any;
               tiktokPosts: any[];
+              taskLinksToday: {
+                instagram: string[];
+                tiktok: string[];
+              };
             }
           | null = null;
 
@@ -404,6 +429,12 @@ export default function DashboardPage() {
         setIgPosts(instagramPosts);
         setTiktokProfile(tiktokProfileData);
         setTiktokPosts(tiktokPostsData);
+        setTaskLinksToday(
+          normalizedAggregator?.taskLinksToday || {
+            instagram: [],
+            tiktok: [],
+          },
+        );
         setApiBaseError(null);
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -794,6 +825,47 @@ export default function DashboardPage() {
     [analytics]
   );
 
+  const dailyTaskText = useMemo(() => {
+    const instagramLinks = taskLinksToday.instagram.filter(Boolean);
+    const tiktokLinks = taskLinksToday.tiktok.filter(Boolean);
+    if (instagramLinks.length === 0 && tiktokLinks.length === 0) return "";
+
+    const sections = [
+      instagramLinks.length > 0
+        ? `Tugas Instagram Hari Ini:\n${instagramLinks.map((link, index) => `${index + 1}. ${link}`).join("\n")}`
+        : null,
+      tiktokLinks.length > 0
+        ? `Tugas TikTok Hari Ini:\n${tiktokLinks.map((link, index) => `${index + 1}. ${link}`).join("\n")}`
+        : null,
+    ].filter(Boolean);
+
+    return sections.join("\n\n");
+  }, [taskLinksToday]);
+
+  const handleCopyDailyTask = async () => {
+    if (!dailyTaskText) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(dailyTaskText);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = dailyTaskText;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopyStatus("success");
+    } catch (error) {
+      setCopyStatus("error");
+    } finally {
+      setTimeout(() => setCopyStatus("idle"), 2000);
+    }
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-sky-50 via-blue-50 to-indigo-100 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-100">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -850,6 +922,22 @@ export default function DashboardPage() {
                       )} yang didorong oleh komunitas Anda.`
                     : "Menunggu konten terbaru untuk dianalisis dan dibagikan ke tim."}
                 </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCopyDailyTask}
+                    disabled={!dailyTaskText}
+                    className="inline-flex items-center gap-2 rounded-full border border-sky-300/70 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700 shadow-[0_12px_30px_rgba(14,165,233,0.2)] transition hover:border-sky-400 hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                  >
+                    📋 Copy Tugas Hari Ini
+                  </button>
+                  {copyStatus === "success" && (
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">Tugas berhasil disalin.</span>
+                  )}
+                  {copyStatus === "error" && (
+                    <span className="text-xs font-medium text-rose-600 dark:text-rose-300">Gagal menyalin tugas.</span>
+                  )}
+                </div>
                 <div className="grid gap-5 text-sm text-slate-700 sm:grid-cols-2 xl:grid-cols-2 dark:text-slate-200">
                   {snapshotMetrics.map((metric) => (
                     <div
