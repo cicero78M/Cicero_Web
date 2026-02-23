@@ -27,12 +27,17 @@ export default function EditUserPage() {
   const [email, setEmail] = useState("");
   const [insta, setInsta] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [secondaryInstagramUsername, setSecondaryInstagramUsername] =
+    useState("");
+  const [secondaryTiktokUsername, setSecondaryTiktokUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
     insta: "",
     tiktok: "",
+    secondaryInstagramUsername: "",
+    secondaryTiktokUsername: "",
   });
   const router = useRouter();
 
@@ -69,6 +74,26 @@ export default function EditUserPage() {
       );
       const tiktokUsername = extractTiktokUsername(user.tiktok);
       setTiktok(tiktokUsername ? `https://tiktok.com/${tiktokUsername}` : "");
+
+      const secondaryInstagram =
+        extractInstagramUsername(
+          user.secondary_instagram_username ||
+            user.instagram_secondary_username ||
+            user.secondary_instagram ||
+            user.insta_2 ||
+            user.insta2,
+        ) || "";
+      setSecondaryInstagramUsername(secondaryInstagram);
+
+      const secondaryTiktok =
+        extractTiktokUsername(
+          user.secondary_tiktok_username ||
+            user.tiktok_secondary_username ||
+            user.secondary_tiktok ||
+            user.tiktok_2 ||
+            user.tiktok2,
+        ) || "";
+      setSecondaryTiktokUsername(secondaryTiktok);
     } catch (err) {
       const message = err?.message?.trim()
         ? err.message
@@ -85,6 +110,8 @@ export default function EditUserPage() {
     const nextFieldErrors = {
       insta: "",
       tiktok: "",
+      secondaryInstagramUsername: "",
+      secondaryTiktokUsername: "",
     };
 
     if (insta && !isValidInstagram(insta)) {
@@ -97,13 +124,35 @@ export default function EditUserPage() {
         "Gunakan format https://www.tiktok.com/@nama_pengguna (contoh: https://www.tiktok.com/@polri)";
     }
 
+    if (
+      secondaryInstagramUsername &&
+      !isValidInstagram(secondaryInstagramUsername)
+    ) {
+      nextFieldErrors.secondaryInstagramUsername =
+        "Isi username Instagram akun kedua tanpa spasi (contoh: humas_polres).";
+    }
+
+    if (secondaryTiktokUsername && !isValidTiktok(secondaryTiktokUsername)) {
+      nextFieldErrors.secondaryTiktokUsername =
+        "Isi username TikTok akun kedua tanpa spasi (contoh: humas_polres).";
+    }
+
     setFieldErrors(nextFieldErrors);
 
-    if (nextFieldErrors.insta || nextFieldErrors.tiktok) {
+    if (
+      nextFieldErrors.insta ||
+      nextFieldErrors.tiktok ||
+      nextFieldErrors.secondaryInstagramUsername ||
+      nextFieldErrors.secondaryTiktokUsername
+    ) {
       return;
     }
     const instaUsername = extractInstagramUsername(insta);
     const tiktokUsername = extractTiktokUsername(tiktok);
+    const secondaryInstagram = extractInstagramUsername(
+      secondaryInstagramUsername,
+    );
+    const secondaryTiktok = extractTiktokUsername(secondaryTiktokUsername);
     const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
@@ -120,6 +169,10 @@ export default function EditUserPage() {
         email: email.trim(),
         insta: instaUsername,
         tiktok: tiktokUsername,
+        secondary_instagram_username: secondaryInstagram,
+        secondary_tiktok_username: secondaryTiktok,
+        instagram_secondary_username: secondaryInstagram,
+        tiktok_secondary_username: secondaryTiktok,
       });
       if (res.success) {
         setMessage("Data berhasil diperbarui");
@@ -341,6 +394,61 @@ export default function EditUserPage() {
             {fieldErrors.tiktok && (
               <p className="text-xs text-red-500">{fieldErrors.tiktok}</p>
             )}
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">
+                Username Instagram Akun Kedua
+              </label>
+              <input
+                type="text"
+                value={secondaryInstagramUsername}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSecondaryInstagramUsername(value);
+                  if (!value || isValidInstagram(value)) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      secondaryInstagramUsername: "",
+                    }));
+                  }
+                }}
+                placeholder="contoh: humas_polres"
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+              {fieldErrors.secondaryInstagramUsername && (
+                <p className="text-xs text-red-500">
+                  {fieldErrors.secondaryInstagramUsername}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-navy">
+                Username TikTok Akun Kedua
+              </label>
+              <input
+                type="text"
+                value={secondaryTiktokUsername}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSecondaryTiktokUsername(value);
+                  if (!value || isValidTiktok(value)) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      secondaryTiktokUsername: "",
+                    }));
+                  }
+                }}
+                placeholder="contoh: humas_polres"
+                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+              />
+              {fieldErrors.secondaryTiktokUsername && (
+                <p className="text-xs text-red-500">
+                  {fieldErrors.secondaryTiktokUsername}
+                </p>
+              )}
+            </div>
           </div>
 
           <button
