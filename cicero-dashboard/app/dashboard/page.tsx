@@ -922,12 +922,12 @@ export default function DashboardPage() {
                       )} yang didorong oleh komunitas Anda.`
                     : "Menunggu konten terbaru untuk dianalisis dan dibagikan ke tim."}
                 </p>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex w-full flex-col items-stretch gap-2">
                   <button
                     type="button"
                     onClick={handleCopyDailyTask}
                     disabled={!dailyTaskText}
-                    className="inline-flex items-center gap-2 rounded-full border border-sky-300/70 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700 shadow-[0_12px_30px_rgba(14,165,233,0.2)] transition hover:border-sky-400 hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-sky-300/70 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700 shadow-[0_12px_30px_rgba(14,165,233,0.2)] transition hover:border-sky-400 hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
                   >
                     📋 Copy Tugas Hari Ini
                   </button>
