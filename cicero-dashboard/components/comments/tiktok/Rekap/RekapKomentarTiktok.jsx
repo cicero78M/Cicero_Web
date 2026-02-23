@@ -347,15 +347,6 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
       hasUsername: true,
     });
 
-  const totalSudahKomentar = Number.isFinite(normalizedSummary.totalSudahKomentar)
-    ? normalizedSummary.totalSudahKomentar
-    : validUsers.filter((u) => classifyStatus(u) === "sudah").length;
-  const totalKurangKomentar = Number.isFinite(normalizedSummary.totalKurangKomentar)
-    ? normalizedSummary.totalKurangKomentar
-    : validUsers.filter((u) => classifyStatus(u) === "kurang").length;
-  const totalBelumKomentar = Number.isFinite(normalizedSummary.totalBelumKomentar)
-    ? normalizedSummary.totalBelumKomentar
-    : validUsers.filter((u) => classifyStatus(u) === "belum").length;
   const totalTanpaUsername = Number.isFinite(normalizedSummary.totalTanpaUsername)
     ? normalizedSummary.totalTanpaUsername
     : tanpaUsernameUsers.length;
@@ -364,6 +355,25 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     Number.isFinite(normalizedSummary.totalTanpaUsername)
       ? Math.max(0, normalizedSummary.totalUsers - normalizedSummary.totalTanpaUsername)
       : validUsers.length;
+  const totalSudahKomentarRaw = Number.isFinite(normalizedSummary.totalSudahKomentar)
+    ? normalizedSummary.totalSudahKomentar
+    : validUsers.filter((u) => classifyStatus(u) === "sudah").length;
+  const totalSudahKomentar = Math.max(0, Math.min(validUserCount, totalSudahKomentarRaw));
+  const totalKurangKomentarRaw = Number.isFinite(normalizedSummary.totalKurangKomentar)
+    ? normalizedSummary.totalKurangKomentar
+    : validUsers.filter((u) => classifyStatus(u) === "kurang").length;
+  const totalKurangKomentar = Math.max(0, Math.min(validUserCount, totalKurangKomentarRaw));
+  const totalBelumKomentarRaw = Number.isFinite(normalizedSummary.totalBelumKomentar)
+    ? normalizedSummary.totalBelumKomentar
+    : validUsers.filter((u) => classifyStatus(u) === "belum").length;
+  const maxBelumKomentarFromActiveUsers = Math.max(
+    0,
+    validUserCount - totalSudahKomentar - totalKurangKomentar,
+  );
+  const totalBelumKomentar = Math.min(
+    maxBelumKomentarFromActiveUsers,
+    Math.max(0, totalBelumKomentarRaw),
+  );
 
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
