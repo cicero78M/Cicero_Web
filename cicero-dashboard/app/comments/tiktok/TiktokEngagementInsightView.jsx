@@ -22,6 +22,8 @@ import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
 import useAuth from "@/hooks/useAuth";
 import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
+import { getRekapKomentarTiktok, getRekapLikesIG } from "@/utils/api";
+import { buildWhatsappTaskRecapMessage, extractTaskLinksToday } from "@/utils/taskRecapWhatsapp";
 
 function buildSummaryFromUsers(users, totalTiktokPost, fallbackSummary) {
   const totalPost = Number(totalTiktokPost) || 0;
@@ -56,7 +58,7 @@ function buildSummaryFromUsers(users, totalTiktokPost, fallbackSummary) {
 
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const { premiumTier, effectiveRole, effectiveClientType } = useAuth();
+  const { premiumTier, effectiveRole, effectiveClientType, token, clientId, regionalId } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -383,6 +385,69 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       }
     : null;
 
+  async function handleCopyTaskLinksToday() {
+    const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("cicero_token") : "");
+    const authClientId = clientId || (typeof window !== "undefined" ? localStorage.getItem("client_id") : "");
+
+    if (!authToken || !authClientId) {
+      showToast("Token atau client ID tidak ditemukan. Silakan login ulang.", "error");
+      return;
+    }
+
+    const roleOption = String(effectiveRole || "").trim().toLowerCase() || undefined;
+    const scopeOption =
+      isOriginalDirectorateClient && directorateScope === "all" ? "DIREKTORAT" : "ORG";
+
+    try {
+      const [igRecap, tiktokRecap] = await Promise.all([
+        getRekapLikesIG(authToken, authClientId, "harian", undefined, undefined, undefined, {
+          role: roleOption,
+          scope: scopeOption,
+          regional_id: regionalId || undefined,
+        }),
+        getRekapKomentarTiktok(
+          authToken,
+          authClientId,
+          "harian",
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          {
+            role: roleOption,
+            scope: scopeOption,
+            regional_id: regionalId || undefined,
+          },
+        ),
+      ]);
+
+      const igLinks = extractTaskLinksToday(igRecap, "instagram").links;
+      const tiktokLinks = extractTaskLinksToday(tiktokRecap, "tiktok").links;
+
+      const message = buildWhatsappTaskRecapMessage({
+        clientName: selectedClientName || clientName || authClientId,
+        instagramLinks: igLinks,
+        tiktokLinks: tiktokLinks,
+      });
+
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(message);
+        showToast("Rekap tugas hari ini berhasil disalin.", "success");
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.prompt("Salin rekap tugas secara manual:", message);
+        showToast("Clipboard tidak tersedia. Silakan salin manual.", "info");
+      }
+    } catch (error) {
+      showToast(
+        "Gagal mengambil link tugas Instagram/TikTok hari ini.",
+        "error",
+      );
+    }
+  }
+
   async function handleCopyRekap() {
     const message = buildTiktokRekap(effectiveRekapSummary, displayedChartData, {
       clientName: selectedClientName,
@@ -435,6 +500,10 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
+          rekapTaskAction={{
+            onClick: handleCopyTaskLinksToday,
+            label: "Rekap Tugas Hari Ini",
+          }}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
           quickInsightTone="blue"
