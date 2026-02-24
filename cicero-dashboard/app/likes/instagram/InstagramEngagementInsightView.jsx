@@ -413,6 +413,10 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
+          rekapTaskAction={{
+            href: "/reposter/tasks/official",
+            label: "Rekap Tugas Hari Ini",
+          }}
           summaryCards={summaryCards}
           quickInsights={quickInsights}
           quickInsightTone="blue"

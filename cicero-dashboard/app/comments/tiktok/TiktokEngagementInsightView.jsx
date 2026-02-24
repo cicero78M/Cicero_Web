@@ -435,6 +435,10 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
           onCopyRekap={handleCopyRekap}
+          rekapTaskAction={{
+            href: "/reposter/tasks/official",
+            label: "Rekap Tugas Hari Ini",
+          }}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
           quickInsightTone="blue"

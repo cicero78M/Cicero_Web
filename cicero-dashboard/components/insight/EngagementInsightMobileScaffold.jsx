@@ -1,6 +1,7 @@
 "use client";
 
-import { Copy, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ClipboardList, Copy, Sparkles } from "lucide-react";
 
 import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
 import ViewDataSelector from "@/components/ViewDataSelector";
@@ -28,6 +29,7 @@ export default function EngagementInsightMobileScaffold({
   scopeSelectorProps,
   onCopyRekap,
   copyLabel = "Salin Rekap",
+  rekapTaskAction,
   summaryCards = [],
   summaryItemProps = {},
   quickInsights = [],
@@ -107,7 +109,7 @@ export default function EngagementInsightMobileScaffold({
 
   return (
     <div className="flex flex-col gap-8">
-      {(viewSelectorProps || scopeSelectorProps || onCopyRekap) && (
+      {(viewSelectorProps || scopeSelectorProps || onCopyRekap || rekapTaskAction) && (
         <div className="flex flex-col gap-5 rounded-2xl border border-sky-100/70 bg-gradient-to-br from-white via-sky-50/30 to-white p-5 shadow-lg backdrop-blur-sm sm:p-6 md:p-7">
           {/* Date Selector Section */}
           {viewSelectorProps ? (
@@ -129,19 +131,40 @@ export default function EngagementInsightMobileScaffold({
           ) : null}
 
           {/* Scope Selector and Recap Button Section */}
-          {(scopeSelectorProps || onCopyRekap) && (
+          {(scopeSelectorProps || onCopyRekap || rekapTaskAction) && (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {renderScopeSelector()}
-              {onCopyRekap ? (
-                <button
-                  onClick={onCopyRekap}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-200/80 bg-gradient-to-r from-teal-50 to-emerald-50 px-5 py-2.5 text-sm font-semibold text-teal-700 shadow-[0_4px_14px_rgba(45,212,191,0.2)] transition-all hover:border-teal-300 hover:shadow-[0_6px_20px_rgba(45,212,191,0.3)] active:scale-[0.98]"
-                  type="button"
-                >
-                  <Copy className="h-4 w-4" aria-hidden />
-                  {copyLabel}
-                </button>
-              ) : null}
+              <div className="flex flex-wrap items-center gap-2">
+                {rekapTaskAction?.href ? (
+                  <Link
+                    href={rekapTaskAction.href}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-2.5 text-sm font-semibold text-sky-700 shadow-[0_4px_14px_rgba(56,189,248,0.2)] transition-all hover:border-sky-300 hover:shadow-[0_6px_20px_rgba(56,189,248,0.3)] active:scale-[0.98]"
+                  >
+                    <ClipboardList className="h-4 w-4" aria-hidden />
+                    {rekapTaskAction.label || "Rekap Tugas Hari Ini"}
+                  </Link>
+                ) : null}
+                {rekapTaskAction?.onClick ? (
+                  <button
+                    onClick={rekapTaskAction.onClick}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-2.5 text-sm font-semibold text-sky-700 shadow-[0_4px_14px_rgba(56,189,248,0.2)] transition-all hover:border-sky-300 hover:shadow-[0_6px_20px_rgba(56,189,248,0.3)] active:scale-[0.98]"
+                    type="button"
+                  >
+                    <ClipboardList className="h-4 w-4" aria-hidden />
+                    {rekapTaskAction.label || "Rekap Tugas Hari Ini"}
+                  </button>
+                ) : null}
+                {onCopyRekap ? (
+                  <button
+                    onClick={onCopyRekap}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-200/80 bg-gradient-to-r from-teal-50 to-emerald-50 px-5 py-2.5 text-sm font-semibold text-teal-700 shadow-[0_4px_14px_rgba(45,212,191,0.2)] transition-all hover:border-teal-300 hover:shadow-[0_6px_20px_rgba(45,212,191,0.3)] active:scale-[0.98]"
+                    type="button"
+                  >
+                    <Copy className="h-4 w-4" aria-hidden />
+                    {copyLabel}
+                  </button>
+                ) : null}
+              </div>
             </div>
           )}
         </div>
