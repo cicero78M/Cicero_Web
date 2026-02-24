@@ -12,8 +12,19 @@ import DirectorateClientSelector from "@/components/DirectorateClientSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import useAuth from "@/hooks/useAuth";
-import { getRekapKomentarTiktok, getRekapLikesIG } from "@/utils/api";
-import { buildWhatsappTaskRecapMessage, extractTaskLinksToday } from "@/utils/taskRecapWhatsapp";
+import {
+  getInstagramPosts,
+  getRekapKomentarTiktok,
+  getRekapLikesIG,
+  getTiktokPosts,
+} from "@/utils/api";
+import {
+  buildWhatsappDetailedTaskRecapMessage,
+  extractTaskLinksToday,
+  getTodayWibDateKey,
+  normalizeInstagramTaskPosts,
+  normalizeTiktokTaskPosts,
+} from "@/utils/taskRecapWhatsapp";
 import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 import {
@@ -243,9 +254,10 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     const roleOption = String(effectiveRole || "").trim().toLowerCase() || undefined;
     const scopeOption =
       isOriginalDirectorateClient && directorateScope === "all" ? "DIREKTORAT" : "ORG";
+    const todayWib = getTodayWibDateKey();
 
     try {
-      const [igRecap, tiktokRecap] = await Promise.all([
+      const [igRecap, tiktokRecap, igPostsRes, tiktokPostsRes] = await Promise.all([
         getRekapLikesIG(authToken, authClientId, "harian", undefined, undefined, undefined, {
           role: roleOption,
           scope: scopeOption,
@@ -265,34 +277,53 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             regional_id: regionalId || undefined,
           },
         ),
+        getInstagramPosts(authToken, authClientId, {
+          startDate: todayWib,
+          endDate: todayWib,
+          scope: scopeOption,
+          role: roleOption,
+          regional_id: regionalId || undefined,
+        }),
+        getTiktokPosts(authToken, authClientId, {
+          startDate: todayWib,
+          endDate: todayWib,
+          scope: scopeOption,
+          role: roleOption,
+          regional_id: regionalId || undefined,
+        }),
       ]);
 
       const igLinks = extractTaskLinksToday(igRecap, "instagram").links;
       const tiktokLinks = extractTaskLinksToday(tiktokRecap, "tiktok").links;
+      const instagramPosts = normalizeInstagramTaskPosts(igPostsRes?.posts || igPostsRes?.data || []);
+      const tiktokPosts = normalizeTiktokTaskPosts(tiktokPostsRes?.data || tiktokPostsRes?.posts || []);
 
-      const message = buildWhatsappTaskRecapMessage({
-        clientName: selectedClientName || resolvedClientLabel || authClientId,
-        instagramLinks: igLinks,
-        tiktokLinks: tiktokLinks,
+      const message = buildWhatsappDetailedTaskRecapMessage({
+        clientName: selectedClientName || clientName || resolvedClientLabel || authClientId,
+        instagramPosts,
+        tiktokPosts,
+        instagramFallbackLinks: igLinks,
+        tiktokFallbackLinks: tiktokLinks,
       });
 
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(message);
-        showToast("Rekap tugas hari ini berhasil disalin.", "success");
+        showToast("Daftar tugas harian berhasil disalin.", "success");
         return;
       }
 
       if (typeof window !== "undefined") {
-        window.prompt("Salin rekap tugas secara manual:", message);
+        window.prompt("Salin daftar tugas secara manual:", message);
         showToast("Clipboard tidak tersedia. Silakan salin manual.", "info");
       }
     } catch (error) {
       showToast(
-        "Gagal mengambil link tugas Instagram/TikTok hari ini.",
+        "Gagal menyusun daftar tugas Instagram/TikTok hari ini.",
         "error",
       );
     }
   }
+
 
   async function handleCopyRekap() {
     const message = buildInstagramRekap(
