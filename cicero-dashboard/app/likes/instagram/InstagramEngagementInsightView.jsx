@@ -511,7 +511,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           onCopyRekap={handleCopyRekap}
           rekapTaskAction={{
             onClick: handleCopyTaskLinksToday,
-            label: "Rekap Tugas Hari Ini",
+            label: "Copy Tugas Hari Ini",
           }}
           summaryCards={summaryCards}
           quickInsights={quickInsights}

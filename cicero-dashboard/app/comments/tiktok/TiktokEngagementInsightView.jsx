@@ -533,7 +533,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           onCopyRekap={handleCopyRekap}
           rekapTaskAction={{
             onClick: handleCopyTaskLinksToday,
-            label: "Rekap Tugas Hari Ini",
+            label: "Copy Tugas Hari Ini",
           }}
           summaryCards={uniqueSummaryCards}
           quickInsights={quickInsights}
