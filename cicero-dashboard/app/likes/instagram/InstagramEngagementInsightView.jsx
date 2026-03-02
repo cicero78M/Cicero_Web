@@ -102,7 +102,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
   const premiumViewOptions = [
-    { value: "today", label: "Harian (hari ini)", periode: "harian" },
+    { value: "today", label: "Hari ini", periode: "harian" },
     { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
     { value: "month", label: "Bulanan", periode: "bulanan", month: true },
     {
@@ -201,7 +201,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
-    ? "POLRES JAJARAN"
+    ? "SATKER JAJARAN"
     : `DIVISI / SATFUNG${selectedClientName ? ` - ${selectedClientName}` : ""}`;
   const directorateNarrative = shouldGroupByClient
     ? undefined

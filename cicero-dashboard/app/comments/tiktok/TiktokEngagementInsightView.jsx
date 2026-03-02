@@ -96,7 +96,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
   const premiumViewOptions = [
-    { value: "today", label: "Harian (hari ini)", periode: "harian" },
+    { value: "today", label: "Hari ini", periode: "harian" },
     { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
     { value: "month", label: "Bulanan", periode: "bulanan", month: true },
     {
@@ -345,7 +345,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
   const directorateOrientation = shouldGroupByClient ? "horizontal" : "vertical";
   const directorateTitle = shouldGroupByClient
-    ? "POLRES JAJARAN"
+    ? "SATKER JAJARAN"
     : `DIVISI / SATFUNG${selectedClientName ? ` - ${selectedClientName}` : ""}`;
 
   const kelompok = isDirectorate ? null : groupUsersByKelompok(displayedChartData);
@@ -363,9 +363,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const chartBoxCommonProps = {
     fieldJumlah: "jumlah_komentar",
-    labelSudah: "User Sudah Komentar",
-    labelKurang: "User Kurang Komentar",
-    labelBelum: "User Belum Komentar",
+    labelSudah: "Komentar Lengkap",
+    labelKurang: "Komentar Kurang Lengkap",
+    labelBelum: "Tanpa Komentar",
     labelTotal: "Total Komentar",
     showTotalUser: true,
     titleClassName: "text-slate-700",
