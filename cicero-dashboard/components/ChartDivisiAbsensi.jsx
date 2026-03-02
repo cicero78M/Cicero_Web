@@ -31,9 +31,9 @@ export default function ChartDivisiAbsensi({
   totalIGPost, // fallback untuk instagram (kompatibilitas lama)
   totalTiktokPost, // fallback untuk tiktok (kompatibilitas lama)
   fieldJumlah = "jumlah_like", // bisa "jumlah_komentar" untuk tiktok
-  labelSudah = "User Sudah Komentar",
-  labelKurang = "User Kurang Komentar",
-  labelBelum = "User Belum Komentar",
+  labelSudah = "Komentar Lengkap",
+  labelKurang = "Kurang Komentar",
+  labelBelum = "Tanpa Komentar",
   labelTotal = "Total Komentar",
   groupBy = "divisi",
   orientation = "vertical",
