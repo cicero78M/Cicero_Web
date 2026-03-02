@@ -30,7 +30,40 @@ function uniqueStrings(values: string[]): string[] {
   });
 }
 
+function resolveWibDateKey(value: unknown): string {
+  const normalized = normalizeText(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return normalized;
+
+  const parsed =
+    value instanceof Date
+      ? value
+      : normalized
+        ? new Date(normalized)
+        : new Date(Number(value));
+
+  if (Number.isNaN(parsed.getTime())) return "";
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(parsed);
+}
+
+function extractEntryDateKey(entry: any): string {
+  return (
+    resolveWibDateKey(entry?.date) ||
+    resolveWibDateKey(entry?.tanggal) ||
+    resolveWibDateKey(entry?.task_date) ||
+    resolveWibDateKey(entry?.created_at) ||
+    resolveWibDateKey(entry?.published_at) ||
+    resolveWibDateKey(entry?.timestamp)
+  );
+}
+
 export function extractTaskLinksToday(payload: any, fallbackPlatform: string): TaskLinksToday {
+  const todayWib = getTodayWibDateKey();
   const candidates = [
     payload?.taskLinksToday,
     payload?.task_links_today,
@@ -49,8 +82,16 @@ export function extractTaskLinksToday(payload: any, fallbackPlatform: string): T
       ? source.data
       : [];
 
+  const hasDateMetadata = linksRaw.some((entry: any) => Boolean(extractEntryDateKey(entry)));
+  const linksForToday = hasDateMetadata
+    ? linksRaw.filter((entry: any) => {
+        const entryDate = extractEntryDateKey(entry);
+        return !entryDate || entryDate === todayWib;
+      })
+    : linksRaw;
+
   const links = uniqueStrings(
-    linksRaw
+    linksForToday
       .map((entry: any) => {
         if (typeof entry === "string") return normalizeText(entry);
         return (
@@ -191,31 +232,43 @@ function mergePostsWithFallbackLinks(posts: TaskPostDetail[], links: string[]): 
 }
 
 export function normalizeInstagramTaskPosts(rawPosts: any[]): TaskPostDetail[] {
-  return (Array.isArray(rawPosts) ? rawPosts : []).map((post) => ({
-    url: resolveInstagramUrl(post),
-    caption: normalizeCaption(post?.caption ?? post?.title ?? post?.text),
-    createdAt:
-      normalizeText(post?.created_at) ||
-      normalizeText(post?.published_at) ||
-      normalizeText(post?.timestamp) ||
-      null,
-    likeCount: normalizeNumber(post?.like_count ?? post?.likes ?? post?.metrics?.like_count),
-    commentCount: normalizeNumber(post?.comment_count ?? post?.comments ?? post?.metrics?.comment_count),
-  }));
+  const todayWib = getTodayWibDateKey();
+  return (Array.isArray(rawPosts) ? rawPosts : [])
+    .map((post) => ({
+      url: resolveInstagramUrl(post),
+      caption: normalizeCaption(post?.caption ?? post?.title ?? post?.text),
+      createdAt:
+        normalizeText(post?.created_at) ||
+        normalizeText(post?.published_at) ||
+        normalizeText(post?.timestamp) ||
+        null,
+      likeCount: normalizeNumber(post?.like_count ?? post?.likes ?? post?.metrics?.like_count),
+      commentCount: normalizeNumber(post?.comment_count ?? post?.comments ?? post?.metrics?.comment_count),
+    }))
+    .filter((post) => {
+      const dateKey = resolveWibDateKey(post.createdAt);
+      return !dateKey || dateKey === todayWib;
+    });
 }
 
 export function normalizeTiktokTaskPosts(rawPosts: any[]): TaskPostDetail[] {
-  return (Array.isArray(rawPosts) ? rawPosts : []).map((post) => ({
-    url: resolveTiktokUrl(post),
-    caption: normalizeCaption(post?.caption ?? post?.desc ?? post?.title),
-    createdAt:
-      normalizeText(post?.created_at) ||
-      normalizeText(post?.published_at) ||
-      normalizeText(post?.timestamp) ||
-      null,
-    likeCount: normalizeNumber(post?.like_count ?? post?.digg_count ?? post?.stats?.diggCount),
-    commentCount: normalizeNumber(post?.comment_count ?? post?.stats?.commentCount),
-  }));
+  const todayWib = getTodayWibDateKey();
+  return (Array.isArray(rawPosts) ? rawPosts : [])
+    .map((post) => ({
+      url: resolveTiktokUrl(post),
+      caption: normalizeCaption(post?.caption ?? post?.desc ?? post?.title),
+      createdAt:
+        normalizeText(post?.created_at) ||
+        normalizeText(post?.published_at) ||
+        normalizeText(post?.timestamp) ||
+        null,
+      likeCount: normalizeNumber(post?.like_count ?? post?.digg_count ?? post?.stats?.diggCount),
+      commentCount: normalizeNumber(post?.comment_count ?? post?.stats?.commentCount),
+    }))
+    .filter((post) => {
+      const dateKey = resolveWibDateKey(post.createdAt);
+      return !dateKey || dateKey === todayWib;
+    });
 }
 
 export function buildWhatsappDetailedTaskRecapMessage({
