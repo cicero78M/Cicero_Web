@@ -392,9 +392,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       `Rekap Likes Instagram (${tanggal})`,
       `Jumlah IG Post: ${totalIGPost}`,
       `Total User: ${totalUser}`,
-      `Sudah Like: ${totalSudahLike}`,
+      `Like Lengkap: ${totalSudahLike}`,
       `Kurang Like: ${totalKurangLike}`,
-      `Belum Like: ${totalBelumLike}`,
+      `Tanpa Like: ${totalBelumLike}`,
       `Tanpa Username IG: ${totalTanpaUsername}`,
       "",
       "Rekap per Satker:",
@@ -511,9 +511,9 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       "Ringkasan Data:",
       `- Jumlah Konten Instagram : ${jumlahKonten}`,
       `- Jumlah Total Personel : ${totalUser} pers`,
-      `- Sudah Melaksanakan : ${totalSudahLike} pers`,
-      `- Melaksanakan Kurang Lengkap : ${totalKurangLike} pers`,
-      `- Belum Melaksanakan : ${totalBelumLike} pers`,
+      `- Like Lengkap : ${totalSudahLike} pers`,
+      `- Kurang Like : ${totalKurangLike} pers`,
+      `- Tanpa Like : ${totalBelumLike} pers`,
       `- Belum Update Username Instagram : ${totalTanpaUsername} pers`,
       "",
       "Daftar Link Konten:",
@@ -528,17 +528,17 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
       lines.push(
         `${client.toUpperCase()} : ${Sudah.length}/${Kurang.length}/${Belum.length}/${UsernameKosong.length}`,
       );
-      lines.push(`Sudah : ${Sudah.length}`);
+      lines.push(`Like Lengkap : ${Sudah.length}`);
       sortByRank(Sudah).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.jumlah_like}`);
       });
-      lines.push(`Kurang : ${Kurang.length}`);
+      lines.push(`Kurang Like : ${Kurang.length}`);
       sortByRank(Kurang).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.jumlah_like}`);
       });
-      lines.push(`Belum : ${Belum.length}`);
+      lines.push(`Tanpa Like : ${Belum.length}`);
       sortByRank(Belum).forEach((u) => {
         const name = u.title ? `${u.title} ${u.nama}` : u.nama;
         lines.push(`- ${name}, ${u.username}`);
@@ -610,7 +610,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           }
         />
         <SummaryCard
-          title="Sudah Like"
+          title="Like Lengkap"
           value={totalSudahLike}
           accent="emerald"
           icon={
@@ -628,7 +628,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
           percentage={getPercentage(totalKurangLike)}
         />
         <SummaryCard
-          title="Belum Like"
+          title="Tanpa Like"
           value={totalBelumLike}
           accent="rose"
           icon={
@@ -784,19 +784,19 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                           row: "bg-rose-50",
                           badge: "border border-rose-200 bg-rose-50 text-rose-700",
                           icon: <X className="h-3 w-3" />,
-                          label: "Belum",
+                          label: "Tanpa Like",
                         },
                         kurang: {
                           row: "bg-amber-50",
                           badge: "border border-amber-200 bg-amber-50 text-amber-700",
                           icon: <AlertTriangle className="h-3 w-3" />,
-                          label: "Kurang",
+                          label: "Kurang Like",
                         },
                         sudah: {
                           row: "bg-emerald-50",
                           badge: "border border-emerald-200 bg-emerald-50 text-emerald-700",
                           icon: <Check className="h-3 w-3" />,
-                          label: "Sudah",
+                          label: "Like Lengkap",
                         },
                         tanpaUsername: {
                           row: "bg-slate-50",
