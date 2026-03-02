@@ -216,11 +216,29 @@ function resolveTiktokUrl(post: any): string {
   return "";
 }
 
+function buildTaskUrlIdentity(url: string): string {
+  const raw = normalizeText(url);
+  if (!raw) return "";
+
+  const compact = raw.toLowerCase().replace(/\/$/, "");
+
+  const igMatch = compact.match(/instagram\.com\/(?:p|reel|tv)\/([^/?#]+)/);
+  if (igMatch?.[1]) return `ig:${igMatch[1]}`;
+
+  const ttMatch = compact.match(/tiktok\.com\/(?:@[^/]+\/video\/|video\/)(\d+)/);
+  if (ttMatch?.[1]) return `tt:${ttMatch[1]}`;
+
+  return compact;
+}
+
 function mergePostsWithFallbackLinks(posts: TaskPostDetail[], links: string[]): TaskPostDetail[] {
   const normalizedPosts = posts.filter((post) => normalizeText(post.url));
-  const used = new Set(normalizedPosts.map((post) => normalizeText(post.url).toLowerCase()));
+  const used = new Set(normalizedPosts.map((post) => buildTaskUrlIdentity(post.url)).filter(Boolean));
   const missing = uniqueStrings(links)
-    .filter((link) => !used.has(link.toLowerCase()))
+    .filter((link) => {
+      const key = buildTaskUrlIdentity(link);
+      return Boolean(key) && !used.has(key);
+    })
     .map((url) => ({
       url,
       caption: "(Tidak ada deskripsi)",
@@ -247,7 +265,7 @@ export function normalizeInstagramTaskPosts(rawPosts: any[]): TaskPostDetail[] {
     }))
     .filter((post) => {
       const dateKey = resolveWibDateKey(post.createdAt);
-      return !dateKey || dateKey === todayWib;
+      return dateKey === todayWib;
     });
 }
 
@@ -267,7 +285,7 @@ export function normalizeTiktokTaskPosts(rawPosts: any[]): TaskPostDetail[] {
     }))
     .filter((post) => {
       const dateKey = resolveWibDateKey(post.createdAt);
-      return !dateKey || dateKey === todayWib;
+      return dateKey === todayWib;
     });
 }
 
