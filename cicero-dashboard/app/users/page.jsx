@@ -28,7 +28,6 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
 import { prioritizeUsersForClient } from "@/utils/userOrdering";
-import ExcelJS from "exceljs/dist/exceljs.min.js";
 import { showToast } from "@/utils/showToast";
 import {
   PANGKAT_OPTIONS,
@@ -431,53 +430,6 @@ export default function UserDirectoryPage() {
     }
   }
 
-  async function handleDownloadData() {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Users");
-    worksheet.columns = [
-      { header: "Nama", key: "nama", width: 40 },
-      { header: "NRP/NIP", key: "nrp", width: 16 },
-      { header: columnLabel, key: "kesatuan", width: 30 },
-      { header: "Username IG", key: "ig", width: 20 },
-      { header: "Username TikTok", key: "tiktok", width: 20 },
-      { header: "Email", key: "email", width: 30 },
-      { header: "Status", key: "status", width: 10 },
-    ];
-
-    worksheet.addRows(
-      users.map((u) => ({
-        nama: (u.title ? `${u.title} ` : "") + (u.nama || "-"),
-        nrp: u.user_id || "",
-        kesatuan: showKesatuanColumn
-          ? u.client_id || u.clientId || u.clientID || u.client || "-"
-          : u.divisi || "",
-        ig: u.insta || "",
-        tiktok: u.tiktok || "",
-        email: u.email || "",
-        status:
-          u.status === true || u.status === "true" ? "Aktif" : "Nonaktif",
-      })),
-    );
-
-    try {
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "user_directory.xlsx";
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      showToast(
-        "Gagal mengunduh data pengguna: " + (error.message || error),
-        "error",
-      );
-    }
-  }
-
   // Data fetching handled by SWR
 
   const filtered = useMemo(
@@ -699,13 +651,6 @@ export default function UserDirectoryPage() {
                   type="button"
                 >
                   Rekap User
-                </button>
-                <button
-                  onClick={handleDownloadData}
-                  className="rounded-xl bg-gradient-to-r from-fuchsia-400 via-purple-400 to-indigo-400 px-4 py-2 text-sm font-medium text-white shadow-lg ring-1 ring-fuchsia-300/50 transition hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400"
-                  type="button"
-                >
-                  Download Data
                 </button>
                 {isDitbinmasClient && (
                   <button
