@@ -100,6 +100,45 @@ function buildRecipientName(user) {
   return `Bapak/Ibu ${identity}`;
 }
 
+
+function normalizeTiktokUsername(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+
+  const withAtPrefix = normalized.startsWith("@")
+    ? normalized
+    : normalized.startsWith("http")
+      ? normalized
+      : `@${normalized}`;
+
+  const match = withAtPrefix.match(/@([a-zA-Z0-9._-]+)/);
+  if (!match?.[1]) return "";
+  return `@${match[1]}`;
+}
+
+function buildCanonicalTiktokLink(link, usernameWithAt) {
+  const source = String(link || "").trim();
+  if (!source) return "";
+
+  if (/tiktok\.com\/@[a-zA-Z0-9._-]+\/video\/\d+/i.test(source)) {
+    return source;
+  }
+
+  const idMatch = source.match(/(?:video\/|\/v\/)(\d{8,})/i);
+  const videoId = idMatch?.[1] ? String(idMatch[1]).trim() : "";
+  if (!videoId) return source;
+  if (!usernameWithAt) return source;
+
+  return `https://www.tiktok.com/${usernameWithAt}/video/${videoId}`;
+}
+
+function normalizePendingLinksForCopy(links, usernameWithAt) {
+  return links
+    .map((link) => buildCanonicalTiktokLink(link, usernameWithAt))
+    .map((link) => String(link || "").trim())
+    .filter(Boolean);
+}
+
 function buildPendingTaskMessage(user, links) {
   const greeting = getTimeBasedGreeting();
   const recipient = buildRecipientName(user);
@@ -139,7 +178,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   },
   ref,
 ) {
-  const { periodeLabel, viewLabel, directorateName } = reportContext || {};
+  const { periodeLabel, viewLabel, directorateName, officialTiktokUsername } = reportContext || {};
   const resolveNumber = (value, fallback) => {
     if (value === undefined || value === null || value === "") return fallback;
     const normalized = Number(value);
@@ -456,7 +495,14 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
             .map((link) => link.trim())
             .filter(Boolean)
         : [];
-    const linksToCopy = linksFromPayload.length > 0 ? linksFromPayload : pendingTaskLinks;
+    const linksToCopyRaw = linksFromPayload.length > 0 ? linksFromPayload : pendingTaskLinks;
+    const resolvedOfficialUsername =
+      normalizeTiktokUsername(user?.client_tiktok) ||
+      normalizeTiktokUsername(officialTiktokUsername);
+    const linksToCopy = normalizePendingLinksForCopy(
+      linksToCopyRaw,
+      resolvedOfficialUsername,
+    );
 
     if (linksToCopy.length === 0) {
       showToast("Link tugas yang belum dikerjakan tidak tersedia.", "info");

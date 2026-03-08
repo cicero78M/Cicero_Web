@@ -69,7 +69,7 @@ function buildSummaryFromUsers(users, totalTiktokPost, fallbackSummary) {
 
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const { premiumTier, effectiveRole, effectiveClientType, token, clientId, regionalId } = useAuth();
+  const { premiumTier, effectiveRole, effectiveClientType, token, clientId, regionalId, profile } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -512,6 +512,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     viewLabel,
     directorateName: selectedClientName || "Satker",
     directorateOfficialName: selectedClientName || "Satker",
+    officialTiktokUsername:
+      profile?.client_tiktok ||
+      profile?.tiktok ||
+      profile?.username_tiktok ||
+      "",
   };
 
   const directorateClientSelectorLabel = "Pilih Client Direktorat / Satker";
