@@ -54,6 +54,30 @@ function getLikesStatus({ jumlahLike = 0, totalPostCount = 0, hasUsername }) {
   return "belum";
 }
 
+function normalizePendingTaskLinks(user) {
+  const linksSource =
+    user?.pendingTaskLinks ??
+    user?.pending_task_links ??
+    user?.pendingLinks ??
+    [];
+
+  if (Array.isArray(linksSource)) {
+    return linksSource
+      .filter((link) => typeof link === "string")
+      .map((link) => link.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof linksSource === "string") {
+    return linksSource
+      .split("\n")
+      .map((link) => link.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 /**
  * Komponen RekapLikesIG
  * @param {Array} users - array user rekap likes IG (sudah HARUS hasil filter/fetch periode yg benar dari parent)
@@ -268,6 +292,50 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     const successful = document.execCommand("copy");
     document.body.removeChild(textarea);
     return successful;
+  }
+
+  function handleCopyPendingLinks(user, statusKey) {
+    if (statusKey === "sudah") {
+      showToast("User ini sudah melaksanakan semua tugas.", "info");
+      return;
+    }
+
+    const pendingTaskLinks = normalizePendingTaskLinks(user);
+    const copyPayloadCandidate =
+      user?.copyPayload ?? user?.copy_payload ?? user?.pending_task_payload ?? "";
+    const copyPayload =
+      typeof copyPayloadCandidate === "string" && copyPayloadCandidate.trim().length > 0
+        ? copyPayloadCandidate.trim()
+        : pendingTaskLinks.join("\n");
+
+    if (!copyPayload) {
+      showToast("Link tugas yang belum dikerjakan tidak tersedia.", "info");
+      return;
+    }
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(copyPayload)
+        .then(() => {
+          showToast("Link tugas yang belum dikerjakan berhasil disalin.", "success");
+        })
+        .catch(() => {
+          const fallbackSuccess = copyToClipboardFallback(copyPayload);
+          if (fallbackSuccess) {
+            showToast("Link tugas yang belum dikerjakan berhasil disalin.", "success");
+          } else {
+            showToast(copyPayload, "info");
+          }
+        });
+      return;
+    }
+
+    const fallbackSuccess = copyToClipboardFallback(copyPayload);
+    if (fallbackSuccess) {
+      showToast("Link tugas yang belum dikerjakan berhasil disalin.", "success");
+    } else {
+      showToast(copyPayload, "info");
+    }
   }
 
   function handleCopyRekap() {
@@ -661,13 +729,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                     <th className={`${hasClient ? 'w-[12%]' : 'w-[14%]'} border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600`}>
                       Jumlah Like
                     </th>
+                    <th className="w-[12%] border-b border-blue-100 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">
+                      Cek Link
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-blue-50">
                   {currentRows.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={hasClient ? 7 : 6}
+                        colSpan={hasClient ? 8 : 7}
                         className="h-48 px-4 text-center text-sm text-blue-700"
                       >
                         <div className="flex flex-col items-center gap-3">
@@ -724,6 +795,8 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                       const statusKey = classifyStatus(u);
                       const jumlahDisplay = statusKey === "tanpaUsername" ? 0 : jumlahLike;
                       const status = statusStyles[statusKey];
+                      const pendingTaskLinks = normalizePendingTaskLinks(u);
+                      const hasPendingTaskLinks = pendingTaskLinks.length > 0;
 
                       return (
                         <tr
@@ -776,6 +849,16 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
                           </td>
                           <td className={`${baseCellClass} text-center text-sm font-semibold text-blue-900`}>
                             {jumlahDisplay}
+                          </td>
+                          <td className={`${baseCellClass} text-center`}>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyPendingLinks(u, statusKey)}
+                              disabled={!hasPendingTaskLinks || statusKey === "tanpaUsername"}
+                              className="rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-blue-200 disabled:hover:bg-white"
+                            >
+                              Copy
+                            </button>
                           </td>
                         </tr>
                       );
