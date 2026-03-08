@@ -78,6 +78,43 @@ function normalizePendingTaskLinks(user) {
   return [];
 }
 
+function getTimeBasedGreeting() {
+  const hourFormatter = new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Jakarta",
+  });
+  const hour = Number(hourFormatter.format(new Date()));
+
+  if (hour >= 4 && hour < 11) return "pagi";
+  if (hour >= 11 && hour < 15) return "siang";
+  return "malam";
+}
+
+function buildRecipientName(user) {
+  const rank = String(user?.title || "").trim();
+  const name = String(user?.nama || "").trim();
+  const identity = [rank, name].filter(Boolean).join(" ").trim();
+
+  if (!identity) return "Bapak/Ibu";
+  return `Bapak/Ibu ${identity}`;
+}
+
+function buildPendingTaskMessage(user, links) {
+  const greeting = getTimeBasedGreeting();
+  const recipient = buildRecipientName(user);
+  const taskList = links.map((link, index) => `${index + 1}. ${link}`).join("\n");
+
+  return [
+    `Selamat ${greeting} ${recipient},`,
+    "",
+    "Kami informasikan berikut link tugas yang belum mendapat likes dan komentar:",
+    taskList,
+    "",
+    "Mohon bantuannya untuk menindaklanjuti tugas tersebut. Terima kasih.",
+  ].join("\n");
+}
+
 /**
  * Rekap komentar TikTok dengan workflow dan struktur selaras RekapLikesIG.
  * @param {Array} users daftar pengguna hasil filter periode yang valid
@@ -412,38 +449,44 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     const pendingTaskLinks = normalizePendingTaskLinks(user);
     const copyPayloadCandidate =
       user?.copyPayload ?? user?.copy_payload ?? user?.pending_task_payload ?? "";
-    const copyPayload =
-      typeof copyPayloadCandidate === "string" && copyPayloadCandidate.trim().length > 0
-        ? copyPayloadCandidate.trim()
-        : pendingTaskLinks.join("\n");
+    const linksFromPayload =
+      typeof copyPayloadCandidate === "string"
+        ? copyPayloadCandidate
+            .split("\n")
+            .map((link) => link.trim())
+            .filter(Boolean)
+        : [];
+    const linksToCopy = linksFromPayload.length > 0 ? linksFromPayload : pendingTaskLinks;
 
-    if (!copyPayload) {
+    if (linksToCopy.length === 0) {
       showToast("Link tugas yang belum dikerjakan tidak tersedia.", "info");
       return;
     }
 
+    const copyMessage = buildPendingTaskMessage(user, linksToCopy);
+
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard
-        .writeText(copyPayload)
+        .writeText(copyMessage)
         .then(() => {
-          showToast("Link tugas yang belum dikerjakan berhasil disalin.", "success");
+          showToast("Pesan link tugas berhasil disalin.", "success");
         })
         .catch(() => {
-          const fallbackSuccess = copyToClipboardFallback(copyPayload);
+          const fallbackSuccess = copyToClipboardFallback(copyMessage);
           if (fallbackSuccess) {
-            showToast("Link tugas yang belum dikerjakan berhasil disalin.", "success");
+            showToast("Pesan link tugas berhasil disalin.", "success");
           } else {
-            showToast(copyPayload, "info");
+            showToast(copyMessage, "info");
           }
         });
       return;
     }
 
-    const fallbackSuccess = copyToClipboardFallback(copyPayload);
+    const fallbackSuccess = copyToClipboardFallback(copyMessage);
     if (fallbackSuccess) {
-      showToast("Link tugas yang belum dikerjakan berhasil disalin.", "success");
+      showToast("Pesan link tugas berhasil disalin.", "success");
     } else {
-      showToast(copyPayload, "info");
+      showToast(copyMessage, "info");
     }
   }
 
