@@ -136,6 +136,7 @@ Additional documents live under the [`docs/`](docs) directory:
 - [`auth-navigation.md`](docs/auth-navigation.md) – ringkasan alur hidrasi autentikasi dan pemulihan rute terakhir
 - [`google_contacts_service_account.md`](docs/google_contacts_service_account.md) – panduan penempatan `credentials.json` untuk layanan Google Contacts di backend Cicero_V2
 - [`amplify-insight.md`](docs/amplify-insight.md) – standar UI/UX dan alur kerja Amplifikasi Link Insight
+- [`.specify/memory/constitution.md`](.specify/memory/constitution.md) – konstitusi engineering dan governance Speckit untuk refactor, penambahan fitur, UI/UX, dan security baseline proyek
 
 For more information about Next.js features, refer to the documentation inside `cicero-dashboard/README.md`.
 
