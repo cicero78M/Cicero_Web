@@ -365,5 +365,6 @@ test("claim update sends whatsapp with 62 prefix for local numbers", async () =>
   const [, options] = (global.fetch as jest.Mock).mock.calls[0];
   expect(JSON.parse(options.body)).toMatchObject({
     whatsapp: "628123",
+    no_wa: "628123",
   });
 });
