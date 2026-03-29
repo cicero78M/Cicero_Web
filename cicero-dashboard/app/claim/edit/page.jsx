@@ -140,9 +140,9 @@ export default function EditUserPage() {
 
     if (!normalizedWhatsapp) {
       nextFieldErrors.whatsapp = "No WhatsApp wajib diisi.";
-    } else if (normalizedWhatsappDigits.length < 10) {
+    } else if (normalizedWhatsappDigits.length < 8) {
       nextFieldErrors.whatsapp =
-        "No WhatsApp terlalu pendek (minimal 10 digit).";
+        "No WhatsApp terlalu pendek (minimal 8 digit).";
     } else if (!/^\d+$/.test(normalizedWhatsappDigits)) {
       nextFieldErrors.whatsapp =
         "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.";
@@ -207,6 +207,7 @@ export default function EditUserPage() {
         // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
         desa: isDitbinmasRole ? desa.trim() : "",
         whatsapp: normalizedWhatsapp,
+        no_wa: normalizedWhatsapp,
         email: normalizedEmail,
         insta: instaUsername,
         tiktok: tiktokUsername,
@@ -387,8 +388,8 @@ export default function EditUserPage() {
                     whatsapp:
                       !sanitizedValue
                         ? ""
-                        : sanitizedDigits.length < 10
-                          ? "No WhatsApp terlalu pendek (minimal 10 digit)."
+                        : sanitizedDigits.length < 8
+                          ? "No WhatsApp terlalu pendek (minimal 8 digit)."
                           : /^\d+$/.test(sanitizedDigits)
                             ? ""
                             : "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.",

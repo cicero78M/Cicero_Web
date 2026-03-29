@@ -43,6 +43,7 @@ Ditambahkan card informasi sebelum input kontak dengan teks persis:
 Saat submit (`handleSubmit`), payload `updateUserViaClaim` kini menyertakan:
 
 - `whatsapp`
+- `no_wa` (alias kompatibilitas backend lama)
 - `email`
 
 Nilai dikirim dalam bentuk hasil `trim()` agar konsisten dengan field profil lainnya.
@@ -52,9 +53,15 @@ Nilai dikirim dalam bentuk hasil `trim()` agar konsisten dengan field profil lai
 Di `cicero-dashboard/utils/api.ts`, parameter fungsi `updateUserViaClaim` diperbarui dengan properti opsional:
 
 - `whatsapp?: string`
+- `no_wa?: string`
 - `email?: string`
 
-Body request tetap meneruskan seluruh objek `data` ke endpoint `/api/claim/update`.
+Body request meneruskan payload ke endpoint `/api/claim/update` dengan fallback dua arah:
+
+- jika hanya ada `whatsapp`, frontend otomatis menambahkan `no_wa`
+- jika hanya ada `no_wa`, frontend otomatis menambahkan `whatsapp`
+
+Validasi nomor di halaman claim edit juga diselaraskan menjadi minimal **8 digit** agar konsisten dengan kontrak backend.
 
 ## Dampak
 

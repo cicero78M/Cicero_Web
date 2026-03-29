@@ -3640,17 +3640,25 @@ export async function updateUserViaClaim(
     jabatan?: string;
     desa?: string;
     whatsapp?: string;
+    no_wa?: string;
     email?: string;
     insta?: string;
     tiktok?: string;
   },
 ): Promise<any> {
   const url = buildApiUrl("/api/claim/update");
+  const payload: Record<string, unknown> = { ...data };
+  if (typeof payload.whatsapp === "string" && !payload.no_wa) {
+    payload.no_wa = payload.whatsapp;
+  }
+  if (typeof payload.no_wa === "string" && !payload.whatsapp) {
+    payload.whatsapp = payload.no_wa;
+  }
   const res = await fetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const defaultMessage = "Failed to update user";
