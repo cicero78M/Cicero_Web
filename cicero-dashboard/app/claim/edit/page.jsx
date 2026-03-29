@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Edit3, Info, TriangleAlert } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
-import { getClaimUserData, updateUserViaClaim } from "@/utils/api";
+import {
+  getClaimUserData,
+  normalizeWhatsapp,
+  updateUserViaClaim,
+} from "@/utils/api";
 import {
   extractInstagramUsername,
   extractTiktokUsername,
@@ -153,6 +157,11 @@ export default function EditUserPage() {
       secondaryInstagramUsername,
     );
     const secondaryTiktok = extractTiktokUsername(secondaryTiktokUsername);
+    const whatsappInput = whatsapp.trim();
+    const normalizedWhatsapp =
+      !whatsappInput.includes("@") && whatsappInput.startsWith("0")
+        ? normalizeWhatsapp(whatsappInput)
+        : whatsappInput;
     const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
@@ -165,7 +174,7 @@ export default function EditUserPage() {
         jabatan: jabatan.trim(),
         // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
         desa: isDitbinmasRole ? desa.trim() : "",
-        whatsapp: whatsapp.trim(),
+        whatsapp: normalizedWhatsapp,
         email: email.trim(),
         insta: instaUsername,
         tiktok: tiktokUsername,
