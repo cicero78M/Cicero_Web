@@ -39,6 +39,7 @@ export default function EditUserPage() {
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
     whatsapp: "",
+    email: "",
     insta: "",
     tiktok: "",
     secondaryInstagramUsername: "",
@@ -107,6 +108,16 @@ export default function EditUserPage() {
     }
   }
 
+  function isValidEmailWithBrowser(emailAddress) {
+    if (!emailAddress) return false;
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.value = emailAddress;
+
+    return emailInput.checkValidity();
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -114,6 +125,7 @@ export default function EditUserPage() {
 
     const nextFieldErrors = {
       whatsapp: "",
+      email: "",
       insta: "",
       tiktok: "",
       secondaryInstagramUsername: "",
@@ -134,6 +146,18 @@ export default function EditUserPage() {
     } else if (!/^\d+$/.test(normalizedWhatsappDigits)) {
       nextFieldErrors.whatsapp =
         "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.";
+    }
+
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail || !isValidEmailWithBrowser(normalizedEmail)) {
+      nextFieldErrors.email = "Email wajib diisi dengan format valid";
+    }
+
+    if (nextFieldErrors.whatsapp) {
+      setError("Nomor WhatsApp wajib diisi dengan format valid");
+    } else if (nextFieldErrors.email) {
+      setError("Email wajib diisi dengan format valid");
     }
 
     if (insta && !isValidInstagram(insta)) {
@@ -183,7 +207,7 @@ export default function EditUserPage() {
         // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
         desa: isDitbinmasRole ? desa.trim() : "",
         whatsapp: normalizedWhatsapp,
-        email: email.trim(),
+        email: normalizedEmail,
         insta: instaUsername,
         tiktok: tiktokUsername,
         secondary_instagram_username: secondaryInstagram,
@@ -386,10 +410,19 @@ export default function EditUserPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmail(value);
+                  if (!value || isValidEmailWithBrowser(value.trim())) {
+                    setFieldErrors((prev) => ({ ...prev, email: "" }));
+                  }
+                }}
                 placeholder="nama@email.com"
                 className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
               />
+              {fieldErrors.email && (
+                <p className="text-xs text-red-500">{fieldErrors.email}</p>
+              )}
             </div>
           </div>
 
