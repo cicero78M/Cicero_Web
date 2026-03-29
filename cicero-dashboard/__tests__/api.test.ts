@@ -9,6 +9,7 @@ import {
   loginClaimUser,
   registerClaimCredential,
   getClaimUserData,
+  normalizeWhatsapp,
   updateUserViaClaim,
 } from "../utils/api";
 
@@ -341,4 +342,28 @@ test("getClaimUserData sends password credential instead of email", async () => 
   const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
   expect(url).toContain("/api/claim/user-data");
   expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
+});
+
+test("claim update sends whatsapp with 62 prefix for local numbers", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve({ success: true }),
+  });
+
+  const whatsappInput = "08123  ";
+  const whatsappNormalized =
+    !whatsappInput.trim().includes("@") && whatsappInput.trim().startsWith("0")
+      ? normalizeWhatsapp(whatsappInput)
+      : whatsappInput.trim();
+
+  await updateUserViaClaim({
+    nrp: "123",
+    password: "Abcd1234!",
+    whatsapp: whatsappNormalized,
+  });
+
+  const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(JSON.parse(options.body)).toMatchObject({
+    whatsapp: "628123",
+  });
 });
