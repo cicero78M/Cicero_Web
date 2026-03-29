@@ -38,6 +38,7 @@ export default function EditUserPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
+    whatsapp: "",
     insta: "",
     tiktok: "",
     secondaryInstagramUsername: "",
@@ -112,11 +113,28 @@ export default function EditUserPage() {
     setMessage("");
 
     const nextFieldErrors = {
+      whatsapp: "",
       insta: "",
       tiktok: "",
       secondaryInstagramUsername: "",
       secondaryTiktokUsername: "",
     };
+    const whatsappInput = whatsapp.trim();
+    const sanitizedWhatsapp = whatsappInput.replace(/(?!^\+)[^\d]/g, "");
+    const normalizedWhatsapp = sanitizedWhatsapp.startsWith("0")
+      ? normalizeWhatsapp(sanitizedWhatsapp)
+      : sanitizedWhatsapp;
+    const normalizedWhatsappDigits = normalizedWhatsapp.replace(/^\+/, "");
+
+    if (!normalizedWhatsapp) {
+      nextFieldErrors.whatsapp = "No WhatsApp wajib diisi.";
+    } else if (normalizedWhatsappDigits.length < 10) {
+      nextFieldErrors.whatsapp =
+        "No WhatsApp terlalu pendek (minimal 10 digit).";
+    } else if (!/^\d+$/.test(normalizedWhatsappDigits)) {
+      nextFieldErrors.whatsapp =
+        "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.";
+    }
 
     if (insta && !isValidInstagram(insta)) {
       nextFieldErrors.insta =
@@ -143,12 +161,7 @@ export default function EditUserPage() {
 
     setFieldErrors(nextFieldErrors);
 
-    if (
-      nextFieldErrors.insta ||
-      nextFieldErrors.tiktok ||
-      nextFieldErrors.secondaryInstagramUsername ||
-      nextFieldErrors.secondaryTiktokUsername
-    ) {
+    if (Object.values(nextFieldErrors).some(Boolean)) {
       return;
     }
     const instaUsername = extractInstagramUsername(insta);
@@ -157,11 +170,6 @@ export default function EditUserPage() {
       secondaryInstagramUsername,
     );
     const secondaryTiktok = extractTiktokUsername(secondaryTiktokUsername);
-    const whatsappInput = whatsapp.trim();
-    const normalizedWhatsapp =
-      !whatsappInput.includes("@") && whatsappInput.startsWith("0")
-        ? normalizeWhatsapp(whatsappInput)
-        : whatsappInput;
     const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
@@ -347,11 +355,31 @@ export default function EditUserPage() {
                 value={whatsapp}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setWhatsapp(value.replace(/[^\d+]/g, ""));
+                  const sanitizedValue = value.replace(/(?!^\+)[^\d]/g, "");
+                  setWhatsapp(sanitizedValue);
+                  const sanitizedDigits = sanitizedValue.replace(/^\+/, "");
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    whatsapp:
+                      !sanitizedValue
+                        ? ""
+                        : sanitizedDigits.length < 10
+                          ? "No WhatsApp terlalu pendek (minimal 10 digit)."
+                          : /^\d+$/.test(sanitizedDigits)
+                            ? ""
+                            : "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.",
+                  }));
                 }}
-                placeholder="08xxxxxxxxxx"
+                placeholder="08xxxxxxxxxx / +628xxxxxxxxxx"
                 className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
               />
+              <p className="text-xs text-neutral-slate">
+                Gunakan format 08xxxxxxxxxx atau +628xxxxxxxxxx. Nomor 08 akan
+                otomatis dinormalisasi menjadi 62xxxxxxxxxx saat disimpan.
+              </p>
+              {fieldErrors.whatsapp && (
+                <p className="text-xs text-red-500">{fieldErrors.whatsapp}</p>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-navy">Email</label>
