@@ -77,12 +77,7 @@ export default function Sidebar() {
     normalizedClientId === "ditbinmas" && normalizedEffectiveRole === "ditbinmas";
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
-  const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(
-    premiumTier,
-    effectiveClientType,
-    effectiveRole,
-    profile,
-  );
+  const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
   const hasPremiumStatus = Boolean(
     isActive(getStatus(profile, "premium_status")) ||
       isActive(getStatus(profile, "is_premium")) ||

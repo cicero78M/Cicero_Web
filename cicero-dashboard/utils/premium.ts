@@ -33,47 +33,6 @@ export function formatPremiumTierLabel(tier?: string | null) {
 
 export const ALLOWED_PREMIUM_ANEV_TIERS = ["tier1", "tier2"] as const;
 export const ALLOWED_ENGAGEMENT_DATE_TIERS = ["tier1", "tier2"] as const;
-const DIREKTORAT_ROLE_KEYS = ["ditbinmas", "ditlantas", "bidhumas", "ditsamapta", "ditintelkam", "direktorat"] as const;
-
-function normalizeRoleValue(value?: string | null) {
-  const raw = String(value ?? "").trim().toLowerCase();
-  return raw || "";
-}
-
-function resolveDirektoratBindingFromProfile(profile?: any | null) {
-  if (!profile || typeof profile !== "object") return "";
-
-  const parentCandidates = [
-    profile.parent_client_id,
-    profile.parentClientId,
-    profile.parent?.client_id,
-    profile.parent_client?.client_id,
-    profile.parentClient?.client_id,
-  ]
-    .map((value) => normalizeRoleValue(value))
-    .filter(Boolean);
-
-  for (const parent of parentCandidates) {
-    if (DIREKTORAT_ROLE_KEYS.some((role) => parent.includes(role))) return parent;
-  }
-
-  const groupCandidates = [
-    profile.client_group,
-    profile.clientGroup,
-    profile.group,
-    profile.parent?.client_group,
-    profile.parent_client?.client_group,
-    profile.parentClient?.client_group,
-  ]
-    .map((value) => normalizeRoleValue(value).replace(/[\s_-]+/g, ""))
-    .filter(Boolean);
-
-  for (const group of groupCandidates) {
-    if (DIREKTORAT_ROLE_KEYS.some((role) => group.includes(role))) return group;
-  }
-
-  return "";
-}
 
 export function isOrgOperator(effectiveClientType?: string | null, effectiveRole?: string | null) {
   const normalizedClientType = effectiveClientType?.toLowerCase();
@@ -81,24 +40,8 @@ export function isOrgOperator(effectiveClientType?: string | null, effectiveRole
   return normalizedClientType === "org" && normalizedRole === "operator";
 }
 
-export function isMandiriPolresOperator(
-  effectiveClientType?: string | null,
-  effectiveRole?: string | null,
-  profile?: any | null,
-) {
-  if (!isOrgOperator(effectiveClientType, effectiveRole)) return false;
-
-  const tiedDirektorat = resolveDirektoratBindingFromProfile(profile);
-  return !tiedDirektorat;
-}
-
-export function isPremiumTierAllowedForAnev(
-  tier?: string | null,
-  effectiveClientType?: string | null,
-  effectiveRole?: string | null,
-  profile?: any | null,
-) {
-  if (isMandiriPolresOperator(effectiveClientType, effectiveRole, profile)) {
+export function isPremiumTierAllowedForAnev(tier?: string | null, effectiveClientType?: string | null, effectiveRole?: string | null) {
+  if (isOrgOperator(effectiveClientType, effectiveRole)) {
     return true;
   }
 
