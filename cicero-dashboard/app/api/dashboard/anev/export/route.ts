@@ -5,6 +5,96 @@ type ExportRow = Record<string, unknown> & {
   section?: string;
 };
 
+const SECTION_COLUMN_ORDER: Record<string, string[]> = {
+  ringkasan: [
+    "metric",
+    "value",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+  posting_per_platform: [
+    "platform",
+    "task_id",
+    "task_link",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+  compliance_per_pelaksana: [
+    "pelaksana",
+    "jumlah_post_ig",
+    "jumlah_post_tiktok",
+    "pelaksanaan_likes_ig",
+    "pelaksanaan_komentar_tiktok",
+    "total_tugas",
+    "completed",
+    "completion_rate",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+  user_per_satfung_divisi: [
+    "satfung_divisi",
+    "users",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+  instagram_likes_per_satfung_divisi: [
+    "satfung_divisi",
+    "jumlah_personil_satfung",
+    "jumlah_personil_melaksanakan_likes",
+    "jumlah_post_tugas_instagram",
+    "total_likes",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+  tiktok_per_satfung_divisi: [
+    "satfung_divisi",
+    "jumlah_personil_satfung",
+    "jumlah_personil_melaksanakan_komentar",
+    "jumlah_post_tugas_tiktok",
+    "total_komentar",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+  top_performer: [
+    "personel",
+    "satfung",
+    "username",
+    "likes_ig",
+    "komentar_tiktok",
+    "total_interaksi",
+    "time_range",
+    "start_date",
+    "end_date",
+    "role",
+    "scope",
+    "client_id",
+  ],
+};
+
 function toSheetName(section?: string, index = 1) {
   const fallback = `Sheet${index}`;
   const raw = (section || fallback).trim();
@@ -20,6 +110,13 @@ function collectColumns(rows: ExportRow[]) {
   return Array.from(
     new Set(rows.flatMap((row) => Object.keys(row || {}).filter((key) => key !== "section"))),
   );
+}
+
+function orderColumnsBySection(section: string, columns: string[]) {
+  const preferred = SECTION_COLUMN_ORDER[String(section || "").toLowerCase()] || [];
+  const first = preferred.filter((key) => columns.includes(key));
+  const rest = columns.filter((key) => !first.includes(key));
+  return [...first, ...rest];
 }
 
 function computeColumnWidth(rows: ExportRow[], column: string) {
@@ -61,7 +158,7 @@ export async function POST(req: NextRequest) {
     const worksheet = workbook.addWorksheet(toSheetName(section, sheetIndex));
     sheetIndex += 1;
 
-    const columns = collectColumns(sectionRows);
+    const columns = orderColumnsBySection(section, collectColumns(sectionRows));
     worksheet.columns = columns.map((column) => ({
       header: column,
       key: column,

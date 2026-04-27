@@ -405,6 +405,36 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     Math.max(0, totalBelumKomentarRaw),
   );
 
+  const getStatusMeta = (statusKey) => {
+    const statusStyles = {
+      belum: {
+        row: "bg-rose-50",
+        badge: "border border-rose-200 bg-rose-50 text-rose-700",
+        icon: <X className="h-3 w-3" />,
+        label: "Belum",
+      },
+      kurang: {
+        row: "bg-amber-50",
+        badge: "border border-amber-200 bg-amber-50 text-amber-700",
+        icon: <AlertTriangle className="h-3 w-3" />,
+        label: "Kurang",
+      },
+      sudah: {
+        row: "bg-emerald-50",
+        badge: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+        icon: <Check className="h-3 w-3" />,
+        label: "Sudah",
+      },
+      tanpaUsername: {
+        row: "bg-slate-50",
+        badge: "border border-slate-200 bg-slate-50 text-slate-700",
+        icon: <UserX className="h-3 w-3" />,
+        label: "Tanpa Username",
+      },
+    };
+    return statusStyles[statusKey] || statusStyles.belum;
+  };
+
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
     if (!denominator) return undefined;
@@ -882,7 +912,79 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95 shadow-inner">
+          <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white/95 p-5 shadow-inner md:p-6">
+            <div className="grid gap-3 md:hidden">
+              {currentRows.length === 0 ? (
+                <div className="rounded-2xl border border-blue-100 bg-white px-4 py-8 text-center text-sm text-blue-700">
+                  Data tidak ditemukan untuk filter saat ini.
+                </div>
+              ) : (
+                currentRows.map((u, i) => {
+                  const username = String(u.username || "").trim();
+                  const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
+                  const statusKey = getKomentarStatus({
+                    jumlahKomentar,
+                    totalPostCount: totalTiktokPostCount,
+                    hasUsername: Boolean(username),
+                  });
+                  const status = getStatusMeta(statusKey);
+                  const jumlahDisplay = statusKey === "tanpaUsername" ? 0 : jumlahKomentar;
+                  const pendingTaskLinks = normalizePendingTaskLinks(u);
+                  const hasPendingTaskLinks = pendingTaskLinks.length > 0;
+
+                  return (
+                    <article
+                      key={`${u.nrp || u.username || u.nama || i}-mobile-${i}`}
+                      className={`rounded-2xl border border-blue-100 p-4 shadow-sm ${status.row}`}
+                    >
+                      <div className="mb-3 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-500">
+                            #{(page - 1) * PAGE_SIZE + i + 1}
+                          </p>
+                          <h4 className="text-sm font-semibold text-blue-900">{u.nama || "-"}</h4>
+                          {u.title && <p className="text-xs text-blue-600">{u.title}</p>}
+                        </div>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.badge}`}>
+                          {status.icon}
+                          {status.label}
+                        </span>
+                      </div>
+                      <dl className="space-y-1.5 text-xs text-slate-700">
+                        {hasClient && (
+                          <div className="flex items-center justify-between gap-2">
+                            <dt className="text-slate-500">Client</dt>
+                            <dd className="text-right font-semibold text-blue-900">{u.nama_client || u.client_name || u.client || "-"}</dd>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between gap-2">
+                          <dt className="text-slate-500">Username TikTok</dt>
+                          <dd className="font-mono text-blue-900">{username || "-"}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <dt className="text-slate-500">Divisi/Satfung</dt>
+                          <dd className="text-right font-semibold text-blue-900">{bersihkanSatfung(u.divisi || "-")}</dd>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <dt className="text-slate-500">Jumlah Komentar</dt>
+                          <dd className="font-semibold text-blue-900">{jumlahDisplay}</dd>
+                        </div>
+                      </dl>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyPendingLinks(u, statusKey)}
+                        disabled={!hasPendingTaskLinks || statusKey === "tanpaUsername"}
+                        className="mt-3 w-full rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Copy Link Tugas
+                      </button>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="hidden overflow-hidden rounded-2xl border border-blue-100 bg-white/95 md:block">
               <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-800">
                 <thead className="sticky top-0 z-10 bg-blue-50/90 backdrop-blur">
                   <tr>
@@ -945,32 +1047,6 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                       const username = String(u.username || "").trim();
                       const jumlahKomentar = clampKomentarToTask(u.jumlah_komentar);
                       const baseCellClass = "px-4 py-3 align-top";
-                      const statusStyles = {
-                        belum: {
-                          row: "bg-rose-50",
-                          badge: "border border-rose-200 bg-rose-50 text-rose-700",
-                          icon: <X className="h-3 w-3" />,
-                          label: "Belum",
-                        },
-                        kurang: {
-                          row: "bg-amber-50",
-                          badge: "border border-amber-200 bg-amber-50 text-amber-700",
-                          icon: <AlertTriangle className="h-3 w-3" />,
-                          label: "Kurang",
-                        },
-                        sudah: {
-                          row: "bg-emerald-50",
-                          badge: "border border-emerald-200 bg-emerald-50 text-emerald-700",
-                          icon: <Check className="h-3 w-3" />,
-                          label: "Sudah",
-                        },
-                        tanpaUsername: {
-                          row: "bg-slate-50",
-                          badge: "border border-slate-200 bg-slate-50 text-slate-700",
-                          icon: <UserX className="h-3 w-3" />,
-                          label: "Tanpa Username",
-                        },
-                      };
 
                       const statusKey = getKomentarStatus({
                         jumlahKomentar,
@@ -980,8 +1056,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                       const jumlahDisplay = statusKey === "tanpaUsername" ? 0 : jumlahKomentar;
                       const pendingTaskLinks = normalizePendingTaskLinks(u);
                       const hasPendingTaskLinks = pendingTaskLinks.length > 0;
-
-                      const status = statusStyles[statusKey];
+                      const status = getStatusMeta(statusKey);
 
                       return (
                         <tr
@@ -1086,6 +1161,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {showRekapButton && (

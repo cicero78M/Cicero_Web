@@ -874,7 +874,7 @@ export default function DashboardPage() {
         <div className="absolute bottom-[-8rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-indigo-200/40 blur-[160px] dark:bg-indigo-500/20" />
         <div className="absolute bottom-10 right-[18%] h-40 w-40 rounded-full bg-emerald-200/40 blur-2xl dark:bg-emerald-500/20" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 py-14">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-12 md:gap-12 md:py-14">
         {apiBaseError && (
           <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 p-4 text-sm text-amber-900 shadow-[0_14px_35px_rgba(251,191,36,0.25)] backdrop-blur dark:border-amber-500/40 dark:bg-amber-950/50 dark:text-amber-50">
             {apiBaseError}
@@ -907,7 +907,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[2.25rem] border border-sky-200/70 bg-gradient-to-br from-white/90 via-sky-50/80 to-cyan-50/70 p-7 shadow-[0_36px_80px_-24px_rgba(14,165,233,0.45)] backdrop-blur-lg dark:border-slate-700/60 dark:from-slate-900/70 dark:via-slate-900/40 dark:to-slate-900/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-sky-200/70 bg-gradient-to-br from-white/90 via-sky-50/80 to-cyan-50/70 p-4 shadow-[0_36px_80px_-24px_rgba(14,165,233,0.45)] backdrop-blur-lg sm:p-6 md:rounded-[2.25rem] md:p-7 dark:border-slate-700/60 dark:from-slate-900/70 dark:via-slate-900/40 dark:to-slate-900/10">
               <div className="absolute inset-x-10 top-6 h-28 rounded-full bg-gradient-to-b from-sky-300/40 via-transparent to-transparent blur-2xl dark:from-cyan-400/25" />
               <div className="absolute -right-12 bottom-16 h-40 w-40 rounded-full bg-gradient-to-br from-cyan-200/40 to-emerald-200/30 blur-3xl dark:from-cyan-500/20 dark:to-emerald-400/20" />
               <div className="relative flex flex-1 flex-col gap-7">

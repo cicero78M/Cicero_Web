@@ -132,7 +132,7 @@ export default function SocialCardsClient({
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/80 p-6 shadow-[0_28px_60px_rgba(59,130,246,0.18)] dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-[0_0_36px_rgba(14,165,233,0.15)]">
+    <div className="relative overflow-hidden rounded-2xl border border-sky-200/70 bg-white/80 p-4 shadow-[0_28px_60px_rgba(59,130,246,0.18)] sm:rounded-3xl sm:p-6 dark:border-slate-800/70 dark:bg-slate-900/60 dark:shadow-[0_0_36px_rgba(14,165,233,0.15)]">
       <div className="absolute -left-16 top-20 h-48 w-48 rounded-full bg-sky-300/40 blur-3xl dark:bg-violet-500/20" />
       <div className="absolute -right-12 bottom-0 h-44 w-44 rounded-full bg-cyan-200/40 blur-3xl dark:bg-cyan-500/20" />
       <div className="relative space-y-6">
@@ -143,11 +143,11 @@ export default function SocialCardsClient({
               Bandingkan performa audiens, likes, dan komentar antar platform.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap">
             {buttons.map((b) => (
               <button
                 key={b.key}
-                className={`relative overflow-hidden rounded-full border px-4 py-1.5 text-sm transition ${
+                className={`relative overflow-hidden rounded-full border px-3 py-1.5 text-xs transition sm:px-4 sm:text-sm ${
                   platform === b.key
                     ? "border-sky-300/70 bg-sky-200/60 text-sky-900 shadow-[0_18px_40px_rgba(56,189,248,0.25)] dark:border-cyan-400/60 dark:bg-cyan-500/20 dark:text-cyan-200"
                     : "border-sky-200/70 bg-white/70 text-sky-700 hover:text-sky-900 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-400 dark:hover:text-slate-200"

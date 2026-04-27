@@ -613,7 +613,35 @@ function ChartBox({
             minHeight={minHeight}
             thicknessMultiplier={thicknessMultiplier}
           />
-          <div className="mt-6 overflow-x-auto">
+          <div className="mt-6 grid gap-3 md:hidden">
+            {data.map((item, index) => {
+              const divisionName =
+                (item?.divisi || item?.nama_client || "").toString() ||
+                `Baris ${index + 1}`;
+              return (
+                <article
+                  key={`${divisionName}-${index}`}
+                  className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <h4 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">
+                      {divisionName}
+                    </h4>
+                    <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                      Total {Number(item?.total ?? 0).toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-2 text-xs">
+                    <MobileMetric label="Instagram Terisi" value={item?.instagramFilled} valueClassName="text-sky-600" />
+                    <MobileMetric label="Instagram Belum" value={item?.instagramEmpty} valueClassName="text-teal-600" />
+                    <MobileMetric label="TikTok Terisi" value={item?.tiktokFilled} valueClassName="text-indigo-600" />
+                    <MobileMetric label="TikTok Belum" value={item?.tiktokEmpty} valueClassName="text-rose-500" />
+                  </dl>
+                </article>
+              );
+            })}
+          </div>
+          <div className="mt-6 hidden overflow-x-auto md:block">
             <table
               aria-labelledby={titleId}
               tabIndex={0}
@@ -1013,4 +1041,15 @@ function SummaryItem({
 
 function Divider() {
   return <div className="hidden h-full w-px self-stretch bg-sky-100 md:block" />;
+}
+
+function MobileMetric({ label, value, valueClassName = "text-slate-700" }) {
+  return (
+    <div className="rounded-xl border border-sky-100 bg-sky-50/40 px-2.5 py-2">
+      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</dt>
+      <dd className={`mt-1 text-sm font-semibold ${valueClassName}`}>
+        {Number(value ?? 0).toLocaleString("id-ID")}
+      </dd>
+    </div>
+  );
 }
