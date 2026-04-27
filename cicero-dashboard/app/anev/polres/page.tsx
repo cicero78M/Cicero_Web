@@ -276,11 +276,15 @@ function mapTiktokPerSatfung(data: DashboardAnevResponse | null): EngagementRow[
         const src = asRecord(entry);
         const satfung = getText(src, ["satfung", "division", "divisi", "label", "name"]);
         if (!satfung) return null;
+        const comments = getNumber(src, ["comments", "total_comments", "engagement"]);
+        const engagement = getNumber(src, ["engagement", "comments", "total_comments"], comments);
+        const rawPosts = getNumber(src, ["posts", "total_posts", "count"]);
+        const posts = rawPosts > 0 ? rawPosts : comments > 0 ? comments : engagement;
         return {
           satfung,
-          posts: getNumber(src, ["posts", "total_posts", "count"]),
-          comments: getNumber(src, ["comments", "total_comments", "engagement"]),
-          engagement: getNumber(src, ["engagement", "comments", "total_comments"]),
+          posts,
+          comments,
+          engagement,
         };
       })
       .filter((row): row is EngagementRow => Boolean(row));
