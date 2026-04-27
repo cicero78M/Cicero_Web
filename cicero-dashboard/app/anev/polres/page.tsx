@@ -336,6 +336,7 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
       const comments = getNumber(src, ["comments", "total_comments"]);
       const shares = getNumber(src, ["shares", "total_shares"]);
       const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
+      const posts = getNumber(src, ["posts", "total_posts", "count"], engagement);
       const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
       const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
       const name = getText(
@@ -355,7 +356,7 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
         satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
         platform,
         engagement,
-        posts: getNumber(src, ["posts", "total_posts", "count"]),
+        posts,
       });
     });
 
