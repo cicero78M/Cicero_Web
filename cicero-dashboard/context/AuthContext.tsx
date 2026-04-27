@@ -233,6 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ];
 
     const expiryKeys = [
+      "premium_expires_at",
+      "premiumExpiresAt",
       "premium_expiry",
       "premiumExpiry",
       "expires_at",
