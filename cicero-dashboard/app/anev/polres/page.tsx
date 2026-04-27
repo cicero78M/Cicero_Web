@@ -53,8 +53,9 @@ type PerformerRow = {
   userId?: string;
   username?: string;
   satfung?: string;
-  platform: "instagram" | "tiktok";
-  engagement: number;
+  likesIg: number;
+  commentsTiktok: number;
+  totalEngagement: number;
 };
 
 type IdentityEntry = {
@@ -363,53 +364,70 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
   if (!data) return [];
   const identityMaps = buildIdentityMaps(data);
 
-  const normalizePerUser = (
-    rows: unknown,
-    platform: "instagram" | "tiktok",
-  ): PerformerRow[] => {
-    if (!Array.isArray(rows)) return [];
-    const normalized: PerformerRow[] = [];
+  const merged = new Map<string, PerformerRow>();
 
-    rows.forEach((entry) => {
-      const src = asRecord(entry);
-      const userId = getText(src, ["user_id", "userId", "id"]);
-      const username = getText(src, ["username", "handle", "account"]);
-      const identity =
-        (userId ? identityMaps.byId.get(userId) : undefined) ||
-        (username ? identityMaps.byUsername.get(normalizeHandleValue(username)) : undefined);
-      const likes = getNumber(src, ["likes", "total_likes"]);
-      const comments = getNumber(src, ["comments", "total_comments"]);
-      const shares = getNumber(src, ["shares", "total_shares"]);
-      const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
-      const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
-      const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
-      const name = getText(
-        src,
-        ["display_name", "full_name", "nama", "name"],
-        identity?.name || username || userId || "User",
-      );
+  const upsertPerformer = (
+    entry: unknown,
+    metric: "likesIg" | "commentsTiktok",
+  ) => {
+    const src = asRecord(entry);
+    const userId = getText(src, ["user_id", "userId", "id"]);
+    const username = getText(src, ["username", "handle", "account"]);
+    const identity =
+      (userId ? identityMaps.byId.get(userId) : undefined) ||
+      (username ? identityMaps.byUsername.get(normalizeHandleValue(username)) : undefined);
+    const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
+    const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
+    if (isUnmapped && !identity?.name && !explicitName) return;
 
-      if (isUnmapped && !identity?.name && !explicitName) {
-        return;
+    const key = userId || normalizeHandleValue(username) || normalizeHandleValue(identity?.username) || explicitName;
+    if (!key) return;
+
+    const name = getText(
+      src,
+      ["display_name", "full_name", "nama", "name"],
+      identity?.name || username || userId || "User",
+    );
+    const satfung = getText(src, ["divisi", "division", "satfung"], identity?.satfung || "");
+    const value = metric === "likesIg"
+      ? getNumber(src, ["likes", "total_likes", "engagement", "total_engagement"])
+      : getNumber(src, ["comments", "total_comments", "engagement", "total_engagement"]);
+
+    const existing = merged.get(key);
+    if (existing) {
+      existing.likesIg += metric === "likesIg" ? value : 0;
+      existing.commentsTiktok += metric === "commentsTiktok" ? value : 0;
+      existing.totalEngagement = existing.likesIg + existing.commentsTiktok;
+      if (!existing.satfung && satfung) existing.satfung = satfung;
+      if (!existing.username && (username || identity?.username)) {
+        existing.username = username || identity?.username;
       }
+      return;
+    }
 
-      normalized.push({
-        name,
-        userId: userId || undefined,
-        username: username || identity?.username,
-        satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
-        platform,
-        engagement,
-      });
+    const likesIg = metric === "likesIg" ? value : 0;
+    const commentsTiktok = metric === "commentsTiktok" ? value : 0;
+    merged.set(key, {
+      name,
+      userId: userId || undefined,
+      username: username || identity?.username,
+      satfung,
+      likesIg,
+      commentsTiktok,
+      totalEngagement: likesIg + commentsTiktok,
     });
-
-    return normalized.sort((a, b) => b.engagement - a.engagement);
   };
 
-  const igRows = normalizePerUser(data.instagram_engagement?.per_user, "instagram");
-  const tkRows = normalizePerUser(data.tiktok_engagement?.per_user, "tiktok");
+  if (Array.isArray(data.instagram_engagement?.per_user)) {
+    data.instagram_engagement.per_user.forEach((row) => upsertPerformer(row, "likesIg"));
+  }
+  if (Array.isArray(data.tiktok_engagement?.per_user)) {
+    data.tiktok_engagement.per_user.forEach((row) => upsertPerformer(row, "commentsTiktok"));
+  }
 
-  return [...igRows, ...tkRows].sort((a, b) => b.engagement - a.engagement).slice(0, 10);
+  return Array.from(merged.values())
+    .sort((a, b) => b.totalEngagement - a.totalEngagement)
+    .slice(0, 10);
 }
 
 function ProgressBar({ value }: { value: number }) {
@@ -951,20 +969,22 @@ export default function AnevPolresPage() {
                 <tr>
                   <th className="px-3 py-2 text-left font-semibold text-slate-600">Personel</th>
                   <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-600">Platform</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Engagement</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Likes IG</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Komentar TikTok</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Total Interaksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {topPerformers.map((row, index) => (
-                  <tr key={`${row.name}-${row.platform}-${index}`}>
+                  <tr key={`${row.name}-${row.userId || row.username || index}`}>
                     <td className="px-3 py-2 text-slate-800">
                       <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
                       {row.username ? <p className="text-xs text-slate-500">@{row.username}</p> : null}
                     </td>
                     <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
-                    <td className="px-3 py-2 uppercase text-slate-600">{row.platform}</td>
-                    <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.engagement)}</td>
+                    <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.likesIg)}</td>
+                    <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.commentsTiktok)}</td>
+                    <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.totalEngagement)}</td>
                   </tr>
                 ))}
               </tbody>
