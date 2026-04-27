@@ -385,21 +385,32 @@ function AnevPolresDetailContent() {
 
     setIsExporting(true);
     try {
-      const response = await fetch("/api/dashboard/anev/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rows,
-          fileName: `anev-polres-${(viewConfig.key || "detail").toLowerCase()}-${filters.time_range || "custom"}`,
-        }),
+      const ExcelJS = (await import("exceljs/dist/exceljs.min.js")).default;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("data");
+
+      const columns = Object.keys(rows[0] || {});
+      worksheet.columns = columns.map((key) => ({
+        header: key,
+        key,
+        width: Math.min(Math.max(key.length + 4, 14), 56),
+      }));
+
+      rows.forEach((row) => {
+        const normalized: Record<string, string | number> = {};
+        columns.forEach((column) => {
+          normalized[column] = row[column] ?? "";
+        });
+        worksheet.addRow(normalized);
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Gagal mengekspor file Excel.");
-      }
+      const header = worksheet.getRow(1);
+      header.font = { bold: true };
 
-      const blob = await response.blob();
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
 
       const fileBase = `${(viewConfig.key || "detail").toLowerCase()}-${filters.time_range || "custom"}`;
       const url = URL.createObjectURL(blob);
