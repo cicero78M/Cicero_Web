@@ -2068,7 +2068,7 @@ export async function getDashboardAnev(
 
 export async function exportDashboardAnevExcel(
   token: string,
-  filters: Partial<DashboardAnevFilters> = {},
+  filters: Partial<DashboardAnevFilters> & { section?: string } = {},
   signal?: AbortSignal,
 ): Promise<DashboardAnevExportResult> {
   const normalizedRole = normalizeAccessParam(
@@ -2108,6 +2108,8 @@ export async function exportDashboardAnevExcel(
   if (normalizedRegionalId) params.append("regional_id", normalizedRegionalId);
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
+  const section = ensureString((filters as any)?.section) || "";
+  if (section) params.append("section", section);
 
   const url = `${buildApiUrl("/api/dashboard/anev/export")}?${params.toString()}`;
   const res = await fetchWithAuth(url, token, {

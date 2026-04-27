@@ -8,7 +8,11 @@ import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useRequirePremium from "@/hooks/useRequirePremium";
 import useAuth from "@/hooks/useAuth";
-import { getDashboardAnev, type DashboardAnevResponse } from "@/utils/api";
+import {
+  exportDashboardAnevExcel,
+  getDashboardAnev,
+  type DashboardAnevResponse,
+} from "@/utils/api";
 import { formatPremiumTierLabel } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 import { useCallback, useEffect, useState } from "react";
@@ -382,41 +386,28 @@ function AnevPolresDetailContent() {
       showToast("Belum ada data untuk diekspor.", "error");
       return;
     }
+    if (!token) return;
 
     setIsExporting(true);
     try {
-      const ExcelJS = (await import("exceljs/dist/exceljs.min.js")).default;
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("data");
+      const result = await exportDashboardAnevExcel(
+        token,
+        {
+          time_range: filters.time_range,
+          start_date: filters.start_date,
+          end_date: filters.end_date,
+          role: filters.role,
+          scope: filters.scope,
+          regional_id: filters.regional_id,
+          client_id: filters.client_id,
+          section: viewConfig.key,
+        },
+      );
 
-      const columns = Object.keys(rows[0] || {});
-      worksheet.columns = columns.map((key) => ({
-        header: key,
-        key,
-        width: Math.min(Math.max(key.length + 4, 14), 56),
-      }));
-
-      rows.forEach((row) => {
-        const normalized: Record<string, string | number> = {};
-        columns.forEach((column) => {
-          normalized[column] = row[column] ?? "";
-        });
-        worksheet.addRow(normalized);
-      });
-
-      const header = worksheet.getRow(1);
-      header.font = { bold: true };
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      const fileBase = `${(viewConfig.key || "detail").toLowerCase()}-${filters.time_range || "custom"}`;
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(result.blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `anev-polres-${fileBase}.xlsx`;
+      anchor.download = result.filename || `anev-polres-${viewConfig.key}-${filters.time_range || "custom"}.xlsx`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -429,7 +420,7 @@ function AnevPolresDetailContent() {
     } finally {
       setIsExporting(false);
     }
-  }, [rows, viewConfig.key, filters.time_range]);
+  }, [rows, token, viewConfig.key, filters]);
 
   if (isHydrating || isProfileLoading || premiumStatus === "loading") {
     return (
