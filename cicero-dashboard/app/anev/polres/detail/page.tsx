@@ -85,14 +85,23 @@ function qualityMeta(score: number) {
   };
 }
 
+function clampScore(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
 function inferRowQualityScore(row: Record<string, string | number>) {
   const rate = row.completion_rate;
   if (typeof rate === "number" && Number.isFinite(rate)) {
     return rate <= 1 ? rate * 100 : rate;
   }
 
-  const assigned = typeof row.assigned === "number" ? row.assigned : 0;
-  const completed = typeof row.completed === "number" ? row.completed : 0;
+  const rateText = typeof rate === "string" ? Number(rate.replace(/[^0-9.-]/g, "")) : Number.NaN;
+  if (Number.isFinite(rateText)) {
+    return rateText <= 1 ? rateText * 100 : rateText;
+  }
+
+  const assigned = typeof row.assigned === "number" ? row.assigned : typeof row.total_tugas === "number" ? row.total_tugas : 0;
+  const completed = typeof row.completed === "number" ? row.completed : typeof row.selesai === "number" ? row.selesai : 0;
   if (assigned > 0) {
     return (completed / assigned) * 100;
   }
@@ -105,9 +114,35 @@ function inferRowQualityScore(row: Record<string, string | number>) {
         ? row.total_komentar
         : 0;
 
-  if (engagement >= 300) return 90;
-  if (engagement >= 120) return 65;
-  return engagement > 0 ? 40 : 25;
+  if (engagement > 0) return 55;
+  return 25;
+}
+
+function createQualityScorer(rows: Array<Record<string, string | number>>, viewKey: string) {
+  const normalizedKey = String(viewKey || "").toLowerCase();
+  if (normalizedKey !== "top_performer") {
+    return (row: Record<string, string | number>) => inferRowQualityScore(row);
+  }
+
+  const activeTotals = rows
+    .map((row) => (typeof row.total_interaksi === "number" ? row.total_interaksi : 0))
+    .filter((value) => value > 0)
+    .sort((a, b) => b - a);
+
+  if (!activeTotals.length) {
+    return () => 20;
+  }
+
+  const maxTotal = Math.max(1, activeTotals[0]);
+  return (row: Record<string, string | number>, index = 0) => {
+    const total = typeof row.total_interaksi === "number" ? row.total_interaksi : 0;
+    const likes = typeof row.likes_ig === "number" ? row.likes_ig : 0;
+    const comments = typeof row.komentar_tiktok === "number" ? row.komentar_tiktok : 0;
+    const normalized = total / maxTotal;
+    const rankScore = activeTotals.length > 1 ? (1 - index / (activeTotals.length - 1)) * 30 : 30;
+    const balanceBonus = likes > 0 && comments > 0 ? 12 : 0;
+    return clampScore(20 + normalized * 50 + rankScore + balanceBonus);
+  };
 }
 
 function normalizeHandleValue(raw?: string) {
@@ -432,6 +467,8 @@ function AnevPolresDetailContent() {
       return mapTopPerformerRows(data);
   }, [data, viewConfig.key, searchParams]);
 
+  const qualityScorer = useMemo(() => createQualityScorer(rows, viewConfig.key), [rows, viewConfig.key]);
+
   const totalRows = rows.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -559,15 +596,26 @@ function AnevPolresDetailContent() {
           <>
             <div className="space-y-2 md:hidden">
               {pagedRows.map((row, index) => {
-                const quality = qualityMeta(inferRowQualityScore(row));
+                const quality = qualityMeta(qualityScorer(row, index));
+                const isTopPerformer = viewConfig.key === "top_performer";
                 return (
-                <div key={index} className={`rounded-lg border border-slate-200 p-3 ${quality.row}`}>
+                <div key={index} className={`rounded-xl border border-slate-200 p-3.5 shadow-sm ${quality.row}`}>
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kualitas Data</p>
+                    <div className="flex items-center gap-2">
+                      {isTopPerformer ? <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-slate-300 bg-white px-1 text-[10px] font-bold text-slate-700">#{(safePage - 1) * PAGE_SIZE + index + 1}</span> : null}
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kualitas Data</p>
+                    </div>
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
                       {quality.label}
                     </span>
                   </div>
+                  {isTopPerformer ? (
+                    <div className="mb-3 grid grid-cols-3 gap-2 text-xs">
+                      <p className="rounded-lg bg-slate-100/80 px-2 py-1 text-center">IG {formatNumber(typeof row.likes_ig === "number" ? row.likes_ig : 0)}</p>
+                      <p className="rounded-lg bg-slate-100/80 px-2 py-1 text-center">TT {formatNumber(typeof row.komentar_tiktok === "number" ? row.komentar_tiktok : 0)}</p>
+                      <p className="rounded-lg bg-blue-100/90 px-2 py-1 text-center font-semibold text-blue-800">{formatNumber(typeof row.total_interaksi === "number" ? row.total_interaksi : 0)}</p>
+                    </div>
+                  ) : null}
                   {columns.map((column) => {
                     const value = row[column];
                     const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
@@ -605,7 +653,7 @@ function AnevPolresDetailContent() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {pagedRows.map((row, index) => {
-                    const quality = qualityMeta(inferRowQualityScore(row));
+                    const quality = qualityMeta(qualityScorer(row, index));
                     return (
                     <tr key={index} className={`transition-colors hover:bg-slate-50/60 ${quality.row}`}>
                       {columns.map((column, columnIndex) => {

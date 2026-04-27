@@ -474,10 +474,21 @@ function getQualityMeta(score: number) {
   };
 }
 
-function getPerformerQuality(totalEngagement: number) {
-  if (totalEngagement >= 300) return getQualityMeta(90);
-  if (totalEngagement >= 120) return getQualityMeta(65);
-  return getQualityMeta(35);
+function clampScore(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function getPerformerQuality(row: PerformerRow, rankIndex: number, rows: PerformerRow[]) {
+  const activeRows = rows.filter((entry) => entry.totalEngagement > 0);
+  if (!activeRows.length) return getQualityMeta(20);
+
+  const maxEngagement = Math.max(1, activeRows[0]?.totalEngagement || 1);
+  const normalizedEngagement = row.totalEngagement / maxEngagement;
+  const balanceBonus = row.likesIg > 0 && row.commentsTiktok > 0 ? 12 : 0;
+  const rankScore = activeRows.length > 1 ? (1 - rankIndex / (activeRows.length - 1)) * 30 : 30;
+
+  const score = clampScore(20 + normalizedEngagement * 50 + rankScore + balanceBonus);
+  return getQualityMeta(score);
 }
 
 export default function AnevPolresPage() {
@@ -1087,23 +1098,28 @@ export default function AnevPolresPage() {
         </div>
         {topPerformers.length ? (
           <>
-            <div className="space-y-2 md:hidden">
+            <div className="space-y-3 md:hidden">
               {topPerformers.map((row, index) => {
-                const quality = getPerformerQuality(row.totalEngagement);
+                const quality = getPerformerQuality(row, index, topPerformers);
                 return (
-                <div key={`${row.name}-${row.userId || row.username || index}`} className={`rounded-lg border p-3 text-sm ${quality.card}`}>
-                  <p className="font-semibold text-slate-800">{row.name || row.username || row.userId || "User"}</p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{row.username ? `@${row.username}` : ""}</p>
-                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
-                      {quality.label}
-                    </span>
+                <div key={`${row.name}-${row.userId || row.username || index}`} className={`rounded-xl border p-3.5 text-sm shadow-sm ${quality.card}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-slate-900">{row.name || row.username || row.userId || "User"}</p>
+                      {row.username ? <p className="text-xs text-slate-500 dark:text-slate-400">@{row.username}</p> : null}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-slate-300 bg-white px-1 text-[10px] font-bold text-slate-700">#{index + 1}</span>
+                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                        {quality.label}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Satfung: <span className="font-medium text-slate-800">{row.satfung || "-"}</span></p>
-                  <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                    <p className="rounded bg-slate-50 px-2 py-1 text-center">IG {formatNumber(row.likesIg)}</p>
-                    <p className="rounded bg-slate-50 px-2 py-1 text-center">TT {formatNumber(row.commentsTiktok)}</p>
-                    <p className="rounded bg-blue-50 px-2 py-1 text-center font-semibold text-blue-700">{formatNumber(row.totalEngagement)}</p>
+                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">Satfung: <span className="font-medium text-slate-800">{row.satfung || "-"}</span></p>
+                  <div className="mt-2.5 grid grid-cols-3 gap-2 text-xs">
+                    <p className="rounded-lg bg-slate-100/80 px-2 py-1 text-center">IG {formatNumber(row.likesIg)}</p>
+                    <p className="rounded-lg bg-slate-100/80 px-2 py-1 text-center">TT {formatNumber(row.commentsTiktok)}</p>
+                    <p className="rounded-lg bg-blue-100/90 px-2 py-1 text-center font-semibold text-blue-800">{formatNumber(row.totalEngagement)}</p>
                   </div>
                 </div>
               );
@@ -1122,15 +1138,20 @@ export default function AnevPolresPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {topPerformers.map((row, index) => {
-                  const quality = getPerformerQuality(row.totalEngagement);
+                  const quality = getPerformerQuality(row, index, topPerformers);
                   return (
                     <tr key={`${row.name}-${row.userId || row.username || index}`}>
                       <td className="px-3 py-2 text-slate-800">
-                        <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
-                        {row.username ? <p className="text-xs text-slate-500 dark:text-slate-400">@{row.username}</p> : null}
-                        <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
-                          {quality.label}
-                        </span>
+                        <div className="flex items-start gap-2">
+                          <span className="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-slate-300 bg-white px-1 text-[10px] font-bold text-slate-700">#{index + 1}</span>
+                          <div>
+                            <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
+                            {row.username ? <p className="text-xs text-slate-500 dark:text-slate-400">@{row.username}</p> : null}
+                            <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                              {quality.label}
+                            </span>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{row.satfung || "-"}</td>
                       <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.likesIg)}</td>
