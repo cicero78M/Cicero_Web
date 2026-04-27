@@ -55,6 +55,53 @@ function formatNumber(value: number | undefined | null) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
+function qualityMeta(score: number) {
+  if (score >= 80) {
+    return {
+      label: "Excellent",
+      badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      row: "bg-emerald-50/40",
+    };
+  }
+  if (score >= 50) {
+    return {
+      label: "Moderate",
+      badge: "border-amber-200 bg-amber-50 text-amber-700",
+      row: "bg-amber-50/40",
+    };
+  }
+  return {
+    label: "Low",
+    badge: "border-rose-200 bg-rose-50 text-rose-700",
+    row: "bg-rose-50/35",
+  };
+}
+
+function inferRowQualityScore(row: Record<string, string | number>) {
+  const rate = row.completion_rate;
+  if (typeof rate === "number" && Number.isFinite(rate)) {
+    return rate <= 1 ? rate * 100 : rate;
+  }
+
+  const assigned = typeof row.assigned === "number" ? row.assigned : 0;
+  const completed = typeof row.completed === "number" ? row.completed : 0;
+  if (assigned > 0) {
+    return (completed / assigned) * 100;
+  }
+
+  const engagement = typeof row.total_interaksi === "number"
+    ? row.total_interaksi
+    : typeof row.total_likes === "number"
+      ? row.total_likes
+      : typeof row.total_komentar === "number"
+        ? row.total_komentar
+        : 0;
+
+  if (engagement >= 300) return 90;
+  if (engagement >= 120) return 65;
+  return engagement > 0 ? 40 : 25;
+}
+
 function normalizeHandleValue(raw?: string) {
   if (!raw) return "";
   const trimmed = String(raw).trim();
@@ -443,8 +490,8 @@ function AnevPolresDetailContent() {
   const columns = pagedRows.length ? Object.keys(pagedRows[0]) : [];
 
   return (
-    <main className="space-y-6 px-4 py-6 md:px-6">
-      <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 shadow-sm">
+    <main className="space-y-6 bg-slate-50/70 px-4 py-6 md:px-6 dark:bg-slate-950/30">
+      <section className="rounded-2xl border border-slate-200/80 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 shadow-[0_12px_35px_-24px_rgba(37,99,235,0.45)] dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">ANEV POLRES · DETAIL</p>
@@ -469,7 +516,7 @@ function AnevPolresDetailContent() {
 
       {error ? <section className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</section> : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
         <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
           <span>Total baris: <span className="font-semibold text-slate-900">{formatNumber(totalRows)}</span></span>
           <span>Halaman {safePage} / {totalPages}</span>
@@ -480,8 +527,16 @@ function AnevPolresDetailContent() {
         ) : pagedRows.length ? (
           <>
             <div className="space-y-2 md:hidden">
-              {pagedRows.map((row, index) => (
-                <div key={index} className="rounded-lg border border-slate-100 p-3">
+              {pagedRows.map((row, index) => {
+                const quality = qualityMeta(inferRowQualityScore(row));
+                return (
+                <div key={index} className={`rounded-lg border border-slate-200 p-3 ${quality.row}`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Kualitas Data</p>
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                      {quality.label}
+                    </span>
+                  </div>
                   {columns.map((column) => {
                     const value = row[column];
                     const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
@@ -502,7 +557,8 @@ function AnevPolresDetailContent() {
                     );
                   })}
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             <div className="hidden overflow-x-auto rounded-xl border border-slate-100 md:block">
@@ -517,8 +573,10 @@ function AnevPolresDetailContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {pagedRows.map((row, index) => (
-                    <tr key={index} className="hover:bg-slate-50/60">
+                  {pagedRows.map((row, index) => {
+                    const quality = qualityMeta(inferRowQualityScore(row));
+                    return (
+                    <tr key={index} className={`hover:bg-slate-50/60 ${quality.row}`}>
                       {columns.map((column) => {
                         const value = row[column];
                         const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
@@ -536,7 +594,8 @@ function AnevPolresDetailContent() {
                         );
                       })}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

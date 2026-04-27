@@ -433,13 +433,35 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
 function ProgressBar({ value }: { value: number }) {
   const safe = Math.max(0, Math.min(100, value));
   return (
-    <div className="h-2.5 w-full rounded-full bg-slate-200">
+    <div className="h-2.5 w-full rounded-full bg-slate-200 dark:bg-slate-800">
       <div
-        className="h-2.5 rounded-full bg-blue-600 transition-all"
+        className="h-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all"
         style={{ width: `${safe}%` }}
       />
     </div>
   );
+}
+
+function getQualityMeta(score: number) {
+  if (score >= 80) {
+    return {
+      label: "Excellent",
+      badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      card: "border-emerald-200/70 bg-emerald-50/40",
+    };
+  }
+  if (score >= 50) {
+    return {
+      label: "Moderate",
+      badge: "border-amber-200 bg-amber-50 text-amber-700",
+      card: "border-amber-200/70 bg-amber-50/40",
+    };
+  }
+  return {
+    label: "Low",
+    badge: "border-rose-200 bg-rose-50 text-rose-700",
+    card: "border-rose-200/70 bg-rose-50/40",
+  };
 }
 
 export default function AnevPolresPage() {
@@ -643,8 +665,8 @@ export default function AnevPolresPage() {
   }
 
   return (
-    <main className="space-y-6 px-4 py-6 md:px-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <main className="space-y-6 bg-slate-50/70 px-4 py-6 md:px-6 dark:bg-slate-950/30">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -676,7 +698,7 @@ export default function AnevPolresPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
         <div className="mb-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -765,7 +787,7 @@ export default function AnevPolresPage() {
       ) : null}
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-blue-200/70 bg-gradient-to-br from-white to-blue-50 p-4 shadow-[0_12px_35px_-24px_rgba(37,99,235,0.45)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Personel Aktif</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.totalUsers)}</p>
           <p className="mt-2 text-xs text-slate-500">Jumlah user terpetakan dalam periode</p>
@@ -774,7 +796,7 @@ export default function AnevPolresPage() {
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-white to-indigo-50 p-4 shadow-[0_12px_35px_-24px_rgba(79,70,229,0.42)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting Instagram</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.igPosts)}</p>
           <p className="mt-2 text-xs text-slate-500">Total posting sumber IG</p>
@@ -783,7 +805,7 @@ export default function AnevPolresPage() {
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-violet-200/70 bg-gradient-to-br from-white to-violet-50 p-4 shadow-[0_12px_35px_-24px_rgba(124,58,237,0.4)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting TikTok</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.tkPosts)}</p>
           <p className="mt-2 text-xs text-slate-500">Total posting sumber TikTok</p>
@@ -792,7 +814,7 @@ export default function AnevPolresPage() {
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-white to-cyan-50 p-4 shadow-[0_12px_35px_-24px_rgba(8,145,178,0.42)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interaksi</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.likes + metrics.comments)}</p>
           <p className="mt-2 text-xs text-slate-500">Likes + komentar terakumulasi</p>
@@ -801,7 +823,7 @@ export default function AnevPolresPage() {
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-white to-emerald-50 p-4 shadow-[0_12px_35px_-24px_rgba(5,150,105,0.42)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kepatuhan</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatPercent(metrics.compliance)}</p>
           <p className="mt-2 text-xs text-slate-500">Rasio realisasi terhadap expected actions</p>
@@ -812,7 +834,7 @@ export default function AnevPolresPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <LineChart className="h-4 w-4 text-blue-600" />
@@ -845,7 +867,7 @@ export default function AnevPolresPage() {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
@@ -857,18 +879,26 @@ export default function AnevPolresPage() {
           </div>
           <div className="space-y-3">
             {complianceRows.length ? (
-              complianceRows.slice(0, 8).map((row) => (
-                <div key={`${row.pelaksana}-${row.assigned}`} className="rounded-lg border border-slate-100 p-3">
+              complianceRows.slice(0, 8).map((row) => {
+                const quality = getQualityMeta(row.rate);
+                return (
+                <div key={`${row.pelaksana}-${row.assigned}`} className={`rounded-lg border p-3 ${quality.card}`}>
                   <div className="mb-1 flex items-center justify-between text-sm">
                     <p className="font-medium text-slate-800">{row.pelaksana}</p>
-                    <p className="text-slate-700">{formatPercent(row.rate)}</p>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                        {quality.label}
+                      </span>
+                      <p className="text-slate-700">{formatPercent(row.rate)}</p>
+                    </div>
                   </div>
                   <ProgressBar value={row.rate} />
                   <p className="mt-1 text-xs text-slate-500">
                     Selesai {formatNumber(row.completed)} dari {formatNumber(row.assigned)} tugas
                   </p>
                 </div>
-              ))
+              );
+              })
             ) : (
               <p className="text-sm text-slate-500">Belum ada data kepatuhan pelaksana.</p>
             )}
@@ -877,7 +907,7 @@ export default function AnevPolresPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-blue-600" />
@@ -901,7 +931,7 @@ export default function AnevPolresPage() {
           </ul>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-blue-600" />
@@ -956,7 +986,7 @@ export default function AnevPolresPage() {
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <LineChart className="h-4 w-4 text-blue-600" />
@@ -1012,7 +1042,7 @@ export default function AnevPolresPage() {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-slate-900">Top Performer (Gabungan IG + TikTok)</h2>
           <Link href={buildDetailHref("top_performer")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
@@ -1022,10 +1052,17 @@ export default function AnevPolresPage() {
         {topPerformers.length ? (
           <>
             <div className="space-y-2 md:hidden">
-              {topPerformers.map((row, index) => (
-                <div key={`${row.name}-${row.userId || row.username || index}`} className="rounded-lg border border-slate-100 p-3 text-sm">
+              {topPerformers.map((row, index) => {
+                const quality = getQualityMeta(row.totalEngagement >= 300 ? 90 : row.totalEngagement >= 120 ? 65 : 35);
+                return (
+                <div key={`${row.name}-${row.userId || row.username || index}`} className={`rounded-lg border p-3 text-sm ${quality.card}`}>
                   <p className="font-semibold text-slate-800">{row.name || row.username || row.userId || "User"}</p>
-                  <p className="text-xs text-slate-500">{row.username ? `@${row.username}` : ""}</p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <p className="text-xs text-slate-500">{row.username ? `@${row.username}` : ""}</p>
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                      {quality.label}
+                    </span>
+                  </div>
                   <p className="mt-1 text-xs text-slate-600">Satfung: <span className="font-medium text-slate-800">{row.satfung || "-"}</span></p>
                   <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
                     <p className="rounded bg-slate-50 px-2 py-1 text-center">IG {formatNumber(row.likesIg)}</p>
@@ -1033,7 +1070,8 @@ export default function AnevPolresPage() {
                     <p className="rounded bg-blue-50 px-2 py-1 text-center font-semibold text-blue-700">{formatNumber(row.totalEngagement)}</p>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
             <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
