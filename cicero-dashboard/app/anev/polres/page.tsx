@@ -541,6 +541,22 @@ export default function AnevPolresPage() {
   const tiktokBySatfung = useMemo(() => mapTiktokPerSatfung(data), [data]);
   const topPerformers = useMemo(() => mapTopPerformers(data), [data]);
 
+  const buildDetailHref = (view: string, extra?: Record<string, string>) => {
+    const params = new URLSearchParams({ view, time_range: filters.time_range || "7d" });
+    if (filters.start_date) params.set("start_date", filters.start_date);
+    if (filters.end_date) params.set("end_date", filters.end_date);
+    if (filters.role) params.set("role", filters.role);
+    if (filters.scope) params.set("scope", filters.scope);
+    if (filters.regional_id) params.set("regional_id", filters.regional_id);
+    if (filters.client_id || clientId) params.set("client_id", filters.client_id || clientId || "");
+    if (extra) {
+      Object.entries(extra).forEach(([key, value]) => {
+        if (value) params.set(key, value);
+      });
+    }
+    return `/anev/polres/detail?${params.toString()}`;
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (filters.time_range === "custom" && (!filters.start_date || !filters.end_date)) {
@@ -785,38 +801,58 @@ export default function AnevPolresPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Personel Aktif</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.totalUsers)}</p>
           <p className="mt-2 text-xs text-slate-500">Jumlah user terpetakan dalam periode</p>
+          <Link href={buildDetailHref("ringkasan")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+            Lihat detail →
+          </Link>
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting Instagram</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.igPosts)}</p>
           <p className="mt-2 text-xs text-slate-500">Total posting sumber IG</p>
+          <Link href={buildDetailHref("platform_posts", { platform: "instagram" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+            Lihat detail →
+          </Link>
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting TikTok</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.tkPosts)}</p>
           <p className="mt-2 text-xs text-slate-500">Total posting sumber TikTok</p>
+          <Link href={buildDetailHref("platform_posts", { platform: "tiktok" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+            Lihat detail →
+          </Link>
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interaksi</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.likes + metrics.comments)}</p>
           <p className="mt-2 text-xs text-slate-500">Likes + komentar terakumulasi</p>
+          <Link href={buildDetailHref("top_performer")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+            Lihat detail →
+          </Link>
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kepatuhan</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatPercent(metrics.compliance)}</p>
           <p className="mt-2 text-xs text-slate-500">Rasio realisasi terhadap expected actions</p>
+          <Link href={buildDetailHref("compliance")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+            Lihat detail →
+          </Link>
         </article>
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <LineChart className="h-4 w-4 text-blue-600" />
-            <h2 className="font-semibold text-slate-900">Aktivitas per Platform</h2>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <LineChart className="h-4 w-4 text-blue-600" />
+              <h2 className="font-semibold text-slate-900">Aktivitas per Platform</h2>
+            </div>
+            <Link href={buildDetailHref("platform_posts")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+              Lihat semua →
+            </Link>
           </div>
           <div className="space-y-3">
             {platformPosts.length ? (
@@ -842,9 +878,14 @@ export default function AnevPolresPage() {
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <Users className="h-4 w-4 text-blue-600" />
-            <h2 className="font-semibold text-slate-900">Kepatuhan Pelaksana</h2>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-600" />
+              <h2 className="font-semibold text-slate-900">Kepatuhan Pelaksana</h2>
+            </div>
+            <Link href={buildDetailHref("compliance")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+              Lihat semua →
+            </Link>
           </div>
           <div className="space-y-3">
             {complianceRows.length ? (
@@ -869,9 +910,14 @@ export default function AnevPolresPage() {
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-blue-600" />
-            <h2 className="font-semibold text-slate-900">Sebaran Personel per Satfung</h2>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              <h2 className="font-semibold text-slate-900">Sebaran Personel per Satfung</h2>
+            </div>
+            <Link href={buildDetailHref("user_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+              Lihat semua →
+            </Link>
           </div>
           <ul className="space-y-2">
             {usersBySatfung.length ? (
@@ -893,7 +939,12 @@ export default function AnevPolresPage() {
               <Sparkles className="h-4 w-4 text-blue-600" />
               <h2 className="font-semibold text-slate-900">Instagram Likes per Satfung</h2>
             </div>
-            <span className="text-xs font-medium text-slate-500">Post IG: {formatNumber(instagramPostTotal)}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-slate-500">Post IG: {formatNumber(instagramPostTotal)}</span>
+              <Link href={buildDetailHref("ig_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+                Lihat semua →
+              </Link>
+            </div>
           </div>
           {igLikesBySatfung.length ? (
             <div className="overflow-x-auto">
@@ -929,7 +980,12 @@ export default function AnevPolresPage() {
               <LineChart className="h-4 w-4 text-blue-600" />
               <h2 className="font-semibold text-slate-900">TikTok Komentar per Satfung</h2>
             </div>
-            <span className="text-xs font-medium text-slate-500">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-slate-500">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
+              <Link href={buildDetailHref("tiktok_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+                Lihat semua →
+              </Link>
+            </div>
           </div>
           {tiktokBySatfung.length ? (
             <div className="overflow-x-auto">
@@ -961,7 +1017,12 @@ export default function AnevPolresPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-base font-semibold text-slate-900">Top Performer (Gabungan IG + TikTok)</h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-slate-900">Top Performer (Gabungan IG + TikTok)</h2>
+          <Link href={buildDetailHref("top_performer")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+            Lihat semua →
+          </Link>
+        </div>
         {topPerformers.length ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
