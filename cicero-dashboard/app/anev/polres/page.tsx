@@ -34,6 +34,7 @@ type ComplianceRow = { pelaksana: string; assigned: number; completed: number; r
 type EngagementRow = { satfung: string; posts: number; comments: number; engagement: number };
 type PerformerRow = {
   name: string;
+  userId?: string;
   username?: string;
   satfung?: string;
   platform: "instagram" | "tiktok";
@@ -159,7 +160,7 @@ function buildIdentityMaps(data: DashboardAnevResponse | null) {
       const name = getText(src, ["display_name", "full_name", "nama", "name"], "");
       const satfung = getText(src, ["divisi", "division", "satfung"]);
       const identity: IdentityEntry = {
-        name: name || username || "Tanpa Nama",
+        name: name || username || userId || "User",
         username: username || undefined,
         satfung: satfung || undefined,
       };
@@ -193,8 +194,8 @@ function mapCompliance(data: DashboardAnevResponse | null): ComplianceRow[] {
       const identity =
         (userId ? identityMaps.byId.get(userId) : undefined) ||
         (username ? identityMaps.byUsername.get(username.toLowerCase()) : undefined);
-      const assigned = getNumber(src, ["assigned", "total_actions", "total", "expected"]);
-      const completed = getNumber(src, ["completed", "done", "total_actions", "selesai"]);
+      const assigned = getNumber(src, ["assigned", "expected_actions", "expected", "tasks", "total"]);
+      const completed = getNumber(src, ["completed", "total_actions", "done", "selesai"]);
       const rateRaw = getNumber(src, ["completion_rate", "completionRate"], Number.NaN);
       const rate = Number.isFinite(rateRaw)
         ? rateRaw <= 1
@@ -314,10 +315,11 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
         const name = getText(
           src,
           ["display_name", "full_name", "nama", "name"],
-          identity?.name || username || "Tanpa Nama",
+          identity?.name || username || userId || "User",
         );
         return {
           name,
+          userId: userId || undefined,
           username: username || identity?.username,
           satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
           platform,
@@ -482,7 +484,12 @@ export default function AnevPolresPage() {
     const comments = getNumber(totals, ["comments", "total_comments"], getNumber(asRecord(data?.aggregates), ["total_comments"]));
     const totalUsers = getNumber(totals, ["total_users"], getNumber(asRecord(data?.aggregates), ["total_users"]));
     const expected = getNumber(totals, ["expected_actions"], getNumber(asRecord(data?.aggregates), ["expected_actions"]));
-    const compliance = expected > 0 ? ((likes + comments) / expected) * 100 : 0;
+    const overallRate = getNumber(totals, ["overall_completion_rate"], Number.NaN);
+    const compliance = Number.isFinite(overallRate)
+      ? (overallRate <= 1 ? overallRate * 100 : overallRate)
+      : expected > 0 && totalUsers > 0
+        ? ((likes + comments) / (expected * totalUsers)) * 100
+        : 0;
 
     return {
       totalUsers,
@@ -914,7 +921,7 @@ export default function AnevPolresPage() {
                 {topPerformers.map((row, index) => (
                   <tr key={`${row.name}-${row.platform}-${index}`}>
                     <td className="px-3 py-2 text-slate-800">
-                      <p className="font-medium">{row.name}</p>
+                      <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
                       {row.username ? <p className="text-xs text-slate-500">@{row.username}</p> : null}
                     </td>
                     <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
