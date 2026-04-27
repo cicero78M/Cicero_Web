@@ -41,6 +41,12 @@ type PerformerRow = {
   posts: number;
 };
 
+type IdentityEntry = {
+  name: string;
+  username?: string;
+  satfung?: string;
+};
+
 type UnknownRecord = Record<string, unknown>;
 
 const TIME_RANGE_OPTIONS = [
@@ -133,8 +139,41 @@ function mapPlatformPosts(data: DashboardAnevResponse | null): PlatformPost[] {
     .sort((a, b) => b.posts - a.posts);
 }
 
+function buildIdentityMaps(data: DashboardAnevResponse | null) {
+  const byId = new Map<string, IdentityEntry>();
+  const byUsername = new Map<string, IdentityEntry>();
+  if (!data) return { byId, byUsername };
+
+  const directoryCandidates: unknown[] = [
+    data.directory,
+    (data.raw as UnknownRecord)?.user_directory,
+    (data.raw as UnknownRecord)?.directory,
+  ];
+
+  directoryCandidates.forEach((candidate) => {
+    if (!Array.isArray(candidate)) return;
+    candidate.forEach((entry) => {
+      const src = asRecord(entry);
+      const userId = getText(src, ["user_id", "userId", "id"]);
+      const username = getText(src, ["username", "handle", "account"]);
+      const name = getText(src, ["display_name", "full_name", "nama", "name"], "");
+      const satfung = getText(src, ["divisi", "division", "satfung"]);
+      const identity: IdentityEntry = {
+        name: name || username || "Tanpa Nama",
+        username: username || undefined,
+        satfung: satfung || undefined,
+      };
+      if (userId) byId.set(userId, identity);
+      if (username) byUsername.set(username.toLowerCase(), identity);
+    });
+  });
+
+  return { byId, byUsername };
+}
+
 function mapCompliance(data: DashboardAnevResponse | null): ComplianceRow[] {
   if (!data) return [];
+  const identityMaps = buildIdentityMaps(data);
 
   const totals = asRecord(data.aggregates.totals);
   const candidates = [
@@ -149,6 +188,11 @@ function mapCompliance(data: DashboardAnevResponse | null): ComplianceRow[] {
   return rows
     .map((entry) => {
       const src = asRecord(entry);
+      const userId = getText(src, ["user_id", "userId", "id"]);
+      const username = getText(src, ["username", "handle", "account"]);
+      const identity =
+        (userId ? identityMaps.byId.get(userId) : undefined) ||
+        (username ? identityMaps.byUsername.get(username.toLowerCase()) : undefined);
       const assigned = getNumber(src, ["assigned", "total_actions", "total", "expected"]);
       const completed = getNumber(src, ["completed", "done", "total_actions", "selesai"]);
       const rateRaw = getNumber(src, ["completion_rate", "completionRate"], Number.NaN);
@@ -160,7 +204,11 @@ function mapCompliance(data: DashboardAnevResponse | null): ComplianceRow[] {
           ? (completed / assigned) * 100
           : 0;
       return {
-        pelaksana: getText(src, ["nama", "pelaksana", "name", "label"], "-"),
+        pelaksana: getText(
+          src,
+          ["display_name", "full_name", "nama", "pelaksana", "name", "label"],
+          identity?.name || "-",
+        ),
         assigned,
         completed,
         rate,
@@ -244,6 +292,7 @@ function mapTiktokPerSatfung(data: DashboardAnevResponse | null): EngagementRow[
 
 function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
   if (!data) return [];
+  const identityMaps = buildIdentityMaps(data);
 
   const normalizePerUser = (
     rows: unknown,
@@ -253,15 +302,24 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
     return rows
       .map((entry) => {
         const src = asRecord(entry);
+        const userId = getText(src, ["user_id", "userId", "id"]);
+        const username = getText(src, ["username", "handle", "account"]);
+        const identity =
+          (userId ? identityMaps.byId.get(userId) : undefined) ||
+          (username ? identityMaps.byUsername.get(username.toLowerCase()) : undefined);
         const likes = getNumber(src, ["likes", "total_likes"]);
         const comments = getNumber(src, ["comments", "total_comments"]);
         const shares = getNumber(src, ["shares", "total_shares"]);
         const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
-        const name = getText(src, ["nama", "full_name", "name", "display_name"], "Tanpa Nama");
+        const name = getText(
+          src,
+          ["display_name", "full_name", "nama", "name"],
+          identity?.name || username || "Tanpa Nama",
+        );
         return {
           name,
-          username: getText(src, ["username", "handle", "account"]),
-          satfung: getText(src, ["divisi", "division", "satfung"]),
+          username: username || identity?.username,
+          satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
           platform,
           engagement,
           posts: getNumber(src, ["posts", "total_posts", "count"]),
