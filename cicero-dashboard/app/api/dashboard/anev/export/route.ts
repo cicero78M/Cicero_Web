@@ -22,6 +22,15 @@ function collectColumns(rows: ExportRow[]) {
   );
 }
 
+function computeColumnWidth(rows: ExportRow[], column: string) {
+  const maxCellLength = rows.reduce((max, row) => {
+    const value = row?.[column];
+    const text = value == null ? "" : String(value);
+    return Math.max(max, text.length);
+  }, column.length);
+  return Math.min(Math.max(maxCellLength + 2, 12), 120);
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const rows = Array.isArray(body?.rows) ? (body.rows as ExportRow[]) : [];
@@ -56,7 +65,7 @@ export async function POST(req: NextRequest) {
     worksheet.columns = columns.map((column) => ({
       header: column,
       key: column,
-      width: Math.min(Math.max(column.length + 4, 14), 48),
+      width: computeColumnWidth(sectionRows, column),
     }));
 
     sectionRows.forEach((row) => {
@@ -83,4 +92,3 @@ export async function POST(req: NextRequest) {
     },
   });
 }
-
