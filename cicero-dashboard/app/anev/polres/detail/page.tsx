@@ -15,6 +15,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Suspense } from "react";
 
 type UnknownRecord = Record<string, unknown>;
+type IdentityEntry = {
+  name: string;
+  username?: string;
+  satfung?: string;
+};
 const PAGE_SIZE = 50;
 
 function asRecord(value: unknown): UnknownRecord {
@@ -55,8 +60,52 @@ function normalizeHandleValue(raw?: string) {
   return (ig || tk || trimmed).replace(/^@+/, "").replace(/\/$/, "").toLowerCase();
 }
 
+function buildIdentityMaps(data: DashboardAnevResponse | null) {
+  const byId = new Map<string, IdentityEntry>();
+  const byUsername = new Map<string, IdentityEntry>();
+  if (!data) return { byId, byUsername };
+
+  const directoryCandidates: unknown[] = [
+    data.directory,
+    (data.raw as UnknownRecord)?.user_directory,
+    (data.raw as UnknownRecord)?.directory,
+  ];
+
+  directoryCandidates.forEach((candidate) => {
+    if (!Array.isArray(candidate)) return;
+    candidate.forEach((entry) => {
+      const src = asRecord(entry);
+      const userId = getText(src, ["user_id", "userId", "id"]);
+      const username = getText(src, ["username", "handle", "account"]);
+      const igHandle = getText(src, ["instagram", "insta", "instagram_username"]);
+      const tkHandle = getText(src, ["tiktok", "tiktok_username"]);
+      const kontak = asRecord(src.kontak_sosial);
+      const kontakIg = getText(kontak, ["instagram"]);
+      const kontakTk = getText(kontak, ["tiktok"]);
+      const name = getText(src, ["display_name", "full_name", "nama", "name"], "");
+      const satfung = getText(src, ["divisi", "division", "satfung"]);
+
+      const identity: IdentityEntry = {
+        name: name || username || userId || "User",
+        username: username || undefined,
+        satfung: satfung || undefined,
+      };
+
+      if (userId) byId.set(userId, identity);
+
+      [username, igHandle, tkHandle, kontakIg, kontakTk]
+        .map((item) => normalizeHandleValue(item))
+        .filter(Boolean)
+        .forEach((key) => byUsername.set(key, identity));
+    });
+  });
+
+  return { byId, byUsername };
+}
+
 function mapTopPerformerRows(data: DashboardAnevResponse | null) {
   if (!data) return [] as Array<Record<string, string | number>>;
+  const identityMaps = buildIdentityMaps(data);
   const byIdentity = new Map<string, { name: string; username?: string; satfung?: string; likesIg: number; commentsTiktok: number }>();
 
   const ingest = (rows: unknown, metric: "likesIg" | "commentsTiktok") => {
@@ -65,29 +114,40 @@ function mapTopPerformerRows(data: DashboardAnevResponse | null) {
       const src = asRecord(entry);
       const userId = getText(src, ["user_id", "userId", "id"]);
       const username = getText(src, ["username", "handle", "account"]);
+      const normalizedUsername = normalizeHandleValue(username);
+      const identity =
+        (userId ? identityMaps.byId.get(userId) : undefined) ||
+        (normalizedUsername ? identityMaps.byUsername.get(normalizedUsername) : undefined);
       const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
-      if (isUnmapped && !userId && !username) return;
-      const name = getText(src, ["display_name", "full_name", "nama", "name"], username || userId || "User");
-      const satfung = getText(src, ["divisi", "division", "satfung"], "-");
+      const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
+      if (isUnmapped && !identity?.name && !explicitName) return;
+
+      const name = getText(
+        src,
+        ["display_name", "full_name", "nama", "name"],
+        identity?.name || username || userId || "User",
+      );
+      const satfung = getText(src, ["divisi", "division", "satfung"], identity?.satfung || "-");
       const value = metric === "likesIg"
         ? getNumber(src, ["likes", "total_likes", "engagement", "total_engagement"])
         : getNumber(src, ["comments", "total_comments", "engagement", "total_engagement"]);
 
-      const key = userId || normalizeHandleValue(username) || normalizeHandleValue(name);
+      const key = userId || normalizedUsername || normalizeHandleValue(identity?.username) || normalizeHandleValue(name);
       if (!key) return;
 
       const existing = byIdentity.get(key);
       if (existing) {
         if (metric === "likesIg") existing.likesIg += value;
         else existing.commentsTiktok += value;
-        if (!existing.username && username) existing.username = username;
+        if (!existing.username && (username || identity?.username)) existing.username = username || identity?.username;
         if ((!existing.satfung || existing.satfung === "-") && satfung) existing.satfung = satfung;
+        if ((!existing.name || existing.name === existing.username) && name) existing.name = name;
         return;
       }
 
       byIdentity.set(key, {
         name,
-        username: username || undefined,
+        username: username || identity?.username,
         satfung,
         likesIg: metric === "likesIg" ? value : 0,
         commentsTiktok: metric === "commentsTiktok" ? value : 0,
@@ -101,7 +161,7 @@ function mapTopPerformerRows(data: DashboardAnevResponse | null) {
   return Array.from(byIdentity.values())
     .map((row) => ({
       personel: row.name,
-      username: row.username ? `@${row.username}` : "",
+      username: row.username ? `@${normalizeHandleValue(row.username) || row.username.replace(/^@+/, "")}` : "",
       satfung: row.satfung || "-",
       likes_ig: row.likesIg,
       komentar_tiktok: row.commentsTiktok,
