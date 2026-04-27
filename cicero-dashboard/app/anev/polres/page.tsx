@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, CalendarClock, LineChart, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { AlertCircle, CalendarClock, Download, LineChart, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles, Users } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useRequirePremium from "@/hooks/useRequirePremium";
@@ -13,6 +13,7 @@ import {
   getDashboardAnev,
 } from "@/utils/api";
 import { formatPremiumTierLabel } from "@/utils/premium";
+import { showToast } from "@/utils/showToast";
 
 type FilterFormState = Pick<DashboardAnevFilters, "time_range" | "start_date" | "end_date"> & {
   role?: string;
@@ -57,17 +58,26 @@ type EngagementUserRow = {
   unmapped?: boolean;
 };
 
+type ComplianceRow = {
+  name: string;
+  assigned: number;
+  completed: number;
+  completion_rate: number | null;
+};
+
 type DirectoryIndex = {
   byId: Map<string, DirectoryEntry>;
   byUsername: Map<string, DirectoryEntry>;
 };
 
+type AnyRecord = Record<string, unknown>;
+
 const TIME_RANGE_PRESETS = [
-  { value: "today", label: "Today" },
-  { value: "7d", label: "This Week" },
-  { value: "30d", label: "This Month" },
-  { value: "90d", label: "Last 90 Days" },
-  { value: "all", label: "All time" },
+  { value: "today", label: "Harian" },
+  { value: "7d", label: "Mingguan" },
+  { value: "30d", label: "Bulanan" },
+  { value: "90d", label: "90 Hari Terakhir" },
+  { value: "all", label: "Semua Waktu" },
   { value: "custom", label: "Custom" },
 ];
 
@@ -76,7 +86,7 @@ function formatNumber(value?: number) {
   return new Intl.NumberFormat("id-ID").format(Number(value));
 }
 
-function resolveNumber(source: Record<string, any>, candidates: string[], fallback = 0) {
+function resolveNumber(source: AnyRecord, candidates: string[], fallback = 0) {
   for (const key of candidates) {
     const value = source?.[key];
     if (typeof value === "number") return value;
@@ -88,7 +98,7 @@ function resolveNumber(source: Record<string, any>, candidates: string[], fallba
   return fallback;
 }
 
-function resolveOptionalNumber(source: Record<string, any>, candidates: string[]) {
+function resolveOptionalNumber(source: AnyRecord, candidates: string[]) {
   const resolved = resolveNumber(source, candidates, Number.NaN);
   return Number.isNaN(resolved) ? undefined : resolved;
 }
@@ -157,7 +167,7 @@ function buildNarrative({
 
 function resolvePlatformPosts(aggregates?: DashboardAnevResponse["aggregates"]) {
   const totals = aggregates?.totals ?? {};
-  const postsMap = (totals.posts as Record<string, any>) || (totals.post as Record<string, any>) || {};
+  const postsMap = (totals.posts as AnyRecord) || (totals.post as AnyRecord) || {};
   const platformsFromMap = Object.keys(postsMap).map((platform) => ({
     platform,
     posts: resolveNumber(postsMap, [platform], 0),
@@ -165,15 +175,18 @@ function resolvePlatformPosts(aggregates?: DashboardAnevResponse["aggregates"]) 
 
   if (platformsFromMap.length) return platformsFromMap;
 
-  const fromArray = (aggregates?.platforms || []).map((entry: any) => ({
-    platform: entry?.platform || entry?.name || entry?.channel || "",
-    posts: resolveNumber(entry || {}, ["posts", "total_posts", "count"], 0),
-  }));
+  const fromArray = (aggregates?.platforms || []).map((entry: unknown) => {
+    const source = (entry && typeof entry === "object" ? entry : {}) as AnyRecord;
+    return {
+      platform: (source.platform as string) || (source.name as string) || (source.channel as string) || "",
+      posts: resolveNumber(source, ["posts", "total_posts", "count"], 0),
+    };
+  });
 
   return fromArray.filter((item) => item.platform);
 }
 
-function resolveComplianceRows(aggregates?: DashboardAnevResponse["aggregates"]) {
+function resolveComplianceRows(aggregates?: DashboardAnevResponse["aggregates"]): ComplianceRow[] {
   const raw = aggregates?.raw ?? aggregates;
   const candidates =
     raw?.compliance_per_pelaksana ||
@@ -181,24 +194,30 @@ function resolveComplianceRows(aggregates?: DashboardAnevResponse["aggregates"])
     aggregates?.totals?.compliance_per_pelaksana ||
     aggregates?.tasks;
 
-  if (!candidates || !Array.isArray(candidates)) return [] as any[];
-  return candidates.map((item: any) => ({
-    name: item?.pelaksana || item?.name || item?.label || item?.executor || "-",
-    assigned: resolveNumber(item || {}, ["assigned", "tugas", "expected", "total"], 0),
-    completed: resolveNumber(item || {}, ["completed", "done", "finished", "selesai"], 0),
-    completion_rate: typeof item?.completion_rate === "number"
-      ? item?.completion_rate
-      : typeof item?.completionRate === "number"
-        ? item?.completionRate
-        : null,
-  }));
+  if (!candidates || !Array.isArray(candidates)) return [];
+  return candidates.map((item: unknown) => {
+    const source = (item && typeof item === "object" ? item : {}) as AnyRecord;
+    return {
+      name:
+        String(
+          source.pelaksana ?? source.name ?? source.label ?? source.executor ?? "-",
+        ) || "-",
+      assigned: resolveNumber(source, ["assigned", "tugas", "expected", "total"], 0),
+      completed: resolveNumber(source, ["completed", "done", "finished", "selesai"], 0),
+      completion_rate: typeof source.completion_rate === "number"
+        ? source.completion_rate
+        : typeof source.completionRate === "number"
+          ? source.completionRate
+          : null,
+    };
+  });
 }
 
 function resolveUserDirectoryEntries(data?: DashboardAnevResponse | null): DirectoryEntry[] {
   if (!data) return [];
 
   const candidates = [
-    (data as any)?.directory,
+    (data as AnyRecord)?.directory,
     data?.raw?.directory,
     data?.raw?.user_directory,
     data?.raw?.userDirectory,
@@ -211,13 +230,15 @@ function resolveUserDirectoryEntries(data?: DashboardAnevResponse | null): Direc
   const results: DirectoryEntry[] = [];
   const seen = new Set<string>();
 
-  const collect = (candidate: any) => {
+  const collect = (candidate: unknown) => {
+    const candidateRecord =
+      candidate && typeof candidate === "object" ? (candidate as Record<string, unknown>) : null;
     const list = Array.isArray(candidate)
       ? candidate
-      : Array.isArray(candidate?.users)
-        ? candidate.users
-        : candidate && typeof candidate === "object"
-          ? Object.values(candidate)
+      : Array.isArray(candidateRecord?.users)
+        ? candidateRecord.users
+        : candidateRecord
+          ? Object.values(candidateRecord)
           : [];
 
     list.forEach((item: Record<string, unknown>) => {
@@ -282,7 +303,7 @@ function resolveEngagementPerUser(
   if (!data) return [];
 
   const rootCandidates = [
-    (data as any)?.[`${platformKey}_engagement`],
+    (data as AnyRecord)?.[`${platformKey}_engagement`],
     data?.raw?.[`${platformKey}_engagement`],
     data?.raw?.[`${platformKey}Engagement`],
     data?.raw?.engagement?.[platformKey],
@@ -298,7 +319,7 @@ function resolveEngagementPerUser(
 
   if (!engagementRoot) return [];
 
-  const normalizeEntries = (candidate: any) => {
+  const normalizeEntries = (candidate: unknown) => {
     const list = Array.isArray(candidate)
       ? candidate
       : candidate && typeof candidate === "object"
@@ -1008,10 +1029,12 @@ export default function AnevPolresPage() {
   const [error, setError] = useState<string | null>(null);
   const [premiumBlocked, setPremiumBlocked] = useState<string | null>(null);
   const [badRequest, setBadRequest] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [pendingExportPreset, setPendingExportPreset] = useState<string | null>(null);
   const lastFetchKeyRef = useRef<string | null>(null);
 
   const availableTimeRangeOptions = useMemo(() => {
-    const permitted = (data?.filters as any)?.permitted_time_ranges as string[] | undefined;
+    const permitted = (data?.filters as Record<string, unknown>)?.permitted_time_ranges as string[] | undefined;
     const normalizedPermitted = (permitted || [])
       .map((entry) => (typeof entry === "string" ? entry.toLowerCase() : ""))
       .filter(Boolean);
@@ -1118,7 +1141,11 @@ export default function AnevPolresPage() {
   useEffect(() => {
     const mergeLocked = (prev: FilterFormState) => {
       const next = { ...prev, ...lockedFilters } as FilterFormState;
-      const hasChanged = Object.keys(next).some((key) => (next as any)[key] !== (prev as any)[key]);
+      const hasChanged = Object.keys(next).some(
+        (key) =>
+          (next as unknown as Record<string, unknown>)[key] !==
+          (prev as unknown as Record<string, unknown>)[key],
+      );
       return hasChanged ? next : prev;
     };
 
@@ -1170,29 +1197,39 @@ export default function AnevPolresPage() {
       .then((response) => {
         setData(response);
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
+        const parsedErr = err as {
+          status?: number;
+          premiumGuard?: {
+            normalizedTier?: string;
+            tier?: string;
+            expires_at?: string;
+            expiresAt?: string;
+          };
+          message?: string;
+        };
         if (controller.signal.aborted) return;
-        if (err?.status === 403) {
+        if (parsedErr?.status === 403) {
           const tierLabelRaw =
-            err?.premiumGuard?.normalizedTier ||
-            err?.premiumGuard?.tier ||
+            parsedErr?.premiumGuard?.normalizedTier ||
+            parsedErr?.premiumGuard?.tier ||
             premiumTier ||
             "";
           const tierLabel = formatPremiumTierLabel(tierLabelRaw) || tierLabelRaw;
-          const expiry = err?.premiumGuard?.expires_at || err?.premiumGuard?.expiresAt;
+          const expiry = parsedErr?.premiumGuard?.expires_at || parsedErr?.premiumGuard?.expiresAt;
           const message =
-            err?.message ||
+            parsedErr?.message ||
             "Akses premium diperlukan untuk membuka Dashboard ANEV.";
           setPremiumBlocked(
             `${message}${tierLabel ? ` (tier: ${tierLabel}${expiry ? `, expiry: ${expiry}` : ""})` : ""}`,
           );
           return;
         }
-        if (err?.status === 400) {
-          setBadRequest(err?.message || "Filter scope/role tidak valid.");
+        if (parsedErr?.status === 400) {
+          setBadRequest(parsedErr?.message || "Filter scope/role tidak valid.");
           return;
         }
-        setError(err?.message || "Gagal memuat Dashboard ANEV Polres.");
+        setError(parsedErr?.message || "Gagal memuat Dashboard ANEV Polres.");
       })
       .finally(() => setLoading(false));
 
@@ -1254,7 +1291,7 @@ export default function AnevPolresPage() {
     () => resolveInstagramLikesBySatfung(aggregates, data?.raw),
     [aggregates, data?.raw],
   );
-  const completionRate = resolveNumber(totals, ["completion_rate", "compliance_rate", "rate"], null as any);
+  const completionRate = resolveOptionalNumber(totals as AnyRecord, ["completion_rate", "compliance_rate", "rate"]) ?? null;
   const topPlatformBreakdown = useMemo<NarrativePlatformBreakdown[]>(
     () => platformBreakdown.map((entry) => ({ platform: entry.platform, posts: entry.posts })),
     [platformBreakdown],
@@ -1309,6 +1346,221 @@ export default function AnevPolresPage() {
     setFormState(resetState);
     setAppliedFilters(resetState);
   };
+
+  const handleQuickExportByPreset = (preset: "today" | "7d" | "30d") => {
+    const derived = derivePresetRange(preset);
+    const nextState = {
+      ...formState,
+      ...lockedFilters,
+      time_range: preset,
+      start_date: derived.startDate,
+      end_date: derived.endDate,
+    };
+
+    lastFetchKeyRef.current = null;
+    setPendingExportPreset(preset);
+    setFormState(nextState);
+    setAppliedFilters(nextState);
+  };
+
+  const handleExportExcel = async () => {
+    if (!data) {
+      showToast("Data ANEV belum tersedia untuk diekspor.", "error");
+      return;
+    }
+
+    if (isCustomRange && isCustomIncomplete) {
+      showToast("Lengkapi tanggal custom terlebih dahulu sebelum export.", "error");
+      return;
+    }
+
+    const exportedAt = new Date().toISOString();
+    const activeFilters = data.filters
+      ? resolveFiltersWithPreset(data.filters as FilterFormState)
+      : resolvedAppliedFilters;
+    const exportContext = {
+      exported_at: exportedAt,
+      time_range: activeFilters.time_range || "",
+      time_range_label: resolvePresetLabel(activeFilters.time_range),
+      start_date: activeFilters.start_date || "",
+      end_date: activeFilters.end_date || "",
+      role: activeFilters.role || lockedRole || "",
+      scope: activeFilters.scope || lockedScope || "",
+      regional_id: activeFilters.regional_id || lockedRegionalId || "",
+      client_id: activeFilters.client_id || clientId || "",
+    };
+
+    const rows: Record<string, string | number>[] = [
+      {
+        section: "ringkasan",
+        metric: "total_users",
+        value: totalUsers,
+        ...exportContext,
+      },
+      {
+        section: "ringkasan",
+        metric: "total_likes",
+        value: totalLikes,
+        ...exportContext,
+      },
+      {
+        section: "ringkasan",
+        metric: "total_comments",
+        value: totalComments,
+        ...exportContext,
+      },
+      {
+        section: "ringkasan",
+        metric: "expected_actions",
+        value: expectedActions,
+        ...exportContext,
+      },
+      {
+        section: "ringkasan",
+        metric: "completion_rate",
+        value: typeof completionRate === "number" ? Number(completionRate.toFixed(2)) : 0,
+        ...exportContext,
+      },
+      ...platformBreakdown.map((entry) => ({
+        section: "posting_per_platform",
+        platform: entry.platform,
+        posts: entry.posts,
+        ...exportContext,
+      })),
+      ...complianceRows.map((entry) => ({
+        section: "compliance_per_pelaksana",
+        pelaksana: entry.name,
+        assigned: entry.assigned,
+        completed: entry.completed,
+        completion_rate:
+          typeof entry.completion_rate === "number"
+            ? Number(entry.completion_rate.toFixed(2))
+            : 0,
+        ...exportContext,
+      })),
+      ...satfungBreakdown.map((entry) => ({
+        section: "user_per_satfung_divisi",
+        satfung_divisi: entry.label,
+        users: entry.count,
+        ...exportContext,
+      })),
+      ...tiktokPerformancePerSatfung.map((entry) => ({
+        section: "tiktok_per_satfung_divisi",
+        satfung_divisi: entry.label,
+        posts: entry.posts,
+        engagement: entry.engagement,
+        views: entry.views ?? 0,
+        likes: entry.likes ?? 0,
+        comments: entry.comments ?? 0,
+        shares: entry.shares ?? 0,
+        engagement_rate:
+          typeof entry.engagementRate === "number"
+            ? Number(entry.engagementRate.toFixed(2))
+            : 0,
+        ...exportContext,
+      })),
+      ...instagramLikesPerSatfung.map((entry) => ({
+        section: "instagram_likes_per_satfung_divisi",
+        satfung_divisi: entry.label,
+        likes: entry.likes,
+        ...exportContext,
+      })),
+      ...directoryEntries.map((entry) => ({
+        section: "direktori_user",
+        user_id: entry.userId || "",
+        username: entry.username || "",
+        full_name: entry.fullName || "",
+        satfung: entry.satfung || entry.division || "",
+        platform: entry.platform || "",
+        unmapped: entry.unmapped ? "yes" : "no",
+        ...exportContext,
+      })),
+      ...instagramEngagementPerUser.map((entry) => ({
+        section: "engagement_instagram_per_user",
+        user_id: entry.userId || "",
+        username: entry.username || "",
+        full_name: entry.fullName || "",
+        satfung: entry.satfung || entry.division || "",
+        posts: entry.posts,
+        likes: entry.likes ?? 0,
+        comments: entry.comments ?? 0,
+        shares: entry.shares ?? 0,
+        engagement: entry.engagement,
+        unmapped: entry.unmapped ? "yes" : "no",
+        ...exportContext,
+      })),
+      ...tiktokEngagementPerUser.map((entry) => ({
+        section: "engagement_tiktok_per_user",
+        user_id: entry.userId || "",
+        username: entry.username || "",
+        full_name: entry.fullName || "",
+        satfung: entry.satfung || entry.division || "",
+        posts: entry.posts,
+        likes: entry.likes ?? 0,
+        comments: entry.comments ?? 0,
+        shares: entry.shares ?? 0,
+        engagement: entry.engagement,
+        unmapped: entry.unmapped ? "yes" : "no",
+        ...exportContext,
+      })),
+    ];
+
+    const periodTag = (activeFilters.time_range || "custom").toLowerCase();
+    const rangeTag = activeFilters.start_date && activeFilters.end_date
+      ? `${activeFilters.start_date}_${activeFilters.end_date}`
+      : formatDateInput(new Date());
+    const rawFileName = `anev-polres-${(clientId || "unknown").toLowerCase()}-${periodTag}-${rangeTag}`;
+    const fileName = rawFileName.replace(/[^a-z0-9-_]/gi, "-");
+
+    setIsExporting(true);
+    try {
+      const response = await fetch("/api/dashboard/anev/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows, fileName }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Gagal menyiapkan file Excel.");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${fileName}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+      showToast("Export Excel berhasil diunduh.", "success");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Export Excel gagal.";
+      showToast(message || "Export Excel gagal.", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!pendingExportPreset) return;
+    if (loading || isExporting || !data) return;
+
+    const activeTimeRange = (resolvedAppliedFilters.time_range || "").toLowerCase();
+    if (activeTimeRange !== pendingExportPreset.toLowerCase()) return;
+
+    handleExportExcel().finally(() => {
+      setPendingExportPreset(null);
+    });
+  }, [
+    data,
+    handleExportExcel,
+    isExporting,
+    loading,
+    pendingExportPreset,
+    resolvedAppliedFilters.time_range,
+  ]);
 
   const FilterSnapshot = () => {
     if (!data?.filters && !resolvedAppliedFilters) return null;
@@ -1430,7 +1682,40 @@ export default function AnevPolresPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={loading || isExporting || !data || isWaitingSessionContext || (isCustomRange && isCustomIncomplete)}
+              >
+                <Download className="h-4 w-4" />
+                {isExporting ? "Menyiapkan Excel..." : "Export Excel"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickExportByPreset("today")}
+                className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={loading || isExporting || isWaitingSessionContext}
+              >
+                Export Harian
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickExportByPreset("7d")}
+                className="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 shadow-sm transition hover:border-cyan-300 hover:bg-cyan-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={loading || isExporting || isWaitingSessionContext}
+              >
+                Export Mingguan
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickExportByPreset("30d")}
+                className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={loading || isExporting || isWaitingSessionContext}
+              >
+                Export Bulanan
+              </button>
               <button
                 type="button"
                 onClick={handleResetFilters}

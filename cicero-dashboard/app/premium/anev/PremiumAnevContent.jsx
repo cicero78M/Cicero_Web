@@ -6,9 +6,9 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 
 const highlights = [
   {
-    title: "Terbuka untuk Premium 1 & 3",
+    title: "Terbuka untuk Premium 1 & 2",
     description:
-      "Halaman /anev/polres tetap memakai guard premium sehingga hanya tier Premium 1 atau Premium 3 yang bisa mengakses dashboard ANEV.",
+      "Halaman /anev/polres tetap memakai guard premium sehingga hanya tier Premium 1 atau Premium 2 yang bisa mengakses dashboard ANEV.",
     icon: ShieldCheck,
   },
   {
