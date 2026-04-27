@@ -915,7 +915,20 @@ export default function AnevPolresPage() {
             </div>
           </div>
           {igLikesBySatfung.length ? (
-            <div className="overflow-x-auto">
+            <>
+              <div className="space-y-2 md:hidden">
+                {igLikesBySatfung.slice(0, 8).map((row) => (
+                  <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm">
+                    <p className="font-semibold text-slate-800">{row.satfung}</p>
+                    <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                      <p>Personil: <span className="font-semibold text-slate-800">{formatNumber(row.totalPersonnel)}</span></p>
+                      <p>Pelaksana: <span className="font-semibold text-slate-800">{formatNumber(row.activePersonnel)}</span></p>
+                    </div>
+                    <p className="mt-2 text-right text-sm font-semibold text-slate-900">Likes: {formatNumber(row.totalLikes)}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
@@ -936,7 +949,8 @@ export default function AnevPolresPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           ) : (
             <p className="text-sm text-slate-500">Data likes per satfung belum tersedia.</p>
           )}
@@ -956,7 +970,20 @@ export default function AnevPolresPage() {
             </div>
           </div>
           {tiktokBySatfung.length ? (
-            <div className="overflow-x-auto">
+            <>
+              <div className="space-y-2 md:hidden">
+                {tiktokBySatfung.slice(0, 8).map((row) => (
+                  <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm">
+                    <p className="font-semibold text-slate-800">{row.satfung}</p>
+                    <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                      <p>Personil: <span className="font-semibold text-slate-800">{formatNumber(row.totalPersonnel)}</span></p>
+                      <p>Pelaksana: <span className="font-semibold text-slate-800">{formatNumber(row.activePersonnel)}</span></p>
+                    </div>
+                    <p className="mt-2 text-right text-sm font-semibold text-slate-900">Komentar: {formatNumber(row.totalComments)}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
@@ -977,7 +1004,8 @@ export default function AnevPolresPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           ) : (
             <p className="text-sm text-slate-500">Data TikTok per satfung belum tersedia.</p>
           )}
@@ -992,7 +1020,22 @@ export default function AnevPolresPage() {
           </Link>
         </div>
         {topPerformers.length ? (
-          <div className="overflow-x-auto">
+          <>
+            <div className="space-y-2 md:hidden">
+              {topPerformers.map((row, index) => (
+                <div key={`${row.name}-${row.userId || row.username || index}`} className="rounded-lg border border-slate-100 p-3 text-sm">
+                  <p className="font-semibold text-slate-800">{row.name || row.username || row.userId || "User"}</p>
+                  <p className="text-xs text-slate-500">{row.username ? `@${row.username}` : ""}</p>
+                  <p className="mt-1 text-xs text-slate-600">Satfung: <span className="font-medium text-slate-800">{row.satfung || "-"}</span></p>
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                    <p className="rounded bg-slate-50 px-2 py-1 text-center">IG {formatNumber(row.likesIg)}</p>
+                    <p className="rounded bg-slate-50 px-2 py-1 text-center">TT {formatNumber(row.commentsTiktok)}</p>
+                    <p className="rounded bg-blue-50 px-2 py-1 text-center font-semibold text-blue-700">{formatNumber(row.totalEngagement)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50">
                 <tr>
@@ -1018,7 +1061,8 @@ export default function AnevPolresPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         ) : (
           <p className="text-sm text-slate-500">Belum ada data performer untuk periode ini.</p>
         )}

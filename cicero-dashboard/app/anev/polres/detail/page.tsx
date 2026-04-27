@@ -449,7 +449,7 @@ function AnevPolresDetailContent() {
             <h1 className="mt-1 text-2xl font-bold text-slate-900">{viewConfig.title}</h1>
             <p className="mt-1 text-sm text-slate-600">Menampilkan seluruh data kategori dengan pagination otomatis tiap 50 baris.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => void handleExportCurrentView()}
@@ -476,41 +476,69 @@ function AnevPolresDetailContent() {
         {isLoading ? (
           <div className="flex min-h-[200px] items-center justify-center"><Loader /></div>
         ) : pagedRows.length ? (
-          <div className="overflow-x-auto rounded-xl border border-slate-100">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  {columns.map((column) => (
-                    <th key={column} className="px-3 py-2 text-left font-semibold text-slate-600">
-                      {column.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {pagedRows.map((row, index) => (
-                  <tr key={index} className="hover:bg-slate-50/60">
-                    {columns.map((column) => {
-                      const value = row[column];
-                      const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
-                      const isLink = column.includes("link") && text.startsWith("http");
-                      return (
-                        <td key={column} className="max-w-[420px] px-3 py-2 align-top text-slate-700">
-                          {isLink ? (
-                            <a href={text} target="_blank" rel="noreferrer" className="break-all text-blue-700 hover:text-blue-800 hover:underline">
-                              {text}
-                            </a>
-                          ) : (
-                            <span className="break-words">{text}</span>
-                          )}
-                        </td>
-                      );
-                    })}
+          <>
+            <div className="space-y-2 md:hidden">
+              {pagedRows.map((row, index) => (
+                <div key={index} className="rounded-lg border border-slate-100 p-3">
+                  {columns.map((column) => {
+                    const value = row[column];
+                    const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
+                    const isLink = column.includes("link") && text.startsWith("http");
+                    return (
+                      <div key={column} className="mb-2 last:mb-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          {column.replace(/_/g, " ")}
+                        </p>
+                        {isLink ? (
+                          <a href={text} target="_blank" rel="noreferrer" className="break-all text-sm text-blue-700 hover:text-blue-800 hover:underline">
+                            {text}
+                          </a>
+                        ) : (
+                          <p className="break-words text-sm text-slate-800">{text}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto rounded-xl border border-slate-100 md:block">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    {columns.map((column) => (
+                      <th key={column} className="px-3 py-2 text-left font-semibold text-slate-600">
+                        {column.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {pagedRows.map((row, index) => (
+                    <tr key={index} className="hover:bg-slate-50/60">
+                      {columns.map((column) => {
+                        const value = row[column];
+                        const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
+                        const isLink = column.includes("link") && text.startsWith("http");
+                        return (
+                          <td key={column} className="max-w-[420px] px-3 py-2 align-top text-slate-700">
+                            {isLink ? (
+                              <a href={text} target="_blank" rel="noreferrer" className="break-all text-blue-700 hover:text-blue-800 hover:underline">
+                                {text}
+                              </a>
+                            ) : (
+                              <span className="break-words">{text}</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <p className="text-sm text-slate-500">Belum ada data untuk kategori ini.</p>
         )}
