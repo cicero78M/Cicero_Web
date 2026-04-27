@@ -335,11 +335,16 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
         const comments = getNumber(src, ["comments", "total_comments"]);
         const shares = getNumber(src, ["shares", "total_shares"]);
         const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
+        const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
+        const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
         const name = getText(
           src,
           ["display_name", "full_name", "nama", "name"],
           identity?.name || username || userId || "User",
         );
+        if (isUnmapped && !identity?.name && !explicitName) {
+          return null;
+        }
         return {
           name,
           userId: userId || undefined,
@@ -350,6 +355,7 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
           posts: getNumber(src, ["posts", "total_posts", "count"]),
         };
       })
+      .filter((row): row is PerformerRow => Boolean(row))
       .sort((a, b) => b.engagement - a.engagement);
   };
 
