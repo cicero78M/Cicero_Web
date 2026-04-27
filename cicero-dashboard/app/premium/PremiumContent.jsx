@@ -12,6 +12,8 @@ import {
   Workflow,
 } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
+import { hasActivePremiumSubscription } from "@/utils/premium";
 
 const features = [
   {
@@ -54,6 +56,12 @@ const features = [
 
 export default function PremiumContent() {
   useRequireAuth();
+  const { premiumTier, premiumExpiry, profile } = useAuth();
+  const hasPremiumAccess = hasActivePremiumSubscription(
+    premiumTier,
+    premiumExpiry || profile?.premium_expires_at || null,
+    Boolean(profile?.premium_status),
+  );
 
   return (
     <div className="space-y-10">
@@ -65,26 +73,29 @@ export default function PremiumContent() {
               Premium
             </div>
             <h1 className="text-3xl font-semibold leading-tight text-sky-800">
-              Paket Premium Cicero
+              {hasPremiumAccess ? "Akses Premium Aktif" : "Paket Premium Cicero"}
             </h1>
             <p className="max-w-3xl text-sm text-slate-600 md:text-base">
-              Nikmati recap otomatis via WA Bot, halaman ANEV siap unduh, dan panduan operator yang
-              dirancang untuk memastikan absensi digital berjalan lancar setiap hari.
+              {hasPremiumAccess
+                ? "Akun Anda sudah premium. Fitur WA Bot, ANEV, dan rekap otomatis sudah aktif sesuai paket berjalan."
+                : "Nikmati recap otomatis via WA Bot, halaman ANEV siap unduh, dan panduan operator yang dirancang untuk memastikan absensi digital berjalan lancar setiap hari."}
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/premium/register"
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-12px_rgba(79,70,229,0.55)] transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-              >
-                Daftar Sekarang
-              </Link>
-              <Link
-                href="/premium/register"
-                className="inline-flex items-center justify-center rounded-xl border border-sky-100/70 bg-white/80 px-5 py-3 text-sm font-semibold text-sky-700 shadow-inner transition hover:border-indigo-200 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-              >
-                Lihat alur pendaftaran
-              </Link>
-            </div>
+            {!hasPremiumAccess && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href="/premium/register"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-12px_rgba(79,70,229,0.55)] transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
+                >
+                  Daftar Sekarang
+                </Link>
+                <Link
+                  href="/premium/register"
+                  className="inline-flex items-center justify-center rounded-xl border border-sky-100/70 bg-white/80 px-5 py-3 text-sm font-semibold text-sky-700 shadow-inner transition hover:border-indigo-200 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
+                >
+                  Lihat alur pendaftaran
+                </Link>
+              </div>
+            )}
           </div>
           <div className="rounded-2xl border border-sky-100/70 bg-white/80 p-5 shadow-inner md:max-w-sm">
             <div className="flex items-center gap-3">
@@ -132,12 +143,14 @@ export default function PremiumContent() {
               dan tidak memblokir pesan WA Bot Cicero.
             </p>
           </div>
-          <Link
-            href="/premium/register"
-            className="inline-flex items-center justify-center rounded-xl border border-indigo-100/70 bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_-14px_rgba(99,102,241,0.65)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
-          >
-            Ajukan akses premium
-          </Link>
+          {!hasPremiumAccess && (
+            <Link
+              href="/premium/register"
+              className="inline-flex items-center justify-center rounded-xl border border-indigo-100/70 bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_-14px_rgba(99,102,241,0.65)] transition hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-200"
+            >
+              Ajukan akses premium
+            </Link>
+          )}
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-indigo-50 bg-indigo-50/60 p-4 text-sm text-indigo-800 shadow-inner">

@@ -25,7 +25,10 @@ import {
   normalizeInstagramTaskPosts,
   normalizeTiktokTaskPosts,
 } from "@/utils/taskRecapWhatsapp";
-import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
+import {
+  hasActivePremiumSubscription,
+  isPremiumTierAllowedForEngagementDate,
+} from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 import {
   Camera,
@@ -74,7 +77,16 @@ function buildSummaryFromUsers(users, totalIGPost, fallbackSummary) {
 
 export default function InstagramEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const { premiumTier, effectiveRole, effectiveClientType, token, clientId, regionalId } = useAuth();
+  const {
+    premiumTier,
+    premiumExpiry,
+    profile,
+    effectiveRole,
+    effectiveClientType,
+    token,
+    clientId,
+    regionalId,
+  } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -476,7 +488,13 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     canSelectScope,
   };
 
-  const premiumCta = isOrgClient && !isOrgOperator
+  const hasPremiumAccess = hasActivePremiumSubscription(
+    premiumTier,
+    premiumExpiry || profile?.premium_expires_at || null,
+    Boolean(profile?.premium_status),
+  );
+
+  const premiumCta = isOrgClient && !isOrgOperator && !hasPremiumAccess
     ? {
         label: "Premium CICERO",
         description: "Jadwalkan rekap otomatis & briefing WA Bot tiap hari.",
@@ -640,7 +658,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             periodeLabel: reportPeriodeLabel,
             viewLabel: resolvedViewOptions.find((option) => option.value === viewBy)?.label,
           }}
-          showPremiumCta={isOrgClient}
+          showPremiumCta={isOrgClient && !hasPremiumAccess}
         />
       </DetailRekapSection>
     </InsightLayout>

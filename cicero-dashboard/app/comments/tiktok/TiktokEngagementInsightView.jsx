@@ -21,7 +21,10 @@ import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
 import useAuth from "@/hooks/useAuth";
-import { isPremiumTierAllowedForEngagementDate } from "@/utils/premium";
+import {
+  hasActivePremiumSubscription,
+  isPremiumTierAllowedForEngagementDate,
+} from "@/utils/premium";
 import {
   getInstagramPosts,
   getRekapKomentarTiktok,
@@ -69,7 +72,16 @@ function buildSummaryFromUsers(users, totalTiktokPost, fallbackSummary) {
 
 export default function TiktokEngagementInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const { premiumTier, effectiveRole, effectiveClientType, token, clientId, regionalId, profile } = useAuth();
+  const {
+    premiumTier,
+    premiumExpiry,
+    effectiveRole,
+    effectiveClientType,
+    token,
+    clientId,
+    regionalId,
+    profile,
+  } = useAuth();
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
@@ -378,7 +390,13 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     canSelectScope,
   };
 
-  const premiumCta = isOrgClient && !isOrgOperator
+  const hasPremiumAccess = hasActivePremiumSubscription(
+    premiumTier,
+    premiumExpiry || profile?.premium_expires_at || null,
+    Boolean(profile?.premium_status),
+  );
+
+  const premiumCta = isOrgClient && !isOrgOperator && !hasPremiumAccess
     ? {
         label: "Premium CICERO",
         description: "Jadwalkan rekap otomatis & briefing WA Bot tiap hari.",
@@ -667,7 +685,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           clientName={selectedClientName}
           reportContext={reportContext}
           rekapSummary={effectiveRekapSummary}
-          showPremiumCta={isOrgClient}
+          showPremiumCta={isOrgClient && !hasPremiumAccess}
         />
       </DetailRekapSection>
     </InsightLayout>

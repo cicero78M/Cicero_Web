@@ -29,7 +29,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import useAuth from "@/hooks/useAuth";
-import { isPremiumTierAllowedForAnev } from "@/utils/premium";
+import { hasActivePremiumSubscription, isPremiumTierAllowedForAnev } from "@/utils/premium";
 import { getUserDirectoryFetchScope } from "@/utils/userDirectoryScope";
 
 export default function Sidebar() {
@@ -43,6 +43,7 @@ export default function Sidebar() {
     clientId,
     effectiveClientType,
     premiumTier,
+    premiumExpiry,
   } = useAuth();
   function isActive(val) {
     return val === true || val === "true" || val === 1 || val === "1";
@@ -77,6 +78,16 @@ export default function Sidebar() {
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
   const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
+  const hasPremiumStatus = Boolean(
+    isActive(getStatus(profile, "premium_status")) ||
+      isActive(getStatus(profile, "is_premium")) ||
+      isActive(getStatus(profile, "premiumStatus")),
+  );
+  const hasPremiumAccess = hasActivePremiumSubscription(
+    premiumTier,
+    premiumExpiry || getStatus(profile, "premium_expires_at") || null,
+    hasPremiumStatus,
+  );
   const anevPolresPath = "/anev/polres";
   
   // Get client_type from profile to determine original directorate scope
@@ -156,7 +167,7 @@ export default function Sidebar() {
       path: "/mekanisme-absensi",
       icon: Workflow,
     },
-    ...(isOrgClient && !isOrgOperator
+    ...(isOrgClient && !isOrgOperator && !hasPremiumAccess
       ? [{ label: "Premium", path: "/premium", icon: Sparkles }]
       : []),
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },

@@ -55,3 +55,25 @@ export function isPremiumTierAllowedForEngagementDate(tier?: string | null) {
 
   return ALLOWED_ENGAGEMENT_DATE_TIERS.some((allowedTier) => normalized === allowedTier);
 }
+
+export function hasActivePremiumSubscription(
+  tier?: string | null,
+  expiry?: string | null,
+  premiumStatus?: boolean | null,
+) {
+  const normalizedTier = normalizePremiumTierKey(tier);
+  const tierLooksPremium =
+    normalizedTier.startsWith("tier") || normalizedTier.startsWith("premium");
+
+  const explicitStatus = typeof premiumStatus === "boolean" ? premiumStatus : null;
+
+  if (explicitStatus === false && !tierLooksPremium) return false;
+  if (explicitStatus !== true && !tierLooksPremium) return false;
+
+  if (!expiry) return true;
+
+  const expiryTime = Date.parse(expiry);
+  if (Number.isNaN(expiryTime)) return true;
+
+  return expiryTime > Date.now();
+}
