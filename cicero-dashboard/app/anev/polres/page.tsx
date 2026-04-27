@@ -710,7 +710,7 @@ export default function AnevPolresPage() {
               type="button"
               onClick={() => void loadData(filters)}
               disabled={isLoading}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60"
             >
               <RefreshCcw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> Refresh
             </button>
@@ -718,7 +718,7 @@ export default function AnevPolresPage() {
               type="button"
               onClick={() => void handleExport()}
               disabled={!data || isExporting}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60"
             >
               <Download className={`h-4 w-4 ${isExporting ? "animate-pulse" : ""}`} /> Export Excel
             </button>
@@ -731,21 +731,21 @@ export default function AnevPolresPage() {
           <button
             type="button"
             onClick={() => void handleQuickRange("today")}
-            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
             Quick Harian
           </button>
           <button
             type="button"
             onClick={() => void handleQuickRange("7d")}
-            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
             Quick Mingguan
           </button>
           <button
             type="button"
             onClick={() => void handleQuickRange("30d")}
-            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
             Quick Bulanan
           </button>
@@ -800,7 +800,7 @@ export default function AnevPolresPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60"
             >
               <CalendarClock className="h-4 w-4" /> Terapkan
             </button>
@@ -819,7 +819,7 @@ export default function AnevPolresPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Personel Aktif</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.totalUsers)}</p>
           <p className="mt-2 text-xs text-slate-500">Jumlah user terpetakan dalam periode</p>
-          <Link href={buildDetailHref("ringkasan")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+          <Link href={buildDetailHref("ringkasan")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
@@ -828,7 +828,7 @@ export default function AnevPolresPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting Instagram</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.igPosts)}</p>
           <p className="mt-2 text-xs text-slate-500">Total posting sumber IG</p>
-          <Link href={buildDetailHref("platform_posts", { platform: "instagram" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+          <Link href={buildDetailHref("platform_posts", { platform: "instagram" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
@@ -837,7 +837,7 @@ export default function AnevPolresPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting TikTok</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.tkPosts)}</p>
           <p className="mt-2 text-xs text-slate-500">Total posting sumber TikTok</p>
-          <Link href={buildDetailHref("platform_posts", { platform: "tiktok" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+          <Link href={buildDetailHref("platform_posts", { platform: "tiktok" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
@@ -846,7 +846,7 @@ export default function AnevPolresPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interaksi</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.likes + metrics.comments)}</p>
           <p className="mt-2 text-xs text-slate-500">Likes + komentar terakumulasi</p>
-          <Link href={buildDetailHref("top_performer")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+          <Link href={buildDetailHref("top_performer")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
@@ -858,7 +858,7 @@ export default function AnevPolresPage() {
             {getQualityMeta(metrics.compliance).label}
           </span>
           <p className="mt-2 text-xs text-slate-500">Rasio realisasi terhadap expected actions</p>
-          <Link href={buildDetailHref("compliance")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
+          <Link href={buildDetailHref("compliance")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
@@ -871,7 +871,7 @@ export default function AnevPolresPage() {
               <LineChart className="h-4 w-4 text-blue-600" />
               <h2 className={ENTERPRISE_SECTION_TITLE}>Aktivitas per Platform</h2>
             </div>
-            <Link href={buildDetailHref("platform_posts")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+            <Link href={buildDetailHref("platform_posts")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
               Lihat semua →
             </Link>
           </div>
@@ -904,7 +904,7 @@ export default function AnevPolresPage() {
               <Users className="h-4 w-4 text-blue-600" />
               <h2 className={ENTERPRISE_SECTION_TITLE}>Kepatuhan Pelaksana</h2>
             </div>
-            <Link href={buildDetailHref("compliance")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+            <Link href={buildDetailHref("compliance")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
               Lihat semua →
             </Link>
           </div>
@@ -949,7 +949,7 @@ export default function AnevPolresPage() {
               <MapPin className="h-4 w-4 text-blue-600" />
               <h2 className={ENTERPRISE_SECTION_TITLE}>Sebaran Personel per Satfung</h2>
             </div>
-            <Link href={buildDetailHref("user_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+            <Link href={buildDetailHref("user_satfung")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
               Lihat semua →
             </Link>
           </div>
@@ -975,7 +975,7 @@ export default function AnevPolresPage() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-slate-500">Post IG: {formatNumber(instagramPostTotal)}</span>
-              <Link href={buildDetailHref("ig_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+              <Link href={buildDetailHref("ig_satfung")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
                 Lihat semua →
               </Link>
             </div>
@@ -984,7 +984,7 @@ export default function AnevPolresPage() {
             <>
               <div className="space-y-2 md:hidden">
                 {igLikesBySatfung.slice(0, 8).map((row) => (
-                  <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm">
+                  <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm transition-colors hover:border-slate-200">
                     <p className="font-semibold text-slate-800">{row.satfung}</p>
                     <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600">
                       <p>Personil: <span className="font-semibold text-slate-800">{formatNumber(row.totalPersonnel)}</span></p>
@@ -1030,7 +1030,7 @@ export default function AnevPolresPage() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-slate-500">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
-              <Link href={buildDetailHref("tiktok_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+              <Link href={buildDetailHref("tiktok_satfung")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
                 Lihat semua →
               </Link>
             </div>
@@ -1039,7 +1039,7 @@ export default function AnevPolresPage() {
             <>
               <div className="space-y-2 md:hidden">
                 {tiktokBySatfung.slice(0, 8).map((row) => (
-                  <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm">
+                  <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm transition-colors hover:border-slate-200">
                     <p className="font-semibold text-slate-800">{row.satfung}</p>
                     <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600">
                       <p>Personil: <span className="font-semibold text-slate-800">{formatNumber(row.totalPersonnel)}</span></p>
@@ -1081,7 +1081,7 @@ export default function AnevPolresPage() {
       <section className={`${ENTERPRISE_PANEL} p-4`}>
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className={ENTERPRISE_SECTION_TITLE}>Top Performer (Gabungan IG + TikTok)</h2>
-          <Link href={buildDetailHref("top_performer")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
+          <Link href={buildDetailHref("top_performer")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat semua →
           </Link>
         </div>

@@ -529,11 +529,11 @@ function AnevPolresDetailContent() {
               type="button"
               onClick={() => void handleExportCurrentView()}
               disabled={isExporting || !rows.length}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60"
             >
               {isExporting ? "Menyiapkan..." : "Download Excel"}
             </button>
-            <Link href="/anev/polres" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Link href="/anev/polres" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white">
               <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard
             </Link>
           </div>
@@ -578,7 +578,7 @@ function AnevPolresDetailContent() {
                           {column.replace(/_/g, " ")}
                         </p>
                         {isLink ? (
-                          <a href={text} target="_blank" rel="noreferrer" className="break-all text-sm text-blue-700 hover:text-blue-800 hover:underline">
+                          <a href={text} target="_blank" rel="noreferrer" className="break-all text-sm text-blue-700 transition-colors hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
                             {text}
                           </a>
                         ) : (
@@ -607,7 +607,7 @@ function AnevPolresDetailContent() {
                   {pagedRows.map((row, index) => {
                     const quality = qualityMeta(inferRowQualityScore(row));
                     return (
-                    <tr key={index} className={`hover:bg-slate-50/60 ${quality.row}`}>
+                    <tr key={index} className={`transition-colors hover:bg-slate-50/60 ${quality.row}`}>
                       {columns.map((column, columnIndex) => {
                         const value = row[column];
                         const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
@@ -615,7 +615,7 @@ function AnevPolresDetailContent() {
                         return (
                           <td key={column} className="max-w-[420px] px-3 py-2 align-top text-slate-700">
                             {isLink ? (
-                              <a href={text} target="_blank" rel="noreferrer" className="break-all text-blue-700 hover:text-blue-800 hover:underline">
+                              <a href={text} target="_blank" rel="noreferrer" className="break-all text-blue-700 transition-colors hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
                                 {text}
                               </a>
                             ) : (
@@ -646,13 +646,13 @@ function AnevPolresDetailContent() {
           <div className="mt-4 flex items-center justify-between">
             <Link
               href={safePage > 1 ? pageHref(safePage - 1) : "#"}
-              className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${safePage > 1 ? "border border-slate-300 text-slate-700 hover:bg-slate-50" : "cursor-not-allowed border border-slate-200 text-slate-400"}`}
+              className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${safePage > 1 ? "border border-slate-300 text-slate-700 transition-colors hover:bg-slate-50" : "cursor-not-allowed border border-slate-200 text-slate-400"}`}
             >
               <ChevronLeft className="h-4 w-4" /> Sebelumnya
             </Link>
             <Link
               href={safePage < totalPages ? pageHref(safePage + 1) : "#"}
-              className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold ${safePage < totalPages ? "border border-slate-300 text-slate-700 hover:bg-slate-50" : "cursor-not-allowed border border-slate-200 text-slate-400"}`}
+              className={`inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${safePage < totalPages ? "border border-slate-300 text-slate-700 transition-colors hover:bg-slate-50" : "cursor-not-allowed border border-slate-200 text-slate-400"}`}
             >
               Berikutnya <ChevronRight className="h-4 w-4" />
             </Link>
