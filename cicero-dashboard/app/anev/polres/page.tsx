@@ -921,11 +921,9 @@ export default function AnevPolresPage() {
           <ul className="space-y-2">
             {tiktokBySatfung.length ? (
               tiktokBySatfung.slice(0, 8).map((row) => (
-                <li key={row.satfung} className="text-sm">
-                  <p className="font-medium text-slate-700">{row.satfung}</p>
-                  <p className="text-slate-500">
-                    Post {formatNumber(row.posts)} • Komentar {formatNumber(row.comments)} • Engagement {formatNumber(row.engagement)}
-                  </p>
+                <li key={row.satfung} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-700">{row.satfung}</span>
+                  <span className="font-semibold text-slate-900">{formatNumber(row.engagement)}</span>
                 </li>
               ))
             ) : (
