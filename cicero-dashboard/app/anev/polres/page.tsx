@@ -701,7 +701,7 @@ export default function AnevPolresPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4">
           <label className="space-y-1 text-sm">
             <span className="font-medium text-slate-700">Periode</span>
             <select
@@ -721,38 +721,6 @@ export default function AnevPolresPage() {
                 </option>
               ))}
             </select>
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Role</span>
-            <input
-              value={filters.role || ""}
-              onChange={(event) => setFilters((prev) => ({ ...prev, role: event.target.value }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
-              placeholder="mis. DITBINMAS"
-            />
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Scope</span>
-            <select
-              value={filters.scope || "org"}
-              onChange={(event) => setFilters((prev) => ({ ...prev, scope: event.target.value }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
-            >
-              <option value="org">ORG</option>
-              <option value="direktorat">Direktorat</option>
-            </select>
-          </label>
-
-          <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Regional</span>
-            <input
-              value={filters.regional_id || ""}
-              onChange={(event) => setFilters((prev) => ({ ...prev, regional_id: event.target.value.toUpperCase() }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
-              placeholder="REGIONAL"
-            />
           </label>
 
           {filters.time_range === "custom" && (
