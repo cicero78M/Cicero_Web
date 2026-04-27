@@ -93,6 +93,15 @@ function getText(source: UnknownRecord, keys: string[], fallback = "") {
   return fallback;
 }
 
+function normalizeHandleValue(raw?: string) {
+  if (!raw) return "";
+  const trimmed = String(raw).trim();
+  if (!trimmed) return "";
+  const ig = trimmed.match(/instagram\.com\/(?:p\/|reel\/)?@?([A-Za-z0-9._-]+)/i)?.[1];
+  const tk = trimmed.match(/tiktok\.com\/@?([A-Za-z0-9._-]+)/i)?.[1];
+  return (ig || tk || trimmed).replace(/^@+/, "").replace(/\/$/, "").toLowerCase();
+}
+
 function formatDateInput(date: Date) {
   const shifted = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return shifted.toISOString().split("T")[0];
@@ -145,6 +154,7 @@ function buildIdentityMaps(data: DashboardAnevResponse | null) {
   const byUsername = new Map<string, IdentityEntry>();
   if (!data) return { byId, byUsername };
 
+
   const directoryCandidates: unknown[] = [
     data.directory,
     (data.raw as UnknownRecord)?.user_directory,
@@ -157,6 +167,11 @@ function buildIdentityMaps(data: DashboardAnevResponse | null) {
       const src = asRecord(entry);
       const userId = getText(src, ["user_id", "userId", "id"]);
       const username = getText(src, ["username", "handle", "account"]);
+      const igHandle = getText(src, ["instagram", "insta", "instagram_username"]);
+      const tkHandle = getText(src, ["tiktok", "tiktok_username"]);
+      const kontak = asRecord(src.kontak_sosial);
+      const kontakIg = getText(kontak, ["instagram"]);
+      const kontakTk = getText(kontak, ["tiktok"]);
       const name = getText(src, ["display_name", "full_name", "nama", "name"], "");
       const satfung = getText(src, ["divisi", "division", "satfung"]);
       const identity: IdentityEntry = {
@@ -165,7 +180,11 @@ function buildIdentityMaps(data: DashboardAnevResponse | null) {
         satfung: satfung || undefined,
       };
       if (userId) byId.set(userId, identity);
-      if (username) byUsername.set(username.toLowerCase(), identity);
+
+      [username, igHandle, tkHandle, kontakIg, kontakTk]
+        .map((entry) => normalizeHandleValue(entry))
+        .filter(Boolean)
+        .forEach((key) => byUsername.set(key, identity));
     });
   });
 
@@ -193,7 +212,7 @@ function mapCompliance(data: DashboardAnevResponse | null): ComplianceRow[] {
       const username = getText(src, ["username", "handle", "account"]);
       const identity =
         (userId ? identityMaps.byId.get(userId) : undefined) ||
-        (username ? identityMaps.byUsername.get(username.toLowerCase()) : undefined);
+        (username ? identityMaps.byUsername.get(normalizeHandleValue(username)) : undefined);
       const assigned = getNumber(src, ["assigned", "expected_actions", "expected", "tasks", "total"]);
       const completed = getNumber(src, ["completed", "total_actions", "done", "selesai"]);
       const rateRaw = getNumber(src, ["completion_rate", "completionRate"], Number.NaN);
@@ -311,7 +330,7 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
         const username = getText(src, ["username", "handle", "account"]);
         const identity =
           (userId ? identityMaps.byId.get(userId) : undefined) ||
-          (username ? identityMaps.byUsername.get(username.toLowerCase()) : undefined);
+          (username ? identityMaps.byUsername.get(normalizeHandleValue(username)) : undefined);
         const likes = getNumber(src, ["likes", "total_likes"]);
         const comments = getNumber(src, ["comments", "total_comments"]);
         const shares = getNumber(src, ["shares", "total_shares"]);
