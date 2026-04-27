@@ -36,7 +36,18 @@ type FilterState = Pick<DashboardAnevFilters, "time_range" | "start_date" | "end
 type LabeledCount = { label: string; value: number };
 type PlatformPost = { platform: string; posts: number };
 type ComplianceRow = { pelaksana: string; assigned: number; completed: number; rate: number };
-type EngagementRow = { satfung: string; posts: number; comments: number; engagement: number };
+type InstagramSatfungRow = {
+  satfung: string;
+  totalPersonnel: number;
+  activePersonnel: number;
+  totalLikes: number;
+};
+type TiktokSatfungRow = {
+  satfung: string;
+  totalPersonnel: number;
+  activePersonnel: number;
+  totalComments: number;
+};
 type PerformerRow = {
   name: string;
   userId?: string;
@@ -44,7 +55,6 @@ type PerformerRow = {
   satfung?: string;
   platform: "instagram" | "tiktok";
   engagement: number;
-  posts: number;
 };
 
 type IdentityEntry = {
@@ -281,17 +291,48 @@ function mapUserPerSatfung(data: DashboardAnevResponse | null): LabeledCount[] {
   return [];
 }
 
-function mapInstagramLikesPerSatfung(data: DashboardAnevResponse | null): LabeledCount[] {
+function mapInstagramLikesPerSatfung(data: DashboardAnevResponse | null): InstagramSatfungRow[] {
   if (!data) return [];
   const totals = asRecord(data.aggregates.totals);
-  const rows = normalizeLabeledArray(totals.likes_per_satfung, ["likes", "total_likes", "value", "count"]);
-  return rows.sort((a, b) => b.value - a.value);
+  const usersBySatfung = mapUserPerSatfung(data);
+  const totalPersonnelMap = new Map(usersBySatfung.map((row) => [row.label, row.value]));
+
+  if (Array.isArray(totals.likes_per_satfung)) {
+    const rows = totals.likes_per_satfung
+      .map((entry) => {
+        const src = asRecord(entry);
+        const satfung = getText(src, ["satfung", "division", "divisi", "label", "name"]);
+        if (!satfung) return null;
+        const totalLikes = getNumber(src, ["likes", "total_likes", "value", "count"]);
+        const totalPersonnel = getNumber(src, ["total_personnel", "personnel_total", "personil_total"], totalPersonnelMap.get(satfung) || 0);
+        const activePersonnel = getNumber(src, ["active_personnel", "personnel_active", "personil_aktif", "liked_personnel", "personnel_likes"], totalLikes > 0 ? totalPersonnel : 0);
+        return {
+          satfung,
+          totalPersonnel,
+          activePersonnel,
+          totalLikes,
+        };
+      })
+      .filter((row): row is InstagramSatfungRow => Boolean(row));
+    return rows.sort((a, b) => b.totalLikes - a.totalLikes);
+  }
+
+  return normalizeLabeledArray(totals.likes_per_satfung, ["likes", "total_likes", "value", "count"])
+    .map((row) => ({
+      satfung: row.label,
+      totalPersonnel: totalPersonnelMap.get(row.label) || 0,
+      activePersonnel: row.value > 0 ? totalPersonnelMap.get(row.label) || 0 : 0,
+      totalLikes: row.value,
+    }))
+    .sort((a, b) => b.totalLikes - a.totalLikes);
 }
 
-function mapTiktokPerSatfung(data: DashboardAnevResponse | null): EngagementRow[] {
+function mapTiktokPerSatfung(data: DashboardAnevResponse | null): TiktokSatfungRow[] {
   if (!data) return [];
   const totals = asRecord(data.aggregates.totals);
   const candidates = [totals.tiktok_per_satfung, totals.tiktok_per_divisi, totals.tiktok_per_division];
+  const usersBySatfung = mapUserPerSatfung(data);
+  const totalPersonnelMap = new Map(usersBySatfung.map((row) => [row.label, row.value]));
 
   for (const candidate of candidates) {
     if (!Array.isArray(candidate)) continue;
@@ -300,20 +341,19 @@ function mapTiktokPerSatfung(data: DashboardAnevResponse | null): EngagementRow[
         const src = asRecord(entry);
         const satfung = getText(src, ["satfung", "division", "divisi", "label", "name"]);
         if (!satfung) return null;
-        const comments = getNumber(src, ["comments", "total_comments", "engagement"]);
-        const engagement = getNumber(src, ["engagement", "comments", "total_comments"], comments);
-        const rawPosts = getNumber(src, ["task_count", "assigned", "expected_tasks", "posts", "total_posts", "count"]);
-        const posts = rawPosts > 0 ? rawPosts : comments > 0 ? comments : engagement;
+        const totalComments = getNumber(src, ["comments", "total_comments", "engagement"]);
+        const totalPersonnel = getNumber(src, ["total_personnel", "personnel_total", "personil_total"], totalPersonnelMap.get(satfung) || 0);
+        const activePersonnel = getNumber(src, ["active_personnel", "personnel_active", "personil_aktif", "commented_personnel", "personnel_comments"], totalComments > 0 ? totalPersonnel : 0);
         return {
           satfung,
-          posts,
-          comments,
-          engagement,
+          totalPersonnel,
+          activePersonnel,
+          totalComments,
         };
       })
-      .filter((row): row is EngagementRow => Boolean(row));
+      .filter((row): row is TiktokSatfungRow => Boolean(row));
 
-    if (rows.length) return rows.sort((a, b) => b.engagement - a.engagement);
+    if (rows.length) return rows.sort((a, b) => b.totalComments - a.totalComments);
   }
 
   return [];
@@ -341,7 +381,6 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
       const comments = getNumber(src, ["comments", "total_comments"]);
       const shares = getNumber(src, ["shares", "total_shares"]);
       const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
-      const posts = getNumber(src, ["posts", "total_posts", "count"], engagement);
       const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
       const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
       const name = getText(
@@ -361,7 +400,6 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
         satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
         platform,
         engagement,
-        posts,
       });
     });
 
@@ -473,6 +511,12 @@ export default function AnevPolresPage() {
   }, [data]);
 
   const platformPosts = useMemo(() => mapPlatformPosts(data), [data]);
+  const platformPostMap = useMemo(
+    () => new Map(platformPosts.map((row) => [row.platform.toLowerCase(), row.posts])),
+    [platformPosts],
+  );
+  const instagramPostTotal = platformPostMap.get("instagram") || metrics.igPosts;
+  const tiktokPostTotal = platformPostMap.get("tiktok") || metrics.tkPosts;
   const complianceRows = useMemo(() => mapCompliance(data), [data]);
   const usersBySatfung = useMemo(() => mapUserPerSatfung(data), [data]);
   const igLikesBySatfung = useMemo(() => mapInstagramLikesPerSatfung(data), [data]);
@@ -826,41 +870,75 @@ export default function AnevPolresPage() {
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-blue-600" />
-            <h2 className="font-semibold text-slate-900">Instagram Likes per Satfung</h2>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <h2 className="font-semibold text-slate-900">Instagram Likes per Satfung</h2>
+            </div>
+            <span className="text-xs font-medium text-slate-500">Post IG: {formatNumber(instagramPostTotal)}</span>
           </div>
-          <ul className="space-y-2">
-            {igLikesBySatfung.length ? (
-              igLikesBySatfung.slice(0, 8).map((row) => (
-                <li key={row.label} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">{row.label}</span>
-                  <span className="font-semibold text-slate-900">{formatNumber(row.value)}</span>
-                </li>
-              ))
-            ) : (
-              <li className="text-sm text-slate-500">Data likes per satfung belum tersedia.</li>
-            )}
-          </ul>
+          {igLikesBySatfung.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Personil</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Pelaksana Likes</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Total Likes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {igLikesBySatfung.slice(0, 8).map((row) => (
+                    <tr key={row.satfung}>
+                      <td className="px-3 py-2 text-slate-700">{row.satfung}</td>
+                      <td className="px-3 py-2 text-right text-slate-700">{formatNumber(row.totalPersonnel)}</td>
+                      <td className="px-3 py-2 text-right text-slate-700">{formatNumber(row.activePersonnel)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.totalLikes)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">Data likes per satfung belum tersedia.</p>
+          )}
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <LineChart className="h-4 w-4 text-blue-600" />
-            <h2 className="font-semibold text-slate-900">TikTok Engagement per Satfung</h2>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <LineChart className="h-4 w-4 text-blue-600" />
+              <h2 className="font-semibold text-slate-900">TikTok Komentar per Satfung</h2>
+            </div>
+            <span className="text-xs font-medium text-slate-500">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
           </div>
-          <ul className="space-y-2">
-            {tiktokBySatfung.length ? (
-              tiktokBySatfung.slice(0, 8).map((row) => (
-                <li key={row.satfung} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">{row.satfung}</span>
-                  <span className="font-semibold text-slate-900">{formatNumber(row.engagement)}</span>
-                </li>
-              ))
-            ) : (
-              <li className="text-sm text-slate-500">Data TikTok per satfung belum tersedia.</li>
-            )}
-          </ul>
+          {tiktokBySatfung.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Personil</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Pelaksana Komentar</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Total Komentar</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {tiktokBySatfung.slice(0, 8).map((row) => (
+                    <tr key={row.satfung}>
+                      <td className="px-3 py-2 text-slate-700">{row.satfung}</td>
+                      <td className="px-3 py-2 text-right text-slate-700">{formatNumber(row.totalPersonnel)}</td>
+                      <td className="px-3 py-2 text-right text-slate-700">{formatNumber(row.activePersonnel)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.totalComments)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">Data TikTok per satfung belum tersedia.</p>
+          )}
         </article>
       </section>
 
@@ -874,7 +952,6 @@ export default function AnevPolresPage() {
                   <th className="px-3 py-2 text-left font-semibold text-slate-600">Personel</th>
                   <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
                   <th className="px-3 py-2 text-left font-semibold text-slate-600">Platform</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Posts</th>
                   <th className="px-3 py-2 text-right font-semibold text-slate-600">Engagement</th>
                 </tr>
               </thead>
@@ -887,7 +964,6 @@ export default function AnevPolresPage() {
                     </td>
                     <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
                     <td className="px-3 py-2 uppercase text-slate-600">{row.platform}</td>
-                    <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.posts)}</td>
                     <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.engagement)}</td>
                   </tr>
                 ))}
