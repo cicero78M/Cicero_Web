@@ -323,40 +323,43 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
     platform: "instagram" | "tiktok",
   ): PerformerRow[] => {
     if (!Array.isArray(rows)) return [];
-    return rows
-      .map((entry) => {
-        const src = asRecord(entry);
-        const userId = getText(src, ["user_id", "userId", "id"]);
-        const username = getText(src, ["username", "handle", "account"]);
-        const identity =
-          (userId ? identityMaps.byId.get(userId) : undefined) ||
-          (username ? identityMaps.byUsername.get(normalizeHandleValue(username)) : undefined);
-        const likes = getNumber(src, ["likes", "total_likes"]);
-        const comments = getNumber(src, ["comments", "total_comments"]);
-        const shares = getNumber(src, ["shares", "total_shares"]);
-        const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
-        const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
-        const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
-        const name = getText(
-          src,
-          ["display_name", "full_name", "nama", "name"],
-          identity?.name || username || userId || "User",
-        );
-        if (isUnmapped && !identity?.name && !explicitName) {
-          return null;
-        }
-        return {
-          name,
-          userId: userId || undefined,
-          username: username || identity?.username,
-          satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
-          platform,
-          engagement,
-          posts: getNumber(src, ["posts", "total_posts", "count"]),
-        };
-      })
-      .filter((row): row is PerformerRow => Boolean(row))
-      .sort((a, b) => b.engagement - a.engagement);
+    const normalized: PerformerRow[] = [];
+
+    rows.forEach((entry) => {
+      const src = asRecord(entry);
+      const userId = getText(src, ["user_id", "userId", "id"]);
+      const username = getText(src, ["username", "handle", "account"]);
+      const identity =
+        (userId ? identityMaps.byId.get(userId) : undefined) ||
+        (username ? identityMaps.byUsername.get(normalizeHandleValue(username)) : undefined);
+      const likes = getNumber(src, ["likes", "total_likes"]);
+      const comments = getNumber(src, ["comments", "total_comments"]);
+      const shares = getNumber(src, ["shares", "total_shares"]);
+      const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
+      const explicitName = getText(src, ["display_name", "full_name", "nama", "name"]);
+      const isUnmapped = Boolean(src.unmapped || src.is_unmapped || src.unrecognized);
+      const name = getText(
+        src,
+        ["display_name", "full_name", "nama", "name"],
+        identity?.name || username || userId || "User",
+      );
+
+      if (isUnmapped && !identity?.name && !explicitName) {
+        return;
+      }
+
+      normalized.push({
+        name,
+        userId: userId || undefined,
+        username: username || identity?.username,
+        satfung: getText(src, ["divisi", "division", "satfung"], identity?.satfung || ""),
+        platform,
+        engagement,
+        posts: getNumber(src, ["posts", "total_posts", "count"]),
+      });
+    });
+
+    return normalized.sort((a, b) => b.engagement - a.engagement);
   };
 
   const igRows = normalizePerUser(data.instagram_engagement?.per_user, "instagram");
