@@ -278,7 +278,7 @@ function mapTiktokPerSatfung(data: DashboardAnevResponse | null): EngagementRow[
         if (!satfung) return null;
         const comments = getNumber(src, ["comments", "total_comments", "engagement"]);
         const engagement = getNumber(src, ["engagement", "comments", "total_comments"], comments);
-        const rawPosts = getNumber(src, ["posts", "total_posts", "count"]);
+        const rawPosts = getNumber(src, ["task_count", "assigned", "expected_tasks", "posts", "total_posts", "count"]);
         const posts = rawPosts > 0 ? rawPosts : comments > 0 ? comments : engagement;
         return {
           satfung,
