@@ -1,950 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, CalendarClock, Download, LineChart, MapPin, RefreshCcw, ShieldAlert, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertCircle,
+  CalendarClock,
+  Download,
+  LineChart,
+  MapPin,
+  RefreshCcw,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useRequirePremium from "@/hooks/useRequirePremium";
 import useAuth from "@/hooks/useAuth";
-import {
-  type DashboardAnevFilters,
-  type DashboardAnevResponse,
-  getDashboardAnev,
-} from "@/utils/api";
+import { type DashboardAnevFilters, type DashboardAnevResponse, getDashboardAnev } from "@/utils/api";
 import { formatPremiumTierLabel } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 
-type FilterFormState = Pick<DashboardAnevFilters, "time_range" | "start_date" | "end_date"> & {
+type FilterState = Pick<DashboardAnevFilters, "time_range" | "start_date" | "end_date"> & {
   role?: string;
   scope?: string;
   regional_id?: string;
   client_id?: string;
 };
 
-type TiktokPerformanceRow = {
-  label: string;
-  posts: number;
-  engagement: number;
-  views?: number;
-  likes?: number;
-  comments?: number;
-  shares?: number;
-  engagementRate?: number;
-};
-
-type DirectoryEntry = {
-  userId?: string;
-  username?: string;
-  fullName?: string;
-  satfung?: string;
-  division?: string;
-  platform?: string;
-  unmapped?: boolean;
-};
-
-type EngagementUserRow = {
-  userId?: string;
-  username?: string;
-  fullName?: string;
-  posts: number;
-  likes?: number;
-  comments?: number;
-  shares?: number;
-  engagement: number;
-  platform?: string;
-  satfung?: string;
-  division?: string;
-  unmapped?: boolean;
-};
-
-type ComplianceRow = {
+type LabeledCount = { label: string; value: number };
+type PlatformPost = { platform: string; posts: number };
+type ComplianceRow = { pelaksana: string; assigned: number; completed: number; rate: number };
+type EngagementRow = { satfung: string; posts: number; comments: number; engagement: number };
+type PerformerRow = {
   name: string;
-  assigned: number;
-  completed: number;
-  completion_rate: number | null;
+  username?: string;
+  satfung?: string;
+  platform: "instagram" | "tiktok";
+  engagement: number;
+  posts: number;
 };
 
-type DirectoryIndex = {
-  byId: Map<string, DirectoryEntry>;
-  byUsername: Map<string, DirectoryEntry>;
-};
+type UnknownRecord = Record<string, unknown>;
 
-type AnyRecord = Record<string, unknown>;
-
-const TIME_RANGE_PRESETS = [
+const TIME_RANGE_OPTIONS = [
   { value: "today", label: "Harian" },
   { value: "7d", label: "Mingguan" },
   { value: "30d", label: "Bulanan" },
-  { value: "90d", label: "90 Hari Terakhir" },
-  { value: "all", label: "Semua Waktu" },
+  { value: "90d", label: "90 Hari" },
+  { value: "all", label: "Semua" },
   { value: "custom", label: "Custom" },
-];
+] as const;
 
-function formatNumber(value?: number) {
-  if (value === undefined || value === null || Number.isNaN(Number(value))) return "0";
-  return new Intl.NumberFormat("id-ID").format(Number(value));
+function formatNumber(value: number | undefined | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "0";
+  return new Intl.NumberFormat("id-ID").format(value);
 }
 
-function resolveNumber(source: AnyRecord, candidates: string[], fallback = 0) {
-  for (const key of candidates) {
-    const value = source?.[key];
-    if (typeof value === "number") return value;
+function formatPercent(value: number | undefined | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "0%";
+  return `${value.toFixed(1)}%`;
+}
+
+function asRecord(value: unknown): UnknownRecord {
+  return value && typeof value === "object" ? (value as UnknownRecord) : {};
+}
+
+function getNumber(source: UnknownRecord, keys: string[], fallback = 0) {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
     if (typeof value === "string" && value.trim()) {
       const parsed = Number(value);
-      if (!Number.isNaN(parsed)) return parsed;
+      if (Number.isFinite(parsed)) return parsed;
     }
   }
   return fallback;
 }
 
-function resolveOptionalNumber(source: AnyRecord, candidates: string[]) {
-  const resolved = resolveNumber(source, candidates, Number.NaN);
-  return Number.isNaN(resolved) ? undefined : resolved;
-}
-
-function safeString(value?: unknown): string | undefined {
-  if (typeof value === "string" && value.trim()) return value.trim();
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
-  return undefined;
-}
-
-type NarrativePlatformBreakdown = { platform: string; posts: number };
-
-function buildNarrative({
-  totalUsers,
-  totalLikes,
-  totalComments,
-  completionRate,
-  platformBreakdown,
-}: {
-  totalUsers?: number;
-  totalLikes?: number;
-  totalComments?: number;
-  completionRate?: number | null;
-  platformBreakdown: NarrativePlatformBreakdown[];
-}) {
-  const sentences: string[] = [];
-
-  if (typeof totalUsers === "number") {
-    sentences.push(`Tercatat ${formatNumber(totalUsers)} pengguna aktif pada periode ini`);
+function getText(source: UnknownRecord, keys: string[], fallback = "") {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
   }
-
-  if (typeof totalLikes === "number" || typeof totalComments === "number") {
-    const likesText =
-      typeof totalLikes === "number" ? `${formatNumber(totalLikes)} likes` : null;
-    const commentsText =
-      typeof totalComments === "number" ? `${formatNumber(totalComments)} komentar` : null;
-    const interactionText = [likesText, commentsText].filter(Boolean).join(" dan ");
-
-    if (interactionText) {
-      sentences.push(`Interaksi mencapai ${interactionText}`);
-    }
-  }
-
-  if (typeof completionRate === "number") {
-    sentences.push(`Tingkat penyelesaian tugas tercatat di ${completionRate.toFixed(1)}%`);
-  }
-
-  const topPlatform = (platformBreakdown || []).reduce<NarrativePlatformBreakdown | null>(
-    (currentTop, entry) => {
-      if (!entry?.platform) return currentTop;
-      if (!currentTop) return entry;
-      return entry.posts > currentTop.posts ? entry : currentTop;
-    },
-    null,
-  );
-
-  if (topPlatform) {
-    sentences.push(
-      `Platform teraktif adalah ${topPlatform.platform.toUpperCase()} dengan ${formatNumber(topPlatform.posts)} posting`,
-    );
-  }
-
-  if (!sentences.length) return null;
-  return `${sentences.join(". ")}.`;
-}
-
-function resolvePlatformPosts(aggregates?: DashboardAnevResponse["aggregates"]) {
-  const totals = aggregates?.totals ?? {};
-  const postsMap = (totals.posts as AnyRecord) || (totals.post as AnyRecord) || {};
-  const platformsFromMap = Object.keys(postsMap).map((platform) => ({
-    platform,
-    posts: resolveNumber(postsMap, [platform], 0),
-  }));
-
-  if (platformsFromMap.length) return platformsFromMap;
-
-  const fromArray = (aggregates?.platforms || []).map((entry: unknown) => {
-    const source = (entry && typeof entry === "object" ? entry : {}) as AnyRecord;
-    return {
-      platform: (source.platform as string) || (source.name as string) || (source.channel as string) || "",
-      posts: resolveNumber(source, ["posts", "total_posts", "count"], 0),
-    };
-  });
-
-  return fromArray.filter((item) => item.platform);
-}
-
-function resolveComplianceRows(aggregates?: DashboardAnevResponse["aggregates"]): ComplianceRow[] {
-  const raw = aggregates?.raw ?? aggregates;
-  const candidates =
-    raw?.compliance_per_pelaksana ||
-    raw?.compliance ||
-    aggregates?.totals?.compliance_per_pelaksana ||
-    aggregates?.tasks;
-
-  if (!candidates || !Array.isArray(candidates)) return [];
-  return candidates.map((item: unknown) => {
-    const source = (item && typeof item === "object" ? item : {}) as AnyRecord;
-    return {
-      name:
-        String(
-          source.pelaksana ?? source.name ?? source.label ?? source.executor ?? "-",
-        ) || "-",
-      assigned: resolveNumber(source, ["assigned", "tugas", "expected", "total"], 0),
-      completed: resolveNumber(source, ["completed", "done", "finished", "selesai"], 0),
-      completion_rate: typeof source.completion_rate === "number"
-        ? source.completion_rate
-        : typeof source.completionRate === "number"
-          ? source.completionRate
-          : null,
-    };
-  });
-}
-
-function resolveUserDirectoryEntries(data?: DashboardAnevResponse | null): DirectoryEntry[] {
-  if (!data) return [];
-
-  const candidates = [
-    (data as AnyRecord)?.directory,
-    data?.raw?.directory,
-    data?.raw?.user_directory,
-    data?.raw?.userDirectory,
-    data?.raw?.users,
-    data?.aggregates?.raw?.directory,
-    data?.aggregates?.raw?.user_directory,
-    data?.aggregates?.raw?.userDirectory,
-  ];
-
-  const results: DirectoryEntry[] = [];
-  const seen = new Set<string>();
-
-  const collect = (candidate: unknown) => {
-    const candidateRecord =
-      candidate && typeof candidate === "object" ? (candidate as Record<string, unknown>) : null;
-    const list = Array.isArray(candidate)
-      ? candidate
-      : Array.isArray(candidateRecord?.users)
-        ? candidateRecord.users
-        : candidateRecord
-          ? Object.values(candidateRecord)
-          : [];
-
-    list.forEach((item: Record<string, unknown>) => {
-      if (!item) return;
-      const userId =
-        safeString(item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp ?? item.user) ||
-        undefined;
-      const username =
-        safeString(item.username ?? item.handle ?? item.user_name ?? item.account ?? item.user) ||
-        undefined;
-      const fullName =
-        safeString(item.full_name ?? item.fullName ?? item.name ?? item.display_name ?? item.displayName) ||
-        undefined;
-      const satfung =
-        safeString(item.satfung ?? item.division ?? item.divisi ?? item.unit ?? item.department) ||
-        undefined;
-      const division =
-        safeString(item.division ?? item.divisi ?? item.satfung ?? item.unit ?? item.department) ||
-        undefined;
-      const platform =
-        safeString(item.platform ?? item.channel ?? item.media ?? item.account_type) ||
-        undefined;
-      const unmapped = Boolean(item.unmapped || item.is_unmapped || item.unrecognized);
-
-      if (!userId && !username && !fullName) return;
-      const key = `${userId || ""}-${username || fullName || ""}`.toLowerCase();
-      if (seen.has(key)) return;
-      seen.add(key);
-      results.push({
-        userId,
-        username,
-        fullName,
-        satfung,
-        division,
-        platform,
-        unmapped,
-      });
-    });
-  };
-
-  candidates.forEach((candidate) => collect(candidate));
-  return results;
-}
-
-function buildDirectoryIndex(entries: DirectoryEntry[]): DirectoryIndex {
-  const byId = new Map<string, DirectoryEntry>();
-  const byUsername = new Map<string, DirectoryEntry>();
-
-  entries.forEach((entry) => {
-    if (entry.userId) byId.set(entry.userId, entry);
-    if (entry.username) byUsername.set(entry.username.toLowerCase(), entry);
-  });
-
-  return { byId, byUsername };
-}
-
-function resolveEngagementPerUser(
-  data: DashboardAnevResponse | null,
-  platformKey: "instagram" | "tiktok",
-  directoryIndex: DirectoryIndex,
-): EngagementUserRow[] {
-  if (!data) return [];
-
-  const rootCandidates = [
-    (data as AnyRecord)?.[`${platformKey}_engagement`],
-    data?.raw?.[`${platformKey}_engagement`],
-    data?.raw?.[`${platformKey}Engagement`],
-    data?.raw?.engagement?.[platformKey],
-    data?.raw?.engagements?.[platformKey],
-    data?.aggregates?.raw?.[`${platformKey}_engagement`],
-    data?.aggregates?.raw?.engagement?.[platformKey],
-    data?.aggregates?.[`${platformKey}_engagement`],
-  ];
-
-  const engagementRoot = rootCandidates.find(
-    (candidate) => candidate && (Array.isArray(candidate) || typeof candidate === "object"),
-  );
-
-  if (!engagementRoot) return [];
-
-  const normalizeEntries = (candidate: unknown) => {
-    const list = Array.isArray(candidate)
-      ? candidate
-      : candidate && typeof candidate === "object"
-        ? Object.entries(candidate).map(([key, value]) =>
-            typeof value === "object" ? { user_id: key, ...value } : { user_id: key, engagement: value },
-          )
-        : [];
-
-    return list
-      .map((item) => {
-        const userId =
-          safeString(item.user_id ?? item.userId ?? item.id ?? item.uid ?? item.nrp) || undefined;
-        const username =
-          safeString(
-            item.username ?? item.handle ?? item.account ?? item.user ?? item.user_name,
-          ) || undefined;
-        const directoryMatch =
-          (userId ? directoryIndex.byId.get(userId) : undefined) ??
-          (username ? directoryIndex.byUsername.get(username.toLowerCase()) : undefined);
-        const fullName =
-          safeString(
-            item.full_name ?? item.fullName ?? item.name ?? item.display_name ?? item.displayName,
-          ) || directoryMatch?.fullName;
-        const satfung =
-          safeString(
-            item.satfung ??
-              item.division ??
-              item.divisi ??
-              item.unit ??
-              item.department ??
-              directoryMatch?.satfung ??
-              directoryMatch?.division,
-          ) || directoryMatch?.satfung;
-        const division =
-          safeString(
-            item.division ??
-              item.divisi ??
-              item.satfung ??
-              item.unit ??
-              directoryMatch?.division ??
-              directoryMatch?.satfung,
-          ) || directoryMatch?.division;
-        const platform =
-          safeString(item.platform ?? item.channel ?? item.media ?? directoryMatch?.platform) ||
-          platformKey;
-        const posts = resolveNumber(
-          item || {},
-          ["posts", "total_posts", "post", "count", "total"],
-          0,
-        );
-        const likes = resolveOptionalNumber(item || {}, ["likes", "like_count", "total_likes"]);
-        const comments = resolveOptionalNumber(item || {}, [
-          "comments",
-          "comment_count",
-          "total_comments",
-        ]);
-        const shares = resolveOptionalNumber(item || {}, [
-          "shares",
-          "share_count",
-          "total_shares",
-        ]);
-        const baseEngagement = (likes ?? 0) + (comments ?? 0) + (shares ?? 0);
-        const engagement = resolveNumber(
-          item || {},
-          ["engagement", "engagements", "total_engagement", "interactions", "interaction", "total"],
-          baseEngagement,
-        );
-        const unmapped = Boolean(
-          item?.unmapped ||
-            item?.is_unmapped ||
-            item?.unrecognized ||
-            ((userId || username) && !directoryMatch),
-        );
-
-        if (!userId && !username && !fullName) return null;
-
-        return {
-          userId,
-          username: username || directoryMatch?.username,
-          fullName,
-          satfung,
-          division,
-          platform,
-          posts,
-          likes,
-          comments,
-          shares,
-          engagement,
-          unmapped,
-        };
-      })
-      .filter(Boolean) as EngagementUserRow[];
-  };
-
-  const perUserCandidates = [
-    engagementRoot.per_user,
-    engagementRoot.perUser,
-    engagementRoot.users,
-    engagementRoot.user,
-    engagementRoot.per_account,
-    engagementRoot.accounts,
-    engagementRoot.entries,
-  ];
-
-  for (const candidate of perUserCandidates) {
-    const normalized = normalizeEntries(candidate);
-    if (normalized.length) {
-      return normalized.sort((a, b) =>
-        b.engagement === a.engagement ? b.posts - a.posts : b.engagement - a.engagement,
-      );
-    }
-  }
-
-  return [];
-}
-
-function resolveUserBreakdownBySatfung(
-  aggregates?: DashboardAnevResponse["aggregates"],
-  rawRoot?: any,
-) {
-  const raw = rawRoot ?? aggregates?.raw ?? aggregates;
-  const nestedRaw =
-    raw?.raw ??
-    raw?.data ??
-    raw?.payload ??
-    raw?.content ??
-    raw?.response ??
-    raw?.result;
-
-  const candidateSources = [
-    raw?.user_per_satfung,
-    raw?.users_per_satfung,
-    raw?.user_satfung,
-    raw?.satfung,
-    raw?.divisi,
-    raw?.division,
-    raw?.divisions,
-    raw?.user_breakdown?.satfung,
-    raw?.user_breakdown?.division,
-    raw?.user_breakdown,
-    raw?.breakdown?.satfung,
-    raw?.breakdown?.division,
-    raw?.breakdowns?.satfung,
-    raw?.breakdowns?.division,
-    raw?.aggregates?.user_per_satfung,
-    raw?.aggregates?.users_per_satfung,
-    raw?.aggregates?.satfung_breakdown,
-    raw?.aggregates?.division_breakdown,
-    raw?.aggregates?.user_breakdown,
-    raw?.aggregates?.breakdown?.satfung,
-    raw?.aggregates?.breakdown?.division,
-    raw?.aggregates?.breakdowns?.satfung,
-    raw?.aggregates?.breakdowns?.division,
-    nestedRaw?.user_per_satfung,
-    nestedRaw?.users_per_satfung,
-    nestedRaw?.satfung_breakdown,
-    nestedRaw?.division_breakdown,
-    nestedRaw?.user_breakdown,
-    nestedRaw?.breakdown?.satfung,
-    nestedRaw?.breakdown?.division,
-    nestedRaw?.breakdowns?.satfung,
-    nestedRaw?.breakdowns?.division,
-    aggregates?.user_per_satfung,
-    aggregates?.users_per_satfung,
-    aggregates?.satfung_breakdown,
-    aggregates?.division_breakdown,
-    aggregates?.user_breakdown,
-    aggregates?.totals?.user_per_satfung,
-    aggregates?.totals?.users_per_satfung,
-    aggregates?.totals?.satfung_breakdown,
-    aggregates?.totals?.division_breakdown,
-    aggregates?.totals?.satfung,
-    aggregates?.totals?.divisi,
-    aggregates?.totals?.divisions,
-    aggregates?.raw?.data?.user_per_satfung,
-    aggregates?.raw?.data?.users_per_satfung,
-    aggregates?.raw?.data?.satfung_breakdown,
-    aggregates?.raw?.data?.division_breakdown,
-    aggregates?.raw?.data?.user_breakdown,
-    aggregates?.raw?.breakdown?.satfung,
-    aggregates?.raw?.breakdown?.division,
-    aggregates?.raw?.breakdowns?.satfung,
-    aggregates?.raw?.breakdowns?.division,
-    aggregates?.raw?.aggregates?.user_per_satfung,
-    aggregates?.raw?.aggregates?.users_per_satfung,
-    aggregates?.raw?.aggregates?.satfung_breakdown,
-    aggregates?.raw?.aggregates?.division_breakdown,
-    aggregates?.raw?.aggregates?.user_breakdown,
-  ];
-
-  const normalizeObjectEntries = (candidate: Record<string, any>) => {
-    const entries = Object.entries(candidate || {}).map(([labelKey, value]) => {
-      const derivedLabel =
-        (value && typeof value === "object"
-          ? value?.satfung ||
-            value?.division ||
-            value?.divisi ||
-            value?.unit ||
-            value?.name ||
-            value?.label ||
-            value?.title
-          : null) || labelKey;
-
-      const count =
-        typeof value === "object"
-          ? resolveNumber(value, ["count", "total", "users", "user", "value", "jumlah", "personel"], 0)
-          : resolveNumber({ value }, ["value"], 0);
-
-      if (!derivedLabel) return null;
-      return { label: String(derivedLabel), count };
-    });
-
-    return entries.filter(Boolean) as { label: string; count: number }[];
-  };
-
-  for (const candidate of candidateSources) {
-    if (Array.isArray(candidate)) {
-      const normalized = candidate
-        .map((item: any) => {
-          const derivedLabel =
-            item?.satfung ||
-            item?.division ||
-            item?.divisi ||
-            item?.unit ||
-            item?.name ||
-            item?.label ||
-            item?.title ||
-            item?.category ||
-            item?.key;
-
-          if (!derivedLabel) return null;
-
-          const count = resolveNumber(
-            item || {},
-            ["count", "total", "users", "user", "value", "jumlah", "personel"],
-            0,
-          );
-
-          return { label: String(derivedLabel), count };
-        })
-        .filter(Boolean) as { label: string; count: number }[];
-
-      if (normalized.length) return normalized;
-    }
-
-    if (candidate && typeof candidate === "object") {
-      const normalized = normalizeObjectEntries(candidate);
-      if (normalized.length) return normalized;
-    }
-  }
-
-  return [] as { label: string; count: number }[];
-}
-
-function resolveInstagramLikesBySatfung(
-  aggregates?: DashboardAnevResponse["aggregates"],
-  rawRoot?: any,
-) {
-  const raw = rawRoot ?? aggregates?.raw ?? aggregates;
-  const instagram = raw?.instagram ?? raw?.ig ?? raw?.instagram_metrics ?? raw?.ig_metrics;
-
-  const candidateSources = [
-    instagram?.likes_per_satfung,
-    instagram?.likes_per_divisi,
-    instagram?.likes_per_division,
-    instagram?.likes_breakdown,
-    instagram?.likes,
-    instagram?.breakdown?.satfung,
-    instagram?.breakdown?.division,
-    instagram?.breakdowns?.satfung,
-    instagram?.breakdowns?.division,
-    raw?.likes_per_satfung,
-    raw?.likes_per_divisi,
-    raw?.likes_per_division,
-    raw?.likes_breakdown,
-    aggregates?.totals?.likes_per_satfung,
-    aggregates?.totals?.likes_per_divisi,
-    aggregates?.totals?.likes_per_division,
-    aggregates?.totals?.likes_breakdown,
-  ];
-
-  const normalizeArrayEntries = (candidate: any[]): { label: string; likes: number }[] => {
-    return candidate
-      .map((item: any) => {
-        const label =
-          item?.satfung ||
-          item?.division ||
-          item?.divisi ||
-          item?.unit ||
-          item?.name ||
-          item?.label ||
-          item?.title ||
-          item?.category ||
-          item?.key;
-
-        if (!label) return null;
-
-        const likes = resolveNumber(item || {}, ["likes", "total_likes", "like", "value", "count", "jumlah"], 0);
-        return { label: String(label), likes };
-      })
-      .filter(Boolean) as { label: string; likes: number }[];
-  };
-
-  const normalizeObjectEntries = (candidate: Record<string, any>): { label: string; likes: number }[] => {
-    const entries = Object.entries(candidate || {}).map(([labelKey, value]) => {
-      const derivedLabel =
-        (value && typeof value === "object"
-          ? value?.satfung ||
-            value?.division ||
-            value?.divisi ||
-            value?.unit ||
-            value?.name ||
-            value?.label ||
-            value?.title
-          : null) || labelKey;
-
-      const likes =
-        typeof value === "object"
-          ? resolveNumber(value, ["likes", "total_likes", "like", "value", "count", "jumlah"], 0)
-          : resolveNumber({ value }, ["value"], 0);
-
-      if (!derivedLabel) return null;
-      return { label: String(derivedLabel), likes };
-    });
-
-    return entries.filter(Boolean) as { label: string; likes: number }[];
-  };
-
-  for (const candidate of candidateSources) {
-    if (Array.isArray(candidate)) {
-      const normalized = normalizeArrayEntries(candidate);
-      if (normalized.length) return normalized.sort((a, b) => b.likes - a.likes);
-    }
-
-    if (candidate && typeof candidate === "object") {
-      const normalized = normalizeObjectEntries(candidate);
-      if (normalized.length) return normalized.sort((a, b) => b.likes - a.likes);
-    }
-  }
-
-  return [] as { label: string; likes: number }[];
-}
-
-function resolveTiktokPerformanceBySatfung(
-  aggregates?: DashboardAnevResponse["aggregates"],
-  rawRoot?: any,
-) {
-  const raw = rawRoot ?? aggregates?.raw ?? aggregates;
-  const tiktok =
-    raw?.tiktok ??
-    raw?.tik_tok ??
-    raw?.tiktok_metrics ??
-    raw?.tiktokMetric ??
-    raw?.tiktok_data ??
-    raw?.tiktokData ??
-    raw?.anev?.tiktok ??
-    raw?.anev?.tik_tok ??
-    raw?.anev?.tiktok_metrics ??
-    raw?.anev?.tiktokMetric ??
-    raw?.anev?.tiktok_data ??
-    raw?.anev?.tiktokData;
-
-  const collectCandidateSources = (candidate: any) => {
-    if (!candidate) return [];
-    return [
-      candidate?.per_satfung,
-      candidate?.per_divisi,
-      candidate?.per_division,
-      candidate?.satfung,
-      candidate?.division,
-      candidate?.divisions,
-      candidate?.breakdown?.satfung,
-      candidate?.breakdown?.division,
-      candidate?.breakdowns?.satfung,
-      candidate?.breakdowns?.division,
-      candidate?.posts_per_satfung,
-      candidate?.posts_per_divisi,
-      candidate?.posts_per_division,
-      candidate?.engagement_per_satfung,
-      candidate?.engagement_per_divisi,
-      candidate?.engagement_per_division,
-      candidate?.performance?.per_satfung,
-      candidate?.performance?.per_divisi,
-      candidate?.performance?.per_division,
-      candidate?.performance,
-      candidate?.tiktok_performance,
-      candidate?.tiktok_performance_per_satfung,
-      candidate?.tiktok_performance_per_divisi,
-      candidate?.tiktok_performance_per_division,
-    ];
-  };
-
-  const candidateSources = [
-    ...collectCandidateSources(tiktok),
-    ...collectCandidateSources(raw?.tiktok_summary),
-    ...collectCandidateSources(raw?.anev),
-    raw?.anev?.tiktok_per_satfung,
-    raw?.anev?.tiktok_per_divisi,
-    raw?.anev?.tiktok_per_division,
-    raw?.anev?.tiktok_posts_per_satfung,
-    raw?.anev?.tiktok_posts_per_divisi,
-    raw?.anev?.tiktok_posts_per_division,
-    raw?.anev?.tiktok_engagement_per_satfung,
-    raw?.anev?.tiktok_engagement_per_divisi,
-    raw?.anev?.tiktok_engagement_per_division,
-    raw?.tiktok_per_satfung,
-    raw?.tiktok_per_divisi,
-    raw?.tiktok_per_division,
-    raw?.tiktok_posts_per_satfung,
-    raw?.tiktok_posts_per_divisi,
-    raw?.tiktok_posts_per_division,
-    raw?.tiktok_engagement_per_satfung,
-    raw?.tiktok_engagement_per_divisi,
-    raw?.tiktok_engagement_per_division,
-    aggregates?.totals?.tiktok_per_satfung,
-    aggregates?.totals?.tiktok_per_divisi,
-    aggregates?.totals?.tiktok_per_division,
-    aggregates?.totals?.tiktok_posts_per_satfung,
-    aggregates?.totals?.tiktok_posts_per_divisi,
-    aggregates?.totals?.tiktok_posts_per_division,
-    aggregates?.totals?.tiktok_engagement_per_satfung,
-    aggregates?.totals?.tiktok_engagement_per_divisi,
-    aggregates?.totals?.tiktok_engagement_per_division,
-    aggregates?.raw?.anev?.tiktok_per_satfung,
-    aggregates?.raw?.anev?.tiktok_per_divisi,
-    aggregates?.raw?.anev?.tiktok_per_division,
-    aggregates?.raw?.anev?.tiktok_posts_per_satfung,
-    aggregates?.raw?.anev?.tiktok_posts_per_divisi,
-    aggregates?.raw?.anev?.tiktok_posts_per_division,
-    aggregates?.raw?.anev?.tiktok_engagement_per_satfung,
-    aggregates?.raw?.anev?.tiktok_engagement_per_divisi,
-    aggregates?.raw?.anev?.tiktok_engagement_per_division,
-  ];
-
-  const normalizeArrayEntries = (
-    candidate: any[],
-  ): TiktokPerformanceRow[] => {
-    return candidate
-      .map((item: any) => {
-        const label =
-          item?.satfung ||
-          item?.division ||
-          item?.divisi ||
-          item?.unit ||
-          item?.name ||
-          item?.label ||
-          item?.title ||
-          item?.category ||
-          item?.key;
-
-        if (!label) return null;
-
-        const posts = resolveNumber(
-          item || {},
-          ["posts", "total_posts", "post", "jumlah_posting", "count", "total"],
-          0,
-        );
-        const likes = resolveNumber(item || {}, ["likes", "like_count"], 0);
-        const comments = resolveNumber(
-          item || {},
-          ["comments", "comment_count"],
-          0,
-        );
-        const shares = resolveNumber(item || {}, ["shares", "share_count"], 0);
-        const views = resolveOptionalNumber(item || {}, [
-          "views",
-          "view",
-          "view_count",
-          "views_count",
-          "plays",
-          "play",
-          "impressions",
-        ]);
-        const optionalLikes = resolveOptionalNumber(item || {}, [
-          "likes",
-          "like_count",
-          "total_likes",
-        ]);
-        const optionalComments = resolveOptionalNumber(item || {}, [
-          "comments",
-          "comment_count",
-          "total_comments",
-        ]);
-        const optionalShares = resolveOptionalNumber(item || {}, [
-          "shares",
-          "share_count",
-          "total_shares",
-        ]);
-        const baseEngagement = likes + comments + shares;
-        const engagement =
-          resolveNumber(
-            item || {},
-            [
-              "engagement",
-              "engagements",
-              "total_engagement",
-              "interaction",
-              "interactions",
-              "total_interactions",
-            ],
-            baseEngagement,
-          ) || baseEngagement;
-        const engagementRate =
-          resolveOptionalNumber(item || {}, [
-            "engagement_rate",
-            "engagementRate",
-            "er",
-            "erate",
-            "engagement_rate_percent",
-          ]) ??
-          (views && views > 0 ? (engagement / views) * 100 : undefined);
-
-        return {
-          label: String(label),
-          posts,
-          engagement,
-          views,
-          likes: optionalLikes,
-          comments: optionalComments,
-          shares: optionalShares,
-          engagementRate,
-        };
-      })
-      .filter(Boolean) as TiktokPerformanceRow[];
-  };
-
-  const normalizeObjectEntries = (
-    candidate: Record<string, any>,
-  ): TiktokPerformanceRow[] => {
-    const entries = Object.entries(candidate || {}).map(([labelKey, value]) => {
-      const derivedLabel =
-        (value && typeof value === "object"
-          ? value?.satfung ||
-            value?.division ||
-            value?.divisi ||
-            value?.unit ||
-            value?.name ||
-            value?.label ||
-            value?.title
-          : null) || labelKey;
-
-      const likes = resolveOptionalNumber(value || {}, ["likes", "like_count", "total_likes"]);
-      const comments = resolveOptionalNumber(value || {}, ["comments", "comment_count", "total_comments"]);
-      const shares = resolveOptionalNumber(value || {}, ["shares", "share_count", "total_shares"]);
-      const views = resolveOptionalNumber(value || {}, [
-        "views",
-        "view",
-        "view_count",
-        "views_count",
-        "plays",
-        "play",
-        "impressions",
-      ]);
-      const posts =
-        typeof value === "object"
-          ? resolveNumber(
-              value,
-              ["posts", "total_posts", "post", "jumlah_posting", "count", "total"],
-              0,
-            )
-          : resolveNumber({ value }, ["value"], 0);
-      const baseEngagement = (likes ?? 0) + (comments ?? 0) + (shares ?? 0);
-      const engagement =
-        typeof value === "object"
-          ? resolveNumber(
-              value,
-              [
-                "engagement",
-                "engagements",
-                "total_engagement",
-                "interaction",
-                "interactions",
-                "total_interactions",
-              ],
-              baseEngagement,
-            ) || baseEngagement
-          : resolveNumber({ value }, ["value"], baseEngagement);
-      const engagementRate =
-        resolveOptionalNumber(value || {}, [
-          "engagement_rate",
-          "engagementRate",
-          "er",
-          "erate",
-          "engagement_rate_percent",
-        ]) ??
-        (views && views > 0 ? (engagement / views) * 100 : undefined);
-
-      if (!derivedLabel) return null;
-      return { label: String(derivedLabel), posts, engagement, views, likes, comments, shares, engagementRate };
-    });
-
-    return entries.filter(Boolean) as TiktokPerformanceRow[];
-  };
-
-  for (const candidate of candidateSources) {
-    if (Array.isArray(candidate)) {
-      const normalized = normalizeArrayEntries(candidate);
-      if (normalized.length) {
-        return normalized.sort((a, b) =>
-          b.engagement === a.engagement
-            ? b.posts - a.posts
-            : b.engagement - a.engagement,
-        );
-      }
-    }
-
-    if (candidate && typeof candidate === "object") {
-      const normalized = normalizeObjectEntries(candidate);
-      if (normalized.length) {
-        return normalized.sort((a, b) =>
-          b.engagement === a.engagement
-            ? b.posts - a.posts
-            : b.engagement - a.engagement,
-        );
-      }
-    }
-  }
-
-  return [] as TiktokPerformanceRow[];
-}
-
-function computeCompletionRate(row: { assigned: number; completed: number; completion_rate?: number | null }) {
-  if (typeof row.completion_rate === "number") return row.completion_rate;
-  if (!row.assigned) return 0;
-  return (row.completed / row.assigned) * 100;
+  return fallback;
 }
 
 function formatDateInput(date: Date) {
@@ -952,1566 +91,787 @@ function formatDateInput(date: Date) {
   return shifted.toISOString().split("T")[0];
 }
 
-function derivePresetRange(timeRange: string) {
-  const normalized = timeRange.toLowerCase();
+function buildQuickRange(timeRange: "today" | "7d" | "30d") {
   const today = new Date();
   const endDate = formatDateInput(today);
+  if (timeRange === "today") {
+    return { start_date: endDate, end_date: endDate };
+  }
 
-  if (normalized === "7d") {
+  if (timeRange === "7d") {
     const start = new Date(today);
-    const diffToMonday = (today.getDay() + 6) % 7;
-    start.setDate(today.getDate() - diffToMonday);
-    return { startDate: formatDateInput(start), endDate };
+    start.setDate(today.getDate() - 6);
+    return { start_date: formatDateInput(start), end_date: endDate };
   }
 
-  if (normalized === "30d") {
-    const start = new Date(today.getFullYear(), today.getMonth(), 1);
-    return { startDate: formatDateInput(start), endDate };
-  }
-
-  if (normalized === "90d") {
-    const start = new Date(today);
-    start.setDate(today.getDate() - 89);
-    return { startDate: formatDateInput(start), endDate };
-  }
-
-  if (normalized === "all") {
-    return { startDate: undefined, endDate: undefined };
-  }
-
-  if (normalized === "today") {
-    return { startDate: endDate, endDate };
-  }
-
-  return { startDate: undefined, endDate: undefined };
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  return { start_date: formatDateInput(start), end_date: endDate };
 }
 
-const DEFAULT_PRESET_RANGE = derivePresetRange("7d");
+function mapPlatformPosts(data: DashboardAnevResponse | null): PlatformPost[] {
+  if (!data) return [];
 
-function resolveFiltersWithPreset(filters: FilterFormState) {
-  const safeTimeRange = filters.time_range || "custom";
-  const presetRange = derivePresetRange(safeTimeRange);
-  const isCustom = safeTimeRange.toLowerCase() === "custom";
-  return {
-    ...filters,
-    time_range: safeTimeRange,
-    start_date: isCustom ? filters.start_date : presetRange.startDate,
-    end_date: isCustom ? filters.end_date : presetRange.endDate,
+  const rows = (data.aggregates.platforms || [])
+    .map((entry) => {
+      const src = asRecord(entry);
+      return {
+        platform: getText(src, ["platform", "name", "channel"]),
+        posts: getNumber(src, ["posts", "total_posts", "count"]),
+      };
+    })
+    .filter((row) => row.platform);
+
+  if (rows.length) return rows.sort((a, b) => b.posts - a.posts);
+
+  const totals = asRecord(data.aggregates.totals);
+  const posts = asRecord(totals.posts ?? totals.post);
+  return Object.keys(posts)
+    .map((platform) => ({
+      platform,
+      posts: getNumber(posts, [platform]),
+    }))
+    .sort((a, b) => b.posts - a.posts);
+}
+
+function mapCompliance(data: DashboardAnevResponse | null): ComplianceRow[] {
+  if (!data) return [];
+
+  const totals = asRecord(data.aggregates.totals);
+  const candidates = [
+    totals.compliance_per_pelaksana,
+    (data.aggregates.raw as UnknownRecord)?.compliance_per_pelaksana,
+    (data.aggregates.raw as UnknownRecord)?.compliance,
+  ];
+
+  const rows = candidates.find((entry) => Array.isArray(entry));
+  if (!Array.isArray(rows)) return [];
+
+  return rows
+    .map((entry) => {
+      const src = asRecord(entry);
+      const assigned = getNumber(src, ["assigned", "total_actions", "total", "expected"]);
+      const completed = getNumber(src, ["completed", "done", "total_actions", "selesai"]);
+      const rateRaw = getNumber(src, ["completion_rate", "completionRate"], Number.NaN);
+      const rate = Number.isFinite(rateRaw)
+        ? rateRaw <= 1
+          ? rateRaw * 100
+          : rateRaw
+        : assigned > 0
+          ? (completed / assigned) * 100
+          : 0;
+      return {
+        pelaksana: getText(src, ["nama", "pelaksana", "name", "label"], "-"),
+        assigned,
+        completed,
+        rate,
+      };
+    })
+    .sort((a, b) => b.rate - a.rate);
+}
+
+function normalizeLabeledArray(candidate: unknown, valueKeys: string[]): LabeledCount[] {
+  if (Array.isArray(candidate)) {
+    return candidate
+      .map((entry) => {
+        const src = asRecord(entry);
+        const label = getText(src, ["satfung", "division", "divisi", "label", "name"]);
+        if (!label) return null;
+        return { label, value: getNumber(src, valueKeys) };
+      })
+      .filter((row): row is LabeledCount => Boolean(row));
+  }
+
+  const src = asRecord(candidate);
+  return Object.keys(src).map((key) => {
+    const valueSource = asRecord(src[key]);
+    const value = Object.keys(valueSource).length
+      ? getNumber(valueSource, valueKeys)
+      : getNumber({ value: src[key] }, ["value"]);
+    return { label: key, value };
+  });
+}
+
+function mapUserPerSatfung(data: DashboardAnevResponse | null): LabeledCount[] {
+  if (!data) return [];
+  const candidates = [
+    data.aggregates.user_per_satfung,
+    data.aggregates.users_per_satfung,
+    data.aggregates.satfung_breakdown,
+    data.aggregates.division_breakdown,
+    asRecord(data.aggregates.totals).user_per_satfung,
+  ];
+
+  for (const candidate of candidates) {
+    const rows = normalizeLabeledArray(candidate, ["count", "users", "total", "value"]);
+    if (rows.length) return rows.sort((a, b) => b.value - a.value);
+  }
+  return [];
+}
+
+function mapInstagramLikesPerSatfung(data: DashboardAnevResponse | null): LabeledCount[] {
+  if (!data) return [];
+  const totals = asRecord(data.aggregates.totals);
+  const rows = normalizeLabeledArray(totals.likes_per_satfung, ["likes", "total_likes", "value", "count"]);
+  return rows.sort((a, b) => b.value - a.value);
+}
+
+function mapTiktokPerSatfung(data: DashboardAnevResponse | null): EngagementRow[] {
+  if (!data) return [];
+  const totals = asRecord(data.aggregates.totals);
+  const candidates = [totals.tiktok_per_satfung, totals.tiktok_per_divisi, totals.tiktok_per_division];
+
+  for (const candidate of candidates) {
+    if (!Array.isArray(candidate)) continue;
+    const rows = candidate
+      .map((entry) => {
+        const src = asRecord(entry);
+        const satfung = getText(src, ["satfung", "division", "divisi", "label", "name"]);
+        if (!satfung) return null;
+        return {
+          satfung,
+          posts: getNumber(src, ["posts", "total_posts", "count"]),
+          comments: getNumber(src, ["comments", "total_comments", "engagement"]),
+          engagement: getNumber(src, ["engagement", "comments", "total_comments"]),
+        };
+      })
+      .filter((row): row is EngagementRow => Boolean(row));
+
+    if (rows.length) return rows.sort((a, b) => b.engagement - a.engagement);
+  }
+
+  return [];
+}
+
+function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
+  if (!data) return [];
+
+  const normalizePerUser = (
+    rows: unknown,
+    platform: "instagram" | "tiktok",
+  ): PerformerRow[] => {
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .map((entry) => {
+        const src = asRecord(entry);
+        const likes = getNumber(src, ["likes", "total_likes"]);
+        const comments = getNumber(src, ["comments", "total_comments"]);
+        const shares = getNumber(src, ["shares", "total_shares"]);
+        const engagement = getNumber(src, ["engagement", "total_engagement"], likes + comments + shares);
+        const name = getText(src, ["nama", "full_name", "name", "display_name"], "Tanpa Nama");
+        return {
+          name,
+          username: getText(src, ["username", "handle", "account"]),
+          satfung: getText(src, ["divisi", "division", "satfung"]),
+          platform,
+          engagement,
+          posts: getNumber(src, ["posts", "total_posts", "count"]),
+        };
+      })
+      .sort((a, b) => b.engagement - a.engagement);
   };
+
+  const igRows = normalizePerUser(data.instagram_engagement?.per_user, "instagram");
+  const tkRows = normalizePerUser(data.tiktok_engagement?.per_user, "tiktok");
+
+  return [...igRows, ...tkRows].sort((a, b) => b.engagement - a.engagement).slice(0, 10);
+}
+
+function makeExportRows(data: DashboardAnevResponse) {
+  const totals = asRecord(data.aggregates.totals);
+  const filters = data.filters;
+  const context = {
+    time_range: filters.time_range,
+    start_date: filters.start_date || "",
+    end_date: filters.end_date || "",
+    role: filters.role || "",
+    scope: filters.scope || "",
+    regional_id: filters.regional_id || "",
+    client_id: filters.client_id || "",
+  };
+
+  const rows: Array<Record<string, string | number>> = [
+    { section: "ringkasan", metric: "total_users", value: getNumber(totals, ["total_users"]), ...context },
+    { section: "ringkasan", metric: "total_likes", value: getNumber(totals, ["likes", "total_likes"]), ...context },
+    {
+      section: "ringkasan",
+      metric: "total_comments",
+      value: getNumber(totals, ["comments", "total_comments"]),
+      ...context,
+    },
+    {
+      section: "ringkasan",
+      metric: "expected_actions",
+      value: getNumber(totals, ["expected_actions"]),
+      ...context,
+    },
+  ];
+
+  mapPlatformPosts(data).forEach((entry) => {
+    rows.push({ section: "posting_per_platform", platform: entry.platform, posts: entry.posts, ...context });
+  });
+
+  mapCompliance(data).forEach((entry) => {
+    rows.push({
+      section: "compliance_per_pelaksana",
+      pelaksana: entry.pelaksana,
+      assigned: entry.assigned,
+      completed: entry.completed,
+      completion_rate: Number(entry.rate.toFixed(2)),
+      ...context,
+    });
+  });
+
+  mapUserPerSatfung(data).forEach((entry) => {
+    rows.push({ section: "user_per_satfung", satfung: entry.label, users: entry.value, ...context });
+  });
+
+  mapInstagramLikesPerSatfung(data).forEach((entry) => {
+    rows.push({ section: "instagram_likes_per_satfung", satfung: entry.label, likes: entry.value, ...context });
+  });
+
+  mapTiktokPerSatfung(data).forEach((entry) => {
+    rows.push({
+      section: "tiktok_per_satfung",
+      satfung: entry.satfung,
+      posts: entry.posts,
+      comments: entry.comments,
+      engagement: entry.engagement,
+      ...context,
+    });
+  });
+
+  return rows;
+}
+
+function ProgressBar({ value }: { value: number }) {
+  const safe = Math.max(0, Math.min(100, value));
+  return (
+    <div className="h-2.5 w-full rounded-full bg-slate-200">
+      <div
+        className="h-2.5 rounded-full bg-blue-600 transition-all"
+        style={{ width: `${safe}%` }}
+      />
+    </div>
+  );
 }
 
 export default function AnevPolresPage() {
   useRequireAuth();
-  const premiumStatus = useRequirePremium({ redirectOnStandard: false });
+  const premiumStatus = useRequirePremium();
+  const { token, clientId, role, effectiveRole, effectiveClientType, regionalId, premiumTier, isHydrating, isProfileLoading } =
+    useAuth();
 
-  const {
-    token,
-    clientId,
-    isHydrating,
-    premiumTier,
-    effectiveRole,
-    effectiveClientType,
-    regionalId,
-    role,
-  } = useAuth();
-  const [formState, setFormState] = useState<FilterFormState>({
-    time_range: "7d",
-    start_date: DEFAULT_PRESET_RANGE.startDate,
-    end_date: DEFAULT_PRESET_RANGE.endDate,
-  });
-  const [appliedFilters, setAppliedFilters] = useState<FilterFormState>({
-    time_range: "7d",
-    start_date: DEFAULT_PRESET_RANGE.startDate,
-    end_date: DEFAULT_PRESET_RANGE.endDate,
-  });
+  const [filters, setFilters] = useState<FilterState>({ time_range: "7d" });
   const [data, setData] = useState<DashboardAnevResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [premiumBlocked, setPremiumBlocked] = useState<string | null>(null);
-  const [badRequest, setBadRequest] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [pendingExportPreset, setPendingExportPreset] = useState<string | null>(null);
-  const lastFetchKeyRef = useRef<string | null>(null);
-
-  const availableTimeRangeOptions = useMemo(() => {
-    const permitted = (data?.filters as Record<string, unknown>)?.permitted_time_ranges as string[] | undefined;
-    const normalizedPermitted = (permitted || [])
-      .map((entry) => (typeof entry === "string" ? entry.toLowerCase() : ""))
-      .filter(Boolean);
-    if (!normalizedPermitted.length) return TIME_RANGE_PRESETS;
-
-    const baseMap = new Map(TIME_RANGE_PRESETS.map((preset) => [preset.value, preset]));
-    const uniqueOptions: { value: string; label: string }[] = [];
-    normalizedPermitted.forEach((value) => {
-      const option = baseMap.get(value) ?? { value, label: value };
-      const alreadyAdded = uniqueOptions.some((item) => item.value === option.value);
-      if (!alreadyAdded) uniqueOptions.push(option);
-    });
-
-    return uniqueOptions.length ? uniqueOptions : TIME_RANGE_PRESETS;
-  }, [data?.filters]);
-
-  const lockedRole = useMemo(() => effectiveRole ?? role ?? undefined, [effectiveRole, role]);
-  const lockedScope = useMemo(() => {
-    const normalized = (effectiveClientType || "").toLowerCase();
-    if (!normalized) return undefined;
-    if (normalized.includes("direktorat")) return "direktorat";
-    if (normalized.includes("org")) return "org";
-    return normalized;
-  }, [effectiveClientType]);
-  const lockedRegionalId = useMemo(
-    () => (regionalId ? String(regionalId).toUpperCase() : undefined),
-    [regionalId],
-  );
-
-  const lockedFilters = useMemo(
-    () => ({
-      role: lockedRole,
-      scope: lockedScope,
-      regional_id: lockedRegionalId,
-      client_id: clientId || undefined,
-    }),
-    [clientId, lockedRegionalId, lockedRole, lockedScope],
-  );
-  const premiumTierLabel = useMemo(
-    () => formatPremiumTierLabel(premiumTier || undefined),
-    [premiumTier],
-  );
-  const isWaitingSessionContext = useMemo(
-    () => !lockedRole || !lockedScope,
-    [lockedRole, lockedScope],
-  );
-
-  const isCustomRange = formState.time_range.toLowerCase() === "custom";
-  const isCustomIncomplete =
-    isCustomRange && (!formState.start_date || !formState.end_date);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const allowedValues = availableTimeRangeOptions.map((option) => option.value);
-    if (!allowedValues.length) return;
-
-    setFormState((prev) => {
-      if (allowedValues.includes(prev.time_range)) return prev;
-      const fallbackValue = allowedValues[0];
-      const derived = derivePresetRange(fallbackValue);
+    if (!clientId) return;
+    setFilters((prev) => {
+      if (prev.client_id && prev.role && prev.scope) return prev;
+      const defaultScope = (effectiveClientType || "").toLowerCase().includes("direktorat")
+        ? "direktorat"
+        : "org";
       return {
         ...prev,
-        time_range: fallbackValue,
-        start_date: fallbackValue === "custom" ? prev.start_date : derived.startDate,
-        end_date: fallbackValue === "custom" ? prev.end_date : derived.endDate,
+        client_id: prev.client_id || clientId,
+        role: prev.role || effectiveRole || role || undefined,
+        scope: prev.scope || defaultScope,
+        regional_id: prev.regional_id || regionalId || undefined,
       };
     });
-  }, [availableTimeRangeOptions]);
+  }, [clientId, role, effectiveRole, effectiveClientType, regionalId]);
 
-  const resolvePresetLabel = (value?: string) =>
-    TIME_RANGE_PRESETS.find((preset) => preset.value === value)?.label || value || "Custom";
-
-  const resolvedAppliedFilters = useMemo(
-    () => resolveFiltersWithPreset(appliedFilters),
-    [appliedFilters],
-  );
-  const appliedPresetLabel = useMemo(
-    () =>
-      resolvePresetLabel(resolvedAppliedFilters.time_range),
-    [resolvedAppliedFilters],
-  );
-  const appliedRangeLabel = useMemo(() => {
-    const start = resolvedAppliedFilters.start_date;
-    const end = resolvedAppliedFilters.end_date;
-    if (!start && !end) return "Belum diterapkan";
-    if (start && end) return `${start} → ${end}`;
-    if (start) return `${start} → (otomatis)`;
-    if (end) return `(otomatis) → ${end}`;
-    return "Rentang tidak tersedia";
-  }, [resolvedAppliedFilters]);
-
-  const derivedFilterEntries = useMemo(
-    () => [
-      { label: "Role", value: lockedRole ? lockedRole.toUpperCase() : "Menunggu sesi" },
-      {
-        label: "Scope",
-        value: lockedScope ? lockedScope.toUpperCase() : "Menunggu sesi",
-      },
-      { label: "Regional", value: lockedRegionalId || "Tidak tersedia" },
-      { label: "Client", value: clientId || "Tidak tersedia" },
-    ],
-    [clientId, lockedRegionalId, lockedRole, lockedScope],
-  );
-
-  useEffect(() => {
-    const mergeLocked = (prev: FilterFormState) => {
-      const next = { ...prev, ...lockedFilters } as FilterFormState;
-      const hasChanged = Object.keys(next).some(
-        (key) =>
-          (next as unknown as Record<string, unknown>)[key] !==
-          (prev as unknown as Record<string, unknown>)[key],
-      );
-      return hasChanged ? next : prev;
-    };
-
-    setFormState((prev) => mergeLocked(prev));
-    setAppliedFilters((prev) => mergeLocked(prev));
-  }, [lockedFilters]);
-
-  useEffect(() => {
-    if (
-      !token ||
-      !clientId ||
-      !lockedRole ||
-      !lockedScope ||
-      isHydrating ||
-      premiumStatus !== "premium"
-    ) {
-      setLoading(false);
-      return;
-    }
-
-    const controller = new AbortController();
-    const requestKey = JSON.stringify({
-      clientId,
-      time_range: resolvedAppliedFilters.time_range,
-      start_date: resolvedAppliedFilters.start_date,
-      end_date: resolvedAppliedFilters.end_date,
-      role: lockedFilters.role,
-      scope: lockedFilters.scope,
-      regional_id: lockedFilters.regional_id,
-    });
-
-    if (lastFetchKeyRef.current === requestKey) return;
-    lastFetchKeyRef.current = requestKey;
-
-    setLoading(true);
-    setError(null);
-    setPremiumBlocked(null);
-    setBadRequest(null);
-
-    getDashboardAnev(
-      token,
-      {
-        ...lockedFilters,
-        ...resolvedAppliedFilters,
-        client_id: clientId,
-      },
-      controller.signal,
-    )
-      .then((response) => {
+  const loadData = useCallback(
+    async (input: FilterState) => {
+      if (!token) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await getDashboardAnev(token, {
+          time_range: input.time_range,
+          start_date: input.start_date,
+          end_date: input.end_date,
+          role: input.role,
+          scope: input.scope,
+          regional_id: input.regional_id,
+          client_id: input.client_id || clientId || "",
+        });
         setData(response);
-      })
-      .catch((err: unknown) => {
-        const parsedErr = err as {
-          status?: number;
-          premiumGuard?: {
-            normalizedTier?: string;
-            tier?: string;
-            expires_at?: string;
-            expiresAt?: string;
-          };
-          message?: string;
-        };
-        if (controller.signal.aborted) return;
-        if (parsedErr?.status === 403) {
-          const tierLabelRaw =
-            parsedErr?.premiumGuard?.normalizedTier ||
-            parsedErr?.premiumGuard?.tier ||
-            premiumTier ||
-            "";
-          const tierLabel = formatPremiumTierLabel(tierLabelRaw) || tierLabelRaw;
-          const expiry = parsedErr?.premiumGuard?.expires_at || parsedErr?.premiumGuard?.expiresAt;
-          const message =
-            parsedErr?.message ||
-            "Akses premium diperlukan untuk membuka Dashboard ANEV.";
-          setPremiumBlocked(
-            `${message}${tierLabel ? ` (tier: ${tierLabel}${expiry ? `, expiry: ${expiry}` : ""})` : ""}`,
-          );
-          return;
-        }
-        if (parsedErr?.status === 400) {
-          setBadRequest(parsedErr?.message || "Filter scope/role tidak valid.");
-          return;
-        }
-        setError(parsedErr?.message || "Gagal memuat Dashboard ANEV Polres.");
-      })
-      .finally(() => setLoading(false));
-
-    return () => controller.abort();
-  }, [
-    clientId,
-    isHydrating,
-    lockedFilters,
-    lockedRole,
-    lockedScope,
-    premiumStatus,
-    premiumTier,
-    resolvedAppliedFilters,
-    token,
-  ]);
-
-  const aggregates = data?.aggregates;
-  const totals = aggregates?.totals || {};
-  const totalUsers = useMemo(() => resolveNumber(totals, ["total_users", "users", "user_count", "personel"], 0), [totals]);
-  const totalLikes = useMemo(() => resolveNumber(totals, ["likes", "total_likes"], 0), [totals]);
-  const totalComments = useMemo(() => resolveNumber(totals, ["comments", "total_comments"], 0), [totals]);
-  const expectedActions = useMemo(
-    () => resolveNumber(totals, ["expected_actions", "actions", "tugas_harusnya", "expected"], 0),
-    [totals],
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Gagal memuat data ANEV Polres.";
+        setError(message);
+        showToast(message, "error");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token, clientId],
   );
 
-  const platformBreakdown = useMemo(() => resolvePlatformPosts(aggregates), [aggregates]);
-  const complianceRows = useMemo(() => resolveComplianceRows(aggregates), [aggregates]);
-  const directoryEntries = useMemo(() => resolveUserDirectoryEntries(data), [data]);
-  const directoryIndex = useMemo(
-    () => buildDirectoryIndex(directoryEntries),
-    [directoryEntries],
-  );
-  const instagramEngagementPerUser = useMemo(
-    () => resolveEngagementPerUser(data, "instagram", directoryIndex),
-    [data, directoryIndex],
-  );
-  const tiktokEngagementPerUser = useMemo(
-    () => resolveEngagementPerUser(data, "tiktok", directoryIndex),
-    [data, directoryIndex],
-  );
-  const satfungBreakdown = useMemo(
-    () => resolveUserBreakdownBySatfung(aggregates, data?.raw),
-    [aggregates, data?.raw],
-  );
-  const maxSatfungCount = useMemo(
-    () =>
-      satfungBreakdown.reduce((acc, entry) => {
-        if (!entry) return acc;
-        return Math.max(acc, entry.count ?? 0);
-      }, 0),
-    [satfungBreakdown],
-  );
-  const tiktokPerformancePerSatfung = useMemo(
-    () => resolveTiktokPerformanceBySatfung(aggregates, data?.raw),
-    [aggregates, data?.raw],
-  );
-  const instagramLikesPerSatfung = useMemo(
-    () => resolveInstagramLikesBySatfung(aggregates, data?.raw),
-    [aggregates, data?.raw],
-  );
-  const completionRate = resolveOptionalNumber(totals as AnyRecord, ["completion_rate", "compliance_rate", "rate"]) ?? null;
-  const topPlatformBreakdown = useMemo<NarrativePlatformBreakdown[]>(
-    () => platformBreakdown.map((entry) => ({ platform: entry.platform, posts: entry.posts })),
-    [platformBreakdown],
-  );
-  const narrative = useMemo(
-    () =>
-      buildNarrative({
-        totalUsers,
-        totalLikes,
-        totalComments,
-        completionRate,
-        platformBreakdown: topPlatformBreakdown,
-      }),
-    [completionRate, topPlatformBreakdown, totalComments, totalLikes, totalUsers],
-  );
+  useEffect(() => {
+    if (!token || !filters.client_id || !filters.role || premiumStatus !== "premium") return;
+    void loadData(filters);
+  }, [token, filters, premiumStatus, loadData]);
 
-  const handleInputChange = (field: keyof FilterFormState, value: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const metrics = useMemo(() => {
+    const totals = asRecord(data?.aggregates?.totals);
+    const igPosts = getNumber(asRecord(totals.posts), ["instagram"], getNumber(asRecord(data?.aggregates), ["instagram_posts"]));
+    const tkPosts = getNumber(asRecord(totals.posts), ["tiktok"], getNumber(asRecord(data?.aggregates), ["tiktok_posts"]));
+    const likes = getNumber(totals, ["likes", "total_likes"], getNumber(asRecord(data?.aggregates), ["total_likes"]));
+    const comments = getNumber(totals, ["comments", "total_comments"], getNumber(asRecord(data?.aggregates), ["total_comments"]));
+    const totalUsers = getNumber(totals, ["total_users"], getNumber(asRecord(data?.aggregates), ["total_users"]));
+    const expected = getNumber(totals, ["expected_actions"], getNumber(asRecord(data?.aggregates), ["expected_actions"]));
+    const compliance = expected > 0 ? ((likes + comments) / expected) * 100 : 0;
 
-  const handlePresetChange = (value: string) => {
-    const derived = derivePresetRange(value);
-    setFormState((prev) => ({
-      ...prev,
-      time_range: value,
-      start_date: value === "custom" ? undefined : derived.startDate,
-      end_date: value === "custom" ? undefined : derived.endDate,
-    }));
-  };
-
-  const handleApply = () => {
-    if (isCustomRange && (!formState.start_date || !formState.end_date)) return;
-    lastFetchKeyRef.current = null;
-    const resolved = resolveFiltersWithPreset({
-      ...formState,
-      ...lockedFilters,
-    });
-
-    setAppliedFilters(resolved);
-  };
-  const handleResetFilters = () => {
-    const resetState = {
-      ...lockedFilters,
-      time_range: "7d",
-      start_date: DEFAULT_PRESET_RANGE.startDate,
-      end_date: DEFAULT_PRESET_RANGE.endDate,
+    return {
+      totalUsers,
+      igPosts,
+      tkPosts,
+      likes,
+      comments,
+      compliance,
     };
-    lastFetchKeyRef.current = null;
-    setFormState(resetState);
-    setAppliedFilters(resetState);
-  };
+  }, [data]);
 
-  const handleQuickExportByPreset = (preset: "today" | "7d" | "30d") => {
-    const derived = derivePresetRange(preset);
-    const nextState = {
-      ...formState,
-      ...lockedFilters,
-      time_range: preset,
-      start_date: derived.startDate,
-      end_date: derived.endDate,
-    };
+  const platformPosts = useMemo(() => mapPlatformPosts(data), [data]);
+  const complianceRows = useMemo(() => mapCompliance(data), [data]);
+  const usersBySatfung = useMemo(() => mapUserPerSatfung(data), [data]);
+  const igLikesBySatfung = useMemo(() => mapInstagramLikesPerSatfung(data), [data]);
+  const tiktokBySatfung = useMemo(() => mapTiktokPerSatfung(data), [data]);
+  const topPerformers = useMemo(() => mapTopPerformers(data), [data]);
 
-    lastFetchKeyRef.current = null;
-    setPendingExportPreset(preset);
-    setFormState(nextState);
-    setAppliedFilters(nextState);
-  };
-
-  const handleExportExcel = async () => {
-    if (!data) {
-      showToast("Data ANEV belum tersedia untuk diekspor.", "error");
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (filters.time_range === "custom" && (!filters.start_date || !filters.end_date)) {
+      showToast("Untuk custom, isi tanggal mulai dan tanggal akhir.", "error");
       return;
     }
+    await loadData(filters);
+  };
 
-    if (isCustomRange && isCustomIncomplete) {
-      showToast("Lengkapi tanggal custom terlebih dahulu sebelum export.", "error");
-      return;
-    }
-
-    const exportedAt = new Date().toISOString();
-    const activeFilters = data.filters
-      ? resolveFiltersWithPreset(data.filters as FilterFormState)
-      : resolvedAppliedFilters;
-    const exportContext = {
-      exported_at: exportedAt,
-      time_range: activeFilters.time_range || "",
-      time_range_label: resolvePresetLabel(activeFilters.time_range),
-      start_date: activeFilters.start_date || "",
-      end_date: activeFilters.end_date || "",
-      role: activeFilters.role || lockedRole || "",
-      scope: activeFilters.scope || lockedScope || "",
-      regional_id: activeFilters.regional_id || lockedRegionalId || "",
-      client_id: activeFilters.client_id || clientId || "",
+  const handleQuickRange = async (range: "today" | "7d" | "30d") => {
+    const quick = buildQuickRange(range);
+    const next: FilterState = {
+      ...filters,
+      time_range: range,
+      start_date: quick.start_date,
+      end_date: quick.end_date,
     };
+    setFilters(next);
+    await loadData(next);
+  };
 
-    const rows: Record<string, string | number>[] = [
-      {
-        section: "ringkasan",
-        metric: "total_users",
-        value: totalUsers,
-        ...exportContext,
-      },
-      {
-        section: "ringkasan",
-        metric: "total_likes",
-        value: totalLikes,
-        ...exportContext,
-      },
-      {
-        section: "ringkasan",
-        metric: "total_comments",
-        value: totalComments,
-        ...exportContext,
-      },
-      {
-        section: "ringkasan",
-        metric: "expected_actions",
-        value: expectedActions,
-        ...exportContext,
-      },
-      {
-        section: "ringkasan",
-        metric: "completion_rate",
-        value: typeof completionRate === "number" ? Number(completionRate.toFixed(2)) : 0,
-        ...exportContext,
-      },
-      ...platformBreakdown.map((entry) => ({
-        section: "posting_per_platform",
-        platform: entry.platform,
-        posts: entry.posts,
-        ...exportContext,
-      })),
-      ...complianceRows.map((entry) => ({
-        section: "compliance_per_pelaksana",
-        pelaksana: entry.name,
-        assigned: entry.assigned,
-        completed: entry.completed,
-        completion_rate:
-          typeof entry.completion_rate === "number"
-            ? Number(entry.completion_rate.toFixed(2))
-            : 0,
-        ...exportContext,
-      })),
-      ...satfungBreakdown.map((entry) => ({
-        section: "user_per_satfung_divisi",
-        satfung_divisi: entry.label,
-        users: entry.count,
-        ...exportContext,
-      })),
-      ...tiktokPerformancePerSatfung.map((entry) => ({
-        section: "tiktok_per_satfung_divisi",
-        satfung_divisi: entry.label,
-        posts: entry.posts,
-        engagement: entry.engagement,
-        views: entry.views ?? 0,
-        likes: entry.likes ?? 0,
-        comments: entry.comments ?? 0,
-        shares: entry.shares ?? 0,
-        engagement_rate:
-          typeof entry.engagementRate === "number"
-            ? Number(entry.engagementRate.toFixed(2))
-            : 0,
-        ...exportContext,
-      })),
-      ...instagramLikesPerSatfung.map((entry) => ({
-        section: "instagram_likes_per_satfung_divisi",
-        satfung_divisi: entry.label,
-        likes: entry.likes,
-        ...exportContext,
-      })),
-      ...directoryEntries.map((entry) => ({
-        section: "direktori_user",
-        user_id: entry.userId || "",
-        username: entry.username || "",
-        full_name: entry.fullName || "",
-        satfung: entry.satfung || entry.division || "",
-        platform: entry.platform || "",
-        unmapped: entry.unmapped ? "yes" : "no",
-        ...exportContext,
-      })),
-      ...instagramEngagementPerUser.map((entry) => ({
-        section: "engagement_instagram_per_user",
-        user_id: entry.userId || "",
-        username: entry.username || "",
-        full_name: entry.fullName || "",
-        satfung: entry.satfung || entry.division || "",
-        posts: entry.posts,
-        likes: entry.likes ?? 0,
-        comments: entry.comments ?? 0,
-        shares: entry.shares ?? 0,
-        engagement: entry.engagement,
-        unmapped: entry.unmapped ? "yes" : "no",
-        ...exportContext,
-      })),
-      ...tiktokEngagementPerUser.map((entry) => ({
-        section: "engagement_tiktok_per_user",
-        user_id: entry.userId || "",
-        username: entry.username || "",
-        full_name: entry.fullName || "",
-        satfung: entry.satfung || entry.division || "",
-        posts: entry.posts,
-        likes: entry.likes ?? 0,
-        comments: entry.comments ?? 0,
-        shares: entry.shares ?? 0,
-        engagement: entry.engagement,
-        unmapped: entry.unmapped ? "yes" : "no",
-        ...exportContext,
-      })),
-    ];
-
-    const periodTag = (activeFilters.time_range || "custom").toLowerCase();
-    const rangeTag = activeFilters.start_date && activeFilters.end_date
-      ? `${activeFilters.start_date}_${activeFilters.end_date}`
-      : formatDateInput(new Date());
-    const rawFileName = `anev-polres-${(clientId || "unknown").toLowerCase()}-${periodTag}-${rangeTag}`;
-    const fileName = rawFileName.replace(/[^a-z0-9-_]/gi, "-");
-
+  const handleExport = async () => {
+    if (!data) return;
     setIsExporting(true);
     try {
+      const rows = makeExportRows(data);
+      if (!rows.length) {
+        showToast("Belum ada data untuk diekspor.", "error");
+        return;
+      }
+
       const response = await fetch("/api/dashboard/anev/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows, fileName }),
+        body: JSON.stringify({
+          rows,
+          fileName: `anev-polres-${data.filters.client_id || "client"}-${data.filters.time_range || "custom"}`,
+        }),
       });
 
       if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || "Gagal menyiapkan file Excel.");
+        const text = await response.text();
+        throw new Error(text || "Gagal mengekspor data ANEV.");
       }
 
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `${fileName}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
+      const downloadUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = `anev-polres-${data.filters.time_range || "custom"}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(downloadUrl);
       showToast("Export Excel berhasil diunduh.", "success");
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Export Excel gagal.";
-      showToast(message || "Export Excel gagal.", "error");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal mengekspor data ANEV.";
+      showToast(message, "error");
     } finally {
       setIsExporting(false);
     }
   };
 
-  useEffect(() => {
-    if (!pendingExportPreset) return;
-    if (loading || isExporting || !data) return;
-
-    const activeTimeRange = (resolvedAppliedFilters.time_range || "").toLowerCase();
-    if (activeTimeRange !== pendingExportPreset.toLowerCase()) return;
-
-    handleExportExcel().finally(() => {
-      setPendingExportPreset(null);
-    });
-  }, [
-    data,
-    handleExportExcel,
-    isExporting,
-    loading,
-    pendingExportPreset,
-    resolvedAppliedFilters.time_range,
-  ]);
-
-  const FilterSnapshot = () => {
-    if (!data?.filters && !resolvedAppliedFilters) return null;
-
-    const apiFilters = data?.filters as FilterFormState | undefined;
-    const filters = apiFilters ? resolveFiltersWithPreset(apiFilters) : resolvedAppliedFilters;
-    const timeRangeValue = filters?.time_range || resolvedAppliedFilters.time_range;
-    const activePresetLabel = resolvePresetLabel(timeRangeValue);
-    const entries = [
-      { label: "Time Range", value: activePresetLabel, highlighted: true },
-      { label: "Start", value: filters?.start_date },
-      { label: "End", value: filters?.end_date },
-      { label: "Scope", value: filters?.scope, highlighted: true },
-      { label: "Role", value: filters?.role, highlighted: true },
-      { label: "Regional", value: filters?.regional_id, highlighted: true },
-      { label: "Client", value: filters?.client_id, highlighted: true },
-    ].filter((entry) => entry.value);
-
-    if (!entries.length) return null;
-
+  if (isHydrating || isProfileLoading || premiumStatus === "loading") {
     return (
-      <div className="flex flex-wrap gap-2 text-sm">
-        {entries.map((entry) => (
-          <span
-            key={`${entry.label}-${entry.value}`}
-            className={`${entry.highlighted ? "border border-blue-100 bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"} rounded-full px-3 py-1`}
-          >
-            <span className="font-medium text-slate-900">{entry.label}:</span> {entry.value}
-          </span>
-        ))}
-      </div>
-    );
-  };
-
-  if (premiumStatus === "loading") {
-    return (
-      <div className="space-y-6 p-6">
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <Loader inline label={null} className="h-5 w-5" />
-          <span className="text-sm font-medium text-slate-700">Memuat status premium…</span>
-        </div>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader />
       </div>
     );
   }
 
-  if (premiumStatus === "standard") {
+  if (premiumStatus !== "premium") {
     return (
-      <div className="space-y-6 p-6">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900 shadow-sm">
-          <div className="mb-2 flex items-center gap-2 font-semibold">
-            <ShieldAlert className="h-5 w-5" />
-            Premium diperlukan
+      <section className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <div className="mb-2 flex items-center gap-2 text-amber-700">
+            <AlertCircle className="h-5 w-5" />
+            <p className="font-semibold">Akses Premium Diperlukan</p>
           </div>
           <p className="text-sm text-amber-800">
-            Akses Dashboard ANEV Polres hanya tersedia untuk pengguna dengan paket premium aktif
-            (Tier 1 atau Tier 2). Tingkatkan paket untuk melanjutkan.
+            Dashboard ANEV Polres hanya tersedia untuk paket premium. Paket Anda saat ini: {formatPremiumTierLabel(premiumTier)}.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/premium/anev"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
-            >
-              <Sparkles className="h-4 w-4" />
-              Cek paket premium ANEV
-            </Link>
-            <Link
-              href="/premium"
-              className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:border-blue-200"
-            >
-              Pelajari manfaat premium lain
-            </Link>
-          </div>
+          <Link
+            href="/premium/anev"
+            className="mt-4 inline-flex items-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+          >
+            Lihat Paket Premium
+          </Link>
         </div>
-      </div>
-    );
-  }
-
-  if (premiumStatus === "error") {
-    return (
-      <div className="space-y-6 p-6">
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
-          <AlertCircle className="mt-0.5 h-5 w-5" />
-          <div>
-            <div className="text-sm font-semibold">Gagal memvalidasi akses premium</div>
-            <p className="text-sm">Coba muat ulang halaman atau hubungi admin untuk memastikan akses premium Anda.</p>
-          </div>
-        </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700">
-            <Sparkles size={20} />
-          </div>
+    <main className="space-y-6 px-4 py-6 md:px-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Dashboard ANEV Polres</h1>
-            <p className="text-sm text-slate-600">
-              Rekap aktivitas, kepatuhan, dan tugas pelaksana dengan rentang waktu yang dapat diatur plus role/scope/regional otomatis dari sesi login.
+            <p className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              <ShieldCheck className="h-3.5 w-3.5" /> ANEV POLRES
+            </p>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">Dashboard ANEV yang lebih ringkas & fokus aksi</h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Alur kerja: pilih periode → cek capaian utama → analisis satfung/divisi → tindak lanjuti → export laporan.
             </p>
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                <CalendarClock className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Filter</h2>
-                <p className="text-sm text-slate-600">
-                  Pilih rentang waktu dan pastikan role, scope, serta regional mengikuti sesi login. Semua kontrol dirapikan agar mudah dibaca di layar kecil maupun besar.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleExportExcel}
-                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loading || isExporting || !data || isWaitingSessionContext || (isCustomRange && isCustomIncomplete)}
-              >
-                <Download className="h-4 w-4" />
-                {isExporting ? "Menyiapkan Excel..." : "Export Excel"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickExportByPreset("today")}
-                className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loading || isExporting || isWaitingSessionContext}
-              >
-                Export Harian
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickExportByPreset("7d")}
-                className="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 shadow-sm transition hover:border-cyan-300 hover:bg-cyan-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loading || isExporting || isWaitingSessionContext}
-              >
-                Export Mingguan
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickExportByPreset("30d")}
-                className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loading || isExporting || isWaitingSessionContext}
-              >
-                Export Bulanan
-              </button>
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
-                disabled={loading}
-              >
-                <RefreshCcw className="h-4 w-4" />
-                Reset ke default
-              </button>
-              <button
-                type="button"
-                onClick={handleApply}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
-                disabled={loading || isWaitingSessionContext || (isCustomRange && isCustomIncomplete)}
-              >
-                Terapkan filter
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-            <div className="space-y-3 rounded-lg border border-slate-100 bg-slate-50/80 p-4 lg:col-span-8">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
-                    <CalendarClock className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Rentang waktu</p>
-                    <p className="text-xs text-slate-500">Gunakan preset ringkas atau isi tanggal custom.</p>
-                  </div>
-                </div>
-                <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600 shadow-sm ring-1 ring-slate-200">
-                  Responsif
-                </span>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="flex flex-wrap gap-2">
-                  {availableTimeRangeOptions.map((option) => {
-                    const isActive = formState.time_range === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handlePresetChange(option.value)}
-                        className={`flex-1 min-w-[130px] rounded-lg border px-4 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${
-                          isActive
-                            ? "border-blue-500 bg-blue-600 text-white shadow-sm"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:text-blue-700"
-                        }`}
-                        aria-pressed={isActive}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {isCustomRange ? (
-                    <>
-                      <label className="flex flex-col gap-1 text-sm text-slate-700">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Start date</span>
-                        <input
-                          type="date"
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none"
-                          value={formState.start_date || ""}
-                          onChange={(e) => handleInputChange("start_date", e.target.value)}
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1 text-sm text-slate-700">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">End date</span>
-                        <input
-                          type="date"
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none"
-                          value={formState.end_date || ""}
-                          onChange={(e) => handleInputChange("end_date", e.target.value)}
-                        />
-                      </label>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Start</span>
-                        <span className="text-sm font-semibold text-slate-900">{formState.start_date}</span>
-                        <span className="text-xs text-slate-500">Preset otomatis menyesuaikan tanggal mulai.</span>
-                      </div>
-                      <div className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">End</span>
-                        <span className="text-sm font-semibold text-slate-900">{formState.end_date}</span>
-                        <span className="text-xs text-slate-500">Mengikuti preset yang dipilih.</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              {isCustomRange && isCustomIncomplete ? (
-                <p className="flex items-center gap-2 text-sm text-amber-700">
-                  <AlertCircle size={16} />
-                  Lengkapi tanggal mulai dan akhir untuk rentang custom.
-                </p>
-              ) : (
-                <p className="text-xs text-slate-500">
-                  Preset Today, This Week, dan This Month otomatis mengisi tanggal mulai/akhir dengan offset lokal.
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-3 rounded-lg border border-slate-100 bg-slate-50/80 p-4 lg:col-span-4">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
-                    <MapPin className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Konteks sesi</p>
-                    <p className="text-xs text-slate-500">Role, scope, dan regional terkunci.</p>
-                  </div>
-                </div>
-                <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700 shadow-sm ring-1 ring-slate-200">
-                  Locked
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {derivedFilterEntries.map((entry) => (
-                  <div
-                    key={`${entry.label}-${entry.value}`}
-                    className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm"
-                  >
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{entry.label}</span>
-                    <span className="text-sm font-semibold text-slate-900">{entry.value}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-600 shadow-sm">
-                Nilai dikunci agar permintaan API selalu memakai konteks login (effectiveRole, effectiveClientType, dan regional).
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-3 md:flex md:items-center md:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Ringkasan terapan</p>
-                <p className="text-xs text-slate-600">
-                  {appliedPresetLabel} • {appliedRangeLabel}
-                </p>
-              </div>
-            </div>
-            <span className="mt-2 inline-flex w-fit items-center rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 shadow-sm ring-1 ring-emerald-100 md:mt-0">
-              Sinkron dengan server
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {premiumStatus === "premium" && isWaitingSessionContext && (
-        <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-blue-800">
-          <AlertCircle size={20} className="mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Menunggu konteks sesi</p>
-            <p className="text-sm leading-relaxed">
-              Role/scope dari sesi login belum tersedia. Menunggu konteks sesi agar permintaan Dashboard ANEV tidak berakhir dengan error 400.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {premiumBlocked && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
-          <ShieldAlert size={20} className="mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Akses premium diperlukan</p>
-            <p className="text-sm leading-relaxed">{premiumBlocked}</p>
-            <Link
-              href="/premium/anev"
-              className="inline-flex w-fit items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void loadData(filters)}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              Daftar premium
-              <Sparkles size={16} />
-            </Link>
+              <RefreshCcw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> Refresh
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleExport()}
+              disabled={!data || isExporting}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              <Download className={`h-4 w-4 ${isExporting ? "animate-pulse" : ""}`} /> Export Excel
+            </button>
           </div>
         </div>
-      )}
+      </section>
 
-      {badRequest && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
-          <AlertCircle size={20} className="mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Filter tidak valid</p>
-            <p className="text-sm leading-relaxed">{badRequest}</p>
-          </div>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void handleQuickRange("today")}
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+          >
+            Quick Harian
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleQuickRange("7d")}
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+          >
+            Quick Mingguan
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleQuickRange("30d")}
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+          >
+            Quick Bulanan
+          </button>
         </div>
-      )}
 
-      {error && !premiumBlocked && !badRequest && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
-          <AlertCircle size={20} className="mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold">Gagal memuat data</p>
-            <p className="text-sm leading-relaxed">{error}</p>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          <label className="space-y-1 text-sm">
+            <span className="font-medium text-slate-700">Periode</span>
+            <select
+              value={filters.time_range}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  time_range: event.target.value,
+                  ...(event.target.value !== "custom" ? { start_date: undefined, end_date: undefined } : {}),
+                }))
+              }
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            >
+              {TIME_RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-1 text-sm">
+            <span className="font-medium text-slate-700">Role</span>
+            <input
+              value={filters.role || ""}
+              onChange={(event) => setFilters((prev) => ({ ...prev, role: event.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="mis. DITBINMAS"
+            />
+          </label>
+
+          <label className="space-y-1 text-sm">
+            <span className="font-medium text-slate-700">Scope</span>
+            <select
+              value={filters.scope || "org"}
+              onChange={(event) => setFilters((prev) => ({ ...prev, scope: event.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            >
+              <option value="org">ORG</option>
+              <option value="direktorat">Direktorat</option>
+            </select>
+          </label>
+
+          <label className="space-y-1 text-sm">
+            <span className="font-medium text-slate-700">Regional</span>
+            <input
+              value={filters.regional_id || ""}
+              onChange={(event) => setFilters((prev) => ({ ...prev, regional_id: event.target.value.toUpperCase() }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              placeholder="REGIONAL"
+            />
+          </label>
+
+          {filters.time_range === "custom" && (
+            <>
+              <label className="space-y-1 text-sm">
+                <span className="font-medium text-slate-700">Mulai</span>
+                <input
+                  type="date"
+                  value={filters.start_date || ""}
+                  onChange={(event) => setFilters((prev) => ({ ...prev, start_date: event.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                />
+              </label>
+              <label className="space-y-1 text-sm">
+                <span className="font-medium text-slate-700">Selesai</span>
+                <input
+                  type="date"
+                  value={filters.end_date || ""}
+                  onChange={(event) => setFilters((prev) => ({ ...prev, end_date: event.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                />
+              </label>
+            </>
+          )}
+
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            >
+              <CalendarClock className="h-4 w-4" /> Terapkan
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </section>
 
-      {loading && (
-        <div className="flex items-center justify-center rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-          <Loader />
-        </div>
-      )}
+      {error ? (
+        <section className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {error}
+        </section>
+      ) : null}
 
-      {!loading && data && !premiumBlocked && !badRequest && (
-        <div className="space-y-5">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Snapshot filter</h2>
-                <p className="text-sm text-slate-600">
-                  Filter aktif dari backend, termasuk role/scope/regional yang dikunci dari sesi login.
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                <ShieldCheck size={14} />
-                {premiumTierLabel ? `Premium aktif (${premiumTierLabel})` : "Premium aktif"}
-              </span>
-            </div>
-            <FilterSnapshot />
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Personel Aktif</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.totalUsers)}</p>
+          <p className="mt-2 text-xs text-slate-500">Jumlah user terpetakan dalam periode</p>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting Instagram</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.igPosts)}</p>
+          <p className="mt-2 text-xs text-slate-500">Total posting sumber IG</p>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting TikTok</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.tkPosts)}</p>
+          <p className="mt-2 text-xs text-slate-500">Total posting sumber TikTok</p>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interaksi</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.likes + metrics.comments)}</p>
+          <p className="mt-2 text-xs text-slate-500">Likes + komentar terakumulasi</p>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kepatuhan</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatPercent(metrics.compliance)}</p>
+          <p className="mt-2 text-xs text-slate-500">Rasio realisasi terhadap expected actions</p>
+        </article>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <LineChart className="h-4 w-4 text-blue-600" />
+            <h2 className="font-semibold text-slate-900">Aktivitas per Platform</h2>
           </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Total users</p>
-              <p className="text-2xl font-semibold text-slate-900">{formatNumber(totalUsers)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Likes</p>
-              <p className="text-2xl font-semibold text-slate-900">{formatNumber(totalLikes)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Comments</p>
-              <p className="text-2xl font-semibold text-slate-900">{formatNumber(totalComments)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Expected actions</p>
-              <p className="text-2xl font-semibold text-slate-900">{formatNumber(expectedActions)}</p>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Naratif</h3>
-            {narrative ? (
-              <p className="mt-2 text-sm leading-relaxed text-slate-700">{narrative}</p>
-            ) : (
-              <p className="mt-2 text-sm text-slate-600">
-                Narasi akan muncul setelah data pengguna, interaksi, atau platform teraktif tersedia.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900">Posting per platform</h3>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {platformBreakdown.length ? (
-                platformBreakdown.map((item) => (
-                  <div
-                    key={`${item.platform}-${item.posts}`}
-                    className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                  >
-                    <p className="text-sm text-slate-600">{item.platform.toUpperCase()}</p>
-                    <p className="text-xl font-semibold text-slate-900">{formatNumber(item.posts)}</p>
+          <div className="space-y-3">
+            {platformPosts.length ? (
+              platformPosts.map((row) => (
+                <div key={row.platform}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-700">{row.platform.toUpperCase()}</span>
+                    <span className="text-slate-900">{formatNumber(row.posts)} posting</span>
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-600">Belum ada data platform untuk filter ini.</p>
-              )}
-            </div>
+                  <ProgressBar
+                    value={
+                      platformPosts[0]?.posts > 0
+                        ? (row.posts / platformPosts[0].posts) * 100
+                        : 0
+                    }
+                  />
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">Belum ada data platform pada periode ini.</p>
+            )}
           </div>
+        </article>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">Direktori user (ANEV)</h3>
-                <p className="text-sm text-slate-600">
-                  Pemetaan <code className="rounded bg-slate-100 px-1 py-0.5">user_id</code>, username, dan nama
-                  untuk menyelaraskan engagement per user. Username yang belum cocok dengan direktori ditandai
-                  sebagai unmapped agar tim backend bisa memetakan akun.
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                <Users size={14} />
-                {directoryEntries.length ? `${directoryEntries.length} entri` : "Menunggu data"}
-              </span>
-            </div>
-            {directoryEntries.length ? (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {directoryEntries.map((entry, idx) => (
-                  <div
-                    key={`${entry.userId || entry.username || entry.fullName || idx}`}
-                    className="flex flex-col gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {entry.fullName || entry.username || entry.userId || "User"}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {entry.username ? `@${entry.username}` : "Username belum dipetakan"}
-                        </p>
-                      </div>
-                      {entry.unmapped && (
-                        <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-                          Unmapped
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                      {entry.userId && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">User ID</span>
-                          <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.userId}</span>
-                        </span>
-                      )}
-                      {entry.platform && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">Platform</span>
-                          <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.platform}</span>
-                        </span>
-                      )}
-                      {entry.satfung && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">Satfung</span>
-                          <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.satfung}</span>
-                        </span>
-                      )}
-                      {entry.division && entry.division !== entry.satfung && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-sm">
-                          <span className="text-xs font-semibold text-slate-700 md:text-[11px]">Divisi</span>
-                          <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.division}</span>
-                        </span>
-                      )}
-                    </div>
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <Users className="h-4 w-4 text-blue-600" />
+            <h2 className="font-semibold text-slate-900">Kepatuhan Pelaksana</h2>
+          </div>
+          <div className="space-y-3">
+            {complianceRows.length ? (
+              complianceRows.slice(0, 8).map((row) => (
+                <div key={`${row.pelaksana}-${row.assigned}`} className="rounded-lg border border-slate-100 p-3">
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <p className="font-medium text-slate-800">{row.pelaksana}</p>
+                    <p className="text-slate-700">{formatPercent(row.rate)}</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-600">
-                Backend dapat mengirim <code className="rounded bg-slate-100 px-1 py-0.5">directory</code> atau{" "}
-                <code className="rounded bg-slate-100 px-1 py-0.5">user_directory</code> untuk memetakan username ke{" "}
-                <code className="rounded bg-slate-100 px-1 py-0.5">user_id</code>. Jika belum tersedia, bagian ini akan
-                kosong tetapi ringkasan agregat serta breakdown satfung/divisi tetap ditampilkan sebagai fallback.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">Engagement Instagram per user</h3>
-                <p className="text-sm text-slate-600">
-                  Breakdown engagement baru yang langsung terhubung ke direktori pengguna. Username yang belum cocok ditandai
-                  sebagai unmapped sehingga tim mudah menambah pemetaan.
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                <LineChart size={14} />
-                {instagramEngagementPerUser.length ? `${instagramEngagementPerUser.length} user` : "Menunggu data"}
-              </span>
-            </div>
-            {instagramEngagementPerUser.length ? (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {instagramEngagementPerUser.map((entry, idx) => {
-                  const hasDetail =
-                    entry.likes !== undefined ||
-                    entry.comments !== undefined ||
-                    entry.shares !== undefined ||
-                    entry.platform;
-
-                  return (
-                    <div
-                      key={`${entry.userId || entry.username || entry.fullName || idx}`}
-                      className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {entry.fullName || entry.username || entry.userId || "User"}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {entry.username ? `@${entry.username}` : "Username belum dipetakan"}
-                          </p>
-                        </div>
-                        {entry.unmapped && (
-                          <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-                            Unmapped
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
-                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
-                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                        {entry.userId && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">User ID</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.userId}</span>
-                          </span>
-                        )}
-                        {entry.platform && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Platform</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.platform}</span>
-                          </span>
-                        )}
-                        {entry.satfung && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Satfung</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.satfung}</span>
-                          </span>
-                        )}
-                        {entry.division && entry.division !== entry.satfung && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Divisi</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.division}</span>
-                          </span>
-                        )}
-                        {hasDetail && (
-                          <>
-                            {entry.likes !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Likes</span>
-                                <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{formatNumber(entry.likes)}</span>
-                              </span>
-                            )}
-                            {entry.comments !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Comments</span>
-                                <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{formatNumber(entry.comments)}</span>
-                              </span>
-                            )}
-                            {entry.shares !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Shares</span>
-                                <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{formatNumber(entry.shares)}</span>
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-600">
-                Data <code className="rounded bg-slate-100 px-1 py-0.5">instagram_engagement.per_user</code> akan muncul di sini.
-                Jika backend belum mengirimnya, Anda tetap bisa memakai ringkasan posting per platform dan breakdown satfung/divisi di bawah.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">Engagement TikTok per user</h3>
-                <p className="text-sm text-slate-600">
-                  Breakdown engagement TikTok yang membawa <code className="rounded bg-slate-100 px-1 py-0.5">user_id</code>{" "}
-                  dan username, lengkap dengan flag unmapped untuk username yang belum cocok dengan direktori.
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                <LineChart size={14} />
-                {tiktokEngagementPerUser.length ? `${tiktokEngagementPerUser.length} user` : "Menunggu data"}
-              </span>
-            </div>
-            {tiktokEngagementPerUser.length ? (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {tiktokEngagementPerUser.map((entry, idx) => {
-                  const hasDetail =
-                    entry.likes !== undefined ||
-                    entry.comments !== undefined ||
-                    entry.shares !== undefined ||
-                    entry.platform;
-
-                  return (
-                    <div
-                      key={`${entry.userId || entry.username || entry.fullName || idx}`}
-                      className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {entry.fullName || entry.username || entry.userId || "User"}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {entry.username ? `@${entry.username}` : "Username belum dipetakan"}
-                          </p>
-                        </div>
-                        {entry.unmapped && (
-                          <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-                            Unmapped
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
-                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
-                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                        {entry.userId && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">User ID</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.userId}</span>
-                          </span>
-                        )}
-                        {entry.platform && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Platform</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.platform}</span>
-                          </span>
-                        )}
-                        {entry.satfung && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Satfung</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.satfung}</span>
-                          </span>
-                        )}
-                        {entry.division && entry.division !== entry.satfung && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Divisi</span>
-                            <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{entry.division}</span>
-                          </span>
-                        )}
-                        {hasDetail && (
-                          <>
-                            {entry.likes !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Likes</span>
-                                <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{formatNumber(entry.likes)}</span>
-                              </span>
-                            )}
-                            {entry.comments !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Comments</span>
-                                <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{formatNumber(entry.comments)}</span>
-                              </span>
-                            )}
-                            {entry.shares !== undefined && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                                <span className="text-xs font-semibold uppercase text-slate-500 md:text-[11px]">Shares</span>
-                                <span className="text-xs font-semibold text-slate-900 md:text-[11px]">{formatNumber(entry.shares)}</span>
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-600">
-                Kirim payload <code className="rounded bg-slate-100 px-1 py-0.5">tiktok_engagement.per_user</code> untuk mengisi daftar ini.
-                Jika belum ada, kartu TikTok per satfung/divisi di bawah tetap menjadi fallback standar.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">User per Satfung/Divisi</h3>
-                <p className="text-sm text-slate-600">Jumlah user yang dikelompokkan per satfung atau divisi.</p>
-              </div>
-            </div>
-            {satfungBreakdown.length ? (
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
-                  <span className="rounded-full bg-slate-100 px-3 py-1">Total entri: {satfungBreakdown.length}</span>
-                  {maxSatfungCount > 0 && (
-                    <span className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700">
-                      Terbanyak: {formatNumber(maxSatfungCount)} user
-                    </span>
-                  )}
+                  <ProgressBar value={row.rate} />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Selesai {formatNumber(row.completed)} dari {formatNumber(row.assigned)} tugas
+                  </p>
                 </div>
-                <div className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
-                  {satfungBreakdown.map((entry, idx) => {
-                    const ratio =
-                      maxSatfungCount > 0
-                        ? Math.min(100, Math.max(4, Math.round((entry.count / maxSatfungCount) * 100)))
-                        : 0;
-                    return (
-                      <div key={`${entry.label}-${idx}`} className="space-y-2 px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-900">{entry.label}</p>
-                            <p className="text-xs text-slate-500">User terdaftar</p>
-                          </div>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm">
-                            {formatNumber(entry.count)}
-                          </span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-white">
-                          <div
-                            className="h-full rounded-full bg-blue-500"
-                            style={{ width: `${ratio}%` }}
-                            aria-label={`Porsi ${entry.label}`}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              ))
             ) : (
-              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Belum ada data satfung/divisi untuk filter ini. Pastikan payload ANEV menyertakan breakdown user per
-                satfung atau divisi pada `aggregates` ataupun `raw`.
-              </div>
+              <p className="text-sm text-slate-500">Belum ada data kepatuhan pelaksana.</p>
             )}
           </div>
+        </article>
+      </section>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">TikTok per Satfung/Divisi</h3>
-                <p className="text-sm text-slate-600">
-                  Rekap kinerja TikTok per satfung atau divisi, menyorot volume posting dan engagement.
-                </p>
-              </div>
-            </div>
-            {tiktokPerformancePerSatfung.length ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {tiktokPerformancePerSatfung.map((entry, idx) => {
-                  const hasDetailMetrics =
-                    entry.views !== undefined ||
-                    entry.likes !== undefined ||
-                    entry.comments !== undefined ||
-                    entry.shares !== undefined;
-
-                  return (
-                    <div
-                      key={`${entry.label}-${idx}`}
-                      className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{entry.label}</p>
-                          <p className="text-xs text-slate-500">Ringkasan posting & interaksi</p>
-                        </div>
-                        {typeof entry.engagementRate === "number" && !Number.isNaN(entry.engagementRate) && (
-                          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                            ER: {formatNumber(entry.engagementRate)}%
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-slate-500">Posting</p>
-                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.posts)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-slate-500">Engagement</p>
-                          <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.engagement)}</p>
-                        </div>
-                      </div>
-                      {hasDetailMetrics && (
-                        <div className="flex flex-wrap gap-2 text-xs text-slate-600 sm:text-sm">
-                          {entry.views !== undefined && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                              <span className="text-[11px] font-semibold uppercase text-slate-500">Views</span>
-                              <span className="font-semibold text-slate-900">{formatNumber(entry.views)}</span>
-                            </span>
-                          )}
-                          {entry.likes !== undefined && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                              <span className="text-[11px] font-semibold uppercase text-slate-500">Likes</span>
-                              <span className="font-semibold text-slate-900">{formatNumber(entry.likes)}</span>
-                            </span>
-                          )}
-                          {entry.comments !== undefined && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                              <span className="text-[11px] font-semibold uppercase text-slate-500">Comments</span>
-                              <span className="font-semibold text-slate-900">{formatNumber(entry.comments)}</span>
-                            </span>
-                          )}
-                          {entry.shares !== undefined && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm">
-                              <span className="text-[11px] font-semibold uppercase text-slate-500">Shares</span>
-                              <span className="font-semibold text-slate-900">{formatNumber(entry.shares)}</span>
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Belum ada data TikTok per satfung/divisi untuk filter ini. Pastikan payload ANEV menyertakan
-                `tiktok_per_satfung`, `tiktok_posts_per_satfung`, atau breakdown TikTok serupa di aggregates/raw.
-              </div>
-            )}
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-blue-600" />
+            <h2 className="font-semibold text-slate-900">Sebaran Personel per Satfung</h2>
           </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">Likes Instagram per Satfung/Divisi</h3>
-                <p className="text-sm text-slate-600">
-                  Rekap total likes Instagram yang dikelompokkan per satfung atau divisi.
-                </p>
-              </div>
-            </div>
-            {instagramLikesPerSatfung.length ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {instagramLikesPerSatfung.map((entry, idx) => (
-                  <div
-                    key={`${entry.label}-${idx}`}
-                    className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3"
-                  >
-                    <p className="text-sm text-slate-600">{entry.label}</p>
-                    <p className="text-xl font-semibold text-slate-900">{formatNumber(entry.likes)}</p>
-                  </div>
-                ))}
-              </div>
+          <ul className="space-y-2">
+            {usersBySatfung.length ? (
+              usersBySatfung.slice(0, 8).map((row) => (
+                <li key={row.label} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-700">{row.label}</span>
+                  <span className="font-semibold text-slate-900">{formatNumber(row.value)}</span>
+                </li>
+              ))
             ) : (
-              <p className="text-sm text-slate-600">Belum ada data likes Instagram per satfung/divisi untuk filter ini.</p>
+              <li className="text-sm text-slate-500">Data satfung belum tersedia.</li>
             )}
-          </div>
+          </ul>
+        </article>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">Compliance per pelaksana</h3>
-                <p className="text-sm text-slate-600">
-                  Tabel kepatuhan berdasarkan pelaksana/tugas dengan completion rate.
-                </p>
-              </div>
-              {completionRate !== null && completionRate !== undefined && (
-                <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Completion: {formatNumber(completionRate)}%
-                </div>
-              )}
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold text-slate-700">Pelaksana</th>
-                    <th className="px-4 py-2 text-left font-semibold text-slate-700">Tugas</th>
-                    <th className="px-4 py-2 text-left font-semibold text-slate-700">Selesai</th>
-                    <th className="px-4 py-2 text-left font-semibold text-slate-700">Completion rate</th>
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-600" />
+            <h2 className="font-semibold text-slate-900">Instagram Likes per Satfung</h2>
+          </div>
+          <ul className="space-y-2">
+            {igLikesBySatfung.length ? (
+              igLikesBySatfung.slice(0, 8).map((row) => (
+                <li key={row.label} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-700">{row.label}</span>
+                  <span className="font-semibold text-slate-900">{formatNumber(row.value)}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-slate-500">Data likes per satfung belum tersedia.</li>
+            )}
+          </ul>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <LineChart className="h-4 w-4 text-blue-600" />
+            <h2 className="font-semibold text-slate-900">TikTok Engagement per Satfung</h2>
+          </div>
+          <ul className="space-y-2">
+            {tiktokBySatfung.length ? (
+              tiktokBySatfung.slice(0, 8).map((row) => (
+                <li key={row.satfung} className="text-sm">
+                  <p className="font-medium text-slate-700">{row.satfung}</p>
+                  <p className="text-slate-500">
+                    Post {formatNumber(row.posts)} • Komentar {formatNumber(row.comments)} • Engagement {formatNumber(row.engagement)}
+                  </p>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-slate-500">Data TikTok per satfung belum tersedia.</li>
+            )}
+          </ul>
+        </article>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-base font-semibold text-slate-900">Top Performer (Gabungan IG + TikTok)</h2>
+        {topPerformers.length ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-3 py-2 text-left font-semibold text-slate-600">Personel</th>
+                  <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
+                  <th className="px-3 py-2 text-left font-semibold text-slate-600">Platform</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Posts</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Engagement</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {topPerformers.map((row, index) => (
+                  <tr key={`${row.name}-${row.platform}-${index}`}>
+                    <td className="px-3 py-2 text-slate-800">
+                      <p className="font-medium">{row.name}</p>
+                      {row.username ? <p className="text-xs text-slate-500">@{row.username}</p> : null}
+                    </td>
+                    <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
+                    <td className="px-3 py-2 uppercase text-slate-600">{row.platform}</td>
+                    <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.posts)}</td>
+                    <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.engagement)}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {complianceRows.length ? (
-                    complianceRows.map((row, idx) => {
-                      const rate = computeCompletionRate(row);
-                      return (
-                        <tr key={`${row.name}-${idx}`} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium text-slate-900">{row.name}</td>
-                          <td className="px-4 py-3 text-slate-700">{formatNumber(row.assigned)}</td>
-                          <td className="px-4 py-3 text-slate-700">{formatNumber(row.completed)}</td>
-                          <td className="px-4 py-3 text-slate-700">{formatNumber(rate)}%</td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td className="px-4 py-3 text-slate-600" colSpan={4}>
-                        Tidak ada data kepatuhan untuk filter ini.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
-    </div>
+        ) : (
+          <p className="text-sm text-slate-500">Belum ada data performer untuk periode ini.</p>
+        )}
+      </section>
+    </main>
   );
 }
