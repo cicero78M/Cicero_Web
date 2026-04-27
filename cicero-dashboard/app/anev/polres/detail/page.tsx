@@ -25,6 +25,7 @@ type IdentityEntry = {
   satfung?: string;
 };
 const PAGE_SIZE = 50;
+const ENTERPRISE_PANEL = "rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90";
 
 function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" ? (value as UnknownRecord) : {};
@@ -515,7 +516,7 @@ function AnevPolresDetailContent() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">ANEV POLRES · DETAIL</p>
-            <h1 className="mt-1 text-2xl font-bold text-slate-900">{viewConfig.title}</h1>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">{viewConfig.title}</h1>
             <p className="mt-1 text-sm text-slate-600">Menampilkan seluruh data kategori dengan pagination otomatis tiap 50 baris.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Periode: <span className="font-semibold text-slate-800">{periodLabel}</span></span>
@@ -541,8 +542,8 @@ function AnevPolresDetailContent() {
 
       {error ? <section className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</section> : null}
 
-      <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
-        <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
+      <section className={`${ENTERPRISE_PANEL} p-4`}>
+        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 text-sm text-slate-600 dark:border-slate-800">
           <span>Total baris: <span className="font-semibold text-slate-900">{formatNumber(totalRows)}</span></span>
           <span>Halaman {safePage} / {totalPages}</span>
         </div>
@@ -596,7 +597,7 @@ function AnevPolresDetailContent() {
                 <thead className="bg-slate-50">
                   <tr>
                     {columns.map((column) => (
-                      <th key={column} className="px-3 py-2 text-left font-semibold text-slate-600">
+                      <th key={column} className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                         {column.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}
                       </th>
                     ))}

@@ -75,6 +75,9 @@ const TIME_RANGE_OPTIONS = [
   { value: "custom", label: "Custom" },
 ] as const;
 
+const ENTERPRISE_PANEL = "rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90";
+const ENTERPRISE_SECTION_TITLE = "text-base font-semibold tracking-tight text-slate-900";
+
 function formatNumber(value: number | undefined | null) {
   if (typeof value !== "number" || Number.isNaN(value)) return "0";
   return new Intl.NumberFormat("id-ID").format(value);
@@ -686,7 +689,7 @@ export default function AnevPolresPage() {
 
   return (
     <main className="space-y-6 bg-slate-50/70 px-4 py-6 md:px-6 dark:bg-slate-950/30">
-      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+      <section className={`${ENTERPRISE_PANEL} p-5`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -723,7 +726,7 @@ export default function AnevPolresPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+      <section className={`${ENTERPRISE_PANEL} p-5`}>
         <div className="mb-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -862,11 +865,11 @@ export default function AnevPolresPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+        <article className={`${ENTERPRISE_PANEL} p-4`}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <LineChart className="h-4 w-4 text-blue-600" />
-              <h2 className="font-semibold text-slate-900">Aktivitas per Platform</h2>
+              <h2 className={ENTERPRISE_SECTION_TITLE}>Aktivitas per Platform</h2>
             </div>
             <Link href={buildDetailHref("platform_posts")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
               Lihat semua →
@@ -895,11 +898,11 @@ export default function AnevPolresPage() {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+        <article className={`${ENTERPRISE_PANEL} p-4`}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
-              <h2 className="font-semibold text-slate-900">Kepatuhan Pelaksana</h2>
+              <h2 className={ENTERPRISE_SECTION_TITLE}>Kepatuhan Pelaksana</h2>
             </div>
             <Link href={buildDetailHref("compliance")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
               Lihat semua →
@@ -940,11 +943,11 @@ export default function AnevPolresPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+        <article className={`${ENTERPRISE_PANEL} p-4`}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-blue-600" />
-              <h2 className="font-semibold text-slate-900">Sebaran Personel per Satfung</h2>
+              <h2 className={ENTERPRISE_SECTION_TITLE}>Sebaran Personel per Satfung</h2>
             </div>
             <Link href={buildDetailHref("user_satfung")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
               Lihat semua →
@@ -964,11 +967,11 @@ export default function AnevPolresPage() {
           </ul>
         </article>
 
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+        <article className={`${ENTERPRISE_PANEL} p-4`}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-blue-600" />
-              <h2 className="font-semibold text-slate-900">Instagram Likes per Satfung</h2>
+              <h2 className={ENTERPRISE_SECTION_TITLE}>Instagram Likes per Satfung</h2>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-slate-500">Post IG: {formatNumber(instagramPostTotal)}</span>
@@ -1019,11 +1022,11 @@ export default function AnevPolresPage() {
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+        <article className={`${ENTERPRISE_PANEL} p-4`}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <LineChart className="h-4 w-4 text-blue-600" />
-              <h2 className="font-semibold text-slate-900">TikTok Komentar per Satfung</h2>
+              <h2 className={ENTERPRISE_SECTION_TITLE}>TikTok Komentar per Satfung</h2>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-slate-500">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
@@ -1075,9 +1078,9 @@ export default function AnevPolresPage() {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90">
+      <section className={`${ENTERPRISE_PANEL} p-4`}>
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-slate-900">Top Performer (Gabungan IG + TikTok)</h2>
+          <h2 className={ENTERPRISE_SECTION_TITLE}>Top Performer (Gabungan IG + TikTok)</h2>
           <Link href={buildDetailHref("top_performer")} className="text-xs font-semibold text-blue-700 hover:text-blue-800">
             Lihat semua →
           </Link>
