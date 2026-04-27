@@ -521,6 +521,11 @@ function AnevPolresDetailContent() {
           <span>Total baris: <span className="font-semibold text-slate-900">{formatNumber(totalRows)}</span></span>
           <span>Halaman {safePage} / {totalPages}</span>
         </div>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Excellent</span>
+          <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Moderate</span>
+          <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-700">Low</span>
+        </div>
 
         {isLoading ? (
           <div className="flex min-h-[200px] items-center justify-center"><Loader /></div>
@@ -577,7 +582,7 @@ function AnevPolresDetailContent() {
                     const quality = qualityMeta(inferRowQualityScore(row));
                     return (
                     <tr key={index} className={`hover:bg-slate-50/60 ${quality.row}`}>
-                      {columns.map((column) => {
+                      {columns.map((column, columnIndex) => {
                         const value = row[column];
                         const text = typeof value === "number" ? formatNumber(value) : String(value ?? "-");
                         const isLink = column.includes("link") && text.startsWith("http");
@@ -588,7 +593,14 @@ function AnevPolresDetailContent() {
                                 {text}
                               </a>
                             ) : (
-                              <span className="break-words">{text}</span>
+                              <>
+                                <span className="break-words">{text}</span>
+                                {columnIndex === 0 ? (
+                                  <span className={`mt-1 block w-fit rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                                    {quality.label}
+                                  </span>
+                                ) : null}
+                              </>
                             )}
                           </td>
                         );

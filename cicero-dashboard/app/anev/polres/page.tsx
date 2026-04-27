@@ -464,6 +464,12 @@ function getQualityMeta(score: number) {
   };
 }
 
+function getPerformerQuality(totalEngagement: number) {
+  if (totalEngagement >= 300) return getQualityMeta(90);
+  if (totalEngagement >= 120) return getQualityMeta(65);
+  return getQualityMeta(35);
+}
+
 export default function AnevPolresPage() {
   useRequireAuth();
   const premiumStatus = useRequirePremium();
@@ -877,6 +883,11 @@ export default function AnevPolresPage() {
               Lihat semua →
             </Link>
           </div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Excellent ≥ 80%</span>
+            <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Moderate 50–79%</span>
+            <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-700">Low &lt; 50%</span>
+          </div>
           <div className="space-y-3">
             {complianceRows.length ? (
               complianceRows.slice(0, 8).map((row) => {
@@ -1053,7 +1064,7 @@ export default function AnevPolresPage() {
           <>
             <div className="space-y-2 md:hidden">
               {topPerformers.map((row, index) => {
-                const quality = getQualityMeta(row.totalEngagement >= 300 ? 90 : row.totalEngagement >= 120 ? 65 : 35);
+                const quality = getPerformerQuality(row.totalEngagement);
                 return (
                 <div key={`${row.name}-${row.userId || row.username || index}`} className={`rounded-lg border p-3 text-sm ${quality.card}`}>
                   <p className="font-semibold text-slate-800">{row.name || row.username || row.userId || "User"}</p>
@@ -1085,18 +1096,24 @@ export default function AnevPolresPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {topPerformers.map((row, index) => (
-                  <tr key={`${row.name}-${row.userId || row.username || index}`}>
-                    <td className="px-3 py-2 text-slate-800">
-                      <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
-                      {row.username ? <p className="text-xs text-slate-500">@{row.username}</p> : null}
-                    </td>
-                    <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
-                    <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.likesIg)}</td>
-                    <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.commentsTiktok)}</td>
-                    <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.totalEngagement)}</td>
-                  </tr>
-                ))}
+                {topPerformers.map((row, index) => {
+                  const quality = getPerformerQuality(row.totalEngagement);
+                  return (
+                    <tr key={`${row.name}-${row.userId || row.username || index}`}>
+                      <td className="px-3 py-2 text-slate-800">
+                        <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
+                        {row.username ? <p className="text-xs text-slate-500">@{row.username}</p> : null}
+                        <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
+                          {quality.label}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
+                      <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.likesIg)}</td>
+                      <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.commentsTiktok)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.totalEngagement)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             </div>
