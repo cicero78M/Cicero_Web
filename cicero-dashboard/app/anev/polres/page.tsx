@@ -696,13 +696,13 @@ export default function AnevPolresPage() {
               <ShieldCheck className="h-3.5 w-3.5" /> ANEV POLRES
             </p>
             <h1 className="mt-2 text-2xl font-bold text-slate-900">Dashboard ANEV yang lebih ringkas & fokus aksi</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
               Alur kerja: pilih periode → cek capaian utama → analisis satfung/divisi → tindak lanjuti → export laporan.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Periode: <span className="font-semibold text-slate-800">{periodLabel}</span></span>
-              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Client: <span className="font-semibold text-slate-800">{filters.client_id || clientId || "-"}</span></span>
-              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Role: <span className="font-semibold text-slate-800">{filters.role || "-"}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">Periode: <span className="font-semibold text-slate-800">{periodLabel}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">Client: <span className="font-semibold text-slate-800">{filters.client_id || clientId || "-"}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">Role: <span className="font-semibold text-slate-800">{filters.role || "-"}</span></span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -816,48 +816,48 @@ export default function AnevPolresPage() {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <article className="rounded-2xl border border-blue-200/70 bg-gradient-to-br from-white to-blue-50 p-4 shadow-[0_12px_35px_-24px_rgba(37,99,235,0.45)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Personel Aktif</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Personel Aktif</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.totalUsers)}</p>
-          <p className="mt-2 text-xs text-slate-500">Jumlah user terpetakan dalam periode</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 md:text-xs">Jumlah user terpetakan dalam periode</p>
           <Link href={buildDetailHref("ringkasan")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
 
         <article className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-white to-indigo-50 p-4 shadow-[0_12px_35px_-24px_rgba(79,70,229,0.42)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting Instagram</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Posting Instagram</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.igPosts)}</p>
-          <p className="mt-2 text-xs text-slate-500">Total posting sumber IG</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 md:text-xs">Total posting sumber IG</p>
           <Link href={buildDetailHref("platform_posts", { platform: "instagram" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
 
         <article className="rounded-2xl border border-violet-200/70 bg-gradient-to-br from-white to-violet-50 p-4 shadow-[0_12px_35px_-24px_rgba(124,58,237,0.4)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Posting TikTok</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Posting TikTok</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.tkPosts)}</p>
-          <p className="mt-2 text-xs text-slate-500">Total posting sumber TikTok</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 md:text-xs">Total posting sumber TikTok</p>
           <Link href={buildDetailHref("platform_posts", { platform: "tiktok" })} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
 
         <article className="rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-white to-cyan-50 p-4 shadow-[0_12px_35px_-24px_rgba(8,145,178,0.42)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interaksi</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Interaksi</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatNumber(metrics.likes + metrics.comments)}</p>
-          <p className="mt-2 text-xs text-slate-500">Likes + komentar terakumulasi</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 md:text-xs">Likes + komentar terakumulasi</p>
           <Link href={buildDetailHref("top_performer")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
         </article>
 
         <article className="rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-white to-emerald-50 p-4 shadow-[0_12px_35px_-24px_rgba(5,150,105,0.42)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kepatuhan</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kepatuhan</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatPercent(metrics.compliance)}</p>
           <span className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${getQualityMeta(metrics.compliance).badge}`}>
             {getQualityMeta(metrics.compliance).label}
           </span>
-          <p className="mt-2 text-xs text-slate-500">Rasio realisasi terhadap expected actions</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 md:text-xs">Rasio realisasi terhadap expected actions</p>
           <Link href={buildDetailHref("compliance")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
             Lihat detail →
           </Link>
@@ -893,7 +893,7 @@ export default function AnevPolresPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">Belum ada data platform pada periode ini.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada data platform pada periode ini.</p>
             )}
           </div>
         </article>
@@ -929,14 +929,14 @@ export default function AnevPolresPage() {
                     </div>
                   </div>
                   <ProgressBar value={row.rate} />
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Selesai {formatNumber(row.completed)} dari {formatNumber(row.assigned)} tugas
                   </p>
                 </div>
               );
               })
             ) : (
-              <p className="text-sm text-slate-500">Belum ada data kepatuhan pelaksana.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada data kepatuhan pelaksana.</p>
             )}
           </div>
         </article>
@@ -962,7 +962,7 @@ export default function AnevPolresPage() {
                 </li>
               ))
             ) : (
-              <li className="text-sm text-slate-500">Data satfung belum tersedia.</li>
+              <li className="text-sm text-slate-500 dark:text-slate-400">Data satfung belum tersedia.</li>
             )}
           </ul>
         </article>
@@ -974,7 +974,7 @@ export default function AnevPolresPage() {
               <h2 className={ENTERPRISE_SECTION_TITLE}>Instagram Likes per Satfung</h2>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-slate-500">Post IG: {formatNumber(instagramPostTotal)}</span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Post IG: {formatNumber(instagramPostTotal)}</span>
               <Link href={buildDetailHref("ig_satfung")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
                 Lihat semua →
               </Link>
@@ -986,7 +986,7 @@ export default function AnevPolresPage() {
                 {igLikesBySatfung.slice(0, 8).map((row) => (
                   <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm transition-colors hover:border-slate-200">
                     <p className="font-semibold text-slate-800">{row.satfung}</p>
-                    <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
                       <p>Personil: <span className="font-semibold text-slate-800">{formatNumber(row.totalPersonnel)}</span></p>
                       <p>Pelaksana: <span className="font-semibold text-slate-800">{formatNumber(row.activePersonnel)}</span></p>
                     </div>
@@ -998,10 +998,10 @@ export default function AnevPolresPage() {
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Personil</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Pelaksana Likes</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Total Likes</th>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Satfung</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Personil</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Pelaksana Likes</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Total Likes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1018,7 +1018,7 @@ export default function AnevPolresPage() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-slate-500">Data likes per satfung belum tersedia.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Data likes per satfung belum tersedia.</p>
           )}
         </article>
 
@@ -1029,7 +1029,7 @@ export default function AnevPolresPage() {
               <h2 className={ENTERPRISE_SECTION_TITLE}>TikTok Komentar per Satfung</h2>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-slate-500">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Post TikTok: {formatNumber(tiktokPostTotal)}</span>
               <Link href={buildDetailHref("tiktok_satfung")} className="text-xs font-semibold text-blue-700 transition-colors hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded">
                 Lihat semua →
               </Link>
@@ -1041,7 +1041,7 @@ export default function AnevPolresPage() {
                 {tiktokBySatfung.slice(0, 8).map((row) => (
                   <div key={row.satfung} className="rounded-lg border border-slate-100 p-3 text-sm transition-colors hover:border-slate-200">
                     <p className="font-semibold text-slate-800">{row.satfung}</p>
-                    <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
                       <p>Personil: <span className="font-semibold text-slate-800">{formatNumber(row.totalPersonnel)}</span></p>
                       <p>Pelaksana: <span className="font-semibold text-slate-800">{formatNumber(row.activePersonnel)}</span></p>
                     </div>
@@ -1053,10 +1053,10 @@ export default function AnevPolresPage() {
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Personil</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Pelaksana Komentar</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">Total Komentar</th>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Satfung</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Personil</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Pelaksana Komentar</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Total Komentar</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1073,7 +1073,7 @@ export default function AnevPolresPage() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-slate-500">Data TikTok per satfung belum tersedia.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Data TikTok per satfung belum tersedia.</p>
           )}
         </article>
       </section>
@@ -1094,12 +1094,12 @@ export default function AnevPolresPage() {
                 <div key={`${row.name}-${row.userId || row.username || index}`} className={`rounded-lg border p-3 text-sm ${quality.card}`}>
                   <p className="font-semibold text-slate-800">{row.name || row.username || row.userId || "User"}</p>
                   <div className="mt-0.5 flex items-center gap-2">
-                    <p className="text-xs text-slate-500">{row.username ? `@${row.username}` : ""}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{row.username ? `@${row.username}` : ""}</p>
                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
                       {quality.label}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">Satfung: <span className="font-medium text-slate-800">{row.satfung || "-"}</span></p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Satfung: <span className="font-medium text-slate-800">{row.satfung || "-"}</span></p>
                   <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
                     <p className="rounded bg-slate-50 px-2 py-1 text-center">IG {formatNumber(row.likesIg)}</p>
                     <p className="rounded bg-slate-50 px-2 py-1 text-center">TT {formatNumber(row.commentsTiktok)}</p>
@@ -1113,11 +1113,11 @@ export default function AnevPolresPage() {
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-600">Personel</th>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-600">Satfung</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Likes IG</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Komentar TikTok</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-600">Total Interaksi</th>
+                  <th className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Personel</th>
+                  <th className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Satfung</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Likes IG</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Komentar TikTok</th>
+                  <th className="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Total Interaksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1127,12 +1127,12 @@ export default function AnevPolresPage() {
                     <tr key={`${row.name}-${row.userId || row.username || index}`}>
                       <td className="px-3 py-2 text-slate-800">
                         <p className="font-medium">{row.name || row.username || row.userId || "User"}</p>
-                        {row.username ? <p className="text-xs text-slate-500">@{row.username}</p> : null}
+                        {row.username ? <p className="text-xs text-slate-500 dark:text-slate-400">@{row.username}</p> : null}
                         <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${quality.badge}`}>
                           {quality.label}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-slate-600">{row.satfung || "-"}</td>
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{row.satfung || "-"}</td>
                       <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.likesIg)}</td>
                       <td className="px-3 py-2 text-right text-slate-800">{formatNumber(row.commentsTiktok)}</td>
                       <td className="px-3 py-2 text-right font-semibold text-slate-900">{formatNumber(row.totalEngagement)}</td>
@@ -1144,7 +1144,7 @@ export default function AnevPolresPage() {
             </div>
           </>
         ) : (
-          <p className="text-sm text-slate-500">Belum ada data performer untuk periode ini.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada data performer untuk periode ini.</p>
         )}
       </section>
     </main>
