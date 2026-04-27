@@ -183,49 +183,47 @@ export default function Sidebar() {
 
   const navLinks = (isSheet = false, isCollapsed = false) => (
     <>
-      <div className="mb-6 px-4 flex justify-center">
-        <div className="rounded-xl bg-white/90 px-3 py-2 shadow-[0_12px_32px_rgba(56,189,248,0.18)] backdrop-blur dark:bg-slate-900/90 dark:shadow-[0_0_20px_rgba(56,189,248,0.35)]">
-          <Image
-            src="/CICERO.png"
-            alt="CICERO Logo"
-            width={isCollapsed ? 32 : 150}
-            height={40}
-            priority
-          />
+      <div className={`mb-5 ${isCollapsed ? "px-2" : "px-3"} flex justify-center`}>
+        <div className="w-full rounded-2xl border border-slate-200/80 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center justify-center gap-2">
+            <Image
+              src="/CICERO.png"
+              alt="CICERO Logo"
+              width={isCollapsed ? 26 : 30}
+              height={30}
+              priority
+            />
+            {!isCollapsed && (
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 dark:text-slate-200">
+                CICERO
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      <nav
-        className={`flex-1 space-y-1 px-2 ${
-          isSheet
-            ? ""
-            : "[&>*]:shadow-[0_10px_24px_rgba(56,189,248,0.12)]"
-        }`}
-      >
+      <nav className={`flex-1 space-y-1.5 ${isCollapsed ? "px-2" : "px-3"}`}>
         {menu.map((item) => {
           const ItemIcon = item.icon;
+          const active = isNavItemActive(item.path);
           return (
             <Link
               key={item.path}
               href={item.path}
-              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                isNavItemActive(item.path)
-                  ? "bg-gradient-to-r from-sky-100 via-sky-200 to-indigo-100 text-sky-700 ring-1 ring-sky-200 dark:from-cyan-400/30 dark:via-sky-500/30 dark:to-indigo-500/30 dark:text-sky-100 dark:ring-cyan-400/60"
-                  : isSheet
-                  ? "text-slate-600 hover:bg-sky-50/80 hover:text-sky-700 dark:text-slate-100 dark:hover:bg-white/10"
-                  : "text-slate-600 hover:bg-sky-50 hover:text-sky-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
+              className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                active
+                  ? "border-sky-200 bg-sky-50 text-sky-700 dark:border-cyan-500/60 dark:bg-cyan-500/10 dark:text-cyan-200"
+                  : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-800/70 dark:hover:text-slate-100"
               } ${isCollapsed ? "justify-center" : ""}`}
               {...(isSheet ? { onClick: () => setOpen(false) } : {})}
             >
               <ItemIcon
-                className={`${
-                  isSheet
-                    ? "h-7 w-7 text-sky-500 dark:text-sky-300"
-                    : isNavItemActive(item.path)
-                    ? "h-5 w-5 text-sky-600 drop-shadow-[0_0_6px_rgba(56,189,248,0.55)] dark:text-cyan-300"
-                    : "h-5 w-5 text-slate-400 group-hover:text-sky-500 dark:text-slate-400 dark:group-hover:text-cyan-200"
+                className={`h-[18px] w-[18px] ${
+                  active
+                    ? "text-sky-600 dark:text-cyan-300"
+                    : "text-slate-400 group-hover:text-slate-600 dark:text-slate-400 dark:group-hover:text-slate-200"
                 }`}
               />
-              {!isCollapsed && <span>{item.label}</span>}
+              {!isCollapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
         })}
@@ -239,7 +237,7 @@ export default function Sidebar() {
         <SheetTrigger asChild className="md:hidden">
           <button
             aria-label={open ? "Tutup Sidebar" : "Buka Sidebar"}
-            className="fixed z-50 top-4 left-4 flex h-12 w-12 items-center justify-center rounded-full border border-sky-300/70 bg-white/90 text-sky-600 shadow-[0_12px_32px_rgba(56,189,248,0.25)] transition-all hover:bg-sky-100 hover:text-sky-800 focus:outline-none dark:border-cyan-500/40 dark:bg-slate-900/80 dark:text-sky-200 dark:hover:bg-cyan-500/40 dark:hover:text-white"
+            className="fixed left-3 top-[4.65rem] z-30 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
           >
             {open ? (
               <IconX size={28} strokeWidth={2.5} />
@@ -250,22 +248,27 @@ export default function Sidebar() {
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="flex w-24 flex-col bg-white/90 p-4 text-slate-700 backdrop-blur-xl md:hidden dark:bg-slate-950/95 dark:text-slate-100"
+          className="flex w-[280px] flex-col border-r border-slate-200 bg-white p-4 text-slate-700 md:hidden dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
         >
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          {navLinks(true, true)}
+          {navLinks(true, false)}
         </SheetContent>
       </Sheet>
 
       <div
         className={`hidden md:sticky md:top-16 md:flex ${
-          collapsed ? "md:w-20" : "md:w-64"
-        } md:h-[calc(100vh-4rem)] md:flex-col md:overflow-y-auto border-r border-sky-100 bg-white/90 text-slate-700 shadow-[0_20px_45px_rgba(56,189,248,0.18)] transition-all dark:border-cyan-500/40 dark:bg-gradient-to-b dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-100 dark:shadow-[0_0_35px_rgba(15,23,42,0.6)]`}
+          collapsed ? "md:w-20" : "md:w-72"
+        } md:h-[calc(100vh-4rem)] md:flex-col md:overflow-y-auto border-r border-slate-200 bg-white text-slate-700 transition-all dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100`}
       >
-        <div className="flex justify-end p-2">
+        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-800">
+          {!collapsed && (
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+              Main Navigation
+            </span>
+          )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="rounded-full bg-sky-100/80 p-1 text-slate-500 transition hover:bg-sky-200 hover:text-sky-700 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-cyan-500/30 dark:hover:text-white"
+            className="rounded-lg border border-slate-200 bg-white p-1 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             aria-label="Toggle Sidebar"
           >
             {collapsed ? (
