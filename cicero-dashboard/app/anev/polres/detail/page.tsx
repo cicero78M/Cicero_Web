@@ -46,6 +46,23 @@ function formatNumber(value: number | undefined | null) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
+function sanitizeSheetName(name: string) {
+  return name.replace(/[\\/?*\[\]:]/g, "-").slice(0, 31) || "Data";
+}
+
+function computeColumnWidths(rows: Array<Record<string, string | number>>) {
+  if (!rows.length) return [] as Array<{ wch: number }>;
+  const headers = Object.keys(rows[0]);
+  return headers.map((header) => {
+    const maxLen = rows.reduce((max, row) => {
+      const value = row[header];
+      const text = value == null ? "" : String(value);
+      return Math.max(max, text.length);
+    }, header.length);
+    return { wch: Math.min(Math.max(maxLen + 2, 10), 120) };
+  });
+}
+
 function normalizeHandleValue(raw?: string) {
   if (!raw) return "";
   const trimmed = String(raw).trim();
@@ -142,6 +159,7 @@ function AnevPolresDetailContent() {
 
   const view = searchParams.get("view") || "ringkasan";
   const page = Math.max(1, Number(searchParams.get("page") || "1") || 1);
+  const [isExporting, setIsExporting] = useState(false);
 
   const filters = useMemo(
     () => ({
@@ -316,6 +334,45 @@ function AnevPolresDetailContent() {
     return `?${params.toString()}`;
   };
 
+  const handleExportCurrentView = useCallback(async () => {
+    if (!rows.length) {
+      showToast("Belum ada data untuk diekspor.", "error");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const XLSX = await import("xlsx");
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      worksheet["!cols"] = computeColumnWidths(rows);
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(viewConfig.title));
+
+      const blobData = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+      const blob = new Blob([blobData], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const fileBase = `${(viewConfig.key || "detail").toLowerCase()}-${filters.time_range || "custom"}`;
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `anev-polres-${fileBase}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+
+      showToast("File Excel berhasil diunduh.", "success");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal mengekspor file Excel.";
+      showToast(message, "error");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [rows, viewConfig.title, viewConfig.key, filters.time_range]);
+
   if (isHydrating || isProfileLoading || premiumStatus === "loading") {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -345,9 +402,19 @@ function AnevPolresDetailContent() {
             <h1 className="mt-1 text-2xl font-bold text-slate-900">{viewConfig.title}</h1>
             <p className="mt-1 text-sm text-slate-600">Menampilkan seluruh data kategori dengan pagination otomatis tiap 50 baris.</p>
           </div>
-          <Link href="/anev/polres" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-            <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleExportCurrentView()}
+              disabled={isExporting || !rows.length}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {isExporting ? "Menyiapkan..." : "Download Excel"}
+            </button>
+            <Link href="/anev/polres" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard
+            </Link>
+          </div>
         </div>
       </section>
 
