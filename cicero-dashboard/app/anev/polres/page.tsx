@@ -85,6 +85,13 @@ function formatPercent(value: number | undefined | null) {
   return `${value.toFixed(1)}%`;
 }
 
+function formatDateLabel(value?: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
 function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" ? (value as UnknownRecord) : {};
 }
@@ -568,6 +575,13 @@ export default function AnevPolresPage() {
   const igLikesBySatfung = useMemo(() => mapInstagramLikesPerSatfung(data), [data]);
   const tiktokBySatfung = useMemo(() => mapTiktokPerSatfung(data), [data]);
   const topPerformers = useMemo(() => mapTopPerformers(data), [data]);
+  const periodLabel = useMemo(() => {
+    if (filters.time_range === "custom") {
+      return `${formatDateLabel(filters.start_date)} - ${formatDateLabel(filters.end_date)}`;
+    }
+    const selected = TIME_RANGE_OPTIONS.find((option) => option.value === filters.time_range);
+    return selected?.label || "Mingguan";
+  }, [filters.time_range, filters.start_date, filters.end_date]);
 
   const buildDetailHref = (view: string, extra?: Record<string, string>) => {
     const params = new URLSearchParams({ view, time_range: filters.time_range || "7d" });
@@ -682,6 +696,11 @@ export default function AnevPolresPage() {
             <p className="mt-1 text-sm text-slate-600">
               Alur kerja: pilih periode → cek capaian utama → analisis satfung/divisi → tindak lanjuti → export laporan.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Periode: <span className="font-semibold text-slate-800">{periodLabel}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Client: <span className="font-semibold text-slate-800">{filters.client_id || clientId || "-"}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Role: <span className="font-semibold text-slate-800">{filters.role || "-"}</span></span>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -832,6 +851,9 @@ export default function AnevPolresPage() {
         <article className="rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-white to-emerald-50 p-4 shadow-[0_12px_35px_-24px_rgba(5,150,105,0.42)]">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Kepatuhan</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatPercent(metrics.compliance)}</p>
+          <span className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${getQualityMeta(metrics.compliance).badge}`}>
+            {getQualityMeta(metrics.compliance).label}
+          </span>
           <p className="mt-2 text-xs text-slate-500">Rasio realisasi terhadap expected actions</p>
           <Link href={buildDetailHref("compliance")} className="mt-3 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800">
             Lihat detail →

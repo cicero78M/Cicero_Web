@@ -55,6 +55,13 @@ function formatNumber(value: number | undefined | null) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
+function formatDateLabel(value?: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
 function qualityMeta(score: number) {
   if (score >= 80) {
     return {
@@ -290,6 +297,19 @@ function AnevPolresDetailContent() {
   }, [token, filters, premiumStatus, loadData]);
 
   const viewConfig = getViewConfig(view);
+  const periodLabel = useMemo(() => {
+    if (filters.time_range === "custom") {
+      return `${formatDateLabel(filters.start_date)} - ${formatDateLabel(filters.end_date)}`;
+    }
+    const mapping: Record<string, string> = {
+      today: "Harian",
+      "7d": "Mingguan",
+      "30d": "Bulanan",
+      "90d": "90 Hari",
+      all: "Semua",
+    };
+    return mapping[filters.time_range] || filters.time_range;
+  }, [filters.time_range, filters.start_date, filters.end_date]);
 
   const rows = useMemo<Array<Record<string, string | number>>>(() => {
     if (!data) return [];
@@ -497,6 +517,11 @@ function AnevPolresDetailContent() {
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">ANEV POLRES · DETAIL</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-900">{viewConfig.title}</h1>
             <p className="mt-1 text-sm text-slate-600">Menampilkan seluruh data kategori dengan pagination otomatis tiap 50 baris.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Periode: <span className="font-semibold text-slate-800">{periodLabel}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Client: <span className="font-semibold text-slate-800">{filters.client_id || "-"}</span></span>
+              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">Kategori: <span className="font-semibold text-slate-800">{viewConfig.key}</span></span>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
