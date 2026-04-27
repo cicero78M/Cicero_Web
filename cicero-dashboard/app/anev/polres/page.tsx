@@ -17,7 +17,12 @@ import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useRequirePremium from "@/hooks/useRequirePremium";
 import useAuth from "@/hooks/useAuth";
-import { type DashboardAnevFilters, type DashboardAnevResponse, getDashboardAnev } from "@/utils/api";
+import {
+  type DashboardAnevFilters,
+  type DashboardAnevResponse,
+  exportDashboardAnevExcel,
+  getDashboardAnev,
+} from "@/utils/api";
 import { formatPremiumTierLabel } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 
@@ -369,73 +374,6 @@ function mapTopPerformers(data: DashboardAnevResponse | null): PerformerRow[] {
   return [...igRows, ...tkRows].sort((a, b) => b.engagement - a.engagement).slice(0, 10);
 }
 
-function makeExportRows(data: DashboardAnevResponse) {
-  const totals = asRecord(data.aggregates.totals);
-  const filters = data.filters;
-  const context = {
-    time_range: filters.time_range,
-    start_date: filters.start_date || "",
-    end_date: filters.end_date || "",
-    role: filters.role || "",
-    scope: filters.scope || "",
-    regional_id: filters.regional_id || "",
-    client_id: filters.client_id || "",
-  };
-
-  const rows: Array<Record<string, string | number>> = [
-    { section: "ringkasan", metric: "total_users", value: getNumber(totals, ["total_users"]), ...context },
-    { section: "ringkasan", metric: "total_likes", value: getNumber(totals, ["likes", "total_likes"]), ...context },
-    {
-      section: "ringkasan",
-      metric: "total_comments",
-      value: getNumber(totals, ["comments", "total_comments"]),
-      ...context,
-    },
-    {
-      section: "ringkasan",
-      metric: "expected_actions",
-      value: getNumber(totals, ["expected_actions"]),
-      ...context,
-    },
-  ];
-
-  mapPlatformPosts(data).forEach((entry) => {
-    rows.push({ section: "posting_per_platform", platform: entry.platform, posts: entry.posts, ...context });
-  });
-
-  mapCompliance(data).forEach((entry) => {
-    rows.push({
-      section: "compliance_per_pelaksana",
-      pelaksana: entry.pelaksana,
-      assigned: entry.assigned,
-      completed: entry.completed,
-      completion_rate: Number(entry.rate.toFixed(2)),
-      ...context,
-    });
-  });
-
-  mapUserPerSatfung(data).forEach((entry) => {
-    rows.push({ section: "user_per_satfung", satfung: entry.label, users: entry.value, ...context });
-  });
-
-  mapInstagramLikesPerSatfung(data).forEach((entry) => {
-    rows.push({ section: "instagram_likes_per_satfung", satfung: entry.label, likes: entry.value, ...context });
-  });
-
-  mapTiktokPerSatfung(data).forEach((entry) => {
-    rows.push({
-      section: "tiktok_per_satfung",
-      satfung: entry.satfung,
-      posts: entry.posts,
-      comments: entry.comments,
-      engagement: entry.engagement,
-      ...context,
-    });
-  });
-
-  return rows;
-}
-
 function ProgressBar({ value }: { value: number }) {
   const safe = Math.max(0, Math.min(100, value));
   return (
@@ -563,34 +501,26 @@ export default function AnevPolresPage() {
   };
 
   const handleExport = async () => {
-    if (!data) return;
+    if (!data || !token) return;
     setIsExporting(true);
     try {
-      const rows = makeExportRows(data);
-      if (!rows.length) {
-        showToast("Belum ada data untuk diekspor.", "error");
-        return;
-      }
+      const result = await exportDashboardAnevExcel(
+        token,
+        {
+          time_range: filters.time_range,
+          start_date: filters.start_date,
+          end_date: filters.end_date,
+          role: filters.role,
+          scope: filters.scope,
+          regional_id: filters.regional_id,
+          client_id: filters.client_id || clientId || "",
+        },
+      );
 
-      const response = await fetch("/api/dashboard/anev/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rows,
-          fileName: `anev-polres-${data.filters.client_id || "client"}-${data.filters.time_range || "custom"}`,
-        }),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Gagal mengekspor data ANEV.");
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
+      const downloadUrl = URL.createObjectURL(result.blob);
       const anchor = document.createElement("a");
       anchor.href = downloadUrl;
-      anchor.download = `anev-polres-${data.filters.time_range || "custom"}.xlsx`;
+      anchor.download = result.filename || `anev-polres-${filters.time_range || "custom"}.xlsx`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

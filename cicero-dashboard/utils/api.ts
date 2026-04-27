@@ -840,6 +840,11 @@ export type DashboardAnevResponse = {
   tiktok_engagement?: DashboardAnevEngagementBreakdown;
 };
 
+export type DashboardAnevExportResult = {
+  blob: Blob;
+  filename: string;
+};
+
 function normalizeDashboardAnevFilters(
   raw: any,
   fallback: Pick<DashboardAnevFilters, "time_range" | "client_id"> & {
@@ -2058,6 +2063,72 @@ export async function getDashboardAnev(
     instagram_engagement,
     tiktok_engagement,
     raw: payload,
+  };
+}
+
+export async function exportDashboardAnevExcel(
+  token: string,
+  filters: Partial<DashboardAnevFilters> = {},
+  signal?: AbortSignal,
+): Promise<DashboardAnevExportResult> {
+  const normalizedRole = normalizeAccessParam(
+    filters.role ?? (filters as any)?.role,
+  );
+  const normalizedScope = normalizeAccessParam(
+    filters.scope ?? (filters as any)?.scope,
+    { casing: "lower" },
+  );
+  const normalizedRegionalId = normalizeAccessParam(
+    filters.regional_id ?? (filters as any)?.regional_id,
+  );
+  const timeRange =
+    ensureString(filters.time_range ?? (filters as any)?.timeRange) || "7d";
+  const startDate =
+    ensureString(filters.start_date ?? (filters as any)?.startDate) || undefined;
+  const endDate =
+    ensureString(filters.end_date ?? (filters as any)?.endDate) || undefined;
+  const clientId =
+    ensureString(filters.client_id ?? filters.clientId) ||
+    readStoredClientId() ||
+    extractClientIdFromToken(token);
+
+  if (!normalizedRole) {
+    throw new Error("Role login wajib tersedia untuk export Dashboard ANEV.");
+  }
+  if (!clientId) {
+    throw new Error("client_id wajib diisi untuk export Dashboard ANEV.");
+  }
+  if (timeRange.toLowerCase() === "custom" && (!startDate || !endDate)) {
+    throw new Error("Rentang waktu custom memerlukan start_date dan end_date.");
+  }
+
+  const params = new URLSearchParams({ time_range: timeRange, client_id: clientId });
+  if (normalizedRole) params.append("role", normalizedRole);
+  if (normalizedScope) params.append("scope", normalizedScope);
+  if (normalizedRegionalId) params.append("regional_id", normalizedRegionalId);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
+
+  const url = `${buildApiUrl("/api/dashboard/anev/export")}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, {
+    signal,
+    headers: {
+      "X-Client-Id": clientId,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal export Dashboard ANEV.");
+  }
+
+  const contentDisposition = res.headers.get("content-disposition") || "";
+  const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+  const filename = decodeURIComponent((filenameMatch?.[1] || "anev-polres.xlsx").replace(/\"/g, ""));
+
+  return {
+    blob: await res.blob(),
+    filename,
   };
 }
 
