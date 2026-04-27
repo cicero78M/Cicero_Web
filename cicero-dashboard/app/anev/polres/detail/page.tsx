@@ -46,23 +46,6 @@ function formatNumber(value: number | undefined | null) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-function sanitizeSheetName(name: string) {
-  return name.replace(/[\\/?*\[\]:]/g, "-").slice(0, 31) || "Data";
-}
-
-function computeColumnWidths(rows: Array<Record<string, string | number>>) {
-  if (!rows.length) return [] as Array<{ wch: number }>;
-  const headers = Object.keys(rows[0]);
-  return headers.map((header) => {
-    const maxLen = rows.reduce((max, row) => {
-      const value = row[header];
-      const text = value == null ? "" : String(value);
-      return Math.max(max, text.length);
-    }, header.length);
-    return { wch: Math.min(Math.max(maxLen + 2, 10), 120) };
-  });
-}
-
 function normalizeHandleValue(raw?: string) {
   if (!raw) return "";
   const trimmed = String(raw).trim();
@@ -342,17 +325,21 @@ function AnevPolresDetailContent() {
 
     setIsExporting(true);
     try {
-      const XLSX = await import("xlsx");
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      worksheet["!cols"] = computeColumnWidths(rows);
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(viewConfig.title));
-
-      const blobData = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
-      const blob = new Blob([blobData], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      const response = await fetch("/api/dashboard/anev/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rows,
+          fileName: `anev-polres-${(viewConfig.key || "detail").toLowerCase()}-${filters.time_range || "custom"}`,
+        }),
       });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Gagal mengekspor file Excel.");
+      }
+
+      const blob = await response.blob();
 
       const fileBase = `${(viewConfig.key || "detail").toLowerCase()}-${filters.time_range || "custom"}`;
       const url = URL.createObjectURL(blob);
@@ -371,7 +358,7 @@ function AnevPolresDetailContent() {
     } finally {
       setIsExporting(false);
     }
-  }, [rows, viewConfig.title, viewConfig.key, filters.time_range]);
+  }, [rows, viewConfig.key, filters.time_range]);
 
   if (isHydrating || isProfileLoading || premiumStatus === "loading") {
     return (
