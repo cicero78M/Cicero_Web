@@ -13,7 +13,11 @@ export default function ExecutiveRecapCard({
 }) {
   const [mode, setMode] = useState("brief");
 
-  const activeText = useMemo(() => (mode === "full" ? fullText || briefText : briefText), [mode, briefText, fullText]);
+  const hasExtendedMode = Boolean(fullText && fullText !== briefText);
+  const activeText = useMemo(() => {
+    if (mode === "full" && hasExtendedMode) return fullText;
+    return briefText;
+  }, [mode, hasExtendedMode, briefText, fullText]);
 
   async function handleCopy() {
     if (!activeText) return;
@@ -58,20 +62,22 @@ export default function ExecutiveRecapCard({
           >
             Ringkas
           </button>
-          <button
-            type="button"
-            onClick={() => setMode("full")}
-            className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${mode === "full" ? "bg-emerald-500 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-          >
-            Lengkap
-          </button>
+          {hasExtendedMode ? (
+            <button
+              type="button"
+              onClick={() => setMode("full")}
+              className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${mode === "full" ? "bg-emerald-500 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            >
+              Lengkap
+            </button>
+          ) : null}
         </div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-white/90 bg-white/90 p-4 shadow-inner">
         <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           <FileText className="h-4 w-4" />
-          Preview briefing {mode === "full" ? "lengkap" : "ringkas"}
+          Preview briefing {mode === "full" && hasExtendedMode ? "lengkap" : "ringkas"}
         </div>
         <pre className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">{activeText}</pre>
       </div>
@@ -83,7 +89,7 @@ export default function ExecutiveRecapCard({
           className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300"
         >
           <Copy className="h-4 w-4" />
-          Copy briefing {mode === "full" ? "lengkap" : "ringkas"}
+          Copy briefing {mode === "full" && hasExtendedMode ? "lengkap" : "ringkas"}
         </button>
       </div>
     </section>

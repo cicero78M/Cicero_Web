@@ -683,13 +683,18 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           riskAlertCenter={<RiskAlertCenter {...(remoteRiskSummary || riskAlertCenter)} />}
           executiveRecap={
             <ExecutiveRecapCard
-              {...(remoteExecutiveRecap || {
-                title: executiveBrief.title,
-                description: executiveBrief.description,
-                summary: executiveBrief.summary,
-                briefText: executiveBrief.text,
-                fullText: executiveFull.text,
-              })}
+              {...(remoteExecutiveRecap
+                ? {
+                    ...remoteExecutiveRecap,
+                    fullText: remoteExecutiveRecap.fullText || executiveFull.text,
+                  }
+                : {
+                    title: executiveBrief.title,
+                    description: executiveBrief.description,
+                    summary: executiveBrief.summary,
+                    briefText: executiveBrief.text,
+                    fullText: executiveFull.text,
+                  })}
             />
           }
           onCopyRekap={handleCopyRekap}
