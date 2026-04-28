@@ -201,6 +201,81 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       ? filterUsersByClientId(chartData, selectedClientId)
       : chartData;
 
+  const hasPremiumAccess = hasActivePremiumSubscription(
+    premiumTier,
+    premiumExpiry || profile?.premium_expires_at || null,
+    Boolean(profile?.premium_status),
+  );
+  const premiumInsightClientId = selectedClientId || clientId;
+  const premiumInsightScope = isDirectorate
+    ? selectedClientId
+      ? "org"
+      : directorateScope === "all"
+        ? "direktorat"
+        : "org"
+    : "org";
+
+  useEffect(() => {
+    if (!hasPremiumAccess || !token || !premiumInsightClientId) {
+      setRemoteExecutiveRecap(null);
+      setRemoteRiskSummary(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const roleOption = String(effectiveRole || "").trim().toLowerCase();
+    const filters = {
+      platform: "tiktok",
+      client_id: premiumInsightClientId,
+      scope: premiumInsightScope,
+      role: roleOption,
+      regional_id: regionalId || undefined,
+      periode: viewBy === "today" ? "harian" : viewBy === "week" ? "mingguan" : viewBy === "month" ? "bulanan" : "harian",
+      tanggal: normalizedCustomDate || undefined,
+      start_date: normalizedRange.startDate || undefined,
+      end_date: normalizedRange.endDate || undefined,
+    };
+
+    Promise.all([
+      getDashboardPremiumExecutiveRecap(token, filters, controller.signal),
+      getDashboardPremiumRiskSummary(token, filters, controller.signal),
+    ])
+      .then(([executiveRes, riskRes]) => {
+        setRemoteExecutiveRecap(
+          mapExecutiveRecapToCardProps(executiveRes) || null,
+        );
+        setRemoteRiskSummary(
+          mapRiskSummaryToCardProps(riskRes, {
+            hasPremiumAccess,
+            premiumHref: "/premium",
+          }) || null,
+        );
+      })
+      .catch((fetchError) => {
+        if (fetchError?.name === "AbortError") return;
+        console.warn("Gagal memuat premium insight TikTok dari backend:", fetchError);
+        setRemoteExecutiveRecap(null);
+        setRemoteRiskSummary(null);
+      });
+
+    return () => controller.abort();
+  }, [
+    clientId,
+    directorateScope,
+    effectiveRole,
+    hasPremiumAccess,
+    isDirectorate,
+    normalizedCustomDate,
+    normalizedRange.endDate,
+    normalizedRange.startDate,
+    premiumInsightClientId,
+    premiumInsightScope,
+    regionalId,
+    selectedClientId,
+    token,
+    viewBy,
+  ]);
+
   const selectedClientName =
     directorateClientOptions.find((entry) => entry.client_id === selectedClientId)
       ?.nama_client || clientName;
@@ -401,12 +476,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     canSelectScope,
   };
 
-  const hasPremiumAccess = hasActivePremiumSubscription(
-    premiumTier,
-    premiumExpiry || profile?.premium_expires_at || null,
-    Boolean(profile?.premium_status),
-  );
-
   const { premiumCta, premiumProof } = buildEngagementPremiumUpsell({
     platform: "tiktok",
     hasPremiumAccess,
@@ -422,14 +491,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     complianceRate,
     premiumHref: "/premium",
   });
-  const premiumInsightClientId = selectedClientId || clientId;
-  const premiumInsightScope = isDirectorate
-    ? selectedClientId
-      ? "org"
-      : directorateScope === "all"
-        ? "direktorat"
-        : "org"
-    : "org";
   const riskAlertCenter = buildRiskComplianceAlertCenter({
     platform: "TikTok",
     periodLabel: reportPeriodeLabel,
@@ -469,66 +530,6 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     complianceRate,
   });
 
-  useEffect(() => {
-    if (!hasPremiumAccess || !token || !premiumInsightClientId) {
-      setRemoteExecutiveRecap(null);
-      setRemoteRiskSummary(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    const roleOption = String(effectiveRole || "").trim().toLowerCase();
-    const filters = {
-      platform: "tiktok",
-      client_id: premiumInsightClientId,
-      scope: premiumInsightScope,
-      role: roleOption,
-      regional_id: regionalId || undefined,
-      periode: viewBy === "today" ? "harian" : viewBy === "week" ? "mingguan" : viewBy === "month" ? "bulanan" : "harian",
-      tanggal: normalizedCustomDate || undefined,
-      start_date: normalizedRange.startDate || undefined,
-      end_date: normalizedRange.endDate || undefined,
-    };
-
-    Promise.all([
-      getDashboardPremiumExecutiveRecap(token, filters, controller.signal),
-      getDashboardPremiumRiskSummary(token, filters, controller.signal),
-    ])
-      .then(([executiveRes, riskRes]) => {
-        setRemoteExecutiveRecap(
-          mapExecutiveRecapToCardProps(executiveRes) || null,
-        );
-        setRemoteRiskSummary(
-          mapRiskSummaryToCardProps(riskRes, {
-            hasPremiumAccess,
-            premiumHref: "/premium",
-          }) || null,
-        );
-      })
-      .catch((fetchError) => {
-        if (fetchError?.name === "AbortError") return;
-        console.warn("Gagal memuat premium insight TikTok dari backend:", fetchError);
-        setRemoteExecutiveRecap(null);
-        setRemoteRiskSummary(null);
-      });
-
-    return () => controller.abort();
-  }, [
-    clientId,
-    directorateScope,
-    effectiveRole,
-    hasPremiumAccess,
-    isDirectorate,
-    normalizedCustomDate,
-    normalizedRange.endDate,
-    normalizedRange.startDate,
-    premiumInsightClientId,
-    premiumInsightScope,
-    regionalId,
-    selectedClientId,
-    token,
-    viewBy,
-  ]);
   const viewSelectorProps = showDateSelector
     ? {
         value: viewBy,
