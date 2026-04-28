@@ -43,6 +43,12 @@ import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
+import PremiumProofValueCard from "@/components/premium/PremiumProofValueCard";
+import ExecutiveRecapCard from "@/components/premium/ExecutiveRecapCard";
+import RiskAlertCenter from "@/components/premium/RiskAlertCenter";
+import { buildExecutiveRecap } from "@/utils/executiveRecap";
+import { buildRiskComplianceAlertCenter } from "@/utils/riskComplianceAlerts";
+import { buildEngagementPremiumUpsell } from "@/utils/premiumUpsell";
 
 function buildSummaryFromUsers(users, totalIGPost, fallbackSummary) {
   const totalPost = Number(totalIGPost) || 0;
@@ -494,14 +500,59 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     Boolean(profile?.premium_status),
   );
 
-  const premiumCta = isOrgClient && !isOrgOperator && !hasPremiumAccess
-    ? {
-        label: "Premium CICERO",
-        description: "Jadwalkan rekap otomatis & briefing WA Bot tiap hari.",
-        href: "/premium",
-        actionLabel: "Lihat Paket",
-      }
-    : null;
+  const { premiumCta, premiumProof } = buildEngagementPremiumUpsell({
+    platform: "instagram",
+    hasPremiumAccess,
+    isOrgClient,
+    isOrgOperator,
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    completedCount: totalSudahLike,
+    actionNeededCount,
+    notStartedCount: totalBelumLike,
+    missingUsernameCount: totalTanpaUsername,
+    totalPosts: effectiveRekapSummary.totalIGPost,
+    complianceRate,
+    premiumHref: "/premium",
+  });
+  const riskAlertCenter = buildRiskComplianceAlertCenter({
+    platform: "Instagram",
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    completedCount: totalSudahLike,
+    partialCount: totalKurangLike,
+    notStartedCount: totalBelumLike,
+    missingUsernameCount: totalTanpaUsername,
+    complianceRate,
+    hasPremiumAccess,
+    premiumHref: "/premium",
+  });
+  const executiveBrief = buildExecutiveRecap({
+    platform: "Instagram",
+    mode: "brief",
+    clientName: selectedClientName || resolvedClientLabel || clientName,
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    totalPosts: effectiveRekapSummary.totalIGPost,
+    completedCount: totalSudahLike,
+    partialCount: totalKurangLike,
+    notStartedCount: totalBelumLike,
+    missingUsernameCount: totalTanpaUsername,
+    complianceRate,
+  });
+  const executiveFull = buildExecutiveRecap({
+    platform: "Instagram",
+    mode: "full",
+    clientName: selectedClientName || resolvedClientLabel || clientName,
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    totalPosts: effectiveRekapSummary.totalIGPost,
+    completedCount: totalSudahLike,
+    partialCount: totalKurangLike,
+    notStartedCount: totalBelumLike,
+    missingUsernameCount: totalTanpaUsername,
+    complianceRate,
+  });
   const viewSelectorProps = showDateSelector
     ? {
         value: viewBy,
@@ -526,6 +577,17 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           viewSelectorProps={viewSelectorProps}
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
+          premiumProof={premiumProof ? <PremiumProofValueCard {...premiumProof} /> : null}
+          riskAlertCenter={<RiskAlertCenter {...riskAlertCenter} />}
+          executiveRecap={
+            <ExecutiveRecapCard
+              title={executiveBrief.title}
+              description={executiveBrief.description}
+              summary={executiveBrief.summary}
+              briefText={executiveBrief.text}
+              fullText={executiveFull.text}
+            />
+          }
           onCopyRekap={handleCopyRekap}
           rekapTaskAction={{
             onClick: handleCopyTaskLinksToday,

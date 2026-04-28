@@ -20,6 +20,12 @@ import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
 import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
+import PremiumProofValueCard from "@/components/premium/PremiumProofValueCard";
+import ExecutiveRecapCard from "@/components/premium/ExecutiveRecapCard";
+import RiskAlertCenter from "@/components/premium/RiskAlertCenter";
+import { buildExecutiveRecap } from "@/utils/executiveRecap";
+import { buildRiskComplianceAlertCenter } from "@/utils/riskComplianceAlerts";
+import { buildEngagementPremiumUpsell } from "@/utils/premiumUpsell";
 import useAuth from "@/hooks/useAuth";
 import {
   hasActivePremiumSubscription,
@@ -396,14 +402,59 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     Boolean(profile?.premium_status),
   );
 
-  const premiumCta = isOrgClient && !isOrgOperator && !hasPremiumAccess
-    ? {
-        label: "Premium CICERO",
-        description: "Jadwalkan rekap otomatis & briefing WA Bot tiap hari.",
-        href: "/premium",
-        actionLabel: "Lihat Paket",
-      }
-    : null;
+  const { premiumCta, premiumProof } = buildEngagementPremiumUpsell({
+    platform: "tiktok",
+    hasPremiumAccess,
+    isOrgClient,
+    isOrgOperator,
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    completedCount: totalSudahKomentar,
+    actionNeededCount,
+    notStartedCount: totalBelumKomentar,
+    missingUsernameCount: totalTanpaUsername,
+    totalPosts: effectiveRekapSummary.totalTiktokPost,
+    complianceRate,
+    premiumHref: "/premium",
+  });
+  const riskAlertCenter = buildRiskComplianceAlertCenter({
+    platform: "TikTok",
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    completedCount: totalSudahKomentar,
+    partialCount: totalKurangKomentar,
+    notStartedCount: totalBelumKomentar,
+    missingUsernameCount: totalTanpaUsername,
+    complianceRate,
+    hasPremiumAccess,
+    premiumHref: "/premium",
+  });
+  const executiveBrief = buildExecutiveRecap({
+    platform: "TikTok",
+    mode: "brief",
+    clientName: selectedClientName || "Satker",
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    totalPosts: effectiveRekapSummary.totalTiktokPost,
+    completedCount: totalSudahKomentar,
+    partialCount: totalKurangKomentar,
+    notStartedCount: totalBelumKomentar,
+    missingUsernameCount: totalTanpaUsername,
+    complianceRate,
+  });
+  const executiveFull = buildExecutiveRecap({
+    platform: "TikTok",
+    mode: "full",
+    clientName: selectedClientName || "Satker",
+    periodLabel: reportPeriodeLabel,
+    totalUsers: totalUser,
+    totalPosts: effectiveRekapSummary.totalTiktokPost,
+    completedCount: totalSudahKomentar,
+    partialCount: totalKurangKomentar,
+    notStartedCount: totalBelumKomentar,
+    missingUsernameCount: totalTanpaUsername,
+    complianceRate,
+  });
   const viewSelectorProps = showDateSelector
     ? {
         value: viewBy,
@@ -553,6 +604,17 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           viewSelectorProps={viewSelectorProps}
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
+          premiumProof={premiumProof ? <PremiumProofValueCard {...premiumProof} /> : null}
+          riskAlertCenter={<RiskAlertCenter {...riskAlertCenter} />}
+          executiveRecap={
+            <ExecutiveRecapCard
+              title={executiveBrief.title}
+              description={executiveBrief.description}
+              summary={executiveBrief.summary}
+              briefText={executiveBrief.text}
+              fullText={executiveFull.text}
+            />
+          }
           onCopyRekap={handleCopyRekap}
           rekapTaskAction={{
             onClick: handleCopyTaskLinksToday,

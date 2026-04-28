@@ -35,6 +35,9 @@ export default function EngagementInsightMobileScaffold({
   quickInsights = [],
   quickInsightTone = "blue",
   premiumCta,
+  premiumProof,
+  riskAlertCenter,
+  executiveRecap,
   children,
 }) {
   const tone = quickInsightPalettes[quickInsightTone] || quickInsightPalettes.blue;
@@ -129,6 +132,10 @@ export default function EngagementInsightMobileScaffold({
               {renderPremiumCta()}
             </div>
           ) : null}
+
+          {premiumProof ? <div className="w-full">{premiumProof}</div> : null}
+          {riskAlertCenter ? <div className="w-full">{riskAlertCenter}</div> : null}
+          {executiveRecap ? <div className="w-full">{executiveRecap}</div> : null}
 
           {/* Scope Selector and Recap Button Section */}
           {(scopeSelectorProps || onCopyRekap || rekapTaskAction) && (
