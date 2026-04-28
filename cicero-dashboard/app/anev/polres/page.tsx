@@ -493,7 +493,7 @@ function getPerformerQuality(row: PerformerRow, rankIndex: number, rows: Perform
 
 export default function AnevPolresPage() {
   useRequireAuth();
-  const premiumStatus = useRequirePremium();
+  const premiumStatus = useRequirePremium({ redirectOnStandard: false });
   const { token, clientId, role, effectiveRole, effectiveClientType, regionalId, premiumTier, isHydrating, isProfileLoading } =
     useAuth();
 
@@ -671,8 +671,35 @@ export default function AnevPolresPage() {
   if (isHydrating || isProfileLoading || premiumStatus === "loading") {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader />
+        <div className="text-center">
+          <Loader />
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">Memuat status premium...</p>
+        </div>
       </div>
+    );
+  }
+
+  if (premiumStatus === "premium" && !effectiveRole && !role) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+          <p className="font-semibold text-slate-800">Menunggu konteks sesi</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Role/scope dari sesi login belum tersedia.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (premiumStatus === "error") {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
+          <p className="font-semibold text-rose-700">Gagal memvalidasi akses premium.</p>
+          <p className="mt-2 text-sm text-rose-700">Silakan refresh halaman atau coba beberapa saat lagi.</p>
+        </div>
+      </section>
     );
   }
 

@@ -98,14 +98,6 @@ const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
       );
   }, [series]);
 
-  if (data.length === 0) {
-    return (
-      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-        Belum ada data tren harian yang siap ditampilkan.
-      </div>
-    );
-  }
-
   const computedTotals = useMemo(() => {
     if (totals && typeof totals === "object") {
       return {
@@ -127,6 +119,14 @@ const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
       { posts: 0, likes: 0, comments: 0, interactions: 0 },
     );
   }, [data, totals]);
+
+  if (data.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+        Belum ada data tren harian yang siap ditampilkan.
+      </div>
+    );
+  }
 
   const safeDayCount = (() => {
     if (typeof dayCount === "number" && Number.isFinite(dayCount) && dayCount > 0) {

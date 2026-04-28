@@ -1,4 +1,15 @@
+"use client";
+
+import { useEffect } from "react";
 import { aggregateWeeklyLikesRecords, mergeWeeklyActivityRecords } from "./lib/dataTransforms";
+import useAuth from "@/hooks/useAuth";
+import {
+  getInstagramPosts,
+  getRekapKomentarTiktok,
+  getRekapLikesIG,
+  getTiktokPosts,
+  getUserDirectory,
+} from "@/utils/api";
 
 type ActivityRecord = Record<string, any>;
 
@@ -11,18 +22,73 @@ function normalizeIdentifier(value?: unknown): string {
   return String(value || "")
     .trim()
     .toLowerCase()
-    .replace(/[\\s._-]+/g, "")
+    .replace(/[\s._-]+/g, "")
     .replace(/[.,]/g, "");
 }
 
-export function filterDitbinmasRecords(records: ActivityRecord[] = []) {
+type DitbinmasFilterOptions = {
+  clientScope?: string;
+};
+
+function recordTokens(record: ActivityRecord): string[] {
+  const client = record.client && typeof record.client === "object" ? record.client : {};
+  const targetClients = Array.isArray(record.target_clients) ? record.target_clients : [];
+  return [
+    record.client_id,
+    record.clientId,
+    record.clientID,
+    (record as any).clientid,
+    (record as any).id_client,
+    (record as any).idClient,
+    (record as any).client_code,
+    (record as any).clientCode,
+    record.client_name,
+    (record as any).clientName,
+    (record as any).name,
+    (client as any).name,
+    record.parent_client_id,
+    (record as any).parent_client,
+    ...targetClients,
+    record.rekap?.client_id,
+    record.rekap?.client_name,
+  ]
+    .map((value) => normalizeIdentifier(value))
+    .filter(Boolean);
+}
+
+function matchesDitbinmasToken(token: string): boolean {
+  return token === "ditbinmas";
+}
+
+function scopeMatcher(record: ActivityRecord, scopeToken: string): boolean {
+  const tokens = recordTokens(record);
+  if (!scopeToken) return false;
+
+  if (scopeToken === "ditbinmas") {
+    return tokens.some(matchesDitbinmasToken);
+  }
+
+  return tokens.some((token) => token === scopeToken);
+}
+
+export function filterDitbinmasRecords(
+  records: ActivityRecord[] = [],
+  options: DitbinmasFilterOptions = {},
+) {
+  const scopeToken = normalizeIdentifier(options.clientScope);
+
   return records.filter((record) => {
-    const clientId =
-      (record.client_id || record.clientId || record.clientID || record.rekap?.client_id || "")
-        .toString()
-        .toUpperCase();
-    const role = (record.role || record.rekap?.role || "").toString().toLowerCase();
-    return clientId === "DITBINMAS" || role.includes("ditbinmas");
+    const tokens = recordTokens(record);
+    const hasDitbinmasClient = tokens.some(matchesDitbinmasToken);
+
+    if (scopeToken) {
+      if (scopeToken === "ditbinmas") {
+        return scopeMatcher(record, "ditbinmas");
+      }
+      return scopeMatcher(record, scopeToken);
+    }
+
+    return hasDitbinmasClient;
   });
 }
 
@@ -30,18 +96,18 @@ export function resolveDitbinmasDirectoryUsers(users: ActivityRecord[] = []) {
   return users
     .filter((user) => {
       const clientId = (user.client_id || user.clientId || "").toString().trim();
+      const targetClients = Array.isArray(user.target_clients) ? user.target_clients : [];
+      const hasDitbinmasTarget = targetClients
+        .map((value) => normalizeIdentifier(value))
+        .includes("ditbinmas");
       const isInactive =
         user.status === "inactive" ||
         user.is_active === false ||
         String(user.aktif || "").toLowerCase() === "tidak";
-      return clientId && !isInactive;
+      const isDitbinmasClient = normalizeIdentifier(clientId) === "ditbinmas";
+      return (isDitbinmasClient || hasDitbinmasTarget) && !isInactive;
     })
-    .map((user) => {
-      if (Array.isArray(user.target_clients) && user.target_clients.includes("DITBINMAS")) {
-        return { ...user };
-      }
-      return { ...user };
-    });
+    .map((user) => ({ ...user }));
 }
 
 export function normalizePostsForPlatform(
@@ -146,8 +212,14 @@ function resolvePersonnelKey(person: ActivityRecord, clientKey: string) {
     normalizeIdentifier(person.user_id) ||
     normalizeIdentifier(person.nrp) ||
     normalizeIdentifier(person.email) ||
-    normalizeIdentifier(person.username) ||
-    normalizeIdentifier(person.nama) ||
+    String(person.username || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-") ||
+    String(person.nama || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-") ||
     clientKey
   );
 }
@@ -162,6 +234,7 @@ export function extractClientPersonnel(clients: ActivityRecord[] = []) {
       personnel.push({
         ...person,
         key: person.key || `${client.key}-${resolvePersonnelKey(person, client.key)}`,
+        nama: person.nama || person.username || "",
         satfung: person.divisi || person.satfung || client.divisi || client.clientName,
         likes,
         comments,
@@ -191,5 +264,49 @@ export function sortPersonnelDistribution(personnel: ActivityRecord[]) {
   });
 }
 
-export { aggregateWeeklyLikesRecords, mergeWeeklyActivityRecords };
+function normalizeClientScope(clientId?: unknown): string {
+  return String(clientId || "")
+    .trim()
+    .toUpperCase();
+}
 
+export default function WeeklyReportPageClient() {
+  const { token, clientId } = useAuth() as { token?: string; clientId?: string };
+
+  useEffect(() => {
+    if (!token) return;
+    const scope = normalizeClientScope(clientId);
+    if (!scope) return;
+
+    const controller = new AbortController();
+
+    const run = async () => {
+      try {
+        await Promise.all([
+          getUserDirectory(token, scope, controller.signal),
+          getInstagramPosts(token, scope, { signal: controller.signal }),
+          getTiktokPosts(token, scope, { signal: controller.signal }),
+          getRekapLikesIG(token, scope, "harian", undefined, undefined, undefined, controller.signal),
+          getRekapKomentarTiktok(
+            token,
+            scope,
+            "harian",
+            undefined,
+            undefined,
+            undefined,
+            controller.signal,
+          ),
+        ]);
+      } catch {
+        // noop untuk menjaga halaman tetap stabil saat salah satu endpoint gagal
+      }
+    };
+
+    void run();
+    return () => controller.abort();
+  }, [token, clientId]);
+
+  return null;
+}
+
+export { aggregateWeeklyLikesRecords, mergeWeeklyActivityRecords };

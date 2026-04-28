@@ -84,22 +84,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
   personnelCount = null,
   personnelLabel = null,
 }) => {
-  if (loading) {
-    return (
-      <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-        Menyiapkan tren interaksi…
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-3xl border border-rose-500/40 bg-rose-500/10 p-6 text-sm text-rose-200">
-        {error}
-      </div>
-    );
-  }
-
   const chartData = useMemo(() => {
     if (!Array.isArray(series) || series.length === 0) {
       return [];
@@ -114,14 +98,6 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
       };
     });
   }, [series]);
-
-  if (chartData.length === 0) {
-    return (
-      <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
-        Belum ada tren interaksi mingguan yang tersedia.
-      </div>
-    );
-  }
 
   const latestPoint = resolvePoint(latest);
   const previousPoint = previous ? resolvePoint(previous) : null;
@@ -286,6 +262,30 @@ const PlatformEngagementTrendChart: React.FC<PlatformEngagementTrendChartProps> 
     shouldShowComments,
     shouldShowLikes,
   ]);
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+        Menyiapkan tren interaksi…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-rose-500/40 bg-rose-500/10 p-6 text-sm text-rose-200">
+        {error}
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <div className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 text-sm text-slate-400">
+        Belum ada tren interaksi mingguan yang tersedia.
+      </div>
+    );
+  }
 
   const summaryNarrative = (() => {
     const formatInteger = (value: number) =>

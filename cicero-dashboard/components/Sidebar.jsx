@@ -246,13 +246,15 @@ export default function Sidebar() {
             )}
           </button>
         </SheetTrigger>
-        <SheetContent
-          side="left"
-          className="flex w-[280px] flex-col border-r border-slate-200 bg-white p-4 text-slate-700 md:hidden dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-        >
-          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          {navLinks(true, false)}
-        </SheetContent>
+        {open ? (
+          <SheetContent
+            side="left"
+            className="flex w-[280px] flex-col border-r border-slate-200 bg-white p-4 text-slate-700 md:hidden dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          >
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            {navLinks(true, false)}
+          </SheetContent>
+        ) : null}
       </Sheet>
 
       <div
