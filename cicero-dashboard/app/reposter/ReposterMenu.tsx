@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import useReposterAuth from "@/hooks/useReposterAuth";
+import { logoutReposterSession } from "@/utils/api";
 
 const MENU_ITEMS = [
   {
@@ -23,12 +25,22 @@ const MENU_ITEMS = [
 
 export default function ReposterMenu() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { token, setAuth } = useReposterAuth();
+
+  const handleLogout = async () => {
+    await logoutReposterSession(token);
+    setAuth(null, null);
+    router.replace("/reposter/login");
+    router.refresh();
+  };
 
   return (
-    <div className="grid gap-3 md:grid-cols-3">
-      {MENU_ITEMS.map((item) => {
-        const isActive = pathname === item.href;
-        return (
+    <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-3">
+        {MENU_ITEMS.map((item) => {
+          const isActive = pathname === item.href;
+          return (
           <Link
             key={item.href}
             href={item.href}
@@ -43,8 +55,18 @@ export default function ReposterMenu() {
               {item.description}
             </p>
           </Link>
-        );
-      })}
+          );
+        })}
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex items-center rounded-2xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/60 dark:bg-slate-900/70 dark:text-rose-300 dark:hover:bg-rose-950/30"
+        >
+          Logout reposter
+        </button>
+      </div>
     </div>
   );
 }

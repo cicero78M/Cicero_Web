@@ -1,3 +1,7 @@
+import {
+  REPOSTER_PROFILE_STORAGE_KEY,
+  REPOSTER_TOKEN_STORAGE_KEY,
+} from "@/context/ReposterAuthContext";
 import { formatPremiumTierLabel, normalizePremiumTierKey } from "@/utils/premium";
 
 // utils/api.ts
@@ -153,13 +157,82 @@ export async function confirmDashboardPasswordReset(
   );
 }
 
-// Handle expired or invalid token by clearing storage and redirecting to login
-function handleTokenExpired(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("cicero_token");
-    localStorage.removeItem("client_id");
-    window.location.href = "/";
+type AuthFailureScope = "dashboard" | "reposter" | "none";
+
+type AuthenticatedRequestInit = RequestInit & {
+  authFailureScope?: AuthFailureScope;
+};
+
+const REPOSTER_SESSION_COOKIE = "reposter_session";
+
+function clearCookie(name: string, path: string = "/"): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; Path=${path}; Max-Age=0; SameSite=Lax`;
+}
+
+function redirectTo(path: string): void {
+  if (typeof window === "undefined") return;
+  window.location.replace(path);
+}
+
+export function clearDashboardAuthState(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("cicero_token");
+  localStorage.removeItem("client_id");
+  localStorage.removeItem("user_id");
+  localStorage.removeItem("username");
+  localStorage.removeItem("user_role");
+}
+
+export function clearReposterAuthState(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
+  clearCookie(REPOSTER_SESSION_COOKIE, "/reposter");
+}
+
+function shouldInvalidateAuth(status: number, data?: any): boolean {
+  if (status === 401) return true;
+  if (status !== 403) return false;
+  const reason = typeof data?.reason === "string" ? data.reason.trim().toLowerCase() : "";
+  return ["invalid_token", "expired_token", "missing_token"].includes(reason);
+}
+
+function handleAuthFailure(scope: AuthFailureScope = "dashboard"): void {
+  if (scope === "none") return;
+  if (scope === "reposter") {
+    clearReposterAuthState();
+    redirectTo("/reposter/login");
+    return;
   }
+  clearDashboardAuthState();
+  redirectTo("/");
+}
+
+async function postLogout(token?: string | null): Promise<void> {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    await fetch(buildApiUrl("/api/auth/logout"), {
+      method: "POST",
+      headers,
+      credentials: "include",
+    });
+  } catch {
+    // Best-effort only.
+  }
+}
+
+export async function logoutDashboardSession(token?: string | null): Promise<void> {
+  await postLogout(token);
+  clearDashboardAuthState();
+}
+
+export async function logoutReposterSession(token?: string | null): Promise<void> {
+  await postLogout(token);
+  clearReposterAuthState();
 }
 
 export type SubmitPremiumRequestPayload = {
@@ -219,8 +292,8 @@ export async function getPremiumRequestContext(
     data = null;
   }
 
-  if (res.status === 401 || res.status === 403) {
-    handleTokenExpired();
+  if (shouldInvalidateAuth(res.status, data)) {
+    handleAuthFailure("dashboard");
   }
 
   const successFlag = res.ok && data?.success !== false;
@@ -385,8 +458,8 @@ export async function submitPremiumRequest(
     data = null;
   }
 
-  if (res.status === 401 || res.status === 403) {
-    handleTokenExpired();
+  if (shouldInvalidateAuth(res.status, data)) {
+    handleAuthFailure("dashboard");
   }
 
   const successFlag = res.ok && data?.success !== false;
@@ -807,18 +880,29 @@ export type SatbinmasAccountDetail = {
 async function fetchWithAuth(
   url: string,
   token: string,
-  options: RequestInit = {}
+  options: AuthenticatedRequestInit = {}
 ): Promise<Response> {
+  const { authFailureScope = "dashboard", ...fetchOptions } = options;
   const res = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      ...(options.headers || {}),
+      ...(fetchOptions.headers || {}),
     },
   });
-  if (res.status === 401) {
-    handleTokenExpired();
+
+  let failurePayload: any = null;
+  if (res.status === 401 || res.status === 403) {
+    try {
+      failurePayload = await res.clone().json();
+    } catch {
+      failurePayload = null;
+    }
+  }
+
+  if (shouldInvalidateAuth(res.status, failurePayload)) {
+    handleAuthFailure(authFailureScope);
     throw new Error("Unauthorized");
   }
   return res;
@@ -1693,7 +1777,10 @@ async function fetchReposterPosts(
   }
   const params = new URLSearchParams({ client_id: clientId });
   const url = `${buildApiUrl(endpoint)}?${params.toString()}`;
-  const res = await fetchWithAuth(url, token, { signal: options.signal });
+  const res = await fetchWithAuth(url, token, {
+    signal: options.signal,
+    authFailureScope: "reposter",
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || "Gagal memuat postingan reposter.");
@@ -1918,7 +2005,10 @@ export async function getReposterReportLinks(
     ? "/api/link-reports-khusus"
     : "/api/link-reports";
   const url = `${buildApiUrl(endpoint)}?${query.toString()}`;
-  const res = await fetchWithAuth(url, token, { signal });
+  const res = await fetchWithAuth(url, token, {
+    signal,
+    authFailureScope: "reposter",
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || "Gagal memuat link laporan.");
@@ -1954,7 +2044,10 @@ export async function getReposterReportLinkDetail(
     ? "/api/link-reports-khusus"
     : "/api/link-reports";
   const url = `${buildApiUrl(endpoint)}?${query.toString()}`;
-  const res = await fetchWithAuth(url, token, { signal });
+  const res = await fetchWithAuth(url, token, {
+    signal,
+    authFailureScope: "reposter",
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || "Gagal memuat link laporan.");
@@ -1991,6 +2084,7 @@ export async function getReposterReportLinkDuplicates(
   const url = `${buildApiUrl(endpoint)}?${params.toString()}`;
   const res = await fetchWithAuth(url, token, {
     signal: options?.signal,
+    authFailureScope: "reposter",
   });
   if (!res.ok) return [];
   const json = await res.json();
@@ -2028,6 +2122,7 @@ export async function submitReposterReportLinks(
     },
     body: JSON.stringify(body),
     signal: options?.signal,
+    authFailureScope: "reposter",
   });
   if (!res.ok) {
     const text = await res.text();
@@ -2970,11 +3065,13 @@ export async function updateUser(
   token: string,
   userId: string,
   data: Record<string, any>,
+  authFailureScope: AuthFailureScope = "dashboard",
 ): Promise<any> {
   const url = buildApiUrl(`/api/users/${encodeURIComponent(userId)}`);
   const res = await fetchWithAuth(url, token, {
     method: "PUT",
     body: JSON.stringify(data),
+    authFailureScope,
   });
   if (!res.ok) {
     const text = await res.text();
@@ -2990,7 +3087,10 @@ export async function getReposterUserProfile(
   signal?: AbortSignal,
 ): Promise<any> {
   const url = buildApiUrl(`/api/users/${encodeURIComponent(userId)}`);
-  const res = await fetchWithAuth(url, token, { signal });
+  const res = await fetchWithAuth(url, token, {
+    signal,
+    authFailureScope: "reposter",
+  });
   if (!res.ok) throw new Error("Gagal mengambil profil user");
   return res.json();
 }

@@ -187,7 +187,7 @@ export default function ProfileClient() {
       email: formState.email.trim(),
     };
     try {
-      const res = await updateUser(token, combinedProfile.nrp, payload);
+      const res = await updateUser(token, combinedProfile.nrp, payload, "reposter");
       const normalized = normalizeReposterProfile([
         res?.data?.user,
         res?.data?.profile,
@@ -248,7 +248,7 @@ export default function ProfileClient() {
         email: "", // Clear the email
       };
       
-      const res = await updateUser(token, combinedProfile.nrp, payload);
+      const res = await updateUser(token, combinedProfile.nrp, payload, "reposter");
       const normalized = normalizeReposterProfile([
         res?.data?.user,
         res?.data?.profile,
