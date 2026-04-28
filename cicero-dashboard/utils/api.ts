@@ -429,6 +429,50 @@ export async function submitPremiumRequest(
   };
 }
 
+export type DashboardPremiumInsightFilters = {
+  platform: "instagram" | "tiktok";
+  clientId?: string;
+  client_id?: string;
+  scope?: string;
+  role?: string;
+  regional_id?: string;
+  periode?: string;
+  tanggal?: string;
+  startDate?: string;
+  endDate?: string;
+  start_date?: string;
+  end_date?: string;
+};
+
+export type DashboardPremiumExecutiveRecapResponse = {
+  platform?: string;
+  periodLabel?: string;
+  clientName?: string;
+  summary?: string;
+  stats?: Record<string, unknown>;
+  text?: string;
+};
+
+export type DashboardPremiumRiskSummaryAlert = {
+  id?: string;
+  severity?: string;
+  title?: string;
+  detail?: string;
+  action?: string;
+};
+
+export type DashboardPremiumRiskSummaryResponse = {
+  platform?: string;
+  periodLabel?: string;
+  complianceRate?: number;
+  actionNeededCount?: number;
+  actionNeededRate?: number;
+  missingUsernameCount?: number;
+  totalUsers?: number;
+  completedCount?: number;
+  alerts?: DashboardPremiumRiskSummaryAlert[];
+};
+
 export type ExecutiveSummaryFilters = {
   month?: string;
   period?: string;
@@ -464,6 +508,82 @@ export type ExecutiveSummaryResponse = {
   tiktokNarrative?: string;
   [key: string]: unknown;
 };
+
+function appendDashboardPremiumInsightParams(
+  params: URLSearchParams,
+  filters: DashboardPremiumInsightFilters,
+): void {
+  params.set("platform", filters.platform);
+
+  const clientId = filters.clientId || filters.client_id;
+  if (clientId) params.set("client_id", clientId);
+  if (filters.scope) params.set("scope", filters.scope);
+  if (filters.role) params.set("role", filters.role);
+  if (filters.regional_id) params.set("regional_id", filters.regional_id);
+  if (filters.periode) params.set("periode", filters.periode);
+  if (filters.tanggal) params.set("tanggal", filters.tanggal);
+
+  const startDate = filters.startDate || filters.start_date;
+  const endDate = filters.endDate || filters.end_date;
+  if (startDate) params.set("start_date", startDate);
+  if (endDate) params.set("end_date", endDate);
+}
+
+export async function getDashboardPremiumExecutiveRecap(
+  token: string,
+  filters: DashboardPremiumInsightFilters,
+  signal?: AbortSignal,
+): Promise<DashboardPremiumExecutiveRecapResponse> {
+  const params = new URLSearchParams();
+  appendDashboardPremiumInsightParams(params, filters);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await fetchWithAuth(
+    `${buildApiUrl("/api/dashboard/premium/executive-recap")}${query}`,
+    token,
+    { signal },
+  );
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  if (!res.ok || data?.success === false) {
+    throw new Error(extractResponseMessage(data, "Gagal memuat executive recap premium."));
+  }
+
+  return data?.data ?? data ?? {};
+}
+
+export async function getDashboardPremiumRiskSummary(
+  token: string,
+  filters: DashboardPremiumInsightFilters,
+  signal?: AbortSignal,
+): Promise<DashboardPremiumRiskSummaryResponse> {
+  const params = new URLSearchParams();
+  appendDashboardPremiumInsightParams(params, filters);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const res = await fetchWithAuth(
+    `${buildApiUrl("/api/dashboard/premium/risk-summary")}${query}`,
+    token,
+    { signal },
+  );
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (error) {
+    data = null;
+  }
+
+  if (!res.ok || data?.success === false) {
+    throw new Error(extractResponseMessage(data, "Gagal memuat risk summary premium."));
+  }
+
+  return data?.data ?? data ?? {};
+}
 
 export async function getExecutiveSummary(
   token: string,

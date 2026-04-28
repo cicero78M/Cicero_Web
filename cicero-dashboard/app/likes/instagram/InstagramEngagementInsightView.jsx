@@ -13,6 +13,8 @@ import useRequireAuth from "@/hooks/useRequireAuth";
 import useInstagramLikesData from "@/hooks/useInstagramLikesData";
 import useAuth from "@/hooks/useAuth";
 import {
+  getDashboardPremiumExecutiveRecap,
+  getDashboardPremiumRiskSummary,
   getInstagramPosts,
   getRekapKomentarTiktok,
   getRekapLikesIG,
@@ -47,6 +49,7 @@ import PremiumProofValueCard from "@/components/premium/PremiumProofValueCard";
 import ExecutiveRecapCard from "@/components/premium/ExecutiveRecapCard";
 import RiskAlertCenter from "@/components/premium/RiskAlertCenter";
 import { buildExecutiveRecap } from "@/utils/executiveRecap";
+import { mapExecutiveRecapToCardProps, mapRiskSummaryToCardProps } from "@/utils/premiumInsightAdapters";
 import { buildRiskComplianceAlertCenter } from "@/utils/riskComplianceAlerts";
 import { buildEngagementPremiumUpsell } from "@/utils/premiumUpsell";
 
@@ -98,6 +101,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   );
   const [directorateScope, setDirectorateScope] = useState("client");
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [remoteExecutiveRecap, setRemoteExecutiveRecap] = useState(null);
+  const [remoteRiskSummary, setRemoteRiskSummary] = useState(null);
   const rekapSectionRef = useRef(null);
 
   const isOriginalDirectorateClient =
@@ -515,6 +520,14 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     complianceRate,
     premiumHref: "/premium",
   });
+  const premiumInsightClientId = selectedClientId || clientId;
+  const premiumInsightScope = shouldUseDirectorateLayout
+    ? selectedClientId
+      ? "org"
+      : directorateScope === "all"
+        ? "direktorat"
+        : "org"
+    : "org";
   const riskAlertCenter = buildRiskComplianceAlertCenter({
     platform: "Instagram",
     periodLabel: reportPeriodeLabel,
@@ -553,6 +566,66 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     missingUsernameCount: totalTanpaUsername,
     complianceRate,
   });
+
+  useEffect(() => {
+    if (!hasPremiumAccess || !token || !premiumInsightClientId) {
+      setRemoteExecutiveRecap(null);
+      setRemoteRiskSummary(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const roleOption = String(effectiveRole || "").trim().toLowerCase();
+    const filters = {
+      platform: "instagram",
+      client_id: premiumInsightClientId,
+      scope: premiumInsightScope,
+      role: roleOption,
+      regional_id: regionalId || undefined,
+      periode: viewBy === "today" ? "harian" : viewBy === "week" ? "mingguan" : viewBy === "month" ? "bulanan" : "harian",
+      tanggal: normalizedCustomDate || undefined,
+      start_date: normalizedRange.startDate || undefined,
+      end_date: normalizedRange.endDate || undefined,
+    };
+
+    Promise.all([
+      getDashboardPremiumExecutiveRecap(token, filters, controller.signal),
+      getDashboardPremiumRiskSummary(token, filters, controller.signal),
+    ])
+      .then(([executiveRes, riskRes]) => {
+        setRemoteExecutiveRecap(
+          mapExecutiveRecapToCardProps(executiveRes) || null,
+        );
+        setRemoteRiskSummary(
+          mapRiskSummaryToCardProps(riskRes, {
+            hasPremiumAccess,
+            premiumHref: "/premium",
+          }) || null,
+        );
+      })
+      .catch((fetchError) => {
+        if (fetchError?.name === "AbortError") return;
+        console.warn("Gagal memuat premium insight Instagram dari backend:", fetchError);
+        setRemoteExecutiveRecap(null);
+        setRemoteRiskSummary(null);
+      });
+
+    return () => controller.abort();
+  }, [
+    clientId,
+    directorateScope,
+    effectiveRole,
+    hasPremiumAccess,
+    normalizedCustomDate,
+    normalizedRange.endDate,
+    normalizedRange.startDate,
+    premiumInsightClientId,
+    premiumInsightScope,
+    regionalId,
+    selectedClientId,
+    token,
+    viewBy,
+  ]);
   const viewSelectorProps = showDateSelector
     ? {
         value: viewBy,
@@ -578,14 +651,16 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           scopeSelectorProps={scopeSelectorProps}
           premiumCta={premiumCta}
           premiumProof={premiumProof ? <PremiumProofValueCard {...premiumProof} /> : null}
-          riskAlertCenter={<RiskAlertCenter {...riskAlertCenter} />}
+          riskAlertCenter={<RiskAlertCenter {...(remoteRiskSummary || riskAlertCenter)} />}
           executiveRecap={
             <ExecutiveRecapCard
-              title={executiveBrief.title}
-              description={executiveBrief.description}
-              summary={executiveBrief.summary}
-              briefText={executiveBrief.text}
-              fullText={executiveFull.text}
+              {...(remoteExecutiveRecap || {
+                title: executiveBrief.title,
+                description: executiveBrief.description,
+                summary: executiveBrief.summary,
+                briefText: executiveBrief.text,
+                fullText: executiveFull.text,
+              })}
             />
           }
           onCopyRekap={handleCopyRekap}
