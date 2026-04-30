@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  clearAdminSystemToken,
   getTelegramWidgetConfig,
   loginAdminWithTelegramWidget,
   setAdminSystemToken,
@@ -18,6 +19,9 @@ export default function AdminSystemLoginPage() {
   useEffect(() => {
     let mounted = true;
 
+    // Force fresh auth challenge every time user opens admin login page.
+    clearAdminSystemToken();
+
     async function initWidget() {
       try {
         const cfg = await getTelegramWidgetConfig();
@@ -28,6 +32,7 @@ export default function AdminSystemLoginPage() {
       } catch (err) {
         if (!mounted) return;
         setError(err instanceof Error ? err.message : "Gagal memuat konfigurasi Telegram widget");
+        setMessage("");
       }
     }
 
