@@ -6,7 +6,14 @@ type AnyRecord = Record<string, unknown>;
 
 function buildUrl(path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${getApiBaseUrl()}${normalized}`;
+  const base = getApiBaseUrl().replace(/\/$/, "");
+
+  // Prevent accidental double `/api/api/...` when NEXT_PUBLIC_API_URL already ends with `/api`.
+  if (base.endsWith("/api") && normalized.startsWith("/api/")) {
+    return `${base}${normalized.slice(4)}`;
+  }
+
+  return `${base}${normalized}`;
 }
 
 export function getAdminSystemToken(): string | null {

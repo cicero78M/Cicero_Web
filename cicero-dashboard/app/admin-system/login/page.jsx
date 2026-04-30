@@ -31,6 +31,14 @@ export default function AdminSystemLoginPage() {
         setBotUsername(username);
       } catch (err) {
         if (!mounted) return;
+        const fallback = String(process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "").trim();
+        if (fallback) {
+          setBotUsername(fallback.replace(/^@/, ""));
+          setError("");
+          setMessage("Menggunakan fallback bot username dari frontend config.");
+          return;
+        }
+
         setError(err instanceof Error ? err.message : "Gagal memuat konfigurasi Telegram widget");
         setMessage("");
       }
