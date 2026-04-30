@@ -91,6 +91,10 @@ export async function getAdminSystemOverview(token: string) {
   return fetchAdminProtected("/api/admin-system/management/overview", token);
 }
 
+export async function getAdminSystemAuthMe(token: string) {
+  return fetchAdminProtected('/api/admin-system/auth/me', token) as Promise<AnyRecord>;
+}
+
 export async function getAdminSystemClientsSummary(token: string) {
   return fetchAdminProtected('/api/admin-system/management/clients/summary', token) as Promise<AnyRecord>;
 }

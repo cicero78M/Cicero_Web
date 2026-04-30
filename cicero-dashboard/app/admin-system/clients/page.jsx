@@ -10,7 +10,21 @@ import {
   updateAdminSystemClient,
 } from "@/utils/adminSystemApi";
 
-const emptyForm = { client_id: "", nama: "", client_type: "", client_group: "", regional_id: "" };
+const emptyForm = {
+  client_id: "",
+  nama: "",
+  client_type: "",
+  client_group: "",
+  regional_id: "",
+  client_operator: "",
+  client_super: "",
+  client_insta: "",
+  client_tiktok: "",
+  client_status: true,
+  client_insta_status: true,
+  client_tiktok_status: true,
+  client_amplify_status: true,
+};
 
 export default function AdminClientsPage() {
   const { token, isHydrating } = useRequireSystemAdminAuth();
@@ -58,10 +72,22 @@ export default function AdminClientsPage() {
             <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="client_type" value={form.client_type} onChange={(e) => setForm((s) => ({ ...s, client_type: e.target.value }))} />
             <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="client_group" value={form.client_group} onChange={(e) => setForm((s) => ({ ...s, client_group: e.target.value }))} />
             <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="regional_id" value={form.regional_id} onChange={(e) => setForm((s) => ({ ...s, regional_id: e.target.value }))} />
+            <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="client_operator" value={form.client_operator} onChange={(e) => setForm((s) => ({ ...s, client_operator: e.target.value }))} />
+            <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="client_super" value={form.client_super} onChange={(e) => setForm((s) => ({ ...s, client_super: e.target.value }))} />
+            <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="client_insta" value={form.client_insta} onChange={(e) => setForm((s) => ({ ...s, client_insta: e.target.value }))} />
+            <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="client_tiktok" value={form.client_tiktok} onChange={(e) => setForm((s) => ({ ...s, client_tiktok: e.target.value }))} />
+          </div>
+          <div className="grid md:grid-cols-4 gap-2 text-xs">
+            <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(form.client_status)} onChange={(e) => setForm((s) => ({ ...s, client_status: e.target.checked }))} /> active</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(form.client_insta_status)} onChange={(e) => setForm((s) => ({ ...s, client_insta_status: e.target.checked }))} /> insta enabled</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(form.client_tiktok_status)} onChange={(e) => setForm((s) => ({ ...s, client_tiktok_status: e.target.checked }))} /> tiktok enabled</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(form.client_amplify_status)} onChange={(e) => setForm((s) => ({ ...s, client_amplify_status: e.target.checked }))} /> amplify enabled</label>
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold text-sm" onClick={async () => {
               if (!token) return;
+              if (!form.client_id && !editingId) return setError("client_id wajib diisi");
+              if (!form.nama.trim()) return setError("nama wajib diisi");
               try {
                 if (editingId) {
                   await updateAdminSystemClient(token, editingId, form);
@@ -102,7 +128,7 @@ export default function AdminClientsPage() {
                     <td className="py-2 pr-3">{String(r.client_status)}</td>
                     <td className="py-2 pr-3">
                       <div className="flex gap-2">
-                        <button className="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-semibold" onClick={() => { setEditingId(r.client_id); setForm({ client_id: r.client_id || "", nama: r.nama || "", client_type: r.client_type || "", client_group: r.client_group || "", regional_id: r.regional_id || "" }); }}>Edit</button>
+                        <button className="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-semibold" onClick={() => { setEditingId(r.client_id); setForm({ client_id: r.client_id || "", nama: r.nama || "", client_type: r.client_type || "", client_group: r.client_group || "", regional_id: r.regional_id || "", client_operator: r.client_operator || "", client_super: r.client_super || "", client_insta: r.client_insta || "", client_tiktok: r.client_tiktok || "", client_status: Boolean(r.client_status), client_insta_status: Boolean(r.client_insta_status), client_tiktok_status: Boolean(r.client_tiktok_status), client_amplify_status: Boolean(r.client_amplify_status) }); }}>Edit</button>
                         <button className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => {
                           if (!token) return;
                           if (!confirm(`Hapus client ${r.client_id}?`)) return;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAdminSystemToken } from "@/utils/adminSystemApi";
+import { clearAdminSystemToken, getAdminSystemAuthMe, getAdminSystemToken } from "@/utils/adminSystemApi";
 
 export default function useRequireSystemAdminAuth() {
   const router = useRouter();
@@ -17,8 +17,15 @@ export default function useRequireSystemAdminAuth() {
       return;
     }
 
-    setToken(current);
-    setIsHydrating(false);
+    getAdminSystemAuthMe(current)
+      .then(() => {
+        setToken(current);
+      })
+      .catch(() => {
+        clearAdminSystemToken();
+        router.replace("/admin-system/login");
+      })
+      .finally(() => setIsHydrating(false));
   }, [router]);
 
   return { token, isHydrating };

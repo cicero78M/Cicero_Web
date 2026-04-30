@@ -63,7 +63,7 @@ export default function AdminPaymentsPage() {
 
           <div className="overflow-auto">
             <table className="w-full text-sm">
-              <thead><tr className="text-left text-slate-400"><th className="py-2 pr-3">User</th><th className="py-2 pr-3">Client</th><th className="py-2 pr-3">Tier</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3">Aksi</th></tr></thead>
+              <thead><tr className="text-left text-slate-400"><th className="py-2 pr-3">User</th><th className="py-2 pr-3">Client</th><th className="py-2 pr-3">Tier</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Timeline</th><th className="py-2 pr-3">Aksi</th></tr></thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.request_id} className="border-t border-slate-800">
@@ -71,7 +71,13 @@ export default function AdminPaymentsPage() {
                     <td className="py-2 pr-3">{r.client_id || "-"}</td>
                     <td className="py-2 pr-3">{r.premium_tier || "-"}</td>
                     <td className="py-2 pr-3">Rp {Number(r.transfer_amount || 0).toLocaleString("id-ID")}</td>
-                    <td className="py-2 pr-3">{r.status}</td>
+                    <td className="py-2 pr-3">
+                      <div className="text-xs">
+                        <div className="font-semibold">{r.status}</div>
+                        <div className="text-slate-400">submitted: {r.created_at ? new Date(r.created_at).toLocaleString("id-ID") : "-"}</div>
+                        <div className="text-slate-400">responded: {r.responded_at ? new Date(r.responded_at).toLocaleString("id-ID") : "-"}</div>
+                      </div>
+                    </td>
                     <td className="py-2 pr-3">
                       {(r.status === "pending" || r.status === "confirmed") ? (
                         <div className="flex gap-2">
