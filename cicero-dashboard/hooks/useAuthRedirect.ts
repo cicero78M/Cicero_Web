@@ -19,7 +19,12 @@ export default function useAuthRedirect() {
         !storedPath.startsWith("/login") &&
         !storedPath.startsWith("/login-update") &&
         !storedPath.startsWith("/claim") &&
-        !storedPath.startsWith("/reposter");
+        !storedPath.startsWith("/reposter") &&
+        !storedPath.startsWith("/admin-system");
+
+      if (storedPath?.startsWith("/admin-system")) {
+        localStorage.removeItem("last_pathname");
+      }
       const targetPath = shouldUseStoredPath ? storedPath : "/dashboard";
       router.replace(targetPath);
     }
