@@ -87,6 +87,7 @@ export default function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(featureHighlights[0].id);
   const loginCtas = [
     { label: "Dashboard", href: "/login", variant: "primary" },
+    { label: "Admin System", href: "/admin-system/login", variant: "outline" },
     { label: "Claims", href: "/login-update", variant: "outline" },
     { label: "Reposter", href: "/reposter/login", variant: "outline" },
   ];
