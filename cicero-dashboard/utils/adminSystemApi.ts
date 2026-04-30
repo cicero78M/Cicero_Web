@@ -74,6 +74,15 @@ export async function loginAdminWithTelegramWidget(payload: Record<string, unkno
   return data;
 }
 
+export async function getTelegramWidgetConfig() {
+  const res = await fetch(buildUrl('/api/admin-system/auth/telegram/widget-config'));
+  const data = await parseResponse(res);
+  if (!res.ok || data?.success === false) {
+    throw new Error(String(data?.message || 'Gagal memuat konfigurasi Telegram widget'));
+  }
+  return data;
+}
+
 async function fetchAdminProtected(path: string, token: string, init?: RequestInit) {
   const res = await fetch(buildUrl(path), {
     ...init,

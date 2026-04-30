@@ -1,24 +1,45 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginAdminWithTelegramWidget, setAdminSystemToken } from "@/utils/adminSystemApi";
+import {
+  getTelegramWidgetConfig,
+  loginAdminWithTelegramWidget,
+  setAdminSystemToken,
+} from "@/utils/adminSystemApi";
 
 export default function AdminSystemLoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("Silakan login memakai Telegram widget.");
 
-  const botUsername = useMemo(
-    () => (process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "").trim(),
-    [],
-  );
+  const [botUsername, setBotUsername] = useState("");
 
   useEffect(() => {
-    if (!botUsername) {
-      setError("NEXT_PUBLIC_TELEGRAM_BOT_USERNAME belum diset.");
-      return;
+    let mounted = true;
+
+    async function initWidget() {
+      try {
+        const cfg = await getTelegramWidgetConfig();
+        const username = String(cfg?.data?.bot_username || "").trim();
+        if (!username) throw new Error("Username bot Telegram tidak ditemukan");
+        if (!mounted) return;
+        setBotUsername(username);
+      } catch (err) {
+        if (!mounted) return;
+        setError(err instanceof Error ? err.message : "Gagal memuat konfigurasi Telegram widget");
+      }
     }
+
+    initWidget();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!botUsername) return;
 
     const callbackName = "onTelegramAdminAuth";
     window[callbackName] = async (user) => {
