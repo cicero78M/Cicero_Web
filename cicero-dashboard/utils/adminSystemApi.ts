@@ -60,6 +60,20 @@ export async function verifyAdminTelegramOtp(requestId: string, otpCode: string)
   return data;
 }
 
+export async function loginAdminWithTelegramWidget(payload: Record<string, unknown>) {
+  const res = await fetch(buildUrl('/api/admin-system/auth/telegram/widget-login'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await parseResponse(res);
+  if (!res.ok || data?.success === false) {
+    throw new Error(String(data?.message || 'Login Telegram widget gagal'));
+  }
+  return data;
+}
+
 async function fetchAdminProtected(path: string, token: string, init?: RequestInit) {
   const res = await fetch(buildUrl(path), {
     ...init,

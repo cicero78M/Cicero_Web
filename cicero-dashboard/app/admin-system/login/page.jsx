@@ -1,57 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  requestAdminTelegramOtp,
-  setAdminSystemToken,
-  verifyAdminTelegramOtp,
-} from "@/utils/adminSystemApi";
+import { loginAdminWithTelegramWidget, setAdminSystemToken } from "@/utils/adminSystemApi";
 
 export default function AdminSystemLoginPage() {
   const router = useRouter();
-  const [telegramChatId, setTelegramChatId] = useState("");
-  const [requestId, setRequestId] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [loadingOtp, setLoadingOtp] = useState(false);
-  const [loadingVerify, setLoadingVerify] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("Silakan login memakai Telegram widget.");
 
-  const handleRequestOtp = async (e) => {
-    e.preventDefault();
-    setError("");
-    setMessage("");
-    setLoadingOtp(true);
-    try {
-      const data = await requestAdminTelegramOtp(telegramChatId.trim());
-      setRequestId(data?.request_id || "");
-      setMessage("OTP berhasil dikirim ke Telegram admin.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal request OTP");
-    } finally {
-      setLoadingOtp(false);
+  const botUsername = useMemo(
+    () => (process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "").trim(),
+    [],
+  );
+
+  useEffect(() => {
+    if (!botUsername) {
+      setError("NEXT_PUBLIC_TELEGRAM_BOT_USERNAME belum diset.");
+      return;
     }
-  };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setError("");
-    setMessage("");
-    setLoadingVerify(true);
-    try {
-      const data = await verifyAdminTelegramOtp(requestId.trim(), otpCode.trim());
-      if (!data?.token) {
-        throw new Error("Token admin tidak diterima dari server");
+    const callbackName = "onTelegramAdminAuth";
+    window[callbackName] = async (user) => {
+      setError("");
+      setMessage("Memverifikasi login Telegram...");
+      try {
+        const data = await loginAdminWithTelegramWidget(user || {});
+        if (!data?.token) throw new Error("Token admin tidak diterima");
+        setAdminSystemToken(data.token);
+        router.replace("/admin-system");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Login Telegram gagal");
+        setMessage("");
       }
-      setAdminSystemToken(data.token);
-      router.replace("/admin-system");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Verifikasi OTP gagal");
-    } finally {
-      setLoadingVerify(false);
-    }
-  };
+    };
+
+    const widgetContainer = document.getElementById("telegram-widget-container");
+    if (!widgetContainer) return;
+    widgetContainer.innerHTML = "";
+
+    const script = document.createElement("script");
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.async = true;
+    script.setAttribute("data-telegram-login", botUsername);
+    script.setAttribute("data-size", "large");
+    script.setAttribute("data-userpic", "false");
+    script.setAttribute("data-request-access", "write");
+    script.setAttribute("data-onauth", `${callbackName}(user)`);
+    widgetContainer.appendChild(script);
+
+    return () => {
+      delete window[callbackName];
+    };
+  }, [botUsername, router]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
@@ -59,55 +60,11 @@ export default function AdminSystemLoginPage() {
         <div>
           <h1 className="text-2xl font-semibold">Admin System Login</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Akses khusus via OTP Telegram admin.
+            Akses hanya untuk akun Telegram <b>@Cicero_Papiqo</b> via Telegram Login Widget.
           </p>
         </div>
 
-        <form onSubmit={handleRequestOtp} className="space-y-3">
-          <label className="text-sm text-slate-300">Telegram Chat ID</label>
-          <input
-            value={telegramChatId}
-            onChange={(e) => setTelegramChatId(e.target.value)}
-            placeholder="contoh: 1836914805"
-            className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loadingOtp}
-            className="w-full rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold py-3 disabled:opacity-60"
-          >
-            {loadingOtp ? "Mengirim OTP..." : "Kirim OTP ke Telegram"}
-          </button>
-        </form>
-
-        <form onSubmit={handleVerifyOtp} className="space-y-3 pt-2 border-t border-slate-700">
-          <label className="text-sm text-slate-300">Request ID</label>
-          <input
-            value={requestId}
-            onChange={(e) => setRequestId(e.target.value)}
-            placeholder="otomatis terisi setelah request OTP"
-            className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm"
-            required
-          />
-
-          <label className="text-sm text-slate-300">OTP Code</label>
-          <input
-            value={otpCode}
-            onChange={(e) => setOtpCode(e.target.value)}
-            placeholder="6 digit OTP"
-            className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm"
-            required
-          />
-
-          <button
-            type="submit"
-            disabled={loadingVerify}
-            className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-3 disabled:opacity-60"
-          >
-            {loadingVerify ? "Verifikasi..." : "Masuk Admin System"}
-          </button>
-        </form>
+        <div id="telegram-widget-container" className="flex justify-center py-2" />
 
         {message && <p className="text-sm text-emerald-400">{message}</p>}
         {error && <p className="text-sm text-rose-400">{error}</p>}
