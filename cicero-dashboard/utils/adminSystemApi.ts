@@ -39,11 +39,11 @@ async function parseResponse(res: Response): Promise<AnyRecord | null> {
   }
 }
 
-export async function requestAdminTelegramOtp(telegramChatId: string) {
+export async function requestAdminTelegramOtp(telegramUsername: string) {
   const res = await fetch(buildUrl("/api/admin-system/auth/telegram/request"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ telegram_chat_id: telegramChatId }),
+    body: JSON.stringify({ telegram_username: telegramUsername }),
   });
 
   const data = await parseResponse(res);
@@ -53,11 +53,11 @@ export async function requestAdminTelegramOtp(telegramChatId: string) {
   return data;
 }
 
-export async function verifyAdminTelegramOtp(requestId: string, otpCode: string) {
+export async function verifyAdminTelegramOtp(requestId: string, otpCode: string, telegramUsername: string) {
   const res = await fetch(buildUrl("/api/admin-system/auth/telegram/verify"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ request_id: requestId, otp_code: otpCode }),
+    body: JSON.stringify({ request_id: requestId, otp_code: otpCode, telegram_username: telegramUsername }),
   });
 
   const data = await parseResponse(res);
@@ -67,28 +67,7 @@ export async function verifyAdminTelegramOtp(requestId: string, otpCode: string)
   return data;
 }
 
-export async function loginAdminWithTelegramWidget(payload: Record<string, unknown>) {
-  const res = await fetch(buildUrl('/api/admin-system/auth/telegram/widget-login'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await parseResponse(res);
-  if (!res.ok || data?.success === false) {
-    throw new Error(String(data?.message || 'Login Telegram widget gagal'));
-  }
-  return data;
-}
-
-export async function getTelegramWidgetConfig() {
-  const res = await fetch(buildUrl('/api/admin-system/auth/telegram/widget-config'));
-  const data = await parseResponse(res);
-  if (!res.ok || data?.success === false) {
-    throw new Error(String(data?.message || 'Gagal memuat konfigurasi Telegram widget'));
-  }
-  return data;
-}
+// Legacy widget helpers intentionally removed from login flow.
 
 async function fetchAdminProtected(path: string, token: string, init?: RequestInit) {
   const res = await fetch(buildUrl(path), {

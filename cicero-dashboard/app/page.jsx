@@ -87,7 +87,6 @@ export default function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(featureHighlights[0].id);
   const loginCtas = [
     { label: "Dashboard", href: "/login", variant: "primary" },
-    { label: "Admin System", href: "/admin-system/login", variant: "outline" },
     { label: "Claims", href: "/login-update", variant: "outline" },
     { label: "Reposter", href: "/reposter/login", variant: "outline" },
   ];
@@ -481,6 +480,9 @@ export default function LandingPage() {
         <div className="container mx-auto flex max-w-7xl flex-col items-center gap-2 px-6 md:flex-row md:justify-between">
           <p>&copy; {new Date().getFullYear()} Cicero. Semua hak cipta dilindungi.</p>
           <div className="flex gap-4">
+            <Link href="/admin-system/login" className="opacity-50 transition hover:opacity-80">
+              Portal Internal
+            </Link>
             <Link href="/terms-of-service" className="transition hover:text-violet-500">
               Ketentuan Layanan
             </Link>
