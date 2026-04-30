@@ -86,9 +86,11 @@ export default function AdminSystemOverviewPage() {
             <Info label="Admin IDs" value={audit?.config_snapshot?.total_admin_chat_ids || 0} />
             <Info label="Role Mappings" value={audit?.config_snapshot?.total_role_mappings || 0} />
           </div>
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-2 flex-wrap">
             <Link href="/admin-system/analysis" className="px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-sm">System Analysis</Link>
             <Link href="/admin-system/funds" className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-semibold text-sm">Funds Management</Link>
+            <Link href="/admin-system/clients" className="px-4 py-2 rounded-lg bg-amber-400 text-slate-950 font-semibold text-sm">Client CRUD</Link>
+            <Link href="/admin-system/payments" className="px-4 py-2 rounded-lg bg-fuchsia-400 text-slate-950 font-semibold text-sm">Payment Workflow</Link>
           </div>
         </section>
       </div>

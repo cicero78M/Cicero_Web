@@ -65,7 +65,7 @@ export default function AdminSystemLoginPage() {
         <div>
           <h1 className="text-2xl font-semibold">Admin System Login</h1>
           <p className="text-sm text-slate-400 mt-1">
-            OTP hanya valid untuk akun Telegram <b>@Cicero_Papiqo</b>.
+            Gunakan OTP dari Telegram untuk masuk ke Admin System.
           </p>
         </div>
 

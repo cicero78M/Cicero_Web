@@ -99,6 +99,51 @@ export async function getAdminSystemFullAudit(token: string) {
   return fetchAdminProtected('/api/admin-system/management/system-audit', token) as Promise<AnyRecord>;
 }
 
+export async function getAdminSystemClients(token: string, params?: { page?: number; limit?: number; q?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.page) qs.set('page', String(params.page));
+  if (params?.limit) qs.set('limit', String(params.limit));
+  if (params?.q) qs.set('q', params.q);
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return fetchAdminProtected(`/api/admin-system/management/clients${suffix}`, token) as Promise<AnyRecord>;
+}
+
+export async function createAdminSystemClient(token: string, payload: AnyRecord) {
+  return fetchAdminProtected('/api/admin-system/management/clients', token, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }) as Promise<AnyRecord>;
+}
+
+export async function updateAdminSystemClient(token: string, clientId: string, payload: AnyRecord) {
+  return fetchAdminProtected(`/api/admin-system/management/clients/${encodeURIComponent(clientId)}`, token, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }) as Promise<AnyRecord>;
+}
+
+export async function deleteAdminSystemClient(token: string, clientId: string) {
+  return fetchAdminProtected(`/api/admin-system/management/clients/${encodeURIComponent(clientId)}`, token, {
+    method: 'DELETE',
+  }) as Promise<AnyRecord>;
+}
+
+export async function getAdminSystemPaymentRequests(token: string, params?: { page?: number; limit?: number; status?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.page) qs.set('page', String(params.page));
+  if (params?.limit) qs.set('limit', String(params.limit));
+  if (params?.status) qs.set('status', params.status);
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return fetchAdminProtected(`/api/admin-system/management/payments/requests${suffix}`, token) as Promise<AnyRecord>;
+}
+
+export async function decideAdminSystemPaymentRequest(token: string, requestId: string, payload: { status: 'approved' | 'rejected'; note?: string }) {
+  return fetchAdminProtected(`/api/admin-system/management/payments/requests/${requestId}/decision`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }) as Promise<AnyRecord>;
+}
+
 export async function getAdminSystemFunds(token: string) {
   return fetchAdminProtected("/api/admin-system/management/funds", token);
 }
