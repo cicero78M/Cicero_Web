@@ -108,13 +108,29 @@ export default function UserDirectoryPage() {
     ? "Satfung/Divisi"
     : "Satfung";
   const showKesatuanColumn = isDitbinmasClient && showAllDitbinmas;
-  const isOriginalDirectorateRole = isDirectorate && normalizedRole !== "operator";
+  const isOriginalDirectorateRole =
+    String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT" &&
+    normalizedRole !== "operator";
 
   const getUserPolres = (user) =>
-    user?.nama_polres || user?.namaPolres || user?.polres || user?.polres_name || "";
+    user?.nama_polres ||
+    user?.namaPolres ||
+    user?.polres ||
+    user?.polres_name ||
+    user?.client_name ||
+    user?.clientName ||
+    user?.nama_client ||
+    user?.client_label ||
+    "";
 
   const getUserJabatan = (user) =>
-    user?.jabatan || user?.nama_jabatan || user?.namaJabatan || user?.position || "";
+    user?.jabatan ||
+    user?.nama_jabatan ||
+    user?.namaJabatan ||
+    user?.position ||
+    user?.title_jabatan ||
+    user?.job_title ||
+    "";
 
   const { error, isLoading, mutate } = useSWR(
     token && client_id
