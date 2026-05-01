@@ -108,6 +108,13 @@ export default function UserDirectoryPage() {
     ? "Satfung/Divisi"
     : "Satfung";
   const showKesatuanColumn = isDitbinmasClient && showAllDitbinmas;
+  const isOriginalDirectorateRole = isDirectorate && normalizedRole !== "operator";
+
+  const getUserPolres = (user) =>
+    user?.nama_polres || user?.namaPolres || user?.polres || user?.polres_name || "";
+
+  const getUserJabatan = (user) =>
+    user?.jabatan || user?.nama_jabatan || user?.namaJabatan || user?.position || "";
 
   const { error, isLoading, mutate } = useSWR(
     token && client_id
@@ -810,7 +817,17 @@ export default function UserDirectoryPage() {
                           />
                         </span>
                       ) : (
-                        (u.title ? `${u.title} ` : "") + (u.nama || "-")
+                        <>
+                          {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
+                          {isOriginalDirectorateRole &&
+                            (getUserPolres(u) || getUserJabatan(u)) && (
+                              <span className="mt-1 block text-[11px] font-normal text-slate-500">
+                                {getUserPolres(u) ? `Polres: ${getUserPolres(u)}` : ""}
+                                {getUserPolres(u) && getUserJabatan(u) ? " • " : ""}
+                                {getUserJabatan(u) ? `Jabatan: ${getUserJabatan(u)}` : ""}
+                              </span>
+                            )}
+                        </>
                       )}
                     </p>
                   </div>
@@ -963,7 +980,17 @@ export default function UserDirectoryPage() {
                           />
                         </div>
                       ) : (
-                        (u.title ? `${u.title} ` : "") + (u.nama || "-")
+                        <>
+                          {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
+                          {isOriginalDirectorateRole &&
+                            (getUserPolres(u) || getUserJabatan(u)) && (
+                              <div className="mt-1 text-xs text-slate-500">
+                                {getUserPolres(u) ? `Polres: ${getUserPolres(u)}` : ""}
+                                {getUserPolres(u) && getUserJabatan(u) ? " • " : ""}
+                                {getUserJabatan(u) ? `Jabatan: ${getUserJabatan(u)}` : ""}
+                              </div>
+                            )}
+                        </>
                       )}
                     </td>
                     <td className="px-4 py-3 font-mono text-slate-600 whitespace-normal break-words">
