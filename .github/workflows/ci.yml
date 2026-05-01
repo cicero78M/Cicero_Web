@@ -1,0 +1,39 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: cicero-dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: cicero-dashboard
+        run: npm ci
+
+      - name: Lint
+        working-directory: cicero-dashboard
+        run: npm run lint
+
+      - name: Test
+        working-directory: cicero-dashboard
+        run: npm test -- --runInBand
+
+      - name: Build
+        working-directory: cicero-dashboard
+        env:
+          NEXT_PUBLIC_API_URL: https://example.invalid
+        run: npm run build

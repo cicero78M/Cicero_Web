@@ -4,11 +4,8 @@ import useSWR from "swr";
 import usePersistentState from "@/hooks/usePersistentState";
 import {
   getUserDirectory,
-  createUser,
-  updateUser,
   getClientProfile,
   getClientNames,
-  updateUserRoles,
   extractUserDirectoryUsers,
 } from "@/utils/api";
 import {
@@ -18,23 +15,24 @@ import {
 } from "@/utils/userDirectoryScope";
 import {
   extractClientOptions,
-  filterUsersByClientId,
   normalizeClientId,
   normalizeUsersWithClientLabel,
 } from "@/utils/directorateClientSelector";
-import { Pencil, Check, X, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import Loader from "@/components/Loader";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
-import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
-import { prioritizeUsersForClient } from "@/utils/userOrdering";
-import { showToast } from "@/utils/showToast";
+import { useUserDirectoryFilters } from "@/hooks/useUserDirectoryFilters";
+import { useUserDirectoryActions } from "@/hooks/useUserDirectoryActions";
 import {
   PANGKAT_OPTIONS,
   SATFUNG_OPTIONS,
-  validateNewUser,
 } from "@/utils/validateUserForm";
 import DirectorateClientSelector from "@/components/DirectorateClientSelector";
+import UserDirectoryCardList from "@/components/users/UserDirectoryCardList";
+import UserDirectoryTable from "@/components/users/UserDirectoryTable";
+import UserDirectoryPagination from "@/components/users/UserDirectoryPagination";
+import DeactivateUserModal from "@/components/users/DeactivateUserModal";
 
 const PAGE_SIZE = 50;
 
@@ -112,25 +110,6 @@ export default function UserDirectoryPage() {
     String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT" &&
     normalizedRole !== "operator";
 
-  const getUserPolres = (user) =>
-    user?.nama_polres ||
-    user?.namaPolres ||
-    user?.polres ||
-    user?.polres_name ||
-    user?.client_name ||
-    user?.clientName ||
-    user?.nama_client ||
-    user?.client_label ||
-    "";
-
-  const getUserJabatan = (user) =>
-    user?.jabatan ||
-    user?.nama_jabatan ||
-    user?.namaJabatan ||
-    user?.position ||
-    user?.title_jabatan ||
-    user?.job_title ||
-    "";
 
   const { error, isLoading, mutate } = useSWR(
     token && client_id
@@ -223,49 +202,21 @@ export default function UserDirectoryPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const sortedUsers = useMemo(() => {
-    const baseSorted = [...users].sort(compareUsersByPangkatAndNrp);
-    return prioritizeUsersForClient(baseSorted, client_id);
-  }, [users, client_id]);
-
-  const rekapUsers = useMemo(() => {
-    const grouped = {};
-    
-    // Apply client filter for directorate scope
-    const clientFilteredUsers = isDirectorate
-      ? filterUsersByClientId(sortedUsers, selectedClientId)
-      : sortedUsers;
-    
-    clientFilteredUsers
-      .filter((u) => {
-        if (isDitbinmasClient && !showAllDitbinmas) {
-          const cid = String(
-            u.client_id || u.clientId || u.clientID || u.client || "",
-          ).toUpperCase();
-          return cid === "DITBINMAS";
-        }
-        return true;
-      })
-      .forEach((u) => {
-        const key = u.divisi || "-";
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(u);
-    });
-    return grouped;
-  }, [sortedUsers, isDitbinmasClient, showAllDitbinmas, isDirectorate, selectedClientId]);
-
-  const summaryStats = useMemo(() => {
-    const list = Object.values(rekapUsers).flat();
-    const total = list.length;
-    const aktif = list.filter(
-      (u) => u.status === true || String(u.status).toLowerCase() === "true",
-    ).length;
-    const nonaktif = total - aktif;
-    const insta = list.filter((u) => Boolean(u.insta)).length;
-    const tiktok = list.filter((u) => Boolean(u.tiktok)).length;
-
-    return { total, aktif, nonaktif, insta, tiktok };
-  }, [rekapUsers]);
+  const {
+    filtered,
+    rekapFilteredUsers,
+    summaryStats,
+    isUserActive,
+  } = useUserDirectoryFilters({
+    users,
+    clientId: client_id,
+    isDirectorate,
+    selectedClientId,
+    isDitbinmasClient,
+    showAllDitbinmas,
+    statusFilter,
+    debouncedSearch,
+  });
 
   const pangkatOptions = useMemo(
     () => ({
@@ -275,37 +226,6 @@ export default function UserDirectoryPage() {
     [],
   );
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setSubmitError("");
-    setSubmitLoading(true);
-    try {
-      const { error: validationError, nrpNip: sanitizedNrpNip, satfungValue } =
-        validateNewUser({ nama, pangkat, nrpNip, satfung, polsekName });
-      if (validationError) {
-        throw new Error(validationError);
-      }
-      await createUser(token || "", {
-        client_id,
-        nama,
-        title: pangkat,
-        user_id: sanitizedNrpNip,
-        divisi: satfungValue,
-      });
-      setNama("");
-      setPangkat("");
-      setNrpNip("");
-      setSatfung("");
-      setPolsekName("");
-      setShowForm(false);
-      showToast("User berhasil ditambahkan", "success");
-      mutate();
-    } catch (err) {
-      setSubmitError(err.message || "Gagal menambah user");
-    }
-    setSubmitLoading(false);
-  }
-
   function handleEditClick(user) {
     setEditingRowId(user.user_id);
     setEditNama(user.nama || "");
@@ -313,32 +233,6 @@ export default function UserDirectoryPage() {
     setEditNrpNip((user.user_id || "").replace(/\D/g, ""));
     setEditSatfung(user.divisi || "");
     setUpdateError("");
-  }
-
-  async function handleUpdateRow(userId) {
-    setUpdateLoading(true);
-    setUpdateError("");
-    try {
-      const sanitizedNrpNip = editNrpNip.replace(/\D/g, "");
-      if (!sanitizedNrpNip) {
-        throw new Error("NRP/NIP wajib diisi");
-      }
-      await updateUser(token || "", userId, {
-        nama: editNama,
-        title: editPangkat,
-        divisi: editSatfung,
-        user_id: sanitizedNrpNip,
-      });
-      if (userId !== sanitizedNrpNip) {
-        await updateUserRoles(token || "", userId, sanitizedNrpNip);
-      }
-      await mutate();
-      setEditingRowId(null);
-      showToast("Data user berhasil diperbarui", "success");
-    } catch (err) {
-      setUpdateError(err.message || "Gagal mengubah user");
-    }
-    setUpdateLoading(false);
   }
 
   function openDeactivateModal(user) {
@@ -355,200 +249,43 @@ export default function UserDirectoryPage() {
     setDeactivateError("");
   }
 
-  async function handleConfirmDeactivate() {
-    const targetId = String(deactivateTarget?.user_id || "").replace(/\D/g, "");
-    const normalizedInput = confirmNrpInput.replace(/\D/g, "");
-    if (!normalizedInput) {
-      setDeactivateError("NRP/NIP wajib diisi untuk konfirmasi.");
-      return;
-    }
-    if (normalizedInput !== targetId) {
-      setDeactivateError("NRP/NIP tidak cocok dengan user yang dipilih.");
-      return;
-    }
-    setDeactivateLoading(true);
-    setDeactivateError("");
-    try {
-      await updateUser(token || "", deactivateTarget.user_id, { status: false });
-      await mutate();
-      showToast("User berhasil dinonaktifkan", "success");
-      closeDeactivateModal();
-    } catch (err) {
-      setDeactivateError(err.message || "Gagal menonaktifkan user");
-    }
-    setDeactivateLoading(false);
-  }
-
-  async function handleActivateUser(user) {
-    setToggleStatusLoadingId(user.user_id);
-    try {
-      await updateUser(token || "", user.user_id, { status: true });
-      await mutate();
-      showToast("User berhasil diaktifkan kembali", "success");
-    } catch (err) {
-      showToast(err.message || "Gagal mengaktifkan user", "error");
-    }
-    setToggleStatusLoadingId(null);
-  }
-
-  async function handleCopyRekap() {
-    const now = new Date();
-    const day = now.toLocaleDateString("id-ID", { weekday: "long" });
-    const date = now.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    const time = now.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const allUsers = rekapFilteredUsers;
-    const totalUser = allUsers.length;
-    const totalUpdateIG = allUsers.filter((u) => u.insta).length;
-    const totalUpdateTiktok = allUsers.filter((u) => u.tiktok).length;
-    const totalBelumUpdate = allUsers.filter(
-      (u) => !u.insta && !u.tiktok,
-    ).length;
-
-    // Group filtered users by divisi for detail section
-    const groupedByDivisi = {};
-    allUsers.forEach((u) => {
-      const key = u.divisi || "-";
-      if (!groupedByDivisi[key]) groupedByDivisi[key] = [];
-      groupedByDivisi[key].push(u);
-    });
-
-    const lines = [
-      `Client Name: ${clientName || "-"}`,
-      `${day}, ${date} ${time}`,
-      "",
-      `Total User : ${totalUser}`,
-      `Update Instagram : ${totalUpdateIG}`,
-      `Update Tiktok : ${totalUpdateTiktok}`,
-      `Belum Update : ${totalBelumUpdate}`,
-      "",
-      "Rincian",
-      "",
-    ];
-    Object.entries(groupedByDivisi).forEach(([sf, list]) => {
-      lines.push(`*${sf}*`);
-      list.forEach((u) => {
-        lines.push(
-          `${u.title ? `${u.title} ` : ""}${u.nama || "-"}, IG ${
-            u.insta || "Kosong"
-          }, Tiktok ${u.tiktok || "Kosong"}`,
-        );
-      });
-      lines.push("");
-    });
-    try {
-      await navigator.clipboard.writeText(lines.join("\n"));
-      showToast("Rekap user berhasil disalin ke clipboard", "success");
-    } catch (err) {
-      showToast(
-        "Gagal menyalin rekap user: " + (err.message || err),
-        "error",
-      );
-    }
-  }
+  const {
+    handleSubmit,
+    handleUpdateRow,
+    handleConfirmDeactivate,
+    handleActivateUser,
+    handleCopyRekap,
+  } = useUserDirectoryActions({
+    token,
+    clientId: client_id,
+    clientName,
+    rekapFilteredUsers,
+    mutate,
+    submitForm: { nama, pangkat, nrpNip, satfung, polsekName },
+    editForm: { editNama, editPangkat, editNrpNip, editSatfung },
+    deactivateForm: { deactivateTarget, confirmNrpInput },
+    setters: {
+      setSubmitError,
+      setSubmitLoading,
+      setNama,
+      setPangkat,
+      setNrpNip,
+      setSatfung,
+      setPolsekName,
+      setShowForm,
+      setUpdateLoading,
+      setUpdateError,
+      setEditingRowId,
+      setDeactivateLoading,
+      setDeactivateError,
+      setToggleStatusLoadingId,
+      closeDeactivateModal,
+    },
+  });
 
   // Data fetching handled by SWR
 
-  const filtered = useMemo(
-    () => {
-      // Apply client filter for directorate scope
-      const clientFiltered = isDirectorate
-        ? filterUsersByClientId(sortedUsers, selectedClientId)
-        : sortedUsers;
-      
-      return clientFiltered
-        .filter((u) => {
-          if (isDitbinmasClient && !showAllDitbinmas) {
-            return (
-              String(
-                u.client_id || u.clientId || u.clientID || u.client || "",
-              ).toUpperCase() === "DITBINMAS"
-            );
-          }
-          return true;
-        })
-        .filter((u) => {
-          if (statusFilter === "ALL") return true;
-          const isActive =
-            u.status === true || String(u.status).toLowerCase() === "true";
-          if (statusFilter === "ACTIVE") return isActive;
-          if (statusFilter === "INACTIVE") return !isActive;
-          return true;
-        })
-        .filter((u) => {
-          if (!debouncedSearch) return true;
-          const term = debouncedSearch.toLowerCase();
-          return (
-            (u.nama_client || u.nama || "")
-              .toLowerCase()
-              .includes(term) ||
-            (u.title || "").toLowerCase().includes(term) ||
-            (u.user_id || "").toLowerCase().includes(term) ||
-            (u.divisi || "")
-              .toLowerCase()
-              .includes(term) ||
-            (u.insta || "").toLowerCase().includes(term) ||
-            (u.tiktok || "").toLowerCase().includes(term) ||
-            (u.email || "").toLowerCase().includes(term) ||
-            String(u.status).toLowerCase().includes(term)
-          );
-        });
-    },
-    [
-      sortedUsers,
-      debouncedSearch,
-      isDitbinmasClient,
-      showAllDitbinmas,
-      statusFilter,
-      isDirectorate,
-      selectedClientId,
-    ],
-  );
-
-  const rekapFilteredUsers = useMemo(() => {
-    const clientFiltered = isDirectorate
-      ? filterUsersByClientId(sortedUsers, selectedClientId)
-      : sortedUsers;
-
-    return clientFiltered
-      .filter((u) => {
-        if (statusFilter === "ALL") return true;
-        const isActive =
-          u.status === true || String(u.status).toLowerCase() === "true";
-        if (statusFilter === "ACTIVE") return isActive;
-        if (statusFilter === "INACTIVE") return !isActive;
-        return true;
-      })
-      .filter((u) => {
-        if (!debouncedSearch) return true;
-        const term = debouncedSearch.toLowerCase();
-        return (
-          (u.nama_client || u.nama || "")
-            .toLowerCase()
-            .includes(term) ||
-          (u.title || "").toLowerCase().includes(term) ||
-          (u.user_id || "").toLowerCase().includes(term) ||
-          (u.divisi || "")
-            .toLowerCase()
-            .includes(term) ||
-          (u.insta || "").toLowerCase().includes(term) ||
-          (u.tiktok || "").toLowerCase().includes(term) ||
-          (u.email || "").toLowerCase().includes(term) ||
-          String(u.status).toLowerCase().includes(term)
-        );
-      });
-  }, [sortedUsers, debouncedSearch, statusFilter, isDirectorate, selectedClientId]);
-
   const sorted = filtered;
-
-  const isUserActive = (user) =>
-    user.status === true || String(user.status).toLowerCase() === "true";
 
   // Paging logic menggunakan data yang sudah diurutkan
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
@@ -807,422 +544,78 @@ export default function UserDirectoryPage() {
             )}
           </div>
 
-          <div className="mt-6 space-y-3 md:hidden">
-            {currentRows.map((u, idx) => (
-              <div
-                key={u.user_id || idx}
-                className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ${editingRowId === u.user_id ? "ring-2 ring-sky-200" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs text-slate-500">No. {(page - 1) * PAGE_SIZE + idx + 1}</p>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {editingRowId === u.user_id ? (
-                        <span className="space-y-2">
-                          <input
-                            value={editPangkat}
-                            onChange={(e) => setEditPangkat(e.target.value)}
-                            placeholder="Pangkat"
-                            className="block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
-                          />
-                          <input
-                            value={editNama}
-                            onChange={(e) => setEditNama(e.target.value)}
-                            placeholder="Nama"
-                            className="block w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
-                          />
-                        </span>
-                      ) : (
-                        <>
-                          {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
-                          {isOriginalDirectorateRole &&
-                            (getUserPolres(u) || getUserJabatan(u)) && (
-                              <span className="mt-1 block text-[11px] font-normal text-slate-500">
-                                {getUserPolres(u) ? `Polres: ${getUserPolres(u)}` : ""}
-                                {getUserPolres(u) && getUserJabatan(u) ? " • " : ""}
-                                {getUserJabatan(u) ? `Jabatan: ${getUserJabatan(u)}` : ""}
-                              </span>
-                            )}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {editingRowId === u.user_id ? (
-                      <>
-                        <button
-                          onClick={() => handleUpdateRow(u.user_id)}
-                          disabled={updateLoading}
-                          className="rounded-lg border border-emerald-200 bg-emerald-100 p-2 text-emerald-600"
-                          type="button"
-                          aria-label="Simpan perubahan"
-                        >
-                          <Check className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingRowId(null)}
-                          className="rounded-lg border border-rose-200 bg-rose-100 p-2 text-rose-600"
-                          type="button"
-                          aria-label="Batalkan perubahan"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleEditClick(u)}
-                          className="rounded-lg border border-sky-200 bg-sky-100 p-2 text-sky-600"
-                          type="button"
-                          aria-label={`Edit data ${u.nama || "user"}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        {isUserActive(u) ? (
-                          <button
-                            onClick={() => openDeactivateModal(u)}
-                            className="rounded-lg border border-rose-200 bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-600"
-                            type="button"
-                            aria-label={`Nonaktifkan ${u.nama || "user"}`}
-                          >
-                            Nonaktifkan
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleActivateUser(u)}
-                            className="rounded-lg border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-600 disabled:opacity-60"
-                            type="button"
-                            disabled={toggleStatusLoadingId === u.user_id}
-                            aria-label={`Aktifkan kembali ${u.nama || "user"}`}
-                          >
-                            {toggleStatusLoadingId === u.user_id ? "Mengaktifkan..." : "Aktifkan"}
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
+          <UserDirectoryCardList
+            currentRows={currentRows}
+            page={page}
+            pageSize={PAGE_SIZE}
+            editingRowId={editingRowId}
+            editPangkat={editPangkat}
+            editNama={editNama}
+            editNrpNip={editNrpNip}
+            editSatfung={editSatfung}
+            updateLoading={updateLoading}
+            updateError={updateError}
+            showKesatuanColumn={showKesatuanColumn}
+            columnLabel={columnLabel}
+            isOriginalDirectorateRole={isOriginalDirectorateRole}
+            toggleStatusLoadingId={toggleStatusLoadingId}
+            isUserActive={isUserActive}
+            setEditPangkat={setEditPangkat}
+            setEditNama={setEditNama}
+            setEditNrpNip={setEditNrpNip}
+            setEditSatfung={setEditSatfung}
+            setEditingRowId={setEditingRowId}
+            handleUpdateRow={handleUpdateRow}
+            handleEditClick={handleEditClick}
+            openDeactivateModal={openDeactivateModal}
+            handleActivateUser={handleActivateUser}
+          />
 
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-lg bg-slate-50 px-3 py-2">
-                    <p className="text-slate-500">NRP/NIP</p>
-                    {editingRowId === u.user_id ? (
-                      <input
-                        value={editNrpNip}
-                        onChange={(e) => setEditNrpNip(e.target.value.replace(/\D/g, ""))}
-                        placeholder="NRP/NIP"
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-mono text-slate-700"
-                      />
-                    ) : (
-                      <p className="font-mono text-slate-800">{u.user_id || "-"}</p>
-                    )}
-                  </div>
-                  <div className="rounded-lg bg-slate-50 px-3 py-2">
-                    <p className="text-slate-500">{columnLabel}</p>
-                    {showKesatuanColumn ? (
-                      <p className="text-slate-800">{u.client_id || u.clientId || u.clientID || u.client || "-"}</p>
-                    ) : editingRowId === u.user_id ? (
-                      <input
-                        value={editSatfung}
-                        onChange={(e) => setEditSatfung(e.target.value)}
-                        placeholder={columnLabel}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
-                      />
-                    ) : (
-                      <p className="text-slate-800">{u.divisi || "-"}</p>
-                    )}
-                  </div>
-                  <div className="rounded-lg bg-slate-50 px-3 py-2">
-                    <p className="text-slate-500">Instagram</p>
-                    <p className="font-mono text-sky-600 break-all">{u.insta ? `@${u.insta}` : "-"}</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 px-3 py-2">
-                    <p className="text-slate-500">TikTok</p>
-                    <p className="font-mono text-purple-600 break-all">{u.tiktok || "-"}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <UserDirectoryTable
+            currentRows={currentRows}
+            page={page}
+            pageSize={PAGE_SIZE}
+            columnLabel={columnLabel}
+            showKesatuanColumn={showKesatuanColumn}
+            editingRowId={editingRowId}
+            editPangkat={editPangkat}
+            editNama={editNama}
+            editNrpNip={editNrpNip}
+            editSatfung={editSatfung}
+            updateLoading={updateLoading}
+            updateError={updateError}
+            isOriginalDirectorateRole={isOriginalDirectorateRole}
+            toggleStatusLoadingId={toggleStatusLoadingId}
+            isUserActive={isUserActive}
+            setEditPangkat={setEditPangkat}
+            setEditNama={setEditNama}
+            setEditNrpNip={setEditNrpNip}
+            setEditSatfung={setEditSatfung}
+            setEditingRowId={setEditingRowId}
+            handleUpdateRow={handleUpdateRow}
+            handleEditClick={handleEditClick}
+            openDeactivateModal={openDeactivateModal}
+            handleActivateUser={handleActivateUser}
+          />
 
-            {editingRowId && updateError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-500" role="alert">
-                {updateError}
-              </div>
-            )}
-
-            {currentRows.length === 0 && (
-              <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">
-                Tidak ada pengguna
-              </div>
-            )}
-          </div>
-
-          <div className="relative mt-6 hidden overflow-x-auto overflow-y-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl backdrop-blur md:block">
-            <table className="w-full table-fixed text-sm text-slate-700">
-              <thead className="bg-sky-50 text-slate-600">
-                <tr className="text-left text-xs uppercase tracking-wider">
-                  <th className="w-16 px-4 py-3 font-medium whitespace-normal break-words">No</th>
-                  <th className="w-48 px-4 py-3 font-medium whitespace-normal break-words">Nama</th>
-                  <th className="w-36 px-4 py-3 font-medium whitespace-normal break-words">NRP/NIP</th>
-                  <th className="w-48 px-4 py-3 font-medium whitespace-normal break-words">{columnLabel}</th>
-                  <th className="w-32 px-4 py-3 font-medium whitespace-normal break-words">Aksi</th>
-                  <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">Instagram</th>
-                  <th className="w-40 px-4 py-3 font-medium whitespace-normal break-words">TikTok</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentRows.map((u, idx) => (
-                  <tr
-                    key={u.user_id || idx}
-                    className={`border-t border-slate-200 transition hover:bg-sky-50 ${editingRowId === u.user_id ? "bg-sky-100/60" : "bg-transparent"}`}
-                  >
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
-                      {(page - 1) * PAGE_SIZE + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700 whitespace-normal break-words">
-                      {editingRowId === u.user_id ? (
-                        <div className="flex gap-2">
-                          <input
-                            value={editPangkat}
-                            onChange={(e) => setEditPangkat(e.target.value)}
-                            placeholder="Pangkat"
-                            className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
-                          />
-                          <input
-                            value={editNama}
-                            onChange={(e) => setEditNama(e.target.value)}
-                            placeholder="Nama"
-                            className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          {(u.title ? `${u.title} ` : "") + (u.nama || "-")}
-                          {isOriginalDirectorateRole &&
-                            (getUserPolres(u) || getUserJabatan(u)) && (
-                              <div className="mt-1 text-xs text-slate-500">
-                                {getUserPolres(u) ? `Polres: ${getUserPolres(u)}` : ""}
-                                {getUserPolres(u) && getUserJabatan(u) ? " • " : ""}
-                                {getUserJabatan(u) ? `Jabatan: ${getUserJabatan(u)}` : ""}
-                              </div>
-                            )}
-                        </>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-slate-600 whitespace-normal break-words">
-                      {editingRowId === u.user_id ? (
-                        <input
-                          value={editNrpNip}
-                          onChange={(e) =>
-                            setEditNrpNip(e.target.value.replace(/\D/g, ""))
-                          }
-                          placeholder="NRP/NIP"
-                          className="w-32 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-mono text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
-                        />
-                      ) : (
-                        u.user_id || "-"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words">
-                      {showKesatuanColumn ? (
-                        u.client_id || u.clientId || u.clientID || u.client || "-"
-                      ) : editingRowId === u.user_id ? (
-                        <input
-                          value={editSatfung}
-                          onChange={(e) => setEditSatfung(e.target.value)}
-                          placeholder={columnLabel}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none"
-                        />
-                      ) : (
-                        u.divisi || "-"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-sky-500 whitespace-normal break-words">
-                      {editingRowId === u.user_id ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleUpdateRow(u.user_id)}
-                            disabled={updateLoading}
-                            className="rounded-lg border border-emerald-200 bg-emerald-100 p-2 text-emerald-600 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
-                            type="button"
-                            aria-label="Simpan perubahan"
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setEditingRowId(null)}
-                            className="rounded-lg border border-rose-200 bg-rose-100 p-2 text-rose-600 transition hover:bg-rose-200"
-                            type="button"
-                            aria-label="Batalkan perubahan"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleEditClick(u)}
-                            className="rounded-lg border border-sky-200 bg-sky-100 p-2 text-sky-600 transition hover:bg-sky-200"
-                            type="button"
-                            aria-label={`Edit data ${u.nama || "user"}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          {isUserActive(u) ? (
-                            <button
-                              onClick={() => openDeactivateModal(u)}
-                              className="rounded-lg border border-rose-200 bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:bg-rose-200"
-                              type="button"
-                              aria-label={`Nonaktifkan ${u.nama || "user"}`}
-                            >
-                              Nonaktifkan
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleActivateUser(u)}
-                              className="rounded-lg border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
-                              type="button"
-                              disabled={toggleStatusLoadingId === u.user_id}
-                              aria-label={`Aktifkan kembali ${u.nama || "user"}`}
-                            >
-                              {toggleStatusLoadingId === u.user_id
-                                ? "Mengaktifkan..."
-                                : "Aktifkan kembali"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-sky-500 whitespace-normal break-words">
-                      {u.insta ? `@${u.insta}` : "-"}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-purple-500 whitespace-normal break-words">
-                      {u.tiktok || "-"}
-                    </td>
-                  </tr>
-                ))}
-                {editingRowId && updateError && (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      className="px-4 py-3 text-sm text-rose-500"
-                      role="alert"
-                    >
-                      {updateError}
-                    </td>
-                  </tr>
-                )}
-                {currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
-                      Tidak ada pengguna
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
-              <button
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={page === 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                type="button"
-              >
-                Prev
-              </button>
-              <span>
-                Halaman <b>{page}</b> dari <b>{totalPages}</b>
-              </span>
-              <button
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 shadow-sm transition hover:bg-sky-50 hover:text-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                type="button"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <UserDirectoryPagination
+            page={page}
+            totalPages={totalPages}
+            onPrev={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+          />
         </div>
       </div>
-      {isDeactivateOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="deactivate-title"
-        >
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2
-                  id="deactivate-title"
-                  className="text-lg font-semibold text-slate-900"
-                >
-                  Konfirmasi Nonaktifkan User
-                </h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  Masukkan NRP/NIP{" "}
-                  <span className="font-semibold text-slate-900">
-                    {deactivateTarget?.user_id || "-"}
-                  </span>{" "}
-                  untuk menonaktifkan {deactivateTarget?.nama || "user"}.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeDeactivateModal}
-                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-100"
-                aria-label="Tutup konfirmasi"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="mt-4">
-              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                NRP/NIP
-              </label>
-              <input
-                type="text"
-                value={confirmNrpInput}
-                onChange={(e) =>
-                  setConfirmNrpInput(e.target.value.replace(/\D/g, ""))
-                }
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                placeholder="Masukkan NRP/NIP"
-              />
-              {deactivateError && (
-                <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600">
-                  {deactivateError}
-                </p>
-              )}
-            </div>
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={closeDeactivateModal}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-                disabled={deactivateLoading}
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeactivate}
-                className="rounded-xl bg-gradient-to-r from-rose-400 via-rose-500 to-red-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:from-rose-500 hover:via-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={deactivateLoading}
-              >
-                {deactivateLoading ? "Memproses..." : "Nonaktifkan"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeactivateUserModal
+        isOpen={isDeactivateOpen}
+        deactivateTarget={deactivateTarget}
+        confirmNrpInput={confirmNrpInput}
+        deactivateError={deactivateError}
+        deactivateLoading={deactivateLoading}
+        setConfirmNrpInput={setConfirmNrpInput}
+        onClose={closeDeactivateModal}
+        onConfirm={handleConfirmDeactivate}
+      />
     </div>
   );
 }
