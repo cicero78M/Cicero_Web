@@ -65,6 +65,9 @@ export function useUserDirectoryActions(params: {
       const { error: validationError, nrpNip: sanitizedNrpNip, satfungValue } =
         validateNewUser(submitForm);
       if (validationError) throw new Error(validationError);
+      if (!sanitizedNrpNip) throw new Error("NRP/NIP wajib diisi");
+      if (!satfungValue) throw new Error("Satfung wajib diisi");
+      if (!clientId) throw new Error("Client ID tidak ditemukan");
       await createUser(token || "", {
         client_id: clientId,
         nama: submitForm.nama,
