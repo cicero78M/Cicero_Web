@@ -41,6 +41,31 @@ export default function LoginPage() {
   const networkErrorMessage =
     "Server tidak merespons. Silakan hubungi admin Cicero.";
 
+  const AUTH_REQUEST_TIMEOUT_MS = 15000;
+
+  const fetchJsonWithTimeout = async (url, options) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AUTH_REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+      return { res, data };
+    } catch (err) {
+      if (err?.name === "AbortError") {
+        throw new Error(networkErrorMessage);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
   useEffect(() => {
     setError("");
     setMessage("");
@@ -86,13 +111,11 @@ export default function LoginPage() {
 
     try {
       const apiUrl = getApiBaseUrl();
-      const res = await fetch(`${apiUrl}/api/auth/dashboard-login`, {
+      const { data } = await fetchJsonWithTimeout(`${apiUrl}/api/auth/dashboard-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: trimmedUsername, password: password.trim() }),
       });
-
-      const data = await res.json();
 
       if (data.success && data.token) {
         const userId = data.user?.user_id || null;
@@ -151,7 +174,7 @@ export default function LoginPage() {
       const apiUrl = getApiBaseUrl();
       const trimmedRole = role.trim();
       const trimmedClientId = client_id.trim();
-      const res = await fetch(`${apiUrl}/api/auth/dashboard-register`, {
+      const { data } = await fetchJsonWithTimeout(`${apiUrl}/api/auth/dashboard-register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,7 +185,6 @@ export default function LoginPage() {
           email: email.trim(),
         }),
       });
-      const data = await res.json();
       if (data.success) {
         const msg =
           data.status === false
