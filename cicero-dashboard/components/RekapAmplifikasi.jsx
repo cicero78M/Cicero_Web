@@ -1,368 +1,214 @@
 "use client";
-import { useMemo, useEffect, useState } from "react";
+
+import { useMemo, useEffect } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
-import { Link as LinkIcon, Users, Check, X, Edit2, Save, XCircle } from "lucide-react";
-import useAuth from "@/hooks/useAuth";
-import { submitReposterReportLinks } from "@/utils/api";
+import { Download } from "lucide-react";
 import { showToast } from "@/utils/showToast";
 
-function bersihkanSatfung(divisi = "") {
-  return divisi.replace(/polsek\s*/i, "").replace(/^[0-9.\-\s]+/, "").trim();
+const PAGE_SIZE = 20;
+
+function safeText(value) {
+  const text = String(value ?? "").trim();
+  return text || "-";
 }
 
-const PAGE_SIZE = 25;
-const MAX_LINK_DISPLAY_LENGTH = 40;
+function cleanSatfung(divisi = "") {
+  const cleaned = String(divisi || "")
+    .replace(/polsek\s*/i, "")
+    .replace(/^[0-9.\-\s]+/, "")
+    .trim();
+  return cleaned || "-";
+}
 
-export default function RekapAmplifikasi({ users = [] }) {
-  const { token } = useAuth();
-  const totalUser = users.length;
-  const totalSudahPost = users.filter((u) => Number(u.jumlah_link) > 0).length;
-  const totalBelumPost = totalUser - totalSudahPost;
-  const totalLink = users.reduce(
-    (sum, u) => sum + Number(u.jumlah_link || 0),
-    0,
-  );
+function firstAvailableLink(user) {
+  const candidates = [
+    user.instagram_link,
+    user.instagramLink,
+    user.link_instagram,
+    user.facebook_link,
+    user.twitter_link,
+    user.tiktok_link,
+    user.youtube_link,
+  ];
+  return candidates.find((entry) => String(entry || "").trim()) || "-";
+}
 
-  const hasClient = useMemo(
-    () => users.some((u) => u.nama_client || u.client_name || u.client),
-    [users],
-  );
+function mapExcelRows(rows) {
+  return rows.map((u, index) => ({
+    no: index + 1,
+    client_id: safeText(u.client_id),
+    client: safeText(u.nama_client || u.client_name || u.client),
+    user_id: safeText(u.user_id),
+    nama: safeText(u.title ? `${u.title} ${u.nama || ""}` : u.nama),
+    username_instagram: safeText(u.username ? `@${u.username}` : ""),
+    divisi_satfung: cleanSatfung(u.divisi),
+    status_pelaksanaan: Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum",
+    jumlah_link: Number(u.jumlah_link || 0),
+    link_pelaksanaan: safeText(firstAvailableLink(u)),
+    instagram_link: safeText(u.instagram_link || u.instagramLink || u.link_instagram),
+    facebook_link: safeText(u.facebook_link),
+    twitter_link: safeText(u.twitter_link),
+    tiktok_link: safeText(u.tiktok_link),
+    youtube_link: safeText(u.youtube_link),
+  }));
+}
 
-  // State for inline editing
-  const [editingUserId, setEditingUserId] = useState(null);
-  const [editedLink, setEditedLink] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [updatedLinks, setUpdatedLinks] = useState({});
+export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-amplify" }) {
+  const [search, setSearch] = usePersistentState("rekapAmplifikasi_search", "");
+  const [page, setPage] = usePersistentState("rekapAmplifikasi_page", 1);
 
-  const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
-    const term = search.toLowerCase();
+    const term = search.toLowerCase().trim();
+    if (!term) return users;
     return users.filter((u) =>
-      (u.nama || "").toLowerCase().includes(term) ||
-      (u.username || "").toLowerCase().includes(term) ||
-      bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
-      (u.nama_client || u.client_name || u.client || "")
-        .toLowerCase()
-        .includes(term),
+      [
+        u.nama,
+        u.title,
+        u.username,
+        u.divisi,
+        u.client_id,
+        u.nama_client,
+        u.client_name,
+        u.client,
+        firstAvailableLink(u),
+      ]
+        .map((entry) => String(entry || "").toLowerCase())
+        .some((entry) => entry.includes(term)),
     );
   }, [users, search]);
 
-  const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      const aLink = Number(a.jumlah_link);
-      const bLink = Number(b.jumlah_link);
-      if (aLink > 0 && bLink === 0) return -1;
-      if (aLink === 0 && bLink > 0) return 1;
-      if (aLink !== bLink) return bLink - aLink;
-      return (a.nama || "").localeCompare(b.nama || "");
-    });
-  }, [filtered]);
+  const sorted = useMemo(
+    () =>
+      [...filtered].sort((a, b) => {
+        const byLink = Number(b.jumlah_link || 0) - Number(a.jumlah_link || 0);
+        if (byLink !== 0) return byLink;
+        return String(a.nama || "").localeCompare(String(b.nama || ""));
+      }),
+    [filtered],
+  );
 
-  const [page, setPage] = usePersistentState("rekapAmplifikasi_page", 1);
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   useEffect(() => setPage(1), [search, setPage]);
   useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages || 1);
-    }
+    if (page > totalPages) setPage(totalPages);
   }, [page, totalPages, setPage]);
 
-  // Helper functions for inline editing
-  const handleEditClick = (user) => {
-    setEditingUserId(user.user_id);
-    const currentLink = user.instagram_link || user.instagramLink || user.link_instagram || "";
-    setEditedLink(currentLink);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingUserId(null);
-    setEditedLink("");
-  };
-
-  const extractInstagramShortcode = (url) => {
-    const trimmed = url.trim();
-    if (!trimmed) return "";
+  const exportExcel = async () => {
     try {
-      const urlObj = new URL(trimmed);
-      const match = urlObj.pathname.match(/\/(p|reel|reels|tv)\/([^/?#]+)/i);
-      return match?.[2] ?? "";
-    } catch {
-      return "";
-    }
-  };
+      const rows = mapExcelRows(sorted);
+      if (!rows.length) {
+        showToast("Data kosong, tidak ada yang bisa diexport.", "error");
+        return;
+      }
+      const response = await fetch("/api/download-amplify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rows,
+          fileName: `${fileNamePrefix}-${new Date().toISOString().slice(0, 10)}`,
+        }),
+      });
+      if (!response.ok) throw new Error("Gagal membuat file Excel");
 
-  const validateInstagramLink = (url) => {
-    const trimmed = url.trim();
-    if (!trimmed) return false;
-    if (!trimmed.startsWith("http")) return false;
-    try {
-      const urlObj = new URL(trimmed);
-      const host = urlObj.hostname.toLowerCase();
-      // Ensure the host is exactly instagram.com or a subdomain of instagram.com
-      // or one of the official Instagram short domains
-      return (
-        host === "instagram.com" ||
-        host.endsWith(".instagram.com") ||
-        host === "instagr.am" ||
-        host.endsWith(".instagr.am") ||
-        host === "ig.me" ||
-        host.endsWith(".ig.me")
-      );
-    } catch {
-      return false;
-    }
-  };
-
-  const handleSaveLink = async (user) => {
-    if (!token) {
-      showToast("Token tidak tersedia. Silakan login ulang.", "error");
-      return;
-    }
-
-    const trimmedLink = editedLink.trim();
-    if (!trimmedLink) {
-      showToast("Link Instagram tidak boleh kosong.", "error");
-      return;
-    }
-
-    if (!validateInstagramLink(trimmedLink)) {
-      showToast("Format link Instagram tidak valid. Pastikan link berasal dari instagram.com", "error");
-      return;
-    }
-
-    const shortcode = extractInstagramShortcode(trimmedLink);
-    if (!shortcode) {
-      showToast("Tidak dapat mengekstrak shortcode dari link Instagram.", "error");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await submitReposterReportLinks(
-        token,
-        {
-          shortcode: shortcode,
-          userId: user.user_id,
-          clientId: user.client_id || user.clientId || null,
-          instagramLink: trimmedLink,
-          facebookLink: "",
-          twitterLink: "",
-        },
-        { isSpecial: true }
-      );
-
-      // Update the link in local state without mutating props
-      setUpdatedLinks(prev => ({
-        ...prev,
-        [user.user_id]: trimmedLink
-      }));
-
-      showToast("Link Instagram berhasil disimpan.", "success");
-      setEditingUserId(null);
-      setEditedLink("");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${fileNamePrefix}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      showToast("Export Excel berhasil.", "success");
     } catch (error) {
-      showToast(error.message || "Gagal menyimpan link Instagram.", "error");
-    } finally {
-      setIsSubmitting(false);
+      showToast(error?.message || "Gagal export Excel", "error");
     }
   };
 
   return (
-    <div className="flex flex-col gap-6 mt-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SummaryCard
-          title="Link Amplifikasi"
-          value={totalLink}
-          color="bg-gradient-to-r from-indigo-400 via-indigo-500 to-purple-400 text-white"
-          icon={<LinkIcon />}
-        />
-        <SummaryCard
-          title="Total User"
-          value={totalUser}
-          color="bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400 text-white"
-          icon={<Users />}
-        />
-        <SummaryCard
-          title="Sudah Post"
-          value={totalSudahPost}
-          color="bg-gradient-to-r from-green-400 via-green-500 to-lime-400 text-white"
-          icon={<Check />}
-        />
-        <SummaryCard
-          title="Belum Post"
-          value={totalBelumPost}
-          color="bg-gradient-to-r from-red-400 via-pink-500 to-yellow-400 text-white"
-          icon={<X />}
-        />
-      </div>
-
-      <div className="flex justify-end mb-2">
+    <div className="mt-4 space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
-          placeholder={
-            hasClient
-              ? "Cari nama, username, divisi, atau client"
-              : "Cari nama, username, atau divisi"
-          }
-          className="px-3 py-2 border rounded-lg text-sm w-64 shadow focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          placeholder="Cari nama, satfung, client, username, atau link"
+          className="w-full rounded-lg border px-3 py-2 text-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <button
+          onClick={exportExcel}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white"
+        >
+          <Download className="h-4 w-4" /> Export Excel
+        </button>
       </div>
 
-      <div className="relative overflow-x-auto rounded-xl shadow">
-        <table className="w-full text-sm text-left">
-          <thead className="sticky top-0 bg-gray-50 z-10">
+      <div className="space-y-2 md:hidden">
+        {currentRows.map((u, idx) => (
+          <div key={`${u.user_id}-${idx}`} className="rounded-lg border p-3 text-sm">
+            <div className="font-semibold">{safeText(u.title ? `${u.title} ${u.nama || ""}` : u.nama)}</div>
+            <div>Client: {safeText(u.nama_client || u.client_name || u.client || u.client_id)}</div>
+            <div>Satfung: {cleanSatfung(u.divisi)}</div>
+            <div>Username: {safeText(u.username ? `@${u.username}` : "")}</div>
+            <div>Status: {Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum"}</div>
+            <div>Jumlah Link: {Number(u.jumlah_link || 0)}</div>
+            <div className="break-all">Link: {safeText(firstAvailableLink(u))}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border md:block">
+        <table className="min-w-full text-sm">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="py-2 px-2">No</th>
-              <th className="py-2 px-2">Client</th>
-              <th className="py-2 px-2">Nama</th>
-              <th className="py-2 px-2">Username IG</th>
-              <th className="py-2 px-2">Divisi/Satfung</th>
-              <th className="py-2 px-2 text-center">Status</th>
-              <th className="py-2 px-2 text-center">Jumlah Link</th>
-              <th className="py-2 px-2">Link Instagram</th>
+              <th className="px-3 py-2 text-left">No</th>
+              <th className="px-3 py-2 text-left">Client</th>
+              <th className="px-3 py-2 text-left">Nama</th>
+              <th className="px-3 py-2 text-left">Username</th>
+              <th className="px-3 py-2 text-left">Satfung</th>
+              <th className="px-3 py-2 text-left">Status</th>
+              <th className="px-3 py-2 text-left">Jumlah Link</th>
+              <th className="px-3 py-2 text-left">Link Pelaksanaan</th>
             </tr>
           </thead>
           <tbody>
-            {currentRows.map((u, i) => {
-              const sudahPost = Number(u.jumlah_link) > 0;
-              // Use updated link from state if available, otherwise use original
-              const instagramLink = updatedLinks[u.user_id] || u.instagram_link || u.instagramLink || u.link_instagram;
-              return (
-                <tr
-                  key={u.user_id}
-                  className={sudahPost ? "bg-green-50" : "bg-red-50"}
-                >
-                  <td className="py-1 px-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                  <td className="py-1 px-2">
-                    {u.nama_client || u.client_name || u.client || "-"}
-                  </td>
-                  <td className="py-1 px-2">
-                    {u.title ? `${u.title} ${u.nama}` : u.nama}
-                  </td>
-                  <td className="py-1 px-2 font-mono text-indigo-700">@
-                    {u.username}
-                  </td>
-                  <td className="py-1 px-2">
-                    <span className="inline-block px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-medium">
-                      {bersihkanSatfung(u.divisi || "-")}
-                    </span>
-                  </td>
-                  <td className="py-1 px-2 text-center">
-                    {sudahPost ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-green-500 text-white font-semibold">
-                        <Check className="w-3 h-3" />
-                        Sudah
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-red-500 text-white font-semibold">
-                        <X className="w-3 h-3" />
-                        Belum
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-1 px-2 text-center font-bold">{u.jumlah_link}</td>
-                  <td className="py-1 px-2">
-                    {editingUserId === u.user_id ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="url"
-                          value={editedLink}
-                          onChange={(e) => setEditedLink(e.target.value)}
-                          placeholder="https://instagram.com/p/..."
-                          className="flex-1 px-2 py-1 text-xs border border-indigo-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                          disabled={isSubmitting}
-                        />
-                        <button
-                          onClick={() => handleSaveLink(u)}
-                          disabled={isSubmitting}
-                          className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
-                          title="Simpan"
-                        >
-                          <Save className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          disabled={isSubmitting}
-                          className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
-                          title="Batal"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        {instagramLink ? (
-                          <a
-                            href={instagramLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-medium break-all flex-1"
-                          >
-                            {instagramLink.length > MAX_LINK_DISPLAY_LENGTH
-                              ? `${instagramLink.substring(0, MAX_LINK_DISPLAY_LENGTH)}...`
-                              : instagramLink}
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 text-xs italic flex-1">Belum ada link</span>
-                        )}
-                        <button
-                          onClick={() => handleEditClick(u)}
-                          className="p-1 text-indigo-600 hover:text-indigo-800"
-                          title="Edit link Instagram"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {currentRows.map((u, i) => (
+              <tr key={`${u.user_id}-${i}`} className="border-t align-top">
+                <td className="px-3 py-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                <td className="px-3 py-2">{safeText(u.nama_client || u.client_name || u.client || u.client_id)}</td>
+                <td className="px-3 py-2">{safeText(u.title ? `${u.title} ${u.nama || ""}` : u.nama)}</td>
+                <td className="px-3 py-2">{safeText(u.username ? `@${u.username}` : "")}</td>
+                <td className="px-3 py-2">{cleanSatfung(u.divisi)}</td>
+                <td className="px-3 py-2">{Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum"}</td>
+                <td className="px-3 py-2">{Number(u.jumlah_link || 0)}</td>
+                <td className="px-3 py-2 break-all">{safeText(firstAvailableLink(u))}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-sm text-gray-500 italic">
-        Tabel ini menampilkan status posting link amplifikasi untuk setiap user
-        beserta total link yang dibagikan.
-      </p>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
-            Sebelumnya
-          </button>
-          <span className="text-sm text-gray-600">
-            Halaman {page} dari {totalPages}
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            Berikutnya
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SummaryCard({ title, value, color, icon }) {
-  return (
-    <div className={`flex flex-col p-4 rounded-lg shadow ${color}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{title}</span>
-        {icon}
+      <div className="flex items-center justify-between text-sm">
+        <button
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          className="rounded border px-3 py-1 disabled:opacity-50"
+        >
+          Sebelumnya
+        </button>
+        <span>
+          Halaman {page} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage(Math.min(totalPages, page + 1))}
+          disabled={page >= totalPages}
+          className="rounded border px-3 py-1 disabled:opacity-50"
+        >
+          Berikutnya
+        </button>
       </div>
-      <div className="text-2xl font-bold mt-2">{value}</div>
     </div>
   );
 }
-

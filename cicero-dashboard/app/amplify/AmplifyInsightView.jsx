@@ -404,113 +404,12 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
       headerAction={headerAction}
     >
       {activeTab === "insight" && (
-        <EngagementInsightMobileScaffold
-          viewSelectorProps={{
-            value: viewBy,
-            onChange: handleViewChange,
-            options: viewOptions,
-            date: selectorDateValue,
-            onDateChange: handleDateChange,
-          }}
-          scopeSelectorProps={{
-            value: directorateScope,
-            onChange: handleDirectorateScopeChange,
-            options: [
-              { value: "client", label: clientName || "Client" },
-              { value: "all", label: `Satker Jajaran ${clientName || ""}`.trim() },
-            ],
-            canSelectScope,
-          }}
-          premiumCta={premiumCta}
-          onCopyRekap={handleCopyRekap}
-          summaryCards={summaryCards}
-          quickInsights={quickInsights}
-          quickInsightTone="indigo"
-        >
-          {isDirectorate ? (
-            <ChartBox
-              title={directorateTitle}
-              users={chartData}
-              totalPost={1}
-              groupBy={directorateGroupBy}
-              orientation={shouldGroupByClient ? "horizontal" : "vertical"}
-              fieldJumlah="jumlah_link"
-              labelSudah="User Sudah Post"
-              labelKurang="User Kurang Post"
-              labelBelum="User Belum Post"
-              labelTotal="Total Link Amplifikasi"
-              sortBy="percentage"
-              narrative={
-                shouldGroupByClient
-                  ? "Ringkasan ini memperlihatkan kepatuhan amplifikasi link antar polres jajaran."
-                  : "Grafik ini menampilkan perbandingan capaian amplifikasi berdasarkan divisi/satfung."
-              }
-            />
-          ) : (
-            <div className="flex flex-col gap-6">
-              <ChartBox
-                title="BAG"
-                users={kelompok?.BAG}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Perbandingan jumlah link dari user di divisi BAG."
-                sortBy="percentage"
-              />
-              <ChartBox
-                title="SAT"
-                users={kelompok?.SAT}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Capaian amplifikasi link untuk divisi SAT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                title="SI & SPKT"
-                users={kelompok?.["SI & SPKT"]}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Distribusi link amplifikasi di divisi SI & SPKT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                title="LAINNYA"
-                users={kelompok?.LAINNYA}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                narrative="Rangkuman divisi lainnya untuk distribusi link."
-                sortBy="percentage"
-              />
-              <ChartHorizontal
-                title="POLSEK"
-                users={kelompok?.POLSEK || []}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi"
-                labelTotalUser="Jumlah User"
-                sortBy="percentage"
-              />
-            </div>
-          )}
-        </EngagementInsightMobileScaffold>
+        <div className="rounded-xl border bg-white p-4">
+          <div className="mb-3 text-sm text-slate-600">
+            Menampilkan seluruh data pelaksanaan amplifikasi per user. Semua nilai kosong ditampilkan sebagai "-".
+          </div>
+          <RekapAmplifikasi users={chartData} fileNamePrefix="rekap-amplify-rutin" />
+        </div>
       )}
 
       <DetailRekapSection

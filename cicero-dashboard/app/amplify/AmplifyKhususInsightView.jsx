@@ -404,118 +404,13 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
       headerAction={headerAction}
     >
       {activeTab === "insight" && (
-        <EngagementInsightMobileScaffold
-          viewSelectorProps={{
-            value: viewBy,
-            onChange: handleViewChange,
-            options: viewOptions,
-            date: selectorDateValue,
-            onDateChange: handleDateChange,
-          }}
-          scopeSelectorProps={{
-            value: directorateScope,
-            onChange: handleDirectorateScopeChange,
-            options: [
-              { value: "client", label: clientName || "Client" },
-              { value: "all", label: `Satker Jajaran ${clientName || ""}`.trim() },
-            ],
-            canSelectScope,
-          }}
-          premiumCta={premiumCta}
-          onCopyRekap={handleCopyRekap}
-          summaryCards={summaryCards}
-          quickInsights={quickInsights}
-          quickInsightTone="indigo"
-        >
-          {/* Instagram Link Upload Segment */}
-          <div className="mb-6">
-            <InstagramLinkUploadSegment />
+        <div className="rounded-xl border bg-white p-4">
+          <div className="mb-3 text-sm text-slate-600">
+            Menampilkan seluruh data pelaksanaan tugas khusus per user. Semua nilai kosong ditampilkan sebagai "-".
           </div>
-
-          {isDirectorate ? (
-            <ChartBox
-              title={directorateTitle}
-              users={chartData}
-              totalPost={1}
-              groupBy={directorateGroupBy}
-              orientation={shouldGroupByClient ? "horizontal" : "vertical"}
-              fieldJumlah="jumlah_link"
-              labelSudah="User Sudah Post"
-              labelKurang="User Kurang Post"
-              labelBelum="User Belum Post"
-              labelTotal="Total Link Amplifikasi Khusus"
-              sortBy="percentage"
-              narrative={
-                shouldGroupByClient
-                  ? "Ringkasan ini memperlihatkan kepatuhan amplifikasi tugas khusus antar polres jajaran."
-                  : "Grafik ini menampilkan perbandingan capaian amplifikasi tugas khusus berdasarkan divisi/satfung."
-              }
-            />
-          ) : (
-            <div className="flex flex-col gap-6">
-              <ChartBox
-                title="BAG"
-                users={kelompok?.BAG}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi Khusus"
-                narrative="Perbandingan jumlah link tugas khusus dari user di divisi BAG."
-                sortBy="percentage"
-              />
-              <ChartBox
-                title="SAT"
-                users={kelompok?.SAT}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi Khusus"
-                narrative="Capaian amplifikasi tugas khusus untuk divisi SAT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                title="SI & SPKT"
-                users={kelompok?.["SI & SPKT"]}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi Khusus"
-                narrative="Distribusi link amplifikasi tugas khusus di divisi SI & SPKT."
-                sortBy="percentage"
-              />
-              <ChartBox
-                title="LAINNYA"
-                users={kelompok?.LAINNYA}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi Khusus"
-                narrative="Rangkuman divisi lainnya untuk distribusi link tugas khusus."
-                sortBy="percentage"
-              />
-              <ChartHorizontal
-                title="POLSEK"
-                users={kelompok?.POLSEK || []}
-                totalPost={1}
-                fieldJumlah="jumlah_link"
-                labelSudah="User Sudah Post"
-                labelKurang="User Kurang Post"
-                labelBelum="User Belum Post"
-                labelTotal="Total Link Amplifikasi Khusus"
-                labelTotalUser="Jumlah User"
-                sortBy="percentage"
-              />
-            </div>
-          )}
-        </EngagementInsightMobileScaffold>
+          <InstagramLinkUploadSegment />
+          <RekapAmplifikasi users={chartData} fileNamePrefix="rekap-amplify-khusus" />
+        </div>
       )}
 
       <DetailRekapSection
