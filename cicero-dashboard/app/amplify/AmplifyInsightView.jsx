@@ -2,19 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  Check,
-  Link as LinkIcon,
-  User,
-  X,
-  Star,
-} from "lucide-react";
+import { Star } from "lucide-react";
 
-import ChartHorizontal from "@/components/ChartHorizontal";
 import InsightLayout from "@/components/InsightLayout";
-import ChartBox from "@/components/likes/instagram/Insight/ChartBox";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
-import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsightMobileScaffold";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import Loader from "@/components/Loader";
 import RekapAmplifikasi from "@/components/RekapAmplifikasi";
@@ -22,14 +13,7 @@ import useAuth from "@/hooks/useAuth";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
 import { getClientNames, getClientProfile, getRekapAmplify } from "@/utils/api";
-import { groupUsersByKelompok } from "@/utils/instagramEngagement";
-import { showToast } from "@/utils/showToast";
-import { buildAmplifyRekap } from "@/utils/amplifyRekap";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
-
-const numberFormatter = new Intl.NumberFormat("id-ID");
-
-const formatNumber = (value) => numberFormatter.format(Number(value) || 0);
 
 const normalizeRolePayload = (value) =>
   String(value || "").trim().toLowerCase() || undefined;
@@ -39,51 +23,14 @@ const normalizeScopePayload = (value) =>
 
 export default function AmplifyInsightView({ initialTab = "insight" }) {
   useRequireAuth();
-  const {
-    token,
-    clientId,
-    role,
-    effectiveRole,
-    effectiveClientType,
-    regionalId,
-    profile,
-  } = useAuth();
-  const isOrgClient = String(effectiveClientType || "").toUpperCase() === "ORG";
-  const [activeTab, setActiveTab] = useState(
-    initialTab === "rekap" ? "rekap" : "insight",
-  );
+  const { token, clientId, role, effectiveRole, effectiveClientType, regionalId, profile } = useAuth();
+  const [activeTab, setActiveTab] = useState(initialTab === "rekap" ? "rekap" : "insight");
   const rekapSectionRef = useRef(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isDirectorate, setIsDirectorate] = useState(false);
-  const [canSelectScope, setCanSelectScope] = useState(false);
-  const [directorateScope, setDirectorateScope] = useState("client");
-  const [clientName, setClientName] = useState("");
-  const [rekapSummary, setRekapSummary] = useState({
-    totalUser: 0,
-    totalSudahPost: 0,
-    totalBelumPost: 0,
-    totalLink: 0,
-  });
 
-  const {
-    viewBy,
-    viewOptions,
-    selectorDateValue,
-    handleViewChange,
-    handleDateChange,
-    normalizedCustomDate,
-    normalizedRange,
-    reportPeriodeLabel,
-  } = useLikesDateSelector();
-
-  const handleDirectorateScopeChange = (event) => {
-    const { value } = event.target || {};
-    if (value === "client" || value === "all") {
-      setDirectorateScope(value);
-    }
-  };
+  const { viewBy, normalizedCustomDate, normalizedRange } = useLikesDateSelector();
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
@@ -102,20 +49,12 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
       return () => controller.abort();
     }
 
-    const selectedDate =
-      viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
-    const { periode, date, startDate, endDate } = getPeriodeDateForView(
-      viewBy,
-      selectedDate,
-    );
+    const selectedDate = viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
+    const { periode, date, startDate, endDate } = getPeriodeDateForView(viewBy, selectedDate);
     const normalizedRole = normalizeRolePayload(effectiveRole ?? role);
     const normalizedScope = normalizeScopePayload(effectiveClientType);
     const resolvedRegionalId =
-      regionalId ||
-      profile?.regional_id ||
-      profile?.regionalId ||
-      profile?.regionalID ||
-      profile?.regional;
+      regionalId || profile?.regional_id || profile?.regionalId || profile?.regionalID || profile?.regional;
     const profileRequestContext = {
       role: normalizedRole,
       scope: normalizedScope,
@@ -124,102 +63,41 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
 
     async function fetchData() {
       try {
-        const rekapRes = await getRekapAmplify(
-          token,
-          clientId,
-          periode,
-          date,
-          startDate,
-          endDate,
-          {
-            role: normalizedRole,
-            scope: normalizedScope,
-            regional_id: resolvedRegionalId,
-            signal: controller.signal,
-          },
-        );
+        const rekapRes = await getRekapAmplify(token, clientId, periode, date, startDate, endDate, {
+          role: normalizedRole,
+          scope: normalizedScope,
+          regional_id: resolvedRegionalId,
+          signal: controller.signal,
+        });
         if (controller.signal.aborted) return;
         const users = Array.isArray(rekapRes.data) ? rekapRes.data : [];
 
-        const profileRes = await getClientProfile(
-          token,
-          clientId,
-          controller.signal,
-          profileRequestContext,
-        );
+        const profileRes = await getClientProfile(token, clientId, controller.signal, profileRequestContext);
         if (controller.signal.aborted) return;
-        const clientProfile =
-          profileRes.client || profileRes.profile || profileRes || {};
-        const resolvedClientName =
-          clientProfile.nama ||
-          clientProfile.nama_client ||
-          clientProfile.client_name ||
-          clientProfile.client ||
-          "";
-        setClientName(resolvedClientName);
-        const dir =
-          (clientProfile.client_type || "").toUpperCase() === "DIREKTORAT";
-        setIsDirectorate(dir);
+        const clientProfile = profileRes.client || profileRes.profile || profileRes || {};
+        const isDirectorate = (clientProfile.client_type || "").toUpperCase() === "DIREKTORAT";
 
-        // Enable scope selector for directorate users (not org)
-        const roleFromSession = String(effectiveRole || role || "").trim().toLowerCase();
-        const isOperatorRole = roleFromSession === "operator";
-        setCanSelectScope(!isOperatorRole && dir && !isOrgClient);
-
-        let enrichedUsers = users;
-        if (dir) {
+        if (isDirectorate) {
           const nameMap = await getClientNames(
             token,
-            users.map((u) =>
-              String(
-                u.client_id ||
-                  u.clientId ||
-                  u.clientID ||
-                  u.id ||
-                  u.client ||
-                  "",
-              ),
-            ),
+            users.map((u) => String(u.client_id || u.clientId || u.clientID || u.id || u.client || "")),
             controller.signal,
             profileRequestContext,
           );
           if (controller.signal.aborted) return;
-          enrichedUsers = users.map((u) => ({
-            ...u,
-            nama_client:
-              nameMap[
-                String(
-                  u.client_id ||
-                    u.clientId ||
-                    u.clientID ||
-                    u.id ||
-                    u.client ||
-                    "",
-                )
-              ] ||
-              u.nama_client ||
-              u.client_name ||
-              u.client,
-          }));
+          setChartData(
+            users.map((u) => ({
+              ...u,
+              nama_client:
+                nameMap[String(u.client_id || u.clientId || u.clientID || u.id || u.client || "")] ||
+                u.nama_client ||
+                u.client_name ||
+                u.client,
+            })),
+          );
+        } else {
+          setChartData(users);
         }
-
-        const totalUser = enrichedUsers.length;
-        const totalSudahPost = enrichedUsers.filter(
-          (user) => Number(user.jumlah_link) > 0,
-        ).length;
-        const totalBelumPost = totalUser - totalSudahPost;
-        const totalLink = enrichedUsers.reduce(
-          (sum, user) => sum + Number(user.jumlah_link || 0),
-          0,
-        );
-
-        setRekapSummary({
-          totalUser,
-          totalSudahPost,
-          totalBelumPost,
-          totalLink,
-        });
-        setChartData(enrichedUsers);
       } catch (err) {
         if (!(err instanceof DOMException && err.name === "AbortError")) {
           setError(`Gagal mengambil data: ${err.message || err}`);
@@ -242,12 +120,11 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     normalizedCustomDate,
     normalizedRange?.startDate,
     normalizedRange?.endDate,
-    // Note: directorateScope is intentionally excluded from dependencies
-    // as it only affects client-side grouping, not data fetching
+    profile,
   ]);
 
   if (loading) return <Loader />;
-  if (error)
+  if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6 text-slate-700">
         <div className="rounded-3xl border border-rose-300/60 bg-white/80 px-8 py-6 text-center text-rose-600 shadow-[0_0_35px_rgba(248,113,113,0.18)] backdrop-blur">
@@ -255,131 +132,12 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
         </div>
       </div>
     );
-
-  // Determine grouping strategy for directorate scope
-  const shouldGroupByClient =
-    isDirectorate &&
-    directorateScope === "all";
-  const directorateGroupBy = shouldGroupByClient ? "client_id" : "divisi";
-  const directorateTitle = shouldGroupByClient
-    ? "POLRES JAJARAN"
-    : `DIVISI / SATFUNG${clientName ? ` - ${clientName}` : ""}`;
-  
-  const kelompok = isDirectorate ? null : groupUsersByKelompok(chartData);
-
-  const totalUser = Number(rekapSummary.totalUser) || 0;
-  const totalSudahPost = Number(rekapSummary.totalSudahPost) || 0;
-  const totalBelumPost = Number(rekapSummary.totalBelumPost) || 0;
-  const totalLink = Number(rekapSummary.totalLink) || 0;
-
-  const completionRate = totalUser
-    ? (totalSudahPost / totalUser) * 100
-    : undefined;
-  const backlogRate = totalUser ? (totalBelumPost / totalUser) * 100 : undefined;
-  const averageLink = totalUser ? totalLink / totalUser : 0;
-
-  const summaryCards = [
-    {
-      key: "total-link",
-      label: "Total Link Amplifikasi",
-      value: formatNumber(totalLink),
-      color: "indigo",
-      icon: <LinkIcon className="h-6 w-6" />,
-    },
-    {
-      key: "total-user",
-      label: "Total User",
-      value: formatNumber(totalUser),
-      color: "slate",
-      icon: <User className="h-6 w-6" />,
-    },
-    {
-      key: "sudah-post",
-      label: "Sudah Post",
-      value: formatNumber(totalSudahPost),
-      color: "green",
-      icon: <Check className="h-6 w-6" />,
-      percentage: completionRate,
-    },
-    {
-      key: "belum-post",
-      label: "Belum Post",
-      value: formatNumber(totalBelumPost),
-      color: "red",
-      icon: <X className="h-6 w-6" />,
-      percentage: backlogRate,
-    },
-  ];
-
-  const quickInsights = [
-    {
-      title: "Kepatuhan amplifikasi",
-      detail:
-        completionRate !== undefined
-          ? `${Math.round(completionRate)}% akun sudah membagikan link pada periode ini.`
-          : "Menunggu data kepatuhan amplifikasi.",
-    },
-    {
-      title: "Prioritas tindak lanjut",
-      detail:
-        totalBelumPost > 0
-          ? `${formatNumber(totalBelumPost)} akun belum melakukan amplifikasi dan perlu follow up.`
-          : "Seluruh akun sudah melakukan amplifikasi.",
-    },
-    {
-      title: "Rata-rata distribusi",
-      detail:
-        totalLink > 0
-          ? `Rata-rata ${averageLink.toFixed(1)} link dibagikan per user pada periode ini.`
-          : "Belum ada link yang terdistribusi di periode ini.",
-    },
-  ];
-
-  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
-
-  const premiumCta = isOrgClient && !isOrgOperator
-    ? {
-        label: "Premium CICERO",
-        description: "Aktifkan rekap otomatis & reminder WA Bot amplifikasi.",
-        href: "/premium",
-        actionLabel: "Daftar",
-      }
-    : null;
+  }
 
   const handleTabChange = (value) => {
     setActiveTab(value);
     if (value === "rekap" && rekapSectionRef.current) {
       rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const handleCopyRekap = async () => {
-    const viewLabel = viewOptions.find((option) => option.value === viewBy)?.label;
-    const message = buildAmplifyRekap(rekapSummary, {
-      clientName,
-      periodeLabel: reportPeriodeLabel,
-      viewLabel,
-    });
-
-    if (navigator?.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(message);
-        showToast("Rekap disalin ke clipboard.", "success");
-        return;
-      } catch (copyError) {
-        showToast(
-          "Gagal menyalin rekap. Izinkan akses clipboard di browser Anda.",
-          "error",
-        );
-      }
-    }
-
-    if (typeof window !== "undefined") {
-      window.prompt("Salin rekap amplifikasi secara manual:", message);
-      showToast(
-        "Clipboard tidak tersedia. Silakan salin rekap secara manual.",
-        "info",
-      );
     }
   };
 
@@ -396,7 +154,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
   return (
     <InsightLayout
       title="Amplifikasi Link Insight"
-      description="Pantau progres amplifikasi link harian dengan ringkasan cepat dan visualisasi per divisi."
+      description="Pantau progres amplifikasi link harian dengan tampilan rekap yang ringkas dan mudah dibaca."
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}

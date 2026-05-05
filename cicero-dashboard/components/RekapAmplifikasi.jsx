@@ -12,6 +12,12 @@ function safeText(value) {
   return text || "-";
 }
 
+function normalizeLink(value) {
+  const text = String(value || "").trim();
+  if (!text || text === "-") return "";
+  return /^https?:\/\//i.test(text) ? text : `https://${text}`;
+}
+
 function cleanSatfung(divisi = "") {
   const cleaned = String(divisi || "")
     .replace(/polsek\s*/i, "")
@@ -33,13 +39,17 @@ function firstAvailableLink(user) {
   return candidates.find((entry) => String(entry || "").trim()) || "-";
 }
 
+function userDisplayName(user) {
+  return safeText(user.title ? `${user.title} ${user.nama || ""}` : user.nama);
+}
+
 function mapExcelRows(rows) {
   return rows.map((u, index) => ({
     no: index + 1,
     client_id: safeText(u.client_id),
     client: safeText(u.nama_client || u.client_name || u.client),
     user_id: safeText(u.user_id),
-    nama: safeText(u.title ? `${u.title} ${u.nama || ""}` : u.nama),
+    nama: userDisplayName(u),
     username_instagram: safeText(u.username ? `@${u.username}` : ""),
     divisi_satfung: cleanSatfung(u.divisi),
     status_pelaksanaan: Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum",
@@ -145,16 +155,36 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
         </button>
       </div>
 
+      <div className="text-xs text-slate-500">Total data: {sorted.length} user</div>
+
+      {sorted.length === 0 && (
+        <div className="rounded-lg border border-dashed p-4 text-sm text-slate-500">Tidak ada data rekap.</div>
+      )}
+
       <div className="space-y-2 md:hidden">
         {currentRows.map((u, idx) => (
           <div key={`${u.user_id}-${idx}`} className="rounded-lg border p-3 text-sm">
-            <div className="font-semibold">{safeText(u.title ? `${u.title} ${u.nama || ""}` : u.nama)}</div>
+            <div className="font-semibold">{userDisplayName(u)}</div>
+            <div>User ID: {safeText(u.user_id)}</div>
             <div>Client: {safeText(u.nama_client || u.client_name || u.client || u.client_id)}</div>
             <div>Satfung: {cleanSatfung(u.divisi)}</div>
             <div>Username: {safeText(u.username ? `@${u.username}` : "")}</div>
             <div>Status: {Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum"}</div>
             <div>Jumlah Link: {Number(u.jumlah_link || 0)}</div>
-            <div className="break-all">Link: {safeText(firstAvailableLink(u))}</div>
+            <div className="break-all">
+              Link: {normalizeLink(firstAvailableLink(u)) ? (
+                <a
+                  href={normalizeLink(firstAvailableLink(u))}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-600 hover:underline"
+                >
+                  {safeText(firstAvailableLink(u))}
+                </a>
+              ) : (
+                "-"
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -165,6 +195,7 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
             <tr>
               <th className="px-3 py-2 text-left">No</th>
               <th className="px-3 py-2 text-left">Client</th>
+              <th className="px-3 py-2 text-left">User ID</th>
               <th className="px-3 py-2 text-left">Nama</th>
               <th className="px-3 py-2 text-left">Username</th>
               <th className="px-3 py-2 text-left">Satfung</th>
@@ -178,12 +209,26 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
               <tr key={`${u.user_id}-${i}`} className="border-t align-top">
                 <td className="px-3 py-2">{(page - 1) * PAGE_SIZE + i + 1}</td>
                 <td className="px-3 py-2">{safeText(u.nama_client || u.client_name || u.client || u.client_id)}</td>
-                <td className="px-3 py-2">{safeText(u.title ? `${u.title} ${u.nama || ""}` : u.nama)}</td>
+                <td className="px-3 py-2">{safeText(u.user_id)}</td>
+                <td className="px-3 py-2">{userDisplayName(u)}</td>
                 <td className="px-3 py-2">{safeText(u.username ? `@${u.username}` : "")}</td>
                 <td className="px-3 py-2">{cleanSatfung(u.divisi)}</td>
                 <td className="px-3 py-2">{Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum"}</td>
                 <td className="px-3 py-2">{Number(u.jumlah_link || 0)}</td>
-                <td className="px-3 py-2 break-all">{safeText(firstAvailableLink(u))}</td>
+                <td className="px-3 py-2 break-all">
+                  {normalizeLink(firstAvailableLink(u)) ? (
+                    <a
+                      href={normalizeLink(firstAvailableLink(u))}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-indigo-600 hover:underline"
+                    >
+                      {safeText(firstAvailableLink(u))}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
