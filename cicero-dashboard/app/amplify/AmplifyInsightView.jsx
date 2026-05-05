@@ -35,7 +35,7 @@ const normalizeRolePayload = (value) =>
   String(value || "").trim().toLowerCase() || undefined;
 
 const normalizeScopePayload = (value) =>
-  String(value || "").trim().toUpperCase() || undefined;
+  String(value || "").trim().toLowerCase() || undefined;
 
 export default function AmplifyInsightView({ initialTab = "insight" }) {
   useRequireAuth();
@@ -148,22 +148,22 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
           profileRequestContext,
         );
         if (controller.signal.aborted) return;
-        const profile =
+        const clientProfile =
           profileRes.client || profileRes.profile || profileRes || {};
         const resolvedClientName =
-          profile.nama ||
-          profile.nama_client ||
-          profile.client_name ||
-          profile.client ||
+          clientProfile.nama ||
+          clientProfile.nama_client ||
+          clientProfile.client_name ||
+          clientProfile.client ||
           "";
         setClientName(resolvedClientName);
         const dir =
-          (profile.client_type || "").toUpperCase() === "DIREKTORAT";
+          (clientProfile.client_type || "").toUpperCase() === "DIREKTORAT";
         setIsDirectorate(dir);
-        
+
         // Enable scope selector for directorate users (not org)
-        const normalizedRole = String(effectiveRole || role || "").trim().toLowerCase();
-        const isOperatorRole = normalizedRole === "operator";
+        const roleFromSession = String(effectiveRole || role || "").trim().toLowerCase();
+        const isOperatorRole = roleFromSession === "operator";
         setCanSelectScope(!isOperatorRole && dir && !isOrgClient);
 
         let enrichedUsers = users;

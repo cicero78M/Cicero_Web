@@ -67,14 +67,14 @@ export function useUserDirectoryActions(params: {
       if (validationError) throw new Error(validationError);
       if (!sanitizedNrpNip) throw new Error("NRP/NIP wajib diisi");
       if (!satfungValue) throw new Error("Satfung wajib diisi");
-      if (!clientId) throw new Error("Client ID tidak ditemukan");
+      if (!clientId) throw new Error("Client ID tidak ditemukan. Silakan login ulang.");
       const resolvedClientId = clientId;
       await createUser(token || "", {
         client_id: resolvedClientId,
         nama: submitForm.nama,
         title: submitForm.pangkat,
         user_id: sanitizedNrpNip,
-        divisi: satfungValue,
+        divisi: satfungValue || "",
       });
       setters.setNama("");
       setters.setPangkat("");
