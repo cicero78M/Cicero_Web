@@ -1,5 +1,7 @@
-import ExcelJS from 'exceljs/dist/exceljs.min.js';
+import ExcelJS from 'exceljs';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = 'nodejs';
 
 function computeColumnWidth(rows: Record<string, unknown>[], column: string) {
   const maxCellLength = rows.reduce((max, row) => {
@@ -63,10 +65,14 @@ export async function POST(req: NextRequest) {
     header.font = { bold: true };
   }
 
-  const buffer = await workbook.xlsx.writeBuffer();
+  const arrayBuffer = await workbook.xlsx.writeBuffer();
+  const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
 
   return new NextResponse(buffer, {
+    status: 200,
     headers: {
+      'Cache-Control': 'no-store',
+      'Content-Length': String(buffer.byteLength),
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="${(fileName || 'rekap')}.xlsx"`,
