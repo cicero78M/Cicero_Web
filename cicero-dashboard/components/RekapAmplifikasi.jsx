@@ -112,17 +112,26 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
         showToast("Data kosong, tidak ada yang bisa diexport.", "error");
         return;
       }
-      const response = await fetch("/api/download-amplify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rows,
-          fileName: `${fileNamePrefix}-${new Date().toISOString().slice(0, 10)}`,
-        }),
-      });
-      if (!response.ok) throw new Error("Gagal membuat file Excel");
 
-      const blob = await response.blob();
+      const ExcelJS = (await import("exceljs/dist/exceljs.min.js")).default;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Rekap Amplify");
+
+      const columns = Object.keys(rows[0] || {});
+      worksheet.columns = columns.map((column) => ({
+        header: column,
+        key: column,
+        width: Math.min(Math.max(String(column).length + 4, 12), 40),
+      }));
+
+      rows.forEach((row) => worksheet.addRow(row));
+      worksheet.getRow(1).font = { bold: true };
+
+      const excelBuffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -133,7 +142,7 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
       URL.revokeObjectURL(url);
       showToast("Export Excel berhasil.", "success");
     } catch (error) {
-      showToast(error?.message || "Gagal export Excel", "error");
+      showToast(error?.message || "Gagal membuat file Excel", "error");
     }
   };
 
