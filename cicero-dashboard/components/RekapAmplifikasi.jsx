@@ -29,12 +29,19 @@ function cleanSatfung(divisi = "") {
 function firstAvailableLink(user) {
   const candidates = [
     user.instagram_link,
+    user.instagram,
     user.instagramLink,
     user.link_instagram,
     user.facebook_link,
+    user.facebook,
     user.twitter_link,
+    user.twitter,
     user.tiktok_link,
+    user.tiktok,
     user.youtube_link,
+    user.youtube,
+    user.link,
+    user.url,
   ];
   return candidates.find((entry) => String(entry || "").trim()) || "-";
 }
@@ -55,11 +62,11 @@ function mapExcelRows(rows) {
     status_pelaksanaan: Number(u.jumlah_link || 0) > 0 ? "Sudah" : "Belum",
     jumlah_link: Number(u.jumlah_link || 0),
     link_pelaksanaan: safeText(firstAvailableLink(u)),
-    instagram_link: safeText(u.instagram_link || u.instagramLink || u.link_instagram),
-    facebook_link: safeText(u.facebook_link),
-    twitter_link: safeText(u.twitter_link),
-    tiktok_link: safeText(u.tiktok_link),
-    youtube_link: safeText(u.youtube_link),
+    instagram_link: safeText(u.instagram_link || u.instagram || u.instagramLink || u.link_instagram),
+    facebook_link: safeText(u.facebook_link || u.facebook),
+    twitter_link: safeText(u.twitter_link || u.twitter),
+    tiktok_link: safeText(u.tiktok_link || u.tiktok),
+    youtube_link: safeText(u.youtube_link || u.youtube),
   }));
 }
 
