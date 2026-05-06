@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Check,
+  Download,
   Link as LinkIcon,
   User,
   X,
@@ -21,7 +22,12 @@ import RekapAmplifikasi from "@/components/RekapAmplifikasi";
 import useAuth from "@/hooks/useAuth";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
 import useRequireAuth from "@/hooks/useRequireAuth";
-import { getClientNames, getClientProfile, getRekapAmplify } from "@/utils/api";
+import {
+  exportRekapAmplifyExcel,
+  getClientNames,
+  getClientProfile,
+  getRekapAmplify,
+} from "@/utils/api";
 import { groupUsersByKelompok } from "@/utils/instagramEngagement";
 import { showToast } from "@/utils/showToast";
 import { buildAmplifyRekap } from "@/utils/amplifyRekap";
@@ -66,6 +72,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     totalBelumPost: 0,
     totalLink: 0,
   });
+  const [isExporting, setIsExporting] = useState(false);
 
   const {
     viewBy,
@@ -383,14 +390,79 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     }
   };
 
+  const handleExportRekapExcel = async () => {
+    if (!token || !clientId) {
+      showToast("Sesi login tidak valid. Silakan login ulang.", "error");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+      const selectedDate =
+        viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
+      const { periode, date, startDate, endDate } = getPeriodeDateForView(
+        viewBy,
+        selectedDate,
+      );
+
+      const normalizedRole = normalizeRolePayload(effectiveRole ?? role);
+      const normalizedScope = normalizeScopePayload(effectiveClientType);
+      const resolvedRegionalId =
+        regionalId ||
+        profile?.regional_id ||
+        profile?.regionalId ||
+        profile?.regionalID ||
+        profile?.regional;
+
+      const result = await exportRekapAmplifyExcel(
+        token,
+        clientId,
+        periode,
+        date,
+        startDate,
+        endDate,
+        {
+          role: normalizedRole,
+          scope: normalizedScope,
+          regional_id: resolvedRegionalId,
+        },
+      );
+
+      const url = URL.createObjectURL(result.blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = result.filename || "rekap_amplifikasi.xlsx";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      showToast("Export Excel berhasil.", "success");
+    } catch (err) {
+      showToast(err?.message || "Gagal export Excel rekap amplifikasi.", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const headerAction = (
-    <Link
-      href="/amplify/khusus"
-      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(251,146,60,0.3)] transition hover:shadow-[0_8px_24px_rgba(251,146,60,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-    >
-      <Star className="h-4 w-4" />
-      Tugas Khusus
-    </Link>
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={handleExportRekapExcel}
+        disabled={isExporting}
+        className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <Download className="h-4 w-4" />
+        {isExporting ? "Exporting..." : "Export Excel"}
+      </button>
+      <Link
+        href="/amplify/khusus"
+        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(251,146,60,0.3)] transition hover:shadow-[0_8px_24px_rgba(251,146,60,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+      >
+        <Star className="h-4 w-4" />
+        Tugas Khusus
+      </Link>
+    </div>
   );
 
   return (

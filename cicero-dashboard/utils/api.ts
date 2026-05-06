@@ -3259,6 +3259,43 @@ export async function getRekapAmplify(
   return res.json();
 }
 
+export async function exportRekapAmplifyExcel(
+  token: string,
+  client_id: string,
+  periode: string = "harian",
+  tanggal?: string,
+  startDate?: string,
+  endDate?: string,
+  options?: {
+    role?: string;
+    scope?: string;
+    regional_id?: string;
+    signal?: AbortSignal;
+  },
+): Promise<{ blob: Blob; filename: string }> {
+  const params = new URLSearchParams({ client_id, periode });
+  if (tanggal) params.append("tanggal", tanggal);
+  if (startDate) params.append("tanggal_mulai", startDate);
+  if (endDate) params.append("tanggal_selesai", endDate);
+  if (options?.role) params.append("role", options.role);
+  if (options?.scope) params.append("scope", options.scope);
+  if (options?.regional_id) params.append("regional_id", options.regional_id);
+
+  const url = `${buildApiUrl("/api/amplify/rekap/excel")}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, { signal: options?.signal });
+
+  if (!res.ok) {
+    const message = await res.text();
+    throw new Error(message || "Gagal export rekap amplifikasi.");
+  }
+
+  const contentDisposition = res.headers.get("content-disposition") || "";
+  const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+  const filename = decodeURIComponent((filenameMatch?.[1] || "rekap_amplifikasi.xlsx").replace(/\"/g, ""));
+
+  return { blob: await res.blob(), filename };
+}
+
 export async function getRekapAmplifyKhusus(
   token: string,
   client_id: string,
