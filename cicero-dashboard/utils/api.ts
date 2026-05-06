@@ -2130,6 +2130,59 @@ export async function submitReposterReportLinks(
   }
 }
 
+export async function downloadLinkReportExcelByUserAndShortcode(
+  token: string,
+  payload: {
+    userId: string;
+    shortcode: string;
+    clientId?: string;
+    isSpecial?: boolean;
+  },
+  signal?: AbortSignal,
+): Promise<{ blob: Blob; filename: string }> {
+  const userId = ensureString(payload.userId).trim();
+  const shortcode = ensureString(payload.shortcode).trim();
+  const clientId =
+    ensureString(payload.clientId).trim() ||
+    readStoredClientId() ||
+    extractClientIdFromToken(token);
+
+  if (!userId || !shortcode) {
+    throw new Error("user_id dan shortcode wajib diisi.");
+  }
+
+  const params = new URLSearchParams({
+    user_id: userId,
+    shortcode,
+  });
+  if (clientId) params.set("client_id", clientId);
+
+  const endpoint = payload.isSpecial
+    ? "/api/link-reports-khusus/excel/by-user-shortcode"
+    : "/api/link-reports/excel/by-user-shortcode";
+  const url = `${buildApiUrl(endpoint)}?${params.toString()}`;
+  const res = await fetchWithAuth(url, token, {
+    signal,
+    authFailureScope: "reposter",
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Gagal download Excel khusus link pelaksanaan.");
+  }
+
+  const contentDisposition = res.headers.get("content-disposition") || "";
+  const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+  const filename = decodeURIComponent(
+    (filenameMatch?.[1] || "link_report_detail.xlsx").replace(/\"/g, ""),
+  );
+
+  return {
+    blob: await res.blob(),
+    filename,
+  };
+}
+
 export async function getDashboardAnev(
   token: string,
   filters: Partial<DashboardAnevFilters> = {},

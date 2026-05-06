@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import usePersistentState from "@/hooks/usePersistentState";
 import { Download } from "lucide-react";
 import { showToast } from "@/utils/showToast";
+import useAuth from "@/hooks/useAuth";
+import { downloadLinkReportExcelByUserAndShortcode } from "@/utils/api";
 
 const PAGE_SIZE = 20;
 
@@ -70,9 +72,13 @@ function mapExcelRows(rows) {
   }));
 }
 
-export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-amplify" }) {
+export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-amplify", isSpecial = false }) {
+  const { token, clientId } = useAuth();
   const [search, setSearch] = usePersistentState("rekapAmplifikasi_search", "");
   const [page, setPage] = usePersistentState("rekapAmplifikasi_page", 1);
+  const [selectedUserId, setSelectedUserId] = usePersistentState("rekapAmplifikasi_selectedUserId", "");
+  const [selectedShortcode, setSelectedShortcode] = usePersistentState("rekapAmplifikasi_selectedShortcode", "");
+  const [isDownloadingSpecial, setIsDownloadingSpecial] = useState(false);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -153,8 +159,83 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
     }
   };
 
+  const downloadSpecialExcel = async () => {
+    try {
+      if (!token) {
+        showToast("Sesi login tidak ditemukan. Silakan login ulang.", "error");
+        return;
+      }
+      const userId = String(selectedUserId || "").trim();
+      const shortcode = String(selectedShortcode || "").trim();
+      if (!userId || !shortcode) {
+        showToast("Isi user_id dan shortcode terlebih dulu.", "error");
+        return;
+      }
+
+      setIsDownloadingSpecial(true);
+      const result = await downloadLinkReportExcelByUserAndShortcode(token, {
+        userId,
+        shortcode,
+        clientId,
+        isSpecial,
+      });
+
+      const url = URL.createObjectURL(result.blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = result.filename || `link_report_${userId}_${shortcode}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      showToast("Download Excel khusus berhasil.", "success");
+    } catch (error) {
+      showToast(error?.message || "Gagal download Excel khusus.", "error");
+    } finally {
+      setIsDownloadingSpecial(false);
+    }
+  };
+
   return (
     <div className="mt-4 space-y-3">
+      <div className="rounded-lg border bg-white p-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Download Khusus Link Pelaksanaan Tugas</p>
+        <div className="grid gap-2 md:grid-cols-4">
+          <input
+            type="text"
+            placeholder="user_id"
+            className="w-full rounded-lg border px-3 py-2 text-sm"
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="shortcode instagram"
+            className="w-full rounded-lg border px-3 py-2 text-sm"
+            value={selectedShortcode}
+            onChange={(e) => setSelectedShortcode(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={downloadSpecialExcel}
+            disabled={isDownloadingSpecial}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {isDownloadingSpecial ? "Menyiapkan..." : "Download Khusus"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedUserId("");
+              setSelectedShortcode("");
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
@@ -201,6 +282,13 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
                 "-"
               )}
             </div>
+            <button
+              type="button"
+              onClick={() => setSelectedUserId(String(u.user_id || ""))}
+              className="mt-2 rounded border px-2 py-1 text-xs font-semibold"
+            >
+              Pilih User
+            </button>
           </div>
         ))}
       </div>
@@ -218,6 +306,7 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
               <th className="px-3 py-2 text-left">Status</th>
               <th className="px-3 py-2 text-left">Jumlah Link</th>
               <th className="px-3 py-2 text-left">Link Pelaksanaan</th>
+              <th className="px-3 py-2 text-left">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -244,6 +333,15 @@ export default function RekapAmplifikasi({ users = [], fileNamePrefix = "rekap-a
                   ) : (
                     "-"
                   )}
+                </td>
+                <td className="px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedUserId(String(u.user_id || ""))}
+                    className="rounded border px-2 py-1 text-xs font-semibold"
+                  >
+                    Pilih User
+                  </button>
                 </td>
               </tr>
             ))}

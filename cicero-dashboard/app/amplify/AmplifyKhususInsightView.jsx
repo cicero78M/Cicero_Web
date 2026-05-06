@@ -524,7 +524,7 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
         description="Rekap detail tugas khusus siap dipantau tanpa berpindah halaman."
         showContent={activeTab === "rekap"}
       >
-        <RekapAmplifikasi users={chartData} />
+        <RekapAmplifikasi users={chartData} isSpecial />
       </DetailRekapSection>
     </InsightLayout>
   );
