@@ -78,6 +78,7 @@ export default function Sidebar() {
   const canSeeExecutiveSummary = hasDitbinmasAccess;
   const canSeeSatbinmasOfficial = hasDitbinmasAccess;
   const hasPremiumAnevAccess = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
+  const shouldHideAnevForOperatorNoInstagram = isOperator && !instagramEnabledRaw;
   const hasPremiumStatus = Boolean(
     isActive(getStatus(profile, "premium_status")) ||
       isActive(getStatus(profile, "is_premium")) ||
@@ -145,22 +146,24 @@ export default function Sidebar() {
           },
         ]
       : []),
-    ...(hasPremiumAnevAccess
-      ? [
-          {
-            label: "Anev Polres",
-            path: anevPolresPath,
-            icon: FilePieChart,
-          },
-        ]
-      : !isOriginalDirectorateScope
-      ? [
-          {
-            label: "Anev Polres (Premium)",
-            path: anevPolresPath,
-            icon: Sparkles,
-          },
-        ]
+    ...(!shouldHideAnevForOperatorNoInstagram
+      ? hasPremiumAnevAccess
+        ? [
+            {
+              label: "Anev Polres",
+              path: anevPolresPath,
+              icon: FilePieChart,
+            },
+          ]
+        : !isOriginalDirectorateScope
+        ? [
+            {
+              label: "Anev Polres (Premium)",
+              path: anevPolresPath,
+              icon: Sparkles,
+            },
+          ]
+        : []
       : []),
     {
       label: "Mekanisme Sistem Absensi",
