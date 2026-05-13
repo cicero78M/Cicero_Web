@@ -24,6 +24,7 @@ export default function ClaimPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [showForgot, setShowForgot] = useState(false);
+  const [resetNrp, setResetNrp] = useState("");
   const [resetEmail, setResetEmail] = useState("");
   const [resetRequestId, setResetRequestId] = useState("");
   const [resetOtp, setResetOtp] = useState("");
@@ -31,8 +32,6 @@ export default function ClaimPage() {
   const [newPassword, setNewPassword] = useState("");
   const [newConfirmPassword, setNewConfirmPassword] = useState("");
   const router = useRouter();
-
-  const forgotStep = !resetRequestId ? 1 : !resetToken ? 2 : 3;
 
   const passwordChecks = useMemo(
     () => ({
@@ -129,7 +128,7 @@ export default function ClaimPage() {
     setLoading(true);
     try {
       const res = await requestClaimPasswordResetOtp({
-        nrp: nrp.trim(),
+        nrp: resetNrp.trim(),
         email: resetEmail.trim() || undefined,
       });
       const payload = res?.data || res;
@@ -183,6 +182,8 @@ export default function ClaimPage() {
       setMessage("Password berhasil diubah. Silakan login.");
       setShowForgot(false);
       setMode("login");
+      setResetNrp("");
+      setResetEmail("");
       setResetRequestId("");
       setResetOtp("");
       setResetToken("");
@@ -329,30 +330,28 @@ export default function ClaimPage() {
 
         {showForgot && (
           <div className="space-y-4 rounded-xl border border-trust-100 bg-trust-50/40 p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-neutral-navy">Lupa Password (NRP + Email)</p>
-              <span className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-neutral-slate">Step {forgotStep}/3</span>
-            </div>
-
-            {!nrp.trim() && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                Isi NRP dulu, lalu lanjut request OTP.
-              </div>
-            )}
+            <p className="text-sm font-semibold text-neutral-navy">Lupa Password (NRP + Email)</p>
 
             {!resetRequestId && (
               <form onSubmit={handleRequestOtp} className="space-y-3">
                 <input
+                  type="text"
+                  value={resetNrp}
+                  onChange={(e) => setResetNrp(e.target.value)}
+                  placeholder="NRP"
+                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
+                />
+                <input
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="Email aktif (isi jika email belum terdaftar)"
+                  placeholder="Email aktif"
                   className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
                 />
                 <p className="text-xs text-neutral-slate">
                   Jika email pada NRP sudah terdaftar, OTP otomatis dikirim ke email tersebut.
                 </p>
-                <button type="submit" disabled={loading || !nrp.trim()} className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-navy border disabled:opacity-60">
+                <button type="submit" disabled={loading || !resetNrp.trim() || !resetEmail.trim()} className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-navy border disabled:opacity-60">
                   Kirim OTP ke Email
                 </button>
               </form>
