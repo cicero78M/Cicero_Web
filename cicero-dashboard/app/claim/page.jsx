@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LockKeyhole, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
@@ -32,7 +32,6 @@ export default function ClaimPage() {
   const [newPassword, setNewPassword] = useState("");
   const [newConfirmPassword, setNewConfirmPassword] = useState("");
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const passwordChecks = useMemo(
     () => ({
@@ -45,14 +44,15 @@ export default function ClaimPage() {
   );
 
   useEffect(() => {
-    const tokenFromUrl = searchParams?.get("token") || "";
+    if (typeof window === "undefined") return;
+    const tokenFromUrl = new URLSearchParams(window.location.search).get("token") || "";
     if (tokenFromUrl) {
       setShowForgot(true);
       setMode("login");
       setResetToken(tokenFromUrl);
       setMessage("Link reset terdeteksi. Silakan masukkan password baru.");
     }
-  }, [searchParams]);
+  }, []);
 
   const saveClaimSession = (trimmedNrp, trimmedPassword) => {
     if (typeof window === "undefined") return;
