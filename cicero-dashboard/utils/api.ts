@@ -3912,8 +3912,7 @@ export type ClaimCredentialPayload = {
 
 export type ClaimPasswordResetRequestPayload = {
   nrp: string;
-  channel?: "whatsapp" | "email" | "telegram";
-  destination?: string;
+  email?: string;
 };
 
 export async function registerClaimCredential(

@@ -24,8 +24,7 @@ export default function ClaimPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [showForgot, setShowForgot] = useState(false);
-  const [resetChannel, setResetChannel] = useState("whatsapp");
-  const [resetDestination, setResetDestination] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [resetRequestId, setResetRequestId] = useState("");
   const [resetOtp, setResetOtp] = useState("");
   const [resetToken, setResetToken] = useState("");
@@ -131,11 +130,11 @@ export default function ClaimPage() {
     try {
       const res = await requestClaimPasswordResetOtp({
         nrp: nrp.trim(),
-        channel: resetChannel,
-        destination: resetDestination.trim() || undefined,
+        email: resetEmail.trim() || undefined,
       });
       const payload = res?.data || res;
       setResetRequestId(payload?.request_id || "");
+      if (payload?.email) setResetEmail(payload.email);
       setMessage(payload?.message || "OTP terkirim.");
     } catch (err) {
       setError(err?.message || "Gagal request OTP.");
@@ -199,15 +198,15 @@ export default function ClaimPage() {
     <ClaimLayout
       stepLabel="Langkah 1 dari 2"
       title="Login atau Registrasi Claim"
-      description="Update terbaru: flow OTP email sudah tidak digunakan. Akses claim sekarang memakai registrasi dan login dengan NRP + password."
+      description="Akses claim menggunakan NRP + password. Jika lupa password, gunakan reset OTP via email pada kartu di bawah."
       icon={<ShieldCheck className="h-5 w-5" />}
       infoTitle="Autentikasi claim berbasis kredensial"
-      infoDescription="Mulai saat ini, proses registrasi, login, dan update profil claim dilakukan menggunakan NRP dan password tanpa request OTP."
+      infoDescription="Proses utama tetap memakai NRP + password. Fitur lupa password sekarang disederhanakan: NRP + email, lalu OTP dikirim ke email."
       infoHighlights={[
-        "Tidak perlu request OTP email lagi pada halaman claim.",
-        "Registrasi awal: NRP + password kuat (huruf, angka, karakter khusus).",
-        "Login berikutnya: cukup NRP + password yang sudah didaftarkan.",
-        "Kredensial yang sama digunakan saat simpan perubahan profil.",
+        "Reset password hanya melalui OTP email (tanpa WhatsApp/Telegram).",
+        "Jika email pada NRP sudah terdaftar, OTP langsung dikirim ke email tersebut.",
+        "Jika belum, masukkan email aktif untuk menerima OTP.",
+        "Setelah OTP valid, buat password baru lalu login kembali.",
       ]}
       cardAccent="trust"
     >
@@ -331,7 +330,7 @@ export default function ClaimPage() {
         {showForgot && (
           <div className="space-y-4 rounded-xl border border-trust-100 bg-trust-50/40 p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-neutral-navy">Reset Password via OTP</p>
+              <p className="text-sm font-semibold text-neutral-navy">Lupa Password (NRP + Email)</p>
               <span className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-neutral-slate">Step {forgotStep}/3</span>
             </div>
 
@@ -343,24 +342,18 @@ export default function ClaimPage() {
 
             {!resetRequestId && (
               <form onSubmit={handleRequestOtp} className="space-y-3">
-                <select
-                  value={resetChannel}
-                  onChange={(e) => setResetChannel(e.target.value)}
-                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
-                >
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="email">Email</option>
-                  <option value="telegram">Telegram</option>
-                </select>
                 <input
-                  type="text"
-                  value={resetDestination}
-                  onChange={(e) => setResetDestination(e.target.value)}
-                  placeholder="Opsional: isi tujuan jika belum terdaftar"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="Email aktif (isi jika email belum terdaftar)"
                   className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
                 />
+                <p className="text-xs text-neutral-slate">
+                  Jika email pada NRP sudah terdaftar, OTP otomatis dikirim ke email tersebut.
+                </p>
                 <button type="submit" disabled={loading || !nrp.trim()} className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-navy border disabled:opacity-60">
-                  Kirim OTP
+                  Kirim OTP ke Email
                 </button>
               </form>
             )}
