@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { LockKeyhole, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
-import { loginClaimUser, registerClaimCredential } from "@/utils/api";
+import {
+  loginClaimUser,
+  registerClaimCredential,
+  requestClaimPasswordResetOtp,
+  verifyClaimPasswordResetOtp,
+  confirmClaimPasswordReset,
+} from "@/utils/api";
 
 const PASSWORD_RULE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -17,7 +23,17 @@ export default function ClaimPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
+  const [resetChannel, setResetChannel] = useState("whatsapp");
+  const [resetDestination, setResetDestination] = useState("");
+  const [resetRequestId, setResetRequestId] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newConfirmPassword, setNewConfirmPassword] = useState("");
   const router = useRouter();
+
+  const forgotStep = !resetRequestId ? 1 : !resetToken ? 2 : 3;
 
   const passwordChecks = useMemo(
     () => ({
@@ -103,6 +119,76 @@ export default function ClaimPage() {
       }
     } catch (err) {
       setError(err?.message?.trim() || "Login gagal.");
+    }
+    setLoading(false);
+  };
+
+  const handleRequestOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+    try {
+      const res = await requestClaimPasswordResetOtp({
+        nrp: nrp.trim(),
+        channel: resetChannel,
+        destination: resetDestination.trim() || undefined,
+      });
+      setResetRequestId(res.request_id || "");
+      setMessage(res.message || "OTP terkirim.");
+    } catch (err) {
+      setError(err?.message || "Gagal request OTP.");
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+    try {
+      const res = await verifyClaimPasswordResetOtp({
+        request_id: resetRequestId,
+        otp: resetOtp.trim(),
+      });
+      setResetToken(res.reset_token || "");
+      setMessage("OTP valid. Silakan buat password baru.");
+    } catch (err) {
+      setError(err?.message || "OTP tidak valid.");
+    }
+    setLoading(false);
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    if (!PASSWORD_RULE.test(newPassword)) {
+      setError("Password minimal 8 karakter dan wajib mengandung huruf, angka, serta karakter khusus.");
+      return;
+    }
+    if (newPassword !== newConfirmPassword) {
+      setError("Konfirmasi password tidak sesuai.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await confirmClaimPasswordReset({
+        token: resetToken,
+        password: newPassword,
+        confirmPassword: newConfirmPassword,
+      });
+      setMessage("Password berhasil diubah. Silakan login.");
+      setShowForgot(false);
+      setMode("login");
+      setResetRequestId("");
+      setResetOtp("");
+      setResetToken("");
+      setNewPassword("");
+      setNewConfirmPassword("");
+    } catch (err) {
+      setError(err?.message || "Gagal reset password.");
     }
     setLoading(false);
   };
@@ -225,6 +311,110 @@ export default function ClaimPage() {
             {loading ? "Memproses..." : mode === "register" ? "Daftar" : "Login & Lanjutkan"}
           </button>
         </form>
+
+        {mode === "login" && (
+          <button
+            type="button"
+            onClick={() => {
+              setShowForgot((prev) => !prev);
+              setError("");
+              setMessage("");
+            }}
+            className="w-full text-sm font-semibold text-trust-700 hover:underline"
+          >
+            {showForgot ? "Tutup Lupa Password" : "Lupa Password?"}
+          </button>
+        )}
+
+        {showForgot && (
+          <div className="space-y-4 rounded-xl border border-trust-100 bg-trust-50/40 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-neutral-navy">Reset Password via OTP</p>
+              <span className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-neutral-slate">Step {forgotStep}/3</span>
+            </div>
+
+            {!nrp.trim() && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                Isi NRP dulu, lalu lanjut request OTP.
+              </div>
+            )}
+
+            {!resetRequestId && (
+              <form onSubmit={handleRequestOtp} className="space-y-3">
+                <select
+                  value={resetChannel}
+                  onChange={(e) => setResetChannel(e.target.value)}
+                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
+                >
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">Email</option>
+                  <option value="telegram">Telegram</option>
+                </select>
+                <input
+                  type="text"
+                  value={resetDestination}
+                  onChange={(e) => setResetDestination(e.target.value)}
+                  placeholder="Opsional: isi tujuan jika belum terdaftar"
+                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
+                />
+                <button type="submit" disabled={loading || !nrp.trim()} className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-navy border disabled:opacity-60">
+                  Kirim OTP
+                </button>
+              </form>
+            )}
+
+            {resetRequestId && !resetToken && (
+              <form onSubmit={handleVerifyOtp} className="space-y-3">
+                <input
+                  type="text"
+                  value={resetOtp}
+                  onChange={(e) => setResetOtp(e.target.value)}
+                  placeholder="Masukkan OTP"
+                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="submit" disabled={loading} className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-navy border disabled:opacity-60">
+                    Verifikasi OTP
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetRequestId("");
+                      setResetOtp("");
+                      setMessage("");
+                      setError("");
+                    }}
+                    className="w-full rounded-xl bg-transparent px-4 py-2 text-sm font-semibold text-neutral-slate border border-trust-200"
+                  >
+                    Kirim Ulang
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {resetToken && (
+              <form onSubmit={handleResetPassword} className="space-y-3">
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Password baru"
+                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
+                />
+                <input
+                  type="password"
+                  value={newConfirmPassword}
+                  onChange={(e) => setNewConfirmPassword(e.target.value)}
+                  placeholder="Konfirmasi password baru"
+                  className="w-full rounded-xl border border-trust-200 px-3 py-2 text-sm"
+                />
+                <button type="submit" disabled={loading} className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-navy border disabled:opacity-60">
+                  Simpan Password Baru
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </ClaimLayout>
   );

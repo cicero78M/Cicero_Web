@@ -3910,6 +3910,12 @@ export type ClaimCredentialPayload = {
   password: string;
 };
 
+export type ClaimPasswordResetRequestPayload = {
+  nrp: string;
+  channel?: "whatsapp" | "email" | "telegram";
+  destination?: string;
+};
+
 export async function registerClaimCredential(
   payload: ClaimCredentialPayload,
 ): Promise<ClaimAuthResponse> {
@@ -3974,6 +3980,60 @@ export async function loginClaimUser(
     token: data?.token,
     user: data?.user,
   };
+}
+
+export async function requestClaimPasswordResetOtp(
+  payload: ClaimPasswordResetRequestPayload,
+): Promise<any> {
+  const url = buildApiUrl("/api/claim/password-reset/request");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(extractResponseMessage(data, "Gagal mengirim OTP reset password."));
+  }
+  return data;
+}
+
+export async function verifyClaimPasswordResetOtp(payload: {
+  request_id: string;
+  otp: string;
+}): Promise<any> {
+  const url = buildApiUrl("/api/claim/password-reset/verify");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(extractResponseMessage(data, "OTP tidak valid atau sudah kedaluwarsa."));
+  }
+  return data;
+}
+
+export async function confirmClaimPasswordReset(payload: {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}): Promise<any> {
+  const url = buildApiUrl("/api/claim/password-reset/confirm");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(extractResponseMessage(data, "Gagal memperbarui password."));
+  }
+  return data;
 }
 
 // Fetch user data by NRP without requiring auth
