@@ -134,8 +134,9 @@ export default function ClaimPage() {
         channel: resetChannel,
         destination: resetDestination.trim() || undefined,
       });
-      setResetRequestId(res.request_id || "");
-      setMessage(res.message || "OTP terkirim.");
+      const payload = res?.data || res;
+      setResetRequestId(payload?.request_id || "");
+      setMessage(payload?.message || "OTP terkirim.");
     } catch (err) {
       setError(err?.message || "Gagal request OTP.");
     }
@@ -152,7 +153,8 @@ export default function ClaimPage() {
         request_id: resetRequestId,
         otp: resetOtp.trim(),
       });
-      setResetToken(res.reset_token || "");
+      const payload = res?.data || res;
+      setResetToken(payload?.reset_token || "");
       setMessage("OTP valid. Silakan buat password baru.");
     } catch (err) {
       setError(err?.message || "OTP tidak valid.");
