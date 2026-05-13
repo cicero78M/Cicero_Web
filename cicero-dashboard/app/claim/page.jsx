@@ -245,92 +245,107 @@ export default function ClaimPage() {
           </button>
         </div>
 
-        <form onSubmit={mode === "register" ? handleRegister : handleLogin} className="space-y-4">
-          {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-          {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
+        {!(mode === "login" && showForgot) && (
+          <form onSubmit={mode === "register" ? handleRegister : handleLogin} className="space-y-4">
+            {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+            {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
 
-          <div className="space-y-2">
-            <label htmlFor="nrp" className="text-sm font-medium text-neutral-navy">NRP</label>
-            <input
-              id="nrp"
-              type="text"
-              value={nrp}
-              onChange={(e) => setNrp(e.target.value)}
-              placeholder="Masukkan NRP"
-              required
-              className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-neutral-navy">Password</label>
-            <div className="relative">
-              <LockKeyhole className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-neutral-slate" />
+            <div className="space-y-2">
+              <label htmlFor="nrp" className="text-sm font-medium text-neutral-navy">NRP</label>
               <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan password"
+                id="nrp"
+                type="text"
+                value={nrp}
+                onChange={(e) => setNrp(e.target.value)}
+                placeholder="Masukkan NRP"
                 required
-                className="w-full rounded-2xl border border-trust-200/80 bg-white py-3 pl-10 pr-4 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
+                className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
               />
             </div>
-          </div>
 
-          {mode === "register" && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="confirm_password" className="text-sm font-medium text-neutral-navy">Konfirmasi Password</label>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-neutral-navy">Password</label>
+              <div className="relative">
+                <LockKeyhole className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-neutral-slate" />
                 <input
-                  id="confirm_password"
+                  id="password"
                   type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Ulangi password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Masukkan password"
                   required
-                  className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
+                  className="w-full rounded-2xl border border-trust-200/80 bg-white py-3 pl-10 pr-4 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
                 />
               </div>
+            </div>
 
-              <div className="rounded-xl border border-trust-100 bg-trust-50/70 px-4 py-3 text-xs text-neutral-slate">
-                <p className="mb-2 font-semibold text-neutral-navy">Password Strength (wajib):</p>
-                <ul className="space-y-1">
-                  <li className={passwordChecks.minLength ? "text-emerald-600" : "text-neutral-slate"}>• Minimal 8 karakter</li>
-                  <li className={passwordChecks.hasLetter ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung huruf</li>
-                  <li className={passwordChecks.hasNumber ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung angka</li>
-                  <li className={passwordChecks.hasSpecial ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung karakter khusus</li>
-                </ul>
-              </div>
-            </>
-          )}
+            {mode === "register" && (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="confirm_password" className="text-sm font-medium text-neutral-navy">Konfirmasi Password</label>
+                  <input
+                    id="confirm_password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Ulangi password"
+                    required
+                    className="w-full rounded-2xl border border-trust-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-trust-400 focus:outline-none focus:ring-2 focus:ring-trust-200"
+                  />
+                </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-2xl bg-gradient-to-r from-trust-300 via-consistency-300 to-spirit-300 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-trust-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Memproses..." : mode === "register" ? "Daftar" : "Login & Lanjutkan"}
-          </button>
-        </form>
+                <div className="rounded-xl border border-trust-100 bg-trust-50/70 px-4 py-3 text-xs text-neutral-slate">
+                  <p className="mb-2 font-semibold text-neutral-navy">Password Strength (wajib):</p>
+                  <ul className="space-y-1">
+                    <li className={passwordChecks.minLength ? "text-emerald-600" : "text-neutral-slate"}>• Minimal 8 karakter</li>
+                    <li className={passwordChecks.hasLetter ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung huruf</li>
+                    <li className={passwordChecks.hasNumber ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung angka</li>
+                    <li className={passwordChecks.hasSpecial ? "text-emerald-600" : "text-neutral-slate"}>• Mengandung karakter khusus</li>
+                  </ul>
+                </div>
+              </>
+            )}
 
-        {mode === "login" && (
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-gradient-to-r from-trust-300 via-consistency-300 to-spirit-300 px-6 py-3 text-sm font-semibold text-neutral-navy shadow-md transition-all hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-trust-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Memproses..." : mode === "register" ? "Daftar" : "Login & Lanjutkan"}
+            </button>
+          </form>
+        )}
+
+        {mode === "login" && !showForgot && (
           <button
             type="button"
             onClick={() => {
-              setShowForgot((prev) => !prev);
+              setShowForgot(true);
               setError("");
               setMessage("");
             }}
             className="w-full text-sm font-semibold text-trust-700 hover:underline"
           >
-            {showForgot ? "Tutup Lupa Password" : "Lupa Password?"}
+            Lupa Password?
           </button>
         )}
 
         {showForgot && (
           <div className="space-y-4 rounded-xl border border-trust-100 bg-trust-50/40 p-4">
-            <p className="text-sm font-semibold text-neutral-navy">Lupa Password (NRP + Email)</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-neutral-navy">Lupa Password (NRP + Email)</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgot(false);
+                  setError("");
+                  setMessage("");
+                }}
+                className="text-xs font-semibold text-trust-700 hover:underline"
+              >
+                Kembali ke Login
+              </button>
+            </div>
 
             {!resetRequestId && (
               <form onSubmit={handleRequestOtp} className="space-y-3">
