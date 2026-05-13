@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LockKeyhole, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
@@ -32,6 +32,7 @@ export default function ClaimPage() {
   const [newPassword, setNewPassword] = useState("");
   const [newConfirmPassword, setNewConfirmPassword] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const passwordChecks = useMemo(
     () => ({
@@ -42,6 +43,16 @@ export default function ClaimPage() {
     }),
     [password],
   );
+
+  useEffect(() => {
+    const tokenFromUrl = searchParams?.get("token") || "";
+    if (tokenFromUrl) {
+      setShowForgot(true);
+      setMode("login");
+      setResetToken(tokenFromUrl);
+      setMessage("Link reset terdeteksi. Silakan masukkan password baru.");
+    }
+  }, [searchParams]);
 
   const saveClaimSession = (trimmedNrp, trimmedPassword) => {
     if (typeof window === "undefined") return;
@@ -153,7 +164,7 @@ export default function ClaimPage() {
       });
       const payload = res?.data || res;
       setResetToken(payload?.reset_token || "");
-      setMessage("OTP valid. Silakan buat password baru.");
+      setMessage(payload?.message || "OTP valid. Silakan buat password baru.");
     } catch (err) {
       setError(err?.message || "OTP tidak valid.");
     }
@@ -332,6 +343,8 @@ export default function ClaimPage() {
 
         {showForgot && (
           <div className="space-y-4 rounded-xl border border-trust-100 bg-trust-50/40 p-4">
+            {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+            {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div>}
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-neutral-navy">Lupa Password (NRP + Email)</p>
               <button
