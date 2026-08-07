@@ -3910,6 +3910,40 @@ export type ClaimCredentialPayload = {
   password: string;
 };
 
+export type ClaimPendingContentItem = {
+  shortcode?: string;
+  video_id?: string;
+  url: string | null;
+  caption: string | null;
+  content_time: string | null;
+};
+
+export type ClaimPendingPlatformContent = {
+  username_available: boolean;
+  usernames: string[];
+  total_content: number;
+  completed_content: number;
+  pending_content: number;
+  items: ClaimPendingContentItem[];
+  completed_ids: string[];
+};
+
+export type ClaimPendingContentResponse = {
+  success: boolean;
+  data: {
+    user_id: string;
+    timezone: string;
+    filters: {
+      periode: "harian" | "mingguan" | "bulanan" | "semua";
+      tanggal: string | null;
+      start_date: string | null;
+      end_date: string | null;
+    };
+    instagram: ClaimPendingPlatformContent;
+    tiktok: ClaimPendingPlatformContent;
+  };
+};
+
 export type ClaimPasswordResetRequestPayload = {
   nrp: string;
   email?: string;
@@ -4069,6 +4103,23 @@ export async function getClaimUserData(
   }
 
   return data;
+}
+
+export async function getClaimPendingContent(): Promise<ClaimPendingContentResponse> {
+  const url = buildApiUrl("/api/claim/pending-content");
+  const res = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(
+      extractResponseMessage(data, "Gagal memuat konten yang belum tercatat"),
+    );
+  }
+
+  return data as ClaimPendingContentResponse;
 }
 
 // Update user data after credential verification
