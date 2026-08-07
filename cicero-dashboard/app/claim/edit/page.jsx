@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Edit3, Info, TriangleAlert } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
+import PendingContentCard from "@/components/claim/PendingContentCard";
 import {
+  getClaimPendingContent,
   getClaimUserData,
   normalizeWhatsapp,
   updateUserViaClaim,
@@ -35,6 +37,11 @@ export default function EditUserPage() {
     useState("");
   const [secondaryTiktokUsername, setSecondaryTiktokUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState("");
+  const [pendingContent, setPendingContent] = useState(null);
+  const [contentLoading, setContentLoading] = useState(true);
+  const [contentError, setContentError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
@@ -58,10 +65,13 @@ export default function EditUserPage() {
       setNrp(n);
       setPassword(w);
       loadUser(n, w);
+      loadPendingContent();
     }
   }, [router]);
 
   async function loadUser(n, w) {
+    setProfileLoading(true);
+    setProfileError("");
     try {
       const res = await getClaimUserData(n, w);
       const user = res.data || res.user || res;
@@ -104,7 +114,22 @@ export default function EditUserPage() {
       const message = err?.message?.trim()
         ? err.message
         : "Gagal mengambil data user";
-      setError(message);
+      setProfileError(message);
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
+  async function loadPendingContent() {
+    setContentLoading(true);
+    setContentError("");
+    try {
+      const response = await getClaimPendingContent();
+      setPendingContent(response.data);
+    } catch (err) {
+      setContentError(err?.message?.trim() || "Terjadi kesalahan pada server");
+    } finally {
+      setContentLoading(false);
     }
   }
 
@@ -253,6 +278,13 @@ export default function EditUserPage() {
       cardAccent="spirit"
     >
       <div className="space-y-8">
+        <PendingContentCard
+          data={pendingContent}
+          loading={contentLoading}
+          error={contentError}
+          onRefresh={loadPendingContent}
+        />
+
         <section className="rounded-3xl border border-spirit-200/80 bg-gradient-to-br from-white/80 via-spirit-50/70 to-trust-50/70 px-6 py-5 text-sm text-neutral-slate shadow-inner">
           <div className="flex items-start gap-3">
             <Info className="mt-0.5 h-5 w-5 text-spirit-500" />
@@ -277,6 +309,15 @@ export default function EditUserPage() {
         </section>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {profileLoading && (
+            <p role="status" className="text-sm text-neutral-slate">Memuat profil...</p>
+          )}
+          {profileError && (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 shadow-sm">
+              <TriangleAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>Gagal memuat profil: {profileError}</span>
+            </div>
+          )}
           {error && (
             <div className="flex items-start gap-3 rounded-2xl border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 shadow-sm">
               <TriangleAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
