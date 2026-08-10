@@ -22,6 +22,7 @@ import {
 export default function EditUserPage() {
   const [nrp, setNrp] = useState("");
   const [password, setPassword] = useState("");
+  const [claimToken, setClaimToken] = useState("");
   const [kesatuan, setKesatuan] = useState("");
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
@@ -58,14 +59,16 @@ export default function EditUserPage() {
     if (typeof window !== "undefined") {
       const n = sessionStorage.getItem("claim_nrp");
       const w = sessionStorage.getItem("claim_password");
-      if (!n || !w) {
+      const token = sessionStorage.getItem("claim_token");
+      if (!n || !w || !token) {
         router.replace("/claim");
         return;
       }
       setNrp(n);
       setPassword(w);
+      setClaimToken(token);
       loadUser(n, w);
-      loadPendingContent();
+      loadPendingContent(token);
     }
   }, [router]);
 
@@ -120,11 +123,11 @@ export default function EditUserPage() {
     }
   }
 
-  async function loadPendingContent() {
+  async function loadPendingContent(token = claimToken) {
     setContentLoading(true);
     setContentError("");
     try {
-      const response = await getClaimPendingContent();
+      const response = await getClaimPendingContent(token);
       setPendingContent(response.data);
     } catch (err) {
       setContentError(err?.message?.trim() || "Terjadi kesalahan pada server");
@@ -283,6 +286,8 @@ export default function EditUserPage() {
           loading={contentLoading}
           error={contentError}
           onRefresh={loadPendingContent}
+          claimToken={claimToken}
+          onOpenProfile={() => document.getElementById("claim-profile-form")?.scrollIntoView({ behavior: "smooth" })}
         />
 
         <section className="rounded-3xl border border-spirit-200/80 bg-gradient-to-br from-white/80 via-spirit-50/70 to-trust-50/70 px-6 py-5 text-sm text-neutral-slate shadow-inner">
@@ -308,7 +313,7 @@ export default function EditUserPage() {
           </div>
         </section>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form id="claim-profile-form" onSubmit={handleSubmit} className="space-y-5">
           {profileLoading && (
             <p role="status" className="text-sm text-neutral-slate">Memuat profil...</p>
           )}

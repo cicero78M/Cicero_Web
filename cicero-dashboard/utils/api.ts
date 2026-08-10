@@ -3944,6 +3944,33 @@ export type ClaimPendingContentResponse = {
   };
 };
 
+export type ClaimComplaintTriage = {
+  platform: "instagram" | "tiktok";
+  content_id: string;
+  triage_code: string;
+  triage_quality: "low" | "medium" | "high";
+  title: string;
+  summary: string;
+  evidence: Array<{ label: string; value: string | null; status: string }>;
+  solutions: Array<{ order: number; label: string }>;
+  last_collected_at: string | null;
+  can_retry: boolean;
+  retry_after: string | null;
+  can_escalate: boolean;
+};
+
+export type ClaimComplaintTriagePayload = {
+  platform: "instagram" | "tiktok";
+  issue_type: "activity_not_recorded";
+  shortcode?: string;
+  video_id?: string;
+  performed_at?: string;
+  periode?: "harian" | "mingguan" | "bulanan" | "semua";
+  tanggal?: string;
+  start_date?: string;
+  end_date?: string;
+};
+
 export type ClaimPasswordResetRequestPayload = {
   nrp: string;
   email?: string;
@@ -4105,10 +4132,15 @@ export async function getClaimUserData(
   return data;
 }
 
-export async function getClaimPendingContent(): Promise<ClaimPendingContentResponse> {
+function claimAuthHeaders(token?: string) {
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+}
+
+export async function getClaimPendingContent(token?: string): Promise<ClaimPendingContentResponse> {
   const url = buildApiUrl("/api/claim/pending-content");
   const res = await fetch(url, {
     method: "GET",
+    headers: claimAuthHeaders(token),
     credentials: "include",
   });
   const data = await res.json().catch(() => null);
@@ -4120,6 +4152,54 @@ export async function getClaimPendingContent(): Promise<ClaimPendingContentRespo
   }
 
   return data as ClaimPendingContentResponse;
+}
+
+export async function triageClaimComplaint(
+  token: string,
+  payload: ClaimComplaintTriagePayload,
+): Promise<ClaimComplaintTriage> {
+  const res = await fetch(buildApiUrl("/api/claim/complaints/triage"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...claimAuthHeaders(token),
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const response = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(extractResponseMessage(response, "Gagal memeriksa kendala aktivitas"));
+  }
+  return response.data as ClaimComplaintTriage;
+}
+
+export async function escalateClaimComplaint(
+  token: string,
+  triage: ClaimComplaintTriage,
+): Promise<void> {
+  const createResponse = await fetch(buildApiUrl("/api/claim/complaints"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...claimAuthHeaders(token) },
+    credentials: "include",
+    body: JSON.stringify({ triage }),
+  });
+  const created = await createResponse.json().catch(() => null);
+  if (!createResponse.ok || !created?.data?.complaint_id) {
+    throw new Error(extractResponseMessage(created, "Gagal membuat eskalasi komplain"));
+  }
+  const escalationResponse = await fetch(
+    buildApiUrl(`/api/claim/complaints/${encodeURIComponent(created.data.complaint_id)}/escalate`),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...claimAuthHeaders(token) },
+      credentials: "include",
+    },
+  );
+  const escalated = await escalationResponse.json().catch(() => null);
+  if (!escalationResponse.ok) {
+    throw new Error(extractResponseMessage(escalated, "Gagal mengeskalasi komplain"));
+  }
 }
 
 // Update user data after credential verification
