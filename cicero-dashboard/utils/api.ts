@@ -4053,10 +4053,38 @@ export type ClaimComplaintTriage = {
   complaint_status: string | null;
 };
 
-export type ClaimComplaintLifecycle = {
+export type ClaimComplaintLifecycleTriage = {
+  code: string;
+  quality: "low" | "medium" | "high" | string;
+  evidence: {
+    activity_recorded: boolean | null;
+    snapshot_available: boolean | null;
+    last_collected_at: string | null;
+    performed_at: string | null;
+  };
+};
+
+export type ClaimComplaintLifecycleDto = {
   complaint_id: string;
+  platform: "instagram" | "tiktok";
+  content_id: string;
+  issue_type: string;
   status: string;
-  [key: string]: unknown;
+  triage: ClaimComplaintLifecycleTriage;
+  created_at: string;
+  updated_at: string;
+  escalated_at: string | null;
+  resolved_at: string | null;
+};
+
+export type ClaimComplaintLifecycleResponse = {
+  success: boolean;
+  data: ClaimComplaintLifecycleDto;
+};
+
+export type ClaimComplaintLifecycleListResponse = {
+  success: boolean;
+  data: ClaimComplaintLifecycleDto[];
 };
 
 export class ClaimComplaintLifecycleError extends Error {
@@ -4332,7 +4360,7 @@ export async function escalateClaimComplaint(
 export async function getClaimComplaint(
   token: string,
   complaintId: string,
-): Promise<ClaimComplaintLifecycle> {
+): Promise<ClaimComplaintLifecycleDto> {
   const response = await fetch(
     buildApiUrl(`/api/claim/complaints/${encodeURIComponent(complaintId)}`),
     {
@@ -4349,7 +4377,31 @@ export async function getClaimComplaint(
       typeof body?.error_code === "string" ? body.error_code : undefined,
     );
   }
-  return body.data as ClaimComplaintLifecycle;
+  return body.data as ClaimComplaintLifecycleDto;
+}
+
+/**
+ * Loads complaints owned by the authenticated claim user. Ownership is derived
+ * exclusively by the backend from the claim credential; no identity query or
+ * request body is accepted here.
+ */
+export async function getClaimComplaints(
+  token?: string,
+): Promise<ClaimComplaintLifecycleDto[]> {
+  const response = await fetch(buildApiUrl("/api/claim/complaints"), {
+    method: "GET",
+    headers: claimAuthHeaders(token),
+    credentials: "include",
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ClaimComplaintLifecycleError(
+      extractResponseMessage(body, "Gagal memuat riwayat komplain"),
+      response.status,
+      typeof body?.error_code === "string" ? body.error_code : undefined,
+    );
+  }
+  return (body?.data ?? []) as ClaimComplaintLifecycleDto[];
 }
 
 export async function updateClaimProfile(

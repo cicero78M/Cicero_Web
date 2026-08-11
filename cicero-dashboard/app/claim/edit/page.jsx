@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
+import ComplaintHistoryCard from "@/components/claim/ComplaintHistoryCard";
 import PendingContentCard from "@/components/claim/PendingContentCard";
 import {
+  getClaimComplaints,
   getClaimPendingContent,
   getClaimProfile,
   normalizeWhatsapp,
@@ -166,6 +168,9 @@ export default function EditUserPage() {
   const [pendingContent, setPendingContent] = useState(null);
   const [contentLoading, setContentLoading] = useState(true);
   const [contentError, setContentError] = useState("");
+  const [complaints, setComplaints] = useState([]);
+  const [complaintsLoading, setComplaintsLoading] = useState(true);
+  const [complaintsError, setComplaintsError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
@@ -181,6 +186,7 @@ export default function EditUserPage() {
       const token = sessionStorage.getItem("claim_token");
       setClaimToken(token || "");
       loadUser(token || "");
+      loadComplaints(token || "");
     }
   }, [router]);
 
@@ -249,6 +255,22 @@ export default function EditUserPage() {
       setContentError(err?.message?.trim() || "Terjadi kesalahan pada server");
     } finally {
       setContentLoading(false);
+    }
+  }
+
+  async function loadComplaints(token = claimToken) {
+    setComplaintsLoading(true);
+    setComplaintsError("");
+    try {
+      setComplaints(await getClaimComplaints(token));
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        router.replace("/claim");
+        return;
+      }
+      setComplaintsError(err?.message?.trim() || "Terjadi kesalahan pada server");
+    } finally {
+      setComplaintsLoading(false);
     }
   }
 
@@ -442,11 +464,19 @@ export default function EditUserPage() {
           error={contentError}
           onRefresh={loadPendingContent}
           claimToken={claimToken}
+          onComplaintChanged={loadComplaints}
           onOpenProfile={() =>
             document
               .getElementById("claim-profile-form")
               ?.scrollIntoView({ behavior: "smooth" })
           }
+        />
+
+        <ComplaintHistoryCard
+          complaints={complaints}
+          loading={complaintsLoading}
+          error={complaintsError}
+          onRetry={loadComplaints}
         />
 
         <section className="rounded-3xl border border-spirit-200/80 bg-gradient-to-br from-white/80 via-spirit-50/70 to-trust-50/70 px-6 py-5 text-sm text-neutral-slate shadow-inner">

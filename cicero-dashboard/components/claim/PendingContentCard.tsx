@@ -23,6 +23,7 @@ type Props = {
   onRefresh: () => void | Promise<void>;
   claimToken?: string;
   onOpenProfile?: () => void;
+  onComplaintChanged?: () => void | Promise<void>;
 };
 
 type Selection = { item: ClaimPendingContentItem; platform: Platform; username: string };
@@ -78,9 +79,10 @@ function PlatformGroup({ platform, content, onComplaint }: { platform: Platform;
   </section>;
 }
 
-function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpenProfile }: {
+function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpenProfile, onComplaintChanged }: {
   selection: Selection; token: string; filters: ClaimPendingContentResponse["data"]["filters"];
   onClose: () => void; onRefresh: () => void | Promise<void>; onOpenProfile?: () => void;
+  onComplaintChanged?: () => void | Promise<void>;
 }) {
   const [performedAt, setPerformedAt] = useState("");
   const [result, setResult] = useState<ClaimComplaintTriage | null>(null);
@@ -113,6 +115,7 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
         ...(filters.end_date ? { end_date: filters.end_date } : {}),
       });
       setResult(triage);
+      await onComplaintChanged?.();
       if (triage.triage_code === "ACTIVITY_ALREADY_RECORDED") await onRefresh();
     } catch (err) { setError(err instanceof Error ? err.message : "Gagal memeriksa kendala aktivitas"); }
     finally { setSubmitting(false); }
@@ -123,6 +126,7 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
     setEscalating(true); setError("");
     try {
       await escalateClaimComplaint(token, result.complaint_id, result.complaint_status);
+      await onComplaintChanged?.();
       onClose();
     } catch (err) {
       if (err instanceof ClaimComplaintLifecycleError && err.status === 409 && err.errorCode === "CLAIM_COMPLAINT_STATUS_CONFLICT") {
@@ -172,13 +176,13 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
   </Dialog.Root>;
 }
 
-export default function PendingContentCard({ data, loading, error, onRefresh, claimToken = "", onOpenProfile }: Props) {
+export default function PendingContentCard({ data, loading, error, onRefresh, claimToken = "", onOpenProfile, onComplaintChanged }: Props) {
   const [selection, setSelection] = useState<Selection | null>(null);
   return <section className="space-y-5 rounded-3xl border border-spirit-200/80 bg-white/90 p-5 shadow-sm" aria-busy={loading}>
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-neutral-navy">Aktivitas Konten Tertunda</h2><p className="mt-1 max-w-2xl text-sm text-neutral-slate">Data berdasarkan hasil sinkronisasi CICERO dan mungkin membutuhkan waktu untuk diperbarui.</p></div><button type="button" onClick={onRefresh} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-spirit-200 px-3 py-2 text-sm font-semibold text-spirit-600 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button></div>
     {loading && !data && <p role="status" className="text-sm text-neutral-slate">Memuat konten tertunda...</p>}
     {error && <div role="alert" className="flex gap-2 rounded-2xl bg-red-50 p-4 text-sm text-red-600"><TriangleAlert className="h-4 w-4 shrink-0" /> Gagal memuat konten tertunda: {error}</div>}
     {data && <><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-gradient-to-br from-fuchsia-50 to-orange-50 p-4"><p className="text-xs text-neutral-slate">Instagram tertunda</p><p className="text-2xl font-bold text-neutral-navy">{data.instagram.pending_content}</p></div><div className="rounded-2xl bg-neutral-100 p-4"><p className="text-xs text-neutral-slate">TikTok tertunda</p><p className="text-2xl font-bold text-neutral-navy">{data.tiktok.pending_content}</p></div></div><PlatformGroup platform="instagram" content={data.instagram} onComplaint={setSelection} /><PlatformGroup platform="tiktok" content={data.tiktok} onComplaint={setSelection} /></>}
-    {selection && data && <ComplaintDialog selection={selection} token={claimToken} filters={data.filters} onClose={() => setSelection(null)} onRefresh={onRefresh} onOpenProfile={onOpenProfile} />}
+    {selection && data && <ComplaintDialog selection={selection} token={claimToken} filters={data.filters} onClose={() => setSelection(null)} onRefresh={onRefresh} onOpenProfile={onOpenProfile} onComplaintChanged={onComplaintChanged} />}
   </section>;
 }

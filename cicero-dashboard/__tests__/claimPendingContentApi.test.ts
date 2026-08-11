@@ -84,4 +84,28 @@ describe("claim complaint lifecycle API", () => {
     await expect(getClaimComplaint("claim-jwt", "c-1")).resolves.toEqual({ complaint_id: "c-1", status: "resolved" });
     expect(global.fetch).toHaveBeenCalledWith("https://api.cicero.test/api/claim/complaints/c-1", expect.objectContaining({ method: "GET" }));
   });
+
+  it("memuat daftar milik pengguna terautentikasi tanpa identitas query atau body", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [{ complaint_id: "c-1", status: "triaged" }] }),
+    });
+    const { getClaimComplaints } = await import("@/utils/api");
+
+    await expect(getClaimComplaints("claim-jwt")).resolves.toEqual([
+      { complaint_id: "c-1", status: "triaged" },
+    ]);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://api.cicero.test/api/claim/complaints",
+      {
+        method: "GET",
+        headers: { Authorization: "Bearer claim-jwt" },
+        credentials: "include",
+      },
+    );
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(url).not.toMatch(/[?&](user_id|nrp|client_id)=/);
+    expect(init).not.toHaveProperty("body");
+  });
 });
