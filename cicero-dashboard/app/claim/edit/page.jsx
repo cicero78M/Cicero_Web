@@ -21,6 +21,7 @@ import {
 
 export default function EditUserPage() {
   const [claimToken, setClaimToken] = useState("");
+  const [nrp, setNrp] = useState("");
   const [kesatuan, setKesatuan] = useState("");
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
@@ -67,6 +68,7 @@ export default function EditUserPage() {
     try {
       const res = await getClaimProfile(token);
       const user = res.data || res.user || res;
+      setNrp(user.user_id || "");
       setRole(user.ditbinmas ? "ditbinmas" : "");
       setKesatuan(user.nama_client || user.client_name || user.client_id || "");
       setNama(user.nama || "");
@@ -342,8 +344,14 @@ export default function EditUserPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">NRP</label>
+              <label
+                htmlFor="nrp"
+                className="text-sm font-medium text-neutral-navy"
+              >
+                NRP
+              </label>
               <input
+                id="nrp"
                 type="text"
                 value={nrp}
                 readOnly
