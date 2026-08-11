@@ -2,8 +2,6 @@ import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import EditUserPage from "@/app/claim/edit/page";
 import {
-  getClaimPendingContent,
-  getClaimComplaints,
   getClaimProfile,
   updateClaimProfile,
   validateClaimSocialProfile,
@@ -21,20 +19,8 @@ jest.mock("@/components/claim/ClaimLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/components/claim/PendingContentCard", () => ({
-  __esModule: true,
-  default: () => <div data-testid="pending-content" />,
-}));
-
-jest.mock("@/components/claim/ComplaintHistoryCard", () => ({
-  __esModule: true,
-  default: () => <div data-testid="complaint-history" />,
-}));
-
 jest.mock("@/utils/api", () => ({
   isValidClaimToken: jest.requireActual("@/utils/api").isValidClaimToken,
-  getClaimPendingContent: jest.fn(),
-  getClaimComplaints: jest.fn(),
   getClaimProfile: jest.fn(),
   normalizeWhatsapp: jest.fn((value: string) => value),
   updateClaimProfile: jest.fn(),
@@ -60,8 +46,6 @@ describe("EditUserPage", () => {
         tiktok_accounts: ["@utama.tt", "@kedua_tt"],
       },
     });
-    (getClaimPendingContent as jest.Mock).mockResolvedValue({ data: null });
-    (getClaimComplaints as jest.Mock).mockResolvedValue([]);
     (updateClaimProfile as jest.Mock).mockResolvedValue({ success: true });
     (validateClaimSocialProfile as jest.Mock).mockResolvedValue({
       success: true,
@@ -87,8 +71,7 @@ describe("EditUserPage", () => {
     );
     expect(screen.getByLabelText("NRP")).toHaveAttribute("readonly");
     expect(getClaimProfile).toHaveBeenCalledWith("header.payload.signature");
-    expect(getClaimPendingContent).toHaveBeenCalledWith("header.payload.signature");
-    expect(getClaimComplaints).toHaveBeenCalledWith("header.payload.signature");
+    expect(screen.getByRole("heading", { name: "Kualitas akun media sosial" })).toBeInTheDocument();
   });
 
   it.each(["[object Object]", "header.payload", "header..signature"])(
@@ -100,8 +83,6 @@ describe("EditUserPage", () => {
       await waitFor(() => expect(replace).toHaveBeenCalledWith("/claim"));
       expect(sessionStorage.getItem("claim_token")).toBeNull();
       expect(getClaimProfile).not.toHaveBeenCalled();
-      expect(getClaimPendingContent).not.toHaveBeenCalled();
-      expect(getClaimComplaints).not.toHaveBeenCalled();
     },
   );
 
@@ -203,7 +184,8 @@ describe("EditUserPage", () => {
     expect(screen.getByText(/Cicero Resmi/)).toBeInTheDocument();
     expect(screen.getByText(/Publik/)).toBeInTheDocument();
     expect(screen.getByText(/partial \(80\/100\)/)).toBeInTheDocument();
-    expect(screen.getByText(/bukan keaslian akun/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/bukan keaslian akun/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("Perlu dilengkapi · 80/100")).toBeInTheDocument();
     expect(validateClaimSocialProfile).toHaveBeenCalledWith(
       { platform: "instagram", username: "utama.ig" },
       "header.payload.signature",

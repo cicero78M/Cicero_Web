@@ -12,11 +12,8 @@ import {
 } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
-import ComplaintHistoryCard from "@/components/claim/ComplaintHistoryCard";
-import PendingContentCard from "@/components/claim/PendingContentCard";
+import SocialAccountQualityCard from "@/components/claim/SocialAccountQualityCard";
 import {
-  getClaimComplaints,
-  getClaimPendingContent,
   getClaimProfile,
   isValidClaimToken,
   normalizeWhatsapp,
@@ -166,12 +163,6 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
-  const [pendingContent, setPendingContent] = useState(null);
-  const [contentLoading, setContentLoading] = useState(true);
-  const [contentError, setContentError] = useState("");
-  const [complaints, setComplaints] = useState([]);
-  const [complaintsLoading, setComplaintsLoading] = useState(true);
-  const [complaintsError, setComplaintsError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
@@ -192,7 +183,6 @@ export default function EditUserPage() {
       }
       setClaimToken(token);
       loadUser(token);
-      loadComplaints(token);
     }
   }, [router]);
 
@@ -236,7 +226,6 @@ export default function EditUserPage() {
         Array(normalizedInstagram.length || 1).fill(null),
       );
       setTiktokValidations(Array(normalizedTiktok.length || 1).fill(null));
-      loadPendingContent(token);
     } catch (err) {
       if (err?.status === 401 || err?.status === 403) {
         router.replace("/claim");
@@ -248,35 +237,6 @@ export default function EditUserPage() {
       setProfileError(message);
     } finally {
       setProfileLoading(false);
-    }
-  }
-
-  async function loadPendingContent(token = claimToken) {
-    setContentLoading(true);
-    setContentError("");
-    try {
-      const response = await getClaimPendingContent(token);
-      setPendingContent(response.data);
-    } catch (err) {
-      setContentError(err?.message?.trim() || "Terjadi kesalahan pada server");
-    } finally {
-      setContentLoading(false);
-    }
-  }
-
-  async function loadComplaints(token = claimToken) {
-    setComplaintsLoading(true);
-    setComplaintsError("");
-    try {
-      setComplaints(await getClaimComplaints(token));
-    } catch (err) {
-      if (err?.status === 401 || err?.status === 403) {
-        router.replace("/claim");
-        return;
-      }
-      setComplaintsError(err?.message?.trim() || "Terjadi kesalahan pada server");
-    } finally {
-      setComplaintsLoading(false);
     }
   }
 
@@ -464,25 +424,16 @@ export default function EditUserPage() {
       cardAccent="spirit"
     >
       <div className="space-y-8">
-        <PendingContentCard
-          data={pendingContent}
-          loading={contentLoading}
-          error={contentError}
-          onRefresh={loadPendingContent}
-          claimToken={claimToken}
-          onComplaintChanged={loadComplaints}
+        <SocialAccountQualityCard
+          instagramAccounts={instagramAccounts}
+          tiktokAccounts={tiktokAccounts}
+          instagramValidations={instagramValidations}
+          tiktokValidations={tiktokValidations}
           onOpenProfile={() =>
             document
               .getElementById("claim-profile-form")
               ?.scrollIntoView({ behavior: "smooth" })
           }
-        />
-
-        <ComplaintHistoryCard
-          complaints={complaints}
-          loading={complaintsLoading}
-          error={complaintsError}
-          onRetry={loadComplaints}
         />
 
         <section className="rounded-3xl border border-spirit-200/80 bg-gradient-to-br from-white/80 via-spirit-50/70 to-trust-50/70 px-6 py-5 text-sm text-neutral-slate shadow-inner">
