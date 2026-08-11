@@ -32,6 +32,7 @@ jest.mock("@/components/claim/ComplaintHistoryCard", () => ({
 }));
 
 jest.mock("@/utils/api", () => ({
+  isValidClaimToken: jest.requireActual("@/utils/api").isValidClaimToken,
   getClaimPendingContent: jest.fn(),
   getClaimComplaints: jest.fn(),
   getClaimProfile: jest.fn(),
@@ -44,7 +45,7 @@ describe("EditUserPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     sessionStorage.clear();
-    sessionStorage.setItem("claim_token", "claim-jwt");
+    sessionStorage.setItem("claim_token", "header.payload.signature");
     replace.mockClear();
     (getClaimProfile as jest.Mock).mockResolvedValue({
       success: true,
@@ -85,10 +86,24 @@ describe("EditUserPage", () => {
       screen.getByLabelText("NRP"),
     );
     expect(screen.getByLabelText("NRP")).toHaveAttribute("readonly");
-    expect(getClaimProfile).toHaveBeenCalledWith("claim-jwt");
-    expect(getClaimPendingContent).toHaveBeenCalledWith("claim-jwt");
-    expect(getClaimComplaints).toHaveBeenCalledWith("claim-jwt");
+    expect(getClaimProfile).toHaveBeenCalledWith("header.payload.signature");
+    expect(getClaimPendingContent).toHaveBeenCalledWith("header.payload.signature");
+    expect(getClaimComplaints).toHaveBeenCalledWith("header.payload.signature");
   });
+
+  it.each(["[object Object]", "header.payload", "header..signature"])(
+    "membersihkan sesi invalid dan redirect tanpa API terlindungi: %s",
+    async (token) => {
+      sessionStorage.setItem("claim_token", token);
+      render(<EditUserPage />);
+
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/claim"));
+      expect(sessionStorage.getItem("claim_token")).toBeNull();
+      expect(getClaimProfile).not.toHaveBeenCalled();
+      expect(getClaimPendingContent).not.toHaveBeenCalled();
+      expect(getClaimComplaints).not.toHaveBeenCalled();
+    },
+  );
 
   it("memuat seluruh array kanonis dan tidak memakai alias", async () => {
     render(<EditUserPage />);
@@ -153,7 +168,7 @@ describe("EditUserPage", () => {
 
     await waitFor(() => expect(updateClaimProfile).toHaveBeenCalled());
     const [payload, token] = (updateClaimProfile as jest.Mock).mock.calls[0];
-    expect(token).toBe("claim-jwt");
+    expect(token).toBe("header.payload.signature");
     expect(payload.instagram_accounts).toEqual(["Polri", "kedua_ig"]);
     expect(payload.tiktok_accounts).toEqual(["@humas_polri", "@kedua_tt"]);
     expect(payload).not.toHaveProperty("insta");
@@ -191,7 +206,7 @@ describe("EditUserPage", () => {
     expect(screen.getByText(/bukan keaslian akun/i)).toBeInTheDocument();
     expect(validateClaimSocialProfile).toHaveBeenCalledWith(
       { platform: "instagram", username: "utama.ig" },
-      "claim-jwt",
+      "header.payload.signature",
     );
   });
 

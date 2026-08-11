@@ -18,6 +18,7 @@ import {
   getClaimComplaints,
   getClaimPendingContent,
   getClaimProfile,
+  isValidClaimToken,
   normalizeWhatsapp,
   updateClaimProfile,
   validateClaimSocialProfile,
@@ -184,9 +185,14 @@ export default function EditUserPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const token = sessionStorage.getItem("claim_token");
-      setClaimToken(token || "");
-      loadUser(token || "");
-      loadComplaints(token || "");
+      if (!isValidClaimToken(token)) {
+        sessionStorage.removeItem("claim_token");
+        router.replace("/claim");
+        return;
+      }
+      setClaimToken(token);
+      loadUser(token);
+      loadComplaints(token);
     }
   }, [router]);
 

@@ -9,6 +9,7 @@ import {
   loginClaimUser,
   registerClaimCredential,
   getClaimProfile,
+  isValidClaimToken,
   normalizeWhatsapp,
   updateClaimProfile,
   validateClaimSocialProfile,
@@ -320,7 +321,7 @@ test("registerClaimCredential calls claim register endpoint", async () => {
 test("loginClaimUser calls user-login endpoint", async () => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
-    json: () => Promise.resolve({ success: true, token: "jwt-token", user: { nrp: "123" } }),
+    json: () => Promise.resolve({ success: true, token: "header.payload.signature", user: { nrp: "123" } }),
   });
 
   const response = await loginClaimUser({ nrp: "123", password: "Abcd1234!" });
@@ -329,7 +330,36 @@ test("loginClaimUser calls user-login endpoint", async () => {
   expect(url).toContain("/api/auth/user-login");
   expect(options.method).toBe("POST");
   expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
-  expect(response.token).toBe("jwt-token");
+  expect(response.token).toBe("header.payload.signature");
+});
+
+test.each([
+  ["missing", {}],
+  ["object-valued", { token: { access: "header.payload.signature" } }],
+  ["stringified object", { token: "[object Object]" }],
+  ["two segments", { token: "header.payload" }],
+  ["empty segment", { token: "header..signature" }],
+])("loginClaimUser rejects a successful response with a %s token", async (_label, body) => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve({ success: true, ...body }),
+  });
+
+  await expect(
+    loginClaimUser({ nrp: "123", password: "Abcd1234!" }),
+  ).rejects.toThrow(/token claim/i);
+});
+
+test.each([
+  [undefined, false],
+  [{ token: "header.payload.signature" }, false],
+  ["", false],
+  ["[object Object]", false],
+  ["header.payload", false],
+  ["header..signature", false],
+  ["header.payload.signature", true],
+])("isValidClaimToken validates JWT-shaped strings", (token, expected) => {
+  expect(isValidClaimToken(token)).toBe(expected);
 });
 
 test("getClaimProfile uses authenticated claim profile endpoint", async () => {
@@ -338,14 +368,14 @@ test("getClaimProfile uses authenticated claim profile endpoint", async () => {
     json: () => Promise.resolve({ success: true, data: { nrp: "123" } }),
   });
 
-  await getClaimProfile("jwt-token");
+  await getClaimProfile("header.payload.signature");
 
   const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
   expect(url).toContain("/api/claim/me");
   expect(options).toMatchObject({
     method: "GET",
     credentials: "include",
-    headers: { Authorization: "Bearer jwt-token" },
+    headers: { Authorization: "Bearer header.payload.signature" },
   });
   expect(options.body).toBeUndefined();
 });
@@ -359,7 +389,7 @@ test("validateClaimSocialProfile posts payload with claim authentication", async
 
   await validateClaimSocialProfile(
     { platform: "instagram", username: "https://instagram.com/Cicero" },
-    "claim-jwt",
+    "header.payload.signature",
   );
 
   const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
@@ -369,7 +399,7 @@ test("validateClaimSocialProfile posts payload with claim authentication", async
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer claim-jwt",
+      Authorization: "Bearer header.payload.signature",
     },
   });
   expect(JSON.parse(options.body)).toEqual({
@@ -411,12 +441,12 @@ test("claim update sends whatsapp with 62 prefix for local numbers", async () =>
 
   await updateClaimProfile({
     whatsapp: whatsappNormalized,
-  }, "jwt-token");
+  }, "header.payload.signature");
 
   const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
   expect(url).toContain("/api/claim/me");
   expect(options.credentials).toBe("include");
-  expect(options.headers.Authorization).toBe("Bearer jwt-token");
+  expect(options.headers.Authorization).toBe("Bearer header.payload.signature");
   expect(JSON.parse(options.body)).toEqual({ whatsapp: "628123" });
 });
 

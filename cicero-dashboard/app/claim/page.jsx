@@ -6,6 +6,7 @@ import { LockKeyhole, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
 import {
+  isValidClaimToken,
   loginClaimUser,
   registerClaimCredential,
   requestClaimPasswordResetOtp,
@@ -58,7 +59,7 @@ export default function ClaimPage() {
     if (typeof window === "undefined") return;
     sessionStorage.removeItem("claim_nrp");
     sessionStorage.removeItem("claim_password");
-    if (token) sessionStorage.setItem("claim_token", token);
+    if (isValidClaimToken(token)) sessionStorage.setItem("claim_token", token);
     else sessionStorage.removeItem("claim_token");
   };
 
@@ -122,11 +123,16 @@ export default function ClaimPage() {
     setLoading(true);
     try {
       const res = await loginClaimUser({ nrp: trimmedNrp, password: trimmedPassword });
-      if (res.success !== false) {
+      if (res.success !== false && isValidClaimToken(res.token)) {
         saveClaimSession(res.token);
         router.push("/claim/edit");
       } else {
-        setError(res.message || "Login gagal.");
+        saveClaimSession(res.token);
+        setError(
+          res.success === false
+            ? res.message || "Login gagal."
+            : "Login gagal karena token sesi tidak valid. Silakan coba lagi.",
+        );
       }
     } catch (err) {
       setError(err?.message?.trim() || "Login gagal.");

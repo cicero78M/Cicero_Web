@@ -4173,9 +4173,14 @@ export async function loginClaimUser(
     throw new Error(message);
   }
 
+  const success = data?.success ?? res.ok;
+  if (success !== false && !isValidClaimToken(data?.token)) {
+    throw new Error("Respons login tidak valid: token claim tidak tersedia atau malformed.");
+  }
+
   return {
     ...data,
-    success: data?.success ?? res.ok,
+    success,
     message,
     token: data?.token,
     user: data?.user,
@@ -4244,8 +4249,14 @@ export async function getUserById(nrp: string): Promise<any> {
   return res.json();
 }
 
-function claimAuthHeaders(token?: string) {
-  return token ? { Authorization: `Bearer ${token}` } : undefined;
+export function isValidClaimToken(token: unknown): token is string {
+  if (typeof token !== "string" || token.length === 0) return false;
+  const segments = token.split(".");
+  return segments.length === 3 && segments.every((segment) => segment.length > 0);
+}
+
+function claimAuthHeaders(token?: unknown) {
+  return isValidClaimToken(token) ? { Authorization: `Bearer ${token}` } : undefined;
 }
 
 function claimResponseError(status: number, data: any, fallback: string): Error {
