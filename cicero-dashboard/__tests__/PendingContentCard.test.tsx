@@ -5,10 +5,12 @@ import type { ClaimPendingContentResponse } from "@/utils/api";
 
 const triageClaimComplaint = jest.fn();
 const escalateClaimComplaint = jest.fn();
+const getClaimComplaint = jest.fn();
 jest.mock("@/utils/api", () => ({
   ...jest.requireActual("@/utils/api"),
   triageClaimComplaint: (...args: unknown[]) => triageClaimComplaint(...args),
   escalateClaimComplaint: (...args: unknown[]) => escalateClaimComplaint(...args),
+  getClaimComplaint: (...args: unknown[]) => getClaimComplaint(...args),
 }));
 
 const platform = (overrides = {}) => ({
@@ -99,6 +101,7 @@ describe("PendingContentCard", () => {
       platform: platformName, content_id: id, triage_code: "ENGAGEMENT_NOT_IN_SNAPSHOT", triage_quality: "medium",
       title: "Aktivitas belum terlihat", summary: "Bukti belum ditemukan.", evidence: [{ label: "Username tersimpan", value: "cicero", status: "tersedia" }],
       solutions: [{ order: 1, label: "Periksa kembali konten." }], last_collected_at: null, can_retry: true, retry_after: null, can_escalate: true,
+      complaint_id: "complaint-1", complaint_created: true, complaint_status: "triaged",
     });
     const item = platformName === "instagram" ? { shortcode: id } : { video_id: id };
     render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={jest.fn()} data={responseData({ [platformName]: platform({ pending_content: 1, items: [{ ...item, url: null, caption: `Konten ${label}`, content_time: null }] }) })} />);
@@ -113,6 +116,8 @@ describe("PendingContentCard", () => {
     expect(screen.getByText("Kualitas triase: medium")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Periksa ulang" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Eskalasi" })).toBeTruthy();
+    expect(screen.getByText("Complaint baru dibuat.")).toBeTruthy();
+    expect(screen.getByText("Status lifecycle terakhir: triaged")).toBeTruthy();
   });
 
   it("tidak menyediakan Komplain saat akun belum terisi", () => {
@@ -126,6 +131,7 @@ describe("PendingContentCard", () => {
       platform: "instagram", content_id: "IG1", triage_code: "ACTIVITY_ALREADY_RECORDED", triage_quality: "high",
       title: "Aktivitas sudah tercatat", summary: "Muat ulang untuk hasil terbaru.", evidence: [], solutions: [{ order: 1, label: "Muat ulang." }],
       last_collected_at: "2026-08-09T03:05:00.000Z", can_retry: false, retry_after: null, can_escalate: false,
+      complaint_id: null, complaint_created: false, complaint_status: null,
     });
     render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={onRefresh} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
     fireEvent.click(screen.getByRole("button", { name: "Komplain" }));
@@ -134,6 +140,54 @@ describe("PendingContentCard", () => {
     await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
     expect(triageClaimComplaint).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Aktivitas sudah tercatat")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Eskalasi" })).toBeNull();
+  });
+
+  it("menampilkan deduplikasi complaint aktif dan mengeskalasi memakai status triase", async () => {
+    triageClaimComplaint.mockResolvedValue({
+      platform: "instagram", content_id: "IG1", triage_code: "ENGAGEMENT_NOT_IN_SNAPSHOT", triage_quality: "medium",
+      title: "Belum terlihat", summary: "Belum ditemukan", evidence: [], solutions: [], last_collected_at: null,
+      can_retry: false, retry_after: null, can_escalate: true, complaint_id: "c-aktif", complaint_created: false, complaint_status: "triaged",
+    });
+    escalateClaimComplaint.mockResolvedValue(undefined);
+    render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={jest.fn()} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
+    fireEvent.click(screen.getByRole("button", { name: "Komplain" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kirim Komplain" }));
+    expect(await screen.findByText("Complaint aktif yang sudah ada digunakan kembali.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Eskalasi" }));
+    await waitFor(() => expect(escalateClaimComplaint).toHaveBeenCalledWith("claim-jwt", "c-aktif", "triaged"));
+  });
+
+  it("memuat status terbaru setelah konflik sebelum menawarkan eskalasi ulang", async () => {
+    const { ClaimComplaintLifecycleError } = jest.requireActual("@/utils/api");
+    triageClaimComplaint.mockResolvedValue({
+      platform: "instagram", content_id: "IG1", triage_code: "ENGAGEMENT_NOT_IN_SNAPSHOT", triage_quality: "medium",
+      title: "Belum terlihat", summary: "Belum ditemukan", evidence: [], solutions: [], last_collected_at: null,
+      can_retry: false, retry_after: null, can_escalate: true, complaint_id: "c-1", complaint_created: false, complaint_status: "triaged",
+    });
+    escalateClaimComplaint.mockRejectedValue(new ClaimComplaintLifecycleError("Status berubah", 409, "CLAIM_COMPLAINT_STATUS_CONFLICT"));
+    getClaimComplaint.mockResolvedValue({ complaint_id: "c-1", status: "reviewed" });
+    render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={jest.fn()} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
+    fireEvent.click(screen.getByRole("button", { name: "Komplain" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kirim Komplain" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Eskalasi" }));
+    await waitFor(() => expect(getClaimComplaint).toHaveBeenCalledWith("claim-jwt", "c-1"));
+    expect(screen.getByRole("alert").textContent).toContain("Status berubah");
+    expect(screen.getByText("Status lifecycle terakhir: reviewed")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Eskalasi" }));
+    await waitFor(() => expect(escalateClaimComplaint).toHaveBeenLastCalledWith("claim-jwt", "c-1", "reviewed"));
+  });
+
+  it("tidak menawarkan eskalasi tanpa complaint_id", async () => {
+    triageClaimComplaint.mockResolvedValue({
+      platform: "instagram", content_id: "IG1", triage_code: "NO_COMPLAINT", triage_quality: "high",
+      title: "Selesai", summary: "Tidak perlu complaint", evidence: [], solutions: [], last_collected_at: null,
+      can_retry: false, retry_after: null, can_escalate: true, complaint_id: null, complaint_created: false, complaint_status: "triaged",
+    });
+    render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={jest.fn()} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
+    fireEvent.click(screen.getByRole("button", { name: "Komplain" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kirim Komplain" }));
+    await screen.findByText("Selesai");
     expect(screen.queryByRole("button", { name: "Eskalasi" })).toBeNull();
   });
 });

@@ -4048,7 +4048,28 @@ export type ClaimComplaintTriage = {
   can_retry: boolean;
   retry_after: string | null;
   can_escalate: boolean;
+  complaint_id: string | null;
+  complaint_created: boolean;
+  complaint_status: string | null;
 };
+
+export type ClaimComplaintLifecycle = {
+  complaint_id: string;
+  status: string;
+  [key: string]: unknown;
+};
+
+export class ClaimComplaintLifecycleError extends Error {
+  status: number;
+  errorCode?: string;
+
+  constructor(message: string, status: number, errorCode?: string) {
+    super(message);
+    this.name = "ClaimComplaintLifecycleError";
+    this.status = status;
+    this.errorCode = errorCode;
+  }
+}
 
 export type ClaimComplaintTriagePayload = {
   platform: "instagram" | "tiktok";
@@ -4286,30 +4307,49 @@ export async function triageClaimComplaint(
 
 export async function escalateClaimComplaint(
   token: string,
-  triage: ClaimComplaintTriage,
+  complaintId: string,
+  complaintStatus: string,
 ): Promise<void> {
-  const createResponse = await fetch(buildApiUrl("/api/claim/complaints"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...claimAuthHeaders(token) },
-    credentials: "include",
-    body: JSON.stringify({ triage }),
-  });
-  const created = await createResponse.json().catch(() => null);
-  if (!createResponse.ok || !created?.data?.complaint_id) {
-    throw new Error(extractResponseMessage(created, "Gagal membuat eskalasi komplain"));
-  }
   const escalationResponse = await fetch(
-    buildApiUrl(`/api/claim/complaints/${encodeURIComponent(created.data.complaint_id)}/escalate`),
+    buildApiUrl(`/api/claim/complaints/${encodeURIComponent(complaintId)}/escalate`),
     {
       method: "POST",
       headers: { "Content-Type": "application/json", ...claimAuthHeaders(token) },
       credentials: "include",
+      body: JSON.stringify({ expected_status: complaintStatus }),
     },
   );
   const escalated = await escalationResponse.json().catch(() => null);
   if (!escalationResponse.ok) {
-    throw new Error(extractResponseMessage(escalated, "Gagal mengeskalasi komplain"));
+    throw new ClaimComplaintLifecycleError(
+      extractResponseMessage(escalated, "Gagal mengeskalasi komplain"),
+      escalationResponse.status,
+      typeof escalated?.error_code === "string" ? escalated.error_code : undefined,
+    );
   }
+}
+
+export async function getClaimComplaint(
+  token: string,
+  complaintId: string,
+): Promise<ClaimComplaintLifecycle> {
+  const response = await fetch(
+    buildApiUrl(`/api/claim/complaints/${encodeURIComponent(complaintId)}`),
+    {
+      method: "GET",
+      headers: claimAuthHeaders(token),
+      credentials: "include",
+    },
+  );
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ClaimComplaintLifecycleError(
+      extractResponseMessage(body, "Gagal memuat status komplain terbaru"),
+      response.status,
+      typeof body?.error_code === "string" ? body.error_code : undefined,
+    );
+  }
+  return body.data as ClaimComplaintLifecycle;
 }
 
 export async function updateClaimProfile(
