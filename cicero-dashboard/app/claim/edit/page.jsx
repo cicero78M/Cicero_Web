@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Edit3, Info, TriangleAlert } from "lucide-react";
+import {
+  CheckCircle2,
+  Edit3,
+  Info,
+  Plus,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
 import PendingContentCard from "@/components/claim/PendingContentCard";
@@ -15,9 +22,71 @@ import {
 import {
   extractInstagramUsername,
   extractTiktokUsername,
-  isValidInstagram,
-  isValidTiktok,
+  normalizeSocialAccountList,
 } from "./socialUtils";
+
+function SocialAccountFields({ platform, values, errors, onChange }) {
+  const key = platform.toLowerCase();
+  const updateRow = (index, value) =>
+    onChange(
+      values.map((item, itemIndex) => (itemIndex === index ? value : item)),
+    );
+  const removeRow = (index) =>
+    onChange(
+      values.length === 1
+        ? [""]
+        : values.filter((_, itemIndex) => itemIndex !== index),
+    );
+  return (
+    <fieldset className="space-y-3 rounded-2xl border border-spirit-200/80 bg-white/70 p-4">
+      <legend className="px-1 text-sm font-semibold text-neutral-navy">
+        Akun {platform}
+      </legend>
+      <p className="text-xs text-neutral-slate">
+        Masukkan username, @username, atau URL profil {platform}.
+      </p>
+      {values.map((value, index) => (
+        <div key={`${key}-${index}`} className="space-y-1">
+          <label
+            htmlFor={`${key}-account-${index}`}
+            className="text-xs font-medium text-neutral-navy"
+          >
+            Username {platform} {index + 1}
+          </label>
+          <div className="flex gap-2">
+            <input
+              id={`${key}-account-${index}`}
+              type="text"
+              value={value}
+              onChange={(event) => updateRow(index, event.target.value)}
+              placeholder="username, @username, atau URL profil"
+              aria-invalid={Boolean(errors[index])}
+              className="min-w-0 flex-1 rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
+            />
+            <button
+              type="button"
+              onClick={() => removeRow(index)}
+              aria-label={`Hapus akun ${platform} ${index + 1}`}
+              className="rounded-2xl border border-red-200 px-3 text-red-500 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+          {errors[index] && (
+            <p className="text-xs text-red-500">{errors[index]}</p>
+          )}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange([...values, ""])}
+        className="inline-flex items-center gap-2 rounded-xl border border-spirit-300 px-3 py-2 text-xs font-medium text-spirit-600 hover:bg-spirit-50"
+      >
+        <Plus className="h-4 w-4" /> Tambah akun {platform}
+      </button>
+    </fieldset>
+  );
+}
 
 export default function EditUserPage() {
   const [claimToken, setClaimToken] = useState("");
@@ -31,11 +100,8 @@ export default function EditUserPage() {
   const [role, setRole] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
-  const [insta, setInsta] = useState("");
-  const [tiktok, setTiktok] = useState("");
-  const [secondaryInstagramUsername, setSecondaryInstagramUsername] =
-    useState("");
-  const [secondaryTiktokUsername, setSecondaryTiktokUsername] = useState("");
+  const [instagramAccounts, setInstagramAccounts] = useState([""]);
+  const [tiktokAccounts, setTiktokAccounts] = useState([""]);
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
@@ -47,10 +113,8 @@ export default function EditUserPage() {
   const [fieldErrors, setFieldErrors] = useState({
     whatsapp: "",
     email: "",
-    insta: "",
-    tiktok: "",
-    secondaryInstagramUsername: "",
-    secondaryTiktokUsername: "",
+    instagramAccounts: [],
+    tiktokAccounts: [],
   });
   const router = useRouter();
 
@@ -78,38 +142,26 @@ export default function EditUserPage() {
       setDesa(user.desa || "");
       setWhatsapp(user.whatsapp || user.no_wa || user.phone || user.telp || "");
       setEmail(user.email || user.mail || user.email_address || "");
-      const instaUsername = extractInstagramUsername(
-        user.instagram_accounts?.[0] || user.insta,
+      const instagramSource = Array.isArray(user.instagram_accounts)
+        ? user.instagram_accounts
+        : user.insta
+          ? [user.insta]
+          : [];
+      const tiktokSource = Array.isArray(user.tiktok_accounts)
+        ? user.tiktok_accounts
+        : user.tiktok
+          ? [user.tiktok]
+          : [];
+      const normalizedInstagram = instagramSource
+        .map(extractInstagramUsername)
+        .filter(Boolean);
+      const normalizedTiktok = tiktokSource
+        .map(extractTiktokUsername)
+        .filter(Boolean);
+      setInstagramAccounts(
+        normalizedInstagram.length ? normalizedInstagram : [""],
       );
-      setInsta(
-        instaUsername ? `https://www.instagram.com/${instaUsername}` : "",
-      );
-      const tiktokUsername = extractTiktokUsername(
-        user.tiktok_accounts?.[0] || user.tiktok,
-      );
-      setTiktok(tiktokUsername ? `https://tiktok.com/${tiktokUsername}` : "");
-
-      const secondaryInstagram =
-        extractInstagramUsername(
-          user.instagram_accounts?.[1] ||
-            user.secondary_instagram_username ||
-            user.instagram_secondary_username ||
-            user.secondary_instagram ||
-            user.insta_2 ||
-            user.insta2,
-        ) || "";
-      setSecondaryInstagramUsername(secondaryInstagram);
-
-      const secondaryTiktok =
-        extractTiktokUsername(
-          user.tiktok_accounts?.[1] ||
-            user.secondary_tiktok_username ||
-            user.tiktok_secondary_username ||
-            user.secondary_tiktok ||
-            user.tiktok_2 ||
-            user.tiktok2,
-        ) || "";
-      setSecondaryTiktokUsername(secondaryTiktok);
+      setTiktokAccounts(normalizedTiktok.length ? normalizedTiktok : [""]);
       loadPendingContent(token);
     } catch (err) {
       if (err?.status === 401 || err?.status === 403) {
@@ -156,10 +208,8 @@ export default function EditUserPage() {
     const nextFieldErrors = {
       whatsapp: "",
       email: "",
-      insta: "",
-      tiktok: "",
-      secondaryInstagramUsername: "",
-      secondaryTiktokUsername: "",
+      instagramAccounts: [],
+      tiktokAccounts: [],
     };
     const whatsappInput = whatsapp.trim();
     const sanitizedWhatsapp = whatsappInput.replace(/(?!^\+)[^\d]/g, "");
@@ -190,57 +240,49 @@ export default function EditUserPage() {
       setError("Email wajib diisi dengan format valid");
     }
 
-    if (insta && !isValidInstagram(insta)) {
-      nextFieldErrors.insta =
-        "Gunakan format https://www.instagram.com/nama_pengguna (contoh: https://www.instagram.com/polri)";
-    }
-
-    if (tiktok && !isValidTiktok(tiktok)) {
-      nextFieldErrors.tiktok =
-        "Gunakan format https://www.tiktok.com/@nama_pengguna (contoh: https://www.tiktok.com/@polri)";
-    }
-
-    if (
-      secondaryInstagramUsername &&
-      !isValidInstagram(secondaryInstagramUsername)
-    ) {
-      nextFieldErrors.secondaryInstagramUsername =
-        "Isi username Instagram akun kedua tanpa spasi (contoh: humas_polres).";
-    }
-
-    if (secondaryTiktokUsername && !isValidTiktok(secondaryTiktokUsername)) {
-      nextFieldErrors.secondaryTiktokUsername =
-        "Isi username TikTok akun kedua tanpa spasi (contoh: humas_polres).";
-    }
+    const normalizedInstagram = normalizeSocialAccountList(
+      instagramAccounts,
+      "instagram",
+    );
+    const normalizedTiktok = normalizeSocialAccountList(
+      tiktokAccounts,
+      "tiktok",
+    );
+    if (!normalizedInstagram.ok)
+      nextFieldErrors.instagramAccounts[normalizedInstagram.index] =
+        normalizedInstagram.message;
+    if (!normalizedTiktok.ok)
+      nextFieldErrors.tiktokAccounts[normalizedTiktok.index] =
+        normalizedTiktok.message;
 
     setFieldErrors(nextFieldErrors);
 
-    if (Object.values(nextFieldErrors).some(Boolean)) {
+    if (
+      nextFieldErrors.whatsapp ||
+      nextFieldErrors.email ||
+      nextFieldErrors.instagramAccounts.some(Boolean) ||
+      nextFieldErrors.tiktokAccounts.some(Boolean)
+    ) {
       return;
     }
-    const instaUsername = extractInstagramUsername(insta);
-    const tiktokUsername = extractTiktokUsername(tiktok);
-    const secondaryInstagram = extractInstagramUsername(
-      secondaryInstagramUsername,
-    );
-    const secondaryTiktok = extractTiktokUsername(secondaryTiktokUsername);
     const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
-      const res = await updateClaimProfile({
-        nama: nama.trim(),
-        title: pangkat.trim(),
-        divisi: satfung.trim(),
-        jabatan: jabatan.trim(),
-        // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
-        desa: isDitbinmasRole ? desa.trim() : "",
-        whatsapp: normalizedWhatsapp,
-        email: normalizedEmail,
-        insta: instaUsername,
-        tiktok: tiktokUsername,
-        instagram_accounts: [instaUsername, secondaryInstagram].filter(Boolean),
-        tiktok_accounts: [tiktokUsername, secondaryTiktok].filter(Boolean),
-      }, claimToken);
+      const res = await updateClaimProfile(
+        {
+          nama: nama.trim(),
+          title: pangkat.trim(),
+          divisi: satfung.trim(),
+          jabatan: jabatan.trim(),
+          // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
+          desa: isDitbinmasRole ? desa.trim() : "",
+          whatsapp: normalizedWhatsapp,
+          email: normalizedEmail,
+          instagram_accounts: normalizedInstagram.accounts,
+          tiktok_accounts: normalizedTiktok.accounts,
+        },
+        claimToken,
+      );
       if (res.success) {
         setMessage("Data berhasil diperbarui");
       } else {
@@ -284,7 +326,11 @@ export default function EditUserPage() {
           error={contentError}
           onRefresh={loadPendingContent}
           claimToken={claimToken}
-          onOpenProfile={() => document.getElementById("claim-profile-form")?.scrollIntoView({ behavior: "smooth" })}
+          onOpenProfile={() =>
+            document
+              .getElementById("claim-profile-form")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
         />
 
         <section className="rounded-3xl border border-spirit-200/80 bg-gradient-to-br from-white/80 via-spirit-50/70 to-trust-50/70 px-6 py-5 text-sm text-neutral-slate shadow-inner">
@@ -292,27 +338,39 @@ export default function EditUserPage() {
             <Info className="mt-0.5 h-5 w-5 text-spirit-500" />
             <div className="space-y-3">
               <p className="text-neutral-navy">
-                Verifikasi kembali nama, pangkat, satfung, dan jabatan sesuai data resmi sebelum menyimpan perubahan.
+                Verifikasi kembali nama, pangkat, satfung, dan jabatan sesuai
+                data resmi sebelum menyimpan perubahan.
               </p>
               <p>
-                Untuk Instagram, buka profilmu lalu ketuk tombol bagikan dan salin tautan penuh dengan format <span className="font-medium text-spirit-600">https://www.instagram.com/nama_pengguna</span>.
+                Untuk Instagram, masukkan username, @username, atau tautan
+                profil yang disalin dari aplikasi.
               </p>
               <p>
-                Untuk TikTok, buka profil di aplikasi atau web, pilih bagikan profil, kemudian salin tautan dengan format <span className="font-medium text-spirit-600">https://www.tiktok.com/@nama_pengguna</span>.
+                Untuk TikTok, masukkan username, @username, atau tautan profil
+                yang disalin dari aplikasi.
               </p>
               <p>
-                Pastikan kedua akun disetel publik agar tim kami dapat melakukan verifikasi.
+                Pastikan kedua akun disetel publik agar tim kami dapat melakukan
+                verifikasi.
               </p>
               <p>
-                Setelah menyesuaikan data dan menempelkan tautan, klik tombol <span className="font-medium text-spirit-600">Simpan</span> agar sistem memperbarui profilmu.
+                Setelah menyesuaikan data akun, klik tombol{" "}
+                <span className="font-medium text-spirit-600">Simpan</span> agar
+                sistem memperbarui profilmu.
               </p>
             </div>
           </div>
         </section>
 
-        <form id="claim-profile-form" onSubmit={handleSubmit} className="space-y-5">
+        <form
+          id="claim-profile-form"
+          onSubmit={handleSubmit}
+          className="space-y-5"
+        >
           {profileLoading && (
-            <p role="status" className="text-sm text-neutral-slate">Memuat profil...</p>
+            <p role="status" className="text-sm text-neutral-slate">
+              Memuat profil...
+            </p>
           )}
           {profileError && (
             <div className="flex items-start gap-3 rounded-2xl border border-red-200/70 bg-red-50/80 px-4 py-3 text-sm text-red-600 shadow-sm">
@@ -335,7 +393,9 @@ export default function EditUserPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Kesatuan</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Kesatuan
+              </label>
               <input
                 type="text"
                 value={kesatuan}
@@ -362,7 +422,9 @@ export default function EditUserPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Nama</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Nama
+              </label>
               <input
                 type="text"
                 value={nama}
@@ -372,7 +434,9 @@ export default function EditUserPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Pangkat</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Pangkat
+              </label>
               <input
                 type="text"
                 value={pangkat}
@@ -384,7 +448,9 @@ export default function EditUserPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Satfung</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Satfung
+              </label>
               <input
                 type="text"
                 value={satfung}
@@ -393,7 +459,9 @@ export default function EditUserPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Jabatan</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Jabatan
+              </label>
               <input
                 type="text"
                 value={jabatan}
@@ -406,7 +474,9 @@ export default function EditUserPage() {
           {/* Aturan bisnis: Desa Binaan hanya relevan/ditampilkan untuk role Ditbinmas. */}
           {isDitbinmasRole && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Desa Binaan</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Desa Binaan
+              </label>
               <input
                 type="text"
                 value={desa}
@@ -417,12 +487,15 @@ export default function EditUserPage() {
           )}
 
           <section className="rounded-2xl border border-spirit-200/80 bg-spirit-50/70 px-4 py-4 text-sm text-neutral-navy shadow-inner">
-            silahkan isi / perbaiki no whatsapp dan email agar kami dapat lebih mudah mengirimkan informasi terbaru kepada anda.
+            silahkan isi / perbaiki no whatsapp dan email agar kami dapat lebih
+            mudah mengirimkan informasi terbaru kepada anda.
           </section>
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">No WhatsApp</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                No WhatsApp
+              </label>
               <input
                 type="tel"
                 inputMode="numeric"
@@ -434,14 +507,13 @@ export default function EditUserPage() {
                   const sanitizedDigits = sanitizedValue.replace(/^\+/, "");
                   setFieldErrors((prev) => ({
                     ...prev,
-                    whatsapp:
-                      !sanitizedValue
-                        ? ""
-                        : sanitizedDigits.length < 8
-                          ? "No WhatsApp terlalu pendek (minimal 8 digit)."
-                          : /^\d+$/.test(sanitizedDigits)
-                            ? ""
-                            : "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.",
+                    whatsapp: !sanitizedValue
+                      ? ""
+                      : sanitizedDigits.length < 8
+                        ? "No WhatsApp terlalu pendek (minimal 8 digit)."
+                        : /^\d+$/.test(sanitizedDigits)
+                          ? ""
+                          : "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.",
                   }));
                 }}
                 placeholder="08xxxxxxxxxx / +628xxxxxxxxxx"
@@ -456,7 +528,9 @@ export default function EditUserPage() {
               )}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">Email</label>
+              <label className="text-sm font-medium text-neutral-navy">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -476,100 +550,18 @@ export default function EditUserPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-navy">Link Profil Instagram</label>
-            <input
-              type="text"
-              value={insta}
-              onChange={(e) => {
-                const value = e.target.value;
-                setInsta(value);
-                if (!value || isValidInstagram(value)) {
-                  setFieldErrors((prev) => ({ ...prev, insta: "" }));
-                }
-              }}
-              placeholder="https://www.instagram.com/nama_pengguna"
-              className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
-            />
-            {fieldErrors.insta && (
-              <p className="text-xs text-red-500">{fieldErrors.insta}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-navy">Link Profil TikTok</label>
-            <input
-              type="text"
-              value={tiktok}
-              onChange={(e) => {
-                const value = e.target.value;
-                setTiktok(value);
-                if (!value || isValidTiktok(value)) {
-                  setFieldErrors((prev) => ({ ...prev, tiktok: "" }));
-                }
-              }}
-              placeholder="https://www.tiktok.com/@nama_pengguna"
-              className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
-            />
-            {fieldErrors.tiktok && (
-              <p className="text-xs text-red-500">{fieldErrors.tiktok}</p>
-            )}
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">
-                Username Instagram Akun Kedua
-              </label>
-              <input
-                type="text"
-                value={secondaryInstagramUsername}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSecondaryInstagramUsername(value);
-                  if (!value || isValidInstagram(value)) {
-                    setFieldErrors((prev) => ({
-                      ...prev,
-                      secondaryInstagramUsername: "",
-                    }));
-                  }
-                }}
-                placeholder="contoh: humas_polres"
-                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
-              />
-              {fieldErrors.secondaryInstagramUsername && (
-                <p className="text-xs text-red-500">
-                  {fieldErrors.secondaryInstagramUsername}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-navy">
-                Username TikTok Akun Kedua
-              </label>
-              <input
-                type="text"
-                value={secondaryTiktokUsername}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSecondaryTiktokUsername(value);
-                  if (!value || isValidTiktok(value)) {
-                    setFieldErrors((prev) => ({
-                      ...prev,
-                      secondaryTiktokUsername: "",
-                    }));
-                  }
-                }}
-                placeholder="contoh: humas_polres"
-                className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
-              />
-              {fieldErrors.secondaryTiktokUsername && (
-                <p className="text-xs text-red-500">
-                  {fieldErrors.secondaryTiktokUsername}
-                </p>
-              )}
-            </div>
-          </div>
+          <SocialAccountFields
+            platform="Instagram"
+            values={instagramAccounts}
+            errors={fieldErrors.instagramAccounts}
+            onChange={setInstagramAccounts}
+          />
+          <SocialAccountFields
+            platform="TikTok"
+            values={tiktokAccounts}
+            errors={fieldErrors.tiktokAccounts}
+            onChange={setTiktokAccounts}
+          />
 
           <button
             type="submit"

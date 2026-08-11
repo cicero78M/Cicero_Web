@@ -3918,8 +3918,9 @@ export type ClaimProfileDto = {
   email: string | null;
   insta: string | null;
   tiktok: string | null;
-  instagram_accounts: string[];
-  tiktok_accounts: string[];
+  /** Canonical account lists; absent only on legacy backend responses. */
+  instagram_accounts?: string[];
+  tiktok_accounts?: string[];
   ditbinmas: boolean;
   ditlantas: boolean;
   bidhumas: boolean;
