@@ -3905,6 +3905,52 @@ export type ClaimAuthResponse = {
   user?: any;
 };
 
+/** Profile fields returned by the authenticated claim profile endpoints. */
+export type ClaimProfileDto = {
+  user_id: string;
+  nama: string | null;
+  title: string | null;
+  divisi: string | null;
+  jabatan: string | null;
+  desa: string | null;
+  client_id: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  insta: string | null;
+  tiktok: string | null;
+  instagram_accounts: string[];
+  tiktok_accounts: string[];
+  ditbinmas: boolean;
+  ditlantas: boolean;
+  bidhumas: boolean;
+  ditsamapta: boolean;
+  ditintelkam: boolean;
+  operator: boolean;
+};
+
+export type ClaimProfileResponse = {
+  success: boolean;
+  message?: string;
+  data: ClaimProfileDto;
+};
+
+export type UpdateClaimProfilePayload = Partial<
+  Pick<
+    ClaimProfileDto,
+    | "nama"
+    | "title"
+    | "divisi"
+    | "jabatan"
+    | "desa"
+    | "whatsapp"
+    | "email"
+    | "insta"
+    | "tiktok"
+    | "instagram_accounts"
+    | "tiktok_accounts"
+  >
+>;
+
 export type ClaimCredentialPayload = {
   nrp: string;
   password: string;
@@ -4104,36 +4150,28 @@ export async function getUserById(nrp: string): Promise<any> {
   return res.json();
 }
 
-// Fetch user data in claim flow after credential verification
-export async function getClaimUserData(
-  nrp: string,
-  password: string,
-): Promise<any> {
-  const url = buildApiUrl("/api/claim/user-data");
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ nrp, password }),
-  });
-
-  let data: any = null;
-  try {
-    data = await res.json();
-  } catch (error) {
-    data = null;
-  }
-
-  if (!res.ok) {
-    const message = extractResponseMessage(data, "Gagal mengambil data user");
-    throw new Error(message);
-  }
-
-  return data;
-}
-
 function claimAuthHeaders(token?: string) {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
+}
+
+function claimResponseError(status: number, data: any, fallback: string): Error {
+  return Object.assign(new Error(extractResponseMessage(data, fallback)), { status });
+}
+
+export async function getClaimProfile(token?: string): Promise<ClaimProfileResponse> {
+  const url = buildApiUrl("/api/claim/me");
+  const res = await fetch(url, {
+    method: "GET",
+    headers: claimAuthHeaders(token),
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw claimResponseError(res.status, data, "Gagal mengambil data user");
+  }
+
+  return data as ClaimProfileResponse;
 }
 
 export async function getClaimPendingContent(token?: string): Promise<ClaimPendingContentResponse> {
@@ -4202,34 +4240,18 @@ export async function escalateClaimComplaint(
   }
 }
 
-// Update user data after credential verification
-export async function updateUserViaClaim(
-  data: {
-    nrp: string;
-    password: string;
-    nama?: string;
-    title?: string;
-    divisi?: string;
-    jabatan?: string;
-    desa?: string;
-    whatsapp?: string;
-    no_wa?: string;
-    email?: string;
-    insta?: string;
-    tiktok?: string;
-  },
-): Promise<any> {
-  const url = buildApiUrl("/api/claim/update");
+export async function updateClaimProfile(
+  data: UpdateClaimProfilePayload,
+  token?: string,
+): Promise<ClaimProfileResponse> {
+  const url = buildApiUrl("/api/claim/me");
   const payload: Record<string, unknown> = { ...data };
-  if (typeof payload.whatsapp === "string" && !payload.no_wa) {
-    payload.no_wa = payload.whatsapp;
-  }
-  if (typeof payload.no_wa === "string" && !payload.whatsapp) {
-    payload.whatsapp = payload.no_wa;
-  }
+  delete payload.nrp;
+  delete payload.user_id;
+  delete payload.password;
   const res = await fetch(url, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...claimAuthHeaders(token) },
     credentials: "include",
     body: JSON.stringify(payload),
   });
@@ -4271,7 +4293,7 @@ export async function updateUserViaClaim(
     } catch (err) {
       // Ignore parsing errors and fall back to default message
     }
-    throw new Error(message);
+    throw Object.assign(new Error(message), { status: res.status });
   }
-  return res.json();
+  return res.json() as Promise<ClaimProfileResponse>;
 }

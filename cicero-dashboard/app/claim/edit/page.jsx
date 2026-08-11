@@ -8,9 +8,9 @@ import ClaimLayout from "@/components/claim/ClaimLayout";
 import PendingContentCard from "@/components/claim/PendingContentCard";
 import {
   getClaimPendingContent,
-  getClaimUserData,
+  getClaimProfile,
   normalizeWhatsapp,
-  updateUserViaClaim,
+  updateClaimProfile,
 } from "@/utils/api";
 import {
   extractInstagramUsername,
@@ -20,8 +20,6 @@ import {
 } from "./socialUtils";
 
 export default function EditUserPage() {
-  const [nrp, setNrp] = useState("");
-  const [password, setPassword] = useState("");
   const [claimToken, setClaimToken] = useState("");
   const [kesatuan, setKesatuan] = useState("");
   const [nama, setNama] = useState("");
@@ -57,28 +55,19 @@ export default function EditUserPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const n = sessionStorage.getItem("claim_nrp");
-      const w = sessionStorage.getItem("claim_password");
       const token = sessionStorage.getItem("claim_token");
-      if (!n || !w || !token) {
-        router.replace("/claim");
-        return;
-      }
-      setNrp(n);
-      setPassword(w);
-      setClaimToken(token);
-      loadUser(n, w);
-      loadPendingContent(token);
+      setClaimToken(token || "");
+      loadUser(token || "");
     }
   }, [router]);
 
-  async function loadUser(n, w) {
+  async function loadUser(token) {
     setProfileLoading(true);
     setProfileError("");
     try {
-      const res = await getClaimUserData(n, w);
+      const res = await getClaimProfile(token);
       const user = res.data || res.user || res;
-      setRole(user.role || user.user_role || user.userRole || "");
+      setRole(user.ditbinmas ? "ditbinmas" : "");
       setKesatuan(user.nama_client || user.client_name || user.client_id || "");
       setNama(user.nama || "");
       setPangkat(user.title || "");
@@ -87,16 +76,21 @@ export default function EditUserPage() {
       setDesa(user.desa || "");
       setWhatsapp(user.whatsapp || user.no_wa || user.phone || user.telp || "");
       setEmail(user.email || user.mail || user.email_address || "");
-      const instaUsername = extractInstagramUsername(user.insta);
+      const instaUsername = extractInstagramUsername(
+        user.instagram_accounts?.[0] || user.insta,
+      );
       setInsta(
         instaUsername ? `https://www.instagram.com/${instaUsername}` : "",
       );
-      const tiktokUsername = extractTiktokUsername(user.tiktok);
+      const tiktokUsername = extractTiktokUsername(
+        user.tiktok_accounts?.[0] || user.tiktok,
+      );
       setTiktok(tiktokUsername ? `https://tiktok.com/${tiktokUsername}` : "");
 
       const secondaryInstagram =
         extractInstagramUsername(
-          user.secondary_instagram_username ||
+          user.instagram_accounts?.[1] ||
+            user.secondary_instagram_username ||
             user.instagram_secondary_username ||
             user.secondary_instagram ||
             user.insta_2 ||
@@ -106,14 +100,20 @@ export default function EditUserPage() {
 
       const secondaryTiktok =
         extractTiktokUsername(
-          user.secondary_tiktok_username ||
+          user.tiktok_accounts?.[1] ||
+            user.secondary_tiktok_username ||
             user.tiktok_secondary_username ||
             user.secondary_tiktok ||
             user.tiktok_2 ||
             user.tiktok2,
         ) || "";
       setSecondaryTiktokUsername(secondaryTiktok);
+      loadPendingContent(token);
     } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        router.replace("/claim");
+        return;
+      }
       const message = err?.message?.trim()
         ? err.message
         : "Gagal mengambil data user";
@@ -225,9 +225,7 @@ export default function EditUserPage() {
     const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
-      const res = await updateUserViaClaim({
-        nrp,
-        password,
+      const res = await updateClaimProfile({
         nama: nama.trim(),
         title: pangkat.trim(),
         divisi: satfung.trim(),
@@ -235,15 +233,12 @@ export default function EditUserPage() {
         // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
         desa: isDitbinmasRole ? desa.trim() : "",
         whatsapp: normalizedWhatsapp,
-        no_wa: normalizedWhatsapp,
         email: normalizedEmail,
         insta: instaUsername,
         tiktok: tiktokUsername,
-        secondary_instagram_username: secondaryInstagram,
-        secondary_tiktok_username: secondaryTiktok,
-        instagram_secondary_username: secondaryInstagram,
-        tiktok_secondary_username: secondaryTiktok,
-      });
+        instagram_accounts: [instaUsername, secondaryInstagram].filter(Boolean),
+        tiktok_accounts: [tiktokUsername, secondaryTiktok].filter(Boolean),
+      }, claimToken);
       if (res.success) {
         setMessage("Data berhasil diperbarui");
       } else {

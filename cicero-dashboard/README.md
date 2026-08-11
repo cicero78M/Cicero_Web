@@ -326,8 +326,8 @@ Flow claim sekarang mengikuti update backend terbaru (tanpa OTP email). Halaman 
 
 1. **Registrasi claim** (`POST /api/claim/register`) dengan payload `nrp` + `password`.
 2. **Login claim** (`POST /api/auth/user-login`) dengan payload `nrp` + `password`.
-3. Setelah login sukses, frontend menyimpan `claim_nrp` + `claim_password` di `sessionStorage` lalu mengarahkan pengguna ke `app/claim/edit/page.jsx`.
-4. Halaman edit mengambil data melalui `getClaimUserData(nrp, password)` (`POST /api/claim/user-data`) dan menyimpan perubahan via `updateUserViaClaim` (`PUT /api/claim/update`) menggunakan kredensial yang sama.
+3. Setelah login sukses, frontend hanya menyimpan token kompatibilitas Bearer (jika backend mengirimkannya), tidak menyimpan NRP atau password, lalu mengarahkan pengguna ke `app/claim/edit/page.jsx`.
+4. Halaman edit memvalidasi sesi cookie HttpOnly melalui `getClaimProfile()` (`GET /api/claim/me`) dan menyimpan perubahan via `updateClaimProfile()` (`PUT /api/claim/me`) tanpa mengirim NRP, user ID, atau password.
 
 ### Aturan password strength di UI registrasi claim
 
