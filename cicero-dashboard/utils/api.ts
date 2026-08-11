@@ -3991,6 +3991,50 @@ export type ClaimPendingContentResponse = {
   };
 };
 
+export type ClaimSocialPlatform = "instagram" | "tiktok";
+
+export type ClaimSocialProfileDataQuality = {
+  score: number;
+  label: "complete" | "partial" | "limited" | string;
+  components: Array<{
+    field: string;
+    available: boolean;
+    points: number;
+  }>;
+  explanation?: string;
+};
+
+export type ClaimSocialProfileDto = {
+  platform: ClaimSocialPlatform;
+  username: string;
+  found: boolean;
+  profile_name: string | null;
+  avatar_url: string | null;
+  is_private: boolean;
+  is_verified: boolean;
+  followers: number | null;
+  following: number | null;
+  content_count: number | null;
+  data_quality: ClaimSocialProfileDataQuality;
+};
+
+export type ClaimSocialProfileValidationResponse = {
+  success: boolean;
+  data: ClaimSocialProfileDto;
+};
+
+export class ClaimSocialProfileValidationError extends Error {
+  status: number;
+  errorCode?: string;
+
+  constructor(message: string, status: number, errorCode?: string) {
+    super(message);
+    this.name = "ClaimSocialProfileValidationError";
+    this.status = status;
+    this.errorCode = errorCode;
+  }
+}
+
 export type ClaimComplaintTriage = {
   platform: "instagram" | "tiktok";
   content_id: string;
@@ -4191,6 +4235,33 @@ export async function getClaimPendingContent(token?: string): Promise<ClaimPendi
   }
 
   return data as ClaimPendingContentResponse;
+}
+
+/** Read-only validation used by the claim edit form before profile persistence. */
+export async function validateClaimSocialProfile(
+  payload: { platform: ClaimSocialPlatform; username: string },
+  token?: string,
+): Promise<ClaimSocialProfileValidationResponse> {
+  const res = await fetch(buildApiUrl("/api/claim/social-profile/validate"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...claimAuthHeaders(token) },
+    credentials: "include",
+    body: JSON.stringify({
+      platform: payload.platform,
+      username: payload.username,
+    }),
+  });
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new ClaimSocialProfileValidationError(
+      extractResponseMessage(data, "Gagal memeriksa profil sosial"),
+      res.status,
+      typeof data?.error_code === "string" ? data.error_code : undefined,
+    );
+  }
+
+  return data as ClaimSocialProfileValidationResponse;
 }
 
 export async function triageClaimComplaint(
