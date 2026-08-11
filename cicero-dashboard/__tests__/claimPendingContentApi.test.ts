@@ -43,7 +43,7 @@ describe("claim complaint lifecycle API", () => {
   it.each([201, 200])("mengembalikan metadata complaint dari triase HTTP %s", async (status) => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, status, json: async () => ({ success: true, data: { ...triageData, complaint_created: status === 201 } }) });
     const { triageClaimComplaint } = await import("@/utils/api");
-    await expect(triageClaimComplaint("claim-jwt", { platform: "instagram", issue_type: "activity_not_recorded", shortcode: "IG1" })).resolves.toMatchObject({
+    await expect(triageClaimComplaint("header.payload.signature", { platform: "instagram", issue_type: "activity_not_recorded", shortcode: "IG1" })).resolves.toMatchObject({
       complaint_id: "complaint/1",
       complaint_created: status === 201,
       complaint_status: "triaged",
@@ -54,7 +54,7 @@ describe("claim complaint lifecycle API", () => {
   it("langsung mengeskalasi complaint dengan expected_status tanpa membuat ulang", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, status: 200, json: async () => ({ success: true }) });
     const { escalateClaimComplaint } = await import("@/utils/api");
-    await escalateClaimComplaint("claim-jwt", "complaint/1", "triaged");
+    await escalateClaimComplaint("header.payload.signature", "complaint/1", "triaged");
     expect(global.fetch).toHaveBeenCalledTimes(1);
     expect(global.fetch).toHaveBeenCalledWith("https://api.cicero.test/api/claim/complaints/complaint%2F1/escalate", expect.objectContaining({
       method: "POST",
@@ -65,7 +65,7 @@ describe("claim complaint lifecycle API", () => {
   it("mempertahankan kode, status, dan pesan backend pada konflik lifecycle", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 409, json: async () => ({ error_code: "CLAIM_COMPLAINT_STATUS_CONFLICT", message: "Status complaint telah berubah" }) });
     const { escalateClaimComplaint } = await import("@/utils/api");
-    await expect(escalateClaimComplaint("claim-jwt", "c-1", "triaged")).rejects.toMatchObject({
+    await expect(escalateClaimComplaint("header.payload.signature", "c-1", "triaged")).rejects.toMatchObject({
       status: 409,
       errorCode: "CLAIM_COMPLAINT_STATUS_CONFLICT",
       message: "Status complaint telah berubah",
@@ -75,13 +75,13 @@ describe("claim complaint lifecycle API", () => {
   it.each([404, 422])("meneruskan pesan backend untuk response %s tanpa status buatan frontend", async (status) => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status, json: async () => ({ error_code: "BACKEND_CODE", message: `Pesan backend ${status}` }) });
     const { escalateClaimComplaint } = await import("@/utils/api");
-    await expect(escalateClaimComplaint("claim-jwt", "c-1", "triaged")).rejects.toMatchObject({ status, message: `Pesan backend ${status}` });
+    await expect(escalateClaimComplaint("header.payload.signature", "c-1", "triaged")).rejects.toMatchObject({ status, message: `Pesan backend ${status}` });
   });
 
   it("memuat lifecycle complaint terbaru", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: { complaint_id: "c-1", status: "resolved" } }) });
     const { getClaimComplaint } = await import("@/utils/api");
-    await expect(getClaimComplaint("claim-jwt", "c-1")).resolves.toEqual({ complaint_id: "c-1", status: "resolved" });
+    await expect(getClaimComplaint("header.payload.signature", "c-1")).resolves.toEqual({ complaint_id: "c-1", status: "resolved" });
     expect(global.fetch).toHaveBeenCalledWith("https://api.cicero.test/api/claim/complaints/c-1", expect.objectContaining({ method: "GET" }));
   });
 
@@ -93,14 +93,14 @@ describe("claim complaint lifecycle API", () => {
     });
     const { getClaimComplaints } = await import("@/utils/api");
 
-    await expect(getClaimComplaints("claim-jwt")).resolves.toEqual([
+    await expect(getClaimComplaints("header.payload.signature")).resolves.toEqual([
       { complaint_id: "c-1", status: "triaged" },
     ]);
     expect(global.fetch).toHaveBeenCalledWith(
       "https://api.cicero.test/api/claim/complaints",
       {
         method: "GET",
-        headers: { Authorization: "Bearer claim-jwt" },
+        headers: { Authorization: "Bearer header.payload.signature" },
         credentials: "include",
       },
     );
@@ -108,4 +108,20 @@ describe("claim complaint lifecycle API", () => {
     expect(url).not.toMatch(/[?&](user_id|nrp|client_id)=/);
     expect(init).not.toHaveProperty("body");
   });
+
+  it.each([undefined, "", "[object Object]", "header.payload", "header..signature"])(
+    "tidak mengirim Bearer header untuk token malformed: %p",
+    async (token) => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [] }),
+      });
+      const { getClaimComplaints } = await import("@/utils/api");
+
+      await getClaimComplaints(token as string | undefined);
+
+      expect((global.fetch as jest.Mock).mock.calls[0][1].headers).toBeUndefined();
+    },
+  );
 });
