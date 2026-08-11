@@ -5,6 +5,7 @@ import {
   getClaimPendingContent,
   getClaimProfile,
   updateClaimProfile,
+  validateClaimSocialProfile,
 } from "@/utils/api";
 
 const replace = jest.fn();
@@ -29,6 +30,7 @@ jest.mock("@/utils/api", () => ({
   getClaimProfile: jest.fn(),
   normalizeWhatsapp: jest.fn((value: string) => value),
   updateClaimProfile: jest.fn(),
+  validateClaimSocialProfile: jest.fn(),
 }));
 
 describe("EditUserPage", () => {
@@ -52,6 +54,19 @@ describe("EditUserPage", () => {
     });
     (getClaimPendingContent as jest.Mock).mockResolvedValue({ data: null });
     (updateClaimProfile as jest.Mock).mockResolvedValue({ success: true });
+    (validateClaimSocialProfile as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        found: true,
+        profile_name: "Cicero Resmi",
+        is_private: false,
+        data_quality: {
+          score: 80,
+          label: "partial",
+          explanation: "Kelengkapan data, bukan keaslian akun.",
+        },
+      },
+    });
   });
 
   it("merender saat loading lalu menampilkan NRP terverifikasi dari profil", async () => {
@@ -153,5 +168,82 @@ describe("EditUserPage", () => {
       await screen.findByText(/Instagram terduplikasi/),
     ).toBeInTheDocument();
     expect(updateClaimProfile).not.toHaveBeenCalled();
+  });
+
+  it("menampilkan status sukses dan DTO kualitas tanpa menyimpulkan keaslian", async () => {
+    render(<EditUserPage />);
+    await screen.findByDisplayValue("utama.ig");
+    fireEvent.click(screen.getAllByRole("button", { name: "Periksa username" })[0]);
+
+    expect(await screen.findByText("Profil ditemukan")).toBeInTheDocument();
+    expect(screen.getByText(/Cicero Resmi/)).toBeInTheDocument();
+    expect(screen.getByText(/Publik/)).toBeInTheDocument();
+    expect(screen.getByText(/partial \(80\/100\)/)).toBeInTheDocument();
+    expect(screen.getByText(/bukan keaslian akun/i)).toBeInTheDocument();
+    expect(validateClaimSocialProfile).toHaveBeenCalledWith(
+      { platform: "instagram", username: "utama.ig" },
+      "claim-jwt",
+    );
+  });
+
+  it("menampilkan profil tidak ditemukan sebagai hasil non-blocking", async () => {
+    (validateClaimSocialProfile as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error("Akun tidak ditemukan."), {
+        errorCode: "CLAIM_SOCIAL_PROFILE_NOT_FOUND",
+        status: 404,
+      }),
+    );
+    render(<EditUserPage />);
+    await screen.findByDisplayValue("utama.ig");
+    fireEvent.click(screen.getAllByRole("button", { name: "Periksa username" })[0]);
+
+    expect(await screen.findByText("Profil tidak ditemukan.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+    await waitFor(() => expect(updateClaimProfile).toHaveBeenCalled());
+  });
+
+  it("menampilkan indikator profil privat", async () => {
+    (validateClaimSocialProfile as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {
+        found: true,
+        profile_name: "Profil Privat",
+        is_private: true,
+        data_quality: { score: 40, label: "limited" },
+      },
+    });
+    render(<EditUserPage />);
+    await screen.findByDisplayValue("utama.ig");
+    fireEvent.click(screen.getAllByRole("button", { name: "Periksa username" })[0]);
+    expect(await screen.findByText("Privat")).toBeInTheDocument();
+  });
+
+  it("mempertahankan nilai dan penyimpanan saat upstream unavailable", async () => {
+    (validateClaimSocialProfile as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error("Layanan validasi profil sedang terganggu."), {
+        errorCode: "CLAIM_SOCIAL_UPSTREAM_UNAVAILABLE",
+        status: 502,
+      }),
+    );
+    render(<EditUserPage />);
+    await screen.findByDisplayValue("utama.ig");
+    fireEvent.click(screen.getAllByRole("button", { name: "Periksa username" })[0]);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/coba lagi/i);
+    expect(screen.getByLabelText("Username Instagram 1")).toHaveValue("utama.ig");
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+    await waitFor(() => expect(updateClaimProfile).toHaveBeenCalled());
+  });
+
+  it("mereset hasil validasi ketika input berubah", async () => {
+    render(<EditUserPage />);
+    await screen.findByDisplayValue("utama.ig");
+    fireEvent.click(screen.getAllByRole("button", { name: "Periksa username" })[0]);
+    expect(await screen.findByText("Profil ditemukan")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Username Instagram 1"), {
+      target: { value: "username.baru" },
+    });
+    expect(screen.queryByText("Profil ditemukan")).not.toBeInTheDocument();
   });
 });

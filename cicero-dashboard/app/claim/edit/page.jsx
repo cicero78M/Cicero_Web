@@ -18,6 +18,7 @@ import {
   getClaimProfile,
   normalizeWhatsapp,
   updateClaimProfile,
+  validateClaimSocialProfile,
 } from "@/utils/api";
 import {
   extractInstagramUsername,
@@ -25,17 +26,63 @@ import {
   normalizeSocialAccountList,
 } from "./socialUtils";
 
-function SocialAccountFields({ platform, values, errors, onChange }) {
+const DEFINITIVE_SOCIAL_ERROR_CODES = new Set([
+  "CLAIM_SOCIAL_PLATFORM_INVALID",
+  "CLAIM_SOCIAL_USERNAME_INVALID",
+  "CLAIM_SOCIAL_USERNAME_FORBIDDEN",
+  "CLAIM_SOCIAL_USERNAME_DUPLICATE",
+  "CLAIM_SOCIAL_USERNAME_CONFLICT",
+]);
+
+function SocialValidationResult({ validation }) {
+  if (!validation) return null;
+  if (validation.status === "loading") {
+    return <p role="status" className="text-xs text-spirit-600">Memeriksa username...</p>;
+  }
+  if (validation.status === "warning") {
+    return (
+      <p role="alert" className="text-xs text-amber-700">
+        {validation.message} Nilai tetap dapat disimpan; silakan coba lagi.
+      </p>
+    );
+  }
+  if (validation.status === "error") {
+    return <p role="alert" className="text-xs text-red-500">{validation.message}</p>;
+  }
+  if (!validation.data?.found) {
+    return <p className="text-xs font-medium text-amber-700">Profil tidak ditemukan.</p>;
+  }
+
+  const profile = validation.data;
+  const quality = profile.data_quality;
+  return (
+    <div className="rounded-xl border border-spirit-200 bg-spirit-50/70 p-3 text-xs text-neutral-slate">
+      <p className="font-semibold text-neutral-navy">Profil ditemukan</p>
+      <dl className="mt-1 grid gap-x-3 gap-y-1 sm:grid-cols-2">
+        <div><dt className="inline font-medium">Nama profil: </dt><dd className="inline">{profile.profile_name || "Tidak tersedia"}</dd></div>
+        <div><dt className="inline font-medium">Visibilitas: </dt><dd className="inline">{profile.is_private ? "Privat" : "Publik"}</dd></div>
+        <div><dt className="inline font-medium">Kualitas data: </dt><dd className="inline">{quality?.label || "Tidak tersedia"}{Number.isFinite(quality?.score) ? ` (${quality.score}/100)` : ""}</dd></div>
+      </dl>
+      <p className="mt-2">{quality?.explanation || "Kualitas data hanya menunjukkan kelengkapan data yang tersedia, bukan keaslian akun."}</p>
+    </div>
+  );
+}
+
+function SocialAccountFields({ platform, values, errors, validations, onChange, onValidate }) {
   const key = platform.toLowerCase();
   const updateRow = (index, value) =>
     onChange(
       values.map((item, itemIndex) => (itemIndex === index ? value : item)),
+      validations.map((item, itemIndex) => (itemIndex === index ? null : item)),
     );
   const removeRow = (index) =>
     onChange(
       values.length === 1
         ? [""]
         : values.filter((_, itemIndex) => itemIndex !== index),
+      values.length === 1
+        ? [null]
+        : validations.filter((_, itemIndex) => itemIndex !== index),
     );
   return (
     <fieldset className="space-y-3 rounded-2xl border border-spirit-200/80 bg-white/70 p-4">
@@ -75,11 +122,20 @@ function SocialAccountFields({ platform, values, errors, onChange }) {
           {errors[index] && (
             <p className="text-xs text-red-500">{errors[index]}</p>
           )}
+          <button
+            type="button"
+            disabled={validations[index]?.status === "loading"}
+            onClick={() => onValidate(index, value)}
+            className="rounded-xl border border-spirit-300 px-3 py-2 text-xs font-medium text-spirit-600 hover:bg-spirit-50 disabled:cursor-wait disabled:opacity-60"
+          >
+            {validations[index]?.status === "loading" ? "Memeriksa..." : "Periksa username"}
+          </button>
+          <SocialValidationResult validation={validations[index]} />
         </div>
       ))}
       <button
         type="button"
-        onClick={() => onChange([...values, ""])}
+        onClick={() => onChange([...values, ""], [...validations, null])}
         className="inline-flex items-center gap-2 rounded-xl border border-spirit-300 px-3 py-2 text-xs font-medium text-spirit-600 hover:bg-spirit-50"
       >
         <Plus className="h-4 w-4" /> Tambah akun {platform}
@@ -102,6 +158,8 @@ export default function EditUserPage() {
   const [email, setEmail] = useState("");
   const [instagramAccounts, setInstagramAccounts] = useState([""]);
   const [tiktokAccounts, setTiktokAccounts] = useState([""]);
+  const [instagramValidations, setInstagramValidations] = useState([null]);
+  const [tiktokValidations, setTiktokValidations] = useState([null]);
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
@@ -162,6 +220,10 @@ export default function EditUserPage() {
         normalizedInstagram.length ? normalizedInstagram : [""],
       );
       setTiktokAccounts(normalizedTiktok.length ? normalizedTiktok : [""]);
+      setInstagramValidations(
+        Array(normalizedInstagram.length || 1).fill(null),
+      );
+      setTiktokValidations(Array(normalizedTiktok.length || 1).fill(null));
       loadPendingContent(token);
     } catch (err) {
       if (err?.status === 401 || err?.status === 403) {
@@ -198,6 +260,49 @@ export default function EditUserPage() {
     emailInput.value = emailAddress;
 
     return emailInput.checkValidity();
+  }
+
+  async function handleSocialValidation(platform, index, username) {
+    const setValidations =
+      platform === "instagram"
+        ? setInstagramValidations
+        : setTiktokValidations;
+    setValidations((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { status: "loading", input: username } : item,
+      ),
+    );
+    try {
+      const response = await validateClaimSocialProfile(
+        { platform, username },
+        claimToken,
+      );
+      setValidations((current) =>
+        current.map((item, itemIndex) =>
+          itemIndex === index && item?.input === username
+            ? { status: "success", data: response.data }
+            : item,
+        ),
+      );
+    } catch (validationError) {
+      const errorCode = validationError?.errorCode;
+      const notFound = errorCode === "CLAIM_SOCIAL_PROFILE_NOT_FOUND";
+      const definitive = DEFINITIVE_SOCIAL_ERROR_CODES.has(errorCode);
+      setValidations((current) =>
+        current.map((item, itemIndex) => {
+          if (itemIndex !== index || item?.input !== username) return item;
+          if (notFound) {
+            return { status: "success", data: { found: false } };
+          }
+          return {
+            status: definitive ? "error" : "warning",
+            blocking: definitive,
+            message:
+              validationError?.message || "Validasi profil belum dapat dilakukan.",
+          };
+        }),
+      );
+    }
   }
 
   async function handleSubmit(e) {
@@ -254,6 +359,17 @@ export default function EditUserPage() {
     if (!normalizedTiktok.ok)
       nextFieldErrors.tiktokAccounts[normalizedTiktok.index] =
         normalizedTiktok.message;
+
+    instagramValidations.forEach((validation, index) => {
+      if (validation?.blocking) {
+        nextFieldErrors.instagramAccounts[index] = validation.message;
+      }
+    });
+    tiktokValidations.forEach((validation, index) => {
+      if (validation?.blocking) {
+        nextFieldErrors.tiktokAccounts[index] = validation.message;
+      }
+    });
 
     setFieldErrors(nextFieldErrors);
 
@@ -554,13 +670,27 @@ export default function EditUserPage() {
             platform="Instagram"
             values={instagramAccounts}
             errors={fieldErrors.instagramAccounts}
-            onChange={setInstagramAccounts}
+            validations={instagramValidations}
+            onChange={(values, validations) => {
+              setInstagramAccounts(values);
+              setInstagramValidations(validations);
+            }}
+            onValidate={(index, value) =>
+              handleSocialValidation("instagram", index, value)
+            }
           />
           <SocialAccountFields
             platform="TikTok"
             values={tiktokAccounts}
             errors={fieldErrors.tiktokAccounts}
-            onChange={setTiktokAccounts}
+            validations={tiktokValidations}
+            onChange={(values, validations) => {
+              setTiktokAccounts(values);
+              setTiktokValidations(validations);
+            }}
+            onValidate={(index, value) =>
+              handleSocialValidation("tiktok", index, value)
+            }
           />
 
           <button

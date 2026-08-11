@@ -11,6 +11,7 @@ import {
   getClaimProfile,
   normalizeWhatsapp,
   updateClaimProfile,
+  validateClaimSocialProfile,
 } from "../utils/api";
 
 const ORIGINAL_API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -347,6 +348,53 @@ test("getClaimProfile uses authenticated claim profile endpoint", async () => {
     headers: { Authorization: "Bearer jwt-token" },
   });
   expect(options.body).toBeUndefined();
+});
+
+test("validateClaimSocialProfile posts payload with claim authentication", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({ success: true, data: { found: true } }),
+  });
+
+  await validateClaimSocialProfile(
+    { platform: "instagram", username: "https://instagram.com/Cicero" },
+    "claim-jwt",
+  );
+
+  const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(url).toContain("/api/claim/social-profile/validate");
+  expect(options).toMatchObject({
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer claim-jwt",
+    },
+  });
+  expect(JSON.parse(options.body)).toEqual({
+    platform: "instagram",
+    username: "https://instagram.com/Cicero",
+  });
+});
+
+test("validateClaimSocialProfile exposes consistent backend error metadata", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    status: 502,
+    json: () => Promise.resolve({
+      error_code: "CLAIM_SOCIAL_UPSTREAM_UNAVAILABLE",
+      message: "Layanan validasi profil sedang terganggu.",
+    }),
+  });
+
+  await expect(
+    validateClaimSocialProfile({ platform: "tiktok", username: "@cicero" }),
+  ).rejects.toMatchObject({
+    message: "Layanan validasi profil sedang terganggu.",
+    status: 502,
+    errorCode: "CLAIM_SOCIAL_UPSTREAM_UNAVAILABLE",
+  });
 });
 
 test("claim update sends whatsapp with 62 prefix for local numbers", async () => {
