@@ -8,9 +8,9 @@ import {
   getUserDirectory,
   loginClaimUser,
   registerClaimCredential,
-  getClaimUserData,
+  getClaimProfile,
   normalizeWhatsapp,
-  updateUserViaClaim,
+  updateClaimProfile,
 } from "../utils/api";
 
 const ORIGINAL_API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -212,7 +212,7 @@ test("getDashboardStats includes role, scope, and regional_id when provided", as
   expect(url).toContain("regional_id=R-12");
 });
 
-test("updateUserViaClaim throws backend validation messages", async () => {
+test("updateClaimProfile throws backend validation messages", async () => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: false,
     headers: { get: () => "application/json" },
@@ -220,7 +220,7 @@ test("updateUserViaClaim throws backend validation messages", async () => {
   });
 
   await expect(
-    updateUserViaClaim({ nrp: "1", password: "Abcd1234!", insta: "bad" }),
+    updateClaimProfile({ insta: "bad" }),
   ).rejects.toThrow("Link Instagram tidak valid");
 });
 
@@ -331,17 +331,22 @@ test("loginClaimUser calls user-login endpoint", async () => {
   expect(response.token).toBe("jwt-token");
 });
 
-test("getClaimUserData sends password credential instead of email", async () => {
+test("getClaimProfile uses authenticated claim profile endpoint", async () => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
     json: () => Promise.resolve({ success: true, data: { nrp: "123" } }),
   });
 
-  await getClaimUserData("123", "Abcd1234!");
+  await getClaimProfile("jwt-token");
 
   const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
-  expect(url).toContain("/api/claim/user-data");
-  expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
+  expect(url).toContain("/api/claim/me");
+  expect(options).toMatchObject({
+    method: "GET",
+    credentials: "include",
+    headers: { Authorization: "Bearer jwt-token" },
+  });
+  expect(options.body).toBeUndefined();
 });
 
 test("claim update sends whatsapp with 62 prefix for local numbers", async () => {
@@ -356,15 +361,30 @@ test("claim update sends whatsapp with 62 prefix for local numbers", async () =>
       ? normalizeWhatsapp(whatsappInput)
       : whatsappInput.trim();
 
-  await updateUserViaClaim({
-    nrp: "123",
-    password: "Abcd1234!",
+  await updateClaimProfile({
     whatsapp: whatsappNormalized,
+  }, "jwt-token");
+
+  const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
+  expect(url).toContain("/api/claim/me");
+  expect(options.credentials).toBe("include");
+  expect(options.headers.Authorization).toBe("Bearer jwt-token");
+  expect(JSON.parse(options.body)).toEqual({ whatsapp: "628123" });
+});
+
+test("claim profile update strips identity and password fields defensively", async () => {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve({ success: true, data: {} }),
   });
 
+  await updateClaimProfile({
+    nama: "User Claim",
+    nrp: "attacker",
+    user_id: "other-user",
+    password: "secret",
+  } as any);
+
   const [, options] = (global.fetch as jest.Mock).mock.calls[0];
-  expect(JSON.parse(options.body)).toMatchObject({
-    whatsapp: "628123",
-    no_wa: "628123",
-  });
+  expect(JSON.parse(options.body)).toEqual({ nama: "User Claim" });
 });

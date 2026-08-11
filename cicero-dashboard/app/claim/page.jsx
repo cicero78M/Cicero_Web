@@ -54,11 +54,12 @@ export default function ClaimPage() {
     }
   }, []);
 
-  const saveClaimSession = (trimmedNrp, trimmedPassword, token) => {
+  const saveClaimSession = (token) => {
     if (typeof window === "undefined") return;
-    sessionStorage.setItem("claim_nrp", trimmedNrp);
-    sessionStorage.setItem("claim_password", trimmedPassword);
+    sessionStorage.removeItem("claim_nrp");
+    sessionStorage.removeItem("claim_password");
     if (token) sessionStorage.setItem("claim_token", token);
+    else sessionStorage.removeItem("claim_token");
   };
 
   const clearForm = () => {
@@ -122,7 +123,7 @@ export default function ClaimPage() {
     try {
       const res = await loginClaimUser({ nrp: trimmedNrp, password: trimmedPassword });
       if (res.success !== false) {
-        saveClaimSession(trimmedNrp, trimmedPassword, res.token);
+        saveClaimSession(res.token);
         router.push("/claim/edit");
       } else {
         setError(res.message || "Login gagal.");
