@@ -6,7 +6,9 @@ import { ExternalLink, Instagram, RefreshCw, TriangleAlert, X } from "lucide-rea
 
 import {
   escalateClaimComplaint,
+  getClaimComplaint,
   triageClaimComplaint,
+  ClaimComplaintLifecycleError,
   type ClaimComplaintTriage,
   type ClaimPendingContentResponse,
   type ClaimPendingContentItem,
@@ -117,10 +119,24 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
   }
 
   async function escalate() {
-    if (!result || escalating) return;
+    if (!result?.complaint_id || !result.complaint_status || escalating) return;
     setEscalating(true); setError("");
-    try { await escalateClaimComplaint(token, result); onClose(); }
-    catch (err) { setError(err instanceof Error ? err.message : "Gagal mengeskalasi komplain"); }
+    try {
+      await escalateClaimComplaint(token, result.complaint_id, result.complaint_status);
+      onClose();
+    } catch (err) {
+      if (err instanceof ClaimComplaintLifecycleError && err.status === 409 && err.errorCode === "CLAIM_COMPLAINT_STATUS_CONFLICT") {
+        try {
+          const latest = await getClaimComplaint(token, result.complaint_id);
+          setResult((current) => current ? { ...current, complaint_status: latest.status } : current);
+          setError(`${err.message} Status terbaru telah dimuat; silakan coba eskalasi kembali.`);
+        } catch (refreshError) {
+          setError(refreshError instanceof Error ? refreshError.message : "Gagal memuat status komplain terbaru");
+        }
+      } else {
+        setError(err instanceof Error ? err.message : "Gagal mengeskalasi komplain");
+      }
+    }
     finally { setEscalating(false); }
   }
 
@@ -140,6 +156,7 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>}
         {result && <section className="mt-5 space-y-4" aria-label="Hasil triase">
           <div><h3 className="text-lg font-bold text-neutral-navy">{result.title}</h3><p className="text-sm text-neutral-slate">{result.summary}</p><p className="mt-2 text-xs font-semibold uppercase">Kualitas triase: {result.triage_quality}</p></div>
+          {result.complaint_id && <div className="rounded-xl bg-spirit-50 p-3 text-sm text-spirit-800"><p>{result.complaint_created ? "Complaint baru dibuat." : "Complaint aktif yang sudah ada digunakan kembali."}</p><p className="mt-1 font-semibold">Status lifecycle terakhir: {result.complaint_status ?? "Tidak tersedia"}</p></div>}
           <div><h4 className="font-semibold">Bukti</h4><dl className="mt-2 space-y-2">{result.evidence.map((entry, index) => <div key={`${entry.label}-${index}`} className="rounded-xl bg-neutral-50 p-3 text-sm"><dt className="font-semibold">{entry.label}</dt><dd>{entry.value ?? "Tidak tersedia"} <span className="text-neutral-slate">({entry.status})</span></dd></div>)}</dl></div>
           <div><h4 className="font-semibold">Langkah solusi</h4><ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">{[...result.solutions].sort((a, b) => a.order - b.order).map((step) => <li key={`${step.order}-${step.label}`}>{step.label}</li>)}</ol></div>
           {result.last_collected_at && <p className="text-xs text-neutral-slate">Sinkronisasi terakhir: {new Date(result.last_collected_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</p>}
@@ -148,7 +165,7 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
           {result?.triage_code === "ACTIVITY_ALREADY_RECORDED" && <button type="button" onClick={onRefresh} className="rounded-xl border px-4 py-2 text-sm font-semibold">Refresh pending content</button>}
           {needsProfileUpdate && <button type="button" onClick={() => { onClose(); onOpenProfile?.(); }} className="rounded-xl border px-4 py-2 text-sm font-semibold">Buka Update Data Personil</button>}
           {result?.can_retry && <button type="button" disabled={!retryReady || submitting} onClick={submit} className="rounded-xl border px-4 py-2 text-sm font-semibold disabled:opacity-50">{retryReady ? "Periksa ulang" : `Periksa setelah ${new Date(retryAt).toLocaleString("id-ID")}`}</button>}
-          {result?.can_escalate && <button type="button" disabled={escalating} onClick={escalate} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{escalating ? "Mengeskalasi..." : "Eskalasi"}</button>}
+          {result?.can_escalate && result.complaint_id && result.complaint_status && <button type="button" disabled={escalating} onClick={escalate} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{escalating ? "Mengeskalasi..." : "Eskalasi"}</button>}
           {!result && <button type="button" disabled={submitting || !identifier || !token} onClick={submit} className="rounded-xl bg-spirit-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{submitting ? "Memeriksa..." : "Kirim Komplain"}</button>}
         </div>
       </Dialog.Content></Dialog.Portal>
