@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import EditUserPage from "@/app/claim/edit/page";
 import {
   getClaimPendingContent,
+  getClaimComplaints,
   getClaimProfile,
   updateClaimProfile,
   validateClaimSocialProfile,
@@ -25,8 +26,14 @@ jest.mock("@/components/claim/PendingContentCard", () => ({
   default: () => <div data-testid="pending-content" />,
 }));
 
+jest.mock("@/components/claim/ComplaintHistoryCard", () => ({
+  __esModule: true,
+  default: () => <div data-testid="complaint-history" />,
+}));
+
 jest.mock("@/utils/api", () => ({
   getClaimPendingContent: jest.fn(),
+  getClaimComplaints: jest.fn(),
   getClaimProfile: jest.fn(),
   normalizeWhatsapp: jest.fn((value: string) => value),
   updateClaimProfile: jest.fn(),
@@ -53,6 +60,7 @@ describe("EditUserPage", () => {
       },
     });
     (getClaimPendingContent as jest.Mock).mockResolvedValue({ data: null });
+    (getClaimComplaints as jest.Mock).mockResolvedValue([]);
     (updateClaimProfile as jest.Mock).mockResolvedValue({ success: true });
     (validateClaimSocialProfile as jest.Mock).mockResolvedValue({
       success: true,
@@ -79,6 +87,7 @@ describe("EditUserPage", () => {
     expect(screen.getByLabelText("NRP")).toHaveAttribute("readonly");
     expect(getClaimProfile).toHaveBeenCalledWith("claim-jwt");
     expect(getClaimPendingContent).toHaveBeenCalledWith("claim-jwt");
+    expect(getClaimComplaints).toHaveBeenCalledWith("claim-jwt");
   });
 
   it("memuat seluruh array kanonis dan tidak memakai alias", async () => {

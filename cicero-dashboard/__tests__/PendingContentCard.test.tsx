@@ -144,18 +144,20 @@ describe("PendingContentCard", () => {
   });
 
   it("menampilkan deduplikasi complaint aktif dan mengeskalasi memakai status triase", async () => {
+    const onComplaintChanged = jest.fn().mockResolvedValue(undefined);
     triageClaimComplaint.mockResolvedValue({
       platform: "instagram", content_id: "IG1", triage_code: "ENGAGEMENT_NOT_IN_SNAPSHOT", triage_quality: "medium",
       title: "Belum terlihat", summary: "Belum ditemukan", evidence: [], solutions: [], last_collected_at: null,
       can_retry: false, retry_after: null, can_escalate: true, complaint_id: "c-aktif", complaint_created: false, complaint_status: "triaged",
     });
     escalateClaimComplaint.mockResolvedValue(undefined);
-    render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={jest.fn()} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
+    render(<PendingContentCard claimToken="claim-jwt" loading={false} error="" onRefresh={jest.fn()} onComplaintChanged={onComplaintChanged} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
     fireEvent.click(screen.getByRole("button", { name: "Komplain" }));
     fireEvent.click(screen.getByRole("button", { name: "Kirim Komplain" }));
     expect(await screen.findByText("Complaint aktif yang sudah ada digunakan kembali.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Eskalasi" }));
     await waitFor(() => expect(escalateClaimComplaint).toHaveBeenCalledWith("claim-jwt", "c-aktif", "triaged"));
+    await waitFor(() => expect(onComplaintChanged).toHaveBeenCalledTimes(2));
   });
 
   it("memuat status terbaru setelah konflik sebelum menawarkan eskalasi ulang", async () => {
