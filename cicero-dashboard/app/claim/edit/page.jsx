@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 
 import ClaimLayout from "@/components/claim/ClaimLayout";
+import PendingContentCard from "@/components/claim/PendingContentCard";
 import SocialAccountQualityCard from "@/components/claim/SocialAccountQualityCard";
 import {
+  getClaimPendingContent,
   getClaimProfile,
   isValidClaimToken,
   normalizeWhatsapp,
@@ -163,6 +165,9 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
+  const [pendingContent, setPendingContent] = useState(null);
+  const [pendingContentLoading, setPendingContentLoading] = useState(false);
+  const [pendingContentError, setPendingContentError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
@@ -183,8 +188,31 @@ export default function EditUserPage() {
       }
       setClaimToken(token);
       loadUser(token);
+      loadPendingContent(token);
     }
   }, [router]);
+
+  async function loadPendingContent(token = claimToken) {
+    if (!token) return;
+    setPendingContentLoading(true);
+    setPendingContentError("");
+    try {
+      const response = await getClaimPendingContent(token);
+      setPendingContent(response.data || null);
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        router.replace("/claim");
+        return;
+      }
+      setPendingContentError(
+        err?.message?.trim()
+          ? err.message
+          : "Gagal mengambil konten tertunda",
+      );
+    } finally {
+      setPendingContentLoading(false);
+    }
+  }
 
   async function loadUser(token) {
     setProfileLoading(true);
@@ -424,6 +452,19 @@ export default function EditUserPage() {
       cardAccent="spirit"
     >
       <div className="space-y-8">
+        <PendingContentCard
+          data={pendingContent}
+          loading={pendingContentLoading}
+          error={pendingContentError}
+          claimToken={claimToken}
+          onRefresh={() => loadPendingContent(claimToken)}
+          onOpenProfile={() =>
+            document
+              .getElementById("claim-profile-form")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+        />
+
         <SocialAccountQualityCard
           instagramAccounts={instagramAccounts}
           tiktokAccounts={tiktokAccounts}
