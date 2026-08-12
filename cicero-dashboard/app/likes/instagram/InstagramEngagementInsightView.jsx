@@ -242,9 +242,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       getDashboardPremiumRiskSummary(token, filters, controller.signal),
     ])
       .then(([executiveRes, riskRes]) => {
-        setRemoteExecutiveRecap(
-          mapExecutiveRecapToCardProps(executiveRes) || null,
-        );
+        setRemoteExecutiveRecap(executiveRes || null);
         setRemoteRiskSummary(
           mapRiskSummaryToCardProps(riskRes, {
             hasPremiumAccess,
@@ -326,7 +324,9 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   );
   const totalBelumLikeRaw = Number(effectiveRekapSummary.totalBelumLike) || 0;
   const maxBelumLikeFromActiveUsers = Math.max(0, validUserCount - totalSudahLike - totalKurangLike);
-  const totalBelumLike = Math.min(maxBelumLikeFromActiveUsers, Math.max(0, totalBelumLikeRaw));
+  const totalBelumLike = Number(effectiveRekapSummary.totalIGPost) <= 0
+    ? validUserCount
+    : Math.min(maxBelumLikeFromActiveUsers, Math.max(0, totalBelumLikeRaw));
   const getPercentage = (value, base = validUserCount) => {
     const denominator = Number(base);
     if (!denominator) return undefined;
@@ -626,6 +626,25 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     missingUsernameCount: totalTanpaUsername,
     complianceRate,
   });
+  const localExecutiveRecap = {
+    title: executiveBrief.title,
+    description: executiveBrief.description,
+    summary: executiveBrief.summary,
+    briefText: executiveBrief.text,
+    fullText: executiveFull.text,
+  };
+  const executiveSourceStats = {
+    totalUsers: totalUser,
+    totalPosts: Number(effectiveRekapSummary.totalIGPost) || 0,
+    completedCount: totalSudahLike,
+    partialCount: totalKurangLike,
+    notStartedCount: totalBelumLike,
+    missingUsernameCount: totalTanpaUsername,
+  };
+  const validatedRemoteExecutiveRecap = mapExecutiveRecapToCardProps(
+    remoteExecutiveRecap,
+    { sourceStats: executiveSourceStats, fallback: localExecutiveRecap },
+  );
 
   const viewSelectorProps = showDateSelector
     ? {
@@ -655,18 +674,12 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           riskAlertCenter={<RiskAlertCenter {...(remoteRiskSummary || riskAlertCenter)} />}
           executiveRecap={
             <ExecutiveRecapCard
-              {...(remoteExecutiveRecap
+              {...(validatedRemoteExecutiveRecap
                 ? {
-                    ...remoteExecutiveRecap,
-                    fullText: remoteExecutiveRecap.fullText || executiveFull.text,
+                    ...validatedRemoteExecutiveRecap,
+                    fullText: validatedRemoteExecutiveRecap.fullText || executiveFull.text,
                   }
-                : {
-                    title: executiveBrief.title,
-                    description: executiveBrief.description,
-                    summary: executiveBrief.summary,
-                    briefText: executiveBrief.text,
-                    fullText: executiveFull.text,
-                  })}
+                : localExecutiveRecap)}
             />
           }
           onCopyRekap={handleCopyRekap}
