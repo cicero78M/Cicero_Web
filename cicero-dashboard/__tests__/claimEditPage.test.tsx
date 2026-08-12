@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import EditUserPage from "@/app/claim/edit/page";
 import {
+  getClaimPendingContent,
   getClaimProfile,
   updateClaimProfile,
   validateClaimSocialProfile,
@@ -21,6 +22,7 @@ jest.mock("@/components/claim/ClaimLayout", () => ({
 
 jest.mock("@/utils/api", () => ({
   isValidClaimToken: jest.requireActual("@/utils/api").isValidClaimToken,
+  getClaimPendingContent: jest.fn(),
   getClaimProfile: jest.fn(),
   normalizeWhatsapp: jest.fn((value: string) => value),
   updateClaimProfile: jest.fn(),
@@ -28,6 +30,34 @@ jest.mock("@/utils/api", () => ({
 }));
 
 describe("EditUserPage", () => {
+  const pendingContent = {
+    filters: { periode: "harian", tanggal: "2026-08-12" },
+    instagram: {
+      username_available: true,
+      usernames: ["utama.ig"],
+      pending_content: 1,
+      items: [{
+        shortcode: "IG123",
+        video_id: null,
+        caption: "Tugas Instagram",
+        content_time: "2026-08-12T01:00:00.000Z",
+        url: "https://www.instagram.com/p/IG123/",
+      }],
+    },
+    tiktok: {
+      username_available: true,
+      usernames: ["utama.tt"],
+      pending_content: 1,
+      items: [{
+        shortcode: null,
+        video_id: "TT123",
+        caption: "Tugas TikTok",
+        content_time: "2026-08-12T02:00:00.000Z",
+        url: "https://www.tiktok.com/@cicero/video/TT123",
+      }],
+    },
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     sessionStorage.clear();
@@ -47,6 +77,10 @@ describe("EditUserPage", () => {
       },
     });
     (updateClaimProfile as jest.Mock).mockResolvedValue({ success: true });
+    (getClaimPendingContent as jest.Mock).mockResolvedValue({
+      success: true,
+      data: pendingContent,
+    });
     (validateClaimSocialProfile as jest.Mock).mockResolvedValue({
       success: true,
       data: {
@@ -62,10 +96,57 @@ describe("EditUserPage", () => {
     });
   });
 
+  it("memuat dan menampilkan tugas pending content setelah autentikasi", async () => {
+    render(<EditUserPage />);
+
+    expect(await screen.findByText("Tugas Instagram")).toBeInTheDocument();
+    expect(screen.getByText("Tugas TikTok")).toBeInTheDocument();
+    expect(getClaimPendingContent).toHaveBeenCalledWith("header.payload.signature");
+    const links = screen.getAllByRole("link", { name: /Buka Konten/ });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "https://www.instagram.com/p/IG123/");
+    expect(links[1]).toHaveAttribute("href", "https://www.tiktok.com/@cicero/video/TT123");
+  });
+
+  it("memuat ulang pending content ketika Refresh dipilih", async () => {
+    render(<EditUserPage />);
+    await screen.findByText("Tugas Instagram");
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() => expect(getClaimPendingContent).toHaveBeenCalledTimes(2));
+  });
+
+  it("menampilkan empty state untuk platform tanpa tugas", async () => {
+    (getClaimPendingContent as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {
+        ...pendingContent,
+        instagram: { ...pendingContent.instagram, pending_content: 0, items: [] },
+        tiktok: { ...pendingContent.tiktok, pending_content: 0, items: [] },
+      },
+    });
+    render(<EditUserPage />);
+
+    expect(await screen.findByText("Tidak ada konten tertunda untuk Instagram.")).toBeInTheDocument();
+    expect(screen.getByText("Tidak ada konten tertunda untuk TikTok.")).toBeInTheDocument();
+  });
+
+  it("tetap menampilkan formulir profil saat pending content gagal dimuat", async () => {
+    (getClaimPendingContent as jest.Mock).mockRejectedValueOnce(
+      new Error("Layanan pending content terganggu"),
+    );
+    render(<EditUserPage />);
+
+    expect(await screen.findByText(/Layanan pending content terganggu/)).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("12345")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Simpan" })).toBeEnabled();
+  });
+
   it("merender saat loading lalu menampilkan NRP terverifikasi dari profil", async () => {
     render(<EditUserPage />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Memuat profil...");
+    expect(screen.getByText("Memuat profil...")).toBeInTheDocument();
     expect(await screen.findByDisplayValue("12345")).toBe(
       screen.getByLabelText("NRP"),
     );
@@ -83,6 +164,19 @@ describe("EditUserPage", () => {
       await waitFor(() => expect(replace).toHaveBeenCalledWith("/claim"));
       expect(sessionStorage.getItem("claim_token")).toBeNull();
       expect(getClaimProfile).not.toHaveBeenCalled();
+      expect(getClaimPendingContent).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([401, 403])(
+    "redirect ke halaman claim ketika pending content merespons %s",
+    async (status) => {
+      (getClaimPendingContent as jest.Mock).mockRejectedValueOnce(
+        Object.assign(new Error("Sesi tidak valid"), { status }),
+      );
+      render(<EditUserPage />);
+
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/claim"));
     },
   );
 
