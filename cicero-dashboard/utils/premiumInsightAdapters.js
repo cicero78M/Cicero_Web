@@ -51,11 +51,47 @@ export function mapRiskSummaryToCardProps(response, { hasPremiumAccess = false, 
   };
 }
 
-export function mapExecutiveRecapToCardProps(response) {
+const EXECUTIVE_STAT_KEYS = [
+  'totalUsers',
+  'totalPosts',
+  'completedCount',
+  'partialCount',
+  'notStartedCount',
+  'missingUsernameCount',
+];
+
+export function isExecutiveRecapStatsConsistent(stats, sourceStats) {
+  if (!stats || typeof stats !== 'object') return false;
+
+  const normalized = {};
+  for (const key of EXECUTIVE_STAT_KEYS) {
+    const value = Number(stats[key]);
+    if (!Number.isFinite(value) || value < 0) return false;
+    normalized[key] = value;
+  }
+
+  const activeUsers = normalized.totalUsers - normalized.missingUsernameCount;
+  const categorizedUsers = normalized.completedCount + normalized.partialCount + normalized.notStartedCount;
+  if (activeUsers < 0 || categorizedUsers !== activeUsers) return false;
+
+  if (sourceStats && typeof sourceStats === 'object') {
+    return EXECUTIVE_STAT_KEYS.every((key) => Number(sourceStats[key]) === normalized[key]);
+  }
+
+  return true;
+}
+
+export function mapExecutiveRecapToCardProps(response, { sourceStats, fallback } = {}) {
   if (!response || typeof response !== 'object') return null;
+
+  if (!isExecutiveRecapStatsConsistent(response.stats, sourceStats)) {
+    return fallback || null;
+  }
 
   const summary = typeof response.summary === 'string' ? response.summary : '';
   const text = typeof response.text === 'string' ? response.text : '';
+
+  if (!summary || !text) return fallback || null;
 
   return {
     title: `Briefing ${response.platform === 'tiktok' ? 'TikTok' : 'Instagram'} siap kirim`,

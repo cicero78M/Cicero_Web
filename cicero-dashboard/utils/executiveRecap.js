@@ -41,6 +41,8 @@ export function buildExecutiveRecap({
   const notStarted = Number(notStartedCount) || 0;
   const missingUsername = Number(missingUsernameCount) || 0;
   const actionNeeded = partial + notStarted;
+  const hasConsistentCounts = completed + partial + notStarted === totalUsersNumber - missingUsername;
+  const isSafe = totalPostsNumber > 0 && hasConsistentCounts && actionNeeded === 0;
   const formattedCompliance = formatPercent(complianceRate);
   const primaryRisk = pickPrimaryRisk({ actionNeededCount: actionNeeded, missingUsernameCount: missingUsername, complianceRate });
 
@@ -59,9 +61,11 @@ export function buildExecutiveRecap({
     '',
     '*Arah tindak lanjut:*',
     `• ${primaryRisk}`,
-    actionNeeded > 0
+    isSafe
+      ? '• Seluruh akun aktif sudah aman, lanjutkan monitoring rutin.'
+      : actionNeeded > 0
       ? `• Prioritaskan ${actionNeeded} akun yang masih perlu aksi sebelum briefing berikutnya.`
-      : '• Seluruh akun aktif sudah aman, lanjutkan monitoring rutin.',
+      : '• Rekap belum dapat dinyatakan aman; verifikasi konten dan keseimbangan kategori personel.',
   ];
 
   if (mode === 'full') {
@@ -80,9 +84,11 @@ export function buildExecutiveRecap({
   return {
     title: `Briefing ${platformLabel} siap kirim`,
     description: `Narasi ${mode === 'full' ? 'lengkap' : 'ringkas'} untuk operator/pimpinan tanpa merakit ulang rekap manual.`,
-    summary: actionNeeded > 0
+    summary: isSafe
+      ? `Semua akun aktif untuk ${platformLabel.toLowerCase()} sudah aman pada ${periodLabel}.`
+      : actionNeeded > 0
       ? `${actionNeeded} akun masih perlu aksi pada ${periodLabel}.`
-      : `Semua akun aktif untuk ${platformLabel.toLowerCase()} sudah aman pada ${periodLabel}.`,
+      : `Status akun aktif belum dapat dipastikan pada ${periodLabel}.`,
     text: lines.join('\n'),
   };
 }
