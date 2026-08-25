@@ -181,7 +181,7 @@ describe("Sidebar", () => {
       expect(screen.queryByText("Premium")).not.toBeInTheDocument();
     });
 
-    it("shows Anev Polres without Premium label for Org Operator", () => {
+    it("hides Anev Polres for Org Operator when Instagram is disabled", () => {
       const authValue = createAuthValue({
         effectiveClientType: "ORG",
         effectiveRole: "OPERATOR",
@@ -193,8 +193,8 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      // Should show "Anev Polres" without "(Premium)" label
-      expect(screen.getByText("Anev Polres")).toBeInTheDocument();
+      // Anev depends on Instagram data and stays hidden until Instagram is enabled.
+      expect(screen.queryByText("Anev Polres")).not.toBeInTheDocument();
       expect(screen.queryByText("Anev Polres (Premium)")).not.toBeInTheDocument();
     });
 
