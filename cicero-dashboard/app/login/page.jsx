@@ -114,6 +114,7 @@ export default function LoginPage() {
       const { data } = await fetchJsonWithTimeout(`${apiUrl}/api/auth/dashboard-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username: trimmedUsername, password: password.trim() }),
       });
 
@@ -132,7 +133,12 @@ export default function LoginPage() {
           data.user?.roleName ||
           null;
         setAuth(data.token, userClient, userId, userRole, userName);
-        router.push("/dashboard");
+        const requestedPath = new URLSearchParams(window.location.search).get("next");
+        const safeRequestedPath =
+          requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+            ? requestedPath
+            : null;
+        router.push(safeRequestedPath || "/dashboard");
       } else {
         setError(data.message || "Login gagal");
       }

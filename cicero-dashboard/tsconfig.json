@@ -31,5 +31,10 @@
     "app/page.jsx",
     "app/layout.jsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "__tests__",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }
