@@ -151,6 +151,7 @@ export default function ViewDataSelector({
   const weekInputId = `${id}-week`;
   const rangeStartId = `${id}-start`;
   const rangeEndId = `${id}-end`;
+  const today = formatDate(new Date());
   const baseContainerClass = cn(
     "flex w-full flex-col gap-4 rounded-xl border border-sky-200/70 bg-white/90 px-5 py-4 shadow-sm",
     disabled && "opacity-60",
@@ -175,7 +176,7 @@ export default function ViewDataSelector({
   return (
     <div className={baseContainerClass} aria-disabled={disabled}>
       <label htmlFor={id} className={baseLabelClass}>
-        Tampilan data berdasarkan
+        Rentang waktu analisis
       </label>
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
         <div className="hidden w-full gap-2 sm:flex sm:flex-wrap">
@@ -239,6 +240,7 @@ export default function ViewDataSelector({
             type="date"
             className={baseControlClass}
             value={date}
+            max={today}
             onChange={(e) => onDateChange?.(e.target.value)}
             disabled={disabled}
           />
@@ -284,6 +286,7 @@ export default function ViewDataSelector({
             type="date"
             className={baseControlClass}
             value={date?.startDate || ""}
+            max={date?.endDate || today}
             onChange={(e) =>
               onDateChange?.({ ...date, startDate: e.target.value })
             }
@@ -298,6 +301,8 @@ export default function ViewDataSelector({
             type="date"
             className={baseControlClass}
             value={date?.endDate || ""}
+            min={date?.startDate || undefined}
+            max={today}
             onChange={(e) =>
               onDateChange?.({ ...date, endDate: e.target.value })
             }

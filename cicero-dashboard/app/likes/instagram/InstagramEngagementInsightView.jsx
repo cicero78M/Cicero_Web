@@ -126,11 +126,12 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
   const premiumViewOptions = [
     { value: "today", label: "Hari ini", periode: "harian" },
-    { value: "week", label: "Mingguan (7 hari)", periode: "mingguan", week: true },
-    { value: "month", label: "Bulanan", periode: "bulanan", month: true },
+    { value: "date", label: "Tanggal tertentu", periode: "harian", custom: true },
+    { value: "week", label: "Pilih minggu", periode: "mingguan", week: true },
+    { value: "month", label: "Pilih bulan", periode: "bulanan", month: true },
     {
       value: "custom_range",
-      label: "Rentang Tanggal",
+      label: "Rentang tanggal",
       periode: "harian",
       range: true,
     },
@@ -659,7 +660,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   return (
     <InsightLayout
       title="Instagram Engagement Insight"
-      description="Pantau performa likes dan komentar harian."
+      description="Analisis kelengkapan likes Instagram berdasarkan konten target, personel, lingkup organisasi, dan rentang waktu yang dipilih."
       tabs={DEFAULT_INSIGHT_TABS}
       activeTab={activeTab}
       onTabChange={handleTabChange}
@@ -690,6 +691,15 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
           summaryCards={summaryCards}
           quickInsights={quickInsights}
           quickInsightTone="blue"
+          analysisContext={{
+            platform: "Instagram Likes",
+            periodLabel: reportPeriodeLabel,
+            scopeLabel: selectedClientName || resolvedClientLabel || clientName || "Lingkup akun aktif",
+            totalPosts: Number(effectiveRekapSummary.totalIGPost) || 0,
+            totalUsers: totalUser,
+            validUsers: validUserCount,
+            actionNeeded: actionNeededCount,
+          }}
         >
           {shouldShowClientSelector ? (
             <div className="relative overflow-hidden rounded-2xl border-2 border-blue-100/80 bg-gradient-to-br from-white via-blue-50/20 to-white p-4 shadow-md backdrop-blur-sm">

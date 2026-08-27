@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, Copy, Sparkles } from "lucide-react";
+import {
+  CalendarRange,
+  CheckCircle2,
+  ClipboardList,
+  Copy,
+  Database,
+  Sparkles,
+  TriangleAlert,
+  UserRoundCheck,
+} from "lucide-react";
 
 import SummaryItem from "@/components/likes/instagram/Insight/SummaryItem";
 import ViewDataSelector from "@/components/ViewDataSelector";
@@ -34,6 +43,7 @@ export default function EngagementInsightMobileScaffold({
   summaryItemProps = {},
   quickInsights = [],
   quickInsightTone = "blue",
+  analysisContext,
   premiumCta,
   premiumProof,
   riskAlertCenter,
@@ -176,6 +186,46 @@ export default function EngagementInsightMobileScaffold({
           )}
         </div>
       )}
+
+      {analysisContext ? (
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="engagement-analysis-context">
+          <div className="border-b border-slate-200 bg-gradient-to-r from-slate-950 via-sky-950 to-indigo-950 px-5 py-4 text-white">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">Konteks analisis aktif</p>
+            <h2 id="engagement-analysis-context" className="mt-1 text-lg font-bold">
+              {analysisContext.platform} · {analysisContext.periodLabel}
+            </h2>
+            <p className="mt-1 text-xs text-slate-300">{analysisContext.scopeLabel}</p>
+          </div>
+          <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-sky-100 bg-sky-50 p-4">
+              <CalendarRange className="h-5 w-5 text-sky-700" aria-hidden />
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Rentang data</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{analysisContext.periodLabel}</p>
+            </div>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <Database className="h-5 w-5 text-indigo-700" aria-hidden />
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Konten target</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{analysisContext.totalPosts} posting</p>
+            </div>
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+              <UserRoundCheck className="h-5 w-5 text-emerald-700" aria-hidden />
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Akun dapat dinilai</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{analysisContext.validUsers} dari {analysisContext.totalUsers} user</p>
+            </div>
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+              <TriangleAlert className="h-5 w-5 text-amber-700" aria-hidden />
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Perlu tindak lanjut</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{analysisContext.actionNeeded} akun</p>
+            </div>
+          </div>
+          <div className="grid gap-3 border-t border-slate-200 bg-slate-50/70 p-5 md:grid-cols-3">
+            <div className="flex gap-3 rounded-xl bg-white p-3 text-sm text-slate-600"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden /><p><strong className="text-slate-900">Lengkap:</strong> aktivitas terdeteksi pada seluruh konten target.</p></div>
+            <div className="flex gap-3 rounded-xl bg-white p-3 text-sm text-slate-600"><TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden /><p><strong className="text-slate-900">Kurang:</strong> baru sebagian konten target yang terdeteksi.</p></div>
+            <div className="flex gap-3 rounded-xl bg-white p-3 text-sm text-slate-600"><Database className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden /><p><strong className="text-slate-900">Belum / tanpa username:</strong> nol aktivitas atau profil belum dapat dipetakan.</p></div>
+          </div>
+          <p className="border-t border-slate-200 px-5 py-3 text-xs leading-5 text-slate-500">Data platform dapat mengalami jeda sinkronisasi. Pastikan halaman selesai dimuat, konteks di atas benar, dan verifikasi akun sebelum menindaklanjuti status.</p>
+        </section>
+      ) : null}
 
       {summaryCards.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
