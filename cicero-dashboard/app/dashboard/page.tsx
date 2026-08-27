@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardStats from "@/components/DashboardStats";
 import SocialCardsClient from "@/components/SocialCardsClient";
-import ComplaintForm from "@/components/ComplaintForm";
 import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { resolvePostThumbnail } from "@/utils/postThumbnail";
@@ -1178,15 +1177,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Komplain Akun</h2>
-            <p className="text-sm text-sky-700 dark:text-slate-300">
-              Laporkan kendala terkait akun Instagram atau TikTok yang sedang Anda kelola.
-            </p>
-          </div>
-          <ComplaintForm />
-        </section>
       </div>
     </div>
   );
