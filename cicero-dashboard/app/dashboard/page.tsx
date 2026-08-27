@@ -6,6 +6,7 @@ import SocialCardsClient from "@/components/SocialCardsClient";
 import ComplaintForm from "@/components/ComplaintForm";
 import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { resolvePostThumbnail } from "@/utils/postThumbnail";
 import {
   getApiBaseUrl,
   getInstagramPostsViaBackend,
@@ -619,20 +620,6 @@ export default function DashboardPage() {
         }))
       : platformTotals.map((p) => ({ key: p.key, value: 0 }));
 
-    const pickThumbnail = (post: any) => {
-      return (
-        post?.thumbnail_url ||
-        post?.cover ||
-        post?.image_versions2?.candidates?.[0]?.url ||
-        post?.display_url ||
-        post?.media_url ||
-        post?.thumbnail?.url ||
-        post?.thumbnail ||
-        post?.images?.standard_resolution?.url ||
-        ""
-      );
-    };
-
     const pickCaption = (post: any) => {
       if (!post) return "";
       if (typeof post.caption === "string") return post.caption;
@@ -682,7 +669,7 @@ export default function DashboardPage() {
         comments,
         views,
         caption: pickCaption(post),
-        thumbnail: pickThumbnail(post),
+        thumbnail: resolvePostThumbnail(post),
         url: pickUrl(post),
       };
     });
@@ -715,7 +702,7 @@ export default function DashboardPage() {
         comments,
         views,
         caption: pickCaption(post),
-        thumbnail: pickThumbnail(post),
+        thumbnail: resolvePostThumbnail(post),
         url: pickUrl(post),
       };
     });
@@ -1135,6 +1122,14 @@ export default function DashboardPage() {
                       alt={`Thumbnail ${post.platform}`}
                       className="h-40 w-full rounded-[1.75rem] object-cover"
                       loading="lazy"
+                      referrerPolicy="no-referrer"
+                      onError={(event) => {
+                        const image = event.currentTarget;
+                        if (!image.src.endsWith("/file.svg")) {
+                          image.src = "/file.svg";
+                          image.classList.add("bg-slate-100", "p-10", "dark:bg-slate-800");
+                        }
+                      }}
                     />
                   ) : (
                     <div className="flex h-40 w-full items-center justify-center rounded-[1.75rem] border border-sky-200/70 bg-white/70 text-sky-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-500">
