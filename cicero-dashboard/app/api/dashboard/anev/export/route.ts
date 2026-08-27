@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs/dist/exceljs.min.js";
+import ExcelJS from "exceljs";
 import { NextRequest, NextResponse } from "next/server";
 
 type ExportRow = Record<string, unknown> & {
