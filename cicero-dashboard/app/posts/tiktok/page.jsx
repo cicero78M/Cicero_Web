@@ -11,6 +11,7 @@ import Loader from "@/components/Loader";
 import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
 import { Activity, Copy, Eye, Heart, PlayCircle, RefreshCw, Users } from "lucide-react";
 import {
   getTiktokProfileViaBackend,
@@ -29,6 +30,7 @@ import { showToast } from "@/utils/showToast";
 
 export default function TiktokPostAnalysisPage() {
   useRequireAuth();
+  const { token, clientId, effectiveRole, role: authRole } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [info, setInfo] = useState(null);
@@ -60,12 +62,7 @@ export default function TiktokPostAnalysisPage() {
   }, [startDate, endDate]);
 
   const fetchData = async () => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    const clientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
-    const role =
-      typeof window !== "undefined" ? localStorage.getItem("user_role") || "" : "";
+    const role = effectiveRole || authRole || "";
 
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
@@ -124,7 +121,7 @@ export default function TiktokPostAnalysisPage() {
 
   useEffect(() => {
     fetchData();
-  }, [startDate, endDate, ditbinmasScope]);
+  }, [startDate, endDate, ditbinmasScope, token, clientId, effectiveRole, authRole]);
 
   function extractUsername(url) {
     if (!url) return "";
@@ -142,8 +139,6 @@ export default function TiktokPostAnalysisPage() {
       setCompareError("Link tidak valid");
       return;
     }
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     if (!token) {
       setCompareError("Token tidak ditemukan. Silakan login ulang.");
       return;

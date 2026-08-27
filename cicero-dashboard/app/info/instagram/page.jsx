@@ -11,9 +11,11 @@ import {
   getClientProfile,
 } from "@/utils/api";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
 
 export default function InstagramInfoPage() {
   useRequireAuth();
+  const { token, clientId } = useAuth();
   const [profile, setProfile] = useState(null);
   const [info, setInfo] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -25,13 +27,6 @@ export default function InstagramInfoPage() {
   const [compareError, setCompareError] = useState("");
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("cicero_token")
-        : null;
-    const clientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
-
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -69,7 +64,7 @@ export default function InstagramInfoPage() {
     }
 
     fetchData();
-  }, []);
+  }, [token, clientId]);
 
   function extractUsername(url) {
     if (!url) return "";
@@ -87,8 +82,6 @@ export default function InstagramInfoPage() {
       setCompareError("Link tidak valid");
       return;
     }
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     if (!token) {
       setCompareError("Token tidak ditemukan. Silakan login ulang.");
       return;

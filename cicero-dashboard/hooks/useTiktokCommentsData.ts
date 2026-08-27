@@ -418,22 +418,9 @@ export default function useTiktokCommentsData({
     setLoading(true);
     setError("");
 
-    const token =
-      auth?.token ??
-      (typeof window !== "undefined"
-        ? localStorage.getItem("cicero_token") ?? ""
-        : "");
-    const userClientId =
-      auth?.clientId ??
-      (typeof window !== "undefined"
-        ? localStorage.getItem("client_id") ?? ""
-        : "");
-    const role =
-      auth?.effectiveRole ??
-      auth?.role ??
-      (typeof window !== "undefined"
-        ? localStorage.getItem("user_role") ?? ""
-        : "");
+    const token = auth?.token ?? "";
+    const userClientId = auth?.clientId ?? "";
+    const role = auth?.effectiveRole ?? auth?.role ?? "";
     const regionalId = auth?.regionalId ?? null;
     const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;

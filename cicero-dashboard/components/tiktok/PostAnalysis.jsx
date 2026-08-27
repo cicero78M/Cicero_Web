@@ -15,8 +15,10 @@ import {
   getTiktokPostsByUsernameViaBackend,
   getClientProfile,
 } from "@/utils/api";
+import useAuth from "@/hooks/useAuth";
 
 export default function TiktokPostAnalysisPage({ embedded = false, hideHeader = false }) {
+  const { token, clientId } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +29,6 @@ export default function TiktokPostAnalysisPage({ embedded = false, hideHeader = 
   const [compareError, setCompareError] = useState("");
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    const clientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
-
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -61,7 +58,7 @@ export default function TiktokPostAnalysisPage({ embedded = false, hideHeader = 
     }
 
     fetchData();
-  }, []);
+  }, [token, clientId]);
 
   function extractUsername(url) {
     if (!url) return "";
@@ -79,8 +76,6 @@ export default function TiktokPostAnalysisPage({ embedded = false, hideHeader = 
       setCompareError("Link tidak valid");
       return;
     }
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     if (!token) {
       setCompareError("Token tidak ditemukan. Silakan login ulang.");
       return;

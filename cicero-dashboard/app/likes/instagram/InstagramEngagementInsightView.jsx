@@ -341,8 +341,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
 
   async function handleCopyTaskLinksToday() {
-    const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("cicero_token") : "");
-    const authClientId = clientId || (typeof window !== "undefined" ? localStorage.getItem("client_id") : "");
+    const authToken = token || "";
+    const authClientId = clientId || "";
 
     if (!authToken || !authClientId) {
       showToast("Token atau client ID tidak ditemukan. Silakan login ulang.", "error");

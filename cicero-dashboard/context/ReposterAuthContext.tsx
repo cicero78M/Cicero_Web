@@ -3,9 +3,6 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import { COOKIE_SESSION_TOKEN, getAuthSession } from "@/utils/api";
 
-export const REPOSTER_TOKEN_STORAGE_KEY = "reposter_token";
-export const REPOSTER_PROFILE_STORAGE_KEY = "reposter_profile";
-
 type ReposterAuthState = {
   token: string | null;
   profile: Record<string, any> | null;
@@ -27,8 +24,6 @@ export function ReposterAuthProvider({
   const [isHydrating, setIsHydrating] = useState(true);
 
   useEffect(() => {
-    localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
-    localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
     getAuthSession()
       .then((session) => {
         setToken(COOKIE_SESSION_TOKEN);
@@ -44,10 +39,7 @@ export function ReposterAuthProvider({
       newProfile: Record<string, any> | null = null,
     ) => {
       setToken(newToken);
-      localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
-
       setProfile(newProfile);
-      localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
     },
     [],
   );

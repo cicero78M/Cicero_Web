@@ -987,9 +987,7 @@ function extractClientIdFromToken(token?: string | null): string {
 }
 
 function readStoredClientId(): string {
-  if (typeof window === "undefined") return "";
-  const stored = window.localStorage.getItem("client_id");
-  return stored && stored.trim() ? stored.trim() : "";
+  return "";
 }
 
 export type DashboardAnevFilters = {

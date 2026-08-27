@@ -247,21 +247,9 @@ export default function useInstagramLikesData({
     const controller = new AbortController();
     setLoading(true);
     setError("");
-    const fallbackToken =
-      typeof window !== "undefined"
-        ? localStorage.getItem("cicero_token") ?? ""
-        : "";
-    const fallbackClientId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("client_id") ?? ""
-        : "";
-    const fallbackRole =
-      typeof window !== "undefined"
-        ? localStorage.getItem("user_role") ?? ""
-        : "";
-    const token = authToken ?? fallbackToken;
-    const userClientId = authClientId ?? fallbackClientId;
-    const role = effectiveRole ?? authRole ?? fallbackRole;
+    const token = authToken ?? "";
+    const userClientId = authClientId ?? "";
+    const role = effectiveRole ?? authRole ?? "";
     const profileLoading = Boolean(isProfileLoading);
     if (profileLoading && (!effectiveClientType || !authRegionalId)) {
       setLoading(true);

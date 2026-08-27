@@ -12,6 +12,7 @@ import Narrative from "@/components/Narrative";
 import PostCompareChart from "@/components/PostCompareChart";
 import FilterBar from "@/components/FilterBar";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
 import { RefreshCw } from "lucide-react";
 import {
   getInstagramProfileViaBackend,
@@ -22,6 +23,7 @@ import {
 
 export default function InstagramPostAnalysisPage() {
   useRequireAuth();
+  const { token, clientId } = useAuth();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [info, setInfo] = useState(null);
@@ -43,11 +45,6 @@ export default function InstagramPostAnalysisPage() {
   const [search, setSearch] = useState("");
 
   const fetchData = async () => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
-    const clientId =
-      typeof window !== "undefined" ? localStorage.getItem("client_id") : null;
-
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -88,7 +85,7 @@ export default function InstagramPostAnalysisPage() {
 
   useEffect(() => {
     fetchData();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, token, clientId]);
 
   function extractUsername(url) {
     if (!url) return "";
@@ -106,8 +103,6 @@ export default function InstagramPostAnalysisPage() {
       setCompareError("Link tidak valid");
       return;
     }
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("cicero_token") : null;
     if (!token) {
       setCompareError("Token tidak ditemukan. Silakan login ulang.");
       return;

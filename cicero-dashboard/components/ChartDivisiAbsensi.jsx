@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useEffect, useRef, useState } from "react";
 import { getClientNames } from "@/utils/api";
+import useAuth from "@/hooks/useAuth";
 import ChartDataTable from "@/components/ChartDataTable";
 import { toJpeg } from "html-to-image";
 import { showToast } from "@/utils/showToast";
@@ -41,6 +42,7 @@ export default function ChartDivisiAbsensi({
   labelTotalUser = "Jumlah User",
   sortBy = "total_value",
 }) {
+  const { token } = useAuth();
   const [enrichedUsers, setEnrichedUsers] = useState(users);
   const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
   const exportRef = useRef(null);
@@ -61,10 +63,6 @@ export default function ChartDivisiAbsensi({
         return;
       }
 
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("cicero_token")
-          : null;
       if (!token) {
         setEnrichedUsers(users);
         return;
@@ -92,7 +90,7 @@ export default function ChartDivisiAbsensi({
     }
 
     enrich();
-  }, [users, groupBy]);
+  }, [users, groupBy, token]);
 
   // Fallback backward compatibility
   const effectiveTotal =

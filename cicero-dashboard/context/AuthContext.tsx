@@ -152,18 +152,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [premiumResolutionError, setPremiumResolutionError] = useState(false);
 
   useEffect(() => {
-    localStorage.removeItem("cicero_token");
-    const storedClient = localStorage.getItem("client_id");
-    const storedUser = localStorage.getItem("user_id");
-    const storedUsername = localStorage.getItem("username");
-    const storedRole = localStorage.getItem("user_role");
     getAuthSession()
       .then((session) => {
         setToken(COOKIE_SESSION_TOKEN);
-        setClientId(session.client_id || session.client_ids?.[0] || storedClient || null);
-        setUserId(session.dashboard_user_id || session.user_id || storedUser || null);
-        setUsername(session.username || session.nama || storedUsername || null);
-        setRole(session.role || storedRole || null);
+        setClientId(session.client_id || session.client_ids?.[0] || null);
+        setUserId(session.dashboard_user_id || session.user_id || null);
+        setUsername(session.username || session.nama || null);
+        setRole(session.role || null);
       })
       .catch(() => setToken(null))
       .finally(() => setIsHydrating(false));
@@ -352,15 +347,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRegionalId(null);
     setPremiumTier(null);
     setPremiumExpiry(null);
-    localStorage.removeItem("cicero_token");
-    if (resolvedClientId) localStorage.setItem("client_id", resolvedClientId);
-    else localStorage.removeItem("client_id");
-    if (resolvedUserId) localStorage.setItem("user_id", resolvedUserId);
-    else localStorage.removeItem("user_id");
-    if (resolvedUsername) localStorage.setItem("username", resolvedUsername);
-    else localStorage.removeItem("username");
-    if (resolvedRole) localStorage.setItem("user_role", resolvedRole);
-    else localStorage.removeItem("user_role");
   };
 
   return (
