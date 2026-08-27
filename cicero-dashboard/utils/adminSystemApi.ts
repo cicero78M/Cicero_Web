@@ -1,6 +1,7 @@
 import { getApiBaseUrl } from "@/utils/api";
 
 export const ADMIN_SYSTEM_TOKEN_KEY = "cicero_admin_system_token";
+const ADMIN_COOKIE_SESSION = "cookie-session";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -18,12 +19,14 @@ function buildUrl(path: string): string {
 
 export function getAdminSystemToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(ADMIN_SYSTEM_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_SYSTEM_TOKEN_KEY);
+  return ADMIN_COOKIE_SESSION;
 }
 
 export function setAdminSystemToken(token: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(ADMIN_SYSTEM_TOKEN_KEY, token);
+  void token;
+  localStorage.removeItem(ADMIN_SYSTEM_TOKEN_KEY);
 }
 
 export function clearAdminSystemToken(): void {
@@ -44,6 +47,7 @@ export async function requestAdminTelegramOtp(telegramUsername: string) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ telegram_username: telegramUsername }),
+    credentials: "include",
   });
 
   const data = await parseResponse(res);
@@ -58,6 +62,7 @@ export async function verifyAdminTelegramOtp(requestId: string, otpCode: string,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ request_id: requestId, otp_code: otpCode, telegram_username: telegramUsername }),
+    credentials: "include",
   });
 
   const data = await parseResponse(res);
@@ -70,14 +75,16 @@ export async function verifyAdminTelegramOtp(requestId: string, otpCode: string,
 // Legacy widget helpers intentionally removed from login flow.
 
 async function fetchAdminProtected(path: string, token: string, init?: RequestInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Content-Type", "application/json");
+  if (token && token !== ADMIN_COOKIE_SESSION) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
   const res = await fetch(buildUrl(path), {
     ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
+    headers,
     cache: "no-store",
+    credentials: "include",
   });
 
   const data = await parseResponse(res);
@@ -85,6 +92,13 @@ async function fetchAdminProtected(path: string, token: string, init?: RequestIn
     throw new Error(String(data?.message || "Akses admin system ditolak"));
   }
   return (data?.data ?? data) as AnyRecord | AnyRecord[];
+}
+
+export async function logoutAdminSystem(): Promise<void> {
+  await fetchAdminProtected('/api/admin-system/auth/logout', ADMIN_COOKIE_SESSION, {
+    method: 'POST',
+  });
+  clearAdminSystemToken();
 }
 
 export async function getAdminSystemOverview(token: string) {

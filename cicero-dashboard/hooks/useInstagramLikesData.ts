@@ -438,7 +438,7 @@ export default function useInstagramLikesData({
           !isOperatorRole && (directorateData || isDirectorateRoleValue),
         );
 
-        let rekapMeta: {
+        const rekapMeta: {
           totalIGPost?: number;
           totalUser?: number;
           totalSudahLike?: number;

@@ -4,15 +4,14 @@ import { Eye, EyeOff, Lock, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
-import { getApiBaseUrl } from "@/utils/api";
+import { COOKIE_SESSION_TOKEN, getApiBaseUrl } from "@/utils/api";
 import {
   decodeJwtPayload,
   extractReposterProfileFromLoginResponse,
   mergeReposterProfiles,
 } from "@/utils/reposterProfile";
 
-const SESSION_COOKIE = "reposter_session";
-const SAVED_CREDENTIALS_KEY = "reposter_saved_credentials";
+const SAVED_USERNAME_KEY = "reposter_saved_credentials";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -22,23 +21,27 @@ export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberCredentials, setRememberCredentials] = useState(false);
+  const [rememberUsername, setRememberUsername] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(SAVED_CREDENTIALS_KEY);
+    const raw = window.localStorage.getItem(SAVED_USERNAME_KEY);
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as {
         username?: string;
-        password?: string;
         remember?: boolean;
       };
       if (parsed?.remember) {
         setUsername(parsed.username ?? "");
-        setPassword(parsed.password ?? "");
-        setRememberCredentials(true);
+        setRememberUsername(true);
+        // Rewrite legacy entries so previously stored plaintext passwords are
+        // removed as soon as the login page is opened.
+        window.localStorage.setItem(
+          SAVED_USERNAME_KEY,
+          JSON.stringify({ username: parsed.username ?? "", remember: true }),
+        );
       }
     } catch (err) {
       console.warn("Gagal membaca kredensial reposter tersimpan.", err);
@@ -65,6 +68,7 @@ export default function LoginForm() {
           nrp: username.trim(),
           password: password.trim(),
         }),
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -78,20 +82,20 @@ export default function LoginForm() {
           profileSnapshot,
           tokenPayload,
         ]);
-        setAuth(sessionToken, mergedProfile ?? profileSnapshot ?? tokenPayload);
-        const encoded = encodeURIComponent(sessionToken);
-        document.cookie = `${SESSION_COOKIE}=${encoded}; Path=/reposter; SameSite=Lax; Max-Age=86400`;
-        if (rememberCredentials) {
+        setAuth(
+          COOKIE_SESSION_TOKEN,
+          mergedProfile ?? profileSnapshot ?? tokenPayload,
+        );
+        if (rememberUsername) {
           window.localStorage.setItem(
-            SAVED_CREDENTIALS_KEY,
+            SAVED_USERNAME_KEY,
             JSON.stringify({
               username: username.trim(),
-              password: password.trim(),
               remember: true,
             }),
           );
         } else {
-          window.localStorage.removeItem(SAVED_CREDENTIALS_KEY);
+          window.localStorage.removeItem(SAVED_USERNAME_KEY);
         }
         router.push(nextPath);
       } else {
@@ -174,10 +178,10 @@ export default function LoginForm() {
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:border-slate-600 dark:text-cyan-400 dark:focus:ring-cyan-500"
-              checked={rememberCredentials}
-              onChange={(event) => setRememberCredentials(event.target.checked)}
+              checked={rememberUsername}
+              onChange={(event) => setRememberUsername(event.target.checked)}
             />
-            Simpan username & password
+            Simpan username
           </label>
 
           {error ? (

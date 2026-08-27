@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import { COOKIE_SESSION_TOKEN, getAuthSession } from "@/utils/api";
 
 export const REPOSTER_TOKEN_STORAGE_KEY = "reposter_token";
 export const REPOSTER_PROFILE_STORAGE_KEY = "reposter_profile";
@@ -26,17 +27,15 @@ export function ReposterAuthProvider({
   const [isHydrating, setIsHydrating] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(REPOSTER_TOKEN_STORAGE_KEY);
-    setToken(storedToken);
-    const storedProfile = localStorage.getItem(REPOSTER_PROFILE_STORAGE_KEY);
-    if (storedProfile) {
-      try {
-        setProfile(JSON.parse(storedProfile));
-      } catch {
-        setProfile(null);
-      }
-    }
-    setIsHydrating(false);
+    localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
+    getAuthSession()
+      .then((session) => {
+        setToken(COOKIE_SESSION_TOKEN);
+        setProfile(session);
+      })
+      .catch(() => setToken(null))
+      .finally(() => setIsHydrating(false));
   }, []);
 
   const setAuth = useCallback(
@@ -45,21 +44,10 @@ export function ReposterAuthProvider({
       newProfile: Record<string, any> | null = null,
     ) => {
       setToken(newToken);
-      if (newToken) {
-        localStorage.setItem(REPOSTER_TOKEN_STORAGE_KEY, newToken);
-      } else {
-        localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
-      }
+      localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
 
       setProfile(newProfile);
-      if (newProfile) {
-        localStorage.setItem(
-          REPOSTER_PROFILE_STORAGE_KEY,
-          JSON.stringify(newProfile),
-        );
-      } else {
-        localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
-      }
+      localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
     },
     [],
   );

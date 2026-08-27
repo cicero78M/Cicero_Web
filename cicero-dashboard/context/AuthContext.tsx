@@ -1,6 +1,10 @@
 "use client";
 import { createContext, useEffect, useState } from "react";
-import { getClientProfile } from "@/utils/api";
+import {
+  COOKIE_SESSION_TOKEN,
+  getAuthSession,
+  getClientProfile,
+} from "@/utils/api";
 
 type AuthState = {
   token: string | null;
@@ -148,18 +152,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [premiumResolutionError, setPremiumResolutionError] = useState(false);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("cicero_token");
+    localStorage.removeItem("cicero_token");
     const storedClient = localStorage.getItem("client_id");
     const storedUser = localStorage.getItem("user_id");
     const storedUsername = localStorage.getItem("username");
     const storedRole = localStorage.getItem("user_role");
-    const tokenProfile = extractTokenProfile(storedToken);
-    setToken(storedToken);
-    setClientId(storedClient || tokenProfile.clientId || null);
-    setUserId(storedUser || tokenProfile.userId || null);
-    setUsername(storedUsername || tokenProfile.username || null);
-    setRole(storedRole || tokenProfile.role || null);
-    setIsHydrating(false);
+    getAuthSession()
+      .then((session) => {
+        setToken(COOKIE_SESSION_TOKEN);
+        setClientId(session.client_id || session.client_ids?.[0] || storedClient || null);
+        setUserId(session.dashboard_user_id || session.user_id || storedUser || null);
+        setUsername(session.username || session.nama || storedUsername || null);
+        setRole(session.role || storedRole || null);
+      })
+      .catch(() => setToken(null))
+      .finally(() => setIsHydrating(false));
   }, []);
 
   useEffect(() => {
@@ -345,8 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRegionalId(null);
     setPremiumTier(null);
     setPremiumExpiry(null);
-    if (newToken) localStorage.setItem("cicero_token", newToken);
-    else localStorage.removeItem("cicero_token");
+    localStorage.removeItem("cicero_token");
     if (resolvedClientId) localStorage.setItem("client_id", resolvedClientId);
     else localStorage.removeItem("client_id");
     if (resolvedUserId) localStorage.setItem("user_id", resolvedUserId);

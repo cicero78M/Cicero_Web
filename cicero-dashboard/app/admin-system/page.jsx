@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import useRequireSystemAdminAuth from "@/hooks/useRequireSystemAdminAuth";
 import {
-  clearAdminSystemToken,
+  logoutAdminSystem,
   getAdminSystemClients,
   getAdminSystemClientsSummary,
   getAdminSystemFullAudit,
@@ -49,8 +49,8 @@ export default function AdminSystemOverviewPage() {
             <p className="text-sm text-slate-400">Ruang admin terpisah dari dashboard operasional utama.</p>
           </div>
           <button
-            onClick={() => {
-              clearAdminSystemToken();
+            onClick={async () => {
+              await logoutAdminSystem().catch(() => undefined);
               window.location.href = "/admin-system/login";
             }}
             className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm"

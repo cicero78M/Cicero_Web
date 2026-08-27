@@ -15,7 +15,12 @@ import { useRouter } from "next/navigation";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import useAuth from "@/hooks/useAuth";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
-import { getApiBaseUrl, normalizeWhatsapp, requestDashboardPasswordReset } from "@/utils/api";
+import {
+  COOKIE_SESSION_TOKEN,
+  getApiBaseUrl,
+  normalizeWhatsapp,
+  requestDashboardPasswordReset,
+} from "@/utils/api";
 
 export default function LoginPage() {
   useAuthRedirect(); // Akan redirect ke /dashboard jika sudah login
@@ -132,7 +137,7 @@ export default function LoginPage() {
           data.user?.user_role ||
           data.user?.roleName ||
           null;
-        setAuth(data.token, userClient, userId, userRole, userName);
+        setAuth(COOKIE_SESSION_TOKEN, userClient, userId, userRole, userName);
         const requestedPath = new URLSearchParams(window.location.search).get("next");
         const safeRequestedPath =
           requestedPath?.startsWith("/") && !requestedPath.startsWith("//")

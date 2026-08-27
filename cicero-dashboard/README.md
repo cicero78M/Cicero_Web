@@ -102,11 +102,11 @@ The repository includes multiple package managers, so lockfiles from the monorep
 ## Modul Reposter
 
 - Rute `/reposter` kini menampilkan menu modul reposter dengan kartu ringkas untuk menuju profil pengguna, tugas official, dan tugas khusus (lihat `app/reposter/page.tsx`).
-- Halaman `/reposter/login` menangani autentikasi reposter secara terpisah, mengirim POST ke `/api/auth/user-login` dengan payload `nrp` dan `password`, menyimpan token di localStorage (`reposter_token`), menyimpan ringkasan profil ke localStorage (`reposter_profile`), dan cookie `reposter_session` untuk kebutuhan guard server, serta membungkus form login dalam Suspense karena memakai `useSearchParams`.
-- Form `/reposter/login` kini menampilkan ikon input, tombol tampil/sembunyikan password, serta opsi simpan username & password ke localStorage (`reposter_saved_credentials`).
+- Halaman `/reposter/login` menangani autentikasi reposter secara terpisah, mengirim POST ke `/api/auth/user-login` dengan payload `nrp` dan `password`, lalu memakai cookie sesi `HttpOnly` dari backend. Token dan profil tidak disimpan di localStorage; sesi dipulihkan melalui `/api/auth/session` yang memvalidasi JWT dan Redis.
+- Form `/reposter/login` menampilkan ikon input, tombol tampil/sembunyikan password, serta opsi menyimpan username saja ke localStorage (`reposter_saved_credentials`). Password lama yang pernah tersimpan dibersihkan saat halaman login dibuka.
 - Context `ReposterAuthContext` dan hook `useRequireReposterAuth` menjaga halaman reposter tetap terlindungi tanpa bercampur dengan sesi login dashboard utama.
 - Halaman `/reposter/login` dirender tanpa header dan sidebar dashboard agar pengalaman login reposter terasa lebih fokus dan tidak tercampur dengan UI modul utama.
-- Middleware `cicero-dashboard/middleware.ts` mengecek cookie `reposter_session` untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
+- Middleware `cicero-dashboard/middleware.ts` mengecek cookie autentikasi backend untuk semua rute `/reposter` selain `/reposter/login` agar redirect ke login terjadi lebih awal.
 - Rute `/reposter/profile`, `/reposter/tasks/official`, dan `/reposter/tasks/special` menampilkan halaman native dashboard yang menampilkan data profil, daftar tugas official, dan daftar tugas khusus berdasarkan token reposter.
 - `/reposter/tasks/official` kini mengambil posting Instagram dari `GET /api/insta/posts?client_id=...`, menggabungkan `client_id` dari token/login dan profil remote (`GET /api/users/{nrp}`), lalu menyaring konten "hari ini" (waktu lokal) agar konten terbaru muncul lebih dulu.
 - `/reposter/tasks/special` kini mengikuti UI/UX tugas official dan memuat posting khusus dari `GET /api/insta/posts-khusus?client_id=...` agar daftar tugas khusus tampil konsisten.

@@ -66,8 +66,8 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/reposter")) {
-    const sessionCookie = request.cookies.get("reposter_session");
-    if (sessionCookie?.value !== "1") {
+    const authToken = request.cookies.get("token")?.value;
+    if (!authToken) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/reposter/login";
       loginUrl.searchParams.set("next", pathname);

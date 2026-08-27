@@ -7,6 +7,7 @@ import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { resolvePostThumbnail } from "@/utils/postThumbnail";
 import {
+  COOKIE_SESSION_TOKEN,
   getApiBaseUrl,
   getInstagramPostsViaBackend,
   getInstagramProfileViaBackend,
@@ -341,8 +342,13 @@ export default function DashboardPage() {
 
         for (const endpoint of endpoints) {
           try {
+            const headers = new Headers();
+            if (authToken !== COOKIE_SESSION_TOKEN) {
+              headers.set("Authorization", `Bearer ${authToken}`);
+            }
             const res = await fetch(endpoint, {
-              headers: { Authorization: `Bearer ${authToken}` },
+              headers,
+              credentials: "include",
               cache: "no-store",
               signal: controller.signal,
             });

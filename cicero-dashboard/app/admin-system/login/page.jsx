@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   clearAdminSystemToken,
   requestAdminTelegramOtp,
-  setAdminSystemToken,
   verifyAdminTelegramOtp,
 } from "@/utils/adminSystemApi";
 
@@ -47,10 +46,7 @@ export default function AdminSystemLoginPage() {
         otpCode.trim(),
         telegramUsername.trim().replace(/^@/, ""),
       );
-      if (!data?.token) {
-        throw new Error("Token admin tidak diterima dari server");
-      }
-      setAdminSystemToken(data.token);
+      if (!data?.success) throw new Error("Sesi admin tidak diterima dari server");
       router.replace("/admin-system");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verifikasi OTP gagal");

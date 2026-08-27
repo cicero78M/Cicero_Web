@@ -1,8 +1,7 @@
-import {
-  REPOSTER_PROFILE_STORAGE_KEY,
-  REPOSTER_TOKEN_STORAGE_KEY,
-} from "@/context/ReposterAuthContext";
 import { formatPremiumTierLabel, normalizePremiumTierKey } from "@/utils/premium";
+
+const REPOSTER_TOKEN_STORAGE_KEY = "reposter_token";
+const REPOSTER_PROFILE_STORAGE_KEY = "reposter_profile";
 
 // utils/api.ts
 let cachedApiBaseUrl: string | null = null;
@@ -158,6 +157,7 @@ export async function confirmDashboardPasswordReset(
 }
 
 type AuthFailureScope = "dashboard" | "reposter" | "none";
+export const COOKIE_SESSION_TOKEN = "cookie-session";
 
 type AuthenticatedRequestInit = RequestInit & {
   authFailureScope?: AuthFailureScope;
@@ -165,9 +165,31 @@ type AuthenticatedRequestInit = RequestInit & {
 
 const REPOSTER_SESSION_COOKIE = "reposter_session";
 
+function appendAuthorizationHeader(
+  headers: Record<string, string>,
+  token?: string | null,
+): void {
+  if (token && token !== COOKIE_SESSION_TOKEN) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+}
+
+export async function getAuthSession(): Promise<any> {
+  const res = await fetch(buildApiUrl("/api/auth/session"), {
+    credentials: "include",
+    cache: "no-store",
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.success === false) {
+    throw new Error(data?.message || "Sesi tidak valid");
+  }
+  return data?.data || data;
+}
+
 function clearCookie(name: string, path: string = "/"): void {
   if (typeof document === "undefined") return;
-  document.cookie = `${name}=; Path=${path}; Max-Age=0; SameSite=Lax`;
+  const secureAttribute = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=; Path=${path}; Max-Age=0; SameSite=Strict${secureAttribute}`;
 }
 
 function redirectTo(path: string): void {
@@ -212,9 +234,7 @@ function handleAuthFailure(scope: AuthFailureScope = "dashboard"): void {
 async function postLogout(token?: string | null): Promise<void> {
   try {
     const headers: Record<string, string> = {};
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    appendAuthorizationHeader(headers, token);
     await fetch(buildApiUrl("/api/auth/logout"), {
       method: "POST",
       headers,
@@ -279,11 +299,9 @@ export async function getPremiumRequestContext(
 ): Promise<PremiumRequestContext> {
   const endpoint = buildApiUrl("/api/premium/request/latest");
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  appendAuthorizationHeader(headers, token);
 
-  const res = await fetch(endpoint, { headers, signal });
+  const res = await fetch(endpoint, { headers, signal, credentials: "include" });
 
   let data: any = null;
   try {
@@ -402,9 +420,7 @@ export async function submitPremiumRequest(
 ): Promise<SubmitPremiumRequestResponse> {
   const endpoint = buildApiUrl("/api/premium/request");
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  appendAuthorizationHeader(headers, token);
 
   const transferAmount = payload.transfer_amount ?? payload.amount;
   const amount = payload.amount ?? transferAmount;
@@ -449,6 +465,7 @@ export async function submitPremiumRequest(
     headers,
     body: JSON.stringify(body),
     signal,
+    credentials: "include",
   });
 
   let data: any = null;
@@ -883,13 +900,15 @@ async function fetchWithAuth(
   options: AuthenticatedRequestInit = {}
 ): Promise<Response> {
   const { authFailureScope = "dashboard", ...fetchOptions } = options;
+  const headers = new Headers(fetchOptions.headers);
+  headers.set("Content-Type", "application/json");
+  if (token && token !== COOKIE_SESSION_TOKEN) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
   const res = await fetch(url, {
     ...fetchOptions,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...(fetchOptions.headers || {}),
-    },
+    headers,
+    credentials: "include",
   });
 
   let failurePayload: any = null;
