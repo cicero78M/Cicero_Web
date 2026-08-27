@@ -1,395 +1,252 @@
+import Link from "next/link";
 import {
+  AlertCircle,
+  ArrowDown,
   BadgeCheck,
-  CalendarCheck,
-  FileText,
-  Map,
-  Network,
-  Shield,
-  Sparkles,
+  BarChart3,
+  BookOpenCheck,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock3,
+  Database,
+  FileCheck2,
+  Filter,
+  Instagram,
+  MessageCircle,
+  RefreshCw,
+  ShieldCheck,
+  UserRoundCheck,
   UsersRound,
 } from "lucide-react";
 
 export const metadata = {
-  title: "Mekanisme Sistem Absensi",
+  title: "Mekanisme Sistem Absensi | Cicero",
   description:
-    "Ikhtisar menyeluruh mekanisme absensi harian Cicero: aktor, alur kerja, peran RACI, dan integrasi lintas sistem.",
+    "Mekanisme pencatatan engagement, klasifikasi status, verifikasi, dan rekap absensi Cicero.",
 };
 
-const actors = [
+const flow = [
   {
-    name: "Tingkat Polda- Direktorat / Bidang",
-    icon: Shield,
-    focus: "Regulator & pengawas kebijakan",
-    responsibilities: [
-      "Menetapkan target kepatuhan harian",
-      "Upload tugas konten pada akun resmi",
-      "Melakukan briefing harian pada WAG Social Media Tingkat Polda- Direktorat / Bidang",
-      "Mengirim Laporan Kepatuhan kepada satker jajaran",
-      "Memonitor permintaan kolaborasi dan mengkurasi konten dari satker jajaran",
-    ],
+    icon: ClipboardCheck,
+    title: "Konten tugas ditetapkan",
+    text: "Konten Instagram atau TikTok yang menjadi target harus berada pada periode dan lingkup client yang benar.",
   },
   {
-    name: "Operator Polres",
-    icon: UsersRound,
-    focus: "Koordinator lapangan",
-    responsibilities: [
-      "Mengelola data personil - penambahan akun baru, pergantian akun, permintaan penghapusan akun",
-      "Monitor tugas di WAG Social Media Tingkat Polda- Direktorat / Bidang dan mendistribusikan link tugas harian",
-      "Mengakomodir kendala personil dan melaporkan pada Cicero",
-      "Melakukan absensi personil harian",
-      "Mengirim permintaan kolaborasi konten ke akun resmi Ditbinmas",
-    ],
+    icon: UserRoundCheck,
+    title: "Personel melaksanakan",
+    text: "Personel berinteraksi menggunakan username yang terdaftar pada profil Cicero dan mengikuti arahan tugas yang berlaku.",
   },
   {
-    name: "Personil",
+    icon: Database,
+    title: "Cicero menyinkronkan",
+    text: "Sistem mengambil data yang tersedia dari sumber platform. Pembaruan tidak selalu seketika dan dapat dipengaruhi batas platform.",
+  },
+  {
+    icon: Filter,
+    title: "Status diklasifikasikan",
+    text: "Jumlah aktivitas dibandingkan dengan jumlah konten target pada konteks yang dipilih: lengkap, sebagian, belum, atau tanpa username.",
+  },
+  {
+    icon: FileCheck2,
+    title: "Operator memverifikasi",
+    text: "Operator memeriksa periode, satuan, konten, username, dan hasil pemuatan sebelum menindaklanjuti personel.",
+  },
+  {
+    icon: BarChart3,
+    title: "Rekap digunakan",
+    text: "Rekap dapat disalin atau diunduh dari modul engagement. Waktu pengambilan dan filter wajib dicantumkan.",
+  },
+];
+
+const roles = [
+  {
+    name: "Personel",
     icon: BadgeCheck,
-    focus: "Pelaksana tugas individu",
-    responsibilities: [
-      "Melakukan likes dan komentar sesuai tugas harian",
-      "Melaporkan kendala kepada operator",
-      "Memperbarui data akun pribadi ketika ada perubahan data",
+    duties: [
+      "Melaksanakan tugas pada konten yang benar dengan akun terdaftar.",
+      "Memastikan aktivitas benar-benar berhasil di aplikasi resmi.",
+      "Memperbarui profil melalui portal claim bila username berubah.",
+      "Melaporkan kendala kepada operator tanpa membagikan kredensial.",
+    ],
+  },
+  {
+    name: "Operator / pengelola satuan",
+    icon: UsersRound,
+    duties: [
+      "Memastikan daftar personel dan username lengkap sebelum pemantauan.",
+      "Mendistribusikan konten serta batas waktu sesuai arahan resmi.",
+      "Memilih periode, client, dan filter yang tepat pada insight.",
+      "Memverifikasi status sebelum mengirim pengingat atau laporan.",
+    ],
+  },
+  {
+    name: "Direktorat / pengawas",
+    icon: ShieldCheck,
+    duties: [
+      "Menetapkan lingkup tugas dan target operasional.",
+      "Meninjau rekap lintas satuan sesuai kewenangan akun.",
+      "Menggunakan Executive Summary atau Anev jika fitur tersedia.",
+      "Menindaklanjuti hasil tervalidasi, bukan data yang masih dimuat.",
     ],
   },
   {
     name: "Sistem Cicero",
-    icon: Network,
-    focus: "Otomasi & analytics",
-    responsibilities: [
-      "Monitoring akun resmi, mengambil data konten hari ini, membuat dan mengirim pesan tugas ke WAG Tingkat Polda- Direktorat / Bidang",
-      "Menarik data engagement real-time",
-      "Menghasilkan status absensi",
-      "Menghitung skor pelaksanaan tugas",
-      "Membuat rekap kepatuhan harian, mingguan dan bulanan",
-      "Mengirim informasi, laporan dan notifikasi via Wa Bot",  
-      "Mendistribusikan laporan harian, mingguan dan Executive Summary / Anev Bulanan",
+    icon: RefreshCw,
+    duties: [
+      "Menggabungkan profil personel, konten target, dan aktivitas platform.",
+      "Menghitung status berdasarkan jumlah target pada periode terpilih.",
+      "Menyediakan insight, pencarian, filter, salin rekap, dan unduhan.",
+      "Memisahkan personel tanpa username dari status pelaksanaan.",
     ],
   },
 ];
 
-const steps = [
+const statuses = [
   {
-    title: "Distribusi Tugas Harian",
-    detail:
-      "Tingkat Polda - Direktorat / Bidang mengunggah konten harian atau menerima permintaan kolaborasi dari satker, selanjutnya sistem Cicero secara otomatis mengirim rrekap link konten tugas ke WAG pusat, dilanjut operator Polres menyalurkan rekap link tugas ke personil / group satkernya dengan instruksi batas waktu.",
+    label: "Sudah / lengkap",
+    color: "emerald",
+    text: "Aktivitas terdeteksi pada seluruh konten target dalam konteks yang dipilih.",
   },
   {
-    title: "Pelaksanaan Interaksi",
-    detail:
-      "Personil menjalankan tugas like/komentar sesuai tugas konten. Sistem merekam aktivitas pelaksanaan likes dan komentar.",
+    label: "Kurang lengkap",
+    color: "amber",
+    text: "Sebagian aktivitas terdeteksi, tetapi jumlahnya masih di bawah total konten target.",
   },
   {
-    title: "Validasi & Absensi",
-    detail:
-      "Sistem melakukan fetch data pelaksanaan likes dan komentar, memastikan status melaksanakan /tidak melaksanakan akurat.",
+    label: "Belum",
+    color: "rose",
+    text: "Belum ada aktivitas yang terdeteksi pada konten target untuk periode terpilih.",
   },
   {
-    title: "Eskalasi & Pelaporan",
-    detail:
-      "Status harian direkap otomatis. Operator mengambil absensi via dashboard, memberi teguran awal kepada personil, selanjutnya Tingkat Polda - Direktorat / Bidang memberikan teguran tindak lanjut bagi satker dengan tingkat kepatuhan rendah.",
-  },
-];
-
-const raciMatrix = [
-  {
-    activity: "Penetapan target & SOP",
-    r: "Tingkat Polda - Direktorat / Bidang",
-    a: "Tingkat Polda - Direktorat / Bidang",
-    c: "Operator Polres",
-    i: "Personil",
-  },
-  {
-    activity: "Distribusi link & jadwal",
-    r: "Operator Polres",
-    a: "Tingkat Polda - Direktorat / Bidang",
-    c: "Sistem",
-    i: "Personil",
-  },
-  {
-    activity: "Eksekusi tugas interaksi",
-    r: "Personil",
-    a: "Operator Polres",
-    c: "Tingkat Polda - Direktorat / Bidang",
-    i: "Sistem",
-  },
-  {
-    activity: "Monitoring & rekap absensi",
-    r: "Sistem",
-    a: "Operator Polres",
-    c: "Tingkat Polda - Direktorat / Bidang",
-    i: "Personil",
-  },
-  {
-    activity: "Eskalasi ketidakpatuhan",
-    r: "Operator Polres",
-    a: "Tingkat Polda - Direktorat / Bidang",
-    c: "Sistem",
-    i: "Personil",
+    label: "Belum update username",
+    color: "slate",
+    text: "Profil belum memiliki username platform. Status ini dipisahkan dari penilaian aktivitas.",
   },
 ];
 
-const integrations = [
-  {
-    term: "Re-fetch",
-    description: "Pemicu sinkronisasi ulang data engagement pada dashboard untuk memastikan status absensi terbaru.",
-    route: "Dashboard → Instagram/TikTok Insight → Tombol Re-fetch",
-  },
-  {
-    term: "Shadowban",
-    description: "Kondisi penurunan jangkauan konten yang memerlukan pergantian akun dan update data profil secepatnya.",
-    route: "WA Bot → Menu Update Profil → Kirim username baru",
-  },
-  {
-    term: "Auto Recap",
-    description: "Job terjadwal yang membuat ringkasan kepatuhan harian di modul Executive Summary.",
-    route: "Background Service → Executive Summary → Distribusi PDF",
-  },
-  {
-    term: "Attendance Score",
-    description: "Skor gabungan dari kecepatan, kelengkapan, dan konsistensi interaksi personil.",
-    route: "Analytics Engine → Dashboard KPI → Notifikasi WA Bot",
-  },
+const statusStyles = {
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+  amber: "border-amber-200 bg-amber-50 text-amber-950",
+  rose: "border-rose-200 bg-rose-50 text-rose-950",
+  slate: "border-slate-200 bg-slate-100 text-slate-900",
+};
+
+const verification = [
+  "Nama client/satuan sesuai kewenangan akun",
+  "Platform dan konten tugas sudah benar",
+  "Periode atau rentang tanggal sudah benar",
+  "Data selesai dimuat tanpa pesan kesalahan",
+  "Jumlah konten target masuk akal",
+  "Username personel terisi dan sesuai akun",
+  "Filter pencarian/status dicatat",
+  "Waktu pengambilan data (WIB) dicantumkan",
 ];
 
-function RelationshipMap() {
+function SectionHeading({ eyebrow, title, description }) {
   return (
-    <svg
-      viewBox="0 0 600 260"
-      role="img"
-      aria-label="Peta hubungan antar aktor sistem absensi"
-      className="h-auto w-full"
-    >
-      <defs>
-        <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(165,243,252,0.8)" />
-          <stop offset="100%" stopColor="rgba(196,181,253,0.9)" />
-        </linearGradient>
-        <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(56,189,248,0.6)" />
-          <stop offset="100%" stopColor="rgba(167,139,250,0.5)" />
-        </linearGradient>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="rgba(148,163,184,0.35)" />
-        </filter>
-      </defs>
-
-      <rect x="0" y="0" width="600" height="260" rx="24" fill="rgba(241,245,249,0.85)" />
-
-      <g stroke="url(#edgeGradient)" strokeWidth="3" strokeLinecap="round" fill="none">
-        <path d="M180 70 Q300 30 420 70" />
-        <path d="M180 190 Q300 230 420 190" />
-        <path d="M150 90 Q120 130 150 170" />
-        <path d="M450 90 Q480 130 450 170" />
-        <path d="M300 110 Q300 130 300 150" strokeDasharray="8 6" />
-      </g>
-
-      <g fill="url(#nodeGradient)" filter="url(#shadow)" stroke="rgba(148,163,184,0.5)" strokeWidth="1.5">
-        <rect x="250" y="110" width="100" height="50" rx="14" />
-        <rect x="90" y="40" width="120" height="60" rx="18" />
-        <rect x="90" y="160" width="120" height="60" rx="18" />
-        <rect x="390" y="40" width="120" height="60" rx="18" />
-        <rect x="390" y="160" width="120" height="60" rx="18" />
-      </g>
-
-      <g
-        fill="#1f2937"
-        fontFamily="'Inter', 'Helvetica Neue', sans-serif"
-        fontSize="15"
-        fontWeight="600"
-        textAnchor="middle"
-      >
-        <text x="300" y="140">Sistem Cicero</text>
-        <text x="150" y="75">Tingkat Polda - Direktorat / Bidang</text>
-        <text x="150" y="195">Operator</text>
-        <text x="450" y="75">Analytics</text>
-        <text x="450" y="195">Personil</text>
-      </g>
-
-      <g
-        fill="rgba(100,116,139,0.85)"
-        fontFamily="'Inter', 'Helvetica Neue', sans-serif"
-        fontSize="11"
-        fontWeight="500"
-        textAnchor="middle"
-      >
-        <text x="300" y="157">(Engine)</text>
-        <text x="150" y="92">(Regulator)</text>
-        <text x="150" y="212">(Koordinator)</text>
-        <text x="450" y="92">(Insight Hub)</text>
-        <text x="450" y="212">(Pelaksana)</text>
-      </g>
-
-      <g
-        fill="#0284c7"
-        fontFamily="'Inter', 'Helvetica Neue', sans-serif"
-        fontSize="11"
-        fontWeight="500"
-      >
-        <text x="300" y="95" textAnchor="middle">Rekap Otomatis</text>
-        <text x="300" y="185" textAnchor="middle">Data Absensi</text>
-        <text x="104" y="130" textAnchor="start">Kebijakan</text>
-        <text x="104" y="150" textAnchor="start">Laporan harian</text>
-        <text x="496" y="130" textAnchor="end">Insight Data</text>
-        <text x="496" y="150" textAnchor="end">Laporan Kendala</text>
-        <text x="300" y="175" textAnchor="middle">Data Engagement</text>
-      </g>
-    </svg>
+    <div className="max-w-3xl">
+      <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-700">{eyebrow}</p>
+      <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
+      <p className="mt-3 leading-7 text-slate-600">{description}</p>
+    </div>
   );
 }
 
 export default function MekanismeAbsensiPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-100 text-slate-800">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 top-24 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-teal-200/30 blur-3xl" />
-        <div className="absolute inset-x-20 bottom-10 h-64 rounded-full bg-gradient-to-r from-sky-200/40 via-transparent to-pink-200/40 blur-2xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-6 py-16">
-        <header className="mb-12 space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-sky-700 shadow-lg shadow-sky-200/70">
-            <Sparkles className="h-4 w-4 text-sky-500" /> Blueprint Absensi
+    <main className="min-h-screen bg-slate-50 text-slate-800">
+      <section className="border-b border-slate-200 bg-gradient-to-br from-sky-950 via-slate-900 to-indigo-950 text-white">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <div className="max-w-4xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-sky-100">
+              <BookOpenCheck className="h-4 w-4" aria-hidden="true" /> Mekanisme operasional
+            </span>
+            <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-5xl">Mekanisme Sistem Absensi Cicero</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-200 sm:text-lg">
+              Cara Cicero mengubah konten tugas dan aktivitas platform menjadi status engagement yang dapat diverifikasi dan direkap.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3 text-sm text-slate-300">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5"><Clock3 className="h-4 w-4" aria-hidden="true" /> Diperbarui 27 Agustus 2026</span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5"><AlertCircle className="h-4 w-4" aria-hidden="true" /> Bukan absensi kehadiran fisik</span>
+            </div>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Mekanisme Sistem Absensi Cicero
-          </h1>
-          <p className="mx-auto max-w-3xl text-base text-slate-600">
-            Peta utuh yang merangkum aktor kunci, alur kerja, tanggung jawab RACI, serta koneksi integrasi yang menopang kepatuhan harian di lingkungan Tingkat Polda - Direktorat / Bidang.
-          </p>
-        </header>
+        </div>
+      </section>
 
-        <section className="grid gap-6 sm:grid-cols-2">
-          {actors.map((actor) => {
-            const Icon = actor.icon;
-            return (
-              <article
-                key={actor.name}
-                className="group relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/80 p-6 shadow-xl shadow-sky-100/70 backdrop-blur-md transition hover:border-sky-300"
-              >
-                <div className="absolute -top-16 right-0 h-32 w-32 rounded-full bg-sky-200/40 blur-2xl" />
-                <div className="relative flex flex-col gap-4">
-                  <div className="flex items-center gap-3 text-sky-700">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-300/60 bg-sky-100 text-sky-600 shadow-inner shadow-sky-200/70">
-                      <Icon className="h-6 w-6" />
-                    </span>
-                    <div>
-                      <h2 className="text-lg font-semibold text-slate-900">{actor.name}</h2>
-                      <p className="text-sm text-slate-600">{actor.focus}</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-2 text-sm text-slate-700">
-                    {actor.responsibilities.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-teal-400" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <section className="rounded-3xl border border-sky-200 bg-sky-50 p-6 sm:p-8" aria-labelledby="definition-title">
+          <div className="flex items-start gap-4">
+            <span className="rounded-2xl bg-sky-700 p-3 text-white"><CheckCircle2 className="h-6 w-6" aria-hidden="true" /></span>
+            <div><h2 id="definition-title" className="text-xl font-bold text-slate-950">Apa yang dimaksud “absensi” di Cicero?</h2><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-700">Absensi adalah klasifikasi pelaksanaan aktivitas digital terhadap konten target—likes Instagram dan komentar TikTok—berdasarkan data yang berhasil dideteksi pada periode serta lingkup terpilih. Status bukan bukti kehadiran fisik dan harus diverifikasi sebelum dijadikan dasar tindak lanjut.</p></div>
+          </div>
+        </section>
+
+        <section className="py-14" aria-labelledby="flow-title">
+          <SectionHeading eyebrow="01 · Alur data" title="Dari konten tugas menjadi rekap" description="Setiap tahap bergantung pada tahap sebelumnya. Kesalahan username, periode, atau konten target akan memengaruhi status akhir." />
+          <div className="mt-8 grid gap-3 lg:grid-cols-6">
+            {flow.map(({ icon: Icon, title, text }, index) => (
+              <div key={title} className="contents">
+                <article className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between"><span className="rounded-xl bg-sky-50 p-2 text-sky-700"><Icon className="h-5 w-5" aria-hidden="true" /></span><span className="text-xs font-bold text-slate-400">0{index + 1}</span></div>
+                  <h3 className="mt-4 font-bold text-slate-950">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+                </article>
+                {index < flow.length - 1 ? <ArrowDown className="mx-auto h-5 w-5 text-sky-400 lg:hidden" aria-hidden="true" /> : null}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-y border-slate-200 py-14" aria-labelledby="role-title">
+          <SectionHeading eyebrow="02 · Tanggung jawab" title="Empat pihak dalam mekanisme absensi" description="Cicero membantu pencatatan dan analisis; validasi operasional tetap menjadi tanggung jawab pengguna sesuai kewenangannya." />
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {roles.map(({ name, icon: Icon, duties }) => (
+              <article key={name} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-3"><span className="rounded-2xl bg-sky-50 p-3 text-sky-700"><Icon className="h-6 w-6" aria-hidden="true" /></span><h3 className="text-lg font-bold text-slate-950">{name}</h3></div>
+                <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">{duties.map((duty) => <li key={duty} className="flex gap-2"><span className="text-emerald-600">✓</span><span>{duty}</span></li>)}</ul>
               </article>
-            );
-          })}
-        </section>
-
-        <section className="mt-14 grid gap-6">
-          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70">
-            <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-200/40 blur-2xl" />
-            <div className="relative flex flex-col gap-5">
-              <div className="inline-flex items-center gap-3 text-sky-700">
-                <CalendarCheck className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Alur Mekanisme</span>
-              </div>
-              <ol className="space-y-4 text-sm leading-relaxed text-slate-700">
-                {steps.map((step, idx) => (
-                  <li key={step.title} className="rounded-2xl border border-sky-200/60 bg-white/70 p-4">
-                    <div className="flex items-center gap-3 text-sky-700">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-sky-300/70 bg-sky-100 text-sm font-semibold text-sky-600">
-                        {idx + 1}
-                      </span>
-                      <p className="text-base font-semibold text-slate-900">{step.title}</p>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600">{step.detail}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/80 p-8 shadow-xl shadow-sky-100/70 backdrop-blur-md">
-            <div className="absolute -right-10 top-1/2 h-36 w-36 -translate-y-1/2 rounded-full bg-teal-200/40 blur-2xl" />
-            <div className="relative flex flex-col gap-4">
-              <div className="inline-flex items-center gap-3 text-sky-700">
-                <Map className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Peta Hubungan Aktor</span>
-              </div>
-              <div className="rounded-2xl border border-sky-100 bg-white/70 p-4">
-                <RelationshipMap />
-              </div>
-              <p className="text-xs text-slate-500">
-                Garis solid menunjukkan aliran koordinasi rutin, garis putus-putus menandakan eskalasi yang dipicu indikator sistem.
-              </p>
-            </div>
+            ))}
           </div>
         </section>
 
-        <section className="mt-14 grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70 backdrop-blur-md">
-            <div className="absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-teal-200/40 blur-2xl" />
-            <div className="relative flex flex-col gap-4">
-              <div className="inline-flex items-center gap-3 text-sky-700">
-                <FileText className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Tabel RACI</span>
-              </div>
-              <div className="overflow-hidden rounded-2xl border border-sky-100">
-                <table className="min-w-full divide-y divide-sky-100 text-left text-sm text-slate-700">
-                  <thead className="bg-sky-100 text-xs uppercase tracking-widest text-slate-500">
-                    <tr>
-                      <th className="px-4 py-3">Aktivitas</th>
-                      <th className="px-4 py-3">R</th>
-                      <th className="px-4 py-3">A</th>
-                      <th className="px-4 py-3">C</th>
-                      <th className="px-4 py-3">I</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-sky-100 bg-white/80">
-                    {raciMatrix.map((row) => (
-                      <tr key={row.activity}>
-                        <td className="px-4 py-3 font-medium text-slate-900">{row.activity}</td>
-                        <td className="px-4 py-3">{row.r}</td>
-                        <td className="px-4 py-3">{row.a}</td>
-                        <td className="px-4 py-3">{row.c}</td>
-                        <td className="px-4 py-3">{row.i}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="text-xs text-slate-500">
-                R = Responsible, A = Accountable, C = Consulted, I = Informed.
-              </p>
-            </div>
+        <section className="py-14" aria-labelledby="status-title">
+          <SectionHeading eyebrow="03 · Status" title="Cara status engagement dibentuk" description="Status dihitung per personel dengan membandingkan aktivitas yang terdeteksi terhadap total konten target. Instagram memakai likes; TikTok memakai komentar." />
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {statuses.map((status) => <article key={status.label} className={`rounded-2xl border p-5 ${statusStyles[status.color]}`}><h3 className="font-bold">{status.label}</h3><p className="mt-2 text-sm leading-6 opacity-80">{status.text}</p></article>)}
           </div>
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950"><strong>Data kosong tidak selalu berarti “Belum”.</strong> Jika halaman masih loading, sumber platform gagal, atau jumlah target belum tersedia, tunggu dan muat ulang sebelum menarik kesimpulan.</div>
+        </section>
 
-          <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 p-8 shadow-xl shadow-sky-100/70">
-            <div className="absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-200/40 blur-2xl" />
-            <div className="relative flex flex-col gap-4">
-              <div className="inline-flex items-center gap-3 text-sky-700">
-                <Shield className="h-6 w-6" />
-                <span className="text-sm font-semibold uppercase tracking-[0.2em]">Istilah Kunci &amp; Rute Integrasi</span>
-              </div>
-              <ul className="space-y-4 text-sm text-slate-700">
-                {integrations.map((item) => (
-                  <li key={item.term} className="rounded-2xl border border-sky-200/60 bg-white/70 p-4">
-                    <div className="text-base font-semibold text-slate-900">{item.term}</div>
-                    <p className="mt-1 text-sm text-slate-600">{item.description}</p>
-                    <p className="mt-2 text-xs font-medium uppercase tracking-widest text-sky-600">
-                      {item.route}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <section className="grid gap-6 border-y border-slate-200 py-14 lg:grid-cols-2" aria-label="Modul dan akses">
+          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="flex items-center gap-3"><Instagram className="h-7 w-7 text-fuchsia-700" aria-hidden="true" /><h2 className="text-xl font-bold text-slate-950">Instagram Engagement Insight</h2></div>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Memantau kelengkapan likes terhadap konten Instagram target, menelusuri personel, memfilter status, dan membuat rekap.</p>
+            <Link href="/likes/instagram" className="mt-5 inline-flex rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700">Buka insight Instagram</Link>
+          </article>
+          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="flex items-center gap-3"><MessageCircle className="h-7 w-7 text-sky-700" aria-hidden="true" /><h2 className="text-xl font-bold text-slate-950">TikTok Engagement Insight</h2></div>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Memantau kelengkapan komentar terhadap konten TikTok target, menelusuri personel, memfilter status, dan membuat rekap.</p>
+            <Link href="/comments/tiktok" className="mt-5 inline-flex rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700">Buka insight TikTok</Link>
+          </article>
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sm leading-6 text-sky-950 lg:col-span-2"><strong>Akses bersifat dinamis.</strong> Ketersediaan platform, pilihan periode historis, lingkup lintas client, Executive Summary, dan Anev mengikuti role, jenis client, status fitur, serta paket akun. Menu yang berbeda antar pengguna tidak otomatis menandakan gangguan.</div>
+        </section>
+
+        <section className="py-14" aria-labelledby="verify-title">
+          <SectionHeading eyebrow="04 · Kontrol kualitas" title="Checklist sebelum rekap dikirim" description="Gunakan checklist ini setiap kali membuat laporan agar hasil dapat ditelusuri dan dibandingkan secara adil." />
+          <div className="mt-8 rounded-3xl bg-slate-900 p-6 text-white sm:p-8">
+            <div className="grid gap-3 sm:grid-cols-2">{verification.map((item) => <div key={item} className="flex items-start gap-3 rounded-xl bg-white/5 p-3 text-sm text-slate-200"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" /><span>{item}</span></div>)}</div>
           </div>
+        </section>
+
+        <section className="grid gap-6 pb-14 lg:grid-cols-[1.1fr_0.9fr]">
+          <article className="rounded-3xl border border-rose-200 bg-rose-50 p-6 sm:p-8">
+            <h2 className="text-xl font-bold text-rose-950">Jika status terasa tidak sesuai</h2>
+            <ol className="mt-5 space-y-3 text-sm leading-6 text-rose-950"><li><strong>1.</strong> Cocokkan username pada User Directory dengan akun yang digunakan.</li><li><strong>2.</strong> Pastikan konten, platform, client, dan periode tidak berubah.</li><li><strong>3.</strong> Verifikasi aktivitas langsung pada aplikasi resmi.</li><li><strong>4.</strong> Muat ulang setelah sinkronisasi; jangan melakukan refresh berulang tanpa jeda.</li><li><strong>5.</strong> Jika tetap berbeda, laporkan waktu WIB, halaman, filter, dan screenshot tanpa kredensial.</li></ol>
+          </article>
+          <article className="rounded-3xl border border-sky-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-xl font-bold text-slate-950">Dokumentasi terkait</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Panduan keamanan, pembaruan profil, interpretasi data kosong, serta eskalasi kendala tersedia pada halaman Panduan &amp; SOP.</p>
+            <Link href="/panduan-sop" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-800">Buka Panduan &amp; SOP <BookOpenCheck className="h-4 w-4" aria-hidden="true" /></Link>
+          </article>
         </section>
       </div>
     </main>
