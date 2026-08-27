@@ -4,13 +4,17 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
+  Activity,
   CalendarClock,
+  CheckCircle2,
   Download,
   LineChart,
   MapPin,
   RefreshCcw,
   ShieldCheck,
   Sparkles,
+  Target,
+  TriangleAlert,
   Users,
 } from "lucide-react";
 import Loader from "@/components/Loader";
@@ -67,12 +71,12 @@ type IdentityEntry = {
 type UnknownRecord = Record<string, unknown>;
 
 const TIME_RANGE_OPTIONS = [
-  { value: "today", label: "Harian" },
-  { value: "7d", label: "Mingguan" },
-  { value: "30d", label: "Bulanan" },
+  { value: "today", label: "Hari Ini" },
+  { value: "7d", label: "7 Hari Terakhir" },
+  { value: "30d", label: "30 Hari Terakhir" },
   { value: "90d", label: "90 Hari" },
-  { value: "all", label: "Semua" },
-  { value: "custom", label: "Custom" },
+  { value: "all", label: "Semua Data" },
+  { value: "custom", label: "Rentang Tanggal" },
 ] as const;
 
 const ENTERPRISE_PANEL = "rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_35px_-24px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-900/90";
@@ -126,28 +130,6 @@ function normalizeHandleValue(raw?: string) {
   const ig = trimmed.match(/instagram\.com\/(?:p\/|reel\/)?@?([A-Za-z0-9._-]+)/i)?.[1];
   const tk = trimmed.match(/tiktok\.com\/@?([A-Za-z0-9._-]+)/i)?.[1];
   return (ig || tk || trimmed).replace(/^@+/, "").replace(/\/$/, "").toLowerCase();
-}
-
-function formatDateInput(date: Date) {
-  const shifted = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return shifted.toISOString().split("T")[0];
-}
-
-function buildQuickRange(timeRange: "today" | "7d" | "30d") {
-  const today = new Date();
-  const endDate = formatDateInput(today);
-  if (timeRange === "today") {
-    return { start_date: endDate, end_date: endDate };
-  }
-
-  if (timeRange === "7d") {
-    const start = new Date(today);
-    start.setDate(today.getDate() - 6);
-    return { start_date: formatDateInput(start), end_date: endDate };
-  }
-
-  const start = new Date(today.getFullYear(), today.getMonth(), 1);
-  return { start_date: formatDateInput(start), end_date: endDate };
 }
 
 function mapPlatformPosts(data: DashboardAnevResponse | null): PlatformPost[] {
@@ -589,12 +571,68 @@ export default function AnevPolresPage() {
   const igLikesBySatfung = useMemo(() => mapInstagramLikesPerSatfung(data), [data]);
   const tiktokBySatfung = useMemo(() => mapTiktokPerSatfung(data), [data]);
   const topPerformers = useMemo(() => mapTopPerformers(data), [data]);
+  const executiveSummary = useMemo(() => {
+    const totals = asRecord(data?.aggregates?.totals);
+    const totalExpected = getNumber(totals, ["total_expected_actions"]);
+    const totalCompleted = getNumber(
+      totals,
+      ["total_completed_actions"],
+      metrics.likes + metrics.comments,
+    );
+    const complete = complianceRows.filter((row) => row.rate >= 80).length;
+    const moderate = complianceRows.filter((row) => row.rate >= 50 && row.rate < 80).length;
+    const low = complianceRows.filter((row) => row.rate < 50).length;
+    const participating = complianceRows.filter((row) => row.completed > 0).length;
+    const participationRate = metrics.totalUsers > 0
+      ? (participating / metrics.totalUsers) * 100
+      : 0;
+    const remainingActions = Math.max(0, totalExpected - totalCompleted);
+    const averageActions = metrics.totalUsers > 0
+      ? totalCompleted / metrics.totalUsers
+      : 0;
+
+    const satfungCoverage = usersBySatfung.map((entry) => {
+      const ig = igLikesBySatfung.find((row) => row.satfung === entry.label);
+      const tk = tiktokBySatfung.find((row) => row.satfung === entry.label);
+      const active = Math.max(ig?.activePersonnel || 0, tk?.activePersonnel || 0);
+      return {
+        label: entry.label,
+        personnel: entry.value,
+        active,
+        rate: entry.value > 0 ? (active / entry.value) * 100 : 0,
+        engagement: (ig?.totalLikes || 0) + (tk?.totalComments || 0),
+      };
+    }).sort((a, b) => b.rate - a.rate || b.engagement - a.engagement);
+
+    const strongestSatfung = satfungCoverage[0];
+    const weakestSatfung = [...satfungCoverage]
+      .filter((row) => row.personnel > 0)
+      .sort((a, b) => a.rate - b.rate || a.engagement - b.engagement)[0];
+    const totalEngagement = metrics.likes + metrics.comments;
+    const instagramShare = totalEngagement > 0 ? (metrics.likes / totalEngagement) * 100 : 0;
+
+    return {
+      totalExpected,
+      totalCompleted,
+      remainingActions,
+      complete,
+      moderate,
+      low,
+      participating,
+      participationRate,
+      averageActions,
+      strongestSatfung,
+      weakestSatfung,
+      instagramShare,
+      tiktokShare: totalEngagement > 0 ? 100 - instagramShare : 0,
+    };
+  }, [data, complianceRows, metrics, usersBySatfung, igLikesBySatfung, tiktokBySatfung]);
   const periodLabel = useMemo(() => {
     if (filters.time_range === "custom") {
       return `${formatDateLabel(filters.start_date)} - ${formatDateLabel(filters.end_date)}`;
     }
     const selected = TIME_RANGE_OPTIONS.find((option) => option.value === filters.time_range);
-    return selected?.label || "Mingguan";
+    return selected?.label || "7 Hari Terakhir";
   }, [filters.time_range, filters.start_date, filters.end_date]);
 
   const buildDetailHref = (view: string, extra?: Record<string, string>) => {
@@ -616,19 +654,27 @@ export default function AnevPolresPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (filters.time_range === "custom" && (!filters.start_date || !filters.end_date)) {
-      showToast("Untuk custom, isi tanggal mulai dan tanggal akhir.", "error");
+      showToast("Isi tanggal mulai dan tanggal akhir.", "error");
+      return;
+    }
+    if (
+      filters.time_range === "custom" &&
+      filters.start_date &&
+      filters.end_date &&
+      filters.start_date > filters.end_date
+    ) {
+      showToast("Tanggal mulai tidak boleh melewati tanggal akhir.", "error");
       return;
     }
     await loadData(filters);
   };
 
   const handleQuickRange = async (range: "today" | "7d" | "30d") => {
-    const quick = buildQuickRange(range);
     const next: FilterState = {
       ...filters,
       time_range: range,
-      start_date: quick.start_date,
-      end_date: quick.end_date,
+      start_date: undefined,
+      end_date: undefined,
     };
     setFilters(next);
     await loadData(next);
@@ -733,9 +779,9 @@ export default function AnevPolresPage() {
             <p className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               <ShieldCheck className="h-3.5 w-3.5" /> ANEV POLRES
             </p>
-            <h1 className="mt-2 text-2xl font-bold text-slate-900">Dashboard ANEV yang lebih ringkas & fokus aksi</h1>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">Executive Summary ANEV Polres</h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Alur kerja: pilih periode → cek capaian utama → analisis satfung/divisi → tindak lanjuti → export laporan.
+              Gambaran holistik personel, beban tugas, realisasi engagement, kepatuhan, performa satfung, dan prioritas tindak lanjut pada rentang waktu terpilih.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="rounded-full border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">Periode: <span className="font-semibold text-slate-800">{periodLabel}</span></span>
@@ -771,27 +817,27 @@ export default function AnevPolresPage() {
             onClick={() => void handleQuickRange("today")}
             className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
-            Quick Harian
+            Hari Ini
           </button>
           <button
             type="button"
             onClick={() => void handleQuickRange("7d")}
             className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
-            Quick Mingguan
+            7 Hari
           </button>
           <button
             type="button"
             onClick={() => void handleQuickRange("30d")}
             className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
-            Quick Bulanan
+            30 Hari
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4">
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-700">Periode</span>
+            <span className="font-medium text-slate-700">Rentang analisis</span>
             <select
               value={filters.time_range}
               onChange={(event) =>
@@ -851,6 +897,70 @@ export default function AnevPolresPage() {
           {error}
         </section>
       ) : null}
+
+      <section className={`${ENTERPRISE_PANEL} overflow-hidden`} aria-labelledby="executive-overview-title">
+        <div className="border-b border-slate-200 bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 px-5 py-5 text-white dark:border-slate-800">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Ringkasan pimpinan</p>
+              <h2 id="executive-overview-title" className="mt-1 text-xl font-bold">Kondisi keseluruhan · {periodLabel}</h2>
+            </div>
+            <p className="text-xs text-slate-300">Sumber: agregat ANEV dalam filter aktif</p>
+          </div>
+        </div>
+        <div className="grid gap-4 p-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-slate-500"><Target className="h-4 w-4" /><span className="text-xs font-semibold uppercase">Target aksi</span></div>
+              <p className="mt-2 text-2xl font-bold text-slate-950">{formatNumber(executiveSummary.totalExpected)}</p>
+              <p className="mt-1 text-xs text-slate-500">Konten target × personel aktif</p>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <div className="flex items-center gap-2 text-emerald-700"><CheckCircle2 className="h-4 w-4" /><span className="text-xs font-semibold uppercase">Realisasi</span></div>
+              <p className="mt-2 text-2xl font-bold text-emerald-950">{formatNumber(executiveSummary.totalCompleted)}</p>
+              <p className="mt-1 text-xs text-emerald-700">{formatPercent(metrics.compliance)} dari target</p>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-center gap-2 text-amber-700"><TriangleAlert className="h-4 w-4" /><span className="text-xs font-semibold uppercase">Celah aksi</span></div>
+              <p className="mt-2 text-2xl font-bold text-amber-950">{formatNumber(executiveSummary.remainingActions)}</p>
+              <p className="mt-1 text-xs text-amber-700">Target belum terdeteksi</p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-center gap-2 text-blue-700"><Activity className="h-4 w-4" /><span className="text-xs font-semibold uppercase">Partisipasi</span></div>
+              <p className="mt-2 text-2xl font-bold text-blue-950">{formatPercent(executiveSummary.participationRate)}</p>
+              <p className="mt-1 text-xs text-blue-700">{formatNumber(executiveSummary.participating)} personel terdeteksi aktif</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Distribusi kepatuhan personel</h3>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl bg-emerald-50 p-3"><p className="text-xl font-bold text-emerald-800">{formatNumber(executiveSummary.complete)}</p><p className="mt-1 text-[11px] text-emerald-700">≥ 80%</p></div>
+              <div className="rounded-xl bg-amber-50 p-3"><p className="text-xl font-bold text-amber-800">{formatNumber(executiveSummary.moderate)}</p><p className="mt-1 text-[11px] text-amber-700">50–79%</p></div>
+              <div className="rounded-xl bg-rose-50 p-3"><p className="text-xl font-bold text-rose-800">{formatNumber(executiveSummary.low)}</p><p className="mt-1 text-[11px] text-rose-700">&lt; 50%</p></div>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-500">Rata-rata {formatNumber(Number(executiveSummary.averageActions.toFixed(1)))} aksi terdeteksi per personel pada rentang ini.</p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 border-t border-slate-200 bg-slate-50/70 p-5 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Keseimbangan kanal</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">Instagram {formatPercent(executiveSummary.instagramShare)} · TikTok {formatPercent(executiveSummary.tiktokShare)}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Proporsi dari seluruh interaksi yang terdeteksi.</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Satfung terkuat</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{executiveSummary.strongestSatfung?.label || "Belum tersedia"}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{executiveSummary.strongestSatfung ? `${formatPercent(executiveSummary.strongestSatfung.rate)} personel terdeteksi aktif` : "Data satfung belum tersedia."}</p>
+          </div>
+          <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Prioritas tindak lanjut</p>
+            <p className="mt-2 text-sm font-semibold text-rose-950">{executiveSummary.weakestSatfung?.label || "Belum tersedia"}</p>
+            <p className="mt-1 text-xs leading-5 text-rose-700">{executiveSummary.weakestSatfung ? `${formatPercent(executiveSummary.weakestSatfung.rate)} personel terdeteksi aktif; verifikasi username dan pelaksanaan.` : "Belum ada dasar data untuk menentukan prioritas."}</p>
+          </div>
+        </div>
+      </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <article className="rounded-2xl border border-blue-200/70 bg-gradient-to-br from-white to-blue-50 p-4 shadow-[0_12px_35px_-24px_rgba(37,99,235,0.45)]">
