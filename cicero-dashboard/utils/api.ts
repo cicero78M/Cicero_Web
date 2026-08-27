@@ -4191,9 +4191,6 @@ export async function loginClaimUser(
   }
 
   const success = data?.success ?? res.ok;
-  if (success !== false && !isValidClaimToken(data?.token)) {
-    throw new Error("Respons login tidak valid: token claim tidak tersedia atau malformed.");
-  }
 
   return {
     ...data,
@@ -4342,7 +4339,7 @@ export async function validateClaimSocialProfile(
 }
 
 export async function triageClaimComplaint(
-  token: string,
+  token: string | undefined,
   payload: ClaimComplaintTriagePayload,
 ): Promise<ClaimComplaintTriage> {
   const res = await fetch(buildApiUrl("/api/claim/complaints/triage"), {
@@ -4362,7 +4359,7 @@ export async function triageClaimComplaint(
 }
 
 export async function escalateClaimComplaint(
-  token: string,
+  token: string | undefined,
   complaintId: string,
   complaintStatus: string,
 ): Promise<void> {
@@ -4386,7 +4383,7 @@ export async function escalateClaimComplaint(
 }
 
 export async function getClaimComplaint(
-  token: string,
+  token: string | undefined,
   complaintId: string,
 ): Promise<ClaimComplaintLifecycleDto> {
   const response = await fetch(

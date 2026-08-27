@@ -21,7 +21,6 @@ type Props = {
   loading: boolean;
   error: string;
   onRefresh: () => void | Promise<void>;
-  claimToken?: string;
   onOpenProfile?: () => void;
   onComplaintChanged?: () => void | Promise<void>;
 };
@@ -80,7 +79,7 @@ function PlatformGroup({ platform, content, onComplaint }: { platform: Platform;
 }
 
 function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpenProfile, onComplaintChanged }: {
-  selection: Selection; token: string; filters: ClaimPendingContentResponse["data"]["filters"];
+  selection: Selection; token?: string; filters: ClaimPendingContentResponse["data"]["filters"];
   onClose: () => void; onRefresh: () => void | Promise<void>; onOpenProfile?: () => void;
   onComplaintChanged?: () => void | Promise<void>;
 }) {
@@ -170,19 +169,19 @@ function ComplaintDialog({ selection, token, filters, onClose, onRefresh, onOpen
           {needsProfileUpdate && <button type="button" onClick={() => { onClose(); onOpenProfile?.(); }} className="rounded-xl border px-4 py-2 text-sm font-semibold">Buka Update Data Personil</button>}
           {result?.can_retry && <button type="button" disabled={!retryReady || submitting} onClick={submit} className="rounded-xl border px-4 py-2 text-sm font-semibold disabled:opacity-50">{retryReady ? "Periksa ulang" : `Periksa setelah ${new Date(retryAt).toLocaleString("id-ID")}`}</button>}
           {result?.can_escalate && result.complaint_id && result.complaint_status && <button type="button" disabled={escalating} onClick={escalate} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{escalating ? "Mengeskalasi..." : "Eskalasi"}</button>}
-          {!result && <button type="button" disabled={submitting || !identifier || !token} onClick={submit} className="rounded-xl bg-spirit-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{submitting ? "Memeriksa..." : "Kirim Komplain"}</button>}
+          {!result && <button type="button" disabled={submitting || !identifier} onClick={submit} className="rounded-xl bg-spirit-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{submitting ? "Memeriksa..." : "Kirim Komplain"}</button>}
         </div>
       </Dialog.Content></Dialog.Portal>
   </Dialog.Root>;
 }
 
-export default function PendingContentCard({ data, loading, error, onRefresh, claimToken = "", onOpenProfile, onComplaintChanged }: Props) {
+export default function PendingContentCard({ data, loading, error, onRefresh, onOpenProfile, onComplaintChanged }: Props) {
   const [selection, setSelection] = useState<Selection | null>(null);
   return <section className="space-y-5 rounded-3xl border border-spirit-200/80 bg-white/90 p-5 shadow-sm" aria-busy={loading}>
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-neutral-navy">Aktivitas Konten Tertunda</h2><p className="mt-1 max-w-2xl text-sm text-neutral-slate">Data berdasarkan hasil sinkronisasi CICERO dan mungkin membutuhkan waktu untuk diperbarui.</p></div><button type="button" onClick={onRefresh} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-spirit-200 px-3 py-2 text-sm font-semibold text-spirit-600 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button></div>
     {loading && !data && <p role="status" className="text-sm text-neutral-slate">Memuat konten tertunda...</p>}
     {error && <div role="alert" className="flex gap-2 rounded-2xl bg-red-50 p-4 text-sm text-red-600"><TriangleAlert className="h-4 w-4 shrink-0" /> Gagal memuat konten tertunda: {error}</div>}
     {data && <><div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-gradient-to-br from-fuchsia-50 to-orange-50 p-4"><p className="text-xs text-neutral-slate">Instagram tertunda</p><p className="text-2xl font-bold text-neutral-navy">{data.instagram.pending_content}</p></div><div className="rounded-2xl bg-neutral-100 p-4"><p className="text-xs text-neutral-slate">TikTok tertunda</p><p className="text-2xl font-bold text-neutral-navy">{data.tiktok.pending_content}</p></div></div><PlatformGroup platform="instagram" content={data.instagram} onComplaint={setSelection} /><PlatformGroup platform="tiktok" content={data.tiktok} onComplaint={setSelection} /></>}
-    {selection && data && <ComplaintDialog selection={selection} token={claimToken} filters={data.filters} onClose={() => setSelection(null)} onRefresh={onRefresh} onOpenProfile={onOpenProfile} onComplaintChanged={onComplaintChanged} />}
+    {selection && data && <ComplaintDialog selection={selection} filters={data.filters} onClose={() => setSelection(null)} onRefresh={onRefresh} onOpenProfile={onOpenProfile} onComplaintChanged={onComplaintChanged} />}
   </section>;
 }

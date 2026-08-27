@@ -17,7 +17,6 @@ import SocialAccountQualityCard from "@/components/claim/SocialAccountQualityCar
 import {
   getClaimPendingContent,
   getClaimProfile,
-  isValidClaimToken,
   normalizeWhatsapp,
   updateClaimProfile,
   validateClaimSocialProfile,
@@ -147,7 +146,6 @@ function SocialAccountFields({ platform, values, errors, validations, onChange, 
 }
 
 export default function EditUserPage() {
-  const [claimToken, setClaimToken] = useState("");
   const [nrp, setNrp] = useState("");
   const [kesatuan, setKesatuan] = useState("");
   const [nama, setNama] = useState("");
@@ -179,25 +177,15 @@ export default function EditUserPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = sessionStorage.getItem("claim_token");
-      if (!isValidClaimToken(token)) {
-        sessionStorage.removeItem("claim_token");
-        router.replace("/claim");
-        return;
-      }
-      setClaimToken(token);
-      loadUser(token);
-      loadPendingContent(token);
-    }
+    loadUser();
+    loadPendingContent();
   }, [router]);
 
-  async function loadPendingContent(token = claimToken) {
-    if (!token) return;
+  async function loadPendingContent() {
     setPendingContentLoading(true);
     setPendingContentError("");
     try {
-      const response = await getClaimPendingContent(token);
+      const response = await getClaimPendingContent();
       setPendingContent(response.data || null);
     } catch (err) {
       if (err?.status === 401 || err?.status === 403) {
@@ -214,11 +202,11 @@ export default function EditUserPage() {
     }
   }
 
-  async function loadUser(token) {
+  async function loadUser() {
     setProfileLoading(true);
     setProfileError("");
     try {
-      const res = await getClaimProfile(token);
+      const res = await getClaimProfile();
       const user = res.data || res.user || res;
       setNrp(user.user_id || "");
       setRole(user.ditbinmas ? "ditbinmas" : "");
@@ -289,10 +277,7 @@ export default function EditUserPage() {
       ),
     );
     try {
-      const response = await validateClaimSocialProfile(
-        { platform, username },
-        claimToken,
-      );
+      const response = await validateClaimSocialProfile({ platform, username });
       setValidations((current) =>
         current.map((item, itemIndex) =>
           itemIndex === index && item?.input === username
@@ -400,21 +385,18 @@ export default function EditUserPage() {
     const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
     setLoading(true);
     try {
-      const res = await updateClaimProfile(
-        {
-          nama: nama.trim(),
-          title: pangkat.trim(),
-          divisi: satfung.trim(),
-          jabatan: jabatan.trim(),
-          // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
-          desa: isDitbinmasRole ? desa.trim() : "",
-          whatsapp: normalizedWhatsapp,
-          email: normalizedEmail,
-          instagram_accounts: normalizedInstagram.accounts,
-          tiktok_accounts: normalizedTiktok.accounts,
-        },
-        claimToken,
-      );
+      const res = await updateClaimProfile({
+        nama: nama.trim(),
+        title: pangkat.trim(),
+        divisi: satfung.trim(),
+        jabatan: jabatan.trim(),
+        // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
+        desa: isDitbinmasRole ? desa.trim() : "",
+        whatsapp: normalizedWhatsapp,
+        email: normalizedEmail,
+        instagram_accounts: normalizedInstagram.accounts,
+        tiktok_accounts: normalizedTiktok.accounts,
+      });
       if (res.success) {
         setMessage("Data berhasil diperbarui");
       } else {
@@ -456,8 +438,7 @@ export default function EditUserPage() {
           data={pendingContent}
           loading={pendingContentLoading}
           error={pendingContentError}
-          claimToken={claimToken}
-          onRefresh={() => loadPendingContent(claimToken)}
+          onRefresh={() => loadPendingContent()}
           onOpenProfile={() =>
             document
               .getElementById("claim-profile-form")

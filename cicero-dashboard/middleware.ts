@@ -27,6 +27,35 @@ function matchesRoutePrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+function decodeJwtPayload(token?: string): Record<string, unknown> | null {
+  if (!token) return null;
+  const segments = token.split(".");
+  if (segments.length < 2) return null;
+
+  try {
+    const payload = segments[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    const decoded = atob(padded);
+    const parsed = JSON.parse(decoded);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function hasUsableAuthToken(token?: string): boolean {
+  if (!token) return false;
+
+  const payload = decodeJwtPayload(token);
+  if (!payload) return false;
+
+  const exp = Number((payload as { exp?: unknown }).exp);
+  if (!Number.isFinite(exp)) return false;
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return exp > nowSeconds;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isServerActionRequest = request.method === "POST" && request.headers.has("next-action");
@@ -57,7 +86,7 @@ export function middleware(request: NextRequest) {
 
   if (isDashboardProtected) {
     const authToken = request.cookies.get("token")?.value;
-    if (!authToken) {
+    if (!hasUsableAuthToken(authToken)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("next", pathname);
@@ -67,7 +96,7 @@ export function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/reposter")) {
     const authToken = request.cookies.get("token")?.value;
-    if (!authToken) {
+    if (!hasUsableAuthToken(authToken)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/reposter/login";
       loginUrl.searchParams.set("next", pathname);
