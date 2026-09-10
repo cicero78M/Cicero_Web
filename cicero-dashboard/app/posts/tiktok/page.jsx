@@ -16,9 +16,9 @@ import { Activity, Copy, Eye, Heart, PlayCircle, RefreshCw, Users } from "lucide
 import {
   getTiktokProfileViaBackend,
   getTiktokPostsViaBackend,
-  getTiktokInfoViaBackend,
   getTiktokPostsByUsernameViaBackend,
   getClientProfile,
+  isAbortError,
 } from "@/utils/api";
 import InsightLayout from "@/components/InsightLayout";
 import InsightSectionCard from "@/components/insight/InsightSectionCard";
@@ -45,6 +45,7 @@ export default function TiktokPostAnalysisPage() {
   const [clientName, setClientName] = useState("");
   const [canSelectScope, setCanSelectScope] = useState(false);
   const [ditbinmasScope, setDitbinmasScope] = useState("client");
+  const [accountReady, setAccountReady] = useState(false);
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
@@ -61,67 +62,94 @@ export default function TiktokPostAnalysisPage() {
     return `${startDate} - ${endDate}`;
   }, [startDate, endDate]);
 
-  const fetchData = async () => {
+  useEffect(() => {
     const role = effectiveRole || authRole || "";
-
+    const controller = new AbortController();
     if (!token || !clientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
-      return;
+      setAccountReady(false);
+      return () => controller.abort();
     }
 
-    try {
-      setLoading(true);
-      const clientProfile = await getClientProfile(token, clientId);
-      setClientName(
-        clientProfile?.client?.client_name ||
-          clientProfile?.client_name ||
-          clientProfile?.nama_client ||
-          "",
-      );
-      const normalizedClientId = String(clientId || "").trim().toUpperCase();
-      const normalizedRole = String(role || "").trim().toLowerCase();
-      const normalizedClientType = String(
-        clientProfile?.client?.client_type || clientProfile?.client_type || "",
-      )
-        .trim()
-        .toUpperCase();
-      const allowedScopeClients = new Set(["DITBINMAS", "DITSAMAPTA", "DITLANTAS", "BIDHUMAS"]);
-      const isDirectorate =
-        normalizedClientType === "DIREKTORAT" || normalizedRole === "ditbinmas";
-      setCanSelectScope(isDirectorate && allowedScopeClients.has(normalizedClientId));
-      const username =
-        clientProfile.client?.client_tiktok?.replace(/^@/, "") ||
-        clientProfile.client_tiktok?.replace(/^@/, "") ||
-        process.env.NEXT_PUBLIC_TIKTOK_USER ||
-        "tiktok";
-
-      const profileRes = await getTiktokProfileViaBackend(token, username);
-      setProfile(profileRes);
-
-      const infoRes = await getTiktokInfoViaBackend(token, username);
-      const infoData = infoRes.data || infoRes.info || infoRes;
-      setInfo(infoData);
-
-      const postRes = await getTiktokPostsViaBackend(
-        token,
-        clientId,
-        50,
-        startDate,
-        endDate,
-      );
-      const postData = postRes.data || postRes.posts || postRes;
-      setPosts(Array.isArray(postData) ? postData : []);
-    } catch (err) {
-      setError("Gagal mengambil data: " + (err.message || err));
-    } finally {
-      setLoading(false);
+    async function fetchAccount() {
+      try {
+        setLoading(true);
+        setError("");
+        setAccountReady(false);
+        const clientProfile = await getClientProfile(token, clientId);
+        setClientName(
+          clientProfile?.client?.client_name ||
+            clientProfile?.client_name ||
+            clientProfile?.nama_client ||
+            "",
+        );
+        const normalizedClientId = String(clientId || "").trim().toUpperCase();
+        const normalizedRole = String(role || "").trim().toLowerCase();
+        const normalizedClientType = String(
+          clientProfile?.client?.client_type || clientProfile?.client_type || "",
+        )
+          .trim()
+          .toUpperCase();
+        const allowedScopeClients = new Set(["DITBINMAS", "DITSAMAPTA", "DITLANTAS", "BIDHUMAS"]);
+        const isDirectorate =
+          normalizedClientType === "DIREKTORAT" || normalizedRole === "ditbinmas";
+        setCanSelectScope(isDirectorate && allowedScopeClients.has(normalizedClientId));
+        const username =
+          clientProfile?.client?.client_tiktok?.replace(/^@/, "") ||
+          clientProfile?.client_tiktok?.replace(/^@/, "") ||
+          process.env.NEXT_PUBLIC_TIKTOK_USER ||
+          "tiktok";
+        const profileRes = await getTiktokProfileViaBackend(token, username, controller.signal);
+        if (controller.signal.aborted) return;
+        setProfile(profileRes);
+        // Profile and info are served by the same RapidAPI resource. Reuse it
+        // here so the insight page does not make two identical upstream calls.
+        setInfo(profileRes);
+        setAccountReady(true);
+      } catch (err) {
+        if (!isAbortError(err, controller.signal)) {
+          setError("Gagal mengambil data akun TikTok: " + (err.message || err));
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
     }
-  };
+
+    fetchAccount();
+    return () => controller.abort();
+  }, [token, clientId, effectiveRole, authRole]);
 
   useEffect(() => {
-    fetchData();
-  }, [startDate, endDate, ditbinmasScope, token, clientId, effectiveRole, authRole]);
+    if (!token || !clientId || !accountReady) return undefined;
+    const controller = new AbortController();
+
+    async function fetchPosts() {
+      try {
+        setLoading(true);
+        setError("");
+        const postRes = await getTiktokPostsViaBackend(
+          token,
+          clientId,
+          50,
+          startDate,
+          endDate,
+          controller.signal,
+        );
+        const postData = postRes.data || postRes.posts || postRes;
+        if (!controller.signal.aborted) setPosts(Array.isArray(postData) ? postData : []);
+      } catch (err) {
+        if (!isAbortError(err, controller.signal)) {
+          setError("Gagal mengambil data posting TikTok: " + (err.message || err));
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+
+    fetchPosts();
+    return () => controller.abort();
+  }, [token, clientId, accountReady, startDate, endDate]);
 
   function extractUsername(url) {
     if (!url) return "";
@@ -288,7 +316,7 @@ export default function TiktokPostAnalysisPage() {
   const engagementRate = engagementRateValue.toFixed(2);
 
   const totalPosts = info?.video_count ?? info?.post_count ?? info?.media_count;
-  const totalLikes = info?.heart_count ?? info?.total_likes;
+  const totalLikes = info?.heart_count ?? info?.total_likes ?? info?.like_count;
 
   const biography = profile.bio || info?.biography || "";
   const bioLink =

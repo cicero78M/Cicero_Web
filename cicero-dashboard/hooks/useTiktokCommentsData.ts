@@ -4,6 +4,7 @@ import {
   getDashboardStats,
   getRekapKomentarTiktok,
   getClientProfile,
+  isAbortError,
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { AuthContext } from "@/context/AuthContext";
@@ -23,6 +24,15 @@ const USER_IDENTIFIER_FIELDS = [
   "NIP",
   "NRP_NIP",
 ];
+
+const DIREKTORAT_ROLE_CODES = new Set([
+  "DIREKTORAT",
+  "DITBINMAS",
+  "DITINTELKAM",
+  "DITLANTAS",
+  "DITSAMAPTA",
+  "BIDHUMAS",
+]);
 
 function normalizeString(value?: unknown): string {
   return String(value || "").trim().toLowerCase();
@@ -461,13 +471,27 @@ export default function useTiktokCommentsData({
       null;
     const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
-    const requestScopeFromAuth = normalizeScopePayload(effectiveClientTypeFromAuth);
-    const profileRequestContext = {
-      role: requestRole,
-      scope: requestScopeFromAuth,
-      regional_id: regionalId ? String(regionalId) : undefined,
-    };
-
+    const authProfile = auth?.profile || {};
+    let profileData =
+      (authProfile as any)?.client ||
+      (authProfile as any)?.profile ||
+      authProfile ||
+      {};
+    const profileClientType = normalizeScopePayload(
+      (profileData as any)?.client_type ??
+        (profileData as any)?.clientType ??
+        (profileData as any)?.client_type_code ??
+        (profileData as any)?.clientTypeName,
+    );
+    const normalizedRoleUpper = String(requestRole || "")
+      .trim()
+      .toUpperCase();
+    const requestScopeFromAuth =
+      normalizeScopePayload(effectiveClientTypeFromAuth) ||
+      profileClientType ||
+      (DIREKTORAT_ROLE_CODES.has(normalizedRoleUpper)
+        ? "DIREKTORAT"
+        : "ORG");
     if (!token || !userClientId) {
       setError("Token / Client ID tidak ditemukan. Silakan login ulang.");
       setLoading(false);
@@ -484,11 +508,6 @@ export default function useTiktokCommentsData({
       .trim()
       .toLowerCase();
     const isOperatorRole = normalizedEffectiveRoleFromAuth === "operator";
-    const normalizedEffectiveClientTypeFromAuth = String(
-      effectiveClientTypeFromAuth || "",
-    )
-      .trim()
-      .toUpperCase();
     const directorateRoles = new Set([
       "ditbinmas",
       "ditsamapta",
@@ -496,36 +515,12 @@ export default function useTiktokCommentsData({
       "bidhumas",
       "direktorat",
     ]);
-    const derivedDirectorateRoleFromAuth =
-      !isOperatorRole &&
-      ((directorateRoles.has(normalizedEffectiveRoleFromAuth) &&
-        normalizedEffectiveClientTypeFromAuth !== "ORG") ||
-        normalizedEffectiveClientTypeFromAuth === "DIREKTORAT") &&
-      normalizedEffectiveRoleFromAuth !== "";
-    const isDirectorateClientTypeFromAuth =
-      normalizedEffectiveClientTypeFromAuth === "DIREKTORAT";
     const allowedScopeClients = new Set([
       "DITBINMAS",
       "DITSAMAPTA",
       "DITLANTAS",
       "BIDHUMAS",
     ]);
-    // Saat role direktorat terdeteksi (termasuk kasus role Ditbinmas yang
-    // dinormalisasi menjadi ORG), paksa pengambilan metrik memakai client
-    // Ditbinmas agar total postingan/engagement tidak nol pada akun ORG.
-    const effectiveDirectorateClientIdFromAuth = derivedDirectorateRoleFromAuth
-      ? isDirectorateClientTypeFromAuth
-        ? normalizedClientId
-        : isDitbinmasClient
-          ? normalizedClientId
-          : "DITBINMAS"
-      : normalizedClientId;
-    const dashboardClientId = isOperatorRole
-      ? normalizedClientId
-      : derivedDirectorateRoleFromAuth
-      ? effectiveDirectorateClientIdFromAuth
-      : normalizedClientId;
-
     async function fetchData() {
       try {
         const selectedDate =
@@ -537,30 +532,40 @@ export default function useTiktokCommentsData({
           selectedDate,
         );
 
-        const statsData = await getDashboardStats(
-          token,
-          periode,
-          date,
-          startDate,
-          endDate,
-          dashboardClientId,
-          {
-            role: requestRole,
-            scope: requestScopeFromAuth,
-            regional_id: regionalId ? String(regionalId) : undefined,
-          },
-          controller.signal,
-        );
+        // The dashboard always provides AuthContext. Keep the old profile and
+        // stats bootstrap only for standalone/legacy hook consumers; the
+        // normal page now follows Instagram's single rekap request workflow.
+        let statsPayload: any = {};
+        if (!auth) {
+          const [statsData, profile] = await Promise.all([
+            getDashboardStats(
+              token,
+              periode,
+              date,
+              startDate,
+              endDate,
+              normalizedClientId,
+              {
+                role: requestRole,
+                scope: undefined,
+                regional_id: regionalId ? String(regionalId) : undefined,
+              },
+              controller.signal,
+            ),
+            getClientProfile(token, normalizedClientId, controller.signal, {
+              role: requestRole,
+              scope: undefined,
+              regional_id: regionalId ? String(regionalId) : undefined,
+            }),
+          ]);
+          statsPayload = (statsData as any)?.data || statsData || {};
+          profileData =
+            (profile as any)?.client ||
+            (profile as any)?.profile ||
+            profile ||
+            profileData;
+        }
 
-        const statsPayload = (statsData as any)?.data || statsData;
-        const profile = await getClientProfile(
-          token,
-          dashboardClientId,
-          controller.signal,
-          profileRequestContext,
-        );
-        const profileData =
-          (profile as any)?.client || (profile as any)?.profile || profile || {};
         const resolvedRegionalId =
           regionalId ??
           (profileData as any)?.regional_id ??
@@ -571,20 +576,13 @@ export default function useTiktokCommentsData({
         const normalizedRegionalId = resolvedRegionalId
           ? String(resolvedRegionalId)
           : undefined;
-        const effectiveRoleFromStats =
-          (statsPayload as any)?.effectiveRole ||
-          (statsPayload as any)?.effective_role ||
-          (statsPayload as any)?.roleEffective;
-        const effectiveClientTypeFromStats =
-          (statsPayload as any)?.effectiveClientType ||
-          (statsPayload as any)?.effective_client_type ||
-          (statsPayload as any)?.clientTypeEffective;
         // Gunakan nilai effective yang telah dinormalisasi (mis. DITSAMAPTA +
         // BIDHUMAS dipaksa menjadi ORG) agar percabangan direktorat tidak
         // memakai tipe klien mentah dari profil.
         const normalizedEffectiveRole = String(
           auth?.effectiveRole ||
-            effectiveRoleFromStats ||
+            (statsPayload as any)?.effectiveRole ||
+            (statsPayload as any)?.effective_role ||
             role ||
             (profileData as any)?.role ||
             (profileData as any)?.user_role ||
@@ -593,8 +591,9 @@ export default function useTiktokCommentsData({
           .trim()
           .toLowerCase();
         const normalizedEffectiveClientType = String(
-          effectiveClientTypeFromAuth ||
-            effectiveClientTypeFromStats ||
+          (statsPayload as any)?.effectiveClientType ||
+            (statsPayload as any)?.effective_client_type ||
+            effectiveClientTypeFromAuth ||
             (profileData as any)?.client_type ||
             (profileData as any)?.clientType ||
             (profileData as any)?.client_type_code ||
@@ -603,9 +602,10 @@ export default function useTiktokCommentsData({
         )
           .trim()
           .toUpperCase();
-        const requestScope = normalizeScopePayload(
-          normalizedEffectiveClientType || effectiveClientTypeFromAuth,
-        );
+        const requestScope =
+          normalizeScopePayload(
+            normalizedEffectiveClientType || effectiveClientTypeFromAuth,
+          ) || requestScopeFromAuth;
         // Per 2024-09, beberapa role direktorat dikonversi menjadi ORG pada
         // `effectiveClientType` (mis. DITSAMAPTA/BIDHUMAS). Gunakan daftar
         // role direktorat yang diketahui agar jalur pengambilan data
@@ -855,7 +855,7 @@ export default function useTiktokCommentsData({
         setChartData(resolvedChartData);
         setClientOptions(normalizedClientOptions);
       } catch (err: any) {
-        if (!(err instanceof DOMException && err.name === "AbortError")) {
+        if (!isAbortError(err, controller.signal)) {
           setError("Gagal mengambil data: " + (err?.message || err));
         }
       } finally {

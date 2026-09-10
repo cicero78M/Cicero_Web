@@ -457,9 +457,21 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
           hasUsername: Boolean(username),
         });
 
+        const nrp = String(
+          u.nrp ??
+            u.nrp_nip ??
+            u.nrpNip ??
+            u.NRP ??
+            u.NRP_NIP ??
+            u.user_id ??
+            u.userId ??
+            u.nip ??
+            "",
+        ).toLowerCase();
         const matchesSearch = (
           (u.nama || "").toLowerCase().includes(term) ||
           (u.username || "").toLowerCase().includes(term) ||
+          nrp.includes(term) ||
           bersihkanSatfung(u.divisi || "").toLowerCase().includes(term) ||
           (u.nama_client || u.client_name || u.client || u.client_id || "")
             .toString()
@@ -887,7 +899,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
                 <input
                   id="rekap-komentar-tiktok-search"
                   type="text"
-                  placeholder="Cari nama, username, divisi, atau client"
+                  placeholder="Cari nama, NRP, username, divisi, atau client"
                   className="w-full rounded-xl border border-blue-200/70 bg-white px-3 py-2 text-sm text-blue-900 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

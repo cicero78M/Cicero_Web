@@ -268,7 +268,7 @@ describe("useTiktokCommentsData", () => {
       "date",
       "start",
       "end",
-      "DITBINMAS",
+      "ORG_CLIENT",
       {
         role: "ditbinmas",
         scope: undefined,
@@ -278,7 +278,7 @@ describe("useTiktokCommentsData", () => {
     );
     expect(mockedGetClientProfile).toHaveBeenCalledWith(
       "token",
-      "DITBINMAS",
+      "ORG_CLIENT",
       expect.anything(),
       {
         role: "ditbinmas",

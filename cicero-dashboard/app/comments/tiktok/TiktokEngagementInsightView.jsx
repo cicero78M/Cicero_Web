@@ -105,18 +105,18 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const isOriginalDirectorateClient =
     String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
+  const isDitbinmasRole =
+    String(effectiveRole || "").trim().toLowerCase() === "ditbinmas";
+  const dataScope =
+    isOriginalDirectorateClient || isDitbinmasRole
+      ? "all"
+      : directorateScope;
 
   useEffect(() => {
     if (initialTab === "rekap" && rekapSectionRef.current) {
       rekapSectionRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [initialTab]);
-
-  useEffect(() => {
-    if (isOriginalDirectorateClient) {
-      setDirectorateScope("all");
-    }
-  }, [isOriginalDirectorateClient]);
 
   const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
   const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
@@ -156,7 +156,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     customDate: isRangeView ? normalizedRange : normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
-    scope: directorateScope,
+    scope: dataScope,
   });
 
   const viewLabel = useMemo(

@@ -3721,10 +3721,10 @@ export async function getInstagramInfoViaBackend(token: string, username: string
 
 
 // Fetch TikTok profile via backend using username
-export async function getTiktokProfileViaBackend(token: string, username: string): Promise<any> {
+export async function getTiktokProfileViaBackend(token: string, username: string, signal?: AbortSignal): Promise<any> {
   const params = new URLSearchParams({ username });
   const url = `${buildApiUrl("/api/tiktok/rapid-profile")}?${params.toString()}`;
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to fetch tiktok profile: ${text}`);
@@ -3804,13 +3804,14 @@ export async function getTiktokPostsViaBackend(
   client_id: string,
   limit: number = 10,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  signal?: AbortSignal
 ): Promise<any> {
   const params = new URLSearchParams({ client_id, limit: String(limit) });
   if (startDate) params.append("start_date", startDate);
   if (endDate) params.append("end_date", endDate);
   const url = `${buildApiUrl("/api/tiktok/rapid-posts")}?${params.toString()}`;
-  const res = await fetchWithAuth(url, token);
+  const res = await fetchWithAuth(url, token, { signal });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to fetch tiktok posts: ${text}`);

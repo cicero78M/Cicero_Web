@@ -5,6 +5,7 @@ import {
   getClientNames,
   getRekapLikesIG,
   getUserDirectory,
+  isAbortError,
 } from "@/utils/api";
 import { getPeriodeDateForView } from "@/components/ViewDataSelector";
 import { compareUsersByPangkatAndNrp } from "@/utils/pangkat";
@@ -323,13 +324,13 @@ export default function useInstagramLikesData({
     const ditbinmasClientId = isDitSamaptaBidhumas
       ? "BIDHUMAS"
       : "DITBINMAS";
+    const shouldMapToDitbinmas =
+      !isOperatorRole &&
+      isDitSamaptaBidhumas &&
+      !isDirectorateScope;
     const directorateScopedClient =
       !isOperatorRole && isDirectorateRoleValue && !isDitbinmasClient;
     setIsDirectorateScopedClient(directorateScopedClient);
-    const shouldMapToDitbinmas =
-      !isOperatorRole &&
-      (isDitbinmasRole ||
-        (isDitSamaptaBidhumas && !isDirectorateScope));
     const normalizedLoginClientId = String(userClientId || "")
       .trim()
       .toLowerCase();
@@ -353,6 +354,8 @@ export default function useInstagramLikesData({
         );
         let postsFromRekap: any[] = [];
 
+        // Keep Ditbinmas-role requests on the authorized client ID. Only the
+        // legacy DITSAMAPTA+BIDHUMAS bridge needs the BIDHUMAS data owner ID.
         const client_id = shouldMapToDitbinmas ? ditbinmasClientId : userClientId;
         const requestContext = {
           role: requestRoleForContext,
@@ -671,7 +674,7 @@ export default function useInstagramLikesData({
         });
         setChartData(sortedUsers);
       } catch (err: any) {
-        if (!(err instanceof DOMException && err.name === "AbortError")) {
+        if (!isAbortError(err, controller.signal)) {
           setError("Gagal mengambil data: " + (err.message || err));
         }
       } finally {
