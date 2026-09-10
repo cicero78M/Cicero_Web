@@ -322,10 +322,7 @@ export default function DashboardPage() {
     async function fetchData(authToken: string) {
       try {
         const apiBaseUrl = getApiBaseUrl();
-        const endpoints = [
-          `${apiBaseUrl}/api/social/aggregator?periode=harian`,
-          `${apiBaseUrl}/api/aggregator?periode=harian`,
-        ];
+        const endpoints = [`${apiBaseUrl}/api/aggregator?periode=harian`];
 
         let normalizedAggregator:
           | {

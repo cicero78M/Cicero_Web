@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import useReposterAuth from "@/hooks/useReposterAuth";
 import { logoutReposterSession } from "@/utils/api";
 
@@ -25,14 +25,12 @@ const MENU_ITEMS = [
 
 export default function ReposterMenu() {
   const pathname = usePathname();
-  const router = useRouter();
   const { token, setAuth } = useReposterAuth();
 
   const handleLogout = async () => {
     await logoutReposterSession(token);
     setAuth(null, null);
-    router.replace("/reposter/login");
-    router.refresh();
+    window.location.replace("/reposter/login");
   };
 
   return (

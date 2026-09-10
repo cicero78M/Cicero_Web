@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import {
   COOKIE_SESSION_TOKEN,
   getAuthSession,
@@ -150,21 +150,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [premiumTierReady, setPremiumTierReady] = useState(false);
   const [hasResolvedPremium, setHasResolvedPremium] = useState(false);
   const [premiumResolutionError, setPremiumResolutionError] = useState(false);
+  const sessionIdentityRef = useRef<string | null>(null);
 
   useEffect(() => {
-    getAuthSession()
-      .then((session) => {
+    let cancelled = false;
+    const clearSessionState = () => {
+      sessionIdentityRef.current = null;
+      setToken(null);
+      setClientId(null);
+      setUserId(null);
+      setUsername(null);
+      setRole(null);
+      setProfile(null);
+      setRegionalId(null);
+    };
+    const refreshSession = async (reloadOnIdentityChange = false) => {
+      try {
+        const session = await getAuthSession("dashboard");
+        if (cancelled) return;
+        const identity = JSON.stringify({
+          userId: session.dashboard_user_id || session.user_id || null,
+          clientIds: session.client_ids || (session.client_id ? [session.client_id] : []),
+          role: session.role || null,
+        });
+        if (
+          reloadOnIdentityChange &&
+          sessionIdentityRef.current &&
+          sessionIdentityRef.current !== identity
+        ) {
+          window.location.reload();
+          return;
+        }
+        sessionIdentityRef.current = identity;
         setToken(COOKIE_SESSION_TOKEN);
         setClientId(session.client_id || session.client_ids?.[0] || null);
         setUserId(session.dashboard_user_id || session.user_id || null);
         setUsername(session.username || session.nama || null);
         setRole(session.role || null);
-      })
-      .catch(() => setToken(null))
-      .finally(() => setIsHydrating(false));
+      } catch {
+        if (!cancelled) clearSessionState();
+      } finally {
+        if (!cancelled) setIsHydrating(false);
+      }
+    };
+    const handleFocus = () => refreshSession(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshSession(true);
+    };
+    refreshSession();
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     async function fetchProfile() {
       setHasResolvedProfile(false);
       setHasResolvedPremium(false);
@@ -187,18 +231,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const res = await getClientProfile(token, clientId, undefined, {
           role: role || undefined,
         });
-        setProfile(res.client || res.profile || res);
-        setPremiumResolutionError(false);
+        if (!cancelled) {
+          setProfile(res.client || res.profile || res);
+          setPremiumResolutionError(false);
+        }
       } catch (err) {
         console.error(err);
-        setProfile(null);
-        setPremiumResolutionError(true);
-        setPremiumTierReady(false);
+        if (!cancelled) {
+          setProfile(null);
+          setPremiumResolutionError(true);
+          setPremiumTierReady(false);
+        }
       }
-      setIsProfileLoading(false);
-      setHasResolvedProfile(true);
+      if (!cancelled) {
+        setIsProfileLoading(false);
+        setHasResolvedProfile(true);
+      }
     }
     fetchProfile();
+    return () => {
+      cancelled = true;
+    };
   }, [token, clientId, role]);
 
   useEffect(() => {

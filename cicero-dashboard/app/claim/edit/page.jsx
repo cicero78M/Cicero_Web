@@ -19,6 +19,8 @@ import {
   getClaimProfile,
   normalizeWhatsapp,
   updateClaimProfile,
+  requestClaimEmailUpdate,
+  verifyClaimEmailUpdate,
   validateClaimSocialProfile,
 } from "@/utils/api";
 import {
@@ -156,6 +158,11 @@ export default function EditUserPage() {
   const [role, setRole] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailPassword, setEmailPassword] = useState("");
+  const [emailRequestId, setEmailRequestId] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
   const [instagramAccounts, setInstagramAccounts] = useState([""]);
   const [tiktokAccounts, setTiktokAccounts] = useState([""]);
   const [instagramValidations, setInstagramValidations] = useState([null]);
@@ -218,6 +225,7 @@ export default function EditUserPage() {
       setDesa(user.desa || "");
       setWhatsapp(user.whatsapp || user.no_wa || user.phone || user.telp || "");
       setEmail(user.email || user.mail || user.email_address || "");
+      setEmailVerified(Boolean(user.email_verified_at));
       const instagramSource = Array.isArray(user.instagram_accounts)
         ? user.instagram_accounts
         : user.insta
@@ -334,16 +342,8 @@ export default function EditUserPage() {
         "No WhatsApp hanya boleh berisi angka. Tanda + hanya boleh di awal.";
     }
 
-    const normalizedEmail = email.trim();
-
-    if (!normalizedEmail || !isValidEmailWithBrowser(normalizedEmail)) {
-      nextFieldErrors.email = "Email wajib diisi dengan format valid";
-    }
-
     if (nextFieldErrors.whatsapp) {
       setError("Nomor WhatsApp wajib diisi dengan format valid");
-    } else if (nextFieldErrors.email) {
-      setError("Email wajib diisi dengan format valid");
     }
 
     const normalizedInstagram = normalizeSocialAccountList(
@@ -393,7 +393,6 @@ export default function EditUserPage() {
         // Aturan bisnis: field desa hanya diproses untuk personel role Ditbinmas.
         desa: isDitbinmasRole ? desa.trim() : "",
         whatsapp: normalizedWhatsapp,
-        email: normalizedEmail,
         instagram_accounts: normalizedInstagram.accounts,
         tiktok_accounts: normalizedTiktok.accounts,
       });
@@ -414,6 +413,34 @@ export default function EditUserPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleRequestEmailOtp() {
+    setError(""); setMessage("");
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || !isValidEmailWithBrowser(normalizedEmail) || !emailPassword) {
+      setError("Masukkan email aktif dan password akun."); return;
+    }
+    setEmailLoading(true);
+    try {
+      const res = await requestClaimEmailUpdate({ email: normalizedEmail, password: emailPassword });
+      const payload = res?.data || res;
+      setEmailRequestId(payload.request_id || "");
+      setMessage(payload.message || "OTP dikirim ke email.");
+    } catch (err) { setError(err?.message || "Gagal mengirim OTP email."); }
+    setEmailLoading(false);
+  }
+
+  async function handleVerifyEmailOtp() {
+    setError(""); setMessage(""); setEmailLoading(true);
+    try {
+      const res = await verifyClaimEmailUpdate({ request_id: emailRequestId, otp: emailOtp.trim() });
+      const payload = res?.data || res;
+      setEmail(payload.email || email); setEmailVerified(true);
+      setEmailRequestId(""); setEmailOtp(""); setEmailPassword("");
+      setMessage(payload.message || "Email berhasil diverifikasi.");
+    } catch (err) { setError(err?.message || "OTP email tidak valid."); }
+    setEmailLoading(false);
   }
 
   const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
@@ -671,6 +698,22 @@ export default function EditUserPage() {
               />
               {fieldErrors.email && (
                 <p className="text-xs text-red-500">{fieldErrors.email}</p>
+              )}
+              <p className={`text-xs ${emailVerified ? "text-emerald-700" : "text-amber-700"}`}>
+                {emailVerified ? "Email telah terverifikasi." : "Email belum terverifikasi. Masukkan password lalu konfirmasi OTP."}
+              </p>
+              {!emailRequestId ? (
+                <div className="space-y-2">
+                  <input type="password" value={emailPassword} onChange={(e) => setEmailPassword(e.target.value)} placeholder="Password akun untuk update email" className="w-full rounded-xl border border-spirit-200 px-3 py-2 text-sm" />
+                  <button type="button" onClick={handleRequestEmailOtp} disabled={emailLoading || !email.trim() || !emailPassword} className="w-full rounded-xl border bg-white px-3 py-2 text-xs font-semibold disabled:opacity-60">
+                    {emailVerified ? "Ubah Email dengan OTP" : "Kirim OTP Verifikasi Email"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <input type="text" inputMode="numeric" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6 digit OTP email" className="w-full rounded-xl border border-spirit-200 px-3 py-2 text-sm" />
+                  <button type="button" onClick={handleVerifyEmailOtp} disabled={emailLoading || emailOtp.length !== 6} className="w-full rounded-xl border bg-white px-3 py-2 text-xs font-semibold disabled:opacity-60">Verifikasi & Simpan Email</button>
+                </div>
               )}
             </div>
           </div>

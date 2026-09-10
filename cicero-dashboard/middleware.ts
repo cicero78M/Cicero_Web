@@ -23,6 +23,16 @@ const DASHBOARD_PROTECTED_PREFIXES = [
   "/premium",
 ] as const;
 
+const PORTAL_ROOTS: Record<string, string> = {
+  "dashboard.papiqo.com": "/dashboard",
+  "claim.papiqo.com": "/claim",
+  "reposter.papiqo.com": "/reposter",
+};
+
+const DASHBOARD_SESSION_COOKIE = "cicero_dashboard_session";
+const REPOSTER_SESSION_COOKIE = "cicero_reposter_session";
+const LEGACY_SESSION_COOKIE = "token";
+
 function matchesRoutePrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
@@ -43,7 +53,7 @@ function decodeJwtPayload(token?: string): Record<string, unknown> | null {
   }
 }
 
-function hasUsableAuthToken(token?: string): boolean {
+function hasUsableAuthToken(token: string | undefined, expectedScope: "dashboard" | "reposter"): boolean {
   if (!token) return false;
 
   const payload = decodeJwtPayload(token);
@@ -53,11 +63,22 @@ function hasUsableAuthToken(token?: string): boolean {
   if (!Number.isFinite(exp)) return false;
 
   const nowSeconds = Math.floor(Date.now() / 1000);
-  return exp > nowSeconds;
+  if (exp <= nowSeconds) return false;
+
+  if (expectedScope === "dashboard") {
+    return Boolean((payload as { dashboard_user_id?: unknown }).dashboard_user_id);
+  }
+  return (
+    (payload as { role?: unknown }).role === "user" &&
+    Boolean((payload as { user_id?: unknown }).user_id)
+  );
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = (request.headers.get("host") || request.nextUrl.hostname)
+    .split(":", 1)[0]
+    .toLowerCase();
   const isServerActionRequest = request.method === "POST" && request.headers.has("next-action");
 
   if (isServerActionRequest) {
@@ -76,6 +97,13 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  const portalRoot = PORTAL_ROOTS[hostname];
+  if (portalRoot && pathname === "/") {
+    const portalUrl = request.nextUrl.clone();
+    portalUrl.pathname = portalRoot;
+    return NextResponse.redirect(portalUrl);
+  }
+
   if (pathname.startsWith("/reposter/login")) {
     return NextResponse.next();
   }
@@ -85,8 +113,10 @@ export function middleware(request: NextRequest) {
   );
 
   if (isDashboardProtected) {
-    const authToken = request.cookies.get("token")?.value;
-    if (!hasUsableAuthToken(authToken)) {
+    const authToken =
+      request.cookies.get(DASHBOARD_SESSION_COOKIE)?.value ||
+      request.cookies.get(LEGACY_SESSION_COOKIE)?.value;
+    if (!hasUsableAuthToken(authToken, "dashboard")) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("next", pathname);
@@ -95,8 +125,10 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/reposter")) {
-    const authToken = request.cookies.get("token")?.value;
-    if (!hasUsableAuthToken(authToken)) {
+    const authToken =
+      request.cookies.get(REPOSTER_SESSION_COOKIE)?.value ||
+      request.cookies.get(LEGACY_SESSION_COOKIE)?.value;
+    if (!hasUsableAuthToken(authToken, "reposter")) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/reposter/login";
       loginUrl.searchParams.set("next", pathname);

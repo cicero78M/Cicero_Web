@@ -61,7 +61,6 @@ function ContentItem({ item, platform, username, onComplaint }: {
         <div className="space-y-1"><p>{formatContentDate(item.content_time)}</p><p className="font-semibold text-amber-600">Belum tercatat</p></div>
         <div className="flex gap-2">
           {url && <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-spirit-200 px-3 py-2 font-semibold text-spirit-600">Buka Konten <ExternalLink className="h-3.5 w-3.5" /></a>}
-          <button type="button" onClick={() => onComplaint({ item, platform, username })} className="rounded-xl bg-amber-500 px-3 py-2 font-semibold text-white hover:bg-amber-600">Komplain</button>
         </div>
       </div>
     </li>

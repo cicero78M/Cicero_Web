@@ -16,13 +16,13 @@ export default function LoginUpdatePage() {
         </p>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Link
-            href="/claim"
+            href="https://claim.papiqo.com/claim"
             className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-violet-200/80 transition hover:scale-[1.03] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
           >
             Login Claim
           </Link>
           <Link
-            href="/reposter/login"
+            href="https://reposter.papiqo.com/reposter/login"
             className="inline-flex items-center justify-center rounded-full border border-indigo-200/70 bg-white/70 px-6 py-3 text-base font-semibold text-slate-700 transition hover:border-violet-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
           >
             Login Reposter

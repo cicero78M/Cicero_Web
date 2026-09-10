@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type AccentKey = "trust" | "consistency" | "spirit";
@@ -19,19 +20,19 @@ type ClaimLayoutProps = {
 
 const accentStyles: Record<AccentKey, { border: string; stepText: string; badge: string }> = {
   trust: {
-    border: "border-trust-200 shadow-[0_25px_50px_-25px_rgba(58,182,192,0.6)]",
-    stepText: "text-trust-600",
-    badge: "bg-trust-50 text-trust-600 ring-2 ring-trust-100/60",
+    border: "border-slate-200 shadow-xl shadow-slate-200/50",
+    stepText: "text-indigo-600",
+    badge: "bg-indigo-600 text-white",
   },
   consistency: {
-    border: "border-consistency-200 shadow-[0_25px_50px_-25px_rgba(140,101,232,0.55)]",
-    stepText: "text-consistency-600",
-    badge: "bg-consistency-50 text-consistency-600 ring-2 ring-consistency-100/60",
+    border: "border-slate-200 shadow-xl shadow-slate-200/50",
+    stepText: "text-indigo-600",
+    badge: "bg-indigo-600 text-white",
   },
   spirit: {
-    border: "border-spirit-200 shadow-[0_25px_50px_-25px_rgba(255,111,138,0.55)]",
-    stepText: "text-spirit-600",
-    badge: "bg-spirit-50 text-spirit-600 ring-2 ring-spirit-100/60",
+    border: "border-slate-200 shadow-xl shadow-slate-200/50",
+    stepText: "text-indigo-600",
+    badge: "bg-indigo-600 text-white",
   },
 };
 
@@ -57,39 +58,46 @@ export default function ClaimLayout({
   const accent = accentStyles[cardAccent];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-trust-50 via-consistency-50 to-spirit-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_minmax(0,1fr)]">
-        <aside className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/80 via-trust-50/90 to-consistency-50/80 p-8 text-neutral-navy shadow-xl ring-1 ring-white/50">
-          <div className="absolute -left-16 -top-20 h-48 w-48 rounded-full bg-trust-200/40 blur-3xl" aria-hidden />
-          <div className="absolute -right-10 -bottom-24 h-52 w-52 rounded-full bg-spirit-200/40 blur-3xl" aria-hidden />
+    <main className="min-h-screen bg-[#f6f8fb] px-4 py-8 text-slate-950 sm:px-6 sm:py-12 lg:px-8">
+      <div className="mx-auto mb-6 flex max-w-7xl items-center justify-between">
+        <a href="https://papiqo.com" className="flex items-center gap-3" aria-label="Kembali ke Papiqo">
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <Image src="/cicero-mark.png" alt="Logo Cicero" fill sizes="40px" className="object-contain p-1" priority />
+          </span>
+          <span><span className="block text-sm font-bold tracking-[0.18em]">CICERO</span><span className="block text-[11px] text-slate-500">Claim workspace</span></span>
+        </a>
+        <a href="https://papiqo.com" className="text-sm font-semibold text-slate-600 transition hover:text-indigo-700">Kembali ke beranda</a>
+      </div>
+      <div className="mx-auto grid max-w-7xl items-stretch overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 lg:grid-cols-[.9fr_1.1fr]">
+        <aside className="relative overflow-hidden bg-slate-950 p-8 text-white sm:p-10 lg:p-12">
           <div className="relative z-10 flex h-full flex-col gap-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/60 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-consistency-400 ring-1 ring-white/50">
-              Aman & Terpercaya
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold text-indigo-300">
+              Aman dan terverifikasi
             </div>
             <div>
               <h2 className="text-2xl font-semibold sm:text-3xl">{infoTitle}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-slate sm:text-base">
+              <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
                 {infoDescription}
               </p>
             </div>
-            <ul className="space-y-3 text-sm text-neutral-slate">
+            <ul className="space-y-4 text-sm text-slate-300">
               {infoHighlights.map((highlight) => (
                 <li key={highlight} className="flex items-start gap-3">
-                  <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-gradient-to-br from-trust-300 via-consistency-300 to-spirit-300" />
+                  <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-indigo-400" />
                   <span>{highlight}</span>
                 </li>
               ))}
             </ul>
             {illustration && <div className="mt-auto">{illustration}</div>}
-            {infoFooter && <div className="text-sm text-neutral-slate/80">{infoFooter}</div>}
+            {infoFooter && <div className="text-sm text-slate-400">{infoFooter}</div>}
           </div>
         </aside>
 
-        <section className="flex w-full items-stretch">
+        <section className="flex w-full items-stretch bg-white">
           <div className="w-full">
             <div
               className={cn(
-                "h-full rounded-3xl border bg-white/90 p-8 backdrop-blur-sm sm:p-10",
+                "h-full border-0 bg-white p-7 sm:p-10 lg:p-12",
                 accent.border,
               )}
             >
@@ -98,7 +106,7 @@ export default function ClaimLayout({
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "flex h-11 w-11 items-center justify-center rounded-full shadow-sm",
+                        "flex h-11 w-11 items-center justify-center rounded-xl shadow-sm",
                         accent.badge,
                       )}
                     >
@@ -116,9 +124,9 @@ export default function ClaimLayout({
                     </span>
                   </div>
                   <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold text-neutral-navy sm:text-3xl">{title}</h1>
+                    <h1 className="text-2xl font-bold tracking-[-0.02em] text-slate-950 sm:text-3xl">{title}</h1>
                     {description && (
-                      <p className="text-sm text-neutral-slate sm:text-base">{description}</p>
+                      <p className="text-sm leading-6 text-slate-600 sm:text-base">{description}</p>
                     )}
                   </div>
                 </div>

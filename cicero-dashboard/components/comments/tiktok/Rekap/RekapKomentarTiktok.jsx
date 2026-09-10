@@ -175,6 +175,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
     reportContext = {},
     rekapSummary = {},
     showPremiumCta = false,
+    initialStatusFilter = "all",
   },
   ref,
 ) {
@@ -443,7 +444,7 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   };
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const filteredUsers = useMemo(
     () =>
       sortedUsers.filter((u) => {
@@ -799,6 +800,10 @@ const RekapKomentarTiktok = forwardRef(function RekapKomentarTiktok(
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
     downloadRekap: handleDownloadRekap,
+    setStatusFilter: (nextFilter = "all") => {
+      setStatusFilter(nextFilter);
+      setPage(1);
+    },
   }));
 
   return (

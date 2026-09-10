@@ -8,6 +8,9 @@ let cachedApiBaseUrl: string | null = null;
 let hasLoggedMissingApiBase = false;
 
 export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined" && /(^|\.)papiqo\.com$/i.test(window.location.hostname)) {
+    return window.location.origin;
+  }
   if (cachedApiBaseUrl) return cachedApiBaseUrl;
 
   const rawValue = (process.env.NEXT_PUBLIC_API_URL || "").trim();
@@ -158,12 +161,13 @@ export async function confirmDashboardPasswordReset(
 
 type AuthFailureScope = "dashboard" | "reposter" | "none";
 export const COOKIE_SESSION_TOKEN = "cookie-session";
+export const DASHBOARD_SESSION_COOKIE = "cicero_dashboard_session";
+export const REPOSTER_HTTP_SESSION_COOKIE = "cicero_reposter_session";
+export const LEGACY_SESSION_COOKIE = "token";
 
 type AuthenticatedRequestInit = RequestInit & {
   authFailureScope?: AuthFailureScope;
 };
-
-const REPOSTER_SESSION_COOKIE = "reposter_session";
 
 function appendAuthorizationHeader(
   headers: Record<string, string>,
@@ -174,22 +178,19 @@ function appendAuthorizationHeader(
   }
 }
 
-export async function getAuthSession(): Promise<any> {
+export async function getAuthSession(
+  scope: Exclude<AuthFailureScope, "none"> = "dashboard",
+): Promise<any> {
   const res = await fetch(buildApiUrl("/api/auth/session"), {
     credentials: "include",
     cache: "no-store",
+    headers: { "X-Cicero-Auth-Scope": scope },
   });
   const data = await res.json().catch(() => null);
   if (!res.ok || data?.success === false) {
     throw new Error(data?.message || "Sesi tidak valid");
   }
   return data?.data || data;
-}
-
-function clearCookie(name: string, path: string = "/"): void {
-  if (typeof document === "undefined") return;
-  const secureAttribute = window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${name}=; Path=${path}; Max-Age=0; SameSite=Strict${secureAttribute}`;
 }
 
 function redirectTo(path: string): void {
@@ -210,7 +211,6 @@ export function clearReposterAuthState(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(REPOSTER_TOKEN_STORAGE_KEY);
   localStorage.removeItem(REPOSTER_PROFILE_STORAGE_KEY);
-  clearCookie(REPOSTER_SESSION_COOKIE, "/reposter");
 }
 
 function shouldInvalidateAuth(status: number, data?: any): boolean {
@@ -231,13 +231,16 @@ function handleAuthFailure(scope: AuthFailureScope = "dashboard"): void {
   redirectTo("/");
 }
 
-async function postLogout(token?: string | null): Promise<void> {
+async function postLogout(
+  token?: string | null,
+  scope: Exclude<AuthFailureScope, "none"> = "dashboard",
+): Promise<void> {
   try {
     const headers: Record<string, string> = {};
     appendAuthorizationHeader(headers, token);
     await fetch(buildApiUrl("/api/auth/logout"), {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Cicero-Auth-Scope": scope },
       credentials: "include",
     });
   } catch {
@@ -246,12 +249,12 @@ async function postLogout(token?: string | null): Promise<void> {
 }
 
 export async function logoutDashboardSession(token?: string | null): Promise<void> {
-  await postLogout(token);
+  await postLogout(token, "dashboard");
   clearDashboardAuthState();
 }
 
 export async function logoutReposterSession(token?: string | null): Promise<void> {
-  await postLogout(token);
+  await postLogout(token, "reposter");
   clearReposterAuthState();
 }
 
@@ -902,6 +905,9 @@ async function fetchWithAuth(
   const { authFailureScope = "dashboard", ...fetchOptions } = options;
   const headers = new Headers(fetchOptions.headers);
   headers.set("Content-Type", "application/json");
+  if (authFailureScope !== "none") {
+    headers.set("X-Cicero-Auth-Scope", authFailureScope);
+  }
   if (token && token !== COOKIE_SESSION_TOKEN) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -3933,6 +3939,7 @@ export type ClaimProfileDto = {
   client_id: string | null;
   whatsapp: string | null;
   email: string | null;
+  email_verified_at?: string | null;
   insta: string | null;
   tiktok: string | null;
   /** Canonical account lists; absent only on legacy backend responses. */
@@ -3972,6 +3979,7 @@ export type UpdateClaimProfilePayload = Partial<
 export type ClaimCredentialPayload = {
   nrp: string;
   password: string;
+  email?: string;
 };
 
 export type ClaimPendingContentItem = {
@@ -4141,7 +4149,7 @@ export async function registerClaimCredential(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ nrp: payload.nrp, password: payload.password }),
+    body: JSON.stringify({ nrp: payload.nrp, password: payload.password, email: payload.email }),
   });
 
   let data: any = null;
@@ -4161,6 +4169,36 @@ export async function registerClaimCredential(
   }
 
   return { ...data, success: data?.success ?? res.ok, message };
+}
+
+export async function verifyClaimRegistration(payload: { request_id: string; otp: string }): Promise<any> {
+  const res = await fetch(buildApiUrl("/api/claim/register/verify"), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    credentials: "include", body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(extractResponseMessage(data, "OTP aktivasi tidak valid."));
+  return data;
+}
+
+export async function requestClaimEmailUpdate(payload: { email: string; password: string }): Promise<any> {
+  const res = await fetch(buildApiUrl("/api/claim/email/request"), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    credentials: "include", body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(extractResponseMessage(data, "Gagal mengirim OTP email."));
+  return data;
+}
+
+export async function verifyClaimEmailUpdate(payload: { request_id: string; otp: string }): Promise<any> {
+  const res = await fetch(buildApiUrl("/api/claim/email/verify"), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    credentials: "include", body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(extractResponseMessage(data, "OTP email tidak valid."));
+  return data;
 }
 
 export async function loginClaimUser(
@@ -4232,6 +4270,28 @@ export async function verifyClaimPasswordResetOtp(payload: {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(extractResponseMessage(data, "OTP tidak valid atau sudah kedaluwarsa."));
+  }
+  return data;
+}
+
+export async function confirmClaimRecoveryEmail(payload: {
+  token: string;
+}): Promise<any> {
+  const url = buildApiUrl("/api/claim/password-reset/confirm-email");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      extractResponseMessage(
+        data,
+        "Tautan konfirmasi email tidak valid atau sudah kedaluwarsa.",
+      ),
+    );
   }
   return data;
 }

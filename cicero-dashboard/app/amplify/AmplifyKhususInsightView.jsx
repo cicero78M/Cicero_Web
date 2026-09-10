@@ -76,6 +76,7 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
     handleDateChange,
     normalizedCustomDate,
     normalizedRange,
+    isRangeView,
     reportPeriodeLabel,
   } = useLikesDateSelector();
 
@@ -103,8 +104,7 @@ export default function AmplifyKhususInsightView({ initialTab = "insight" }) {
       return () => controller.abort();
     }
 
-    const selectedDate =
-      viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
+    const selectedDate = isRangeView ? normalizedRange : normalizedCustomDate;
     const { periode, date, startDate, endDate } = getPeriodeDateForView(
       viewBy,
       selectedDate,

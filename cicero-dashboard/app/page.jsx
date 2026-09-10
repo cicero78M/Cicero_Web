@@ -1,494 +1,246 @@
 "use client";
-import { useMemo, useState } from "react";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
+
 import Link from "next/link";
 import {
-  Activity,
+  ArrowRight,
   BarChart3,
-  CheckCircle,
-  Command,
-  Database,
-  Gauge,
-  MessageCircle,
+  CheckCircle2,
+  CircleDot,
+  LayoutDashboard,
+  MessageCircleMore,
+  RefreshCcw,
+  ShieldCheck,
   Sparkles,
+  UsersRound,
   Workflow,
-  Zap,
 } from "lucide-react";
 
-const featureHighlights = [
+import useAuthRedirect from "@/hooks/useAuthRedirect";
+import Image from "next/image";
+
+const products = [
   {
-    id: "command",
-    title: "Command Center",
-    description:
-      "Satu panel komando untuk agregasi lintas kanal, menyatukan inbox, KPI, dan SOP respon cepat sesuai playbook terbaru.",
-    icon: Command,
-    stats: [
-      "Agregator omnichannel",
-      "Peringatan prioritas WA",
-      "Checklist SOP otomatis",
-    ],
+    name: "Dashboard",
+    description: "Pantau performa, aktivitas, dan insight lintas kanal dalam satu ruang kerja.",
+    href: "https://dashboard.papiqo.com/login",
+    action: "Masuk Dashboard",
+    icon: LayoutDashboard,
   },
   {
-    id: "workflow",
-    title: "Orkestrasi Workflow",
-    description:
-      "Tetapkan owner, jalankan automation bot WhatsApp, dan sinkronkan follow-up lintas tim dalam satu diagram operasional.",
+    name: "Claim",
+    description: "Kelola identitas personel, akun sosial, dan tindak lanjut aktivitas secara mandiri.",
+    href: "https://claim.papiqo.com/claim",
+    action: "Buka Claim",
+    icon: ShieldCheck,
+  },
+  {
+    name: "Reposter",
+    description: "Temukan tugas publikasi resmi dan laporkan hasilnya melalui alur yang terarah.",
+    href: "https://reposter.papiqo.com/reposter/login",
+    action: "Buka Reposter",
+    icon: RefreshCcw,
+  },
+];
+
+const capabilities = [
+  {
+    title: "Monitoring terpusat",
+    description: "Informasi penting dari kanal digital disusun menjadi tampilan yang ringkas dan mudah ditindaklanjuti.",
+    icon: BarChart3,
+  },
+  {
+    title: "Koordinasi lebih rapi",
+    description: "Tugas, pemilik pekerjaan, dan progres berada dalam alur yang sama agar tindak lanjut tidak terlewat.",
+    icon: UsersRound,
+  },
+  {
+    title: "Otomasi yang terukur",
+    description: "Proses rutin dibantu sistem dengan kontrol, jejak aktivitas, dan batas akses yang jelas.",
     icon: Workflow,
-    stats: [
-      "Trigger bot WA adaptif",
-      "Routing tugas berbasis SLA",
-      "Integrasi knowledge base",
-    ],
-  },
-  {
-    id: "insight",
-    title: "Insight Prediktif",
-    description:
-      "Prediksi lonjakan percakapan, rekomendasikan aksi preventif, dan validasi outcome dengan simulasi skenario otomatis.",
-    icon: Gauge,
-    stats: [
-      "Forecast campaign harian",
-      "Skor risiko sentimen",
-      "Rekomendasi taktis AI",
-    ],
   },
 ];
 
-const timeline = [
-  {
-    title: "Agregasi Multi-Kanal",
-    description:
-      "Semua percakapan IG, TikTok, dan WhatsApp tersusun otomatis dalam satu feed prioritas.",
-    time: "00:00",
-  },
-  {
-    title: "Insight Prediktif",
-    description:
-      "Mesin analitik memetakan potensi eskalasi dan menyiapkan rencana mitigasi sesuai SOP.",
-    time: "00:05",
-  },
-  {
-    title: "Orkestrasi Bot",
-    description:
-      "Bot WhatsApp mengeksekusi follow-up, assign PIC, dan menutup loop laporan otomatis.",
-    time: "00:10",
-  },
-];
-
-const metrics = [
-  { label: "Akun Aktif", value: "1.240", trend: "+18%" },
-  { label: "Engagement", value: "3.4M", trend: "+26%" },
-  { label: "SLA Respon", value: "2m 15s", trend: "-32%" },
+const flow = [
+  ["01", "Kumpulkan", "Data operasional dan aktivitas kanal masuk ke ruang kerja terpusat."],
+  ["02", "Pahami", "Dashboard menyajikan konteks, prioritas, dan progres yang relevan."],
+  ["03", "Tindak lanjuti", "Tim menjalankan tugas melalui Claim, Reposter, dan alur operasional."],
 ];
 
 export default function LandingPage() {
   useAuthRedirect();
-  const [email, setEmail] = useState("");
-  const [activeFeature, setActiveFeature] = useState(featureHighlights[0].id);
-  const loginCtas = [
-    { label: "Dashboard", href: "/login", variant: "primary" },
-    { label: "Claims", href: "/login-update", variant: "outline" },
-    { label: "Reposter", href: "/reposter/login", variant: "outline" },
-  ];
-
-  const packages = useMemo(
-    () => [
-      {
-        name: "Kelas A",
-        users: "1500-3000 pengguna",
-        setup: "Rp5.000.000",
-        monthly: "Rp4.200.000",
-        features: [
-          "Agregator omnichannel penuh",
-          "Workflow lintas divisi",
-          "Prioritas dukungan 24/7",
-          "Integrasi ERP & CRM",
-        ],
-      },
-      {
-        name: "Kelas B",
-        users: "800-1500 pengguna",
-        setup: "Rp4.000.000",
-        monthly: "Rp3.600.000",
-        popular: true,
-        features: [
-          "Insight prediktif standar",
-          "Orkestrasi bot WA",
-          "Dukungan jam kerja",
-          "Integrasi knowledge base",
-        ],
-      },
-      {
-        name: "Kelas C",
-        users: "maks. 800 pengguna",
-        setup: "Rp3.000.000",
-        monthly: "Rp2.400.000",
-        features: [
-          "Agregasi kanal dasar",
-          "Template SOP respon",
-          "Dukungan email",
-          "2 channel aktif",
-        ],
-      },
-    ],
-    []
-  );
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("Terima kasih!");
-    setEmail("");
-  };
-
-  const selectedFeature = featureHighlights.find((item) => item.id === activeFeature);
-  const SelectedIcon = selectedFeature?.icon;
 
   return (
-    <div className="relative flex flex-col min-h-screen overflow-hidden bg-gradient-to-br from-sky-100 via-indigo-50 to-violet-100 text-slate-900">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.28),_rgba(236,233,254,0.4)_45%,_transparent_70%)]" />
-      <div className="pointer-events-none absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-violet-200/70 blur-3xl" />
-
-      {/* Header */}
-      <header className="relative z-10 w-full border-b border-indigo-200/40 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-300 via-indigo-200 to-violet-300 shadow-lg shadow-violet-200/60">
-              <Sparkles className="h-6 w-6" aria-hidden="true" />
+    <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+          <Link href="/" className="flex items-center gap-3" aria-label="Cicero beranda">
+            <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <Image src="/cicero-mark.png" alt="Logo Cicero" fill sizes="40px" className="object-contain p-1" priority />
             </span>
-            <div className="text-left">
-              <p className="text-xs uppercase tracking-[0.3em] text-indigo-600">Cicero</p>
-              <p className="text-sm text-slate-600">Next-Gen Command Dashboard</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {loginCtas.map((cta) => (
-              <Link
-                key={cta.label}
-                href={cta.href}
-                className={
-                  cta.variant === "primary"
-                    ? "rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-200/70 transition hover:scale-105 hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
-                    : "rounded-full border border-indigo-200/70 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
-                }
-              >
-                {cta.label}
-              </Link>
-            ))}
-          </div>
+            <span>
+              <span className="block text-sm font-bold tracking-[0.18em]">CICERO</span>
+              <span className="block text-[11px] text-slate-500">Digital Operations Platform</span>
+            </span>
+          </Link>
+          <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex" aria-label="Navigasi utama">
+            <a href="#platform" className="transition hover:text-slate-950">Platform</a>
+            <a href="#kapabilitas" className="transition hover:text-slate-950">Kapabilitas</a>
+            <a href="#cara-kerja" className="transition hover:text-slate-950">Cara kerja</a>
+          </nav>
+          <Link
+            href="https://dashboard.papiqo.com/login"
+            className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            Masuk <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="relative z-10 flex flex-grow flex-col items-center">
-        <section className="w-full border-b border-indigo-200/30 bg-gradient-to-b from-white/80 via-indigo-50/50 to-transparent pb-20 pt-16">
-          <div className="container mx-auto flex max-w-7xl flex-col gap-12 px-6 text-center md:flex-row md:text-left">
-            <div className="flex-1 space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-300/60 bg-indigo-100/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-600">
-                Omnichannel Upgrade
-              </span>
-              <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
-                Satukan Operasi Sosial <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500">dengan agregator lintas kanal</span>
+      <main>
+        <section className="relative overflow-hidden border-b border-slate-200 bg-white">
+          <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[420px] max-w-5xl bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.12),transparent_68%)]" />
+          <div className="relative mx-auto grid max-w-7xl gap-14 px-5 py-20 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-28">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700">
+                <CircleDot className="h-3.5 w-3.5" aria-hidden="true" />
+                Satu ekosistem untuk operasi digital
+              </div>
+              <h1 className="max-w-3xl text-4xl font-bold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-6xl">
+                Operasi digital yang lebih jelas, cepat, dan terkendali.
               </h1>
-              <p className="max-w-xl text-base text-slate-600 md:text-lg">
-                Cicero kini menghadirkan insight prediktif, orkestrasi bot WhatsApp, dan kontrol workflow sesuai SOP terbaru agar tim Anda selalu selangkah di depan.
+              <p className="mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                Cicero menyatukan monitoring, evaluasi, pengelolaan personel, dan distribusi tugas dalam alur kerja yang sederhana untuk membantu tim bergerak dengan informasi yang tepat.
               </p>
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-                  {loginCtas.map((cta) => (
-                    <Link
-                      key={cta.label}
-                      href={cta.href}
-                      className={
-                        cta.variant === "primary"
-                          ? "inline-flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-violet-200/80 transition hover:scale-[1.03] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
-                          : "inline-flex flex-1 items-center justify-center rounded-full border border-indigo-200/70 bg-white/70 px-6 py-3 text-base font-semibold text-slate-700 transition hover:border-violet-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
-                      }
-                    >
-                      {cta.label}
-                    </Link>
-                  ))}
-                </div>
-                <a
-                  href="https://wa.me/+6281235114745"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-full border border-indigo-200/70 bg-white/50 px-6 py-3 text-base font-semibold text-slate-700 transition hover:border-violet-300 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300"
-                >
-                  Lihat Alur Terbaru
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="https://dashboard.papiqo.com/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700">
+                  Mulai dari Dashboard <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <a href="#platform" className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950">
+                  Jelajahi platform
                 </a>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {metrics.map((metric) => (
-                  <div
-                    key={metric.label}
-                    className="rounded-2xl border border-indigo-200/60 bg-gradient-to-br from-sky-200/60 via-indigo-100/60 to-violet-100/60 p-4 text-left shadow-lg shadow-indigo-200/40"
-                  >
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{metric.label}</p>
-                    <p className="mt-2 text-2xl font-bold text-slate-900">{metric.value}</p>
-                    <p className="text-xs text-emerald-500">{metric.trend}</p>
-                  </div>
+              <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
+                {["Akses berbasis peran", "Alur kerja terintegrasi", "Informasi terpusat"].map((item) => (
+                  <span key={item} className="inline-flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" /> {item}
+                  </span>
                 ))}
               </div>
             </div>
-            <div className="flex-1">
-              <div className="relative mx-auto max-w-lg overflow-hidden rounded-3xl border border-indigo-200/60 bg-white/80 p-6 shadow-2xl shadow-indigo-200/40">
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-200/40 via-indigo-200/40 to-violet-200/40" />
-                <div className="relative space-y-4">
-                  <div className="flex items-center justify-between rounded-2xl border border-indigo-200/60 bg-white/70 px-5 py-4">
+
+            <div className="relative mx-auto w-full max-w-xl">
+              <div className="rounded-[2rem] border border-slate-200 bg-slate-950 p-3 shadow-2xl shadow-slate-300/60">
+                <div className="rounded-[1.4rem] bg-white p-5 sm:p-7">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-5">
                     <div>
-                      <p className="text-xs text-slate-500">Live Audience Flow</p>
-                      <p className="text-lg font-semibold text-slate-900">+245 joining</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Ruang Operasi</p>
+                      <p className="mt-1 font-semibold text-slate-900">Ringkasan hari ini</p>
                     </div>
-                    <BarChart3 className="h-6 w-6 text-indigo-500" aria-hidden="true" />
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Aktif</span>
                   </div>
-                  <div className="rounded-2xl border border-indigo-200/60 bg-white/70 p-5">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-slate-500">Sentiment Heat</p>
-                      <span className="text-xs text-emerald-500">Stable</span>
-                    </div>
-                    <div className="mt-4 grid grid-cols-5 gap-2 text-center text-xs">
-                      {["IG", "TT", "YT", "FB", "TW"].map((channel) => (
-                        <div
-                          key={channel}
-                          className="rounded-lg bg-gradient-to-br from-sky-200/60 via-indigo-100/60 to-violet-200/60 px-3 py-2"
-                        >
-                          <p className="font-semibold text-slate-900">{channel}</p>
-                          <p className="text-[10px] text-slate-600">Active</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-3 rounded-2xl border border-indigo-200/60 bg-white/70 p-5">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-slate-500">Auto Tasks</p>
-                      <span className="text-xs text-indigo-500">12 in queue</span>
-                    </div>
-                    <div className="space-y-2">
-                      {["Respond comment high priority", "Review draft carousel", "Schedule trend remix"].map(
-                        (task) => (
-                          <div
-                            key={task}
-                            className="flex items-center justify-between rounded-xl border border-indigo-200/50 bg-gradient-to-r from-sky-200/50 via-indigo-100/40 to-transparent px-3 py-2 text-xs"
-                          >
-                            <span className="text-slate-700">{task}</span>
-                            <Zap className="h-4 w-4 text-violet-400" aria-hidden="true" />
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Interactive Features */}
-        <section className="w-full border-b border-indigo-200/40 bg-gradient-to-br from-sky-100/70 via-white/80 to-teal-100/70 py-16">
-          <div className="container mx-auto flex max-w-7xl flex-col gap-12 px-6 lg:flex-row">
-            <div className="flex-1 space-y-5">
-              <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Kenapa Cicero Dibuat?</h2>
-              <p className="text-slate-600">
-                Cicero menggabungkan monitoring & evaluasi media sosial dalam satu ekosistem komando. Agregator lintas kanal, insight prediktif, dan orkestrasi bot WA memastikan setiap aktivitas mengikuti knowledge base resmi tanpa jeda.
-              </p>
-              <div className="grid gap-4 md:grid-cols-2">
-                {[Activity, MessageCircle, Database, BarChart3].map((Icon, index) => (
-                  <div
-                    key={index}
-                    className="rounded-2xl border border-indigo-200/60 bg-gradient-to-br from-sky-200/60 via-teal-100/60 to-violet-100/60 p-5 shadow-lg shadow-indigo-200/40"
-                  >
-                    <Icon className="h-8 w-8 text-indigo-500" aria-hidden="true" />
-                    <p className="mt-3 text-sm text-slate-600">
-                      {[
-                        "Monitoring & evaluasi terpusat",
-                        "Laporan otomatis via WhatsApp",
-                        "Minim administrasi manual",
-                        "Visualisasi & analisis lengkap",
-                      ][index]}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex-1 space-y-6">
-              <div className="flex flex-wrap gap-3">
-                {featureHighlights.map(({ id, title, icon: Icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onMouseEnter={() => setActiveFeature(id)}
-                    onFocus={() => setActiveFeature(id)}
-                    className={`flex items-center gap-3 rounded-full border px-4 py-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-300 ${
-                      activeFeature === id
-                        ? "border-indigo-400 bg-gradient-to-r from-sky-200/70 via-indigo-200/70 to-violet-200/70 text-indigo-700"
-                        : "border-indigo-200/50 bg-white/70 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    {title}
-                  </button>
-                ))}
-              </div>
-              {selectedFeature && SelectedIcon && (
-                <div className="rounded-3xl border border-indigo-200/60 bg-gradient-to-br from-sky-100/70 via-white/80 to-violet-100/70 p-8 shadow-lg shadow-indigo-200/40">
-                  <div className="flex items-center gap-3">
-                    <SelectedIcon className="h-8 w-8 text-violet-500" aria-hidden="true" />
-                    <h3 className="text-2xl font-semibold text-slate-900">{selectedFeature.title}</h3>
-                  </div>
-                  <p className="mt-4 text-sm text-slate-600 md:text-base">{selectedFeature.description}</p>
-                  <ul className="mt-6 grid gap-3 md:grid-cols-2">
-                    {selectedFeature.stats.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-center gap-2 rounded-2xl border border-indigo-200/60 bg-gradient-to-r from-sky-200/60 via-indigo-100/60 to-violet-100/60 px-4 py-2 text-sm"
-                      >
-                        <CheckCircle className="h-4 w-4 text-emerald-500" aria-hidden="true" />
-                        <span>{item}</span>
-                      </li>
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {["Monitoring kanal", "Progres personel", "Distribusi tugas", "Laporan & evaluasi"].map((label, index) => (
+                      <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <span className={`mb-5 block h-2 w-10 rounded-full ${index % 2 ? "bg-violet-400" : "bg-indigo-500"}`} />
+                        <p className="text-sm font-semibold text-slate-800">{label}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">Tersusun dan siap ditinjau</p>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                  <div className="mt-3 flex items-center gap-3 rounded-2xl bg-indigo-50 p-4 text-sm text-indigo-950">
+                    <ShieldCheck className="h-5 w-5 shrink-0 text-indigo-600" aria-hidden="true" />
+                    Setiap pengguna masuk melalui ruang dan hak akses yang sesuai.
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Workflow Timeline */}
-        <section className="w-full bg-gradient-to-b from-indigo-50 via-sky-100 to-violet-100 py-16">
-          <div className="container mx-auto max-w-7xl px-6 text-center">
-            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Workflow Terpadu dalam 10 Menit</h2>
-            <p className="mt-4 text-slate-600">
-              Dari agregasi lintas kanal, insight prediktif, hingga orkestrasi bot WA, setiap langkah mengikuti SOP terbaru tanpa perlu switching platform.
-            </p>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {timeline.map((step) => (
-                <div
-                  key={step.title}
-                  className="rounded-3xl border border-indigo-200/60 bg-gradient-to-br from-sky-200/60 via-indigo-100/60 to-violet-100/60 p-6 text-left shadow-lg shadow-indigo-200/40"
-                >
-                  <p className="text-xs uppercase tracking-[0.25em] text-indigo-500">{step.time}</p>
-                  <h3 className="mt-4 text-xl font-semibold text-slate-900">{step.title}</h3>
-                  <p className="mt-3 text-sm text-slate-600">{step.description}</p>
-                </div>
-              ))}
+        <section id="platform" className="scroll-mt-24 py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-5 sm:px-8">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Platform Cicero</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">Pilih ruang kerja sesuai kebutuhan.</h2>
+              <p className="mt-4 leading-7 text-slate-600">Tiga layanan yang saling terhubung, dengan tujuan dan pengalaman yang tetap fokus.</p>
             </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section className="w-full border-y border-indigo-200/40 bg-gradient-to-br from-indigo-50 via-sky-100 to-violet-100 py-16">
-          <div className="container mx-auto max-w-7xl px-6">
-            <h2 className="text-center text-3xl font-bold text-slate-900 md:text-4xl">Paket Cicero</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">
-              Pilih paket yang menyelaraskan agregator lintas kanal, insight prediktif, dan orkestrasi bot WA dengan kebutuhan workflow tim Anda. Komitmen jangka menengah maupun panjang mendapat potongan 10%.
-            </p>
-            <div className="mt-10 grid gap-6 md:grid-cols-3">
-              {packages.map((pkg) => (
-                <div
-                  key={pkg.name}
-                  className={`relative flex h-full flex-col rounded-3xl border border-indigo-200/60 bg-white/80 p-6 text-slate-800 shadow-xl shadow-indigo-200/40 transition hover:-translate-y-1 hover:shadow-indigo-200/60 ${
-                    pkg.popular ? "ring-2 ring-indigo-300" : ""
-                  }`}
-                >
-                  {pkg.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-sky-300 via-indigo-300 to-violet-400 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-900">
-                      Most Popular
+            <div className="mt-10 grid gap-5 lg:grid-cols-3">
+              {products.map(({ name, description, href, action, icon: Icon }, index) => (
+                <Link key={name} href={href} className="group flex min-h-64 flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-100/70">
+                  <div className="flex items-start justify-between">
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${index === 0 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700"}`}>
+                      <Icon className="h-5 w-5" aria-hidden="true" />
                     </span>
-                  )}
-                  <h3 className="text-lg font-semibold text-slate-900">{pkg.name}</h3>
-                  <p className="text-sm text-slate-600">{pkg.users}</p>
-                  <div className="mt-6">
-                    <p className="text-xs uppercase tracking-[0.2em] text-indigo-500">Biaya Setup</p>
-                    <p className="text-3xl font-extrabold text-slate-900">{pkg.setup}</p>
+                    <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-600" aria-hidden="true" />
                   </div>
-                  <div className="mt-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-indigo-500">Biaya Bulanan</p>
-                    <p className="text-2xl font-semibold text-slate-900">{pkg.monthly}</p>
-                  </div>
-                  <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-600">
-                    {pkg.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
-                        <CheckCircle aria-hidden="true" className="mt-0.5 h-4 w-4 text-emerald-500" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <a
-                    href="https://wa.me/+6281235114745"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Kirim pesan paket ${pkg.name}`}
-                    className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-200/70 transition hover:scale-[1.02] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
-                  >
-                    Kirim Pesan
-                  </a>
+                  <h3 className="mt-8 text-xl font-bold">{name}</h3>
+                  <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{description}</p>
+                  <p className="mt-6 text-sm font-semibold text-indigo-700">{action}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="kapabilitas" className="scroll-mt-24 border-y border-slate-200 bg-white py-20 sm:py-24">
+          <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[.8fr_1.2fr]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Kapabilitas inti</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">Dibuat untuk mengurangi kerumitan operasional.</h2>
+              <p className="mt-5 leading-7 text-slate-600">Antarmuka yang fokus membantu tim memahami kondisi, menentukan prioritas, dan menyelesaikan pekerjaan tanpa berpindah-pindah konteks.</p>
+            </div>
+            <div className="divide-y divide-slate-200 border-y border-slate-200">
+              {capabilities.map(({ title, description, icon: Icon }) => (
+                <div key={title} className="grid gap-4 py-7 sm:grid-cols-[auto_1fr] sm:gap-6">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <div><h3 className="font-bold text-slate-900">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{description}</p></div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Social Proof */}
-        <section className="w-full bg-gradient-to-br from-indigo-50 via-white to-violet-100 py-16">
-          <div className="container mx-auto max-w-3xl px-6 text-center">
-            <blockquote className="rounded-3xl border border-indigo-200/60 bg-gradient-to-br from-sky-200/60 via-indigo-200/60 to-violet-200/60 p-8 text-lg italic text-slate-700 shadow-lg shadow-indigo-200/40">
-              "Agregator lintas kanal Cicero memotong waktu audit kami hingga 60%. Insight prediktifnya memicu orkestrasi bot WA yang menutup semua tiket sebelum melewati SLA."
-            </blockquote>
-            <p className="mt-4 text-sm text-slate-500">- Head of Digital Operations, Cicero Devs</p>
+        <section id="cara-kerja" className="scroll-mt-24 py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-5 sm:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Cara kerja</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">Dari data menjadi tindakan.</h2>
+              <p className="mt-4 leading-7 text-slate-600">Alur sederhana yang menjaga informasi, koordinasi, dan tindak lanjut tetap terhubung.</p>
+            </div>
+            <div className="mt-12 grid gap-5 md:grid-cols-3">
+              {flow.map(([number, title, description]) => (
+                <div key={number} className="rounded-3xl border border-slate-200 bg-white p-7">
+                  <span className="text-sm font-bold text-indigo-600">{number}</span>
+                  <h3 className="mt-8 text-xl font-bold">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Signup Form */}
-        <section className="w-full border-t border-indigo-200/40 bg-gradient-to-b from-white via-indigo-50 to-violet-100 py-16">
-          <div className="container mx-auto max-w-lg px-6">
-            <form
-              onSubmit={handleSubmit}
-              className="rounded-3xl border border-indigo-200/60 bg-white/80 p-8 shadow-xl shadow-indigo-200/40"
-            >
-              <h3 className="text-2xl font-semibold text-slate-900">Berlangganan Knowledge Pulse</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                Terima ringkasan rilis agregator, template SOP operasional, serta insight prediktif mingguan langsung dari tim enablement kami.
-              </p>
-              <div className="mt-6 space-y-3">
-                <label htmlFor="email" className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Email Anda
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@perusahaan.com"
-                  required
-                  className="w-full rounded-2xl border border-indigo-200/60 bg-white/90 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-violet-300/50"
-                />
-              </div>
-              <button
-                type="submit"
-                className="mt-6 w-full rounded-full bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-200/70 transition hover:scale-[1.02] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
-              >
-                Kirim Ringkasan
-              </button>
-              <p className="mt-3 text-xs text-slate-500">Kami mengacu pada kebijakan privasi & SOP keamanan data terbaru.</p>
-            </form>
+        <section className="px-5 pb-20 sm:px-8 sm:pb-24">
+          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 overflow-hidden rounded-[2rem] bg-slate-950 px-7 py-10 text-white sm:px-10 lg:flex-row lg:items-center lg:px-14 lg:py-14">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">Akses Cicero</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.03em]">Mulai dari ruang kerja Anda.</h2>
+              <p className="mt-4 leading-7 text-slate-300">Masuk ke Dashboard untuk monitoring atau pilih Claim dan Reposter sesuai tugas operasional Anda.</p>
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Link href="https://dashboard.papiqo.com/login" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-indigo-50">Masuk Dashboard <ArrowRight className="h-4 w-4" /></Link>
+              <a href="https://wa.me/6281235114745" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-900"><MessageCircleMore className="h-4 w-4" /> Hubungi tim</a>
+            </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-indigo-200/40 bg-white/80 py-6 text-center text-xs text-slate-500">
-        <div className="container mx-auto flex max-w-7xl flex-col items-center gap-2 px-6 md:flex-row md:justify-between">
-          <p>&copy; {new Date().getFullYear()} Cicero. Semua hak cipta dilindungi.</p>
-          <div className="flex gap-4">
-            <Link href="/admin-system/login" className="opacity-50 transition hover:opacity-80">
-              Portal Internal
-            </Link>
-            <Link href="/terms-of-service" className="transition hover:text-violet-500">
-              Ketentuan Layanan
-            </Link>
-            <Link href="/privacy-policy" className="transition hover:text-violet-500">
-              Kebijakan Privasi
-            </Link>
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-slate-500 sm:px-8 md:flex-row md:items-center md:justify-between">
+          <p>&copy; {new Date().getFullYear()} Cicero. Platform operasi digital.</p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <Link href="/terms-of-service" className="transition hover:text-slate-950">Ketentuan Layanan</Link>
+            <Link href="/privacy-policy" className="transition hover:text-slate-950">Kebijakan Privasi</Link>
+            <Link href="/admin-system/login" className="transition hover:text-slate-950">Portal Internal</Link>
           </div>
         </div>
       </footer>

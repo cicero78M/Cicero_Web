@@ -300,6 +300,10 @@ const CONTENT_PERFORMANCE = [
 
 const VIEW_OPTIONS = [
   { value: "today", label: "Harian (hari ini)", periode: "harian", custom: true },
+  { value: "yesterday", label: "Kemarin", periode: "harian" },
+  { value: "last_7_days", label: "7 hari terakhir", periode: "mingguan" },
+  { value: "last_30_days", label: "30 hari terakhir", periode: "harian" },
+  { value: "month_to_date", label: "Bulan ini", periode: "harian" },
   { value: "week", label: "Mingguan (7 hari)", periode: "mingguan" },
   { value: "month", label: "Bulanan", periode: "bulanan", month: true },
   { value: "custom_range", label: "Rentang Tanggal", periode: "custom", range: true },
@@ -380,6 +384,22 @@ export default function SatbinmasOfficialPage() {
       const end = parseDateOnly(selectedDate);
       const start = new Date(end);
       start.setDate(end.getDate() - 6);
+      return { start, end };
+    }
+    if (viewBy === "yesterday") {
+      const end = parseDateOnly(today);
+      end.setDate(end.getDate() - 1);
+      return { start: end, end };
+    }
+    if (viewBy === "last_7_days" || viewBy === "last_30_days") {
+      const end = parseDateOnly(today);
+      const start = new Date(end);
+      start.setDate(end.getDate() - (viewBy === "last_7_days" ? 6 : 29));
+      return { start, end };
+    }
+    if (viewBy === "month_to_date") {
+      const end = parseDateOnly(today);
+      const start = new Date(end.getFullYear(), end.getMonth(), 1);
       return { start, end };
     }
     if (viewBy === "month") {

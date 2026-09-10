@@ -38,6 +38,19 @@ function normalizeScopePayload(value?: unknown): string | undefined {
   return normalized || undefined;
 }
 
+function readSessionStorageValue(...keys: string[]) {
+  if (typeof window === "undefined") return "";
+  try {
+    for (const key of keys) {
+      const value = window.localStorage.getItem(key);
+      if (value && value.trim()) return value.trim();
+    }
+  } catch {
+    // Storage can be unavailable in private browsing or restricted embeds.
+  }
+  return "";
+}
+
 function getUserClientKey(user: any) {
   return normalizeString(
     user?.client_id ||
@@ -360,7 +373,7 @@ function resolveNumber(value: unknown, fallback: number) {
 
 interface Options {
   viewBy: string;
-  customDate: string;
+  customDate: string | { startDate?: string; endDate?: string };
   fromDate: string;
   toDate: string;
   scope?: "client" | "all";
@@ -418,10 +431,34 @@ export default function useTiktokCommentsData({
     setLoading(true);
     setError("");
 
-    const token = auth?.token ?? "";
-    const userClientId = auth?.clientId ?? "";
-    const role = auth?.effectiveRole ?? auth?.role ?? "";
-    const regionalId = auth?.regionalId ?? null;
+    // Do not start a request with incomplete identity data while the
+    // application AuthProvider is still resolving its HttpOnly session. The
+    // previous request was then aborted as soon as the provider hydrated,
+    // producing duplicate rekap calls and an apparent endless loading state.
+    if (auth?.isHydrating) {
+      return () => controller.abort();
+    }
+
+    // AuthProvider normally supplies these values from the HttpOnly session.
+    // Keep a read-only storage fallback for the short hydration window and
+    // embedded/legacy consumers so a valid session is not rejected before the
+    // provider finishes resolving it. Never write credentials here.
+    const token =
+      auth?.token ||
+      (auth
+        ? ""
+        : readSessionStorageValue("cicero_token", "token", "access_token"));
+    const userClientId =
+      auth?.clientId ||
+      (auth ? "" : readSessionStorageValue("client_id", "clientId"));
+    const role =
+      auth?.effectiveRole ||
+      auth?.role ||
+      (auth ? "" : readSessionStorageValue("user_role", "role"));
+    const regionalId =
+      auth?.regionalId ||
+      (auth ? "" : readSessionStorageValue("regional_id", "regionalId")) ||
+      null;
     const requestRole = normalizeRolePayload(role);
     const effectiveClientTypeFromAuth = auth?.effectiveClientType ?? undefined;
     const requestScopeFromAuth = normalizeScopePayload(effectiveClientTypeFromAuth);
@@ -492,7 +529,7 @@ export default function useTiktokCommentsData({
     async function fetchData() {
       try {
         const selectedDate =
-          viewBy === "custom_range"
+          viewBy === "custom_range" || typeof customDate === "object"
             ? { startDate: fromDate, endDate: toDate }
             : customDate;
         const { periode, date, startDate, endDate } = getPeriodeDateForView(
@@ -842,6 +879,7 @@ export default function useTiktokCommentsData({
     auth?.effectiveRole,
     auth?.role,
     auth?.effectiveClientType,
+    auth?.isHydrating,
   ]);
 
   return {

@@ -137,6 +137,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
     clientName = "",
     reportContext = {},
     showPremiumCta = false,
+    initialStatusFilter = "all",
   },
   ref,
 ) {
@@ -304,7 +305,7 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
 
   // Search/filter
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const filteredUsers = useMemo(
     () =>
       sortedUsers.filter((u) => {
@@ -651,6 +652,10 @@ const RekapLikesIG = forwardRef(function RekapLikesIG(
    */
   useImperativeHandle(ref, () => ({
     copyRekap: handleCopyRekap,
+    setStatusFilter: (nextFilter = "all") => {
+      setStatusFilter(nextFilter);
+      setPage(1);
+    },
   }));
 
   return (

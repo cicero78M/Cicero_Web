@@ -4,8 +4,28 @@ import { cn } from "@/lib/utils";
 
 export const VIEW_OPTIONS = [
   { value: "today", label: "Hari ini", periode: "harian" },
-  { value: "date", label: "Pilih Tanggal", periode: "harian", custom: true },
-  { value: "month", label: "Pilih Bulan", periode: "bulanan", month: true },
+  { value: "yesterday", label: "Kemarin", periode: "harian", relative: "yesterday" },
+  {
+    value: "last_7_days",
+    label: "7 hari terakhir",
+    periode: "harian",
+    rangePreset: "last_7_days",
+  },
+  {
+    value: "last_30_days",
+    label: "30 hari terakhir",
+    periode: "harian",
+    rangePreset: "last_30_days",
+  },
+  {
+    value: "month_to_date",
+    label: "Bulan ini",
+    periode: "harian",
+    rangePreset: "month_to_date",
+  },
+  { value: "date", label: "Pilih tanggal", periode: "harian", custom: true },
+  { value: "week", label: "Minggu", periode: "mingguan", week: true },
+  { value: "month", label: "Bulan", periode: "bulanan", month: true },
   {
     value: "custom_range",
     label: "Rentang Tanggal",
@@ -87,16 +107,30 @@ export function getWeekRangeFromValue(value, fallbackDate = new Date()) {
 
 export function getPeriodeDateForView(view, selectedDate, options = VIEW_OPTIONS) {
   const optionList = Array.isArray(options) && options.length ? options : VIEW_OPTIONS;
-  const normalizedOptions =
-    optionList.some((option) => option.value === "week")
-      ? optionList
-      : [
-          ...optionList,
-          { value: "week", label: "Mingguan", periode: "mingguan", week: true },
-        ];
+  const normalizedOptions = optionList;
   const opt = normalizedOptions.find((o) => o.value === view) || normalizedOptions[0];
   const now = new Date();
   const isWeekView = opt?.week || opt?.value === "week";
+
+  if (opt.rangePreset) {
+    const end = new Date(now);
+    end.setHours(0, 0, 0, 0);
+    const start = new Date(end);
+    if (opt.rangePreset === "last_7_days") start.setDate(start.getDate() - 6);
+    if (opt.rangePreset === "last_30_days") start.setDate(start.getDate() - 29);
+    if (opt.rangePreset === "month_to_date") start.setDate(1);
+    return {
+      periode: opt.periode || "harian",
+      startDate: formatDate(start),
+      endDate: formatDate(end),
+    };
+  }
+
+  if (opt.relative === "yesterday") {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return { periode: opt.periode || "harian", date: formatDate(yesterday) };
+  }
 
   function formatMonth(d) {
     const year = d.getFullYear();

@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import RekapLikesIG from "@/components/likes/instagram/Rekap/RekapLikesIG";
 import useLikesDateSelector from "@/hooks/useLikesDateSelector";
+import { VIEW_OPTIONS } from "@/components/ViewDataSelector";
 import InsightLayout from "@/components/InsightLayout";
 import { DEFAULT_INSIGHT_TABS } from "@/components/insight/tabs";
 import DetailRekapSection from "@/components/insight/DetailRekapSection";
@@ -48,6 +49,7 @@ import EngagementInsightMobileScaffold from "@/components/insight/EngagementInsi
 import PremiumProofValueCard from "@/components/premium/PremiumProofValueCard";
 import ExecutiveRecapCard from "@/components/premium/ExecutiveRecapCard";
 import RiskAlertCenter from "@/components/premium/RiskAlertCenter";
+import PriorityActionPanel from "@/components/insight/PriorityActionPanel";
 import { buildExecutiveRecap } from "@/utils/executiveRecap";
 import { mapExecutiveRecapToCardProps, mapRiskSummaryToCardProps } from "@/utils/premiumInsightAdapters";
 import { buildRiskComplianceAlertCenter } from "@/utils/riskComplianceAlerts";
@@ -104,6 +106,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const [remoteExecutiveRecap, setRemoteExecutiveRecap] = useState(null);
   const [remoteRiskSummary, setRemoteRiskSummary] = useState(null);
   const rekapSectionRef = useRef(null);
+  const rekapTableRef = useRef(null);
 
   const isOriginalDirectorateClient =
     String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
@@ -124,18 +127,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const hasPremiumDateAccess =
     isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
-  const premiumViewOptions = [
-    { value: "today", label: "Hari ini", periode: "harian" },
-    { value: "date", label: "Tanggal tertentu", periode: "harian", custom: true },
-    { value: "week", label: "Pilih minggu", periode: "mingguan", week: true },
-    { value: "month", label: "Pilih bulan", periode: "bulanan", month: true },
-    {
-      value: "custom_range",
-      label: "Rentang tanggal",
-      periode: "harian",
-      range: true,
-    },
-  ];
+  const premiumViewOptions = VIEW_OPTIONS;
   const viewOptions = showDateSelector
     ? premiumViewOptions
     : [{ value: "today", label: "Hari ini", periode: "harian" }];
@@ -148,6 +140,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     handleDateChange,
     normalizedCustomDate,
     normalizedRange,
+    isRangeView,
     reportPeriodeLabel,
   } = useLikesDateSelector({ options: viewOptions });
 
@@ -166,7 +159,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     clientOptions,
   } = useInstagramLikesData({
     viewBy,
-    customDate: normalizedCustomDate,
+    customDate: isRangeView ? normalizedRange : normalizedCustomDate,
     fromDate: normalizedRange.startDate,
     toDate: normalizedRange.endDate,
     scope: directorateScope,
@@ -339,6 +332,14 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   const actionNeededCount = totalKurangLike + totalBelumLike;
   const actionNeededRate = getPercentage(actionNeededCount);
   const usernameCompletionPercent = getPercentage(validUserCount, totalUser);
+
+  const handlePriorityAction = (status) => {
+    setActiveTab("rekap");
+    window.setTimeout(() => {
+      rekapTableRef.current?.setStatusFilter(status);
+      rekapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  };
 
   async function handleCopyTaskLinksToday() {
     const authToken = token || "";
@@ -701,6 +702,16 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             actionNeeded: actionNeededCount,
           }}
         >
+          <PriorityActionPanel
+            items={[
+              { key: "belum", count: totalBelumLike },
+              { key: "kurang", count: totalKurangLike },
+              { key: "tanpaUsername", count: totalTanpaUsername },
+            ]}
+            onAction={handlePriorityAction}
+            allComplete={actionNeededCount === 0 && totalTanpaUsername === 0}
+          />
+
           {shouldShowClientSelector ? (
             <div className="relative overflow-hidden rounded-2xl border-2 border-blue-100/80 bg-gradient-to-br from-white via-blue-50/20 to-white p-4 shadow-md backdrop-blur-sm">
               <div className="pointer-events-none absolute -top-8 -left-8 h-24 w-24 rounded-full bg-blue-200/20 blur-2xl" />
@@ -814,6 +825,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
         ) : null}
 
         <RekapLikesIG
+          ref={rekapTableRef}
           users={displayedUsers}
           totalIGPost={effectiveRekapSummary.totalIGPost}
           posts={igPosts}
@@ -825,6 +837,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             viewLabel: resolvedViewOptions.find((option) => option.value === viewBy)?.label,
           }}
           showPremiumCta={isOrgClient && !hasPremiumAccess}
+          initialStatusFilter="all"
         />
       </DetailRekapSection>
     </InsightLayout>

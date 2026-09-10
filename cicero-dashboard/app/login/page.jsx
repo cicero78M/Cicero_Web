@@ -10,9 +10,9 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import DarkModeToggle from "@/components/DarkModeToggle";
+import Image from "next/image";
 import useAuth from "@/hooks/useAuth";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 import {
@@ -40,7 +40,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [forgotUsername, setForgotUsername] = useState("");
   const [recoveryContact, setRecoveryContact] = useState("");
-  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const handleTrim = (setter) => (e) => setter(e.target.value.trim());
   const networkErrorMessage =
@@ -87,15 +86,15 @@ export default function LoginPage() {
     () => [
       {
         icon: <Sparkles className="h-4 w-4 text-sky-500" />,
-        title: "Kepercayaan Terukur",
+        title: "Akses berbasis peran",
         description:
-          "Panel transparan menampilkan progres lintas channel sehingga setiap keputusan dilandasi data yang akurat dan mudah diaudit.",
+          "Hak akses pengguna disesuaikan per tugas agar data sensitif tetap aman dan mudah diaudit.",
       },
       {
         icon: <ShieldCheck className="h-4 w-4 text-teal-500" />,
-        title: "Kolaborasi Konsisten",
+        title: "Alur kerja terpusat",
         description:
-          "Pengingat dan log otomatis menjaga ritme tim tetap selaras sekaligus menyalakan semangat kolektif di setiap satker.",
+          "Monitoring, laporan, dan progres kerja berada pada satu dashboard untuk memudahkan tindak lanjut.",
       },
     ],
     []
@@ -143,7 +142,7 @@ export default function LoginPage() {
           requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
             ? requestedPath
             : null;
-        router.push(safeRequestedPath || "/dashboard");
+        window.location.assign(safeRequestedPath || "/dashboard");
       } else {
         setError(data.message || "Login gagal");
       }
@@ -320,7 +319,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.6 }}
               >
-                Cicero Operations Hub
+                Cicero Dashboard
               </motion.span>
               <motion.h1
                 className="text-4xl font-bold leading-tight text-slate-900 md:text-5xl"
@@ -328,7 +327,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, delay: 0.1 }}
               >
-                Cicero — Kendali Terpadu, Data Akurat, Kinerja Selaras.
+                Masuk ke Dashboard Cicero
               </motion.h1>
               <motion.p
                 className="max-w-xl text-balance text-sm leading-relaxed text-slate-700 md:text-base"
@@ -336,7 +335,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, delay: 0.2 }}
               >
-                Cicero mengintegrasikan laporan, performa digital, dan koordinasi satker dalam satu sistem yang memastikan keputusan lebih cepat dan pelaksanaan lebih tertib.              </motion.p>
+                Pantau performa, tindak lanjut, dan koordinasi tim dalam satu ruang kerja yang ringkas dan terstruktur.              </motion.p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -380,7 +379,10 @@ export default function LoginPage() {
             >
               <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-[0.3em] text-sky-600/90">Cicero Access</p>
+                  <div className="mb-3 flex items-center gap-3">
+                    <Image src="/cicero-mark.png" alt="Logo Cicero" width={42} height={42} className="object-contain" priority />
+                    <p className="text-xs uppercase tracking-[0.3em] text-sky-600/90">Cicero Access</p>
+                  </div>
                   <h2 className="text-2xl font-semibold text-slate-900">
                     {formMode === "register"
                       ? "Aktivasi Akun"
@@ -410,13 +412,13 @@ export default function LoginPage() {
                         : "text-slate-500"
                     }`}
                   >
-                    Register
+                    Registrasi
                   </button>
                 </div>
               </div>
 
               <p className="mb-7 rounded-2xl border border-sky-200/60 bg-white/50 p-4 text-xs text-slate-600">
-                Masuk dengan akun role Anda. Kami menjaga data dengan protokol berlapis dan memastikan tim Anda selalu mendapat panduan terkini.
+                Gunakan akun resmi untuk masuk. Pilih Login jika sudah punya akun, atau Registrasi untuk pengajuan akses baru.
               </p>
               <form className="space-y-5" onSubmit={submitHandler}>
                 {formMode !== "forgot" ? (
@@ -428,7 +430,7 @@ export default function LoginPage() {
                       <input
                         id="username"
                         type="text"
-                        placeholder="Username dinas"
+                        placeholder="Username akun dashboard"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         onBlur={handleTrim(setUsername)}
@@ -443,7 +445,7 @@ export default function LoginPage() {
                       <input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Password"
+                        placeholder="Masukkan password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         onBlur={handleTrim(setPassword)}
@@ -485,7 +487,7 @@ export default function LoginPage() {
                       <input
                         id="forgot_username"
                         type="text"
-                        placeholder="Username yang terdaftar"
+                        placeholder="Username akun yang terdaftar"
                         value={forgotUsername}
                         onChange={(e) => setForgotUsername(e.target.value)}
                         onBlur={handleTrim(setForgotUsername)}
@@ -500,7 +502,7 @@ export default function LoginPage() {
                       <input
                         id="recovery_contact"
                         type="text"
-                        placeholder="WhatsApp aktif atau email dinas"
+                        placeholder="WhatsApp aktif atau email pemulihan"
                         value={recoveryContact}
                         onChange={(e) => setRecoveryContact(e.target.value)}
                         onBlur={handleTrim(setRecoveryContact)}
@@ -547,7 +549,7 @@ export default function LoginPage() {
                       <input
                         id="email"
                         type="email"
-                        placeholder="Email dinas aktif"
+                        placeholder="Email aktif untuk notifikasi"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         onBlur={handleTrim(setEmail)}
@@ -565,7 +567,7 @@ export default function LoginPage() {
                           id="role"
                           type="text"
                           list="role-options"
-                          placeholder="Role penugasan"
+                          placeholder="Role akun (contoh: OPERATOR)"
                           value={role}
                           onChange={(e) => setRole(e.target.value)}
                           onBlur={handleTrim(setRole)}
@@ -587,7 +589,7 @@ export default function LoginPage() {
                           id="client_id"
                           type="text"
                           list="client-options"
-                          placeholder="Satker / Wilayah"
+                          placeholder="Satker / wilayah (opsional)"
                           value={client_id}
                           onChange={(e) => setClientId(e.target.value)}
                           onBlur={handleTrim(setClientId)}
@@ -694,9 +696,9 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-600/90">Onboarding Terarah</p>
-                <h3 className="text-lg font-semibold text-slate-800">Verifikasi akses dalam 1×24 jam</h3>
+                <h3 className="text-lg font-semibold text-slate-800">Pengajuan akun diproses maksimal 1×24 jam</h3>
                 <p className="text-sm leading-relaxed text-slate-600">
-                  Tim Cicero akan mengirim notifikasi ke email dinas Anda untuk memvalidasi mandat, memastikan akses diberikan secara tepat dan konsisten bagi seluruh tim.
+                  Tim admin akan meninjau data registrasi Anda, lalu mengirimkan status aktivasi melalui kontak resmi yang didaftarkan.
                 </p>
               </div>
             </motion.div>

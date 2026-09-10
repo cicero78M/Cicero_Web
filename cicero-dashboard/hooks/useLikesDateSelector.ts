@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   VIEW_OPTIONS,
+  getPeriodeDateForView,
   getWeekRangeFromValue,
 } from "@/components/ViewDataSelector";
 
@@ -86,6 +87,10 @@ export function useLikesDateSelector({
   const normalizedViewBy = viewOptions.some((option) => option.value === viewBy)
     ? viewBy
     : defaultView;
+  const activeOption = viewOptions.find(
+    (option) => option.value === normalizedViewBy,
+  );
+  const isRangeView = Boolean(activeOption?.range || activeOption?.rangePreset);
 
   const handleViewChange = (nextView: ViewValue) => {
     if (!viewOptions.some((option) => option.value === nextView)) {
@@ -165,8 +170,14 @@ export function useLikesDateSelector({
   const normalizedMonthlyDate = monthlyDate || currentMonth;
   const normalizedWeeklyDate =
     weeklyDate || getWeekRangeFromValue(undefined, new Date(today)).weekKey;
-  const normalizedRangeStart = dateRange.startDate || today;
-  const normalizedRangeEnd = dateRange.endDate || normalizedRangeStart;
+  const presetRange =
+    isRangeView && normalizedViewBy !== "custom_range"
+      ? getPeriodeDateForView(normalizedViewBy, undefined, viewOptions)
+      : null;
+  const normalizedRangeStart =
+    presetRange?.startDate || dateRange.startDate || today;
+  const normalizedRangeEnd =
+    presetRange?.endDate || dateRange.endDate || normalizedRangeStart;
   const normalizedRange = {
     startDate: normalizedRangeStart,
     endDate: normalizedRangeEnd,
@@ -180,7 +191,7 @@ export function useLikesDateSelector({
         : normalizedDailyDate;
 
   const reportPeriodeLabel = useMemo(() => {
-    if (normalizedViewBy === "custom_range") {
+    if (isRangeView) {
       return formatDisplayRange(normalizedRangeStart, normalizedRangeEnd);
     }
     if (normalizedViewBy === "month") {
@@ -193,14 +204,21 @@ export function useLikesDateSelector({
       );
       return formatDisplayRange(startDate, endDate);
     }
-    return formatDisplayDate(normalizedDailyDate);
+    const selectedPeriod = getPeriodeDateForView(
+      normalizedViewBy,
+      normalizedDailyDate,
+      viewOptions,
+    );
+    return formatDisplayDate(selectedPeriod.date || normalizedDailyDate);
   }, [
     normalizedViewBy,
+    isRangeView,
     normalizedRangeStart,
     normalizedRangeEnd,
     normalizedMonthlyDate,
     normalizedWeeklyDate,
     normalizedDailyDate,
+    viewOptions,
   ]);
 
   const selectorDateValue =
@@ -220,6 +238,7 @@ export function useLikesDateSelector({
     handleDateChange,
     normalizedCustomDate,
     normalizedRange,
+    isRangeView,
     normalizedDailyDate,
     normalizedMonthlyDate,
     normalizedWeeklyDate,

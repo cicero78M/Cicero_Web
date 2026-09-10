@@ -149,7 +149,7 @@ export default function PanduanSOPPage() {
             <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex items-center gap-3"><span className="rounded-2xl bg-violet-50 p-3 text-violet-700"><Users className="h-6 w-6" aria-hidden="true" /></span><h3 className="text-xl font-bold text-slate-950">Registrasi &amp; pembaruan profil personel</h3></div>
               <ol className="mt-6 space-y-4 text-sm leading-6 text-slate-700">
-                <li><strong>1.</strong> Buka <Link href="/claim" className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-4">portal claim Cicero</Link> untuk registrasi NRP/NIP atau login claim.</li>
+                <li><strong>1.</strong> Buka <Link href="https://claim.papiqo.com/claim" className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-4">portal claim Cicero</Link> untuk registrasi NRP/NIP atau login claim.</li>
                 <li><strong>2.</strong> Gunakan kata sandi unik dan kuat; jangan memakai contoh dari dokumen atau kata sandi akun lain.</li>
                 <li><strong>3.</strong> Tinjau nama, pangkat, jabatan, satuan, kontak, serta username Instagram/TikTok. Masukkan username sesuai format kolom, bukan asumsi.</li>
                 <li><strong>4.</strong> Simpan perubahan dan tunggu konfirmasi berhasil. Perubahan dapat memerlukan waktu sebelum terlihat pada seluruh laporan.</li>

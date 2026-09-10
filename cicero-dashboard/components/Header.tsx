@@ -4,20 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 import useAuth from "@/hooks/useAuth";
 import DarkModeToggle from "./DarkModeToggle";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import ClientProfileMenu from "./ClientProfileMenu";
 import { logoutDashboardSession } from "@/utils/api";
 
 export default function Header() {
   const { setAuth, token } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
 
   const handleLogout = async () => {
     await logoutDashboardSession(token);
     setAuth(null, null, null, null);
-    router.replace("/login");
-    router.refresh();
+    window.location.replace("/login");
   };
 
   if (pathname === "/" || pathname === "/login") return null;

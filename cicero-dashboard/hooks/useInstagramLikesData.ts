@@ -186,7 +186,7 @@ function normalizeScopePayload(value?: unknown): string | undefined {
 
 interface Options {
   viewBy: string;
-  customDate: string;
+  customDate: string | { startDate?: string; endDate?: string };
   fromDate: string;
   toDate: string;
   scope?: "client" | "all";
@@ -344,7 +344,7 @@ export default function useInstagramLikesData({
     async function fetchData() {
       try {
         const selectedDate =
-          viewBy === "custom_range"
+          viewBy === "custom_range" || typeof customDate === "object"
             ? { startDate: fromDate, endDate: toDate }
             : customDate;
         const { periode, date, startDate, endDate } = getPeriodeDateForView(

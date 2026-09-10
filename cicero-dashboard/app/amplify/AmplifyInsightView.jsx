@@ -82,6 +82,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
     handleDateChange,
     normalizedCustomDate,
     normalizedRange,
+    isRangeView,
     reportPeriodeLabel,
   } = useLikesDateSelector();
 
@@ -109,8 +110,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
       return () => controller.abort();
     }
 
-    const selectedDate =
-      viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
+    const selectedDate = isRangeView ? normalizedRange : normalizedCustomDate;
     const { periode, date, startDate, endDate } = getPeriodeDateForView(
       viewBy,
       selectedDate,
@@ -398,8 +398,7 @@ export default function AmplifyInsightView({ initialTab = "insight" }) {
 
     try {
       setIsExporting(true);
-      const selectedDate =
-        viewBy === "custom_range" ? normalizedRange : normalizedCustomDate;
+      const selectedDate = isRangeView ? normalizedRange : normalizedCustomDate;
       const { periode, date, startDate, endDate } = getPeriodeDateForView(
         viewBy,
         selectedDate,
