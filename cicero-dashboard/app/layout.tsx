@@ -8,6 +8,11 @@ export const metadata = {
   title: "CICERO Dashboard",
   description:
     "Next-Gen Dashboard for Social Media Monitoring & Team Management",
+  icons: {
+    icon: "/cicero-mark.png",
+    shortcut: "/cicero-mark.png",
+    apple: "/cicero-mark.png",
+  },
 };
 
 export const viewport = {

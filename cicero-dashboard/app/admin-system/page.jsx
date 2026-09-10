@@ -8,6 +8,7 @@ import {
   getAdminSystemClients,
   getAdminSystemClientsSummary,
   getAdminSystemFullAudit,
+  getAdminSystemHealth,
   getAdminSystemOverview,
 } from "@/utils/adminSystemApi";
 
@@ -17,56 +18,132 @@ export default function AdminSystemOverviewPage() {
   const [clients, setClients] = useState(null);
   const [clientRows, setClientRows] = useState([]);
   const [audit, setAudit] = useState(null);
+  const [health, setHealth] = useState(null);
+  const [selectedComponent, setSelectedComponent] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const load = async () => {
     if (!token) return;
-    Promise.all([
+    setLoading(true);
+    try {
+      const [ov, cl, clientList, au, systemHealth] = await Promise.all([
       getAdminSystemOverview(token),
       getAdminSystemClientsSummary(token),
       getAdminSystemClients(token, { page: 1, limit: 8 }),
       getAdminSystemFullAudit(token),
-    ])
-      .then(([ov, cl, clientList, au]) => {
-        setOverview(ov);
-        setClients(cl);
-        setClientRows(Array.isArray(clientList?.data) ? clientList.data : []);
-        setAudit(au);
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "Gagal load admin overview"));
+      getAdminSystemHealth(token),
+      ]);
+      setOverview(ov);
+      setClients(cl);
+      setClientRows(Array.isArray(clientList?.data) ? clientList.data : []);
+      setAudit(au);
+      setHealth(systemHealth);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal load admin overview");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
   }, [token]);
+
+  useEffect(() => {
+    if (!autoRefresh || !token) return undefined;
+    const timer = window.setInterval(() => load(), 30000);
+    return () => window.clearInterval(timer);
+  }, [autoRefresh, token]);
 
   if (isHydrating) {
     return <div className="min-h-screen bg-slate-950 text-slate-100 p-6">Loading...</div>;
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
+    <main className="min-h-screen overflow-hidden bg-[#050914] p-4 text-slate-100 sm:p-6">
+      <div className="pointer-events-none fixed inset-0 opacity-30 [background-image:linear-gradient(rgba(56,189,248,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.07)_1px,transparent_1px)] [background-size:42px_42px]" />
+      <div className="pointer-events-none fixed -left-32 top-20 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -right-32 bottom-10 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-3xl" />
+      <div className="relative mx-auto max-w-[1500px] space-y-5">
+        <div className="flex flex-col justify-between gap-4 rounded-2xl border border-cyan-400/20 bg-slate-900/75 p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur-xl sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-semibold">Admin System Console</h1>
-            <p className="text-sm text-slate-400">Ruang admin terpisah dari dashboard operasional utama.</p>
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-300"><span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_12px_#67e8f9]" /> CICERO / COMMAND CONTROL</div>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Admin System Console</h1>
+            <p className="mt-1 text-sm text-slate-400">Control room orkestrasi sistem, client, integrasi, dan keputusan administrator.</p>
           </div>
-          <button
-            onClick={async () => {
-              await logoutAdminSystem().catch(() => undefined);
-              window.location.href = "/admin-system/login";
-            }}
-            className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm"
-          >
-            Logout
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setAutoRefresh((value) => !value)} className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${autoRefresh ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300" : "border-slate-700 bg-slate-800 text-slate-300"}`}>
+              {autoRefresh ? "Auto-monitor ON" : "Auto-monitor OFF"}
+            </button>
+            <button onClick={load} disabled={loading} className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-semibold text-sm disabled:opacity-50">
+              {loading ? "Memeriksa..." : "Refresh status"}
+            </button>
+            <button
+              onClick={async () => {
+                await logoutAdminSystem().catch(() => undefined);
+                window.location.href = "/admin-system/login";
+              }}
+              className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {error && <div className="text-rose-400 text-sm">{error}</div>}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card label="Total Client" value={overview?.total_clients ?? 0} />
-          <Card label="Dashboard User" value={overview?.total_dashboard_users ?? 0} />
-          <Card label="Pending Premium" value={overview?.total_pending_premium_requests ?? 0} />
-          <Card label="Pending Fund Req" value={overview?.total_pending_fund_requests ?? 0} />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <Card label="Total Client" value={overview?.total_clients ?? 0} accent="cyan" />
+          <Card label="Dashboard User" value={overview?.total_dashboard_users ?? 0} accent="violet" />
+          <Card label="Pending Premium" value={overview?.total_pending_premium_requests ?? 0} accent="amber" />
+          <Card label="Pending Fund Req" value={overview?.total_pending_fund_requests ?? 0} accent="rose" />
         </div>
+
+        <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">System Health & Integrations</h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Pemeriksaan read-only; terakhir: {health?.checked_at ? new Date(health.checked_at).toLocaleString("id-ID") : "belum tersedia"}
+              </p>
+            </div>
+            <HealthBadge status={health?.status || "unknown"} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {(health?.components || []).map((item) => (
+              <button type="button" key={item.name} onClick={() => setSelectedComponent(item)} className={`rounded-lg border p-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-400/60 ${selectedComponent?.name === item.name ? "border-cyan-400/70 bg-cyan-400/10" : "border-slate-700 bg-slate-950"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold capitalize">{item.name.replaceAll("_", " ")}</span>
+                  <HealthBadge status={item.status} />
+                </div>
+                <p className="mt-2 text-xs text-slate-400">{item.latency_ms ?? "-"} ms</p>
+                {item.name === "clients" && (
+                  <p className="mt-1 text-xs text-slate-300">{item.details?.active ?? 0} aktif / {item.details?.total ?? 0} total</p>
+                )}
+                {item.name === "whatsapp_admin" && (
+                  <p className="mt-1 text-xs text-slate-300">{item.details?.reachable ? "Service dapat dijangkau" : "Perlu pemeriksaan"}</p>
+                )}
+              </button>
+            ))}
+          </div>
+          {selectedComponent && (
+            <div className="rounded-lg border border-cyan-400/20 bg-cyan-400/5 p-3 text-xs text-slate-300">
+              <div className="mb-1 font-semibold uppercase tracking-wider text-cyan-300">Telemetry / {selectedComponent.name.replaceAll("_", " ")}</div>
+              <pre className="overflow-auto whitespace-pre-wrap text-slate-400">{JSON.stringify(selectedComponent.details || {}, null, 2)}</pre>
+            </div>
+          )}
+          {health?.process && (
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-400 border-t border-slate-800 pt-3">
+              <span>Backend uptime: {formatUptime(health.process.uptime_seconds)}</span>
+              <span>Node: {health.process.node_version}</span>
+              <span>Env: {health.process.environment}</span>
+              <span>Probe: {health.total_latency_ms ?? "-"} ms</span>
+            </div>
+          )}
+        </section>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-3">
           <h2 className="text-lg font-semibold">Client Data Summary</h2>
@@ -155,9 +232,9 @@ export default function AdminSystemOverviewPage() {
 
 function Card({ label, value }) {
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
-      <p className="text-sm text-slate-400">{label}</p>
-      <p className="text-3xl font-bold mt-2">{value}</p>
+    <div className="group rounded-xl border border-slate-700/80 bg-slate-900/80 p-4 shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-cyan-400/40">
+      <div className="mb-3 flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{label}</p><span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_#67e8f9]" /></div>
+      <p className="text-3xl font-bold tracking-tight text-slate-100">{value}</p>
     </div>
   );
 }
@@ -169,4 +246,24 @@ function Info({ label, value }) {
       <div className="font-semibold mt-1">{value}</div>
     </div>
   );
+}
+
+function HealthBadge({ status }) {
+  const styles = {
+    ok: "border-emerald-600/50 text-emerald-300 bg-emerald-500/10",
+    warning: "border-amber-600/50 text-amber-300 bg-amber-500/10",
+    degraded: "border-rose-600/50 text-rose-300 bg-rose-500/10",
+    down: "border-rose-600/50 text-rose-300 bg-rose-500/10",
+    unknown: "border-slate-600 text-slate-400 bg-slate-800",
+  };
+  return <span className={`rounded border px-2 py-0.5 text-[10px] uppercase tracking-wide ${styles[status] || styles.unknown}`}>{status}</span>;
+}
+
+function formatUptime(seconds) {
+  const value = Number(seconds || 0);
+  if (!value) return "-";
+  const days = Math.floor(value / 86400);
+  const hours = Math.floor((value % 86400) / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  return `${days ? `${days}h ` : ""}${hours}j ${minutes}m`;
 }

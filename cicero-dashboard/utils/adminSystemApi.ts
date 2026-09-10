@@ -117,6 +117,10 @@ export async function getAdminSystemFullAudit(token: string) {
   return fetchAdminProtected('/api/admin-system/management/system-audit', token) as Promise<AnyRecord>;
 }
 
+export async function getAdminSystemHealth(token: string) {
+  return fetchAdminProtected('/api/admin-system/management/system-health', token) as Promise<AnyRecord>;
+}
+
 export async function getAdminSystemClients(token: string, params?: { page?: number; limit?: number; q?: string }) {
   const qs = new URLSearchParams();
   if (params?.page) qs.set('page', String(params.page));

@@ -190,7 +190,7 @@ export default function Sidebar() {
         <div className="w-full rounded-2xl border border-slate-200/80 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center justify-center gap-2">
             <Image
-              src="/CICERO.png"
+              src="/cicero-mark.png"
               alt="CICERO Logo"
               width={isCollapsed ? 26 : 30}
               height={30}

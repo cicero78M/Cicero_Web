@@ -28,7 +28,7 @@ export default function Header() {
         <Link href="/dashboard" className="group flex items-center gap-3">
           <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <Image
-              src="/CICERO.png"
+              src="/cicero-mark.png"
               alt="CICERO Logo"
               fill
               sizes="36px"
