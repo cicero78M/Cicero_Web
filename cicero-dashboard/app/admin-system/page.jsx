@@ -10,6 +10,7 @@ import {
   getAdminSystemFullAudit,
   getAdminSystemHealth,
   getAdminSystemOverview,
+  getAdminSystemTopology,
 } from "@/utils/adminSystemApi";
 
 export default function AdminSystemOverviewPage() {
@@ -19,6 +20,7 @@ export default function AdminSystemOverviewPage() {
   const [clientRows, setClientRows] = useState([]);
   const [audit, setAudit] = useState(null);
   const [health, setHealth] = useState(null);
+  const [topology, setTopology] = useState(null);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,6 +28,7 @@ export default function AdminSystemOverviewPage() {
   const [panelState, setPanelState] = useState({
     overview: "idle",
     health: "idle",
+    topology: "idle",
     clients: "idle",
     clientList: "idle",
     audit: "idle",
@@ -56,6 +59,7 @@ export default function AdminSystemOverviewPage() {
     await Promise.all([
       loadPanel("overview", () => getAdminSystemOverview(token), setOverview),
       loadPanel("health", () => getAdminSystemHealth(token), setHealth),
+      loadPanel("topology", () => getAdminSystemTopology(token), setTopology),
       loadPanel("clients", () => getAdminSystemClientsSummary(token), setClients),
       loadPanel(
         "clientList",
@@ -127,6 +131,20 @@ export default function AdminSystemOverviewPage() {
           <Card label="Pending Premium" value={overview?.total_pending_premium_requests} state={panelState.overview} accent="amber" />
           <Card label="Pending Fund Req" value={overview?.total_pending_fund_requests} state={panelState.overview} accent="rose" />
         </div>
+
+        <section className="rounded-xl border border-cyan-400/20 bg-slate-900/90 p-5 space-y-4 shadow-lg shadow-cyan-950/10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><h2 className="text-lg font-semibold">Cicero Ecosystem Topology</h2><p className="mt-1 text-xs text-slate-400">Peta read-only service, pipeline data, dan cakupan client.</p></div>
+            <PanelMeta state={panelState.topology} updatedAt={panelUpdatedAt.topology} onRetry={() => loadPanel("topology", () => getAdminSystemTopology(token), setTopology)} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {(topology?.topology || []).map((item) => <div key={item.id} className="rounded-lg border border-slate-700 bg-slate-950 p-3"><div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{item.label}</span><HealthBadge status={item.status} /></div><div className="mt-2 text-[10px] uppercase tracking-wider text-slate-500">{item.kind}</div></div>)}
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {(topology?.pipelines || []).map((item) => <div key={item.name} className="rounded-lg border border-slate-800 bg-slate-950/80 p-3"><div className="text-xs font-semibold text-slate-200">{item.name}</div><div className="mt-2 text-lg font-bold text-cyan-300">{item.total_records.toLocaleString("id-ID")}</div><div className="text-[10px] text-slate-500">data · {item.latest_at ? new Date(item.latest_at).toLocaleString("id-ID") : "belum tersedia"}</div></div>)}
+          </div>
+          {topology?.clients && <div className="overflow-auto rounded-lg border border-slate-800"><table className="w-full min-w-[640px] text-xs"><thead><tr className="text-left text-slate-500"><th className="p-3">Client</th><th className="p-3">Group</th><th className="p-3">Instagram</th><th className="p-3">TikTok</th><th className="p-3">Amplify</th></tr></thead><tbody>{topology.clients.matrix.slice(0, 12).map((item) => <tr key={item.client_id} className="border-t border-slate-800"><td className="p-3 font-semibold">{item.name}</td><td className="p-3 text-slate-400">{item.group || "-"}</td><td className="p-3"><HealthBadge status={item.platforms.instagram === "enabled" ? "ok" : "unknown"} /></td><td className="p-3"><HealthBadge status={item.platforms.tiktok === "enabled" ? "ok" : "unknown"} /></td><td className="p-3"><HealthBadge status={item.platforms.amplify === "enabled" ? "ok" : "unknown"} /></td></tr>)}</tbody></table></div>}
+        </section>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
