@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AdminNav from "@/components/admin-system/AdminNav";
 import useRequireSystemAdminAuth from "@/hooks/useRequireSystemAdminAuth";
 import {
   applyAdminSystemConfigChange,
   getAdminSystemConfigAnalysis,
   getAdminSystemConfigAudit,
+  getAdminSystemHealth,
+  getAdminSystemTopology,
   previewAdminSystemConfigChange,
   rollbackAdminSystemConfigChange,
 } from "@/utils/adminSystemApi";
@@ -17,6 +20,8 @@ export default function AdminSystemAnalysisPage() {
   const [auditData, setAuditData] = useState([]);
   const [error, setError] = useState("");
   const [previewData, setPreviewData] = useState(null);
+  const [health, setHealth] = useState(null);
+  const [topology, setTopology] = useState(null);
 
   const [configKey, setConfigKey] = useState("ADMIN_SYSTEM_OTP_TTL_SECONDS");
   const [configValue, setConfigValue] = useState("");
@@ -24,12 +29,20 @@ export default function AdminSystemAnalysisPage() {
 
   const load = async () => {
     if (!token) return;
-    const [cfg, audit] = await Promise.all([
+    const results = await Promise.allSettled([
       getAdminSystemConfigAnalysis(token),
       getAdminSystemConfigAudit(token, { page: 1, limit: 20 }),
+      getAdminSystemHealth(token),
+      getAdminSystemTopology(token),
     ]);
-    setConfigData(cfg);
-    setAuditData(Array.isArray(audit?.data) ? audit.data : Array.isArray(audit) ? audit : []);
+    if (results[0].status === "fulfilled") setConfigData(results[0].value);
+    if (results[1].status === "fulfilled") {
+      const audit = results[1].value;
+      setAuditData(Array.isArray(audit?.data) ? audit.data : Array.isArray(audit) ? audit : []);
+    }
+    if (results[2].status === "fulfilled") setHealth(results[2].value);
+    if (results[3].status === "fulfilled") setTopology(results[3].value);
+    if (results.every((result) => result.status === "rejected")) throw results[0].reason;
   };
 
   useEffect(() => {
@@ -43,8 +56,9 @@ export default function AdminSystemAnalysisPage() {
   const cfg = configData?.config || {};
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 p-6">
+    <main className="admin-console min-h-screen bg-slate-950 text-slate-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        <AdminNav />
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">System Analysis</h1>
           <Link href="/admin-system" className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm">Kembali</Link>
@@ -58,6 +72,18 @@ export default function AdminSystemAnalysisPage() {
           <Card label="Admin Chat IDs" value={cfg.total_admin_chat_ids ?? 0} />
           <Card label="Role Mappings" value={cfg.total_role_mappings ?? 0} />
         </div>
+
+        <section className="rounded-xl border border-cyan-400/20 bg-slate-900 p-4 space-y-3">
+          <div><h2 className="font-semibold">Holistic Operations Analysis</h2><p className="mt-1 text-xs text-slate-400">Gabungan status layanan, pipeline data, dan cakupan client untuk membantu keputusan administrator.</p></div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Card label="Services Healthy" value={`${(health?.components || []).filter((item) => item.status === "ok").length}/${(health?.components || []).length || "—"}`} />
+            <Card label="Active Clients" value={topology?.clients?.active ?? "—"} />
+            <Card label="Pipelines Tracked" value={topology?.pipelines?.length ?? "—"} />
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {(health?.components || []).map((item) => <div key={item.name} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm"><span className="capitalize">{item.name.replaceAll("_", " ")}</span><span className="text-xs text-slate-400">{item.latency_ms ?? "—"} ms · {item.status}</span></div>)}
+          </div>
+        </section>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-3">
           <h2 className="font-semibold">Config Change (Super Admin)</h2>

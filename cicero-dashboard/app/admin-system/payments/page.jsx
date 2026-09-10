@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AdminNav from "@/components/admin-system/AdminNav";
 import useRequireSystemAdminAuth from "@/hooks/useRequireSystemAdminAuth";
 import { decideAdminSystemPaymentRequest, getAdminSystemPaymentRequests } from "@/utils/adminSystemApi";
 
@@ -34,8 +35,9 @@ export default function AdminPaymentsPage() {
   if (isHydrating) return <div className="min-h-screen bg-slate-950 text-slate-100 p-6">Loading...</div>;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 p-6">
+    <main className="admin-console min-h-screen bg-slate-950 text-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-4">
+        <AdminNav />
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Payment Workflow (User ↔ Admin)</h1>
           <Link href="/admin-system" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm">Kembali</Link>

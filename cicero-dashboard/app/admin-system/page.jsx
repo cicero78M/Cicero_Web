@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AdminNav from "@/components/admin-system/AdminNav";
 import useRequireSystemAdminAuth from "@/hooks/useRequireSystemAdminAuth";
 import {
   logoutAdminSystem,
@@ -86,11 +87,12 @@ export default function AdminSystemOverviewPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#050914] p-4 text-slate-100 sm:p-6">
+    <main className="admin-console min-h-screen overflow-hidden bg-[#050914] p-4 text-slate-100 sm:p-6">
       <div className="pointer-events-none fixed inset-0 opacity-30 [background-image:linear-gradient(rgba(56,189,248,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.07)_1px,transparent_1px)] [background-size:42px_42px]" />
       <div className="pointer-events-none fixed -left-32 top-20 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
       <div className="pointer-events-none fixed -right-32 bottom-10 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-3xl" />
       <div className="relative mx-auto max-w-[1500px] space-y-5">
+        <AdminNav />
         <div className="flex flex-col justify-between gap-4 rounded-2xl border border-cyan-400/20 bg-slate-900/75 p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur-xl sm:flex-row sm:items-center">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-300"><span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_12px_#67e8f9]" /> CICERO / COMMAND CONTROL</div>
