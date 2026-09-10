@@ -108,9 +108,14 @@ export default function AdminClientsPage() {
         </section>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-3">
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm w-full" placeholder="Cari client_id / nama / group" value={q} onChange={(e) => setQ(e.target.value)} />
-            <button className="px-3 py-2 rounded bg-emerald-500 text-slate-950 text-sm font-semibold" onClick={() => { setPage(1); load(); }}>Cari</button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button className="px-3 py-2 rounded bg-emerald-500 text-slate-950 text-sm font-semibold" onClick={() => { if (page === 1) load(); else setPage(1); }}>Cari</button>
+              <button className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>‹</button>
+              <span className="whitespace-nowrap text-xs text-slate-400">{page}/{pages}</span>
+              <button className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs disabled:opacity-40" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>›</button>
+            </div>
           </div>
 
           <div className="overflow-auto">
@@ -142,11 +147,6 @@ export default function AdminClientsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</button>
-            <span className="text-xs text-slate-400">Page {page}/{pages}</span>
-            <button className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
           </div>
         </section>
       </div>

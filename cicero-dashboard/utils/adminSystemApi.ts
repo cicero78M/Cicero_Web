@@ -74,7 +74,7 @@ export async function verifyAdminTelegramOtp(requestId: string, otpCode: string,
 
 // Legacy widget helpers intentionally removed from login flow.
 
-async function fetchAdminProtected(path: string, token: string, init?: RequestInit) {
+async function fetchAdminProtected(path: string, token: string, init?: RequestInit, preserveEnvelope = false) {
   const headers = new Headers(init?.headers);
   headers.set("Content-Type", "application/json");
   if (token && token !== ADMIN_COOKIE_SESSION) {
@@ -91,7 +91,7 @@ async function fetchAdminProtected(path: string, token: string, init?: RequestIn
   if (!res.ok || data?.success === false) {
     throw new Error(String(data?.message || "Akses admin system ditolak"));
   }
-  return (data?.data ?? data) as AnyRecord | AnyRecord[];
+  return (preserveEnvelope ? data : data?.data ?? data) as AnyRecord | AnyRecord[];
 }
 
 export async function logoutAdminSystem(): Promise<void> {
@@ -131,7 +131,7 @@ export async function getAdminSystemClients(token: string, params?: { page?: num
   if (params?.limit) qs.set('limit', String(params.limit));
   if (params?.q) qs.set('q', params.q);
   const suffix = qs.toString() ? `?${qs.toString()}` : '';
-  return fetchAdminProtected(`/api/admin-system/management/clients${suffix}`, token) as Promise<AnyRecord>;
+  return fetchAdminProtected(`/api/admin-system/management/clients${suffix}`, token, undefined, true) as Promise<AnyRecord>;
 }
 
 export async function createAdminSystemClient(token: string, payload: AnyRecord) {
@@ -160,7 +160,7 @@ export async function getAdminSystemPaymentRequests(token: string, params?: { pa
   if (params?.limit) qs.set('limit', String(params.limit));
   if (params?.status) qs.set('status', params.status);
   const suffix = qs.toString() ? `?${qs.toString()}` : '';
-  return fetchAdminProtected(`/api/admin-system/management/payments/requests${suffix}`, token) as Promise<AnyRecord>;
+  return fetchAdminProtected(`/api/admin-system/management/payments/requests${suffix}`, token, undefined, true) as Promise<AnyRecord>;
 }
 
 export async function decideAdminSystemPaymentRequest(token: string, requestId: string, payload: { status: 'approved' | 'rejected'; note?: string }) {
