@@ -23,29 +23,48 @@ export default function AdminSystemOverviewPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [panelState, setPanelState] = useState({
+    overview: "idle",
+    health: "idle",
+    clients: "idle",
+    clientList: "idle",
+    audit: "idle",
+  });
+  const [panelErrors, setPanelErrors] = useState({});
+  const [panelUpdatedAt, setPanelUpdatedAt] = useState({});
+
+  const loadPanel = async (key, request, apply) => {
+    if (!token) return;
+    setPanelState((current) => ({ ...current, [key]: "loading" }));
+    setPanelErrors((current) => ({ ...current, [key]: "" }));
+    try {
+      const result = await withTimeout(request(), 15000);
+      apply(result);
+      setPanelState((current) => ({ ...current, [key]: "ready" }));
+      setPanelUpdatedAt((current) => ({ ...current, [key]: new Date().toISOString() }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memuat panel";
+      setPanelState((current) => ({ ...current, [key]: "error" }));
+      setPanelErrors((current) => ({ ...current, [key]: message }));
+    }
+  };
 
   const load = async () => {
     if (!token) return;
     setLoading(true);
-    try {
-      const [ov, cl, clientList, au, systemHealth] = await Promise.all([
-      getAdminSystemOverview(token),
-      getAdminSystemClientsSummary(token),
-      getAdminSystemClients(token, { page: 1, limit: 8 }),
-      getAdminSystemFullAudit(token),
-      getAdminSystemHealth(token),
-      ]);
-      setOverview(ov);
-      setClients(cl);
-      setClientRows(Array.isArray(clientList?.data) ? clientList.data : []);
-      setAudit(au);
-      setHealth(systemHealth);
-      setError("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal load admin overview");
-    } finally {
-      setLoading(false);
-    }
+    setError("");
+    await Promise.all([
+      loadPanel("overview", () => getAdminSystemOverview(token), setOverview),
+      loadPanel("health", () => getAdminSystemHealth(token), setHealth),
+      loadPanel("clients", () => getAdminSystemClientsSummary(token), setClients),
+      loadPanel(
+        "clientList",
+        () => getAdminSystemClients(token, { page: 1, limit: 8 }),
+        (result) => setClientRows(Array.isArray(result?.data) ? result.data : []),
+      ),
+      loadPanel("audit", () => getAdminSystemFullAudit(token), setAudit),
+    ]);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -95,11 +114,18 @@ export default function AdminSystemOverviewPage() {
 
         {error && <div className="text-rose-400 text-sm">{error}</div>}
 
+        <PanelNotice
+          state={overallPanelState(panelState)}
+          error={overallPanelError(panelErrors)}
+          updatedAt={latestPanelUpdate(panelUpdatedAt)}
+          onRetry={load}
+        />
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <Card label="Total Client" value={overview?.total_clients ?? 0} accent="cyan" />
-          <Card label="Dashboard User" value={overview?.total_dashboard_users ?? 0} accent="violet" />
-          <Card label="Pending Premium" value={overview?.total_pending_premium_requests ?? 0} accent="amber" />
-          <Card label="Pending Fund Req" value={overview?.total_pending_fund_requests ?? 0} accent="rose" />
+          <Card label="Total Client" value={overview?.total_clients} state={panelState.overview} accent="cyan" />
+          <Card label="Dashboard User" value={overview?.total_dashboard_users} state={panelState.overview} accent="violet" />
+          <Card label="Pending Premium" value={overview?.total_pending_premium_requests} state={panelState.overview} accent="amber" />
+          <Card label="Pending Fund Req" value={overview?.total_pending_fund_requests} state={panelState.overview} accent="rose" />
         </div>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
@@ -110,7 +136,7 @@ export default function AdminSystemOverviewPage() {
                 Pemeriksaan read-only; terakhir: {health?.checked_at ? new Date(health.checked_at).toLocaleString("id-ID") : "belum tersedia"}
               </p>
             </div>
-            <HealthBadge status={health?.status || "unknown"} />
+            <div className="flex items-center gap-2"><PanelMeta state={panelState.health} updatedAt={panelUpdatedAt.health} onRetry={() => loadPanel("health", () => getAdminSystemHealth(token), setHealth)} /><HealthBadge status={health?.status || "unknown"} /></div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(health?.components || []).map((item) => (
@@ -146,7 +172,7 @@ export default function AdminSystemOverviewPage() {
         </section>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-3">
-          <h2 className="text-lg font-semibold">Client Data Summary</h2>
+          <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Client Data Summary</h2><PanelMeta state={panelState.clients} updatedAt={panelUpdatedAt.clients} onRetry={() => loadPanel("clients", () => getAdminSystemClientsSummary(token), setClients)} /></div>
           <div className="grid md:grid-cols-3 gap-3 text-sm">
             <Info label="Active Clients" value={clients?.status?.active_clients ?? 0} />
             <Info label="Inactive Clients" value={clients?.status?.inactive_clients ?? 0} />
@@ -159,7 +185,7 @@ export default function AdminSystemOverviewPage() {
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">Daftar Klien</h2>
+            <div><h2 className="text-lg font-semibold">Daftar Klien</h2><PanelMeta state={panelState.clientList} updatedAt={panelUpdatedAt.clientList} onRetry={() => loadPanel("clientList", () => getAdminSystemClients(token, { page: 1, limit: 8 }), (result) => setClientRows(Array.isArray(result?.data) ? result.data : []))} /></div>
             <Link href="/admin-system/clients" className="text-xs px-3 py-2 rounded bg-slate-800 border border-slate-700">Lihat Semua</Link>
           </div>
 
@@ -209,7 +235,7 @@ export default function AdminSystemOverviewPage() {
         </section>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-3">
-          <h2 className="text-lg font-semibold">System Configuration Snapshot</h2>
+          <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">System Configuration Snapshot</h2><PanelMeta state={panelState.audit} updatedAt={panelUpdatedAt.audit} onRetry={() => loadPanel("audit", () => getAdminSystemFullAudit(token), setAudit)} /></div>
           <div className="grid md:grid-cols-3 gap-3 text-sm">
             <Info label="Risk Level" value={audit?.config_analysis?.riskLevel || "-"} />
             <Info label="Timezone" value={audit?.config_snapshot?.timezone || "-"} />
@@ -230,13 +256,48 @@ export default function AdminSystemOverviewPage() {
   );
 }
 
-function Card({ label, value }) {
+function Card({ label, value, state }) {
   return (
     <div className="group rounded-xl border border-slate-700/80 bg-slate-900/80 p-4 shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-cyan-400/40">
       <div className="mb-3 flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{label}</p><span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_#67e8f9]" /></div>
-      <p className="text-3xl font-bold tracking-tight text-slate-100">{value}</p>
+      <p className="text-3xl font-bold tracking-tight text-slate-100">{state === "loading" ? <span className="inline-block h-8 w-16 animate-pulse rounded bg-slate-700" /> : value ?? "—"}</p>
     </div>
   );
+}
+
+function PanelMeta({ state, updatedAt, onRetry }) {
+  if (state === "loading") return <span className="text-[10px] uppercase tracking-wide text-cyan-300">memuat…</span>;
+  if (state === "error") return <button type="button" onClick={onRetry} className="text-[10px] uppercase tracking-wide text-rose-300 hover:text-rose-200">gagal · coba lagi</button>;
+  if (state === "ready") return <span className="text-[10px] uppercase tracking-wide text-emerald-300">{updatedAt ? `ok ${new Date(updatedAt).toLocaleTimeString("id-ID")}` : "ok"}</span>;
+  return <span className="text-[10px] uppercase tracking-wide text-slate-500">belum dimuat</span>;
+}
+
+function PanelNotice({ state, error, updatedAt, onRetry }) {
+  if (state === "ready" && !error) return null;
+  return <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${state === "error" ? "border-rose-400/30 bg-rose-400/10 text-rose-200" : "border-cyan-400/20 bg-cyan-400/5 text-slate-300"}`}><span>{state === "loading" ? "Memuat telemetry console…" : error || "Sebagian panel belum tersedia."}{updatedAt ? ` Data terakhir: ${new Date(updatedAt).toLocaleTimeString("id-ID")}` : ""}</span>{state === "error" && <button type="button" onClick={onRetry} className="font-semibold underline">Coba lagi</button>}</div>;
+}
+
+function overallPanelState(states) {
+  const values = Object.values(states);
+  if (values.some((value) => value === "loading")) return "loading";
+  if (values.some((value) => value === "error")) return "error";
+  if (values.every((value) => value === "ready")) return "ready";
+  return "idle";
+}
+
+function overallPanelError(errors) {
+  return Object.values(errors).find(Boolean) || "";
+}
+
+function latestPanelUpdate(updates) {
+  return Object.values(updates).filter(Boolean).sort().at(-1);
+}
+
+function withTimeout(promise, milliseconds) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => window.setTimeout(() => reject(new Error("Permintaan timeout setelah 15 detik")), milliseconds)),
+  ]);
 }
 
 function Info({ label, value }) {
