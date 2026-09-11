@@ -20,6 +20,7 @@ export function buildEngagementPremiumUpsell({
   hasPremiumAccess = false,
   isOrgClient = false,
   isOrgOperator = false,
+  isDitbinmasRole = false,
   periodLabel = 'hari ini',
   totalUsers = 0,
   completedCount = 0,
@@ -30,7 +31,7 @@ export function buildEngagementPremiumUpsell({
   complianceRate,
   premiumHref = '/premium',
 }) {
-  if (!isOrgClient || isOrgOperator || hasPremiumAccess) {
+  if (!isDitbinmasRole || isOrgOperator || hasPremiumAccess) {
     return { premiumCta: null, premiumProof: null };
   }
 

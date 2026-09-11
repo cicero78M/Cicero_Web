@@ -32,6 +32,8 @@ import { buildEngagementPremiumUpsell } from "@/utils/premiumUpsell";
 import useAuth from "@/hooks/useAuth";
 import {
   hasActivePremiumSubscription,
+  hasAutomaticPremiumAccess,
+  isDitbinmasPremiumAudience,
   isPremiumTierAllowedForEngagementDate,
 } from "@/utils/premium";
 import {
@@ -87,6 +89,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     premiumTier,
     premiumExpiry,
     effectiveRole,
+    role,
     effectiveClientType,
     token,
     clientId,
@@ -105,8 +108,9 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const isOriginalDirectorateClient =
     String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
+  const resolvedRole = effectiveRole || role;
   const isDitbinmasRole =
-    String(effectiveRole || "").trim().toLowerCase() === "ditbinmas";
+    String(resolvedRole || "").trim().toLowerCase() === "ditbinmas";
   const dataScope =
     isOriginalDirectorateClient || isDitbinmasRole
       ? "all"
@@ -118,7 +122,8 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
   }, [initialTab]);
 
-  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
+  const isOrgOperator = String(resolvedRole || "").toUpperCase() === "OPERATOR";
+  const isDitbinmasPremium = isDitbinmasPremiumAudience(clientId, resolvedRole);
   const hasPremiumDateAccess = isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
   const premiumViewOptions = VIEW_OPTIONS;
@@ -195,7 +200,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       ? filterUsersByClientId(chartData, selectedClientId)
       : chartData;
 
-  const hasPremiumAccess = hasActivePremiumSubscription(
+  const hasPremiumAccess = hasAutomaticPremiumAccess(clientId, resolvedRole) || hasActivePremiumSubscription(
     premiumTier,
     premiumExpiry || profile?.premium_expires_at || null,
     Boolean(profile?.premium_status),
@@ -217,7 +222,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     }
 
     const controller = new AbortController();
-    const roleOption = String(effectiveRole || "").trim().toLowerCase();
+    const roleOption = String(resolvedRole || "").trim().toLowerCase();
     const filters = {
       platform: "tiktok",
       client_id: premiumInsightClientId,
@@ -256,7 +261,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   }, [
     clientId,
     directorateScope,
-    effectiveRole,
+    resolvedRole,
     hasPremiumAccess,
     isDirectorate,
     normalizedCustomDate,
@@ -483,6 +488,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
     hasPremiumAccess,
     isOrgClient,
     isOrgOperator,
+    isDitbinmasRole: isDitbinmasPremium,
     periodLabel: reportPeriodeLabel,
     totalUsers: totalUser,
     completedCount: totalSudahKomentar,
@@ -551,7 +557,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
       return;
     }
 
-    const roleOption = String(effectiveRole || "").trim().toLowerCase() || undefined;
+    const roleOption = String(resolvedRole || "").trim().toLowerCase() || undefined;
     const scopeOption =
       isOriginalDirectorateClient && directorateScope === "all" ? "DIREKTORAT" : "ORG";
     const todayWib = getTodayWibDateKey();
@@ -851,7 +857,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           clientName={selectedClientName}
           reportContext={reportContext}
           rekapSummary={effectiveRekapSummary}
-          showPremiumCta={isOrgClient && !hasPremiumAccess}
+          showPremiumCta={isDitbinmasPremium && !hasPremiumAccess}
           initialStatusFilter="all"
         />
       </DetailRekapSection>

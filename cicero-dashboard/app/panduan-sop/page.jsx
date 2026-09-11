@@ -29,9 +29,17 @@ export const metadata = {
 
 const quickLinks = [
   { href: "#mulai", label: "Mulai menggunakan", icon: KeyRound },
+  { href: "#seluruh-level", label: "Peran seluruh level", icon: Users },
   { href: "#operasional", label: "SOP operasional", icon: ClipboardCheck },
   { href: "#membaca-data", label: "Membaca data", icon: BarChart3 },
   { href: "#kendala", label: "Penanganan kendala", icon: LifeBuoy },
+];
+
+const levelGuidance = [
+  { level: "Admin pusat / pengelola sistem", focus: "Menjaga konfigurasi, data master, akses, dan kesiapan layanan.", steps: ["Pastikan client, role, platform, dan username terdaftar sesuai kewenangan.", "Uji login dan menu setelah perubahan akses; catat setiap perubahan produksi.", "Pantau kesehatan sinkronisasi dan tindak lanjuti error lintas satuan.", "Dokumentasikan konfigurasi, waktu kejadian, dan hasil verifikasi."] },
+  { level: "Ditbinmas / pengawas wilayah", focus: "Menetapkan sasaran, memantau lintas satuan, dan mengambil keputusan dari rekap tervalidasi.", steps: ["Tetapkan konten target, periode, batas waktu, dan satuan yang dipantau.", "Gunakan lingkup sesuai kewenangan; bedakan ringkasan wilayah dari detail client.", "Tinjau anomali dan status kurang/belum sebelum meminta klarifikasi.", "Sertakan periode, waktu data, dan sumber rekap pada tindak lanjut."] },
+  { level: "Operator / pengelola satuan", focus: "Menyiapkan data, membantu personel, memvalidasi status, dan menyusun laporan satuan.", steps: ["Periksa NRP/NIP, username, konten, periode, dan target sebelum tugas dimulai.", "Berikan instruksi yang menyebut platform, tautan konten, periode, dan batas waktu.", "Pantau periode yang sama dan refresh setelah sinkronisasi wajar.", "Pisahkan kendala data/username dari personel yang memang belum melaksanakan."] },
+  { level: "Personel / pelaksana", focus: "Melaksanakan aktivitas pada konten yang tepat dan menjaga profil tetap dapat diverifikasi.", steps: ["Pastikan satuan dan profil yang tampil sudah benar sebelum bekerja.", "Buka tautan konten target, lakukan aktivitas sesuai instruksi, lalu pastikan berhasil.", "Perbarui profil melalui portal claim bila username berubah.", "Laporkan kendala dengan waktu, tautan, dan screenshot tanpa kredensial."] },
 ];
 
 const dailySteps = [
@@ -113,7 +121,7 @@ export default function PanduanSOPPage() {
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3 text-sm text-slate-300">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
-                <Clock3 className="h-4 w-4" aria-hidden="true" /> Diperbarui 27 Agustus 2026
+                <Clock3 className="h-4 w-4" aria-hidden="true" /> Diperbarui 11 September 2026
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Berlaku untuk pengguna dashboard
@@ -155,6 +163,21 @@ export default function PanduanSOPPage() {
                 <li><strong>4.</strong> Simpan perubahan dan tunggu konfirmasi berhasil. Perubahan dapat memerlukan waktu sebelum terlihat pada seluruh laporan.</li>
               </ol>
             </article>
+          </div>
+        </section>
+
+        <section id="seluruh-level" className="scroll-mt-24 border-y border-slate-200 py-14" aria-labelledby="level-title">
+          <SectionHeading eyebrow="02 · Seluruh level" title="Tata cara penggunaan sesuai tanggung jawab" description="Gunakan pembagian berikut agar satu data tidak diperiksa berulang tanpa koordinasi dan setiap status memiliki penanggung jawab yang jelas." />
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {levelGuidance.map((item) => (
+              <article key={item.level} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                <h3 className="text-lg font-bold text-slate-950">{item.level}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{item.focus}</p>
+                <ol className="mt-5 space-y-3 text-sm leading-6 text-slate-700">
+                  {item.steps.map((step, index) => <li key={step} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-800">{index + 1}</span><span>{step}</span></li>)}
+                </ol>
+              </article>
+            ))}
           </div>
         </section>
 

@@ -9,9 +9,7 @@ import {
   Home,
   Users,
   BarChart3,
-  Instagram,
   Heart,
-  Music,
   MessageCircle,
   ChevronLeft,
   ChevronRight,
@@ -29,7 +27,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import useAuth from "@/hooks/useAuth";
-import { hasActivePremiumSubscription, isPremiumTierAllowedForAnev } from "@/utils/premium";
+import { hasActivePremiumSubscription, hasAutomaticPremiumAccess, isDitbinmasPremiumAudience, isPremiumTierAllowedForAnev } from "@/utils/premium";
 import { getUserDirectoryFetchScope } from "@/utils/userDirectoryScope";
 
 export default function Sidebar() {
@@ -66,7 +64,10 @@ export default function Sidebar() {
   const normalizedEffectiveClientType = effectiveClientType?.toLowerCase();
   const isOrgClient = normalizedEffectiveClientType === "org";
   const isOperator = normalizedEffectiveRole === "operator";
-  const isOrgOperator = isOrgClient && isOperator;
+  const isAutomaticPremiumOperator = isOperator;
+  const resolvedRole = effectiveRole || role;
+  const isDitbinmasAudience = isDitbinmasPremiumAudience(clientId, resolvedRole);
+  const hasAutomaticPremium = hasAutomaticPremiumAccess(clientId, resolvedRole);
   const normalizedClientId = clientId?.toLowerCase();
   const hasEngagementAccessOverride =
     normalizedEffectiveClientType === "org" &&
@@ -84,7 +85,7 @@ export default function Sidebar() {
       isActive(getStatus(profile, "is_premium")) ||
       isActive(getStatus(profile, "premiumStatus")),
   );
-  const hasPremiumAccess = hasActivePremiumSubscription(
+  const hasPremiumAccess = hasAutomaticPremium || hasActivePremiumSubscription(
     premiumTier,
     premiumExpiry || getStatus(profile, "premium_expires_at") || null,
     hasPremiumStatus,
@@ -105,13 +106,6 @@ export default function Sidebar() {
     { label: "User Insight", path: "/user-insight", icon: BarChart3 },
     ...(instagramEnabled
       ? [
-          ...(!isOrgOperator && isOperator
-            ? [{
-                label: "Instagram Post Analysis",
-                path: "/instagram",
-                icon: Instagram,
-              }]
-            : []),
           { label: "Instagram Engagement Insight", path: "/likes/instagram", icon: Heart },
         ]
       : []),
@@ -120,13 +114,6 @@ export default function Sidebar() {
       : []),
     ...(tiktokEnabled
       ? [
-          ...(!isOrgOperator && isOperator
-            ? [{
-                label: "TikTok Post Analysis",
-                path: "/tiktok",
-                icon: Music,
-              }]
-            : []),
           {
             label: "TikTok Engagement Insight",
             path: "/comments/tiktok",
@@ -170,7 +157,7 @@ export default function Sidebar() {
       path: "/mekanisme-absensi",
       icon: Workflow,
     },
-    ...(isOrgClient && !isOrgOperator && !hasPremiumAccess
+    ...(isDitbinmasAudience && !hasPremiumAccess
       ? [{ label: "Premium", path: "/premium", icon: Sparkles }]
       : []),
     { label: "Panduan & SOP", path: "/panduan-sop", icon: Book },

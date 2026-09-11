@@ -31,13 +31,30 @@ export function formatPremiumTierLabel(tier?: string | null) {
   return normalized;
 }
 
-export const ALLOWED_PREMIUM_ANEV_TIERS = ["tier1", "tier2"] as const;
-export const ALLOWED_ENGAGEMENT_DATE_TIERS = ["tier1", "tier2"] as const;
+// Values here are compared after normalizePremiumTierKey(), which removes
+// separators from premium_unified.
+export const ALLOWED_PREMIUM_ANEV_TIERS = ["tier1", "tier2", "premiumunified"] as const;
+export const ALLOWED_ENGAGEMENT_DATE_TIERS = ["tier1", "tier2", "premiumunified"] as const;
 
 export function isOrgOperator(effectiveClientType?: string | null, effectiveRole?: string | null) {
-  const normalizedClientType = effectiveClientType?.toLowerCase();
   const normalizedRole = effectiveRole?.toLowerCase();
-  return normalizedClientType === "org" && normalizedRole === "operator";
+  return normalizedRole === "operator";
+}
+
+export function isDitbinmasPremiumAudience(clientId?: string | null, effectiveRole?: string | null) {
+  return (
+    String(clientId || "").trim().toLowerCase() === "ditbinmas" &&
+    String(effectiveRole || "").trim().toLowerCase() === "ditbinmas"
+  );
+}
+
+export function isDitbinmasRole(effectiveRole?: string | null) {
+  return String(effectiveRole || "").trim().toLowerCase() === "ditbinmas";
+}
+
+export function hasAutomaticPremiumAccess(clientId?: string | null, effectiveRole?: string | null) {
+  const normalizedRole = String(effectiveRole || "").trim().toLowerCase();
+  return normalizedRole === "operator" || isDitbinmasPremiumAudience(clientId, effectiveRole);
 }
 
 export function isPremiumTierAllowedForAnev(tier?: string | null, effectiveClientType?: string | null, effectiveRole?: string | null) {

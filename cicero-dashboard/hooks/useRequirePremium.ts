@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
-import { isPremiumTierAllowedForAnev } from "@/utils/premium";
+import { isDitbinmasPremiumAudience, isPremiumTierAllowedForAnev } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
 
 export type PremiumGuardStatus = "loading" | "premium" | "standard" | "error";
@@ -23,6 +23,8 @@ export default function useRequirePremium({
     premiumTierReady,
     hasResolvedPremium,
     premiumResolutionError,
+    clientId,
+    role,
     effectiveClientType,
     effectiveRole,
   } = useAuth();
@@ -35,7 +37,9 @@ export default function useRequirePremium({
     if (isHydrating || isProfileLoading || !readyToGuard) return "loading";
     if (premiumResolutionError) return "error";
 
-    const allowed = isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole);
+    const allowed =
+      isDitbinmasPremiumAudience(clientId, effectiveRole || role) ||
+      isPremiumTierAllowedForAnev(premiumTier, effectiveClientType, effectiveRole || role);
     return allowed ? "premium" : "standard";
   }, [
     hasResolvedPremium,
@@ -46,6 +50,8 @@ export default function useRequirePremium({
     premiumTierReady,
     effectiveClientType,
     effectiveRole,
+    clientId,
+    role,
   ]);
 
   useEffect(() => {

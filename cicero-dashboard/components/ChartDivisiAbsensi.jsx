@@ -286,10 +286,8 @@ export default function ChartDivisiAbsensi({
 
   const groupByLabel =
     groupBy === "client_id" ? "POLRES JAJARAN" : "divisi-satfung";
-  const fileGrouping =
-    groupBy === "client_id" ? "polres-jajaran" : "divisi-satfung";
   const exportDate = new Date().toISOString().split("T")[0];
-  const fileName = `instagram-engagement-direktorat-${fileGrouping}-${exportDate}.jpg`;
+  const fileName = `instagram-engagement-direktorat-polres-jajaran-${exportDate}.jpg`;
 
   const handleDownloadJpg = async () => {
     if (!exportRef.current || dataChart.length === 0) {
@@ -489,8 +487,8 @@ export default function ChartDivisiAbsensi({
           title={title}
           columns={tableColumns}
           rows={tableRows}
-          onDownloadJpg={dataChart.length > 0 ? handleDownloadJpg : undefined}
-          downloadLabel={`Download JPG ${groupByLabel}`}
+          onDownloadJpg={groupBy === "client_id" && dataChart.length > 0 ? handleDownloadJpg : undefined}
+          downloadLabel="Download JPG polres-jajaran"
           isDownloading={isDownloadingJpg}
         />
       </div>

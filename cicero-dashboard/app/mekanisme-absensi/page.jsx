@@ -60,6 +60,16 @@ const flow = [
 
 const roles = [
   {
+    name: "Admin pusat / pengelola sistem",
+    icon: ShieldCheck,
+    duties: [
+      "Menjaga data master client, role, platform, username, dan konfigurasi akses.",
+      "Memastikan sinkronisasi, endpoint, dan layanan berjalan sebelum laporan digunakan.",
+      "Mencatat perubahan konfigurasi serta melakukan uji akses setelah perubahan.",
+      "Menangani eskalasi lintas satuan tanpa meminta kredensial pengguna.",
+    ],
+  },
+  {
     name: "Personel",
     icon: BadgeCheck,
     duties: [
@@ -142,6 +152,14 @@ const verification = [
   "Waktu pengambilan data (WIB) dicantumkan",
 ];
 
+const optimalProtocol = [
+  ["Sebelum tugas", "Admin/operator memastikan client, role, personel, username, tautan konten, periode, dan target sudah benar."],
+  ["Saat tugas", "Personel bekerja dari aplikasi resmi pada konten yang ditentukan; operator membantu jika ada username atau tautan yang keliru."],
+  ["Saat pemantauan", "Operator memilih platform, periode, client, dan filter yang sama dengan penugasan; hindari refresh berulang."],
+  ["Sebelum laporan", "Tunggu data selesai, cocokkan jumlah target, periksa status kurang/belum, lalu catat waktu pengambilan dalam WIB."],
+  ["Jika ada selisih", "Verifikasi aktivitas di platform, perbarui data profil bila perlu, ambil ulang setelah jeda, lalu eskalasi dengan bukti aman."],
+];
+
 function SectionHeading({ eyebrow, title, description }) {
   return (
     <div className="max-w-3xl">
@@ -166,7 +184,7 @@ export default function MekanismeAbsensiPage() {
               Cara Cicero mengubah konten tugas dan aktivitas platform menjadi status engagement yang dapat diverifikasi dan direkap.
             </p>
             <div className="mt-7 flex flex-wrap gap-3 text-sm text-slate-300">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5"><Clock3 className="h-4 w-4" aria-hidden="true" /> Diperbarui 27 Agustus 2026</span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5"><Clock3 className="h-4 w-4" aria-hidden="true" /> Diperbarui 11 September 2026</span>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5"><AlertCircle className="h-4 w-4" aria-hidden="true" /> Bukan absensi kehadiran fisik</span>
             </div>
           </div>
@@ -203,6 +221,19 @@ export default function MekanismeAbsensiPage() {
               <article key={name} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-3"><span className="rounded-2xl bg-sky-50 p-3 text-sky-700"><Icon className="h-6 w-6" aria-hidden="true" /></span><h3 className="text-lg font-bold text-slate-950">{name}</h3></div>
                 <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">{duties.map((duty) => <li key={duty} className="flex gap-2"><span className="text-emerald-600">✓</span><span>{duty}</span></li>)}</ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="py-14" aria-labelledby="optimal-title">
+          <SectionHeading eyebrow="03 · Penggunaan optimal" title="Satu alur kerja dari tugas sampai laporan" description="Ikuti urutan ini pada setiap siklus agar status absensi digital konsisten di seluruh level dan mudah diaudit." />
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {optimalProtocol.map(([title, text], index) => (
+              <article key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <span className="text-xs font-bold uppercase tracking-wider text-sky-700">Tahap {index + 1}</span>
+                <h3 className="mt-3 font-bold text-slate-950">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
               </article>
             ))}
           </div>

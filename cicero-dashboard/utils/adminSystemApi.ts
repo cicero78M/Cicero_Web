@@ -125,6 +125,10 @@ export async function getAdminSystemTopology(token: string) {
   return fetchAdminProtected('/api/admin-system/management/system-topology', token) as Promise<AnyRecord>;
 }
 
+export async function getAdminSystemDuplicateMonitoring(token: string) {
+  return fetchAdminProtected('/api/admin-system/management/duplicate-monitoring', token) as Promise<AnyRecord>;
+}
+
 export async function getAdminSystemClients(token: string, params?: { page?: number; limit?: number; q?: string }) {
   const qs = new URLSearchParams();
   if (params?.page) qs.set('page', String(params.page));

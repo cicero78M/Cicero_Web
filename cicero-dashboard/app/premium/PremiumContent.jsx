@@ -14,6 +14,7 @@ import {
 import useRequireAuth from "@/hooks/useRequireAuth";
 import useAuth from "@/hooks/useAuth";
 import { hasActivePremiumSubscription } from "@/utils/premium";
+import { hasAutomaticPremiumAccess, isDitbinmasRole } from "@/utils/premium";
 
 const features = [
   {
@@ -56,8 +57,13 @@ const features = [
 
 export default function PremiumContent() {
   useRequireAuth();
-  const { premiumTier, premiumExpiry, profile } = useAuth();
-  const hasPremiumAccess = hasActivePremiumSubscription(
+  const { premiumTier, premiumExpiry, profile, clientId, effectiveRole, role } = useAuth();
+  const resolvedRole = effectiveRole || role;
+  const isDitbinmasAudience = isDitbinmasRole(resolvedRole);
+  if (!isDitbinmasAudience) {
+    return <section className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-700"><h1 className="text-2xl font-semibold">Layanan Premium</h1><p className="mt-2 text-sm">Layanan Premium hanya ditawarkan untuk dashboard dengan role Ditbinmas. Role Operator memperoleh fitur Premium secara otomatis.</p></section>;
+  }
+  const hasPremiumAccess = hasAutomaticPremiumAccess(clientId, resolvedRole) || hasActivePremiumSubscription(
     premiumTier,
     premiumExpiry || profile?.premium_expires_at || null,
     Boolean(profile?.premium_status),

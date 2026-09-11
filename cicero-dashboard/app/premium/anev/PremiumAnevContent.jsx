@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FilePieChart, ShieldCheck, Sparkles } from "lucide-react";
 import useRequireAuth from "@/hooks/useRequireAuth";
+import useAuth from "@/hooks/useAuth";
+import { isDitbinmasRole } from "@/utils/premium";
 
 const highlights = [
   {
@@ -27,6 +29,11 @@ const highlights = [
 
 export default function PremiumAnevContent() {
   useRequireAuth();
+  const { effectiveRole, role } = useAuth();
+  const isDitbinmasAudience = isDitbinmasRole(effectiveRole || role);
+  if (!isDitbinmasAudience) {
+    return <section className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-700"><h1 className="text-2xl font-semibold">Anev Polres</h1><p className="mt-2 text-sm">Role Operator memperoleh akses Premium Anev secara otomatis. Penawaran Premium hanya tersedia untuk role Ditbinmas.</p></section>;
+  }
 
   return (
     <div className="space-y-10">

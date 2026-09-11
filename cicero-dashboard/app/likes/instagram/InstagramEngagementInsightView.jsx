@@ -29,6 +29,8 @@ import {
 } from "@/utils/taskRecapWhatsapp";
 import {
   hasActivePremiumSubscription,
+  hasAutomaticPremiumAccess,
+  isDitbinmasPremiumAudience,
   isPremiumTierAllowedForEngagementDate,
 } from "@/utils/premium";
 import { showToast } from "@/utils/showToast";
@@ -92,6 +94,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     premiumTier,
     premiumExpiry,
     profile,
+    role,
     effectiveRole,
     effectiveClientType,
     token,
@@ -110,8 +113,9 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
 
   const isOriginalDirectorateClient =
     String(effectiveClientType || "").trim().toUpperCase() === "DIREKTORAT";
+  const resolvedRole = effectiveRole || role;
   const isDitbinmasRole =
-    String(effectiveRole || "").trim().toLowerCase() === "ditbinmas";
+    String(resolvedRole || "").trim().toLowerCase() === "ditbinmas";
   const dataScope =
     isOriginalDirectorateClient || isDitbinmasRole
       ? "all"
@@ -123,7 +127,8 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     }
   }, [initialTab]);
 
-  const isOrgOperator = effectiveClientType === "ORG" && effectiveRole === "OPERATOR";
+  const isOrgOperator = String(resolvedRole || "").toUpperCase() === "OPERATOR";
+  const isDitbinmasPremium = isDitbinmasPremiumAudience(clientId, resolvedRole);
   const hasPremiumDateAccess =
     isPremiumTierAllowedForEngagementDate(premiumTier) || isOrgOperator;
   const showDateSelector = hasPremiumDateAccess || isOriginalDirectorateClient;
@@ -196,7 +201,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       ? filterUsersByClientId(chartData, selectedClientId)
       : chartData;
 
-  const hasPremiumAccess = hasActivePremiumSubscription(
+  const hasPremiumAccess = hasAutomaticPremiumAccess(clientId, resolvedRole) || hasActivePremiumSubscription(
     premiumTier,
     premiumExpiry || profile?.premium_expires_at || null,
     Boolean(profile?.premium_status),
@@ -218,7 +223,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     }
 
     const controller = new AbortController();
-    const roleOption = String(effectiveRole || "").trim().toLowerCase();
+    const roleOption = String(resolvedRole || "").trim().toLowerCase();
     const filters = {
       platform: "instagram",
       client_id: premiumInsightClientId,
@@ -255,7 +260,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
   }, [
     clientId,
     directorateScope,
-    effectiveRole,
+    resolvedRole,
     hasPremiumAccess,
     normalizedCustomDate,
     normalizedRange.endDate,
@@ -350,7 +355,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
       return;
     }
 
-    const roleOption = String(effectiveRole || "").trim().toLowerCase() || undefined;
+    const roleOption = String(resolvedRole || "").trim().toLowerCase() || undefined;
     const scopeOption =
       isOriginalDirectorateClient && directorateScope === "all" ? "DIREKTORAT" : "ORG";
     const todayWib = getTodayWibDateKey();
@@ -580,6 +585,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
     hasPremiumAccess,
     isOrgClient,
     isOrgOperator,
+    isDitbinmasRole: isDitbinmasPremium,
     periodLabel: reportPeriodeLabel,
     totalUsers: totalUser,
     completedCount: totalSudahLike,
@@ -836,7 +842,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
             periodeLabel: reportPeriodeLabel,
             viewLabel: resolvedViewOptions.find((option) => option.value === viewBy)?.label,
           }}
-          showPremiumCta={isOrgClient && !hasPremiumAccess}
+          showPremiumCta={isDitbinmasPremium && !hasPremiumAccess}
           initialStatusFilter="all"
         />
       </DetailRekapSection>

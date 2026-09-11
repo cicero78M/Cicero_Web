@@ -11,33 +11,18 @@ import {
   submitPremiumRequest,
 } from "@/utils/api";
 import { showToast } from "@/utils/showToast";
+import { isDitbinmasRole } from "@/utils/premium";
 
 const premiumTiers = [
   {
-    value: "premium_1",
-    label: "Premium 1",
-    description: "Recap otomatis dengan akses ANEV lengkap untuk 1 User.",
+    value: "premium_unified",
+    label: "Premium CICERO",
+    description: "Satu layanan lengkap untuk seluruh fitur Premium CICERO.",
     basePrice: 300000,
     benefits: [
       "Recap WA Bot jam 15:00 / 18:00 / 20:30",
-      "Halaman ANEV harian, mingguan, bulanan",
-      "Unduhan Excel & panduan operator dasar",
-    ],
-  },
-  {
-    value: "premium_2",
-    label: "Premium 2",
-    description: "Prioritas Web Dashboard untuk monitoring ANEV.",
-    basePrice: 200000,
-    benefits: ["Web ANEV dashboard", "Download data"],
-  },
-  {
-    value: "premium_3",
-    label: "Premium 3",
-    description: "Prioritas WA Bot dengan rekap otomatis terjadwal.",
-    basePrice: 200000,
-    benefits: [
-      "Rekap file Excel ANEV Harian, Mingguan dan Bulanan",
+      "ANEV harian, mingguan, bulanan, dan custom range",
+      "Unduhan Excel, Executive Recap, dan Risk Summary",
     ],
   },
 ];
@@ -48,14 +33,15 @@ const initialFormState = {
   bankName: "",
   senderName: "",
   accountNumber: "",
-  premiumTier: "",
+  premiumTier: "premium_unified",
   amount: "",
   amountSuffix: "",
 };
 
 export default function PremiumRegisterContent() {
   useRequireAuth();
-  const { profile, userId, token, isHydrating } = useAuth();
+  const { profile, userId, token, isHydrating, clientId, effectiveRole, role } = useAuth();
+  const isDitbinmasAudience = isDitbinmasRole(effectiveRole || role);
 
   const [formState, setFormState] = useState(initialFormState);
   const [error, setError] = useState("");
@@ -241,6 +227,23 @@ Catatan tambahan:`;
   const isFormLocked = isSubmitting || Boolean(successMessage) || contextLocked;
   const isSubmitDisabled = isFormLocked || isHydrating || isContextLoading;
 
+  useEffect(() => {
+    // A new request has no backend-generated amount yet. Fill it immediately
+    // from the selected unified Premium price so submit never sees an empty
+    // nominal after a page reload.
+    if (isHydrating || isContextLoading || isFormLocked || !selectedTier) return;
+
+    setFormState((prev) => {
+      if (prev.amount.trim() || prev.amountSuffix.trim()) return prev;
+      const suffix = String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+      return {
+        ...prev,
+        amountSuffix: suffix,
+        amount: String(selectedTier.basePrice + Number(suffix)),
+      };
+    });
+  }, [isContextLoading, isFormLocked, isHydrating, selectedTier]);
+
   const handleTierChange = (value) => {
     if (isFormLocked) return;
 
@@ -363,6 +366,10 @@ Catatan tambahan:`;
     }
   };
 
+  if (!isDitbinmasAudience && !isHydrating) {
+    return <section className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-700"><h1 className="text-2xl font-semibold">Pendaftaran Premium</h1><p className="mt-2 text-sm">Pendaftaran Premium hanya tersedia untuk dashboard dengan role Ditbinmas. Role Operator memperoleh fitur Premium secara otomatis.</p></section>;
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-3">
@@ -398,7 +405,7 @@ Catatan tambahan:`;
             <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-5 shadow-inner">
               <h2 className="text-sm font-semibold text-slate-800">Langkah cepat</h2>
               <ol className="mt-3 list-decimal space-y-2 pl-4 text-sm text-slate-600">
-                <li>Pilih paket premium agar nominal unik dihitung otomatis.</li>
+                <li>Pilih layanan Premium agar nominal unik dihitung otomatis.</li>
                 <li>Lengkapi detail bank, nama pengirim, dan nomor rekening.</li>
                 <li>Kirim formulir ini, lalu salin template WA untuk konfirmasi pembayaran.</li>
                 <li>Tunggu verifikasi dari tim CICERO. Formulir akan terkunci setelah berhasil.</li>
@@ -413,8 +420,8 @@ Catatan tambahan:`;
                     <h3 className="text-base font-semibold text-slate-800">Paket & tarif</h3>
                   </div>
                   <p className="mt-1 text-sm text-slate-600">
-                    Pilih paket sesuai kebutuhan tim. Harga sudah termasuk penambahan 3 digit acak
-                    untuk memudahkan pencocokan transfer.
+                    Satu layanan mencakup seluruh fitur Premium. Harga sudah termasuk penambahan 3
+                    digit acak untuk memudahkan pencocokan transfer.
                   </p>
                 </div>
                 <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-indigo-700 shadow-inner">
@@ -452,7 +459,7 @@ Catatan tambahan:`;
                       ))}
                     </ul>
                     <div className="text-[11px] font-semibold text-indigo-700">
-                      Klik untuk memilih paket ini
+                      Layanan Premium terpadu
                     </div>
                   </button>
                 ))}
@@ -508,7 +515,7 @@ Catatan tambahan:`;
                       onChange={(event) => handleTierChange(event.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-inner focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100"
                     >
-                      <option value="">Pilih paket</option>
+                      <option value="">Pilih layanan</option>
                       {premiumTiers.map((tier) => (
                         <option key={tier.value} value={tier.value}>
                           {tier.label} — Rp {tier.basePrice.toLocaleString("id-ID")}
@@ -517,7 +524,7 @@ Catatan tambahan:`;
                     </select>
                     <p className="text-xs text-slate-500">
                       {selectedTier?.description ||
-                        "Pilih paket sesuai periode recap yang dibutuhkan."}
+                        "Satu layanan Premium mencakup seluruh fitur dan periode yang tersedia."}
                     </p>
                   </label>
                   <label className="space-y-1 text-sm text-slate-700">

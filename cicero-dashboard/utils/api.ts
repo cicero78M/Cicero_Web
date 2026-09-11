@@ -3734,35 +3734,25 @@ export async function getTiktokProfileViaBackend(token: string, username: string
   const userInfo = raw.userInfo || raw;
   const user = userInfo.user || raw.user || {};
   const stats = userInfo.stats || raw.stats || {};
-  
+  const normalizedFollowers = ensureNumber(
+    stats.followerCount ?? stats.followers ?? stats.follower_count ?? raw.followers ?? raw.follower_count,
+  );
+  const normalizedFollowing = ensureNumber(
+    stats.followingCount ?? stats.following ?? stats.following_count ?? raw.following ?? raw.following_count,
+  );
 
   return {
-    username:
-      user.uniqueId ||
-      user.username ||
-      user.user_name ||
-      raw.username ||
-      "",
-    followers:
-      stats.followerCount ||
-      stats.followers ||
-      stats.follower_count ||
-      raw.followers ||
-      raw.follower_count ||
-      0,
-    following:
-      stats.followingCount ||
-      stats.following ||
-      stats.following_count ||
-      raw.following ||
-      raw.following_count ||
-      0,
-    bio: user.signature || raw.bio || raw.signature || "",
-    avatar: user.avatarLarger || user.avatarMedium || raw.avatar || "",
     ...raw,
     ...userInfo,
     ...user,
     ...stats,
+    username: ensureString(
+      user.uniqueId || user.username || user.user_name || raw.username || "",
+    ),
+    followers: normalizedFollowers,
+    following: normalizedFollowing,
+    bio: ensureString(user.signature || raw.bio || raw.signature || ""),
+    avatar: ensureString(user.avatarLarger || user.avatarMedium || raw.avatar || ""),
   };
 }
 
@@ -3820,23 +3810,23 @@ export async function getTiktokPostsViaBackend(
   let posts = json.data || json.posts || json;
   if (Array.isArray(posts)) {
     posts = posts.map((p) => ({
+      ...p,
       id: p.id || p.post_id || p.aweme_id || p.video_id,
-      caption: p.caption || p.desc || "",
+      caption: ensureString(p.caption || p.desc || ""),
       thumbnail:
         p.thumbnail ||
         p.cover ||
         p.video?.cover ||
         p.video?.originCover ||
         "",
-      like_count: p.like_count ?? p.stats?.diggCount ?? p.diggCount ?? 0,
+      like_count: ensureNumber(p.like_count ?? p.stats?.diggCount ?? p.diggCount),
       comment_count:
-        p.comment_count ?? p.stats?.commentCount ?? p.commentCount ?? 0,
-      share_count: p.share_count ?? p.stats?.shareCount ?? p.shareCount ?? 0,
-      view_count: p.view_count ?? p.stats?.playCount ?? p.playCount ?? 0,
+        ensureNumber(p.comment_count ?? p.stats?.commentCount ?? p.commentCount),
+      share_count: ensureNumber(p.share_count ?? p.stats?.shareCount ?? p.shareCount),
+      view_count: ensureNumber(p.view_count ?? p.stats?.playCount ?? p.playCount),
       created_at:
         p.created_at ||
         (p.createTime ? new Date(p.createTime * 1000).toISOString() : ""),
-      ...p,
     }));
   }
   return posts;
@@ -3859,23 +3849,23 @@ export async function getTiktokPostsByUsernameViaBackend(
   let posts = json.data || json.posts || json;
   if (Array.isArray(posts)) {
     posts = posts.map((p) => ({
+      ...p,
       id: p.id || p.post_id || p.aweme_id || p.video_id,
-      caption: p.caption || p.desc || "",
+      caption: ensureString(p.caption || p.desc || ""),
       thumbnail:
         p.thumbnail ||
         p.cover ||
         p.video?.cover ||
         p.video?.originCover ||
         "",
-      like_count: p.like_count ?? p.stats?.diggCount ?? p.diggCount ?? 0,
+      like_count: ensureNumber(p.like_count ?? p.stats?.diggCount ?? p.diggCount),
       comment_count:
-        p.comment_count ?? p.stats?.commentCount ?? p.commentCount ?? 0,
-      share_count: p.share_count ?? p.stats?.shareCount ?? p.shareCount ?? 0,
-      view_count: p.view_count ?? p.stats?.playCount ?? p.playCount ?? 0,
+        ensureNumber(p.comment_count ?? p.stats?.commentCount ?? p.commentCount),
+      share_count: ensureNumber(p.share_count ?? p.stats?.shareCount ?? p.shareCount),
+      view_count: ensureNumber(p.view_count ?? p.stats?.playCount ?? p.playCount),
       created_at:
         p.created_at ||
         (p.createTime ? new Date(p.createTime * 1000).toISOString() : ""),
-      ...p,
     }));
   }
   return posts;
@@ -4210,7 +4200,7 @@ export async function loginClaimUser(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ nrp: payload.nrp, password: payload.password }),
+    body: JSON.stringify({ nrp: payload.nrp, password: payload.password, login_surface: "claim" }),
   });
 
   let data: any = null;

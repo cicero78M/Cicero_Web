@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AdminNav from "@/components/admin-system/AdminNav";
 import useRequireSystemAdminAuth from "@/hooks/useRequireSystemAdminAuth";
@@ -12,6 +12,7 @@ import {
   getAdminSystemHealth,
   getAdminSystemOverview,
   getAdminSystemTopology,
+  getAdminSystemDuplicateMonitoring,
 } from "@/utils/adminSystemApi";
 
 export default function AdminSystemOverviewPage() {
@@ -22,6 +23,7 @@ export default function AdminSystemOverviewPage() {
   const [audit, setAudit] = useState(null);
   const [health, setHealth] = useState(null);
   const [topology, setTopology] = useState(null);
+  const [duplicateMonitoring, setDuplicateMonitoring] = useState(null);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,43 +35,60 @@ export default function AdminSystemOverviewPage() {
     clients: "idle",
     clientList: "idle",
     audit: "idle",
+    duplicates: "idle",
   });
   const [panelErrors, setPanelErrors] = useState({});
   const [panelUpdatedAt, setPanelUpdatedAt] = useState({});
+  const [panelDurations, setPanelDurations] = useState({});
+  const [monitorEvents, setMonitorEvents] = useState([]);
+  const loadInFlight = useRef(false);
 
   const loadPanel = async (key, request, apply) => {
     if (!token) return;
+    const startedAt = performance.now();
     setPanelState((current) => ({ ...current, [key]: "loading" }));
     setPanelErrors((current) => ({ ...current, [key]: "" }));
     try {
       const result = await withTimeout(request(), 15000);
+      const duration = Math.round(performance.now() - startedAt);
       apply(result);
       setPanelState((current) => ({ ...current, [key]: "ready" }));
       setPanelUpdatedAt((current) => ({ ...current, [key]: new Date().toISOString() }));
+      setPanelDurations((current) => ({ ...current, [key]: duration }));
+      setMonitorEvents((current) => [{ key, status: "ready", duration, at: new Date().toISOString() }, ...current].slice(0, 18));
     } catch (err) {
+      const duration = Math.round(performance.now() - startedAt);
       const message = err instanceof Error ? err.message : "Gagal memuat panel";
       setPanelState((current) => ({ ...current, [key]: "error" }));
       setPanelErrors((current) => ({ ...current, [key]: message }));
+      setPanelDurations((current) => ({ ...current, [key]: duration }));
+      setMonitorEvents((current) => [{ key, status: "error", duration, at: new Date().toISOString(), message }, ...current].slice(0, 18));
     }
   };
 
   const load = async () => {
-    if (!token) return;
+    if (!token || loadInFlight.current) return;
+    loadInFlight.current = true;
     setLoading(true);
     setError("");
-    await Promise.all([
-      loadPanel("overview", () => getAdminSystemOverview(token), setOverview),
-      loadPanel("health", () => getAdminSystemHealth(token), setHealth),
-      loadPanel("topology", () => getAdminSystemTopology(token), setTopology),
-      loadPanel("clients", () => getAdminSystemClientsSummary(token), setClients),
-      loadPanel(
-        "clientList",
-        () => getAdminSystemClients(token, { page: 1, limit: 8 }),
-        (result) => setClientRows(Array.isArray(result?.data) ? result.data : []),
-      ),
-      loadPanel("audit", () => getAdminSystemFullAudit(token), setAudit),
-    ]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        loadPanel("overview", () => getAdminSystemOverview(token), setOverview),
+        loadPanel("health", () => getAdminSystemHealth(token), setHealth),
+        loadPanel("topology", () => getAdminSystemTopology(token), setTopology),
+        loadPanel("duplicates", () => getAdminSystemDuplicateMonitoring(token), setDuplicateMonitoring),
+        loadPanel("clients", () => getAdminSystemClientsSummary(token), setClients),
+        loadPanel(
+          "clientList",
+          () => getAdminSystemClients(token, { page: 1, limit: 8 }),
+          (result) => setClientRows(Array.isArray(result?.data) ? result.data : []),
+        ),
+        loadPanel("audit", () => getAdminSystemFullAudit(token), setAudit),
+      ]);
+    } finally {
+      loadInFlight.current = false;
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -127,12 +146,32 @@ export default function AdminSystemOverviewPage() {
           onRetry={load}
         />
 
+        <LiveMonitoring
+          panelState={panelState}
+          panelErrors={panelErrors}
+          panelUpdatedAt={panelUpdatedAt}
+          panelDurations={panelDurations}
+          events={monitorEvents}
+        />
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card label="Total Client" value={overview?.total_clients} state={panelState.overview} accent="cyan" />
           <Card label="Dashboard User" value={overview?.total_dashboard_users} state={panelState.overview} accent="violet" />
           <Card label="Pending Premium" value={overview?.total_pending_premium_requests} state={panelState.overview} accent="amber" />
           <Card label="Pending Fund Req" value={overview?.total_pending_fund_requests} state={panelState.overview} accent="rose" />
         </div>
+
+        <section className="rounded-xl border border-cyan-400/20 bg-slate-900/90 p-5 shadow-lg shadow-cyan-950/10">
+          <div className="mb-3">
+            <h2 className="text-lg font-semibold">User Login per Kanal</h2>
+            <p className="mt-1 text-xs text-slate-400">Jumlah user unik yang tercatat pernah login.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Info label="Dashboard" value={overview?.login_users?.dashboard ?? 0} />
+            <Info label="Claim" value={overview?.login_users?.claim ?? 0} />
+            <Info label="Reposter" value={overview?.login_users?.reposter ?? 0} />
+          </div>
+        </section>
 
         <section className="rounded-xl border border-cyan-400/20 bg-slate-900/90 p-5 space-y-4 shadow-lg shadow-cyan-950/10">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,6 +186,13 @@ export default function AdminSystemOverviewPage() {
           </div>
           {topology?.clients && <div className="overflow-auto rounded-lg border border-slate-800"><table className="w-full min-w-[640px] text-xs"><thead><tr className="text-left text-slate-500"><th className="p-3">Client</th><th className="p-3">Group</th><th className="p-3">Instagram</th><th className="p-3">TikTok</th><th className="p-3">Amplify</th></tr></thead><tbody>{topology.clients.matrix.slice(0, 12).map((item) => <tr key={item.client_id} className="border-t border-slate-800"><td className="p-3 font-semibold">{item.name}</td><td className="p-3 text-slate-400">{item.group || "-"}</td><td className="p-3"><HealthBadge status={item.platforms.instagram === "enabled" ? "ok" : "unknown"} /></td><td className="p-3"><HealthBadge status={item.platforms.tiktok === "enabled" ? "ok" : "unknown"} /></td><td className="p-3"><HealthBadge status={item.platforms.amplify === "enabled" ? "ok" : "unknown"} /></td></tr>)}</tbody></table></div>}
         </section>
+
+        <DuplicateMonitoring
+          data={duplicateMonitoring}
+          state={panelState.duplicates}
+          updatedAt={panelUpdatedAt.duplicates}
+          onRetry={() => loadPanel("duplicates", () => getAdminSystemDuplicateMonitoring(token), setDuplicateMonitoring)}
+        />
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -264,12 +310,6 @@ export default function AdminSystemOverviewPage() {
             <Info label="Admin IDs" value={audit?.config_snapshot?.total_admin_chat_ids || 0} />
             <Info label="Role Mappings" value={audit?.config_snapshot?.total_role_mappings || 0} />
           </div>
-          <div className="flex gap-2 pt-2 flex-wrap">
-            <Link href="/admin-system/analysis" className="px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-sm">System Analysis</Link>
-            <Link href="/admin-system/funds" className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-semibold text-sm">Funds Management</Link>
-            <Link href="/admin-system/clients" className="px-4 py-2 rounded-lg bg-amber-400 text-slate-950 font-semibold text-sm">Client CRUD</Link>
-            <Link href="/admin-system/payments" className="px-4 py-2 rounded-lg bg-fuchsia-400 text-slate-950 font-semibold text-sm">Payment Workflow</Link>
-          </div>
         </section>
       </div>
     </main>
@@ -283,6 +323,207 @@ function Card({ label, value, state }) {
       <p className="text-3xl font-bold tracking-tight text-slate-100">{state === "loading" ? <span className="inline-block h-8 w-16 animate-pulse rounded bg-slate-700" /> : value ?? "—"}</p>
     </div>
   );
+}
+
+function DuplicateMonitoring({ data, state, updatedAt, onRetry }) {
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [whatsappMessage, setWhatsappMessage] = useState("");
+  const [copied, setCopied] = useState(false);
+  const summary = data?.summary || {};
+  const groups = data?.groups || [];
+  const classificationLabels = {
+    same_user_format_or_duplicate: "User sama / format ganda",
+    same_client_multi_user: "Antar-user satu client",
+    cross_client: "Lintas client",
+  };
+  const buildWhatsappMessage = (group) => {
+    const records = group?.records || [];
+    const source = records[0]?.client_name || records[0]?.client_id || "Tidak diketahui";
+    const detail = records.map((record, index) => [
+      `DATA USER ${index + 1}`,
+      `• Nama: ${record.name || "-"}`,
+      `• Pangkat/Jabatan: ${record.title || record.jabatan || "-"}`,
+      `• NRP/User ID: ${record.user_id || "-"}`,
+      `• Polres/Client: ${record.client_name || record.client_id || "-"}`,
+      `• Platform: ${String(group.platform || "").toUpperCase()}`,
+      `• Username: @${record.username || group.username}`,
+      `• Sumber akun: ${record.source === "additional" ? `akun tambahan${record.account_order != null ? ` #${record.account_order}` : ""}` : "field utama"}`,
+    ].join("\n")).join("\n\n");
+    const reason = group.platform === "tiktok"
+      ? "Data TikTok diusulkan untuk dihapus karena username tidak sesuai dengan identitas atau ketentuan akun yang berlaku."
+      : "Data Instagram terindikasi duplikat berdasarkan username yang sama setelah normalisasi dan menunggu verifikasi.";
+    return [
+      "⚠️ PEMBERITAHUAN DATA DUPLIKASI",
+      "",
+      "Data berikut belum dihapus dan diusulkan untuk ditindaklanjuti setelah verifikasi.",
+      "",
+      "📍 SUMBER DATA",
+      `• Polres/Client: ${source}`,
+      `• Platform: ${String(group.platform || "").toUpperCase()}`,
+      `• Username terdeteksi: @${group.username}`,
+      `• Klasifikasi: ${classificationLabels[group.classification] || group.classification}`,
+      `• Kemunculan: ${group.occurrences || records.length}`,
+      "",
+      detail,
+      "",
+      "🗑️ DATA YANG DIUSULKAN UNTUK DIHAPUS",
+      reason,
+      "",
+      "✅ TINDAKAN YANG DIMINTA",
+      "Mohon verifikasi data yang benar untuk dipertahankan dan data yang dapat dihapus.",
+      "",
+      "⚠️ Tidak ada data yang dihapus pada tahap pemberitahuan ini. Penghapusan hanya dilakukan setelah konfirmasi administrator.",
+      `Waktu pemeriksaan: ${data?.checked_at ? new Date(data.checked_at).toLocaleString("id-ID") : "-"}`,
+      "",
+      "Admin System Console",
+    ].join("\n");
+  };
+  return (
+    <section className="rounded-xl border border-amber-400/20 bg-slate-900/90 p-5 shadow-lg shadow-amber-950/10">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_10px_#fcd34d]" />
+            <h2 className="text-lg font-semibold">Duplicate Data Monitoring</h2>
+          </div>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-400">Deteksi read-only username Instagram/TikTok yang sama setelah normalisasi URL, @, dan huruf besar-kecil.</p>
+        </div>
+        <PanelMeta state={state} updatedAt={updatedAt} onRetry={onRetry} />
+      </div>
+      {state === "ready" && (
+        <>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <MonitoringStat label="Grup duplikat" value={summary.total_groups ?? 0} tone={summary.total_groups ? "rose" : "emerald"} />
+            <MonitoringStat label="Instagram" value={summary.instagram?.groups ?? 0} tone="cyan" />
+            <MonitoringStat label="TikTok" value={summary.tiktok?.groups ?? 0} tone="cyan" />
+            <MonitoringStat label="Antar-user" value={(summary.same_client ?? 0) + (summary.cross_client ?? 0)} tone="amber" />
+            <MonitoringStat label="Lintas-client" value={summary.cross_client ?? 0} tone={summary.cross_client ? "rose" : "slate"} />
+          </div>
+          <div className="mt-4 overflow-auto rounded-lg border border-slate-800">
+            {groups.length === 0 ? <p className="p-4 text-sm text-emerald-300">Tidak ditemukan duplikasi aktif.</p> : (
+              <table className="w-full min-w-[760px] text-xs">
+                <thead><tr className="border-b border-slate-800 text-left text-slate-500"><th className="p-3">Platform</th><th className="p-3">Username normal</th><th className="p-3">Klasifikasi</th><th className="p-3">User</th><th className="p-3">Client</th></tr></thead>
+                <tbody>{groups.slice(0, 20).map((group) => <tr key={`${group.platform}:${group.username}`} onClick={() => { setSelectedGroup(group); setWhatsappMessage(""); setCopied(false); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedGroup(group); setWhatsappMessage(""); setCopied(false); } }} tabIndex={0} role="button" aria-label={`Lihat user duplikat ${group.platform} ${group.username}`} className={`cursor-pointer border-b border-slate-900 last:border-0 transition hover:bg-cyan-400/10 focus:bg-cyan-400/10 focus:outline-none ${selectedGroup?.platform === group.platform && selectedGroup?.username === group.username ? "bg-cyan-400/10" : ""}`}><td className="p-3 uppercase text-cyan-300">{group.platform}</td><td className="p-3 font-semibold text-slate-200">@{group.username}</td><td className="p-3 text-amber-200">{classificationLabels[group.classification] || group.classification}</td><td className="p-3 text-slate-300">{group.unique_users}</td><td className="p-3 text-slate-400">{group.unique_clients}</td></tr>)}</tbody>
+              </table>
+            )}
+          </div>
+          {selectedGroup && (
+            <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-4" aria-live="polite">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">Detail user duplikat</div>
+                  <h3 className="mt-1 text-base font-semibold text-slate-100">{selectedGroup.platform.toUpperCase()} · @{selectedGroup.username}</h3>
+                  <p className="mt-1 text-xs text-slate-400">{classificationLabels[selectedGroup.classification] || selectedGroup.classification} · {selectedGroup.occurrences} kemunculan</p>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => { setWhatsappMessage(buildWhatsappMessage(selectedGroup)); setCopied(false); }} className="rounded-md border border-emerald-400/40 bg-emerald-400/10 px-2 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/20">Buat pesan WhatsApp</button>
+                  <button type="button" onClick={() => { setSelectedGroup(null); setWhatsappMessage(""); setCopied(false); }} className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:border-cyan-400/50 hover:text-cyan-200">Tutup detail</button>
+                </div>
+              </div>
+              <div className="mt-3 overflow-auto rounded-md border border-slate-800">
+                <table className="w-full min-w-[680px] text-xs">
+                  <thead><tr className="border-b border-slate-800 text-left text-slate-500"><th className="p-3">User ID</th><th className="p-3">Nama</th><th className="p-3">Client</th><th className="p-3">Sumber</th><th className="p-3">Username normal</th></tr></thead>
+                  <tbody>{(selectedGroup.records || []).map((record, index) => <tr key={`${record.user_id}:${record.source}:${index}`} className="border-b border-slate-900 last:border-0"><td className="p-3 font-mono text-cyan-200">{record.user_id}</td><td className="p-3 text-slate-200">{record.name || "-"}</td><td className="p-3 text-slate-300">{record.client_name || record.client_id || "-"}</td><td className="p-3 text-slate-400">{record.source === "additional" ? `akun tambahan${record.account_order != null ? ` #${record.account_order}` : ""}` : "field utama"}</td><td className="p-3 text-amber-200">@{record.username}</td></tr>)}</tbody>
+                </table>
+              </div>
+              <p className="mt-2 text-[10px] text-slate-500">Klik baris lain untuk membandingkan grup duplikasi berikutnya. Monitoring tidak melakukan perubahan data.</p>
+              {whatsappMessage && (
+                <div className="mt-4 rounded-lg border border-emerald-400/30 bg-emerald-400/5 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div><div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">Pratinjau pesan WhatsApp</div><p className="mt-1 text-xs text-slate-400">Pesan hanya dibuat untuk ditinjau atau disalin. Tidak ada pengiriman otomatis.</p></div>
+                    <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(whatsappMessage); setCopied(true); } catch { setCopied(false); } }} className="rounded-md border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/20">{copied ? "Tersalin" : "Salin pesan"}</button>
+                  </div>
+                  <textarea readOnly value={whatsappMessage} className="mt-3 min-h-[320px] w-full rounded-md border border-slate-700 bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-200 outline-none" aria-label="Pratinjau pesan WhatsApp" />
+                </div>
+              )}
+            </div>
+          )}
+          {data?.truncated && <p className="mt-2 text-[10px] text-amber-300">Detail dibatasi 100 grup. Gunakan audit lanjutan untuk pemeriksaan penuh.</p>}
+          <p className="mt-2 text-[10px] text-slate-500">Sumber: {data?.source?.active_users ?? 0} user aktif · probe {data?.latency_ms ?? "-"} ms · {data?.checked_at ? new Date(data.checked_at).toLocaleString("id-ID") : "-"}</p>
+        </>
+      )}
+    </section>
+  );
+}
+
+function LiveMonitoring({ panelState, panelErrors, panelUpdatedAt, panelDurations, events }) {
+  const labels = {
+    overview: "Ringkasan sistem",
+    health: "Health & integrasi",
+    topology: "Topology & pipeline",
+    clients: "Ringkasan client",
+    clientList: "Daftar client",
+    audit: "Audit konfigurasi",
+    duplicates: "Duplikasi data",
+  };
+  const entries = Object.entries(labels);
+  const ready = entries.filter(([key]) => panelState[key] === "ready").length;
+  const errors = entries.filter(([key]) => panelState[key] === "error").length;
+  const latest = Object.values(panelUpdatedAt).filter(Boolean).sort().at(-1);
+
+  return (
+    <section className="rounded-xl border border-cyan-400/20 bg-slate-900/90 p-5 shadow-lg shadow-cyan-950/10">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_10px_#67e8f9]" />
+            <h2 className="text-lg font-semibold">Live Monitoring & Data Detail</h2>
+          </div>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-400">
+            Ringkasan pemeriksaan read-only untuk mengetahui sumber data yang sehat, gagal, terlambat, dan waktu data terakhir diperbarui.
+          </p>
+        </div>
+        <div className="text-right text-[10px] uppercase tracking-wide text-slate-500">
+          <div>{latest ? `pemeriksaan terakhir ${new Date(latest).toLocaleTimeString("id-ID")}` : "belum ada pemeriksaan"}</div>
+          <div className="mt-1 text-cyan-300">{ready}/{entries.length} panel siap</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <MonitoringStat label="Panel siap" value={ready} tone="emerald" />
+        <MonitoringStat label="Panel bermasalah" value={errors} tone={errors ? "rose" : "slate"} />
+        <MonitoringStat label="Event tercatat" value={events.length} tone="cyan" />
+      </div>
+
+      <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        {entries.map(([key, label]) => (
+          <div key={key} className="rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-200">{label}</span>
+              <HealthBadge status={panelState[key] === "ready" ? "ok" : panelState[key] === "error" ? "degraded" : panelState[key] === "loading" ? "warning" : "unknown"} />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+              <span>{panelDurations[key] != null ? `${panelDurations[key]} ms` : "-"}</span>
+              <span>{panelUpdatedAt[key] ? new Date(panelUpdatedAt[key]).toLocaleTimeString("id-ID") : "belum tersedia"}</span>
+            </div>
+            {panelState[key] === "error" && <p className="mt-2 truncate text-[10px] text-rose-300" title={panelErrors[key]}>{panelErrors[key] || "Sumber data gagal"}</p>}
+          </div>
+        ))}
+      </div>
+
+      <details className="mt-4 rounded-lg border border-slate-800 bg-slate-950/60">
+        <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-cyan-300">Buka riwayat pemeriksaan terakhir</summary>
+        <div className="max-h-56 overflow-auto border-t border-slate-800">
+          {events.length === 0 ? <p className="p-3 text-xs text-slate-500">Belum ada event monitoring.</p> : events.map((event, index) => (
+            <div key={`${event.at}-${event.key}-${index}`} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 px-3 py-2 text-[10px] last:border-0">
+              <span className={event.status === "ready" ? "text-emerald-300" : "text-rose-300"}>{event.status === "ready" ? "OK" : "ERROR"} · {labels[event.key] || event.key}</span>
+              <span className="text-slate-500">{event.duration} ms · {new Date(event.at).toLocaleTimeString("id-ID")}</span>
+            </div>
+          ))}
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function MonitoringStat({ label, value, tone }) {
+  const tones = {
+    emerald: "text-emerald-300 border-emerald-400/20 bg-emerald-400/5",
+    rose: "text-rose-300 border-rose-400/20 bg-rose-400/5",
+    cyan: "text-cyan-300 border-cyan-400/20 bg-cyan-400/5",
+    slate: "text-slate-300 border-slate-700 bg-slate-950/50",
+  };
+  return <div className={`rounded-lg border p-3 ${tones[tone] || tones.slate}`}><div className="text-[10px] uppercase tracking-wider opacity-70">{label}</div><div className="mt-1 text-2xl font-bold">{value}</div></div>;
 }
 
 function PanelMeta({ state, updatedAt, onRetry }) {

@@ -81,6 +81,7 @@ export default function LoginForm() {
         body: JSON.stringify({
           nrp: username.trim(),
           password: password.trim(),
+          login_surface: "reposter",
         }),
         credentials: "include",
       });
