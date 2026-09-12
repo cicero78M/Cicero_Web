@@ -759,6 +759,7 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
               users={displayedChartData}
               totalPost={effectiveRekapSummary.totalTiktokPost}
               groupBy={directorateGroupBy}
+              clientOptions={directorateClientOptions}
               orientation={directorateOrientation}
               sortBy="percentage"
               narrative={

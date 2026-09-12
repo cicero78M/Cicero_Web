@@ -30,6 +30,7 @@ export default function ChartBox({
   useDefaultContainerStyle = true,
   decorations = defaultDecorations,
   titleClassName = "text-sky-600",
+  clientOptions = [],
 }) {
   return (
     <div
@@ -61,6 +62,7 @@ export default function ChartBox({
           labelBelum={labelBelum}
           labelTotal={labelTotal}
           groupBy={groupBy}
+          clientOptions={clientOptions}
           showTotalUser={showTotalUser}
           labelTotalUser={labelTotalUser}
           sortBy={sortBy}

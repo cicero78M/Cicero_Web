@@ -740,6 +740,7 @@ export default function InstagramEngagementInsightView({ initialTab = "insight" 
               users={displayedUsers}
               totalPost={effectiveRekapSummary.totalIGPost}
               groupBy={directorateGroupBy}
+              clientOptions={directorateClientOptions}
               orientation={directorateOrientation}
               sortBy="percentage"
               narrative={directorateNarrative}

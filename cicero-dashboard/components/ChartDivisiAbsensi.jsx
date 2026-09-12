@@ -41,6 +41,7 @@ export default function ChartDivisiAbsensi({
   showTotalUser = false,
   labelTotalUser = "Jumlah User",
   sortBy = "total_value",
+  clientOptions = [],
 }) {
   const { token } = useAuth();
   const [enrichedUsers, setEnrichedUsers] = useState(users);
@@ -106,6 +107,12 @@ export default function ChartDivisiAbsensi({
   // Group by divisi atau client_id jika diminta
   const divisiMap = {};
   const labelKey = groupBy === "client_id" ? "client_name" : "divisi";
+  const clientNameById = new Map(
+    clientOptions.map((client) => [
+      String(client?.client_id ?? "").trim().toLowerCase(),
+      String(client?.nama_client ?? client?.client_name ?? "").trim(),
+    ]),
+  );
   enrichedUsers.forEach((u) => {
     const idKey = String(
       u.client_id ?? u.clientId ?? u.clientID ?? u.client ?? "LAINNYA",
@@ -114,7 +121,11 @@ export default function ChartDivisiAbsensi({
       groupBy === "client_id" ? idKey : bersihkanSatfung(u.divisi || "LAINNYA");
     const display =
       groupBy === "client_id"
-        ? u.nama_client || u.client_name || u.client || idKey
+        ? clientNameById.get(idKey.toLowerCase()) ||
+          u.nama_client ||
+          u.client_name ||
+          u.client ||
+          idKey
         : key;
     const jumlah = Number(u[fieldJumlah] || 0);
     const hasUsername = Boolean(String(u.username || "").trim());
