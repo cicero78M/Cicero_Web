@@ -284,7 +284,7 @@ describe("useRequirePremium", () => {
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
-  it("does not treat non-ORG Operator as premium without tier", async () => {
+  it("treats Operator as premium without tier regardless of client type", async () => {
     const spy = jest.fn();
     mockedUseAuth.mockReturnValue({
       isHydrating: false,
@@ -299,8 +299,8 @@ describe("useRequirePremium", () => {
 
     render(<StatusConsumer onStatus={spy} />);
 
-    await waitFor(() => expect(spy).toHaveBeenCalledWith("standard"));
-    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/premium/anev"));
+    await waitFor(() => expect(spy).toHaveBeenCalledWith("premium"));
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("does not treat ORG non-Operator as premium without tier", async () => {

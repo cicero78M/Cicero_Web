@@ -90,7 +90,7 @@ body {
   z-index: 50;
 }
 
-/* Input text should always be black while placeholders remain grey */
+/* Keep form controls readable in both themes; component backgrounds remain opt-in. */
 input::placeholder,
 textarea::placeholder,
 select::placeholder {
@@ -108,7 +108,20 @@ select::placeholder {
 input,
 textarea,
 select {
-  color: #000; /* black */
+  color: var(--foreground);
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
 }
 
 .admin-console input,

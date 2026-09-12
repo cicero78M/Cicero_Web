@@ -336,6 +336,8 @@ function DuplicateMonitoring({ data, state, updatedAt, onRetry }) {
     same_client_multi_user: "Antar-user satu client",
     cross_client: "Lintas client",
   };
+  const groupLabels = { nrp: "NRP", instagram: "Instagram", tiktok: "TikTok" };
+  const displayDuplicateValue = (group) => group.platform === "nrp" ? group.username : `@${group.username}`;
   const buildWhatsappMessage = (group) => {
     const records = group?.records || [];
     const source = records[0]?.client_name || records[0]?.client_id || "Tidak diketahui";
@@ -386,7 +388,7 @@ function DuplicateMonitoring({ data, state, updatedAt, onRetry }) {
             <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_10px_#fcd34d]" />
             <h2 className="text-lg font-semibold">Duplicate Data Monitoring</h2>
           </div>
-          <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-400">Deteksi read-only username Instagram/TikTok yang sama setelah normalisasi URL, @, dan huruf besar-kecil.</p>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-400">Monitoring read-only dengan tiga kelompok terpisah: NRP dashboard yang sama, username Instagram yang sama, dan username TikTok yang sama. Username sosial dinormalisasi dari URL, @, dan huruf besar-kecil.</p>
         </div>
         <PanelMeta state={state} updatedAt={updatedAt} onRetry={onRetry} />
       </div>
@@ -394,16 +396,16 @@ function DuplicateMonitoring({ data, state, updatedAt, onRetry }) {
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <MonitoringStat label="Grup duplikat" value={summary.total_groups ?? 0} tone={summary.total_groups ? "rose" : "emerald"} />
+            <MonitoringStat label="NRP" value={summary.nrp?.groups ?? 0} tone="cyan" />
             <MonitoringStat label="Instagram" value={summary.instagram?.groups ?? 0} tone="cyan" />
             <MonitoringStat label="TikTok" value={summary.tiktok?.groups ?? 0} tone="cyan" />
-            <MonitoringStat label="Antar-user" value={(summary.same_client ?? 0) + (summary.cross_client ?? 0)} tone="amber" />
-            <MonitoringStat label="Lintas-client" value={summary.cross_client ?? 0} tone={summary.cross_client ? "rose" : "slate"} />
+            <MonitoringStat label="Kemunculan" value={summary.total_occurrences ?? 0} tone="amber" />
           </div>
           <div className="mt-4 overflow-auto rounded-lg border border-slate-800">
             {groups.length === 0 ? <p className="p-4 text-sm text-emerald-300">Tidak ditemukan duplikasi aktif.</p> : (
               <table className="w-full min-w-[760px] text-xs">
-                <thead><tr className="border-b border-slate-800 text-left text-slate-500"><th className="p-3">Platform</th><th className="p-3">Username normal</th><th className="p-3">Klasifikasi</th><th className="p-3">User</th><th className="p-3">Client</th></tr></thead>
-                <tbody>{groups.slice(0, 20).map((group) => <tr key={`${group.platform}:${group.username}`} onClick={() => { setSelectedGroup(group); setWhatsappMessage(""); setCopied(false); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedGroup(group); setWhatsappMessage(""); setCopied(false); } }} tabIndex={0} role="button" aria-label={`Lihat user duplikat ${group.platform} ${group.username}`} className={`cursor-pointer border-b border-slate-900 last:border-0 transition hover:bg-cyan-400/10 focus:bg-cyan-400/10 focus:outline-none ${selectedGroup?.platform === group.platform && selectedGroup?.username === group.username ? "bg-cyan-400/10" : ""}`}><td className="p-3 uppercase text-cyan-300">{group.platform}</td><td className="p-3 font-semibold text-slate-200">@{group.username}</td><td className="p-3 text-amber-200">{classificationLabels[group.classification] || group.classification}</td><td className="p-3 text-slate-300">{group.unique_users}</td><td className="p-3 text-slate-400">{group.unique_clients}</td></tr>)}</tbody>
+                <thead><tr className="border-b border-slate-800 text-left text-slate-500"><th className="p-3">Kelompok</th><th className="p-3">Nilai duplikat</th><th className="p-3">Klasifikasi</th><th className="p-3">User</th><th className="p-3">Client</th></tr></thead>
+                <tbody>{groups.slice(0, 20).map((group) => <tr key={`${group.platform}:${group.username}`} onClick={() => { setSelectedGroup(group); setWhatsappMessage(""); setCopied(false); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedGroup(group); setWhatsappMessage(""); setCopied(false); } }} tabIndex={0} role="button" aria-label={`Lihat grup duplikat ${groupLabels[group.platform] || group.platform} ${group.username}`} className={`cursor-pointer border-b border-slate-900 last:border-0 transition hover:bg-cyan-400/10 focus:bg-cyan-400/10 focus:outline-none ${selectedGroup?.platform === group.platform && selectedGroup?.username === group.username ? "bg-cyan-400/10" : ""}`}><td className="p-3 uppercase text-cyan-300">{groupLabels[group.platform] || group.platform}</td><td className="p-3 font-semibold text-slate-200">{displayDuplicateValue(group)}</td><td className="p-3 text-amber-200">{classificationLabels[group.classification] || group.classification}</td><td className="p-3 text-slate-300">{group.unique_users}</td><td className="p-3 text-slate-400">{group.unique_clients}</td></tr>)}</tbody>
               </table>
             )}
           </div>
@@ -412,7 +414,7 @@ function DuplicateMonitoring({ data, state, updatedAt, onRetry }) {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300">Detail user duplikat</div>
-                  <h3 className="mt-1 text-base font-semibold text-slate-100">{selectedGroup.platform.toUpperCase()} · @{selectedGroup.username}</h3>
+                  <h3 className="mt-1 text-base font-semibold text-slate-100">{groupLabels[selectedGroup.platform] || selectedGroup.platform.toUpperCase()} · {displayDuplicateValue(selectedGroup)}</h3>
                   <p className="mt-1 text-xs text-slate-400">{classificationLabels[selectedGroup.classification] || selectedGroup.classification} · {selectedGroup.occurrences} kemunculan</p>
                 </div>
                 <div className="flex gap-2">
@@ -422,9 +424,33 @@ function DuplicateMonitoring({ data, state, updatedAt, onRetry }) {
               </div>
               <div className="mt-3 overflow-auto rounded-md border border-slate-800">
                 <table className="w-full min-w-[680px] text-xs">
-                  <thead><tr className="border-b border-slate-800 text-left text-slate-500"><th className="p-3">User ID</th><th className="p-3">Nama</th><th className="p-3">Client</th><th className="p-3">Sumber</th><th className="p-3">Username normal</th></tr></thead>
-                  <tbody>{(selectedGroup.records || []).map((record, index) => <tr key={`${record.user_id}:${record.source}:${index}`} className="border-b border-slate-900 last:border-0"><td className="p-3 font-mono text-cyan-200">{record.user_id}</td><td className="p-3 text-slate-200">{record.name || "-"}</td><td className="p-3 text-slate-300">{record.client_name || record.client_id || "-"}</td><td className="p-3 text-slate-400">{record.source === "additional" ? `akun tambahan${record.account_order != null ? ` #${record.account_order}` : ""}` : "field utama"}</td><td className="p-3 text-amber-200">@{record.username}</td></tr>)}</tbody>
+                  <thead><tr className="border-b border-slate-800 text-left text-slate-500"><th className="p-3">User ID</th><th className="p-3">Nama</th><th className="p-3">Client</th><th className="p-3">Sumber</th><th className="p-3">Nilai normal</th></tr></thead>
+                  <tbody>{(selectedGroup.records || []).map((record, index) => <tr key={`${record.user_id}:${record.source}:${index}`} className="border-b border-slate-900 last:border-0"><td className="p-3 font-mono text-cyan-200">{record.user_id}</td><td className="p-3 text-slate-200">{record.name || "-"}</td><td className="p-3 text-slate-300">{record.client_name || record.client_id || "-"}</td><td className="p-3 text-slate-400">{record.source === "additional" ? `akun tambahan${record.account_order != null ? ` #${record.account_order}` : ""}` : record.source === "dashboard" ? "dashboard" : "field utama"}</td><td className="p-3 text-amber-200">{selectedGroup.platform === "nrp" ? record.username : `@${record.username}`}</td></tr>)}</tbody>
                 </table>
+              </div>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {(selectedGroup.records || []).map((record, index) => (
+                  <article key={`full:${record.user_id}:${record.source}:${index}`} className="rounded-md border border-slate-800 bg-slate-950/60 p-3 text-xs">
+                    <div className="mb-2 flex items-center justify-between border-b border-slate-800 pb-2">
+                      <span className="font-semibold text-cyan-200">Data user lengkap #{index + 1}</span>
+                      <span className="text-amber-200">{selectedGroup.platform === "nrp" ? record.username : `@${record.username}`}</span>
+                    </div>
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-slate-300">
+                      <dt className="text-slate-500">NRP</dt><dd>{record.nrp || record.user_id || "-"}</dd>
+                      <dt className="text-slate-500">Username login</dt><dd>{record.login_username || "-"}</dd>
+                      <dt className="text-slate-500">Nama personel</dt><dd>{record.name || "-"}</dd>
+                      <dt className="text-slate-500">Pangkat</dt><dd>{record.title || "-"}</dd>
+                      <dt className="text-slate-500">Jabatan</dt><dd>{record.jabatan || "-"}</dd>
+                      <dt className="text-slate-500">Satfung</dt><dd>{record.divisi || "-"}</dd>
+                      <dt className="text-slate-500">Desa binaan</dt><dd>{record.desa || "-"}</dd>
+                      <dt className="text-slate-500">Role</dt><dd>{record.roles || "-"}</dd>
+                      <dt className="text-slate-500">Email</dt><dd className="break-all">{record.email || "-"}</dd>
+                      <dt className="text-slate-500">WhatsApp</dt><dd>{record.whatsapp || "-"}</dd>
+                      <dt className="text-slate-500">Satker/Client</dt><dd>{record.client_name || record.client_id || "-"}</dd>
+                      <dt className="text-slate-500">Sumber</dt><dd>{record.source === "additional" ? `akun tambahan${record.account_order != null ? ` #${record.account_order}` : ""}` : record.source === "dashboard" ? "dashboard" : "field utama"}</dd>
+                    </dl>
+                  </article>
+                ))}
               </div>
               <p className="mt-2 text-[10px] text-slate-500">Klik baris lain untuk membandingkan grup duplikasi berikutnya. Monitoring tidak melakukan perubahan data.</p>
               {whatsappMessage && (

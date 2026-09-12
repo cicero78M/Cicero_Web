@@ -42,7 +42,8 @@ test("getDashboardStats supports date range params", async () => {
   expect(call[0]).toContain("/api/dashboard/stats");
   expect(call[0]).toContain("tanggal_mulai=2024-01-01");
   expect(call[0]).toContain("tanggal_selesai=2024-01-31");
-  expect(call[1].headers.Authorization).toBe("Bearer token123");
+  expect(call[1].credentials).toBe("include");
+  expect(call[1].headers.Authorization).toBeUndefined();
 });
 
 test("getRekapAmplify supports date range params", async () => {
@@ -62,7 +63,8 @@ test("getRekapAmplify supports date range params", async () => {
   expect(call[0]).toContain("role=operator");
   expect(call[0]).toContain("scope=ORG");
   expect(call[0]).toContain("regional_id=R-01");
-  expect(call[1].headers.Authorization).toBe("Bearer tok");
+  expect(call[1].credentials).toBe("include");
+  expect(call[1].headers.Authorization).toBeUndefined();
 });
 
 test("getRekapLikesIG supports date range params", async () => {
@@ -329,7 +331,11 @@ test("loginClaimUser calls user-login endpoint", async () => {
   const [url, options] = (global.fetch as jest.Mock).mock.calls[0];
   expect(url).toContain("/api/auth/user-login");
   expect(options.method).toBe("POST");
-  expect(JSON.parse(options.body)).toEqual({ nrp: "123", password: "Abcd1234!" });
+  expect(JSON.parse(options.body)).toEqual({
+    nrp: "123",
+    password: "Abcd1234!",
+    login_surface: "claim",
+  });
   expect(response.token).toBe("header.payload.signature");
 });
 
@@ -339,15 +345,15 @@ test.each([
   ["stringified object", { token: "[object Object]" }],
   ["two segments", { token: "header.payload" }],
   ["empty segment", { token: "header..signature" }],
-])("loginClaimUser rejects a successful response with a %s token", async (_label, body) => {
+])( "loginClaimUser accepts a successful cookie-session response with %s token shape", async (_label, body) => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
     json: () => Promise.resolve({ success: true, ...body }),
   });
 
-  await expect(
-    loginClaimUser({ nrp: "123", password: "Abcd1234!" }),
-  ).rejects.toThrow(/token claim/i);
+  const response = await loginClaimUser({ nrp: "123", password: "Abcd1234!" });
+  expect(response.success).toBe(true);
+  expect(response.message).toMatch(/gagal/i);
 });
 
 test.each([

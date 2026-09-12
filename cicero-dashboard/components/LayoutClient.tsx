@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import SidebarWrapper from "./SidebarWrapper";
 import Header from "./Header";
+import VerificationNotice from "./VerificationNotice";
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -40,11 +41,12 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   return (
     <>
       <Header />
+      <VerificationNotice />
       <div className="flex min-h-screen bg-gradient-to-b from-sky-50 via-blue-50 to-indigo-100">
         <aside aria-label="Sidebar navigation" className="md:sticky md:top-16">
           <SidebarWrapper />
         </aside>
-        <main id="main-content" className="flex-1 p-2 md:p-4">
+        <main id="main-content" className="min-w-0 flex-1 p-2 pt-16 md:p-4">
           {children}
         </main>
       </div>

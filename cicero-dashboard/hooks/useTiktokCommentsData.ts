@@ -715,8 +715,7 @@ export default function useTiktokCommentsData({
                 user?.nama_client ??
                 user?.client_name ??
                 user?.clientName ??
-                user?.client ??
-                user?.nama,
+                user?.client,
             }),
           )
           .filter(Boolean);

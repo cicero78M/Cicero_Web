@@ -359,7 +359,8 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      expect(screen.getByText("Diseminasi Insight")).toBeInTheDocument();
+      expect(screen.getByText("Tugas Resmi/Rutin")).toBeInTheDocument();
+      expect(screen.getByText("Tugas Khusus")).toBeInTheDocument();
     });
 
     it("does not show Diseminasi Insight when amplify is disabled", () => {
@@ -375,7 +376,8 @@ describe("Sidebar", () => {
         </AuthContext.Provider>
       );
 
-      expect(screen.queryByText("Diseminasi Insight")).not.toBeInTheDocument();
+      expect(screen.queryByText("Tugas Resmi/Rutin")).not.toBeInTheDocument();
+      expect(screen.queryByText("Tugas Khusus")).not.toBeInTheDocument();
     });
   });
 

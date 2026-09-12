@@ -17,10 +17,13 @@ import SocialAccountQualityCard from "@/components/claim/SocialAccountQualityCar
 import {
   getClaimPendingContent,
   getClaimProfile,
+  getClaimSatfungOptions,
   normalizeWhatsapp,
   updateClaimProfile,
   requestClaimEmailUpdate,
   verifyClaimEmailUpdate,
+  requestClaimWhatsappOtp,
+  verifyClaimWhatsappOtp,
   validateClaimSocialProfile,
 } from "@/utils/api";
 import {
@@ -153,12 +156,16 @@ export default function EditUserPage() {
   const [nama, setNama] = useState("");
   const [pangkat, setPangkat] = useState("");
   const [satfung, setSatfung] = useState("");
+  const [satfungOptions, setSatfungOptions] = useState([]);
   const [jabatan, setJabatan] = useState("");
   const [desa, setDesa] = useState("");
   const [role, setRole] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
+  const [whatsappVerified, setWhatsappVerified] = useState(false);
+  const [whatsappRequestId, setWhatsappRequestId] = useState(false);
+  const [whatsappOtp, setWhatsappOtp] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [emailRequestId, setEmailRequestId] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
@@ -221,11 +228,23 @@ export default function EditUserPage() {
       setNama(user.nama || "");
       setPangkat(user.title || "");
       setSatfung(user.divisi || "");
+      try {
+        const options = await getClaimSatfungOptions();
+        const current = String(user.divisi || '').trim();
+        setSatfungOptions(
+          current && !options.some((option) => option.toUpperCase() === current.toUpperCase())
+            ? [...options, current]
+            : options,
+        );
+      } catch {
+        setSatfungOptions([]);
+      }
       setJabatan(user.jabatan || "");
       setDesa(user.desa || "");
       setWhatsapp(user.whatsapp || user.no_wa || user.phone || user.telp || "");
       setEmail(user.email || user.mail || user.email_address || "");
       setEmailVerified(Boolean(user.email_verified_at));
+      setWhatsappVerified(Boolean(user.whatsapp_verified));
       const instagramSource = Array.isArray(user.instagram_accounts)
         ? user.instagram_accounts
         : user.insta
@@ -443,6 +462,28 @@ export default function EditUserPage() {
     setEmailLoading(false);
   }
 
+  async function handleRequestWhatsappOtp() {
+    setError(""); setMessage(""); setEmailLoading(true);
+    try {
+      const res = await requestClaimWhatsappOtp();
+      const payload = res?.data || res;
+      setWhatsappRequestId(payload.request_id || "sent");
+      setMessage(payload.message || "OTP WhatsApp berhasil dikirim.");
+    } catch (err) { setError(err?.message || "Gagal mengirim OTP WhatsApp."); }
+    setEmailLoading(false);
+  }
+
+  async function handleVerifyWhatsappOtp() {
+    setError(""); setMessage(""); setEmailLoading(true);
+    try {
+      const res = await verifyClaimWhatsappOtp({ otp: whatsappOtp.trim() });
+      const payload = res?.data || res;
+      setWhatsappVerified(true); setWhatsappRequestId(false); setWhatsappOtp("");
+      setMessage(payload.message || "WhatsApp berhasil diverifikasi.");
+    } catch (err) { setError(err?.message || "OTP WhatsApp tidak valid."); }
+    setEmailLoading(false);
+  }
+
   const isDitbinmasRole = role.trim().toLowerCase() === "ditbinmas";
 
   return (
@@ -572,6 +613,20 @@ export default function EditUserPage() {
             </div>
           </div>
 
+          <section className="rounded-2xl border border-spirit-200/80 bg-white/70 p-4">
+            <p className={`text-xs ${whatsappVerified ? "text-emerald-700" : "text-amber-700"}`}>
+              {whatsappVerified ? "WhatsApp telah terverifikasi." : "WhatsApp belum terverifikasi. Kirim dan masukkan OTP WhatsApp."}
+            </p>
+            {!whatsappVerified && (!whatsappRequestId ? (
+              <button type="button" onClick={handleRequestWhatsappOtp} disabled={emailLoading || !whatsapp.trim()} className="mt-2 rounded-xl border bg-white px-3 py-2 text-xs font-semibold disabled:opacity-60">Kirim OTP WhatsApp</button>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <input type="text" inputMode="numeric" maxLength={6} value={whatsappOtp} onChange={(e) => setWhatsappOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6 digit OTP WhatsApp" className="min-w-0 flex-1 rounded-xl border border-spirit-200 px-3 py-2 text-sm" />
+                <button type="button" onClick={handleVerifyWhatsappOtp} disabled={emailLoading || whatsappOtp.length !== 6} className="rounded-xl border bg-white px-3 py-2 text-xs font-semibold disabled:opacity-60">Verifikasi</button>
+              </div>
+            ))}
+          </section>
+
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-navy">
@@ -601,14 +656,21 @@ export default function EditUserPage() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-navy">
-                Satfung
+                Satfung Utama / POLSEK
               </label>
-              <input
-                type="text"
+              <select
                 value={satfung}
                 onChange={(e) => setSatfung(e.target.value)}
                 className="w-full rounded-2xl border border-spirit-200/80 bg-white px-4 py-3 text-sm text-neutral-navy shadow-inner focus:border-spirit-400 focus:outline-none focus:ring-2 focus:ring-spirit-200"
-              />
+              >
+                <option value="">Pilih satfung</option>
+                {satfungOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+              <p className="text-xs text-neutral-slate">
+                Pilihan mengikuti satfung utama dan POLSEK pada client_id akun ini.
+              </p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-neutral-navy">

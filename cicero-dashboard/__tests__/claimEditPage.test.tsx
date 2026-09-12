@@ -101,7 +101,7 @@ describe("EditUserPage", () => {
 
     expect(await screen.findByText("Tugas Instagram")).toBeInTheDocument();
     expect(screen.getByText("Tugas TikTok")).toBeInTheDocument();
-    expect(getClaimPendingContent).toHaveBeenCalledWith("header.payload.signature");
+    expect(getClaimPendingContent).toHaveBeenCalledWith();
     const links = screen.getAllByRole("link", { name: /Buka Konten/ });
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute("href", "https://www.instagram.com/p/IG123/");
@@ -151,22 +151,9 @@ describe("EditUserPage", () => {
       screen.getByLabelText("NRP"),
     );
     expect(screen.getByLabelText("NRP")).toHaveAttribute("readonly");
-    expect(getClaimProfile).toHaveBeenCalledWith("header.payload.signature");
+    expect(getClaimProfile).toHaveBeenCalledWith();
     expect(screen.getByRole("heading", { name: "Kualitas akun media sosial" })).toBeInTheDocument();
   });
-
-  it.each(["[object Object]", "header.payload", "header..signature"])(
-    "membersihkan sesi invalid dan redirect tanpa API terlindungi: %s",
-    async (token) => {
-      sessionStorage.setItem("claim_token", token);
-      render(<EditUserPage />);
-
-      await waitFor(() => expect(replace).toHaveBeenCalledWith("/claim"));
-      expect(sessionStorage.getItem("claim_token")).toBeNull();
-      expect(getClaimProfile).not.toHaveBeenCalled();
-      expect(getClaimPendingContent).not.toHaveBeenCalled();
-    },
-  );
 
   it.each([401, 403])(
     "redirect ke halaman claim ketika pending content merespons %s",
@@ -242,8 +229,7 @@ describe("EditUserPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
 
     await waitFor(() => expect(updateClaimProfile).toHaveBeenCalled());
-    const [payload, token] = (updateClaimProfile as jest.Mock).mock.calls[0];
-    expect(token).toBe("header.payload.signature");
+    const [payload] = (updateClaimProfile as jest.Mock).mock.calls[0];
     expect(payload.instagram_accounts).toEqual(["Polri", "kedua_ig"]);
     expect(payload.tiktok_accounts).toEqual(["@humas_polri", "@kedua_tt"]);
     expect(payload).not.toHaveProperty("insta");
@@ -282,7 +268,6 @@ describe("EditUserPage", () => {
     expect(screen.getByText("Perlu dilengkapi · 80/100")).toBeInTheDocument();
     expect(validateClaimSocialProfile).toHaveBeenCalledWith(
       { platform: "instagram", username: "utama.ig" },
-      "header.payload.signature",
     );
   });
 

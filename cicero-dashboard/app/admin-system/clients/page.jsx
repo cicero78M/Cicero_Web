@@ -86,7 +86,7 @@ export default function AdminClientsPage() {
             <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(form.client_amplify_status)} onChange={(e) => setForm((s) => ({ ...s, client_amplify_status: e.target.checked }))} /> amplify enabled</label>
           </div>
           <div className="flex gap-2">
-            <button className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold text-sm" onClick={async () => {
+            <button type="button" className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold text-sm" onClick={async () => {
               if (!token) return;
               if (!form.client_id && !editingId) return setError("client_id wajib diisi");
               if (!form.nama.trim()) return setError("nama wajib diisi");
@@ -103,7 +103,7 @@ export default function AdminClientsPage() {
                 setError(err instanceof Error ? err.message : "Gagal simpan client");
               }
             }}>{editingId ? "Update" : "Tambah"}</button>
-            {editingId && <button className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" onClick={() => { setEditingId(""); setForm(emptyForm); }}>Batal</button>}
+            {editingId && <button type="button" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" onClick={() => { setEditingId(""); setForm(emptyForm); }}>Batal</button>}
           </div>
         </section>
 
@@ -111,10 +111,10 @@ export default function AdminClientsPage() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm w-full" placeholder="Cari client_id / nama / group" value={q} onChange={(e) => setQ(e.target.value)} />
             <div className="flex shrink-0 items-center gap-2">
-              <button className="px-3 py-2 rounded bg-emerald-500 text-slate-950 text-sm font-semibold" onClick={() => { if (page === 1) load(); else setPage(1); }}>Cari</button>
-              <button className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>‹</button>
+              <button type="button" className="px-3 py-2 rounded bg-emerald-500 text-slate-950 text-sm font-semibold" onClick={() => { if (page === 1) load(); else setPage(1); }}>Cari</button>
+              <button type="button" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>‹</button>
               <span className="whitespace-nowrap text-xs text-slate-400">{page}/{pages}</span>
-              <button className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs disabled:opacity-40" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>›</button>
+              <button type="button" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs disabled:opacity-40" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>›</button>
             </div>
           </div>
 
@@ -135,8 +135,8 @@ export default function AdminClientsPage() {
                     <td className="py-2 pr-3">{String(r.client_status)}</td>
                     <td className="py-2 pr-3">
                       <div className="flex gap-2">
-                        <button className="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-semibold" onClick={() => { setEditingId(r.client_id); setForm({ client_id: r.client_id || "", nama: r.nama || "", client_type: r.client_type || "", client_group: r.client_group || "", regional_id: r.regional_id || "", client_operator: r.client_operator || "", client_super: r.client_super || "", client_insta: r.client_insta || "", client_tiktok: r.client_tiktok || "", client_status: Boolean(r.client_status), client_insta_status: Boolean(r.client_insta_status), client_tiktok_status: Boolean(r.client_tiktok_status), client_amplify_status: Boolean(r.client_amplify_status) }); }}>Edit</button>
-                        <button className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => {
+                        <button type="button" className="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-semibold" onClick={() => { setEditingId(r.client_id); setForm({ client_id: r.client_id || "", nama: r.nama || "", client_type: r.client_type || "", client_group: r.client_group || "", regional_id: r.regional_id || "", client_operator: r.client_operator || "", client_super: r.client_super || "", client_insta: r.client_insta || "", client_tiktok: r.client_tiktok || "", client_status: Boolean(r.client_status), client_insta_status: Boolean(r.client_insta_status), client_tiktok_status: Boolean(r.client_tiktok_status), client_amplify_status: Boolean(r.client_amplify_status) }); }}>Edit</button>
+                        <button type="button" className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => {
                           if (!token) return;
                           if (!confirm(`Hapus client ${r.client_id}?`)) return;
                           try { await deleteAdminSystemClient(token, r.client_id); await load(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal hapus client"); }

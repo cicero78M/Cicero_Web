@@ -83,8 +83,8 @@ export default function AdminPaymentsPage() {
                     <td className="py-2 pr-3">
                       {(r.status === "pending" || r.status === "confirmed") ? (
                         <div className="flex gap-2">
-                          <button className="px-2 py-1 rounded bg-emerald-500 text-slate-950 text-xs font-semibold" onClick={async () => { if (!token) return; try { await decideAdminSystemPaymentRequest(token, String(r.request_id), { status: "approved" }); await load(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal approve"); } }}>Approve</button>
-                          <button className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => { if (!token) return; const note = prompt("Alasan reject (opsional):") || ""; try { await decideAdminSystemPaymentRequest(token, String(r.request_id), { status: "rejected", note }); await load(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal reject"); } }}>Reject</button>
+                          <button type="button" className="px-2 py-1 rounded bg-emerald-500 text-slate-950 text-xs font-semibold" onClick={async () => { if (!token) return; try { await decideAdminSystemPaymentRequest(token, String(r.request_id), { status: "approved" }); await load(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal approve"); } }}>Approve</button>
+                          <button type="button" className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => { if (!token) return; const note = prompt("Alasan reject (opsional):") || ""; try { await decideAdminSystemPaymentRequest(token, String(r.request_id), { status: "rejected", note }); await load(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal reject"); } }}>Reject</button>
                         </div>
                       ) : "-"}
                     </td>
@@ -94,9 +94,9 @@ export default function AdminPaymentsPage() {
             </table>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</button>
+            <button type="button" className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</button>
             <span className="text-xs text-slate-400">Page {page}/{pages}</span>
-            <button className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
+            <button type="button" className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
           </div>
         </section>
       </div>

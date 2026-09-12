@@ -193,6 +193,34 @@ export async function getAuthSession(
   return data?.data || data;
 }
 
+export async function updateDashboardProfile(token: string, payload: { nama?: string; pangkat?: string; nrp?: string; email?: string; whatsapp?: string }): Promise<any> {
+  const res = await fetchWithAuth(buildApiUrl("/api/auth/dashboard-profile"), token, { method: "PUT", body: JSON.stringify(payload) });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.success === false) throw new Error(data?.message || "Gagal memperbarui profil");
+  return data?.data || data;
+}
+
+export async function getDashboardSatfungOptions(token: string): Promise<string[]> {
+  const res = await fetchWithAuth(buildApiUrl("/api/auth/dashboard-satfung"), token);
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.success === false) throw new Error(data?.message || "Gagal mengambil daftar Satfung");
+  return Array.isArray(data?.data) ? data.data.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0) : [];
+}
+
+export async function requestDashboardVerificationOtp(token: string, channel: "email" | "whatsapp"): Promise<any> {
+  const res = await fetchWithAuth(buildApiUrl("/api/auth/dashboard-verification/request"), token, { method: "POST", body: JSON.stringify({ channel }) });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.success === false) throw new Error(data?.message || "Gagal mengirim OTP");
+  return data;
+}
+
+export async function confirmDashboardVerificationOtp(token: string, channel: "email" | "whatsapp", otp: string): Promise<any> {
+  const res = await fetchWithAuth(buildApiUrl("/api/auth/dashboard-verification/confirm"), token, { method: "POST", body: JSON.stringify({ channel, otp }) });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.success === false) throw new Error(data?.message || "OTP tidak valid");
+  return data;
+}
+
 function redirectTo(path: string): void {
   if (typeof window === "undefined") return;
   window.location.replace(path);
@@ -4192,6 +4220,22 @@ export async function verifyClaimEmailUpdate(payload: { request_id: string; otp:
   return data;
 }
 
+export async function requestClaimWhatsappOtp(): Promise<any> {
+  const res = await fetch(buildApiUrl("/api/claim/whatsapp/request"), { method: "POST", credentials: "include" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(extractResponseMessage(data, "Gagal mengirim OTP WhatsApp."));
+  return data;
+}
+
+export async function verifyClaimWhatsappOtp(payload: { otp: string }): Promise<any> {
+  const res = await fetch(buildApiUrl("/api/claim/whatsapp/verify"), {
+    method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(extractResponseMessage(data, "OTP WhatsApp tidak valid."));
+  return data;
+}
+
 export async function loginClaimUser(
   payload: ClaimCredentialPayload,
 ): Promise<ClaimAuthResponse> {
@@ -4342,6 +4386,21 @@ export async function getClaimProfile(token?: string): Promise<ClaimProfileRespo
   }
 
   return data as ClaimProfileResponse;
+}
+
+export async function getClaimSatfungOptions(token?: string): Promise<string[]> {
+  const res = await fetch(buildApiUrl("/api/claim/satfung-options"), {
+    method: "GET",
+    headers: claimAuthHeaders(token),
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.success === false) {
+    throw claimResponseError(res.status, data, "Gagal mengambil pilihan satfung");
+  }
+  return Array.isArray(data?.data)
+    ? data.data.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
 }
 
 export async function getClaimPendingContent(token?: string): Promise<ClaimPendingContentResponse> {

@@ -237,8 +237,9 @@ export default function Sidebar() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild className="md:hidden">
           <button
+            type="button"
             aria-label={open ? "Tutup Sidebar" : "Buka Sidebar"}
-            className="fixed left-3 top-[4.65rem] z-30 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className="fixed left-3 top-[4.65rem] z-30 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
           >
             {open ? (
               <IconX size={28} strokeWidth={2.5} />
@@ -270,6 +271,7 @@ export default function Sidebar() {
             </span>
           )}
           <button
+            type="button"
             onClick={() => setCollapsed(!collapsed)}
             className="rounded-lg border border-slate-200 bg-white p-1 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             aria-label="Toggle Sidebar"

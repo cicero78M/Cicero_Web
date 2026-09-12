@@ -38,6 +38,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [forgotUsername, setForgotUsername] = useState("");
   const [recoveryContact, setRecoveryContact] = useState("");
   const shouldReduceMotion = useReducedMotion();
@@ -193,6 +194,7 @@ export default function LoginPage() {
           role: trimmedRole ? trimmedRole.toLowerCase() : undefined,
           client_id: trimmedClientId || undefined,
           email: email.trim(),
+          whatsapp: normalizeWhatsapp(whatsapp),
         }),
       });
       if (data.success) {
@@ -208,6 +210,7 @@ export default function LoginPage() {
         setRole("");
         setClientId("");
         setEmail("");
+        setWhatsapp("");
       } else {
         setError(data.message || "Registrasi gagal");
       }
@@ -557,6 +560,10 @@ export default function LoginPage() {
                         autoComplete="email"
                         className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
                       />
+                    </div>
+                    <div>
+                      <label htmlFor="whatsapp" className="sr-only">WhatsApp</label>
+                      <input id="whatsapp" type="tel" placeholder="Nomor WhatsApp untuk OTP (opsional)" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} onBlur={handleTrim(setWhatsapp)} autoComplete="tel" className="w-full rounded-xl border border-sky-200/60 bg-white/70 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>

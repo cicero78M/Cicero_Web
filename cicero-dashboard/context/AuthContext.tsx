@@ -23,6 +23,7 @@ type AuthState = {
   premiumTierReady: boolean;
   hasResolvedPremium: boolean;
   premiumResolutionError: boolean;
+  mergeProfile: (patch: Record<string, unknown>) => void;
   setAuth: (
     token: string | null,
     clientId: string | null,
@@ -187,6 +188,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(session.dashboard_user_id || session.user_id || null);
         setUsername(session.username || session.nama || null);
         setRole(session.role || null);
+        // Session data contains personnel identity. Keep client fields separate;
+        // the client-profile fetch is the source of truth for client metadata.
+        setProfile((current: any) => ({
+          ...(current || {}),
+          nama: session.nama ?? current?.nama ?? null,
+          pangkat: session.pangkat ?? current?.pangkat ?? null,
+          nrp: session.nrp ?? current?.nrp ?? null,
+          satfung: session.satfung ?? current?.satfung ?? null,
+          email: session.email ?? current?.email ?? null,
+          whatsapp: session.whatsapp ?? current?.whatsapp ?? null,
+          email_verified: Boolean(session.email_verified ?? current?.email_verified),
+          email_verified_at: session.email_verified_at ?? current?.email_verified_at ?? null,
+          whatsapp_verified: Boolean(session.whatsapp_verified ?? current?.whatsapp_verified),
+          whatsapp_verified_at: session.whatsapp_verified_at ?? current?.whatsapp_verified_at ?? null,
+          premium_status: session.premium_status ?? current?.premium_status ?? false,
+          premium_tier: session.premium_tier ?? current?.premium_tier ?? null,
+          premium_expires_at: session.premium_expires_at ?? current?.premium_expires_at ?? null,
+        }));
       } catch {
         if (!cancelled) clearSessionState();
       } finally {
@@ -412,6 +431,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPremiumExpiry(null);
   };
 
+  const mergeProfile = (patch: Record<string, unknown>) => {
+    setProfile((current: any) => ({ ...(current || {}), ...patch }));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -431,6 +454,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         premiumTierReady,
         hasResolvedPremium,
         premiumResolutionError,
+        mergeProfile,
         setAuth,
       }}
     >

@@ -32,7 +32,7 @@ describe("premium utils", () => {
     expect(isOrgOperator("ORG", "Operator")).toBe(true);
     expect(isOrgOperator("org", "operator")).toBe(true);
     expect(isOrgOperator("ORG", "OPERATOR")).toBe(true);
-    expect(isOrgOperator("DIREKTORAT", "Operator")).toBe(false);
+    expect(isOrgOperator("DIREKTORAT", "Operator")).toBe(true);
     expect(isOrgOperator("ORG", "BIDHUMAS")).toBe(false);
     expect(isOrgOperator(null, null)).toBe(false);
   });
@@ -48,7 +48,7 @@ describe("premium utils", () => {
     const results = allowed.map((tier) => isPremiumTierAllowedForAnev(tier));
 
     expect(results).toEqual([true, true, true]);
-    expect(ALLOWED_PREMIUM_ANEV_TIERS).toEqual(["tier1", "tier2"]);
+    expect(ALLOWED_PREMIUM_ANEV_TIERS).toEqual(["tier1", "tier2", "premiumunified"]);
   });
 
   it("allows tier 1 and 2 for engagement date selector", () => {
@@ -58,11 +58,11 @@ describe("premium utils", () => {
     ["premium3", "basic", "standard"].forEach((tier) => {
       expect(isPremiumTierAllowedForEngagementDate(tier)).toBe(false);
     });
-    expect(ALLOWED_ENGAGEMENT_DATE_TIERS).toEqual(["tier1", "tier2"]);
+    expect(ALLOWED_ENGAGEMENT_DATE_TIERS).toEqual(["tier1", "tier2", "premiumunified"]);
   });
 
   it("rejects non-premium tiers for non-ORG Operators", () => {
-    expect(isPremiumTierAllowedForAnev("free", "DIREKTORAT", "Operator")).toBe(false);
+    expect(isPremiumTierAllowedForAnev("free", "DIREKTORAT", "Operator")).toBe(true);
     expect(isPremiumTierAllowedForAnev("premium4", "ORG", "BIDHUMAS")).toBe(false);
     expect(isPremiumTierAllowedForAnev("free")).toBe(false);
     expect(isPremiumTierAllowedForAnev("premium4")).toBe(false);

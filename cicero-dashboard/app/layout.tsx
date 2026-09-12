@@ -22,7 +22,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="id">
       <body className="antialiased">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <AuthProvider>

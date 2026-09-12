@@ -99,7 +99,12 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
   const [activeTab, setActiveTab] = useState(
     initialTab === "rekap" ? "rekap" : "insight",
   );
-  const [directorateScope, setDirectorateScope] = useState("client");
+  const isDitbinmasContext =
+    String(clientId || "").trim().toUpperCase() === "DITBINMAS" ||
+    String(effectiveRole || role || "").trim().toLowerCase() === "ditbinmas";
+  const [directorateScope, setDirectorateScope] = useState(() =>
+    isDitbinmasContext ? "all" : "client",
+  );
   const [selectedClientId, setSelectedClientId] = useState("");
   const [remoteExecutiveRecap, setRemoteExecutiveRecap] = useState(null);
   const [remoteRiskSummary, setRemoteRiskSummary] = useState(null);
@@ -319,7 +324,10 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const directorateScopeOptions = [
     { value: "client", label: clientName },
-    { value: "all", label: `Satker Jajaran ${clientName}` },
+    {
+      value: "all",
+      label: `Satker Jajaran ${isDitbinmasContext ? "DITBINMAS" : clientName}`,
+    },
   ];
 
 
@@ -720,7 +728,10 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
           analysisContext={{
             platform: "TikTok Komentar",
             periodLabel: reportPeriodeLabel,
-            scopeLabel: selectedClientName || clientName || "Lingkup akun aktif",
+            scopeLabel:
+              directorateScope === "all"
+                ? `Satker Jajaran ${isDitbinmasContext ? "DITBINMAS" : clientName}`
+                : selectedClientName || clientName || "Lingkup akun aktif",
             totalPosts: Number(effectiveRekapSummary.totalTiktokPost) || 0,
             totalUsers: totalUser,
             validUsers: validUserCount,

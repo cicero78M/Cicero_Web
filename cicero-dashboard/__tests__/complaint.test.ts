@@ -1,4 +1,8 @@
-import { postComplaintInstagram, postComplaintTiktok } from "../utils/api";
+import {
+  COOKIE_SESSION_TOKEN,
+  postComplaintInstagram,
+  postComplaintTiktok,
+} from "../utils/api";
 
 const ORIGINAL_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -29,7 +33,7 @@ afterEach(() => {
 
 describe("postComplaintInstagram", () => {
   test("sends correct payload with all required fields", async () => {
-    await postComplaintInstagram("token123", {
+    await postComplaintInstagram(COOKIE_SESSION_TOKEN, {
       nrp: "75020201",
       user_id: "75020201",
       client_id: "POLDA_JABAR",
@@ -40,8 +44,8 @@ describe("postComplaintInstagram", () => {
     const call = (global.fetch as jest.Mock).mock.calls[0];
     expect(call[0]).toContain("/api/dashboard/komplain/insta");
     expect(call[1].method).toBe("POST");
-    expect(call[1].headers.Authorization).toBe("Bearer token123");
-    expect(call[1].headers["Content-Type"]).toBe("application/json");
+    expect(call[1].headers.get("Authorization")).toBeNull();
+    expect(call[1].headers.get("Content-Type")).toBe("application/json");
     expect(call[1].credentials).toBe("include");
 
     const body = JSON.parse(call[1].body);
@@ -53,7 +57,7 @@ describe("postComplaintInstagram", () => {
   });
 
   test("sends minimal payload with only nrp", async () => {
-    await postComplaintInstagram("token123", {
+    await postComplaintInstagram(COOKIE_SESSION_TOKEN, {
       nrp: "75020201",
     });
 
@@ -76,14 +80,14 @@ describe("postComplaintInstagram", () => {
     });
 
     await expect(
-      postComplaintInstagram("token123", { nrp: "75020201" })
+      postComplaintInstagram(COOKIE_SESSION_TOKEN, { nrp: "75020201" })
     ).rejects.toThrow(
       "Akses ditolak. Periksa: (1) Apakah akun dashboard Anda sudah di-approve? (2) Apakah token masih valid?"
     );
   });
 
   test("returns success message from backend", async () => {
-    const result = await postComplaintInstagram("token123", {
+    const result = await postComplaintInstagram(COOKIE_SESSION_TOKEN, {
       nrp: "75020201",
     });
 
@@ -94,7 +98,7 @@ describe("postComplaintInstagram", () => {
 
 describe("postComplaintTiktok", () => {
   test("sends correct payload with all required fields", async () => {
-    await postComplaintTiktok("token456", {
+    await postComplaintTiktok(COOKIE_SESSION_TOKEN, {
       nrp: "75020202",
       user_id: "75020202",
       client_id: "POLDA_JATIM",
@@ -105,8 +109,8 @@ describe("postComplaintTiktok", () => {
     const call = (global.fetch as jest.Mock).mock.calls[0];
     expect(call[0]).toContain("/api/dashboard/komplain/tiktok");
     expect(call[1].method).toBe("POST");
-    expect(call[1].headers.Authorization).toBe("Bearer token456");
-    expect(call[1].headers["Content-Type"]).toBe("application/json");
+    expect(call[1].headers.get("Authorization")).toBeNull();
+    expect(call[1].headers.get("Content-Type")).toBe("application/json");
     expect(call[1].credentials).toBe("include");
 
     const body = JSON.parse(call[1].body);
@@ -118,7 +122,7 @@ describe("postComplaintTiktok", () => {
   });
 
   test("sends minimal payload with only nrp", async () => {
-    await postComplaintTiktok("token456", {
+    await postComplaintTiktok(COOKIE_SESSION_TOKEN, {
       nrp: "75020202",
     });
 

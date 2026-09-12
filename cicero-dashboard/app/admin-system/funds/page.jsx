@@ -87,7 +87,7 @@ export default function AdminSystemFundsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Manajemen Dana Sistem</h1>
           <div className="flex gap-2">
-            <button className="px-3 py-2 rounded bg-emerald-500 text-slate-950 text-sm font-semibold" onClick={async () => { if (!token) return; try { const blob = await exportFundAuditCsv(token); const href = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = href; a.download = "fund-audit-log.csv"; a.click(); URL.revokeObjectURL(href); } catch (err) { setError(err instanceof Error ? err.message : "Gagal export CSV"); } }}>Export CSV</button>
+            <button type="button" className="px-3 py-2 rounded bg-emerald-500 text-slate-950 text-sm font-semibold" onClick={async () => { if (!token) return; try { const blob = await exportFundAuditCsv(token); const href = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = href; a.download = "fund-audit-log.csv"; a.click(); URL.revokeObjectURL(href); } catch (err) { setError(err instanceof Error ? err.message : "Gagal export CSV"); } }}>Export CSV</button>
             <Link href="/admin-system" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm">Kembali</Link>
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function AdminSystemFundsPage() {
           <div className="flex flex-wrap gap-3 items-end">
             <DateField label="Start" value={startDate} onChange={(v) => { setStartDate(v); setReqPage(1); setTxPage(1); setAuditPage(1); }} />
             <DateField label="End" value={endDate} onChange={(v) => { setEndDate(v); setReqPage(1); setTxPage(1); setAuditPage(1); }} />
-            <button className="px-3 py-2 rounded bg-slate-800 border border-slate-700" onClick={() => { setStartDate(""); setEndDate(""); }}>Reset tanggal</button>
+            <button type="button" className="px-3 py-2 rounded bg-slate-800 border border-slate-700" onClick={() => { setStartDate(""); setEndDate(""); }}>Reset tanggal</button>
             <select className="px-3 py-2 rounded bg-slate-800 border border-slate-700" value={period} onChange={(e) => setPeriod(e.target.value)}>
               <option value="daily">Ringkasan Harian</option><option value="weekly">Ringkasan Mingguan</option><option value="monthly">Ringkasan Bulanan</option>
             </select>
@@ -126,7 +126,7 @@ export default function AdminSystemFundsPage() {
               <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="Amount" type="number" value={txForm.amount} onChange={(e) => setTxForm((s) => ({ ...s, amount: e.target.value }))} required />
               <select className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" value={txForm.direction} onChange={(e) => setTxForm((s) => ({ ...s, direction: e.target.value }))}><option value="outflow">outflow</option><option value="inflow">inflow</option></select>
               <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="Deskripsi" value={txForm.description} onChange={(e) => setTxForm((s) => ({ ...s, description: e.target.value }))} />
-              <button className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold">Simpan</button>
+              <button type="submit" className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold">Simpan</button>
             </form>
           </Panel>
 
@@ -135,7 +135,7 @@ export default function AdminSystemFundsPage() {
               <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="Judul" value={reqForm.title} onChange={(e) => setReqForm((s) => ({ ...s, title: e.target.value }))} required />
               <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="Nominal" type="number" value={reqForm.requested_amount} onChange={(e) => setReqForm((s) => ({ ...s, requested_amount: e.target.value }))} required />
               <input className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" placeholder="Catatan" value={reqForm.note} onChange={(e) => setReqForm((s) => ({ ...s, note: e.target.value }))} />
-              <button className="px-3 py-2 rounded bg-emerald-500 text-slate-950 font-semibold">Kirim</button>
+              <button type="submit" className="px-3 py-2 rounded bg-emerald-500 text-slate-950 font-semibold">Kirim</button>
             </form>
           </Panel>
         </section>
