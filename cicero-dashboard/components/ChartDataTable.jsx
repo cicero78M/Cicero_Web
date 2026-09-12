@@ -12,9 +12,6 @@ export default function ChartDataTable({
   rows = [],
   summaryLabel = "Tampilkan data tabel",
   initialOpen = false,
-  onDownloadJpg,
-  downloadLabel = "Download JPG",
-  isDownloading = false,
 }) {
   if (!rows || rows.length === 0) {
     return null;
@@ -41,18 +38,6 @@ export default function ChartDataTable({
 
   return (
     <div className="mt-4 space-y-3">
-      {typeof onDownloadJpg === "function" ? (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={onDownloadJpg}
-            disabled={isDownloading}
-            className="inline-flex items-center rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isDownloading ? "Memproses JPG..." : downloadLabel}
-          </button>
-        </div>
-      ) : null}
       <details
         className="group rounded-2xl border border-sky-100/60 bg-white/70 p-4 text-slate-700 shadow-inner backdrop-blur"
         open={initialOpen}

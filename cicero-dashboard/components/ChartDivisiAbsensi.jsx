@@ -10,12 +10,10 @@ import {
   CartesianGrid,
   LabelList,
 } from "recharts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getClientNames } from "@/utils/api";
 import useAuth from "@/hooks/useAuth";
 import ChartDataTable from "@/components/ChartDataTable";
-import { toJpeg } from "html-to-image";
-import { showToast } from "@/utils/showToast";
 
 // Bersihkan "POLSEK" dan awalan angka pada nama divisi/satfung
 function bersihkanSatfung(divisi = "") {
@@ -45,8 +43,6 @@ export default function ChartDivisiAbsensi({
 }) {
   const { token } = useAuth();
   const [enrichedUsers, setEnrichedUsers] = useState(users);
-  const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
-  const exportRef = useRef(null);
 
   // Enrich user data with client names when grouping by client_id.
   useEffect(() => {
@@ -295,45 +291,11 @@ export default function ChartDivisiAbsensi({
     };
   });
 
-  const groupByLabel =
-    groupBy === "client_id" ? "POLRES JAJARAN" : "divisi-satfung";
-  const exportDate = new Date().toISOString().split("T")[0];
-  const fileName = `instagram-engagement-direktorat-polres-jajaran-${exportDate}.jpg`;
-
-  const handleDownloadJpg = async () => {
-    if (!exportRef.current || dataChart.length === 0) {
-      return;
-    }
-
-    setIsDownloadingJpg(true);
-    try {
-      const dataUrl = await toJpeg(exportRef.current, {
-        quality: 0.95,
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-      });
-      const link = document.createElement("a");
-      link.download = fileName;
-      link.href = dataUrl;
-      link.click();
-      showToast(`Berhasil mengunduh JPG ${groupByLabel}.`, "success");
-    } catch (error) {
-      showToast(
-        "Gagal mengekspor JPG. Silakan coba lagi dengan data lebih sedikit atau gunakan browser terbaru.",
-        "error",
-      );
-      console.error("[ChartDivisiAbsensi] JPG export failed", error);
-    } finally {
-      setIsDownloadingJpg(false);
-    }
-  };
-
   return (
     <div className="relative mt-8 w-full overflow-hidden rounded-3xl border border-sky-100/60 bg-white/70 p-6 shadow-[0_25px_55px_-30px_rgba(56,189,248,0.45)] backdrop-blur">
       <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-12 top-0 h-16 bg-gradient-to-b from-white/60 to-transparent blur-2xl" />
-      <div ref={exportRef} className="relative w-full px-2 pb-4">
+      <div className="relative w-full px-2 pb-4">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={dataChart}
@@ -498,9 +460,6 @@ export default function ChartDivisiAbsensi({
           title={title}
           columns={tableColumns}
           rows={tableRows}
-          onDownloadJpg={groupBy === "client_id" && dataChart.length > 0 ? handleDownloadJpg : undefined}
-          downloadLabel="Download JPG polres-jajaran"
-          isDownloading={isDownloadingJpg}
         />
       </div>
     </div>
