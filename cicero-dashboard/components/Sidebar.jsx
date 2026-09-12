@@ -110,7 +110,18 @@ export default function Sidebar() {
         ]
       : []),
     ...(amplifyEnabled
-      ? [{ label: "Diseminasi Insight", path: "/amplify", icon: LinkIcon }]
+      ? [
+          {
+            label: "Tugas Resmi/Rutin",
+            path: "/amplify",
+            icon: LinkIcon,
+          },
+          {
+            label: "Tugas Khusus",
+            path: "/amplify/khusus",
+            icon: Sparkles,
+          },
+        ]
       : []),
     ...(tiktokEnabled
       ? [

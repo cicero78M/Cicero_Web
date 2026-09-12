@@ -232,7 +232,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role || undefined,
         });
         if (!cancelled) {
-          setProfile(res.client || res.profile || res);
+          const clientProfile = res.client || res.profile || res;
+          // `nama` pada response client adalah nama satker/client, sedangkan
+          // `profile.nama` adalah nama personil dashboard. Jangan satukan
+          // kedua field tersebut karena dapat membuat nama personil berubah
+          // hanya ketika profile client selesai dimuat.
+          const { nama: clientNama, ...clientFields } = clientProfile || {};
+          setProfile((current: any) => ({
+            ...(current || {}),
+            ...clientFields,
+            client_name: clientProfile?.client_name || clientNama || current?.client_name || null,
+          }));
           setPremiumResolutionError(false);
         }
       } catch (err) {

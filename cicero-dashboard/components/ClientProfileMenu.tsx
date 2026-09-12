@@ -36,7 +36,7 @@ export default function ClientProfileMenu({ onLogout }: ClientProfileMenuProps) 
     };
   }, []);
 
-  const displayName = profile?.nama || profile?.client_name || "User";
+  const displayName = profile?.client_name || profile?.nama || "User";
   const displayRole = profile?.client_type || "Client";
 
   const handleNavigate = (path: string) => {
