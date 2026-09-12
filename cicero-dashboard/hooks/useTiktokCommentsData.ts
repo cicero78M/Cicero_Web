@@ -640,13 +640,17 @@ export default function useTiktokCommentsData({
         );
         setIsDirectorate(directorate);
         setIsOrgClient(orgClient);
-        setClientName(
-          (profileData as any)?.nama ||
-            (profileData as any)?.nama_client ||
-            (profileData as any)?.client_name ||
-            (profileData as any)?.client ||
-            "",
-        );
+        // `profileData.nama` is the dashboard user's personel name after
+        // AuthContext separates it from the client profile. Scope labels must
+        // always identify the client/satker, never the personel.
+        const resolvedClientName =
+          (profileData as any)?.client_name ||
+          (profileData as any)?.nama_client ||
+          (profileData as any)?.clientName ||
+          (profileData as any)?.name_client ||
+          (profileData as any)?.client ||
+          normalizedClientId;
+        setClientName(String(resolvedClientName || "").trim());
         setCanSelectScope(
           !isOperatorRole &&
             directorate &&

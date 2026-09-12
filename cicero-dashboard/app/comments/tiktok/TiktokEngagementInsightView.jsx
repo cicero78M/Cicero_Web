@@ -277,7 +277,11 @@ export default function TiktokEngagementInsightView({ initialTab = "insight" }) 
 
   const selectedClientName =
     directorateClientOptions.find((entry) => entry.client_id === selectedClientId)
-      ?.nama_client || clientName;
+      ?.nama_client ||
+    clientName ||
+    profile?.client_name ||
+    clientId ||
+    "Satker";
 
   const effectiveRekapSummary =
     shouldShowClientSelector && selectedClientId
