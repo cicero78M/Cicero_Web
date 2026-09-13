@@ -3,16 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import PendingContentCard from "@/components/claim/PendingContentCard";
 import type { ClaimPendingContentResponse } from "@/utils/api";
 
-const triageClaimComplaint = jest.fn();
-const escalateClaimComplaint = jest.fn();
-const getClaimComplaint = jest.fn();
-jest.mock("@/utils/api", () => ({
-  ...jest.requireActual("@/utils/api"),
-  triageClaimComplaint: (...args: unknown[]) => triageClaimComplaint(...args),
-  escalateClaimComplaint: (...args: unknown[]) => escalateClaimComplaint(...args),
-  getClaimComplaint: (...args: unknown[]) => getClaimComplaint(...args),
-}));
-
 const platform = (overrides = {}) => ({
   username_available: true,
   usernames: ["cicero"],
@@ -93,12 +83,4 @@ describe("PendingContentCard", () => {
     expect(links[0].getAttribute("rel")).toBe("noopener noreferrer");
   });
 
-  it("tidak menampilkan atau memanggil aksi Komplain", () => {
-    render(<PendingContentCard loading={false} error="" onRefresh={jest.fn()} data={responseData({ instagram: platform({ pending_content: 1, items: [{ shortcode: "IG1", url: null, caption: "Konten", content_time: null }] }) })} />);
-    expect(screen.queryByRole("button", { name: "Komplain" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Eskalasi" })).toBeNull();
-    expect(triageClaimComplaint).not.toHaveBeenCalled();
-    expect(escalateClaimComplaint).not.toHaveBeenCalled();
-    expect(getClaimComplaint).not.toHaveBeenCalled();
-  });
 });

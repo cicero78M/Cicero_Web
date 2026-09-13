@@ -76,7 +76,7 @@ const roles = [
       "Melaksanakan tugas pada konten yang benar dengan akun terdaftar.",
       "Memastikan aktivitas benar-benar berhasil di aplikasi resmi.",
       "Memperbarui profil melalui portal claim bila username berubah.",
-      "Melaporkan kendala kepada operator tanpa membagikan kredensial.",
+      "Menyampaikan kendala kepada operator tanpa membagikan kredensial.",
     ],
   },
   {

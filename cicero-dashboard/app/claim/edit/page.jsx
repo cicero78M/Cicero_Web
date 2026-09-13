@@ -507,11 +507,6 @@ export default function EditUserPage() {
           loading={pendingContentLoading}
           error={pendingContentError}
           onRefresh={() => loadPendingContent()}
-          onOpenProfile={() =>
-            document
-              .getElementById("claim-profile-form")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
         />
 
         <SocialAccountQualityCard
