@@ -7,7 +7,7 @@
     "clean": "rm -rf .next",
     "build": "npm run clean && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "jest"
   },
   "dependencies": {
