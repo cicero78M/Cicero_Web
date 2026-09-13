@@ -149,7 +149,7 @@ export default function AdminSystemFundsPage() {
             money(r.requested_amount),
             <Badge key={`b-${r.request_id}`} status={r.status} />,
             r.note || '-',
-            r.status === 'pending' ? <div key={`a-${r.request_id}`} className="flex gap-2"><button className="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-semibold" onClick={async () => { if (!token) return; try { await approveFundRequest(token, r.request_id); await loadAll(); } catch (err) { setError(err instanceof Error ? err.message : 'Gagal approve'); } }}>Approve</button><button className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={() => { setRejectRequestId(r.request_id); setRejectReason(''); setRejectModalOpen(true); }}>Reject</button></div> : '-'
+            r.status === 'pending' ? <div key={`a-${r.request_id}`} className="flex gap-2"><button type="button" className="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-semibold" onClick={async () => { if (!token) return; try { await approveFundRequest(token, r.request_id); await loadAll(); } catch (err) { setError(err instanceof Error ? err.message : 'Gagal approve'); } }}>Approve</button><button type="button" className="px-2 py-1 rounded bg-rose-500 text-white text-xs font-semibold" onClick={() => { setRejectRequestId(r.request_id); setRejectReason(''); setRejectModalOpen(true); }}>Reject</button></div> : '-'
           ])}
           footer={<Pagination page={reqPage} totalPages={reqPagination.total_pages || 1} onPrev={() => setReqPage((p) => Math.max(1, p - 1))} onNext={() => setReqPage((p) => Math.min(reqPagination.total_pages || 1, p + 1))} />}
         />
@@ -176,7 +176,7 @@ export default function AdminSystemFundsPage() {
           <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-4 space-y-3">
             <h3 className="font-semibold">Tolak Request Dana</h3>
             <textarea className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm min-h-24 w-full" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Alasan penolakan" />
-            <div className="flex justify-end gap-2"><button className="px-3 py-2 rounded bg-slate-800 border border-slate-700" onClick={() => setRejectModalOpen(false)}>Batal</button><button className="px-3 py-2 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => { if (!token || !rejectRequestId) return; if (!rejectReason.trim()) return setError("Alasan wajib diisi"); try { await rejectFundRequest(token, rejectRequestId, rejectReason.trim()); setRejectModalOpen(false); await loadAll(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal reject"); } }}>Konfirmasi</button></div>
+            <div className="flex justify-end gap-2"><button type="button" className="px-3 py-2 rounded bg-slate-800 border border-slate-700" onClick={() => setRejectModalOpen(false)}>Batal</button><button type="button" className="px-3 py-2 rounded bg-rose-500 text-white text-xs font-semibold" onClick={async () => { if (!token || !rejectRequestId) return; if (!rejectReason.trim()) return setError("Alasan wajib diisi"); try { await rejectFundRequest(token, rejectRequestId, rejectReason.trim()); setRejectModalOpen(false); await loadAll(); } catch (err) { setError(err instanceof Error ? err.message : "Gagal reject"); } }}>Konfirmasi</button></div>
           </div>
         </div>
       )}
@@ -221,5 +221,5 @@ function SimpleTable({ title, headers, rows, controls, footer }) {
 }
 
 function Pagination({ page, totalPages, onPrev, onNext }) {
-  return <div className="flex items-center gap-2 pt-2"><button onClick={onPrev} disabled={page <= 1} className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40">Prev</button><span className="text-xs text-slate-400">Page {page}/{Math.max(1, totalPages)}</span><button onClick={onNext} disabled={page >= Math.max(1, totalPages)} className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40">Next</button></div>;
+  return <div className="flex items-center gap-2 pt-2"><button type="button" onClick={onPrev} disabled={page <= 1} className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40">Prev</button><span className="text-xs text-slate-400">Page {page}/{Math.max(1, totalPages)}</span><button type="button" onClick={onNext} disabled={page >= Math.max(1, totalPages)} className="px-3 py-1 rounded bg-slate-800 border border-slate-700 disabled:opacity-40">Next</button></div>;
 }

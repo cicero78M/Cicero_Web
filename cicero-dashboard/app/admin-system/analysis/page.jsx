@@ -101,7 +101,7 @@ export default function AdminSystemAnalysisPage() {
             <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan perubahan" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-sm" />
           </div>
           <div className="flex gap-2">
-            <button className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold" onClick={async () => {
+            <button type="button" className="px-3 py-2 rounded bg-cyan-500 text-slate-950 font-semibold" onClick={async () => {
               if (!token) return;
               try {
                 const data = await previewAdminSystemConfigChange(token, { config_key: configKey, config_value: configValue });
@@ -111,7 +111,7 @@ export default function AdminSystemAnalysisPage() {
                 setError(err instanceof Error ? err.message : "Preview gagal");
               }
             }}>Preview Impact</button>
-            <button className="px-3 py-2 rounded bg-emerald-500 text-slate-950 font-semibold" onClick={async () => {
+            <button type="button" className="px-3 py-2 rounded bg-emerald-500 text-slate-950 font-semibold" onClick={async () => {
               if (!token) return;
               try {
                 await applyAdminSystemConfigChange(token, {
@@ -159,6 +159,7 @@ export default function AdminSystemAnalysisPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Config Audit Trail</h2>
             <button
+              type="button"
               className="px-3 py-2 rounded bg-amber-500 text-slate-950 font-semibold text-xs"
               onClick={async () => {
                 if (!token) return;

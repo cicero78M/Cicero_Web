@@ -119,13 +119,14 @@ export default function AdminSystemOverviewPage() {
             <p className="mt-1 text-sm text-slate-400">Control room orkestrasi sistem, client, integrasi, dan keputusan administrator.</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setAutoRefresh((value) => !value)} className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${autoRefresh ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300" : "border-slate-700 bg-slate-800 text-slate-300"}`}>
+            <button type="button" onClick={() => setAutoRefresh((value) => !value)} className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${autoRefresh ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300" : "border-slate-700 bg-slate-800 text-slate-300"}`}>
               {autoRefresh ? "Auto-monitor ON" : "Auto-monitor OFF"}
             </button>
-            <button onClick={load} disabled={loading} className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-semibold text-sm disabled:opacity-50">
+            <button type="button" onClick={load} disabled={loading} className="px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-semibold text-sm disabled:opacity-50">
               {loading ? "Memeriksa..." : "Refresh status"}
             </button>
             <button
+              type="button"
               onClick={async () => {
                 await logoutAdminSystem().catch(() => undefined);
                 window.location.href = "/admin-system/login";
