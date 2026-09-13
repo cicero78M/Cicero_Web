@@ -286,6 +286,8 @@ export default function ProfileClient() {
             <img
               src={combinedProfile.avatarUrl}
               alt={displayName}
+              width={80}
+              height={80}
               className="h-full w-full object-cover"
             />
           ) : (

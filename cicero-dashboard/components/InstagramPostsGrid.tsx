@@ -44,6 +44,8 @@ export default function InstagramPostsGrid({ posts = [] }: InstagramPostsGridPro
                   (post.images_url && post.images_url[0])
               )}
               alt={post.caption || "thumbnail"}
+              width={640}
+              height={192}
               loading="lazy"
               className="w-full h-48 object-cover"
               onError={(e) => {

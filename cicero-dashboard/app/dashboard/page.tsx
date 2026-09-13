@@ -1122,6 +1122,8 @@ export default function DashboardPage() {
                     <img
                       src={post.thumbnail}
                       alt={`Thumbnail ${post.platform}`}
+                      width={640}
+                      height={256}
                       className="h-40 w-full rounded-[1.75rem] object-cover"
                       loading="lazy"
                       referrerPolicy="no-referrer"

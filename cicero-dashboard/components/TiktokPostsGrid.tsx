@@ -40,6 +40,8 @@ export default function TiktokPostsGrid({ posts = [] }: TiktokPostsGridProps) {
                 post.thumbnail || post.thumbnail_url || post.cover_url
               )}
               alt={post.caption || "thumbnail"}
+              width={640}
+              height={192}
               loading="lazy"
               className="w-full h-48 object-cover"
               onError={(e) => {

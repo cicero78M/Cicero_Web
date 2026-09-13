@@ -536,6 +536,8 @@ export default function ReportLinksClient({
                   <img
                     src={reportInfo.imageUrl}
                     alt={`Gambar tugas ${taskNumber || postId || ""}`.trim()}
+                    width={220}
+                    height={275}
                     className="aspect-[4/5] w-full object-cover"
                   />
                 ) : (

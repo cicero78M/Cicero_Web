@@ -379,6 +379,8 @@ export default function ReposterTaskList({ taskType }: ReposterTaskListProps) {
                           post.caption ||
                           `Postingan ${taskType === "official" ? "official" : "khusus"}`
                         }
+                        width={440}
+                        height={320}
                         className="h-full w-full object-cover"
                       />
                     ) : (

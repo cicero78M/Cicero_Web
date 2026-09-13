@@ -125,6 +125,8 @@ export default function SocialProfileCard({
               <img
                 src={avatarSrc}
                 alt="avatar"
+                width={64}
+                height={64}
                 loading="lazy"
                 className="h-16 w-16 rounded-full border border-white/40 object-cover shadow-[0_18px_36px_rgba(148,163,184,0.25)] dark:border-white/20 dark:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
                 onError={(e) => {

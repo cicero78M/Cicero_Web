@@ -161,6 +161,8 @@ const PlatformOverviewCard: React.FC<PlatformOverviewCardProps> = ({
               <img
                 src={profile.avatarUrl}
                 alt={profile.label || platform.label}
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded-2xl border border-slate-800/80 object-cover"
               />
             </div>
