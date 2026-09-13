@@ -1,6 +1,7 @@
 import {
   COOKIE_SESSION_TOKEN,
   getAuthSession,
+  logoutClaimSession,
   logoutDashboardSession,
   logoutReposterSession,
 } from "../utils/api";
@@ -18,7 +19,7 @@ describe("frontend auth scope isolation", () => {
     jest.restoreAllMocks();
   });
 
-  it.each(["dashboard", "reposter"] as const)(
+  it.each(["dashboard", "claim", "reposter"] as const)(
     "labels %s session reads with an explicit scope",
     async (scope) => {
       await getAuthSession(scope);
@@ -49,6 +50,16 @@ describe("frontend auth scope isolation", () => {
       expect.stringContaining("/api/auth/logout"),
       expect.objectContaining({
         headers: { "X-Cicero-Auth-Scope": "reposter" },
+      }),
+    );
+  });
+
+  it("logs claim out without targeting the reposter scope", async () => {
+    await logoutClaimSession(COOKIE_SESSION_TOKEN);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/auth/logout"),
+      expect.objectContaining({
+        headers: { "X-Cicero-Auth-Scope": "claim" },
       }),
     );
   });

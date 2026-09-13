@@ -9,7 +9,11 @@ describe("getClaimPendingContent", () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ success: true, data: {} }) });
     const { getClaimPendingContent } = await import("@/utils/api");
     await getClaimPendingContent();
-    expect(global.fetch).toHaveBeenCalledWith("https://api.cicero.test/api/claim/pending-content", { method: "GET", credentials: "include" });
+    expect(global.fetch).toHaveBeenCalledWith("https://api.cicero.test/api/claim/pending-content", {
+      method: "GET",
+      headers: { "X-Cicero-Auth-Scope": "claim" },
+      credentials: "include",
+    });
   });
 
   it("meneruskan pesan API 401", async () => {
@@ -100,7 +104,10 @@ describe("claim complaint lifecycle API", () => {
       "https://api.cicero.test/api/claim/complaints",
       {
         method: "GET",
-        headers: { Authorization: "Bearer header.payload.signature" },
+        headers: {
+          Authorization: "Bearer header.payload.signature",
+          "X-Cicero-Auth-Scope": "claim",
+        },
         credentials: "include",
       },
     );
@@ -121,7 +128,9 @@ describe("claim complaint lifecycle API", () => {
 
       await getClaimComplaints(token as string | undefined);
 
-      expect((global.fetch as jest.Mock).mock.calls[0][1].headers).toBeUndefined();
+      expect((global.fetch as jest.Mock).mock.calls[0][1].headers).toEqual({
+        "X-Cicero-Auth-Scope": "claim",
+      });
     },
   );
 });

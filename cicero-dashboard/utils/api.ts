@@ -159,7 +159,7 @@ export async function confirmDashboardPasswordReset(
   );
 }
 
-type AuthFailureScope = "dashboard" | "reposter" | "none";
+type AuthFailureScope = "dashboard" | "claim" | "reposter" | "none";
 export const COOKIE_SESSION_TOKEN = "cookie-session";
 export const DASHBOARD_SESSION_COOKIE = "cicero_dashboard_session";
 export const REPOSTER_HTTP_SESSION_COOKIE = "cicero_reposter_session";
@@ -255,6 +255,10 @@ function handleAuthFailure(scope: AuthFailureScope = "dashboard"): void {
     redirectTo("/reposter/login");
     return;
   }
+  if (scope === "claim") {
+    redirectTo("/claim");
+    return;
+  }
   clearDashboardAuthState();
   redirectTo("/");
 }
@@ -284,6 +288,10 @@ export async function logoutDashboardSession(token?: string | null): Promise<voi
 export async function logoutReposterSession(token?: string | null): Promise<void> {
   await postLogout(token, "reposter");
   clearReposterAuthState();
+}
+
+export async function logoutClaimSession(token?: string | null): Promise<void> {
+  await postLogout(token, "claim");
 }
 
 export type SubmitPremiumRequestPayload = {
@@ -4202,7 +4210,7 @@ export async function verifyClaimRegistration(payload: { request_id: string; otp
 
 export async function requestClaimEmailUpdate(payload: { email: string; password: string }): Promise<any> {
   const res = await fetch(buildApiUrl("/api/claim/email/request"), {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers: { "Content-Type": "application/json", ...claimAuthHeaders() },
     credentials: "include", body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
@@ -4212,7 +4220,7 @@ export async function requestClaimEmailUpdate(payload: { email: string; password
 
 export async function verifyClaimEmailUpdate(payload: { request_id: string; otp: string }): Promise<any> {
   const res = await fetch(buildApiUrl("/api/claim/email/verify"), {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers: { "Content-Type": "application/json", ...claimAuthHeaders() },
     credentials: "include", body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
@@ -4221,7 +4229,11 @@ export async function verifyClaimEmailUpdate(payload: { request_id: string; otp:
 }
 
 export async function requestClaimWhatsappOtp(): Promise<any> {
-  const res = await fetch(buildApiUrl("/api/claim/whatsapp/request"), { method: "POST", credentials: "include" });
+  const res = await fetch(buildApiUrl("/api/claim/whatsapp/request"), {
+    method: "POST",
+    headers: claimAuthHeaders(),
+    credentials: "include",
+  });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(extractResponseMessage(data, "Gagal mengirim OTP WhatsApp."));
   return data;
@@ -4229,7 +4241,7 @@ export async function requestClaimWhatsappOtp(): Promise<any> {
 
 export async function verifyClaimWhatsappOtp(payload: { otp: string }): Promise<any> {
   const res = await fetch(buildApiUrl("/api/claim/whatsapp/verify"), {
-    method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(payload),
+    method: "POST", headers: { "Content-Type": "application/json", ...claimAuthHeaders() }, credentials: "include", body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(extractResponseMessage(data, "OTP WhatsApp tidak valid."));
@@ -4364,8 +4376,11 @@ export function isValidClaimToken(token: unknown): token is string {
   return segments.length === 3 && segments.every((segment) => segment.length > 0);
 }
 
-function claimAuthHeaders(token?: unknown) {
-  return isValidClaimToken(token) ? { Authorization: `Bearer ${token}` } : undefined;
+function claimAuthHeaders(token?: unknown): Record<string, string> {
+  return {
+    "X-Cicero-Auth-Scope": "claim",
+    ...(isValidClaimToken(token) ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 function claimResponseError(status: number, data: any, fallback: string): Error {
